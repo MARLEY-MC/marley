@@ -1,4 +1,5 @@
 CXX=g++
+CXXFLAGS=-std=c++11
 
 OBJ = parse.o
 

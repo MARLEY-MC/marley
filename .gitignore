@@ -1,2 +1,4 @@
 data/
 *.o
+ensdf.*
+parse
