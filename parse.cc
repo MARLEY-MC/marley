@@ -72,6 +72,8 @@ int main() {
     std::string nuc_id = line.substr(0,5);
     if (nuc_id == " 40K ") {
 
+      std::cout << line << std::endl;
+
       // Level Record
       if (std::regex_match(line, rx_primary_level_record)) {
         record = line;
@@ -87,7 +89,12 @@ int main() {
         line = process_continuation_records(file_in, record, rx_continuation_gamma_record);
         no_advance = true;
 
-        std::cout << "gamma record:" << std::endl << record << std::endl;
+        std::cout << "gamma record:" << std::endl;
+        std::cout << record << std::endl;
+        std::cout << "   energy: " << record.substr(9,9) << std::endl;
+        std::cout << "   relative photon intensity: " << record.substr(21,7) << std::endl;
+        std::cout << "   total conversion coefficient: " << record.substr(55,6) << std::endl;
+        std::cout << "   relative total transition intensity: " << record.substr(64,9) << std::endl;
       }
      
       //// Parent Record
