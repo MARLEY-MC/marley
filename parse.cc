@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -136,11 +137,15 @@ class TEnsdfDecayScheme {
     void add_level(const TEnsdfLevel level);
     std::map<std::string, TEnsdfLevel>* get_levels();
     TEnsdfLevel* get_level(std::string energy);
+    std::vector<TEnsdfLevel*>* get_sorted_level_pointers();
     //void doCascade();
 
   private:
     std::string nuc_id;
     std::map<std::string, TEnsdfLevel> levels;
+    std::vector<TEnsdfLevel*> pv_sorted_levels;
+    static bool compare_level_energies(TEnsdfLevel* first,
+      TEnsdfLevel* second);
 };
 
 TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid) {
@@ -155,10 +160,38 @@ void TEnsdfDecayScheme::set_nuc_id(std::string id) {
   nuc_id = id;
 }
 
+bool TEnsdfDecayScheme::compare_level_energies(TEnsdfLevel* first,
+  TEnsdfLevel* second)
+{
+  return first->get_numerical_energy() < second->get_numerical_energy();
+}
+
 void TEnsdfDecayScheme::add_level(TEnsdfLevel level) {
+  // Add the level to the std::map of level objects. Use the
+  // string version of its energy in keV as the key.
   std::string energy_string = level.get_string_energy();
   levels[energy_string] = level;
+
+  // Get a pointer to the just-added level object
+  TEnsdfLevel* p_level = &(levels[energy_string]);
+
+  // Figure out where this level should go in the
+  // vector of level pointers sorted by ascending energy
+  std::vector<TEnsdfLevel*>::iterator
+    insert_point = std::lower_bound(pv_sorted_levels.begin(),
+    pv_sorted_levels.end(), p_level,
+    compare_level_energies);
+
+  // Add a pointer to the new level object at the
+  // appropriate place in the energy-sorted vector
+  pv_sorted_levels.insert(insert_point, p_level);
 }
+
+
+std::vector<TEnsdfLevel*>* TEnsdfDecayScheme::get_sorted_level_pointers() {
+  return &pv_sorted_levels;
+}
+
 
 std::map<std::string, TEnsdfLevel>* TEnsdfDecayScheme::get_levels() {
   return &levels;
@@ -322,27 +355,24 @@ int main() {
 
   }
 
+  // Now that we've loaded our decay scheme with all of the data,
+  // we can fill in the end level pointers for each of our gamma
+  // ray objects. This will enable the generator to descend through
+  // the decay chains after only looking up the starting level.
+
+
+
   // Check decay scheme object contents (for debugging purposes)
   std::cout << std::endl << std::endl << "Beginning decay scheme data check" << std::endl;
-  std::map<std::string, TEnsdfLevel>* p_levels = decay_scheme.get_levels();
-  std::vector<std::string> level_energies;
-  // Get all keys from the map. Put them in a vector so we can sort them.
-  for(std::map<std::string, TEnsdfLevel>::iterator i = p_levels->begin();
-    i != p_levels->end(); ++i)
-  {
-    level_energies.push_back(i->first);
-  }
-
-  // Sort the entries by ascending level energy.
-  std::sort(level_energies.begin(), level_energies.end(), numeric_less_than);
+  std::vector<TEnsdfLevel*>* level_pointers = decay_scheme.get_sorted_level_pointers();
 
   // Generate a report about the contents of the decay scheme object
-  for(std::vector<std::string>::iterator j = level_energies.begin();
-    j != level_energies.end(); ++j)
+  for(std::vector<TEnsdfLevel*>::iterator j = level_pointers->begin();
+    j != level_pointers->end(); ++j)
   {
     
-    std::cout << "Level at " << p_levels->find(*j)->first << std::endl;
-    std::vector<TEnsdfGamma>* p_gammas = p_levels->find(*j)->second.get_gammas();
+    std::cout << "Level at " << (*j)->get_string_energy() << std::endl;
+    std::vector<TEnsdfGamma>* p_gammas = (*j)->get_gammas();
     for(std::vector<TEnsdfGamma>::iterator k = p_gammas->begin();
       k != p_gammas->end(); ++k) 
     {
@@ -352,11 +382,6 @@ int main() {
   }
 
   std::cout << std::endl << "Completed decay scheme data check." << std::endl;
-
-  // Now that we've loaded our decay scheme with all of the data,
-  // we can fill in the end level pointers for each of our gamma
-  // ray objects. This will enable the generator to descend through
-  // the decay chains after only looking up the starting level.
 
   file_in.close();
 
