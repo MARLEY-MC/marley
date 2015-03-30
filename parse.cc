@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -359,12 +360,14 @@ int main() {
   // we can fill in the end level pointers for each of our gamma
   // ray objects. This will enable the generator to descend through
   // the decay chains after only looking up the starting level.
-
-
-
-  // Check decay scheme object contents (for debugging purposes)
+  // Also check decay scheme object contents (for debugging purposes)
   std::cout << std::endl << std::endl << "Beginning decay scheme data check" << std::endl;
   std::vector<TEnsdfLevel*>* level_pointers = decay_scheme.get_sorted_level_pointers();
+  // Use this vector of level energies to find the closest final level's index.
+  // We'll push level energies onto it in ascending order to make the searching
+  // as efficient as possible (we don't need to worry about negative-energy gamma
+  // decays to higher levels)
+  std::vector<double> level_energies;
 
   // Generate a report about the contents of the decay scheme object
   for(std::vector<TEnsdfLevel*>::iterator j = level_pointers->begin();
@@ -373,12 +376,55 @@ int main() {
     
     std::cout << "Level at " << (*j)->get_string_energy() << std::endl;
     std::vector<TEnsdfGamma>* p_gammas = (*j)->get_gammas();
+    double initial_level_energy = (*j)->get_numerical_energy();
+
     for(std::vector<TEnsdfGamma>::iterator k = p_gammas->begin();
       k != p_gammas->end(); ++k) 
     {
+      double gamma_energy = k->get_energy();
+
+      // Approximate the final level energy so we can search for the final level
+      double final_level_energy = initial_level_energy - gamma_energy; 
+
+      // Search for the corresponding energy using the vector of lower energies
+      std::vector<double>::iterator p_final_level_energy = std::lower_bound(
+        level_energies.begin(), level_energies.end(), final_level_energy); 
+
+      // Determine the index of the final level energy appropriately
+      int e_index = std::distance(level_energies.begin(), p_final_level_energy);
+      if (e_index == level_energies.size()) {
+        // The calculated final level energy is greater than
+        // every energy in the vector. We will therefore assume
+        // that the gamma decay takes us to the highest level in
+        // the vector. Its index is given by one less than the
+        // number of elements in the vector, so subtract one from
+        // our previous result.
+        --e_index;
+      }
+      else if (e_index > 0) {
+        // If the calculated index does not correspond to the
+        // first element, we still need to check which of the
+        // two levels found (one on each side) is really the
+        // closest. Do so and reassign the index if needed.
+        if (std::abs(final_level_energy - level_energies[e_index])
+          > std::abs(final_level_energy - level_energies[e_index - 1]))
+        {
+          --e_index;
+        }
+      }
+
+      // Use the index to assign the appropriate end level pointer to this gamma
+      k->set_end_level((*level_pointers)[e_index]);
+
       std::cout << "  has a gamma with energy " << k->get_energy();
-      std::cout << " and relative photon intensity " << k->get_ri() << std::endl; 
+      std::cout << " (transition to level at "
+        << k->get_end_level()->get_string_energy() << " keV)" << std::endl;
+      std::cout << "    and relative photon intensity " << k->get_ri() << std::endl; 
     }
+
+    // Add the current level's energy to the level energies to use while
+    // searching for gamma final levels
+    level_energies.push_back(initial_level_energy);
   }
 
   std::cout << std::endl << "Completed decay scheme data check." << std::endl;
