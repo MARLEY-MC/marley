@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map>
 #include <regex>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include "ensdf_utils.hh"
@@ -140,18 +141,83 @@ class TEnsdfDecayScheme {
     TEnsdfLevel* get_level(std::string energy);
     std::vector<TEnsdfLevel*>* get_sorted_level_pointers();
     void print_report();
-    //void doCascade();
+    void do_cascade(std::string initial_energy);
+    void do_cascade(double initial_energy);
+    void do_cascade(TEnsdfLevel* initial_level);
 
   private:
     std::string nuc_id;
     std::map<std::string, TEnsdfLevel> levels;
     std::vector<TEnsdfLevel*> pv_sorted_levels;
+    std::vector<double> sorted_level_energies;
     static bool compare_level_energies(TEnsdfLevel* first,
       TEnsdfLevel* second);
     std::string process_continuation_records(std::ifstream &file_in,
       std::string &record, std::regex &rx_cont_record) const;
 
 };
+
+void TEnsdfDecayScheme::do_cascade(std::string initial_energy) {
+  std::map<std::string, TEnsdfLevel>::iterator it = levels.find(initial_energy);
+  if (it == levels.end()) {
+    throw std::range_error("Could not do cascade. Level with energy "
+      + initial_energy + " keV not found.");
+  }
+  else {
+    TEnsdfLevel* plevel = &(it->second);
+    do_cascade(plevel);
+  }
+}
+
+void TEnsdfDecayScheme::do_cascade(double initial_energy) {
+
+  // Since we were given a numerical initial energy in this
+  // version of the function, search for the level whose energy is
+  // closest to the given value of initial_energy 
+  std::vector<double>::iterator it = std::lower_bound(
+    sorted_level_energies.begin(), sorted_level_energies.end(),
+    initial_energy); 
+
+  // Determine the index of the initial level energy appropriately
+  int e_index = std::distance(sorted_level_energies.begin(), it);
+  if (e_index == sorted_level_energies.size()) {
+    // The given initial energy is greater than every level energy in our
+    // decay scheme. We will therefore assume that the initial level is the
+    // highest level.  Its energy's index is given by one less than the
+    // number of elements in the sorted vector, so subtract one from our
+    // previous result.
+    --e_index;
+  }
+  else if (e_index > 0) {
+    // If the calculated index does not correspond to the
+    // first element, we still need to check which of the
+    // two levels found (one on each side) is really the
+    // closest. Do so and reassign the index if needed.
+    if (std::abs(initial_energy - sorted_level_energies[e_index])
+      > std::abs(initial_energy - sorted_level_energies[e_index - 1]))
+    {
+      --e_index;
+    }
+  }
+
+  TEnsdfLevel* plevel = pv_sorted_levels[e_index];
+    
+  do_cascade(plevel);
+}
+
+
+void TEnsdfDecayScheme::do_cascade(TEnsdfLevel* initial_level) {
+  std::cout << "Beginning gamma cascade at level with energy "
+    << initial_level->get_string_energy() << std::endl;
+
+  bool cascade_finished = false;
+
+  TEnsdfLevel* current_level = initial_level;
+
+  //while (!cascade_finished) {
+
+  //}
+}
 
 
 TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
@@ -268,11 +334,8 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
   // ray objects. This will enable the generator to descend through
   // the decay chains after only looking up the starting level.
 
-  // Use this vector of level energies to find the closest final level's index.
-  // We'll push level energies onto it in ascending order to make the searching
-  // as efficient as possible (we don't need to worry about negative-energy gamma
-  // decays to higher levels)
-  std::vector<double> level_energies;
+  // We will use the sorted_level_energies vector (whose entries were created
+  // when we parsed each level record) to find the closest final level's index.
 
   // Cycle through each of the level objects. We will assign end level pointers
   // to each gamma owned by each level.
@@ -291,13 +354,15 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
       // Approximate the final level energy so we can search for the final level
       double final_level_energy = initial_level_energy - gamma_energy; 
 
-      // Search for the corresponding energy using the vector of lower energies
+      // Search for the corresponding energy using the vector of level energies
       std::vector<double>::iterator p_final_level_energy = std::lower_bound(
-        level_energies.begin(), level_energies.end(), final_level_energy); 
+        this->sorted_level_energies.begin(), this->sorted_level_energies.end(),
+        final_level_energy); 
 
       // Determine the index of the final level energy appropriately
-      int e_index = std::distance(level_energies.begin(), p_final_level_energy);
-      if (e_index == level_energies.size()) {
+      int e_index = std::distance(this->sorted_level_energies.begin(),
+        p_final_level_energy);
+      if (e_index == this->sorted_level_energies.size()) {
         // The calculated final level energy is greater than
         // every energy in the vector. We will therefore assume
         // that the gamma decay takes us to the highest level in
@@ -311,8 +376,8 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
         // first element, we still need to check which of the
         // two levels found (one on each side) is really the
         // closest. Do so and reassign the index if needed.
-        if (std::abs(final_level_energy - level_energies[e_index])
-          > std::abs(final_level_energy - level_energies[e_index - 1]))
+        if (std::abs(final_level_energy - this->sorted_level_energies[e_index])
+          > std::abs(final_level_energy - this->sorted_level_energies[e_index - 1]))
         {
           --e_index;
         }
@@ -322,10 +387,6 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
       k->set_end_level(this->pv_sorted_levels[e_index]);
 
     }
-
-    // Add the current level's energy to the level energies to use while
-    // searching for gamma final levels
-    level_energies.push_back(initial_level_energy);
 
   }
 
@@ -409,16 +470,26 @@ void TEnsdfDecayScheme::add_level(TEnsdfLevel level) {
   // Get a pointer to the just-added level object
   TEnsdfLevel* p_level = &(levels[energy_string]);
 
-  // Figure out where this level should go in the
-  // vector of level pointers sorted by ascending energy
-  std::vector<TEnsdfLevel*>::iterator
-    insert_point = std::lower_bound(pv_sorted_levels.begin(),
-    pv_sorted_levels.end(), p_level,
-    compare_level_energies);
+  // Get this level's numerical energy
+  double l_energy = p_level->get_numerical_energy();
 
-  // Add a pointer to the new level object at the
-  // appropriate place in the energy-sorted vector
-  pv_sorted_levels.insert(insert_point, p_level);
+  // Figure out where this level should go in the
+  // vector of sorted level energies 
+  std::vector<double>::iterator
+    insert_point = std::lower_bound(sorted_level_energies.begin(),
+    sorted_level_energies.end(), l_energy);
+
+  // Compute the numerical index for where we will
+  // insert the energy of the new level
+  int index = std::distance(sorted_level_energies.begin(), insert_point);
+
+  // Add an entry in the vector of sorted level
+  // energies for this new level
+  sorted_level_energies.insert(insert_point, l_energy);
+
+  // Also add a pointer to the new level object at the
+  // appropriate place in our energy-sorted vector of pointers
+  pv_sorted_levels.insert(pv_sorted_levels.begin() + index, p_level);
 }
 
 
@@ -447,5 +518,10 @@ int main() {
 
   // Print a report describing the decay scheme
   decay_scheme.print_report();
+
+  std::cout << std::endl << std::endl;
+
+  // Test the decay scheme object by simulating a sample gamma cascade
+  decay_scheme.do_cascade(1e10);
 
 }
