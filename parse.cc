@@ -132,7 +132,7 @@ double TEnsdfGamma::get_ri() const {
 
 class TEnsdfDecayScheme {
   public:
-    TEnsdfDecayScheme(std::string nucid = "");
+    TEnsdfDecayScheme(std::string nucid, std::string filename);
     std::string get_nuc_id() const;
     void set_nuc_id(std::string id);
     void add_level(const TEnsdfLevel level);
@@ -147,10 +147,228 @@ class TEnsdfDecayScheme {
     std::vector<TEnsdfLevel*> pv_sorted_levels;
     static bool compare_level_energies(TEnsdfLevel* first,
       TEnsdfLevel* second);
+    std::string process_continuation_records(std::ifstream &file_in,
+      std::string &record, std::regex &rx_cont_record);
+
 };
 
-TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid) {
+TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
+
   nuc_id = nucid;
+
+  // Regular expressions for identifying ensdf record types
+  //std::string generic_nuc_id = "^[[:alnum:] ]{5}";
+  std::string primary_record = "[ 1]";
+  std::string continuation_record = "[^ 1]";
+  std::string record_data = ".{71}";
+  
+  std::regex rx_end_record("\\s*"); // Matches blank lines
+  //std::regex rx_generic_primary_identification_record(nuc_id + primary_record + "   " + record_data);
+  std::regex rx_primary_identification_record(nuc_id + primary_record
+    + "   ADOPTED LEVELS, GAMMAS.{49}");
+  std::regex rx_primary_level_record(nuc_id + primary_record + " L " + record_data);
+  std::regex rx_continuation_level_record(nuc_id + continuation_record + " L " + record_data);
+  std::regex rx_primary_gamma_record(nuc_id + primary_record + " G " + record_data);
+  std::regex rx_continuation_gamma_record(nuc_id + continuation_record + " G " + record_data);
+ 
+  // Open the ENSDF file for parsing
+  std::ifstream file_in(filename);
+
+  std::string line; // String to store the current line
+                    // of the ENSDF file during parsing
+
+  std::string record; // String that will store the full text
+                      // (all lines) of the current ENSDF record
+
+  bool found_decay_scheme = false; // Flag that indicates whether or not
+                                   // gamma decay scheme data were found for the
+                                   // current nuc_id.
+
+  while (!file_in.eof()) {
+    std::getline(file_in, line);
+    if (std::regex_match(line, rx_primary_identification_record)) {
+      found_decay_scheme = true;
+      break;
+    }
+  }
+
+  if (!found_decay_scheme) {
+    std::cout << "Gamma decay scheme data (adopted levels, gammas) for " + nuc_id << std::endl;
+    std::cout << "could not be found in the file " + filename << std::endl;
+  }
+  else {
+    std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using ENSDF dataset" << std::endl;
+    std::cout << line << std::endl;
+  }
+
+  bool no_advance = false; // Flag that prevents advancing through
+                           // the ENSDF file when a continuation record
+                           // is found
+
+  TEnsdfLevel* p_current_level = nullptr; // Pointer to the current level object
+                                          // being filled with gamma ray data 
+
+  while (!file_in.eof()) {
+    // Get the next line of the file
+    // unless we already did
+    if (!no_advance) std::getline(file_in, line);
+    no_advance = false;
+
+    // Level Record
+    if (std::regex_match(line, rx_primary_level_record)) {
+      record = line;
+      line = this->process_continuation_records(file_in, record, rx_continuation_level_record);
+      no_advance = true;
+        
+      std::cout << "level record:" << std::endl << record << std::endl;
+
+      // Extract the level energy (in keV) as a trimmed string from the ENSDF level record
+      std::string level_energy = ensdf_utils::trim_copy(record.substr(9,10)); 
+
+      // Also extract the spin-parity of the level
+      std::string spin_parity = ensdf_utils::trim_copy(record.substr(21,18));
+
+      // Add a new level object to this decay scheme object using these data
+      this->add_level(TEnsdfLevel(level_energy, spin_parity));
+
+      // Update the current level pointer
+      p_current_level = this->get_level(level_energy);
+    }
+
+    // Gamma Record
+    else if (std::regex_match(line, rx_primary_gamma_record)) {
+      record = line;
+      line = this->process_continuation_records(file_in,
+        record, rx_continuation_gamma_record);
+      no_advance = true;
+
+      std::cout << "gamma record:" << std::endl;
+
+      // Extract the gamma ray's energy and relative (photon)
+      // intensity from the ENSDF gamma record
+      double gamma_energy = std::stod(record.substr(9,10));
+      double gamma_ri = ensdf_utils::str_to_double(record.substr(21,8));
+
+      // If this gamma belongs to a level record, then add its
+      // data to the corresponding level object. Gammas that
+      // have no assigned level appear before any level records,
+      // so p_current_level will be a null pointer for them.
+      if (p_current_level != nullptr) {
+        p_current_level->add_gamma(TEnsdfGamma(gamma_energy, gamma_ri, p_current_level)); 
+      }
+
+      std::cout << record << std::endl;
+      std::cout << "   energy: " << record.substr(9,10) << std::endl;
+      std::cout << "   relative photon intensity: " << record.substr(21,7) << std::endl;
+      std::cout << "   total conversion coefficient: " << record.substr(55,6) << std::endl;
+      std::cout << "   relative total transition intensity: " << record.substr(64,9) << std::endl;
+    }
+
+    else if (std::regex_match(line, rx_end_record)) {
+      std::cout << "Finished parsing gamma decay scheme data." << std::endl;
+      break;
+    }
+
+  }
+
+  // Now that we've loaded our decay scheme with all of the data,
+  // we can fill in the end level pointers for each of our gamma
+  // ray objects. This will enable the generator to descend through
+  // the decay chains after only looking up the starting level.
+  // Also check decay scheme object contents (for debugging purposes)
+  std::cout << std::endl << std::endl << "Beginning decay scheme data check" << std::endl;
+
+  // Use this vector of level energies to find the closest final level's index.
+  // We'll push level energies onto it in ascending order to make the searching
+  // as efficient as possible (we don't need to worry about negative-energy gamma
+  // decays to higher levels)
+  std::vector<double> level_energies;
+
+  // Generate a report about the contents of the decay scheme object
+  for(std::vector<TEnsdfLevel*>::iterator j = this->pv_sorted_levels.begin();
+    j != this->pv_sorted_levels.end(); ++j)
+  {
+    
+    std::cout << "Level at " << (*j)->get_string_energy() << std::endl;
+    std::vector<TEnsdfGamma>* p_gammas = (*j)->get_gammas();
+    double initial_level_energy = (*j)->get_numerical_energy();
+
+    for(std::vector<TEnsdfGamma>::iterator k = p_gammas->begin();
+      k != p_gammas->end(); ++k) 
+    {
+      double gamma_energy = k->get_energy();
+
+      // Approximate the final level energy so we can search for the final level
+      double final_level_energy = initial_level_energy - gamma_energy; 
+
+      // Search for the corresponding energy using the vector of lower energies
+      std::vector<double>::iterator p_final_level_energy = std::lower_bound(
+        level_energies.begin(), level_energies.end(), final_level_energy); 
+
+      // Determine the index of the final level energy appropriately
+      int e_index = std::distance(level_energies.begin(), p_final_level_energy);
+      if (e_index == level_energies.size()) {
+        // The calculated final level energy is greater than
+        // every energy in the vector. We will therefore assume
+        // that the gamma decay takes us to the highest level in
+        // the vector. Its index is given by one less than the
+        // number of elements in the vector, so subtract one from
+        // our previous result.
+        --e_index;
+      }
+      else if (e_index > 0) {
+        // If the calculated index does not correspond to the
+        // first element, we still need to check which of the
+        // two levels found (one on each side) is really the
+        // closest. Do so and reassign the index if needed.
+        if (std::abs(final_level_energy - level_energies[e_index])
+          > std::abs(final_level_energy - level_energies[e_index - 1]))
+        {
+          --e_index;
+        }
+      }
+
+      // Use the index to assign the appropriate end level pointer to this gamma
+      k->set_end_level(this->pv_sorted_levels[e_index]);
+
+      std::cout << "  has a gamma with energy " << k->get_energy();
+      std::cout << " (transition to level at "
+        << k->get_end_level()->get_string_energy() << " keV)" << std::endl;
+      std::cout << "    and relative photon intensity " << k->get_ri() << std::endl; 
+    }
+
+    // Add the current level's energy to the level energies to use while
+    // searching for gamma final levels
+    level_energies.push_back(initial_level_energy);
+  }
+
+  std::cout << std::endl << "Completed decay scheme data check." << std::endl;
+
+  file_in.close();
+
+}
+
+std::string TEnsdfDecayScheme::process_continuation_records(std::ifstream &file_in,
+  std::string &record, std::regex &rx_cont_record) {
+
+  std::string line;
+  while (!file_in.eof()) {
+    // Get the next line of the file
+    std::getline(file_in, line);
+ 
+    // Check to see if the next line is a continuation record 
+    if (std::regex_match(line, rx_cont_record)) {
+      // If it is, add the next line to the current
+      // record text.
+      record += "\n" + line;
+    }
+
+    // If a non-continuation-record line is found,
+    // stop reading from the file.
+    else return line; 
+  
+  }
+
 }
 
 std::string TEnsdfDecayScheme::get_nuc_id() const {
@@ -203,36 +421,6 @@ TEnsdfLevel* TEnsdfDecayScheme::get_level(std::string energy) {
 }
 
 
-std::string process_continuation_records(std::ifstream &file_in,
-  std::string &record, std::regex &rx_cont_record) {
-
-  std::string line;
-  while (!file_in.eof()) {
-    // Get the next line of the file
-    std::getline(file_in, line);
- 
-    // Check to see if the next line is a continuation record 
-    if (std::regex_match(line, rx_cont_record)) {
-      // If it is, add the next line to the current
-      // record text.
-      record += "\n" + line;
-    }
-
-    // If a non-continuation-record line is found,
-    // stop reading from the file.
-    else return line; 
-  
-  }
-
-}
-
-bool numeric_less_than(const std::string& s1, const std::string& s2) {
-  return ensdf_utils::str_to_double(s1) < ensdf_utils::str_to_double(s2);
-}
-
-
-
-
 
 int main() {
 
@@ -241,194 +429,6 @@ int main() {
 
   // Create a decay scheme object to store data
   // imported from the ENSDF file
-  TEnsdfDecayScheme decay_scheme(nuc_id);
-
-  // Regular expressions for identifying ensdf record types
-  //std::string generic_nuc_id = "^[[:alnum:] ]{5}";
-  std::string primary_record = "[ 1]";
-  std::string continuation_record = "[^ 1]";
-  std::string record_data = ".{71}";
-  
-  std::regex rx_end_record("\\s*"); // Matches blank lines
-  //std::regex rx_generic_primary_identification_record(nuc_id + primary_record + "   " + record_data);
-  std::regex rx_primary_identification_record(nuc_id + primary_record
-    + "   ADOPTED LEVELS, GAMMAS.{49}");
-  std::regex rx_primary_level_record(nuc_id + primary_record + " L " + record_data);
-  std::regex rx_continuation_level_record(nuc_id + continuation_record + " L " + record_data);
-  std::regex rx_primary_gamma_record(nuc_id + primary_record + " G " + record_data);
-  std::regex rx_continuation_gamma_record(nuc_id + continuation_record + " G " + record_data);
-
-  // Open the ENSDF file for parsing
-  std::ifstream file_in(filename);
-
-  std::string line; // String to store the current line
-                    // of the ENSDF file during parsing
-
-  std::string record;
-
-  bool found_decay_scheme = false; // Flag that indicates whether or not
-                                   // gamma decay scheme data were found for the
-                                   // current nuc_id.
-
-  while (!file_in.eof()) {
-    std::getline(file_in, line);
-    if (std::regex_match(line, rx_primary_identification_record)) {
-      found_decay_scheme = true;
-      break;
-    }
-  }
-
-  if (!found_decay_scheme) {
-    std::cout << "Gamma decay scheme data (adopted levels, gammas) for " + nuc_id << std::endl;
-    std::cout << "could not be found in the file " + filename << std::endl;
-  }
-  else {
-    std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using ENSDF dataset" << std::endl;
-    std::cout << line << std::endl;
-  }
-
-  bool no_advance = false; // Flag that prevents advancing through
-                           // the ENSDF file when a continuation record
-                           // is found
-
-  TEnsdfLevel* p_current_level = nullptr; // Pointer to the current level object
-                                          // being filled with gamma ray data 
-
-  while (!file_in.eof()) {
-    // Get the next line of the file
-    // unless we already did
-    if (!no_advance) std::getline(file_in, line);
-    no_advance = false;
-
-    // Level Record
-    if (std::regex_match(line, rx_primary_level_record)) {
-      record = line;
-      line = process_continuation_records(file_in, record, rx_continuation_level_record);
-      no_advance = true;
-        
-      std::cout << "level record:" << std::endl << record << std::endl;
-
-      // Extract the level energy (in keV) as a trimmed string from the ENSDF level record
-      std::string level_energy = ensdf_utils::trim_copy(record.substr(9,10)); 
-
-      // Also extract the spin-parity of the level
-      std::string spin_parity = ensdf_utils::trim_copy(record.substr(21,18));
-
-      // Add a new level object to our decay scheme using these data
-      decay_scheme.add_level(TEnsdfLevel(level_energy, spin_parity));
-
-      // Update the current level pointer
-      p_current_level = decay_scheme.get_level(level_energy);
-    }
-
-    // Gamma Record
-    else if (std::regex_match(line, rx_primary_gamma_record)) {
-      record = line;
-      line = process_continuation_records(file_in, record, rx_continuation_gamma_record);
-      no_advance = true;
-
-      std::cout << "gamma record:" << std::endl;
-
-      // Extract the gamma ray's energy and relative (photon)
-      // intensity from the ENSDF gamma record
-      double gamma_energy = std::stod(record.substr(9,10));
-      double gamma_ri = ensdf_utils::str_to_double(record.substr(21,8));
-
-      // If this gamma belongs to a level record, then add its
-      // data to the corresponding level object. Gammas that
-      // have no assigned level appear before any level records,
-      // so p_current_level will be a null pointer for them.
-      if (p_current_level != nullptr) {
-        p_current_level->add_gamma(TEnsdfGamma(gamma_energy, gamma_ri, p_current_level)); 
-      }
-
-      std::cout << record << std::endl;
-      std::cout << "   energy: " << record.substr(9,10) << std::endl;
-      std::cout << "   relative photon intensity: " << record.substr(21,7) << std::endl;
-      std::cout << "   total conversion coefficient: " << record.substr(55,6) << std::endl;
-      std::cout << "   relative total transition intensity: " << record.substr(64,9) << std::endl;
-    }
-
-    else if (std::regex_match(line, rx_end_record)) {
-      std::cout << "Finished parsing gamma decay scheme data." << std::endl;
-      break;
-    }
-
-  }
-
-  // Now that we've loaded our decay scheme with all of the data,
-  // we can fill in the end level pointers for each of our gamma
-  // ray objects. This will enable the generator to descend through
-  // the decay chains after only looking up the starting level.
-  // Also check decay scheme object contents (for debugging purposes)
-  std::cout << std::endl << std::endl << "Beginning decay scheme data check" << std::endl;
-  std::vector<TEnsdfLevel*>* level_pointers = decay_scheme.get_sorted_level_pointers();
-  // Use this vector of level energies to find the closest final level's index.
-  // We'll push level energies onto it in ascending order to make the searching
-  // as efficient as possible (we don't need to worry about negative-energy gamma
-  // decays to higher levels)
-  std::vector<double> level_energies;
-
-  // Generate a report about the contents of the decay scheme object
-  for(std::vector<TEnsdfLevel*>::iterator j = level_pointers->begin();
-    j != level_pointers->end(); ++j)
-  {
-    
-    std::cout << "Level at " << (*j)->get_string_energy() << std::endl;
-    std::vector<TEnsdfGamma>* p_gammas = (*j)->get_gammas();
-    double initial_level_energy = (*j)->get_numerical_energy();
-
-    for(std::vector<TEnsdfGamma>::iterator k = p_gammas->begin();
-      k != p_gammas->end(); ++k) 
-    {
-      double gamma_energy = k->get_energy();
-
-      // Approximate the final level energy so we can search for the final level
-      double final_level_energy = initial_level_energy - gamma_energy; 
-
-      // Search for the corresponding energy using the vector of lower energies
-      std::vector<double>::iterator p_final_level_energy = std::lower_bound(
-        level_energies.begin(), level_energies.end(), final_level_energy); 
-
-      // Determine the index of the final level energy appropriately
-      int e_index = std::distance(level_energies.begin(), p_final_level_energy);
-      if (e_index == level_energies.size()) {
-        // The calculated final level energy is greater than
-        // every energy in the vector. We will therefore assume
-        // that the gamma decay takes us to the highest level in
-        // the vector. Its index is given by one less than the
-        // number of elements in the vector, so subtract one from
-        // our previous result.
-        --e_index;
-      }
-      else if (e_index > 0) {
-        // If the calculated index does not correspond to the
-        // first element, we still need to check which of the
-        // two levels found (one on each side) is really the
-        // closest. Do so and reassign the index if needed.
-        if (std::abs(final_level_energy - level_energies[e_index])
-          > std::abs(final_level_energy - level_energies[e_index - 1]))
-        {
-          --e_index;
-        }
-      }
-
-      // Use the index to assign the appropriate end level pointer to this gamma
-      k->set_end_level((*level_pointers)[e_index]);
-
-      std::cout << "  has a gamma with energy " << k->get_energy();
-      std::cout << " (transition to level at "
-        << k->get_end_level()->get_string_energy() << " keV)" << std::endl;
-      std::cout << "    and relative photon intensity " << k->get_ri() << std::endl; 
-    }
-
-    // Add the current level's energy to the level energies to use while
-    // searching for gamma final levels
-    level_energies.push_back(initial_level_energy);
-  }
-
-  std::cout << std::endl << "Completed decay scheme data check." << std::endl;
-
-  file_in.close();
+  TEnsdfDecayScheme decay_scheme(nuc_id, filename);
 
 }

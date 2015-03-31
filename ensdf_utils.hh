@@ -6,7 +6,10 @@
 #include <string>
 
 namespace ensdf_utils {
-  
+
+  // String containing all of the characters that will be
+  // considered whitespace by default in the string
+  // manipulation functions below 
   const std::string whitespace = " \f\n\r\t\v"; 
 
   // This version of std::stod will return 0 if it encounters
