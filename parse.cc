@@ -149,7 +149,7 @@ class TEnsdfDecayScheme {
     static bool compare_level_energies(TEnsdfLevel* first,
       TEnsdfLevel* second);
     std::string process_continuation_records(std::ifstream &file_in,
-      std::string &record, std::regex &rx_cont_record);
+      std::string &record, std::regex &rx_cont_record) const;
 
 };
 
@@ -334,7 +334,7 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
 }
 
 std::string TEnsdfDecayScheme::process_continuation_records(std::ifstream &file_in,
-  std::string &record, std::regex &rx_cont_record) {
+  std::string &record, std::regex &rx_cont_record) const {
 
   std::string line;
   while (!file_in.eof()) {
@@ -362,8 +362,12 @@ void TEnsdfDecayScheme::print_report() {
   for(std::vector<TEnsdfLevel*>::iterator j = this->pv_sorted_levels.begin();
     j != this->pv_sorted_levels.end(); ++j)
   {
+
+    std::string sp = (*j)->get_spin_parity();
+    if (sp.empty()) sp = "UNKNOWN";
     
-    std::cout << "Level at " << (*j)->get_string_energy() << " keV" << std::endl;
+    std::cout << "Level at " << (*j)->get_string_energy()
+      << " keV has spin-parity " << sp << std::endl;
     std::vector<TEnsdfGamma>* p_gammas = (*j)->get_gammas();
 
     // Cycle through each of the gammas owned by the current level
