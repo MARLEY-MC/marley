@@ -139,6 +139,7 @@ class TEnsdfDecayScheme {
     std::map<std::string, TEnsdfLevel>* get_levels();
     TEnsdfLevel* get_level(std::string energy);
     std::vector<TEnsdfLevel*>* get_sorted_level_pointers();
+    void print_report();
     //void doCascade();
 
   private:
@@ -152,9 +153,10 @@ class TEnsdfDecayScheme {
 
 };
 
+
 TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
 
-  nuc_id = nucid;
+  this->nuc_id = nucid;
 
   // Regular expressions for identifying ensdf record types
   //std::string generic_nuc_id = "^[[:alnum:] ]{5}";
@@ -192,14 +194,14 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
     }
   }
 
-  if (!found_decay_scheme) {
-    std::cout << "Gamma decay scheme data (adopted levels, gammas) for " + nuc_id << std::endl;
-    std::cout << "could not be found in the file " + filename << std::endl;
-  }
-  else {
-    std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using ENSDF dataset" << std::endl;
-    std::cout << line << std::endl;
-  }
+  //if (!found_decay_scheme) {
+  //  std::cout << "Gamma decay scheme data (adopted levels, gammas) for " + nuc_id << std::endl;
+  //  std::cout << "could not be found in the file " + filename << std::endl;
+  //}
+  //else {
+  //  std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using ENSDF dataset" << std::endl;
+  //  std::cout << line << std::endl;
+  //}
 
   bool no_advance = false; // Flag that prevents advancing through
                            // the ENSDF file when a continuation record
@@ -220,8 +222,6 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
       line = this->process_continuation_records(file_in, record, rx_continuation_level_record);
       no_advance = true;
         
-      std::cout << "level record:" << std::endl << record << std::endl;
-
       // Extract the level energy (in keV) as a trimmed string from the ENSDF level record
       std::string level_energy = ensdf_utils::trim_copy(record.substr(9,10)); 
 
@@ -242,8 +242,6 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
         record, rx_continuation_gamma_record);
       no_advance = true;
 
-      std::cout << "gamma record:" << std::endl;
-
       // Extract the gamma ray's energy and relative (photon)
       // intensity from the ENSDF gamma record
       double gamma_energy = std::stod(record.substr(9,10));
@@ -257,15 +255,9 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
         p_current_level->add_gamma(TEnsdfGamma(gamma_energy, gamma_ri, p_current_level)); 
       }
 
-      std::cout << record << std::endl;
-      std::cout << "   energy: " << record.substr(9,10) << std::endl;
-      std::cout << "   relative photon intensity: " << record.substr(21,7) << std::endl;
-      std::cout << "   total conversion coefficient: " << record.substr(55,6) << std::endl;
-      std::cout << "   relative total transition intensity: " << record.substr(64,9) << std::endl;
     }
 
     else if (std::regex_match(line, rx_end_record)) {
-      std::cout << "Finished parsing gamma decay scheme data." << std::endl;
       break;
     }
 
@@ -275,8 +267,6 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
   // we can fill in the end level pointers for each of our gamma
   // ray objects. This will enable the generator to descend through
   // the decay chains after only looking up the starting level.
-  // Also check decay scheme object contents (for debugging purposes)
-  std::cout << std::endl << std::endl << "Beginning decay scheme data check" << std::endl;
 
   // Use this vector of level energies to find the closest final level's index.
   // We'll push level energies onto it in ascending order to make the searching
@@ -284,12 +274,12 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
   // decays to higher levels)
   std::vector<double> level_energies;
 
-  // Generate a report about the contents of the decay scheme object
+  // Cycle through each of the level objects. We will assign end level pointers
+  // to each gamma owned by each level.
   for(std::vector<TEnsdfLevel*>::iterator j = this->pv_sorted_levels.begin();
     j != this->pv_sorted_levels.end(); ++j)
   {
     
-    std::cout << "Level at " << (*j)->get_string_energy() << std::endl;
     std::vector<TEnsdfGamma>* p_gammas = (*j)->get_gammas();
     double initial_level_energy = (*j)->get_numerical_energy();
 
@@ -331,18 +321,13 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
       // Use the index to assign the appropriate end level pointer to this gamma
       k->set_end_level(this->pv_sorted_levels[e_index]);
 
-      std::cout << "  has a gamma with energy " << k->get_energy();
-      std::cout << " (transition to level at "
-        << k->get_end_level()->get_string_energy() << " keV)" << std::endl;
-      std::cout << "    and relative photon intensity " << k->get_ri() << std::endl; 
     }
 
     // Add the current level's energy to the level energies to use while
     // searching for gamma final levels
     level_energies.push_back(initial_level_energy);
-  }
 
-  std::cout << std::endl << "Completed decay scheme data check." << std::endl;
+  }
 
   file_in.close();
 
@@ -367,6 +352,32 @@ std::string TEnsdfDecayScheme::process_continuation_records(std::ifstream &file_
     // stop reading from the file.
     else return line; 
   
+  }
+
+}
+
+void TEnsdfDecayScheme::print_report() {
+  // Cycle through each of the levels owned by this decay scheme
+  // object in order of increasing energy
+  for(std::vector<TEnsdfLevel*>::iterator j = this->pv_sorted_levels.begin();
+    j != this->pv_sorted_levels.end(); ++j)
+  {
+    
+    std::cout << "Level at " << (*j)->get_string_energy() << " keV" << std::endl;
+    std::vector<TEnsdfGamma>* p_gammas = (*j)->get_gammas();
+
+    // Cycle through each of the gammas owned by the current level
+    // (according to the ENSDF specification, these will already be
+    // sorted in order of increasing energy)
+    for(std::vector<TEnsdfGamma>::iterator k = p_gammas->begin();
+      k != p_gammas->end(); ++k) 
+    {
+      std::cout << "  has a gamma with energy " << k->get_energy() << " keV";
+      std::cout << " (transition to level at "
+        << k->get_end_level()->get_string_energy() << " keV)" << std::endl;
+      std::cout << "    and relative photon intensity " << k->get_ri() << std::endl; 
+    }
+
   }
 
 }
@@ -421,7 +432,6 @@ TEnsdfLevel* TEnsdfDecayScheme::get_level(std::string energy) {
 }
 
 
-
 int main() {
 
   std::string nuc_id = " 40K ";
@@ -430,5 +440,8 @@ int main() {
   // Create a decay scheme object to store data
   // imported from the ENSDF file
   TEnsdfDecayScheme decay_scheme(nuc_id, filename);
+
+  // Print a report describing the decay scheme
+  decay_scheme.print_report();
 
 }
