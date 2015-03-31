@@ -1,81 +1,19 @@
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <random>
 #include <regex>
 #include <stdexcept>
 #include <string>
 #include <vector>
 #include "ensdf_utils.hh"
 
-class TEnsdfLevel;
 class TEnsdfGamma;
+class TEnsdfLevel;
 class TEnsdfDecayScheme;
-
-/// A class that represents an ENSDF nuclear energy level
-
-class TEnsdfLevel {
-  public:
-    /// @param energy a string containing the
-    /// level energy in keV
-    /// @param jpi a string containing the spin
-    /// and parity of the level (e.g., 0+)
-    TEnsdfLevel(std::string energy = "0", std::string jpi = "");
-    void add_gamma(const TEnsdfGamma& gamma);
-    void clear_gammas();
-    std::vector<TEnsdfGamma>* get_gammas();
-    double get_numerical_energy() const;
-    std::string get_string_energy() const;
-    std::string get_spin_parity() const;
-    void set_energy(std::string energy);
-    void set_spin_parity(std::string jpi);
-
-  private:
-    std::string sEnergy;
-    double fEnergy;
-    std::string spin_parity;
-    std::vector<TEnsdfGamma> gammas;
-};
-
-TEnsdfLevel::TEnsdfLevel(std::string energy, std::string jpi) {
-  sEnergy = energy;
-  fEnergy = std::stod(energy); // Converts the energy string into a double
-  spin_parity = jpi;
-}
-
-void TEnsdfLevel::add_gamma(const TEnsdfGamma& gamma) {
-  gammas.push_back(gamma);
-}
-
-double TEnsdfLevel::get_numerical_energy() const {
-  return fEnergy; 
-}
-
-std::string TEnsdfLevel::get_string_energy() const {
-  return sEnergy; 
-}
-
-void TEnsdfLevel::set_energy(std::string energy) {
-  sEnergy = energy;
-  fEnergy = std::stod(energy);
-}
-
-std::string TEnsdfLevel::get_spin_parity() const {
-  return spin_parity;
-}
-
-void TEnsdfLevel::set_spin_parity(std::string jpi) {
-  spin_parity = jpi;
-}
-
-void TEnsdfLevel::clear_gammas() {
-  gammas.clear();
-}
-
-std::vector<TEnsdfGamma>* TEnsdfLevel::get_gammas() {
-  return &gammas;
-}
 
 
 class TEnsdfGamma {
@@ -128,6 +66,91 @@ double TEnsdfGamma::get_energy() const {
 
 double TEnsdfGamma::get_ri() const {
   return fRI;
+}
+
+
+/// A class that represents an ENSDF nuclear energy level
+
+class TEnsdfLevel {
+  public:
+    /// @param energy a string containing the
+    /// level energy in keV
+    /// @param jpi a string containing the spin
+    /// and parity of the level (e.g., 0+)
+    TEnsdfLevel(std::string energy = "0", std::string jpi = "");
+    void add_gamma(const TEnsdfGamma& gamma);
+    void clear_gammas();
+    std::vector<TEnsdfGamma>* get_gammas();
+    double get_numerical_energy() const;
+    std::string get_string_energy() const;
+    std::string get_spin_parity() const;
+    void set_energy(std::string energy);
+    void set_spin_parity(std::string jpi);
+    //TEnsdfGamma* sample_gamma();
+
+  private:
+    std::string sEnergy;
+    double fEnergy;
+    std::string spin_parity;
+    std::vector<TEnsdfGamma> gammas;
+    std::vector<double> gamma_intensities;
+    std::discrete_distribution<int> gamma_dist;
+};
+
+TEnsdfLevel::TEnsdfLevel(std::string energy, std::string jpi) {
+  sEnergy = energy;
+  fEnergy = std::stod(energy); // Converts the energy string into a double
+  spin_parity = jpi;
+}
+
+void TEnsdfLevel::add_gamma(const TEnsdfGamma& gamma) {
+  // Update the vector of gamma objects
+  gammas.push_back(gamma);
+
+  // Update the vector of gamma intensities
+  gamma_intensities.push_back(gamma.get_ri());
+
+  // Update the discrete distribution used to sample gammas
+  // when simulating a gamma cascade
+  std::discrete_distribution<int>::param_type
+    params(gamma_intensities.begin(), gamma_intensities.end());
+  gamma_dist.param(params);
+
+}
+
+double TEnsdfLevel::get_numerical_energy() const {
+  return fEnergy; 
+}
+
+std::string TEnsdfLevel::get_string_energy() const {
+  return sEnergy; 
+}
+
+void TEnsdfLevel::set_energy(std::string energy) {
+  sEnergy = energy;
+  fEnergy = std::stod(energy);
+}
+
+std::string TEnsdfLevel::get_spin_parity() const {
+  return spin_parity;
+}
+
+void TEnsdfLevel::set_spin_parity(std::string jpi) {
+  spin_parity = jpi;
+}
+
+void TEnsdfLevel::clear_gammas() {
+  gammas.clear();
+  gamma_intensities.clear();
+  // The discrete distribution will be cleared by these
+  // commands because gamma_intensities is now empty
+  std::discrete_distribution<int>::param_type
+    params(gamma_intensities.begin(), gamma_intensities.end());
+  gamma_dist.param(params);
+}
+
+std::vector<TEnsdfGamma>* TEnsdfLevel::get_gammas() {
+  return &gammas;
 }
 
 
@@ -522,6 +545,43 @@ int main() {
   std::cout << std::endl << std::endl;
 
   // Test the decay scheme object by simulating a sample gamma cascade
-  decay_scheme.do_cascade(1e10);
+  decay_scheme.do_cascade(7400);
 
+  // construct a trivial random generator engine from a time-based seed:
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  std::default_random_engine gen(seed);
+  
+
+  std::vector<double> v(4,1);
+  std::discrete_distribution<int> d;
+
+  for(auto n : d.probabilities())
+    std::cout << n << ' ';
+  std::cout << "\n";
+  for(int i = 1; i < 10; ++i)
+    std::cout << d(gen) << ' ';
+  std::cout << "\n";
+
+  v[1] = 30;
+  v[2] = 10;
+  std::discrete_distribution<int>::param_type
+    params(v.begin(), v.end());
+  d.param(params);
+  for(auto n : d.probabilities())
+    std::cout << n << ' ';
+  std::cout << "\n";
+  for(int i = 1; i < 10; ++i)
+    std::cout << d(gen) << ' ';
+  std::cout << "\n";
+
+  v.clear();
+  std::discrete_distribution<int>::param_type
+    params2(v.begin(), v.end());
+  d.param(params2);
+  for(auto n : d.probabilities())
+    std::cout << n << ' ';
+  std::cout << "\n";
+  for(int i = 1; i < 10; ++i)
+    std::cout << d(gen) << ' ';
+  std::cout << "\n";
 }
