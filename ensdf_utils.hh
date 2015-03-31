@@ -7,6 +7,11 @@
 
 namespace ensdf_utils {
 
+  // Random number generator that will be used when selecting gammas for
+  // cascade simulations. Seed it using the system time
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  std::knuth_b rand_gen(seed);
+ 
   // String containing all of the characters that will be
   // considered whitespace by default in the string
   // manipulation functions below 

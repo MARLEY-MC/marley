@@ -86,7 +86,7 @@ class TEnsdfLevel {
     std::string get_spin_parity() const;
     void set_energy(std::string energy);
     void set_spin_parity(std::string jpi);
-    //TEnsdfGamma* sample_gamma();
+    TEnsdfGamma* sample_gamma();
 
   private:
     std::string sEnergy;
@@ -101,6 +101,23 @@ TEnsdfLevel::TEnsdfLevel(std::string energy, std::string jpi) {
   sEnergy = energy;
   fEnergy = std::stod(energy); // Converts the energy string into a double
   spin_parity = jpi;
+}
+
+/// Choose a gamma owned by this level randomly based on the relative
+/// intensities of all of the gammas.  Return a pointer to the gamma that was
+/// chosen.  If this level doesn't have any gammas, return a null pointer.
+TEnsdfGamma* TEnsdfLevel::sample_gamma() {
+  if (gammas.empty()) {
+    return nullptr;
+  }
+  else {
+    // Get the index of the gamma to return by randomly sampling from the
+    // discrete distribution gamma_dist using the standard ensdf_utils random
+    // number generator.
+    int g_index = gamma_dist(ensdf_utils::rand_gen);
+    // Return a pointer to the corresponding gamma
+    return &(gammas[g_index]);
+  }
 }
 
 void TEnsdfLevel::add_gamma(const TEnsdfGamma& gamma) {
@@ -228,18 +245,35 @@ void TEnsdfDecayScheme::do_cascade(double initial_energy) {
   do_cascade(plevel);
 }
 
-
 void TEnsdfDecayScheme::do_cascade(TEnsdfLevel* initial_level) {
   std::cout << "Beginning gamma cascade at level with energy "
     << initial_level->get_string_energy() << std::endl;
 
   bool cascade_finished = false;
 
-  TEnsdfLevel* current_level = initial_level;
+  TEnsdfLevel* p_current_level = initial_level;
 
-  //while (!cascade_finished) {
+  while (!cascade_finished) {
+    // Randomly select a gamma to produce
+    TEnsdfGamma* p_gamma = p_current_level->sample_gamma();
+    if (p_gamma == nullptr) {
+      std::cout << "  this level does not have any gammas" << std::endl;
+      cascade_finished = true;
+    }
+    else {
+      p_current_level = p_gamma->get_end_level();
+      if (p_current_level == nullptr) {
+        throw std::runtime_error(std::string("This gamma does not have an end level. ")
+          + "Cannot continue cascade.");
+      }
+      std::cout << "  emitted gamma with energy " << p_gamma->get_energy()
+        << " keV. New level has energy " << p_current_level->get_string_energy()
+        << " keV." << std::endl;
+    }
+  }
 
-  //}
+  std::cout << "Finished gamma cascade at level with energy "
+    << p_current_level->get_string_energy() << std::endl;
 }
 
 
@@ -547,41 +581,4 @@ int main() {
   // Test the decay scheme object by simulating a sample gamma cascade
   decay_scheme.do_cascade(7400);
 
-  // construct a trivial random generator engine from a time-based seed:
-  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-  std::default_random_engine gen(seed);
-  
-
-  std::vector<double> v(4,1);
-  std::discrete_distribution<int> d;
-
-  for(auto n : d.probabilities())
-    std::cout << n << ' ';
-  std::cout << "\n";
-  for(int i = 1; i < 10; ++i)
-    std::cout << d(gen) << ' ';
-  std::cout << "\n";
-
-  v[1] = 30;
-  v[2] = 10;
-  std::discrete_distribution<int>::param_type
-    params(v.begin(), v.end());
-  d.param(params);
-  for(auto n : d.probabilities())
-    std::cout << n << ' ';
-  std::cout << "\n";
-  for(int i = 1; i < 10; ++i)
-    std::cout << d(gen) << ' ';
-  std::cout << "\n";
-
-  v.clear();
-  std::discrete_distribution<int>::param_type
-    params2(v.begin(), v.end());
-  d.param(params2);
-  for(auto n : d.probabilities())
-    std::cout << n << ' ';
-  std::cout << "\n";
-  for(int i = 1; i < 10; ++i)
-    std::cout << d(gen) << ' ';
-  std::cout << "\n";
 }
