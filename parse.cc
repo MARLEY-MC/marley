@@ -303,6 +303,13 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
   // Open the ENSDF file for parsing
   std::ifstream file_in(filename);
 
+  // If the file doesn't exist or some other error
+  // occurred, complain and give up.
+  if (!file_in.good()) {
+    throw std::runtime_error(std::string("Could not read from the ") +
+      "file " + filename);
+  }
+
   std::string line; // String to store the current line
                     // of the ENSDF file during parsing
 
