@@ -181,11 +181,11 @@ class TEnsdfDecayScheme {
     std::map<std::string, TEnsdfLevel>* get_levels();
     TEnsdfLevel* get_level(std::string energy);
     std::vector<TEnsdfLevel*>* get_sorted_level_pointers();
-    void print_report();
+    void print_report(std::ostream& ostr = std::cout);
     void do_cascade(std::string initial_energy);
     void do_cascade(double initial_energy);
     void do_cascade(TEnsdfLevel* initial_level);
-    void print_latex_table();
+    void print_latex_table(std::ostream& ostr = std::cout);
 
   private:
     std::string nuc_id;
@@ -478,7 +478,7 @@ std::string TEnsdfDecayScheme::process_continuation_records(std::ifstream &file_
 
 }
 
-void TEnsdfDecayScheme::print_report() {
+void TEnsdfDecayScheme::print_report(std::ostream& ostr) {
   // Cycle through each of the levels owned by this decay scheme
   // object in order of increasing energy
   for(std::vector<TEnsdfLevel*>::iterator j = this->pv_sorted_levels.begin();
@@ -488,7 +488,7 @@ void TEnsdfDecayScheme::print_report() {
     std::string sp = (*j)->get_spin_parity();
     if (sp.empty()) sp = "UNKNOWN";
     
-    std::cout << "Level at " << (*j)->get_string_energy()
+    ostr << "Level at " << (*j)->get_string_energy()
       << " keV has spin-parity " << sp << std::endl;
     std::vector<TEnsdfGamma>* p_gammas = (*j)->get_gammas();
 
@@ -498,17 +498,17 @@ void TEnsdfDecayScheme::print_report() {
     for(std::vector<TEnsdfGamma>::iterator k = p_gammas->begin();
       k != p_gammas->end(); ++k) 
     {
-      std::cout << "  has a gamma with energy " << k->get_energy() << " keV";
-      std::cout << " (transition to level at "
+      ostr << "  has a gamma with energy " << k->get_energy() << " keV";
+      ostr << " (transition to level at "
         << k->get_end_level()->get_string_energy() << " keV)" << std::endl;
-      std::cout << "    and relative photon intensity " << k->get_ri() << std::endl; 
+      ostr << "    and relative photon intensity " << k->get_ri() << std::endl; 
     }
 
   }
 
 }
 
-void TEnsdfDecayScheme::print_latex_table() {
+void TEnsdfDecayScheme::print_latex_table(std::ostream& ostr) {
 
   std::string caption_beginning =
     std::string("{\\textbf{Levels") +
@@ -520,17 +520,15 @@ void TEnsdfDecayScheme::print_latex_table() {
       ensdf_utils::to_lowercase(nuc_id.substr(4,1))) + 
     "}} \n from file " + this->file_name + " ";
 
-  std::cout << ensdf_utils::latex_table_1;
+  ostr << ensdf_utils::latex_table_1;
 
-  std::cout << caption_beginning + "}}\\\\\n";
-  //std::cout <<  << this->nuc_id.substr(0,3)
-  //  << "]{" << this->nuc_id[3] << static_cast<char>(std::tolower(this->nuc_id[4]))
-  //  << "} from file " << this->file_name;
-  std::cout << ensdf_utils::latex_table_2;
+  ostr << caption_beginning + "}}\\\\\n";
 
-  std::cout << caption_beginning + " -- \\textit{continued}}} \\\\\n";  
+  ostr << ensdf_utils::latex_table_2;
 
-  std::cout << ensdf_utils::latex_table_3;
+  ostr << caption_beginning + " -- \\textit{continued}}} \\\\\n";  
+
+  ostr << ensdf_utils::latex_table_3;
   // Cycle through each of the levels owned by this decay scheme
   // object in order of increasing energy
   for(std::vector<TEnsdfLevel*>::iterator j = this->pv_sorted_levels.begin();
@@ -541,7 +539,7 @@ void TEnsdfDecayScheme::print_latex_table() {
     if (sp.empty()) sp = "?";
     if (sp == "UNNATURAL") sp = "unnat.";
 
-    std::cout << (*j)->get_string_energy() << " & "
+    ostr << (*j)->get_string_energy() << " & "
       << sp  << " & ";
 
     std::vector<TEnsdfGamma>* p_gammas = (*j)->get_gammas();
@@ -550,13 +548,13 @@ void TEnsdfDecayScheme::print_latex_table() {
     // the current row of the table. Add extra space between this
     // level and the next one.
     if (p_gammas->empty()) {
-      std::cout << " &  &";
+      ostr << " &  &";
       // If this is the last row of the table, don't add extra space.
       if (j == this->pv_sorted_levels.end() - 1) {
-        std::cout << "" << std::endl;
+        ostr << "" << std::endl;
       }
       else {
-        std::cout << " \\\\ \\addlinespace[\\ExtraRowSpace]" << std::endl;
+        ostr << " \\\\ \\addlinespace[\\ExtraRowSpace]" << std::endl;
       }
     }
 
@@ -568,9 +566,9 @@ void TEnsdfDecayScheme::print_latex_table() {
     {
       // If this is not the first gamma, add empty columns
       // for the level energy and spin-parity
-      if (k != p_gammas->begin()) std::cout << " & & ";
+      if (k != p_gammas->begin()) ostr << " & & ";
       // Output information about the current gamma
-      std::cout << k->get_energy() << " & "
+      ostr << k->get_energy() << " & "
         << k->get_ri() << " & "
         << k->get_end_level()->get_string_energy();
       // Add vertical space after the final gamma row. Also prevent page breaks
@@ -579,20 +577,20 @@ void TEnsdfDecayScheme::print_latex_table() {
       if (k == p_gammas->end() - 1) {
 	// Don't add the extra row space for the very last row in the table
 	if (j >= this->pv_sorted_levels.end() - 1) {
-          std::cout << std::endl;
+          ostr << std::endl;
         }
         else {
-          std::cout << " \\\\ \\addlinespace[\\ExtraRowSpace]" << std::endl;
+          ostr << " \\\\ \\addlinespace[\\ExtraRowSpace]" << std::endl;
         }
       }
       else {
-        std::cout << " \\\\*" << std::endl;
+        ostr << " \\\\*" << std::endl;
       }
     }
 
   }
 
-  std::cout << ensdf_utils::latex_table_4 << std::endl;
+  ostr << ensdf_utils::latex_table_4 << std::endl;
 }
 
 
@@ -665,13 +663,13 @@ int main() {
   // imported from the ENSDF file
   TEnsdfDecayScheme decay_scheme(nuc_id, filename);
 
-  //// Print a report describing the decay scheme
-  //decay_scheme.print_report();
+  // Print a report describing the decay scheme
+  decay_scheme.print_report();
 
-  //std::cout << std::endl << std::endl;
+  std::cout << std::endl << std::endl;
 
-  //// Test the decay scheme object by simulating a sample gamma cascade
-  //decay_scheme.do_cascade(7400);
+  // Test the decay scheme object by simulating a sample gamma cascade
+  decay_scheme.do_cascade(7400);
   
   decay_scheme.print_latex_table();
 }
