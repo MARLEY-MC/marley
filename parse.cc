@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cmath>
 #include <fstream>
@@ -184,9 +185,11 @@ class TEnsdfDecayScheme {
     void do_cascade(std::string initial_energy);
     void do_cascade(double initial_energy);
     void do_cascade(TEnsdfLevel* initial_level);
+    void print_latex_table();
 
   private:
     std::string nuc_id;
+    std::string file_name;
     std::map<std::string, TEnsdfLevel> levels;
     std::vector<TEnsdfLevel*> pv_sorted_levels;
     std::vector<double> sorted_level_energies;
@@ -280,6 +283,7 @@ void TEnsdfDecayScheme::do_cascade(TEnsdfLevel* initial_level) {
 TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
 
   this->nuc_id = nucid;
+  this->file_name = filename;
 
   // Regular expressions for identifying ensdf record types
   //std::string generic_nuc_id = "^[[:alnum:] ]{5}";
@@ -504,6 +508,94 @@ void TEnsdfDecayScheme::print_report() {
 
 }
 
+void TEnsdfDecayScheme::print_latex_table() {
+
+  std::string caption_beginning =
+    std::string("{\\textbf{Levels") +
+    " and $\\boldsymbol{\\gamma}$ transitions \n for " +
+    "\\isotope[\\boldsymbol{" +
+    ensdf_utils::trim_copy(this->nuc_id.substr(0,3)) +
+    "}]{\\textbf{" + this->nuc_id.substr(3,1) +
+    ensdf_utils::trim_copy(
+      ensdf_utils::to_lowercase(nuc_id.substr(4,1))) + 
+    "}} \n from file " + this->file_name + " ";
+
+  std::cout << ensdf_utils::latex_table_1;
+
+  std::cout << caption_beginning + "}}\\\\\n";
+  //std::cout <<  << this->nuc_id.substr(0,3)
+  //  << "]{" << this->nuc_id[3] << static_cast<char>(std::tolower(this->nuc_id[4]))
+  //  << "} from file " << this->file_name;
+  std::cout << ensdf_utils::latex_table_2;
+
+  std::cout << caption_beginning + " -- \\textit{continued}}} \\\\\n";  
+
+  std::cout << ensdf_utils::latex_table_3;
+  // Cycle through each of the levels owned by this decay scheme
+  // object in order of increasing energy
+  for(std::vector<TEnsdfLevel*>::iterator j = this->pv_sorted_levels.begin();
+    j != this->pv_sorted_levels.end(); ++j)
+  {
+
+    std::string sp = (*j)->get_spin_parity();
+    if (sp.empty()) sp = "?";
+    if (sp == "UNNATURAL") sp = "unnat.";
+
+    std::cout << (*j)->get_string_energy() << " & "
+      << sp  << " & ";
+
+    std::vector<TEnsdfGamma>* p_gammas = (*j)->get_gammas();
+
+    // If there aren't any gammas for this level, finish writing
+    // the current row of the table. Add extra space between this
+    // level and the next one.
+    if (p_gammas->empty()) {
+      std::cout << " &  &";
+      // If this is the last row of the table, don't add extra space.
+      if (j == this->pv_sorted_levels.end() - 1) {
+        std::cout << "" << std::endl;
+      }
+      else {
+        std::cout << " \\\\ \\addlinespace[\\ExtraRowSpace]" << std::endl;
+      }
+    }
+
+    // Cycle through each of the gammas owned by the current level
+    // (according to the ENSDF specification, these will already be
+    // sorted in order of increasing energy)
+    for(std::vector<TEnsdfGamma>::iterator k = p_gammas->begin();
+      k != p_gammas->end(); ++k) 
+    {
+      // If this is not the first gamma, add empty columns
+      // for the level energy and spin-parity
+      if (k != p_gammas->begin()) std::cout << " & & ";
+      // Output information about the current gamma
+      std::cout << k->get_energy() << " & "
+        << k->get_ri() << " & "
+        << k->get_end_level()->get_string_energy();
+      // Add vertical space after the final gamma row. Also prevent page breaks
+      // in the middle of a list of gammas by outputting a star at the end of
+      // each row except the final gamma row.
+      if (k == p_gammas->end() - 1) {
+	// Don't add the extra row space for the very last row in the table
+	if (j >= this->pv_sorted_levels.end() - 1) {
+          std::cout << std::endl;
+        }
+        else {
+          std::cout << " \\\\ \\addlinespace[\\ExtraRowSpace]" << std::endl;
+        }
+      }
+      else {
+        std::cout << " \\\\*" << std::endl;
+      }
+    }
+
+  }
+
+  std::cout << ensdf_utils::latex_table_4 << std::endl;
+}
+
+
 std::string TEnsdfDecayScheme::get_nuc_id() const {
   return nuc_id;
 }
@@ -573,12 +665,13 @@ int main() {
   // imported from the ENSDF file
   TEnsdfDecayScheme decay_scheme(nuc_id, filename);
 
-  // Print a report describing the decay scheme
-  decay_scheme.print_report();
+  //// Print a report describing the decay scheme
+  //decay_scheme.print_report();
 
-  std::cout << std::endl << std::endl;
+  //std::cout << std::endl << std::endl;
 
-  // Test the decay scheme object by simulating a sample gamma cascade
-  decay_scheme.do_cascade(7400);
-
+  //// Test the decay scheme object by simulating a sample gamma cascade
+  //decay_scheme.do_cascade(7400);
+  
+  decay_scheme.print_latex_table();
 }
