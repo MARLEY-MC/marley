@@ -294,7 +294,7 @@ TEnsdfDecayScheme::TEnsdfDecayScheme(std::string nucid, std::string filename) {
   std::regex rx_end_record("\\s*"); // Matches blank lines
   //std::regex rx_generic_primary_identification_record(nuc_id + primary_record + "   " + record_data);
   std::regex rx_primary_identification_record(nuc_id + primary_record
-    + "   ADOPTED LEVELS, GAMMAS.{49}");
+    + "   ADOPTED LEVELS.{57}"); //"   ADOPTED LEVELS(, GAMMAS.{49}|.{57})");
   std::regex rx_primary_level_record(nuc_id + primary_record + " L " + record_data);
   std::regex rx_continuation_level_record(nuc_id + continuation_record + " L " + record_data);
   std::regex rx_primary_gamma_record(nuc_id + primary_record + " G " + record_data);
@@ -663,20 +663,34 @@ TEnsdfLevel* TEnsdfDecayScheme::get_level(std::string energy) {
 
 int main() {
 
-  std::string nuc_id = " 40K ";
+  std::vector<std::string> nuc_ids = { " 40AR",  " 40K ",
+    " 40CA", " 40SC", " 40TI" };
   std::string filename = "ensdf.040";
 
-  // Create a decay scheme object to store data
-  // imported from the ENSDF file
-  TEnsdfDecayScheme decay_scheme(nuc_id, filename);
+  //// Create a decay scheme object to store data
+  //// imported from the ENSDF file
+  //TEnsdfDecayScheme decay_scheme(nuc_id, filename);
 
   // Print a report describing the decay scheme
-  decay_scheme.print_report();
-
-  std::cout << std::endl << std::endl;
+  //decay_scheme.print_report();
+  //std::cout << std::endl;
 
   // Test the decay scheme object by simulating a sample gamma cascade
-  decay_scheme.do_cascade(7400);
+  //decay_scheme.do_cascade(6000);
   
-  decay_scheme.print_latex_table();
+  //decay_scheme.print_latex_table();
+
+  //std::ofstream ofs;
+  
+  for (std::vector<std::string>::iterator i = nuc_ids.begin();
+    i != nuc_ids.end(); ++i)
+  {
+    TEnsdfDecayScheme ds = TEnsdfDecayScheme((*i), filename); 
+    //ofs.open(ensdf_utils::trim_copy((*i)) + ".txt", std::ofstream::trunc);
+    ds.print_report();//(ofs);
+    std::cout << std::endl;
+    ds.do_cascade(6000);
+    std::cout << std::endl;
+    //ofs.close();
+  }
 }
