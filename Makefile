@@ -1,7 +1,7 @@
 CXX=g++
-CXXFLAGS=-std=c++11 -I.
+CXXFLAGS=-std=c++11 -I. -Wall -Wextra -Werror
 
-OBJ = parse.o
+OBJ = TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o marley_utils.o parse.o
 
 %.o: %.c
 	$(CXX) -c -o $@
