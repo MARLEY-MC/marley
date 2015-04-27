@@ -301,11 +301,14 @@ void TMarleyDecayScheme::print_report(std::ostream& ostr) {
     j != this->pv_sorted_levels.end(); ++j)
   {
 
-    std::string sp = (*j)->get_spin_parity();
-    if (sp.empty()) sp = "UNKNOWN";
+    //std::string sp = (*j)->get_spin_parity();
+    int spin = (*j)->get_ispin();
+    int parity = (*j)->get_iparity();
+    
+    //if (sp.empty()) sp = "UNKNOWN";
     
     ostr << "Level at " << (*j)->get_string_energy()
-      << " keV has spin-parity " << sp << std::endl;
+	 << " keV has spin-parity " << spin << " " << parity << std::endl; // changed from sp to spin and parity
     std::vector<TMarleyGamma>* p_gammas = (*j)->get_gammas();
 
     // Cycle through each of the gammas owned by the current level

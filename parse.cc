@@ -5,8 +5,8 @@
 
 int main() {
 
-  std::vector<std::string> nuc_ids = { " 40AR",  " 40K ",
-    " 40CA", " 40SC", " 40TI" };
+  std::vector<std::string> nuc_ids = { " 40K " };  //{ " 40AR",  " 40K ",
+  //  " 40CA", " 40SC", " 40TI" };
   std::string filename = "ensdf.040";
 
   //// Create a decay scheme object to store data
