@@ -14,9 +14,12 @@ class TMarleyLevel {
     void add_gamma(const TMarleyGamma& gamma);
     void clear_gammas();
     std::vector<TMarleyGamma>* get_gammas();
+    bool get_gamma_status() const;
     double get_numerical_energy() const;
     std::string get_string_energy() const;
     std::string get_spin_parity() const;
+    int get_ispin() const;
+    int get_iparity() const;
     void set_energy(std::string energy);
     void set_spin_parity(std::string jpi);
     TMarleyGamma* sample_gamma();
@@ -24,7 +27,12 @@ class TMarleyLevel {
   private:
     std::string sEnergy;
     double fEnergy;
+  
     std::string spin_parity;
+    int ispin; // Spin as an integer, not isospin
+    int iparity;
+
+    bool gammas_known; // Determining whether or not the gammas are known
     std::vector<TMarleyGamma> gammas;
     std::vector<double> gamma_intensities;
     std::discrete_distribution<int> gamma_dist;
