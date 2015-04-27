@@ -177,7 +177,7 @@ void TMarleyLevel::set_spin_parity(std::string jpi) {
     }
 
   //For testing purposes:
-  std::cout << "Spin: " << ispin << " " << "Parity: " << iparity << std::endl;
+  //std::cout << "Spin: " << ispin << " " << "Parity: " << iparity << std::endl;
 }
 
 void TMarleyLevel::clear_gammas() {
