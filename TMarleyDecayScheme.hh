@@ -16,6 +16,7 @@ class TMarleyDecayScheme {
     void do_cascade(std::string initial_energy);
     void do_cascade(double initial_energy);
     void do_cascade(TMarleyLevel* initial_level);
+    void do_weisskopf(int i);
     void print_latex_table(std::ostream& ostr = std::cout);
 
   private:
@@ -28,5 +29,13 @@ class TMarleyDecayScheme {
       TMarleyLevel* second);
     std::string process_continuation_records(std::ifstream &file_in,
       std::string &record, std::regex &rx_cont_record) const;
+
+    // Functions for calculating Weisskopf estimates
+    double doubleFact(int i); // Calculating double factorials x!!
+    double calcBE(int i);
+    double calcBM(int i);
+    double calcf(int i);
+    double calcTE(int i, double dE, double BE_i, double f_i);
+    double calcTM(int i, double dE, double BM_i, double f_i);
 
 };

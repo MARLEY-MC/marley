@@ -6,6 +6,11 @@
 #include "marley_utils.hh"
 #include "TMarleyDecayScheme.hh"
 
+// MOVE THESE TO AN APPROPRIATE SPOT
+const double PI = 4*std::atan(1); //Define pi better... Make it accessible to functions w/o being global
+const double atomicMass = 40.; //Potassium 40... Maybe add more digits of precision. Make it accessible to functions w/o being global
+
+
 void TMarleyDecayScheme::do_cascade(std::string initial_energy) {
   std::map<std::string, TMarleyLevel>::iterator it = levels.find(initial_energy);
   if (it == levels.end()) {
@@ -216,7 +221,11 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename) 
   for(std::vector<TMarleyLevel*>::iterator j = this->pv_sorted_levels.begin();
     j != this->pv_sorted_levels.end(); ++j)
   {
-    
+
+    // Calculate Weisskopf Estimates here if gamma data is not known
+    if( (*j)->get_gamma_status() == false )
+      do_weisskopf(j - this->pv_sorted_levels.begin());
+
     std::vector<TMarleyGamma>* p_gammas = (*j)->get_gammas();
     double initial_level_energy = (*j)->get_numerical_energy();
 
@@ -470,4 +479,159 @@ std::map<std::string, TMarleyLevel>* TMarleyDecayScheme::get_levels() {
 
 TMarleyLevel* TMarleyDecayScheme::get_level(std::string energy) {
   return &(levels.at(energy));
+}
+
+void TMarleyDecayScheme::do_weisskopf(int i){
+  TMarleyLevel* init = this->pv_sorted_levels[i];
+  TMarleyLevel* current = nullptr;
+  double deltaE;
+  int deltaJ; // Difference in spin
+  int parProd; // Product of parities
+  double trans_rate;
+  double min_rate = 1e+19; // Minimum rate for transitions. Those below this are neglected. Come up with a good way to determine this rate.
+  int lambda;
+  double BE, BM, f;
+  double E_i, E_f;
+  
+  for(int j = i-1; j > 0; j--){
+      current = this->pv_sorted_levels[j];
+      E_i = init->get_numerical_energy();
+      E_f = current->get_numerical_energy();
+	
+      deltaE = E_i - E_f;
+	    
+      //Determine which type of EM transition takes place
+      deltaJ = std::abs(init->get_ispin() - current->get_ispin());
+      parProd = init->get_iparity() * current->get_iparity();
+	    
+      if(parProd == 1) //Meaning parity stays the same
+	switch (deltaJ){
+	  case 0:
+	  case 1:
+	    lambda = 0;
+	    BM = calcBM(lambda + 1);
+	    f = calcf(lambda + 1);
+	    trans_rate = calcTM(lambda, deltaE, BM, f);
+	    if ( trans_rate > min_rate )
+	      init->add_weiss(E_f, trans_rate);
+	    break;
+		  
+	  case 2:
+	    lambda = 1;
+	    BE = calcBE(lambda + 1);
+	    f = calcf(lambda + 1);
+	    trans_rate = calcTE(lambda, deltaE, BE, f);
+	    if ( trans_rate > min_rate )
+	      init->add_weiss(E_f, trans_rate);
+	    break;
+		  
+	  case 3:
+	    lambda = 2;
+	    BM = calcBM(lambda + 1);
+	    f = calcf(lambda + 1);
+	    trans_rate = calcTM(lambda, deltaE, BM, f);
+	    if ( trans_rate > min_rate )
+	      init->add_weiss(E_f, trans_rate);
+	    break;
+		  
+	  default:
+	    if( deltaJ % 2 == 0 ){
+	      BE = calcBE(deltaJ);
+	      f = calcf(deltaJ);
+	      trans_rate = calcTE(deltaJ, deltaE, BE, f);
+	      if ( trans_rate > min_rate )
+		init->add_weiss(E_f, trans_rate);
+	    }
+	    else if( (deltaJ + 1) % 2 == 0 ){
+		BM = calcBM(deltaJ);
+		f = calcf(deltaJ);
+		trans_rate = calcTM(deltaJ, deltaE, BM, f);
+		if ( trans_rate > min_rate )
+		  init->add_weiss(E_f, trans_rate);
+	      }
+	    else
+	      std::cout << "Warning! Something bad happened! deltaJ = " << deltaJ << std::endl;
+	    break;
+	  }
+	    
+      else //Meaning parity changes
+	switch ( deltaJ )
+	  {
+	  case 0:
+	  case 1:
+	    lambda = 0;
+	    BE = calcBE(deltaJ + 1);
+	    f = calcf(deltaJ + 1);
+	    trans_rate = calcTE(lambda, deltaE, BE, f);
+	    if ( trans_rate > min_rate )
+	      init->add_weiss(E_f, trans_rate);
+	    break;
+		  
+	  case 2:
+	    lambda = 1;
+	    BM = calcBM(deltaJ + 1);
+	    f = calcf(deltaJ + 1);
+	    trans_rate = calcTM(lambda, deltaE, BM, f);
+	    if ( trans_rate > min_rate )
+	      init->add_weiss(E_f, trans_rate);
+	    break;
+		  
+	  case 3:
+	    lambda = 2;
+	    BE = calcBE(deltaJ + 1);
+	    f = calcf(deltaJ + 1);
+	    trans_rate = calcTE(lambda, deltaE, BE, f);
+	    if ( trans_rate > min_rate )
+	      init->add_weiss(E_f, trans_rate);
+	    break;
+		  
+	  default:
+	    if( deltaJ % 2 == 0 ){
+	      BM = calcBM(deltaJ);
+	      f = calcf(deltaJ);
+	      trans_rate = calcTM(deltaJ, deltaE, BM, f);
+	      if ( trans_rate > min_rate )
+		init->add_weiss(E_f, trans_rate);
+	    }
+	    else if( (deltaJ + 1) % 2 == 0 ){
+	      BE = calcBM(deltaJ);
+	      f = calcf(deltaJ);
+	      trans_rate = calcTE(deltaJ, deltaE, BE, f);
+	      if ( trans_rate > min_rate )
+		init->add_weiss(E_f, trans_rate);
+	    }
+	    else
+	      std::cout << "Warning! Something bad happened! deltaJ = " << deltaJ << std::endl;
+	    break;
+	  }  
+    }
+  init->calc_ri();
+}
+
+double TMarleyDecayScheme::doubleFact(int i){
+  if (i == 0 || i == 1)
+    return 1;
+  else
+    return i * doubleFact(i - 2);
+}
+
+double TMarleyDecayScheme::calcBE (int i){
+  return pow(1.2, 2*i) * 9 / (4*PI) / (i + 3) / (i + 3) * pow(atomicMass, 2*i/3.0);
+}
+
+double TMarleyDecayScheme::calcBM (int i){
+  return pow(1.2, 2*i - 2) * 90/PI / (i + 3) / (i + 3) * pow (atomicMass, (2*i - 2)/3.0);
+}
+
+double TMarleyDecayScheme::calcf (int i){
+  double x = doubleFact(2*i + 1);
+  return (i + 1)/(i*x*x);
+}
+
+double TMarleyDecayScheme::calcTE(int i, double dE, double BE_i, double f_i){
+  return 5.498e+22 * pow (dE/197330, 2*i + 1) * BE_i * f_i;
+}
+
+double TMarleyDecayScheme::calcTM(int i, double dE, double BM_i, double f_i){
+  return 6.080e+20 * pow (dE/197330, 2*i + 1) * BM_i * f_i;
 }

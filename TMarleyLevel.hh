@@ -20,6 +20,8 @@ class TMarleyLevel {
     std::string get_spin_parity() const;
     int get_ispin() const;
     int get_iparity() const;
+    void add_weiss(const double& eenergy, const double& trans);
+    void calc_ri(); // Calculating RI for weisskopf estimates
     void set_energy(std::string energy);
     void set_spin_parity(std::string jpi);
     TMarleyGamma* sample_gamma();
@@ -31,6 +33,8 @@ class TMarleyLevel {
     std::string spin_parity;
     int ispin; // Spin as an integer, not isospin
     int iparity;
+
+    std::vector<std::vector<double> > weisskopf_estimates; // Holds energy and corresponding transition rates, not normalized probabilities
 
     bool gammas_known; // Determining whether or not the gammas are known
     std::vector<TMarleyGamma> gammas;
