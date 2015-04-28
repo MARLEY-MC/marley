@@ -10,6 +10,8 @@ TMarleyLevel::TMarleyLevel(std::string energy, std::string jpi) {
   fEnergy = std::stod(energy); // Converts the energy string into a double
 
   gammas_known = false; // The default is that gammas are not known
+  weisskopf_estimates.push_back(std::vector<double>()); // Energy
+  weisskopf_estimates.push_back(std::vector<double>()); // Transition rate
   
   this->set_spin_parity(jpi); // Need to convert jpi to integers in the constructor... Maybe do this a better way
   //spin_parity = jpi;
@@ -87,7 +89,7 @@ void TMarleyLevel::set_spin_parity(std::string jpi) {
   std::regex jp_par("[0-9]\\([+-]\\)"); // j(p)
   std::regex j1p1_j2p2_nopar("[0-9][+-],[0-9][+-]"); // j1p1,j2p2
   std::regex le_jp("\\(LE [0-9]\\)[+-]"); // (LE j)p
-  std::regex j1_j2p2("\\([0-9],[0-9][+-]\\)"); // (j1,j2p2) --------Not behaving correctly
+  std::regex j1_j2p2("\\([0-9],[0-9][+-]\\)"); // (j1,j2p2) -------- Not behaving correctly. Check this.
   std::regex jp_inpar("\\([0-9][+-]\\)"); // (jp)
 
   if(std::regex_match(spin_parity, jp)) // jp
@@ -140,7 +142,7 @@ void TMarleyLevel::set_spin_parity(std::string jpi) {
 	iparity = -1;
     }
 
-  else if (std::regex_match(spin_parity, j1p1_j2p2_nopar)) // j1p1,j2p2 (no parentheses)
+  else if (std::regex_match(spin_parity, j1p1_j2p2_nopar)) // j1p1,j2p2 (no parenthesis)
     {
       ispin = std::stoi(spin_parity.substr(0,1));
 	 	  
@@ -160,7 +162,7 @@ void TMarleyLevel::set_spin_parity(std::string jpi) {
 	iparity = -1;
     }
 
-  else if (std::regex_match(spin_parity, j1_j2p2)) // (j1,j2p2) //---------------Not working correctly (j,jp)
+  else if (std::regex_match(spin_parity, j1_j2p2)) // (j1,j2p2) //---------------Not working correctly for (j,jp)
     {
       ispin = std::stoi(spin_parity.substr(3,4)); //Picking the first spin only
 
@@ -175,9 +177,6 @@ void TMarleyLevel::set_spin_parity(std::string jpi) {
       ispin = 1;
       iparity = 1;
     }
-
-  //For testing purposes:
-  //std::cout << "Spin: " << ispin << " " << "Parity: " << iparity << std::endl;
 }
 
 void TMarleyLevel::clear_gammas() {
@@ -199,4 +198,30 @@ bool TMarleyLevel::get_gamma_status() const
 {
   return gammas_known;
 }
+
+void TMarleyLevel::add_weiss(const double& final_energy, const double& trans_rate)
+{
+  weisskopf_estimates[0].push_back(final_energy);
+  weisskopf_estimates[1].push_back(trans_rate);
+}
+
+void TMarleyLevel::calc_ri()
+{
+  // Find the sum of all transitions
+  double trans_sum = 0;
+  for(unsigned int i = 0; i < weisskopf_estimates[1].size(); i++)
+    trans_sum += weisskopf_estimates[1][i] ;
+
+  // Calculate the relative intensity for each given transition and add the gamma to the current level object
+  double e_gamma = 0;
+  double ri = 0;
+  for(unsigned int i = 0; i < weisskopf_estimates[0].size(); i++)
+    {
+      e_gamma = this->get_numerical_energy() - weisskopf_estimates[0][i];
+      ri = weisskopf_estimates[1][i]/trans_sum;
+      TMarleyGamma gamma(e_gamma, ri, this);
+      this->add_gamma(gamma);
+    }
+}
+
 
