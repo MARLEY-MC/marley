@@ -4,6 +4,7 @@
              // if desired by project collaborators.
 
 #include <algorithm>
+#include <complex>
 #include <random>
 #include <string>
 
@@ -16,6 +17,9 @@ namespace marley_utils {
   // cascade simulations.
   extern unsigned seed;
   extern std::knuth_b rand_gen;
+
+  // Compute the complex gamma function using the Lanczos approximation
+  std::complex<double> gamma(std::complex<double> z);
  
   // String containing all of the characters that will be
   // considered whitespace by default in the string

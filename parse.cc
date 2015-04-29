@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "TMarleyDecayScheme.hh"
+#include "marley_utils.hh"
 
 int main() {
 
@@ -35,4 +36,8 @@ int main() {
     std::cout << std::endl;
     //ofs.close();
   }
+
+  //std::cout << std::endl
+  //  << marley_utils::gamma(std::complex<double>(1.234,-5.6))
+  //  << std::endl;
 }

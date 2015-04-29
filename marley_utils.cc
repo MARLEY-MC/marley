@@ -2,6 +2,7 @@
 #include <cctype>
 #include <chrono>
 #include <cmath>
+#include <complex>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -92,3 +93,39 @@ std::string marley_utils::latex_table_4 = "\\end{longtable}\n"
 // cascade simulations. Seed it using the system time
 unsigned marley_utils::seed = std::chrono::system_clock::now().time_since_epoch().count();
 std::knuth_b marley_utils::rand_gen(seed);
+
+
+// This implementation of the complex gamma function is based on the
+// Lanczos approximation and its Python implementation given
+// on Wikipedia (https://en.wikipedia.org/wiki/Lanczos_approximation)
+// The C++ version given here is taken almost verbatim from
+// http://bytes.com/topic/c/answers/576697-c-routine-complex-gamma-function
+std::complex<double> marley_utils::gamma(std::complex<double> z)
+{
+  // Initialize some constants used in the algorithm. The "static
+  // const" keywords ensure that these constants are initialized only
+  // once (not reinitialized each time this function is called)
+  static const int g=7;
+  static const double pi =
+  3.1415926535897932384626433832795028841972;
+  static const double p[g+2] = {0.99999999999980993, 676.5203681218851,
+  -1259.1392167224028, 771.32342877765313, -176.61502916214059,
+  12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6,
+  1.5056327351493116e-7};
+
+  if (std::real(z) < 0.5) {
+    return pi / (std::sin(pi*z)*gamma(1.0-z));
+  }
+
+  z -= 1.0;
+
+  std::complex<double> x = p[0];
+
+  for (int i = 1; i < g + 2; i++) {
+    x += p[i]/(z+std::complex<double>(i,0));
+  }
+
+  std::complex<double> t = z + (g + 0.5);
+
+  return std::sqrt(2*pi) * std::pow(t, z + 0.5) * std::exp(-t) * x;
+}
