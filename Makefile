@@ -9,7 +9,10 @@ OBJ = TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o marley_utils.o parse.o
 parse: $(OBJ)
 	$(CXX) -o $@ $^
 
+gamma: gamma.o
+	$(CXX) -o $@ $^
+
 .PHONY: clean
 
 clean:
-	rm -f *.o parse
+	rm -f *.o parse gamma
