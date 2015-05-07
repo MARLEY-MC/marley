@@ -11,10 +11,7 @@ all: parse sn_neutrino_spectra
 parse: $(OBJ)
 	$(CXX) -o $@ $^
 
-sn_spectra: sn_neutrino_spectra.cc
-	$(CXX) -o sn_neutrino_spectra sn_neutrino_spectra.cc
-
 .PHONY: clean
 
 clean:
-	rm -f *.o parse sn_neutrino_spectra
+	rm -f *.o parse
