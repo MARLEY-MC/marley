@@ -1,0 +1,32 @@
+# MARLEY reaction data for nu_e on 40Ar
+# Prepared on 10 May 2015 by S. J. Gardiner
+#
+# Particle IDs conform to the 2013 revision of
+# the Particle Data Group Monte Carlo Particle
+# Numbering Scheme
+# (see http://pdg.lbl.gov/2014/reviews/rpp2014-rev-monte-carlo-numbering.pdf)
+#
+# Atomic masses are taken from 
+# the 2012 Atomic Mass Evaluation
+# (see http://amdc.impcas.ac.cn/evaluation/data2012/ame.html)
+# and converted using 1 amu = 931.494061 MeV
+#
+# B(F) + B(GT) values are taken from
+# M. Bhattacharya, et al., Phys. Rev. C 58, 3677 (1998).
+# 40Sc levels are used for observed strengths that did
+# not correspond to 40K levels known in 1998.
+#
+# Particle IDs
+12 1000180400 11 1000190400
+# Particle Masses (MeV)
+0 37224.7225 0.510998910 37226.2269
+# Number of levels included
+21
+# Level energies (MeV)
+2.28988 2.73038 2.95070 3.10975 3.14644 3.293 3.373850
+3.79758 3.84025 3.898 3.996 4.352 4.38400 4.697 4.761
+4.78865 4.848 5.027 5.223 5.696 6.006
+# B(F) + B(GT) values
+0.90 1.50 0.11 0.06 0.04 0.01 0.16 0.26 0.01
+0.05 0.11 0.29 3.84 0.31 0.38 0.47 0.36 0.23
+0.03 0.11 0.13
