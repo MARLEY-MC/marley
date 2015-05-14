@@ -9,6 +9,7 @@ class TMarleyReaction {
     double ejectile_energy(double E_level, double Ea, double cos_theta_c);
     double differential_xs(double E_level, double Ea, double cos_theta_c);
     double total_xs(double E_level, double Ea);
+    double sample_ejectile_scattering_cosine(double E_level, double Ea);
     void create_event(double Ea); // TODO: change this to return an event object
     double num_integrate(const std::function<double(double)> &f,
       double a, double b, int n);
