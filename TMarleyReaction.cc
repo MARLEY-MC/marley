@@ -190,25 +190,6 @@ double TMarleyReaction::differential_xs(double E_level, double Ea, double cos_th
     /(1.0 + (Ea/mb)*(1 - (Ec/pc)*cos_theta_c));
 }
 
-// TODO: Consider adding this function to marley_utils
-// rather than the TMarleyReaction class
-
-// Numerically integrate a given function f (that takes a
-// double argument to integrate over and returns a double)
-// over the interval [a,b] using the composite trapezoidal
-// rule over n subintervals.
-// (see http://en.wikipedia.org/wiki/Numerical_integration)
-double TMarleyReaction::num_integrate(const std::function<double(double)> &f,
-  double a, double b, int n)
-{
-  double integral = 0; 
-  for(int k = 1; k < n-1; k++) {
-    integral += ((b - a)/n)*f(a + k*(b - a)/n);
-  }
-  integral += ((b - a)/n)*(f(a)/2 + f(b)/2);
-  return integral;
-}
-
 // Numerically integrate the differential cross section over
 // cos(theta_c) = [-1,1] to get the total reaction cross section
 // for a given final residue level and projectile energy
@@ -228,5 +209,5 @@ double TMarleyReaction::total_xs(double E_level, double Ea) {
 
   // Numerically integrate using the call wrapper, the integration bounds,
   // and the number of subintervals
-  return num_integrate(dxs, -1.0, 1.0, n); 
+  return marley_utils::num_integrate(dxs, -1.0, 1.0, n); 
 }

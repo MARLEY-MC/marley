@@ -139,7 +139,7 @@ std::complex<double> marley_utils::gamma(std::complex<double> z)
 // The location where f takes its minimum is returned in the variable minLoc.
 // Notation and implementation based on Chapter 5 of Richard Brent's book
 // "Algorithms for Minimization Without Derivatives".
-double marley_utils::minimize(std::function<double(double)> f, // [in] objective function to minimize
+double marley_utils::minimize(const std::function<double(double)> f, // [in] objective function to minimize
   double leftEnd,     // [in] smaller value of bracketing interval
   double rightEnd,    // [in] larger value of bracketing interval
   double epsilon,     // [in] stopping tolerance
@@ -220,7 +220,7 @@ double marley_utils::minimize(std::function<double(double)> f, // [in] objective
 }
 
 // We can maximize a function using the same technique by minimizing its opposite
-double marley_utils::maximize(std::function<double(double)> f, // [in] objective function to maximize
+double marley_utils::maximize(const std::function<double(double)> f, // [in] objective function to maximize
   double leftEnd,     // [in] smaller value of bracketing interval
   double rightEnd,    // [in] larger value of bracketing interval
   double epsilon,     // [in] stopping tolerance
@@ -229,4 +229,20 @@ double marley_utils::maximize(std::function<double(double)> f, // [in] objective
   double result = minimize([&f](double x) -> double { return -1.0*f(x); },
     leftEnd, rightEnd, epsilon, maxLoc);
   return -1.0*result;
+}
+
+// Numerically integrate a given function f (that takes a
+// double argument to integrate over and returns a double)
+// over the interval [a,b] using the composite trapezoidal
+// rule over n subintervals.
+// (see http://en.wikipedia.org/wiki/Numerical_integration)
+double marley_utils::num_integrate(const std::function<double(double)> &f,
+  double a, double b, int n)
+{
+  double integral = 0;
+  for(int k = 1; k < n-1; k++) {
+    integral += ((b - a)/n)*f(a + k*(b - a)/n);
+  }
+  integral += ((b - a)/n)*(f(a)/2 + f(b)/2);
+  return integral;
 }
