@@ -22,12 +22,16 @@ namespace marley_utils {
   // Compute the complex gamma function using the Lanczos approximation
   std::complex<double> gamma(std::complex<double> z);
 
+  // Numerically integrate a 1D function using the composite trapezoid rule
+  double num_integrate(const std::function<double(double)> &f,
+    double a, double b, int n);
+
   // Numerically minimize or maximize a function of one variable using
   // Brent's method (see http://en.wikipedia.org/wiki/Brent%27s_method)
-  double minimize(std::function<double(double)> f, double leftEnd,
+  double minimize(const std::function<double(double)> f, double leftEnd,
     double rightEnd, double epsilon, double& minLoc);
 
-  double maximize(std::function<double(double)> f, double leftEnd,
+  double maximize(const std::function<double(double)> f, double leftEnd,
     double rightEnd, double epsilon, double& maxLoc);
 
   // String containing all of the characters that will be
