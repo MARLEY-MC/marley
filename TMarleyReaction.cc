@@ -135,10 +135,10 @@ void TMarleyReaction::create_event(double Ea) {
   double E_level = 2.289871;
   double md = md_gs + E_level;
 
-  // TODO: change this to sample a scattering angle
-  // for the ejectile
-  double theta_c = std::acos(0);
-  double cos_theta_c = std::cos(theta_c);
+  // Sample a scattering angle for the ejectile using
+  // the differential cross section
+  double cos_theta_c = sample_ejectile_scattering_cosine(E_level, Ea);
+  double theta_c = std::acos(cos_theta_c);
 
   // Use conservation of 4-momentum to compute the ejectile energy
   // based on the sampled scattering angle
@@ -210,4 +210,66 @@ double TMarleyReaction::total_xs(double E_level, double Ea) {
   // Numerically integrate using the call wrapper, the integration bounds,
   // and the number of subintervals
   return marley_utils::num_integrate(dxs, -1.0, 1.0, n); 
+}
+
+// Sample a scattering cosine for the ejectile using the differential
+// cross section defined in the member function differential_xs
+double TMarleyReaction::sample_ejectile_scattering_cosine(double E_level, double Ea) {
+
+  // Get the total cross section for this reaction based
+  // on the projectile energy and final residue energy.
+  // This will be used as a normalization factor.
+  double xstot = total_xs(E_level, Ea);
+
+  // Make a normalized version of the differential cross section
+  // to use as our probability density function for sampling.
+  // Note that, since we are using a rejection sampling method,
+  // this is not strictly necessary. That being said, doing so
+  // allows us to set our value of epsilon for marley_utils::maximize
+  // without having to worry about the absolute scale of the differential cross
+  // section (the normalized version has an average value of 0.5,
+  // so an epsilon of, say, 1e-8 is perfectly usable).
+  std::function<double(double)> ndxs = [this, &xstot, &E_level, &Ea](double cos_theta_c)
+    -> double { return (1.0/xstot)*differential_xs(E_level, Ea, cos_theta_c); };
+
+  // This variable will be loaded with the ejectile cosine that
+  // corresponds to the largest differential xs
+  // We don't actually use this, but currently it's
+  // a required parameter of marley_utils::maximize
+  double cmax;
+
+  // Get the maximum value of the normalized differential cross section for
+  // the given projectile energy and final residue energy.
+  // This is needed to correctly apply rejection sampling.
+  double max_ndxs = marley_utils::maximize(ndxs, -1.0, 1.0, 1e-8, cmax);
+
+  // Find the double value that comes immediately after +1.0. This allows
+  // us to sample uniformly on [0,1] and [-1,1] rather than [0,1) and [-1,1).
+  // This trick comes from
+  // http://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution/uniform_real_distribution
+  static double after_one = std::nextafter(1.0, std::numeric_limits<double>::max());
+
+  // Create a uniform distribution object to perform the rejection sampling.
+  // Also create two sets of distribution parameters so that we can sample
+  // the horizontal and vertical parts using the same object.
+  static std::uniform_real_distribution<double> udist; // Defaults to sampling from [0,1). We will always
+                                                       // explicitly supply the upper and lower bounds to
+                                                       // this distribution, so we won't worry about the
+                                                       // default setting.
+  static std::uniform_real_distribution<double>::param_type height_params(0, after_one); // [0,1]
+  static std::uniform_real_distribution<double>::param_type cos_params(-1, after_one); // [-1,1]
+
+  double cos_theta_c, height;
+
+  do {
+    // Sample cosine value uniformly from [-1,1]
+    cos_theta_c = udist(marley_utils::rand_gen, cos_params); 
+    // Sample height uniformly from [0, max_ndxs]
+    height = max_ndxs*udist(marley_utils::rand_gen, height_params);
+  }
+  // Keep sampling until you get a height value less than the normalized
+  // differential cross section evaluated at cos_theta_c
+  while (height > ndxs(cos_theta_c));
+
+  return cos_theta_c;
 }
