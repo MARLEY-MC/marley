@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <complex>
+#include <functional>
 #include <random>
 #include <string>
 
@@ -20,7 +21,15 @@ namespace marley_utils {
 
   // Compute the complex gamma function using the Lanczos approximation
   std::complex<double> gamma(std::complex<double> z);
- 
+
+  // Numerically minimize or maximize a function of one variable using
+  // Brent's method (see http://en.wikipedia.org/wiki/Brent%27s_method)
+  double minimize(std::function<double(double)> f, double leftEnd,
+    double rightEnd, double epsilon, double& minLoc);
+
+  double maximize(std::function<double(double)> f, double leftEnd,
+    double rightEnd, double epsilon, double& maxLoc);
+
   // String containing all of the characters that will be
   // considered whitespace by default in the string
   // manipulation functions below 
