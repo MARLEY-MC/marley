@@ -94,22 +94,12 @@ double TMarleyReaction::ejectile_energy(double E_level, double Ea, double cos_th
   double C = std::pow((Etot*Etot + mc*mc - md*md - p2a), 2)
     + 4*mc*mc*p2a*cos_theta_c*cos_theta_c;
 
-  // Restructure the calculation to avoid some potentially bad cancellations
-  // See http://www.petebecker.com/js/js200010.html for details
-  double c = C/A;
-  double b = B/(2*A);
-
   // There are two solutions of the quadratic equation 
   // that correspond to forward and backward scattering
-  // solutions
-  double Ecplus, Ecminus;   if (b > 0) {
-    Ecminus = -b - std::sqrt(b*b - c);
-    Ecplus = c/Ecminus;
-  }
-  else {
-    Ecplus = -b + std::sqrt(b*b - c);
-    Ecminus = c/Ecplus;
-  }
+  // solutions. Find both of them and load Ecplus and
+  // Ecminus with the results.
+  double Ecplus, Ecminus;
+  marley_utils::solve_quadratic_equation(A, B, C, Ecplus, Ecminus);
 
   // Assume we are above the backward threshold, and match the
   // correct solution to the physical ejectile energy.
@@ -123,6 +113,7 @@ double TMarleyReaction::ejectile_energy(double E_level, double Ea, double cos_th
   }
 
 }
+
 
 // TODO: change this to return an event object
 void TMarleyReaction::create_event(double Ea) {

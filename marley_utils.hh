@@ -34,6 +34,11 @@ namespace marley_utils {
   double maximize(const std::function<double(double)> f, double leftEnd,
     double rightEnd, double epsilon, double& maxLoc);
 
+  // Find both solutions of a quadratic equation while attempting
+  // to avoid floating-point arithmetic issues
+  void solve_quadratic_equation(double A, double B,
+    double C, double &solPlus, double &solMinus);
+
   // String containing all of the characters that will be
   // considered whitespace by default in the string
   // manipulation functions below 

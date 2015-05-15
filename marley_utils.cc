@@ -246,3 +246,32 @@ double marley_utils::num_integrate(const std::function<double(double)> &f,
   integral += ((b - a)/n)*(f(a)/2 + f(b)/2);
   return integral;
 }
+
+// Solves a quadratic equation of the form A*x^2 + B*x + C = 0
+// while attempting to minimize errors due to the inherent limitations
+// of floating-point arithmetic. The variables solPlus and solMinus
+// are loaded with the two solutions x = (-B ± sqrt(B^2 - 4*A*C))/(2*A).
+// Unsurprisingly, solPlus corresponds to the choice of the plus sign,
+// while solMinus corresponds to the choice of the minus sign.
+void marley_utils::solve_quadratic_equation(double A, double B,
+  double C, double &solPlus, double &solMinus) {
+
+  // Restructure the calculation to avoid some potentially bad cancellations
+  // See, e.g., http://www.petebecker.com/js/js200010.html for details
+  double c = C/A;
+  double b = B/(2*A);
+
+  // Find both solutions of the quadratic equation while avoiding
+  // an extra subtraction (which can potentially lead to catastrophic
+  // loss of precision) between -b and the square root of the
+  // discriminant.
+  if (b > 0) {
+    solMinus = -b - std::sqrt(b*b - c);
+    solPlus = c/solMinus;
+  }
+  else {
+    solPlus = -b + std::sqrt(b*b - c);
+    solMinus = c/solPlus;
+  }
+
+}
