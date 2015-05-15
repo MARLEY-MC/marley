@@ -6,7 +6,7 @@
 #include "marley_utils.hh"
 #include "TMarleyDecayScheme.hh"
 
-// MOVE THESE TO AN APPROPRIATE SPOT
+// TODO: move these to an appropriate spot
 const double PI = 4*std::atan(1); //Define pi better... Make it accessible to functions w/o being global
 const double atomicMass = 40.; //Potassium 40... Maybe add more digits of precision. Make it accessible to functions w/o being global
 
@@ -15,7 +15,7 @@ void TMarleyDecayScheme::do_cascade(std::string initial_energy) {
   std::map<std::string, TMarleyLevel>::iterator it = levels.find(initial_energy);
   if (it == levels.end()) {
     throw std::range_error("Could not do cascade. Level with energy "
-      + initial_energy + " keV not found.");
+      + initial_energy + " MeV not found.");
   }
   else {
     TMarleyLevel* plevel = &(it->second);
@@ -25,11 +25,7 @@ void TMarleyDecayScheme::do_cascade(std::string initial_energy) {
 
 // Returns a pointer to the level owned by this decay scheme object
 // that has the closest excitation energy to E_level (E_level
-// has units of keV).
-
-// TODO: change units here so that everything is consistent (all energies MeV
-// perhaps?). Right now, TMarleyReaction uses MeV, while the ENSDF
-// data classes use keV.
+// has units of MeV).
 TMarleyLevel* TMarleyDecayScheme::get_pointer_to_closest_level(double E_level) {
   // Search for the level whose energy is closest to the given value of E_level
   std::vector<double>::iterator it = std::lower_bound(
@@ -77,7 +73,7 @@ void TMarleyDecayScheme::do_cascade(double initial_energy) {
 
 void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level) {
   std::cout << "Beginning gamma cascade at level with energy "
-    << initial_level->get_string_energy() << std::endl;
+    << initial_level->get_string_energy() << " keV" << std::endl;
 
   bool cascade_finished = false;
 
@@ -97,7 +93,7 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level) {
           + "Cannot continue cascade.");
       }
       std::cout << "  emitted gamma with energy " << p_gamma->get_energy()
-        << " keV. New level has energy " << p_current_level->get_string_energy()
+        << " MeV. New level has energy " << p_current_level->get_string_energy()
         << " keV." << std::endl;
     }
   }
@@ -204,8 +200,9 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename) 
       no_advance = true;
 
       // Extract the gamma ray's energy and relative (photon)
-      // intensity from the ENSDF gamma record
-      double gamma_energy = std::stod(record.substr(9,10));
+      // intensity from the ENSDF gamma record. Convert its
+      // energy from keV to MeV.
+      double gamma_energy = std::stod(record.substr(9,10)) * marley_utils::MeV;
       double gamma_ri = marley_utils::str_to_double(record.substr(21,8));
 
       // If this gamma belongs to a level record, then add its
@@ -342,7 +339,7 @@ void TMarleyDecayScheme::print_report(std::ostream& ostr) {
     for(std::vector<TMarleyGamma>::iterator k = p_gammas->begin();
       k != p_gammas->end(); ++k) 
     {
-      ostr << "  has a gamma with energy " << k->get_energy() << " keV";
+      ostr << "  has a gamma with energy " << k->get_energy() << " MeV";
       ostr << " (transition to level at "
         << k->get_end_level()->get_string_energy() << " keV)" << std::endl;
       ostr << "    and relative photon intensity " << k->get_ri() << std::endl; 

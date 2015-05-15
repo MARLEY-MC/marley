@@ -146,8 +146,8 @@ double marley_utils::minimize(const std::function<double(double)> f, // [in] obj
   double& minLoc)     // [out] location of minimum
 {
     double d, e, m, p, q, r, tol, t2, u, v, w, fu, fv, fw, fx;
-    static const double c = 0.5*(3.0 - sqrt(5.0));
-    static const double SQRT_DBL_EPSILON = sqrt(DBL_EPSILON);
+    static const double c = 0.5*(3.0 - std::sqrt(5.0));
+    static const double SQRT_DBL_EPSILON = std::sqrt(DBL_EPSILON);
     
     double& a = leftEnd; double& b = rightEnd; double& x = minLoc;
 
@@ -261,17 +261,41 @@ void marley_utils::solve_quadratic_equation(double A, double B,
   double c = C/A;
   double b = B/(2*A);
 
+  double discr = b*b - c;
+
   // Find both solutions of the quadratic equation while avoiding
   // an extra subtraction (which can potentially lead to catastrophic
   // loss of precision) between -b and the square root of the
   // discriminant.
   if (b > 0) {
-    solMinus = -b - std::sqrt(b*b - c);
+
+    solMinus = -b - marley_utils::real_sqrt(discr);
     solPlus = c/solMinus;
   }
   else {
-    solPlus = -b + std::sqrt(b*b - c);
+
+    solPlus = -b + marley_utils::real_sqrt(discr);
     solMinus = c/solPlus;
+    //std::cout << "DEBUG: b = " << b << std::endl;
+    //std::cout << "DEBUG: c = " << c << std::endl;
+    //std::cout << "DEBUG: b*b - c = " << b*b - c << std::endl;
+    //std::cout << "DEBUG: solPlus = " << solPlus << std::endl;
+    //std::cout << "DEBUG: solMinus = " << solMinus << std::endl;
   }
 
+}
+
+// Takes the square root of nonnegative arguments. Returns zero otherwise.
+// This sqrt implementation is a quick fix for cases where roundoff errors
+// give an argument to std::sqrt() that is slightly negative, causing it
+// to return NaN.
+
+// TODO: consider other ways of resolving this problem
+double marley_utils::real_sqrt(double num) {
+  if (num < 0) {
+    return 0;
+  }
+  else {
+    return std::sqrt(num);
+  }
 }
