@@ -114,6 +114,22 @@ double TMarleyReaction::ejectile_energy(double E_level, double Ea, double cos_th
 
 }
 
+// Return the maximum residue excitation energy E_level that can
+// be achieved in the lab frame for a given projectile energy Ea
+// (this corresponds to the final particles all being produced
+// at rest in the CM frame). This maximum level energy is used
+// to find the allowed levels when creating events.
+double TMarleyReaction::max_level_energy(double Ea) {
+  // Calculate the total CM frame energy using known quantities
+  // from the lab frame
+  double E_CM = std::sqrt(ma*ma + mb*mb + 2*mb*Ea);
+  // The maximum level energy is achieved when the final state
+  // particles are produced at rest in the CM frame. Subtracting
+  // the ground-state rest masses of particles c and d from the
+  // total CM energy leaves us with the energy available to create
+  // an excited level in the residue (particle d).
+  return E_CM - mc - md_gs;
+}
 
 // TODO: change this to return an event object
 void TMarleyReaction::create_event(double Ea) {
