@@ -11,6 +11,10 @@
 
 namespace marley_utils {
 
+  // Conversion factor to use when expressing ENSDF energies (keV) in
+  // standard MARLEY energy units (MeV)
+  const double MeV = 1e-3;
+
   // Strings to use for latex table output of ENSDF data
   extern std::string latex_table_1, latex_table_2, latex_table_3, latex_table_4;
 
@@ -18,6 +22,10 @@ namespace marley_utils {
   // cascade simulations.
   extern unsigned seed;
   extern std::knuth_b rand_gen;
+
+  // Take the square root of a number. Assume that a negative argument is
+  // due to roundoff error and return zero in such cases rather than NaN.
+  double real_sqrt(double num);
 
   // Compute the complex gamma function using the Lanczos approximation
   std::complex<double> gamma(std::complex<double> z);

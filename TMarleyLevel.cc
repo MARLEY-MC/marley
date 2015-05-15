@@ -7,7 +7,11 @@
 
 TMarleyLevel::TMarleyLevel(std::string energy, std::string jpi) {
   sEnergy = energy;
-  fEnergy = std::stod(energy); // Converts the energy string into a double
+  // Converts the energy string into a double and also converts from
+  // the standard ENSDF energy units (keV) to MeV.
+  // TODO: Consider whether keeping the string version of the energy
+  // in keV is really the best solution
+  fEnergy = std::stod(energy) * marley_utils::MeV;
 
   gammas_known = false; // The default is that gammas are not known
   weisskopf_estimates.push_back(std::vector<double>()); // Energy
@@ -48,7 +52,7 @@ void TMarleyLevel::add_gamma(const TMarleyGamma& gamma) {
   gamma_dist.param(params);
 
   // Update the gamma status to known
-    gammas_known = true;
+  gammas_known = true;
 
 }
 
