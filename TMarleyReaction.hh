@@ -8,6 +8,7 @@ class TMarleyReaction {
     double fermi_approx(int z, double t, bool electron);
     double ejectile_energy(double E_level, double Ea, double cos_theta_c);
     double differential_xs(double E_level, double Ea, double cos_theta_c);
+    double max_level_energy(double Ea);
     double total_xs(double E_level, double Ea);
     double sample_ejectile_scattering_cosine(double E_level, double Ea);
     void create_event(double Ea); // TODO: change this to return an event object
@@ -28,4 +29,10 @@ class TMarleyReaction {
     double GF = 1.16637e-11; // Fermi coupling constant (MeV^(-2)) 
     double Vud = 0.97427; // abs(V_ud) (from CKM matrix)
     double Zf = 19;
+    // Lab-frame total energy of the projectile at threshold
+    // for this reaction (all final-state particles at rest
+    // in the CM frame)
+  public:
+    double E_threshold = ((mc + md_gs)*(mc + md_gs)
+      - ma*ma - mb*mb)/(2*mb);
 };

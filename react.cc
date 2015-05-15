@@ -19,6 +19,12 @@ int main(){
   std::cout << "sigma = "
     << reaction.total_xs(E_level, Ea)
     << std::endl;
+  std::cout << "threshold Ea = "
+    << reaction.E_threshold
+    << std::endl;
+  std::cout << "max E_level = "
+    << reaction.max_level_energy(reaction.E_threshold)
+    << std::endl;
 
   return 0;
 }
