@@ -23,19 +23,23 @@ void TMarleyDecayScheme::do_cascade(std::string initial_energy) {
   }
 }
 
-void TMarleyDecayScheme::do_cascade(double initial_energy) {
+// Returns a pointer to the level owned by this decay scheme object
+// that has the closest excitation energy to E_level (E_level
+// has units of keV).
 
-  // Since we were given a numerical initial energy in this
-  // version of the function, search for the level whose energy is
-  // closest to the given value of initial_energy 
+// TODO: change units here so that everything is consistent (all energies MeV
+// perhaps?). Right now, TMarleyReaction uses MeV, while the ENSDF
+// data classes use keV.
+TMarleyLevel* TMarleyDecayScheme::get_pointer_to_closest_level(double E_level) {
+  // Search for the level whose energy is closest to the given value of E_level
   std::vector<double>::iterator it = std::lower_bound(
     sorted_level_energies.begin(), sorted_level_energies.end(),
-    initial_energy); 
+    E_level);
 
-  // Determine the index of the initial level energy appropriately
+  // Determine the index of the level energy appropriately
   unsigned int e_index = std::distance(sorted_level_energies.begin(), it);
   if (e_index == sorted_level_energies.size()) {
-    // The given initial energy is greater than every level energy in our
+    // The given energy is greater than every level energy in our
     // decay scheme. We will therefore assume that the initial level is the
     // highest level.  Its energy's index is given by one less than the
     // number of elements in the sorted vector, so subtract one from our
@@ -47,15 +51,27 @@ void TMarleyDecayScheme::do_cascade(double initial_energy) {
     // first element, we still need to check which of the
     // two levels found (one on each side) is really the
     // closest. Do so and reassign the index if needed.
-    if (std::abs(initial_energy - sorted_level_energies[e_index])
-      > std::abs(initial_energy - sorted_level_energies[e_index - 1]))
+    if (std::abs(E_level - sorted_level_energies[e_index])
+      > std::abs(E_level - sorted_level_energies[e_index - 1]))
     {
       --e_index;
     }
   }
 
+  // Get a pointer to the selected level object
   TMarleyLevel* plevel = pv_sorted_levels[e_index];
-    
+
+  return plevel;
+
+}
+
+void TMarleyDecayScheme::do_cascade(double initial_energy) {
+
+  // Since we were given a numerical initial energy in this
+  // version of the function, search for the level whose energy is
+  // closest to the given value of initial_energy. Then handle
+  // the cascade in the usual way.
+  TMarleyLevel* plevel = get_pointer_to_closest_level(initial_energy);
   do_cascade(plevel);
 }
 

@@ -1,14 +1,17 @@
 CXX=g++
 CXXFLAGS=-std=c++11 -I. -Wall -Wextra -Werror
 
-OBJ = react.o marley_utils.o TMarleyReaction.o #TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o parse.o
+OBJ = marley_utils.o TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o parse.o #react.o 
 
-all: react
+all: parse
 
 %.o: %.c
 	$(CXX) -c -o $@
 
-react: $(OBJ)
+#react: $(OBJ)
+#	$(CXX) -o $@ $^
+
+parse: $(OBJ)
 	$(CXX) -o $@ $^
 
 .PHONY: clean
