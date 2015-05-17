@@ -49,12 +49,41 @@ TMarleyReaction::TMarleyReaction(std::string filename) {
   std::cout << "DEBUG: I read mc = " << mc << std::endl;
   std::cout << "DEBUG: I read md_gs = " << md_gs << std::endl;
 
-  // Get the number of levels that have tabulated
+  // Read in the number of levels that have tabulated
   // B(F) + B(GT) data
   int num_levels;
   line = get_next_line(file_in, rx_comment, false);
   iss.str(line); 
+  iss.clear();
   iss >> num_levels;
+  std::cout << "DEBUG: I read num_levels = " << num_levels << std::endl;
+
+  // Read in all of the level energies (in MeV)
+  int j = 0;
+  double entry;
+  while (j < num_levels && file_in.good()) {
+    line = get_next_line(file_in, rx_comment, false);
+    iss.str(line);
+    iss.clear();
+    while (iss >> entry) {
+      residue_level_energies.push_back(entry);
+      ++j;
+      std::cout << "DEBUG: I read E = " << entry << std::endl;
+    }
+  }
+
+  // Read in all of the level B(F) + B(GT) values
+  j = 0;
+  while (j < num_levels && file_in.good()) {
+    line = get_next_line(file_in, rx_comment, false);
+    iss.str(line);
+    iss.clear();
+    while (iss >> entry) {
+      residue_level_strengths.push_back(entry);
+      ++j;
+      std::cout << "DEBUG: I read B(F) + B(GT) = " << entry << std::endl;
+    }
+  }
 
   // We haven't associated a decay scheme object with
   // this reaction yet, so set the decay scheme pointer
