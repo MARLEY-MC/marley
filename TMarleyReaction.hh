@@ -2,7 +2,9 @@
 #include <functional>
 #include <regex>
 #include <string>
+#include <vector>
 #include "TMarleyDecayScheme.hh"
+#include "TMarleyLevel.hh"
 
 class TMarleyReaction {
   public:
@@ -41,4 +43,7 @@ class TMarleyReaction {
     double Ea_threshold = ((mc + md_gs)*(mc + md_gs)
       - ma*ma - mb*mb)/(2*mb);
     TMarleyDecayScheme* ds;
+    std::vector<double> residue_level_energies; // Energy values from reaction dataset
+    std::vector<double> residue_level_strengths; // B(F) + B(GT) values from reaction dataset
+    std::vector<TMarleyLevel*> residue_level_pointers; // Pointers to the corresponding ENSDF decay scheme levels
 };
