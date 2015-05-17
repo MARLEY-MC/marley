@@ -191,6 +191,8 @@ void TMarleyLevel::clear_gammas() {
   std::discrete_distribution<int>::param_type
     params(gamma_intensities.begin(), gamma_intensities.end());
   gamma_dist.param(params);
+  // Update the gamma status to unknown
+  gammas_known = false;
 }
 
 std::vector<TMarleyGamma>* TMarleyLevel::get_gammas() {

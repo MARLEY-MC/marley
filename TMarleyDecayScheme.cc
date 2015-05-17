@@ -6,8 +6,7 @@
 #include "marley_utils.hh"
 #include "TMarleyDecayScheme.hh"
 
-// TODO: move these to an appropriate spot
-const double PI = 4*std::atan(1); //Define pi better... Make it accessible to functions w/o being global
+// TODO: move this to an appropriate spot
 const double atomicMass = 40.; //Potassium 40... Maybe add more digits of precision. Make it accessible to functions w/o being global
 
 
@@ -236,8 +235,9 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename) 
   {
 
     // Calculate Weisskopf Estimates here if gamma data is not known
-    if( (*j)->get_gamma_status() == false )
+    if( (*j)->get_gamma_status() == false ) {
       do_weisskopf(j - this->pv_sorted_levels.begin());
+    }
 
     std::vector<TMarleyGamma>* p_gammas = (*j)->get_gammas();
     double initial_level_energy = (*j)->get_numerical_energy();
@@ -501,11 +501,11 @@ void TMarleyDecayScheme::do_weisskopf(int i){
   int deltaJ; // Difference in spin
   int parProd; // Product of parities
   double trans_rate;
-  double min_rate = 1e+19; // Minimum rate for transitions. Those below this are neglected. Come up with a good way to determine this rate.
+  double min_rate = 1e+16; // Minimum rate for transitions. Those below this are neglected. Come up with a good way to determine this rate.
   int lambda;
   double BE, BM, f;
   double E_i, E_f;
-  
+
   for(int j = i-1; j > 0; j--){
       current = this->pv_sorted_levels[j];
       E_i = init->get_numerical_energy();
@@ -516,7 +516,7 @@ void TMarleyDecayScheme::do_weisskopf(int i){
       //Determine which type of EM transition takes place
       deltaJ = std::abs(init->get_ispin() - current->get_ispin());
       parProd = init->get_iparity() * current->get_iparity();
-	    
+
       if(parProd == 1) //Meaning parity stays the same
 	switch (deltaJ){
 	  case 0:
@@ -629,11 +629,11 @@ double TMarleyDecayScheme::doubleFact(int i){
 }
 
 double TMarleyDecayScheme::calcBE (int i){
-  return pow(1.2, 2*i) * 9 / (4*PI) / (i + 3) / (i + 3) * pow(atomicMass, 2*i/3.0);
+  return pow(1.2, 2*i) * 9 / (4*marley_utils::pi) / (i + 3) / (i + 3) * pow(atomicMass, 2*i/3.0);
 }
 
 double TMarleyDecayScheme::calcBM (int i){
-  return pow(1.2, 2*i - 2) * 90/PI / (i + 3) / (i + 3) * pow (atomicMass, (2*i - 2)/3.0);
+  return pow(1.2, 2*i - 2) * 90/marley_utils::pi / (i + 3) / (i + 3) * pow(atomicMass, (2*i - 2)/3.0);
 }
 
 double TMarleyDecayScheme::calcf (int i){

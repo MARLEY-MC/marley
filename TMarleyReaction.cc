@@ -1,6 +1,8 @@
 #include <cmath>
 #include <complex>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 #include "marley_utils.hh"
@@ -12,75 +14,133 @@ TMarleyReaction::TMarleyReaction() {
   ds = nullptr;
 }
 
+TMarleyReaction::TMarleyReaction(std::string filename) {
+
+
+  std::regex rx_comment("#.*"); // Matches comment lines
+
+  // Open the reaction data file for parsing
+  std::ifstream file_in(filename);
+
+  // If the file doesn't exist or some other error
+  // occurred, complain and give up.
+  if (!file_in.good()) {
+    throw std::runtime_error(std::string("Could not read from the ") +
+      "file " + filename);
+  }
+
+  std::string line; // String to store the current line
+                    // of the reaction data file during parsing
+
+  // TODO: add more error handling for this function
+
+  line = get_next_line(file_in, rx_comment, false);
+
+  // Read in the particle IDs
+  // TODO: implement this
+
+  line = get_next_line(file_in, rx_comment, false);
+
+  // Read in the particle masses
+  std::istringstream iss(line);
+  iss >> ma >> mb >> mc >> md_gs;
+  std::cout << "DEBUG: I read ma = " << ma << std::endl;
+  std::cout << "DEBUG: I read mb = " << mb << std::endl;
+  std::cout << "DEBUG: I read mc = " << mc << std::endl;
+  std::cout << "DEBUG: I read md_gs = " << md_gs << std::endl;
+
+  // Get the number of levels that have tabulated
+  // B(F) + B(GT) data
+  int num_levels;
+  line = get_next_line(file_in, rx_comment, false);
+  iss.str(line); 
+  iss >> num_levels;
+
+  // We haven't associated a decay scheme object with
+  // this reaction yet, so set the decay scheme pointer
+  // to nullptr for the time being
+  ds = nullptr;
+
+  file_in.close();
+}
+
+// Advance to the next line of a file that either matches (match == true)
+// or does not match (match == false) a given regular expression
+std::string TMarleyReaction::get_next_line(std::ifstream &file_in,
+  std::regex &rx, bool match) const {
+
+  std::string line;
+  while (!file_in.eof()) {
+    // Get the next line of the file
+    std::getline(file_in, line);
+ 
+    // Check to see if the new line fulfills the search criteria
+    if (std::regex_match(line, rx) == match) {
+      // If it does, return it
+      return line;
+    }
+    // If not, keep looking
+  }
+
+  // If the end of the file is encountered before a suitable
+  // line is found, return an empty string
+  return std::string("");
+}
+
 // Associate a decay scheme object with this reaction. This will provide
 // nuclear structure data for sampling final residue energy levels.
 void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme) {
   ds = scheme;
 }
 
-// TODO: Fix both Fermi functions to use natural units and energies in MeV (this keeps
-// everything consistent)
-
 // Fermi function used in calculating cross-sections
 // The equation was taken from http://en.wikipedia.org/wiki/Beta_decay
-// Input: atomic number Z and electron kinetic energy T (in keV), positron or electron?
-double TMarleyReaction::fermi_function(double z, double t, bool electron){
+// Input: atomic number Z, mass number A, electron total energy E (MeV), positron or electron?
+double TMarleyReaction::fermi_function(int Z, int A, double E, bool electron){
   
-  double charge = z;
-  double kin_e = t;
-  double atomic_mass = 40.;
+  double m = marley_utils::m_e; // electron mass (MeV)
   
-  // Constants
-  const double alpha = 7.297e-3; // Fine-structure constant
-  const double hbar_c = 1.97e+3; // hbar*c in keV*fm
-  const double e = std::exp(1); // Euler's number
-  const double pi = 4*std::atan(1);
-  const double r_0 = 1.2; // in fm
-  const double m = 510.9989; // in keV
+  double p = marley_utils::real_sqrt(E*E - m*m); // Electron momentum
+  double s = std::sqrt(1 - marley_utils::alpha*marley_utils::alpha*Z*Z);
 
-  double eta;
-  double p = std::sqrt(kin_e*kin_e + 2*m*kin_e); // Electron momentum
-  double s = std::sqrt(1 - alpha*alpha*charge*charge);
-  double energy = std::sqrt(p*p + m*m);
-  double r_n = r_0*std::pow(atomic_mass, 1./3);
-  double rho = r_n/hbar_c;
-  
-  if(electron)
-    eta = alpha*charge*energy/p;
-  else
-    eta = -alpha*charge*energy/p;
+  // Fitting coefficient for estimating the nuclear radius
+  // (taken from Introductory Nuclear Physics by Kenneth S. Krane)
+  const double r_0 = 1.2; // fm
+
+  // Estimate the nuclear radius using r_n = r_0*A^(1/3)
+  double r_n = r_0*std::pow(A, 1./3);
+
+  // Convert the estimated nuclear radius to natural units (MeV^(-1))
+  double rho = r_n/marley_utils::hbar_c;
+
+  double eta = marley_utils::alpha*Z*E/p;
+  if (!electron) eta *= -1;
 
   // Complex variables for the gamma function
   std::complex<double> a(s, eta);
-  std::complex<double> b(1+2*s, 0);
+  //std::complex<double> b(1+2*s, 0);
+  double b = std::tgamma(1+2*s);
 
-  return 2*(1 + s)* std::pow(2*p*rho, 2*s-2)*std::pow(e, pi*eta)*std::norm(marley_utils::gamma(a))
-    / (std::abs(marley_utils::gamma(b)) * std::abs(marley_utils::gamma(b)));
+  return 2*(1 + s)*std::pow(2*p*rho, 2*s-2)*std::exp(marley_utils::pi*eta)*std::norm(marley_utils::gamma(a))
+    / (b*b);
+    // /std::pow(std::abs(marley_utils::gamma(b)), 2);
 }
 
-double TMarleyReaction::fermi_approx(int z, double t, bool electron){
+
+// Input: atomic number Z, electron total energy E (MeV), positron or electron?
+double TMarleyReaction::fermi_approx(int Z, double E, bool electron){
 
   // This is a test for comparison with the "exact" calculation, which involves
   // complex gamma functions. This holds true for Q << mc^2
   
-  int charge = z;
-  double kin_e = t;
+  const double m = marley_utils::m_e; // electron mass (MeV)
 
-  const double alpha = 7.297e-3; // Fine-structure constant
-  const double e = std::exp(1); // Euler's number
-  const double pi = 4*std::atan(1);
-  const double m = 510.9989; // in keV
-
-  double eta;
-  double p = std::sqrt(kin_e*kin_e + 2*kin_e*m);
-  double energy = std::sqrt(p*p + m*m);
+  double p = std::sqrt(E*E - m*m);
   
-  if(electron)
-    eta = alpha*charge*energy/p;
-  else
-    eta = -alpha*charge*energy/p;
+  double eta = marley_utils::alpha*Z*E/p;
+  if (!electron) eta *= -1;
 
-  return 2*pi*eta/(1-std::pow(e, -2*pi*eta));
+  return 2*marley_utils::pi*eta/(1-std::exp(-2*marley_utils::pi*eta));
 }
 
 double TMarleyReaction::ejectile_energy(double E_level, double Ea, double cos_theta_c) {
@@ -196,7 +256,7 @@ void TMarleyReaction::create_event(double Ea) {
 
     // Get the excitation energy for the current level
     double level_energy = (*j)->get_numerical_energy();
-    std::cout << "DEBUG: Found level with energy = " << level_energy << std::endl;
+    //std::cout << "DEBUG: Found level with energy = " << level_energy << std::endl;
 
     // Exit the loop early if you reach a level with an energy that's too high
     if (level_energy > max_E_level) break;
@@ -218,8 +278,8 @@ void TMarleyReaction::create_event(double Ea) {
     }
     else {
     level_weights.push_back(xs);
-    std::cout << "DEBUG: This level was assigned weight = "
-      << xs << std::endl;
+    //std::cout << "DEBUG: This level was assigned weight = "
+    //  << xs << std::endl;
     }
   }
 
@@ -315,7 +375,7 @@ double TMarleyReaction::differential_xs(double E_level, double Ea, double cos_th
   // In: Muon Physics, Volume II: Weak Interactions.
   // Ed. by V. W. Hughes and C. S. Wu.
   return (1.0/(2*std::acos(-1)))*GF*GF*Vud*Vud
-    *pc*Ec*fermi_function(Zf, Ec - mc, true)*matrix_element
+    *pc*Ec*fermi_function(Zf, 40, Ec, true)*matrix_element
     /(1.0 + (Ea/mb)*(1 - (Ec/pc)*cos_theta_c));
 }
 

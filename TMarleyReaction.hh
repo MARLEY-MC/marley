@@ -1,12 +1,15 @@
 #pragma once
 #include <functional>
+#include <regex>
+#include <string>
 #include "TMarleyDecayScheme.hh"
 
 class TMarleyReaction {
   public:
     TMarleyReaction();
-    double fermi_function(double z, double t, bool electron);
-    double fermi_approx(int z, double t, bool electron);
+    TMarleyReaction(std::string filename);
+    double fermi_function(int Z, int A, double E, bool electron);
+    double fermi_approx(int Z, double E, bool electron);
     double ejectile_energy(double E_level, double Ea, double cos_theta_c);
     double max_level_energy(double Ea);
     double get_threshold_energy();
@@ -15,6 +18,8 @@ class TMarleyReaction {
     double sample_ejectile_scattering_cosine(double E_level, double Ea);
     void set_decay_scheme(TMarleyDecayScheme* scheme);
     void create_event(double Ea); // TODO: change this to return an event object
+    std::string get_next_line(std::ifstream &file_in,
+      std::regex &rx, bool match) const;
 
   private:
     // TODO: change this class so that these masses (and any other
@@ -25,7 +30,7 @@ class TMarleyReaction {
     // These masses are in MeV/c^2
     double ma = 0; // nu_e
     double mb = 37224.72; // 40Ar
-    double mc = 0.5109989; // e-
+    double mc = 0.510998928; // e-
     double md_gs = 37226.23; // 40K
     double GF = 1; //1.16637e-11; // Fermi coupling constant (MeV^(-2)) 
     double Vud = 0.97427; // abs(V_ud) (from CKM matrix)

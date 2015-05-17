@@ -15,6 +15,20 @@ namespace marley_utils {
   // standard MARLEY energy units (MeV)
   const double MeV = 1e-3;
 
+  // Consistent value of pi to use throughout all of MARLEY
+  const double pi = std::acos(-1);
+
+  // The physical constants given here were all taken from
+  // the 2014 edition of the Review of Particle Physics
+  // published by the Particle Data Group.
+  
+  // Fine structure constant 
+  const double alpha = 7.2973525698e-3;
+  // Conversion factor used to switch to natural units (hbar = c = 1)
+  const double hbar_c = 197.3269718; // MeV*fm
+  // Electron mass
+  const double m_e = 0.510998928; // MeV
+
   // Strings to use for latex table output of ENSDF data
   extern std::string latex_table_1, latex_table_2, latex_table_3, latex_table_4;
 
