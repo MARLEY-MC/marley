@@ -420,7 +420,9 @@ void TMarleyReaction::create_event(double Ea) {
   //std::cout << "Ed = " << Ed << std::endl;
   //std::cout << "cos_theta_d = " << cos_theta_d << std::endl;
   std::cout << "e- kinetic energy = " << Ec - mc << std::endl;
+  std::cout << "e- mass = " << mc << std::endl;
   std::cout << "40K kinetic energy = " << Ed - md_gs - E_level << std::endl;
+  std::cout << "Ground state nuclear mass change = " << md_gs - mb << std::endl; 
 
   // Simulate de-excitation gammas
   this->ds->do_cascade(plevel);

@@ -25,6 +25,8 @@ int main(){
 
   // Simulate a reaction at the given
   // incident neutrino energy
+  std::cout.precision(15);
+  std::cout << std::scientific;
   for (int i = 1; i < 100; i++) {
     r.create_event(Ea);
     std::cout << std::endl << std::endl;
