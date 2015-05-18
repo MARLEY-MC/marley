@@ -134,6 +134,24 @@ std::string TMarleyReaction::get_next_line(std::ifstream &file_in,
 // nuclear structure data for sampling final residue energy levels.
 void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme) {
 
+  if (scheme == nullptr) throw std::runtime_error(std::string("Null pointer")
+    + " passed to TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme)");
+
+  // Check to see if the decay scheme being associated with this
+  // reaction is for the correct nuclide. If the nuc_id in the decay
+  // scheme object does not match the one we'd expect for this reaction's
+  // final state nucleus, complain
+  std::string reaction_nuc_id = marley_utils::nuc_id(Zf, Af);
+  std::string scheme_nuc_id = scheme->get_nuc_id();
+  if (reaction_nuc_id != scheme_nuc_id) throw
+    std::runtime_error(std::string("Nuclear data mismatch: attempted ")
+    + "to associate a decay scheme object that has ENSDF nucid "
+    + marley_utils::trim_copy(scheme_nuc_id)
+    + " with a reaction object that has nucid "
+    + marley_utils::trim_copy(reaction_nuc_id));
+
+  // The decay scheme object has passed our error checks, so go
+  // ahead and associate it with this reaction
   ds = scheme;
 
   // Clear the list of pointers to the ENSDF levels. This will need to 
