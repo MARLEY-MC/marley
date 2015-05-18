@@ -31,12 +31,20 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
   line = get_next_line(file_in, rx_comment, false);
 
   // Read in the particle IDs
-  // TODO: implement this
+  std::istringstream iss(line);
+  iss >> pid_a >> pid_b >> pid_c >> pid_d;
 
-  line = get_next_line(file_in, rx_comment, false);
+  // Get initial and final values of the nuclear
+  // charge and mass number from the pids
+  Zi = (pid_b % 10000000)/10000;
+  Ai = (pid_b % 10000)/10;
+  Zf = (pid_d % 10000000)/10000;
+  Af = (pid_b % 10000)/10;
 
   // Read in the particle masses
-  std::istringstream iss(line);
+  line = get_next_line(file_in, rx_comment, false);
+  iss.str(line); 
+  iss.clear();
   iss >> ma >> mb >> mc >> md_gs;
 
   Ea_threshold = ((mc + md_gs)*(mc + md_gs) - ma*ma - mb*mb)/(2*mb);
@@ -412,7 +420,9 @@ void TMarleyReaction::create_event(double Ea) {
   //std::cout << "Ed = " << Ed << std::endl;
   //std::cout << "cos_theta_d = " << cos_theta_d << std::endl;
   std::cout << "e- kinetic energy = " << Ec - mc << std::endl;
+  std::cout << "e- mass = " << mc << std::endl;
   std::cout << "40K kinetic energy = " << Ed - md_gs - E_level << std::endl;
+  std::cout << "Ground state nuclear mass change = " << md_gs - mb << std::endl; 
 
   // Simulate de-excitation gammas
   this->ds->do_cascade(plevel);

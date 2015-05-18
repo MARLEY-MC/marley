@@ -94,6 +94,8 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level) {
       //std::cout << "  emitted gamma with energy " << p_gamma->get_energy()
       //  << " MeV." New level has energy " << p_current_level->get_string_energy()
       //  << " keV." << std::endl;
+      std::cout.precision(15);
+      std::cout << std::scientific;
       std::cout << "gamma energy = " << p_gamma->get_energy() << std::endl;
     }
   }
