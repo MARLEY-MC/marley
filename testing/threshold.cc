@@ -27,9 +27,9 @@ int main()
   bool firstblank = false;
 
   std::regex empty_line("\\s*");
-  std::regex electron("e- kinetic energy = [0-9]+.[0-9]+");
-  std::regex potassium("40K kinetic energy = [0-9]+.[0-9]+");
-  std::regex gamma("gamma energy = [0-9]+.[0-9]+");
+  std::regex electron("e- kinetic energy = [0-9]+.[0-9]+e[+-][0-9]+");
+  std::regex potassium("40K kinetic energy = [0-9]+.[0-9]+e[+-][0-9]+");
+  std::regex gamma("gamma energy = [0-9]+.[0-9]+e[+-][0-9]+");
   
   while(infile)
     {
@@ -41,24 +41,24 @@ int main()
 	{ 
 	  if(std::regex_match(line, gamma))
 	    {
-	      e = std::stod(line.substr(15,21));
+	      e = std::stod(line.substr(15,35));
 	      std::cout << "Gamma "; // << e << std::endl;
 	      firstblank = true;
 	    }
 	  else if(std::regex_match(line, electron))
 	    {
-	      e = std::stod(line.substr(20,26));
+	      e = std::stod(line.substr(20,40));
 	      std::cout << "Electron "; // << e << std::endl;
 	    }
 	  else if(std::regex_match(line, potassium))
 	    {
-	      e = std::stod(line.substr(21,31));
+	      e = std::stod(line.substr(21,41));
 	      std::cout << "40K "; // << e << std::endl;
 	    }
 
-	  else
-	    std::cout << "I shouldn't be here!\n";
-	  
+	  // else
+	  //std::cout << line << std::endl;
+	      
 	  if( e > 0.5 ) // Threshold of 0.5 MeV
 	    {
 	      std::cout << "above threshold: " << e << std::endl;
@@ -66,8 +66,8 @@ int main()
 	    }
 
 	  // Don't record the energy if it's below the threshold
-	  else 
-	    std::cout << "below threshold: " << e << std::endl;
+	   else if (e < 0.5 && e != 0)
+	     std::cout << "below threshold: " << e << std::endl;
 
 	    
 	}
