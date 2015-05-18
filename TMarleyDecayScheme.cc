@@ -71,8 +71,8 @@ void TMarleyDecayScheme::do_cascade(double initial_energy) {
 }
 
 void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level) {
-  std::cout << "Beginning gamma cascade at level with energy "
-    << initial_level->get_string_energy() << " keV" << std::endl;
+  //std::cout << "Beginning gamma cascade at level with energy "
+  //  << initial_level->get_string_energy() << " keV" << std::endl;
 
   bool cascade_finished = false;
 
@@ -82,7 +82,7 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level) {
     // Randomly select a gamma to produce
     TMarleyGamma* p_gamma = p_current_level->sample_gamma();
     if (p_gamma == nullptr) {
-      std::cout << "  this level does not have any gammas" << std::endl;
+      //std::cout << "  this level does not have any gammas" << std::endl;
       cascade_finished = true;
     }
     else {
@@ -91,14 +91,15 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level) {
         throw std::runtime_error(std::string("This gamma does not have an end level. ")
           + "Cannot continue cascade.");
       }
-      std::cout << "  emitted gamma with energy " << p_gamma->get_energy()
-        << " MeV. New level has energy " << p_current_level->get_string_energy()
-        << " keV." << std::endl;
+      //std::cout << "  emitted gamma with energy " << p_gamma->get_energy()
+      //  << " MeV." New level has energy " << p_current_level->get_string_energy()
+      //  << " keV." << std::endl;
+      std::cout << "gamma energy = " << p_gamma->get_energy() << std::endl;
     }
   }
 
-  std::cout << "Finished gamma cascade at level with energy "
-    << p_current_level->get_string_energy() << std::endl;
+  //std::cout << "Finished gamma cascade at level with energy "
+  //  << p_current_level->get_string_energy() << std::endl;
 }
 
 
