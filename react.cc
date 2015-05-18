@@ -16,7 +16,7 @@ int main(){
   // imported from the ENSDF file
   TMarleyDecayScheme ds(nuc_id, filename);
 
-  TMarleyReaction r("ve40ArCC.react");
+  TMarleyReaction r("ve40ArCC.react", &ds);
 
   // TODO: debug numerical errors that arise when
   // Ea = E_threshold
@@ -25,7 +25,7 @@ int main(){
 
   // Use the parsed ENSDF nuclear structure
   // data for simulating this reaction
-  r.set_decay_scheme(&ds);
+  //r.set_decay_scheme(&ds);
 
   // Simulate a reaction at the given
   // incident neutrino energy
@@ -48,7 +48,7 @@ int main(){
   //}
 
   std::cout << std::endl << std::endl;
-  ds.print_report();
+  //ds.print_report();
 
   return 0;
 }

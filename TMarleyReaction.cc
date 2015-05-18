@@ -14,8 +14,8 @@ TMarleyReaction::TMarleyReaction() {
   ds = nullptr;
 }
 
-TMarleyReaction::TMarleyReaction(std::string filename) {
 
+TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* scheme) {
 
   std::regex rx_comment("#.*"); // Matches comment lines
 
@@ -60,15 +60,26 @@ TMarleyReaction::TMarleyReaction(std::string filename) {
 
   // Read in all of the level energies (in MeV)
   int j = 0;
-  double entry;
+  double entry, old_entry;
   while (j < num_levels && file_in.good()) {
     line = get_next_line(file_in, rx_comment, false);
     iss.str(line);
     iss.clear();
     while (iss >> entry) {
+      // TODO: consider implementing a sorting procedure rather than strictly
+      // enforcing that energies must be given in ascending order. Note that
+      // you will need to alter the order of the B(F) + B(GT) values
+      // as well if you sort the energies.
+      
+      // The order of the entries is important because later uses of the
+      // residue_level_energies vector assume that they are sorted in
+      // order of ascending energy.
+      if (old_entry >= entry) throw std::runtime_error(std::string("Invalid reaction dataset. ")
+        + "Level energies must be unique and must be given in ascending order.");
       residue_level_energies.push_back(entry);
       ++j;
       std::cout << "DEBUG: I read E = " << entry << std::endl;
+      old_entry = entry;
     }
   }
 
@@ -85,10 +96,16 @@ TMarleyReaction::TMarleyReaction(std::string filename) {
     }
   }
 
-  // We haven't associated a decay scheme object with
-  // this reaction yet, so set the decay scheme pointer
-  // to nullptr for the time being
-  ds = nullptr;
+  // If a pointer to a decay scheme object is supplied
+  // to the constructor, associate it with this reaction.
+  // If not, note that we don't have nuclear structure data
+  // associated with this reaction yet.
+  if (scheme != nullptr) {
+    set_decay_scheme(scheme);
+  }
+  else {
+    ds = nullptr;
+  }
 
   file_in.close();
 }
@@ -119,7 +136,42 @@ std::string TMarleyReaction::get_next_line(std::ifstream &file_in,
 // Associate a decay scheme object with this reaction. This will provide
 // nuclear structure data for sampling final residue energy levels.
 void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme) {
+
   ds = scheme;
+
+  // Clear the list of pointers to the ENSDF levels. This will need to 
+  // be remade each time we associate nuclear structure data with this
+  // reaction object
+  residue_level_pointers.clear();
+
+  // Cycle through each of the level energies given in the reaction dataset. 
+  for(std::vector<double>::iterator it = residue_level_energies.begin();
+  it != residue_level_energies.end(); ++it)
+  {
+    // For each one, find a pointer to the level with the closest energy owned
+    // by the decay scheme object.
+    TMarleyLevel* plevel = ds->get_pointer_to_closest_level(*it);
+    std::cout << "DEBUG: I matched E = " << *it << " MeV to the ENSDF level "
+      << "with energy " << plevel->get_numerical_energy() << " MeV" << std::endl;
+
+    // Complain if there are duplicates (if there are duplicates, we'll have
+    // two different B(F) + B(GT) values for the same level object)
+    if (std::find(residue_level_pointers.begin(), residue_level_pointers.end(),
+      plevel) != residue_level_pointers.end()) {
+      // residue_level_pointers already contains plevel
+      throw std::runtime_error(std::string("Reaction dataset gives two level energies ")
+        + "that refer to the same ENSDF level at "
+        + std::to_string(plevel->get_numerical_energy()) + " MeV");
+    }
+
+    // TODO: add check to see if the energy of the chosen level is very different
+    // from the energy given in the reaction dataset. If it is, the level matchup
+    // is likely incorrect.
+
+    // Add the ENSDF level pointer to the list
+    residue_level_pointers.push_back(plevel);
+  }
+
 }
 
 // Fermi function used in calculating cross-sections
@@ -260,56 +312,52 @@ void TMarleyReaction::create_event(double Ea) {
   // levels, so we won't worry about its default behavior.
   static std::discrete_distribution<unsigned int> ldist;
 
-  // Get level information from the decay scheme
+  // Check that there is a decay scheme
   // object associated with this reaction. Complain
-  // if problems occur
+  // if there is a problem.
   if (ds == nullptr) {
     throw std::runtime_error(std::string("Could not create this event. No nuclear ")
       + "structure data is associated with this reaction.");
   } 
+
+  // TODO: add more error checks as necessary
   
-  std::vector<TMarleyLevel*>* pv_levels = ds->get_sorted_level_pointers();
-
-  if (pv_levels->empty()) {
-    throw std::runtime_error(std::string("Could not create this event. The ")
-      + "TMarleyDecayScheme object associated with this reaction "
-      + "does not contain any level data.");
-  }
-
-  // The pointers in pv_levels are ordered by increasing energy.
-  // Iterate over the levels, assigning the total cross section
-  // for each level as its weight until you reach the end of pv_levels
-  // or a level that is kinematically forbidden
-  for(std::vector<TMarleyLevel*>::iterator j = pv_levels->begin();
-    j != pv_levels->end(); ++j) {
+  // The pointers in residue_level_pointers are ordered by increasing energy
+  // (this currently enforced by the reaction data format and is checked
+  // during parsing). Iterate over the levels, assigning the total cross section
+  // for each level as its weight until you reach the end of residue_level_pointers
+  // or a level that is kinematically forbidden. If the matrix element B(F) + B(GT)
+  // for a level vanishes, skip computing the total cross section and assign a weight
+  // of zero for efficiency.
+  for(unsigned int i = 0; i < residue_level_pointers.size(); ++i) {
 
     // Get the excitation energy for the current level
-    double level_energy = (*j)->get_numerical_energy();
+    double level_energy = residue_level_pointers[i]->get_numerical_energy();
     //std::cout << "DEBUG: Found level with energy = " << level_energy << std::endl;
 
     // Exit the loop early if you reach a level with an energy that's too high
     if (level_energy > max_E_level) break;
 
-    // TODO: add a check here for whether the matrix element (B(F) + B(GT))
-    // is nonvanishing for the current level. If it is, just set the weight
-    // equal to zero rather than calling total_xs. This will avoid unnecessary
-    // numerical integrations.
-
-    // Assign a weight to this level equal to the total reaction
-    // cross section. Note that std::discrete_distribution automatically
-    // normalizes the weights, so we don't have to do that ourselves.
-
-    //DEBUG
-    double xs = total_xs(level_energy, Ea);
-    if (std::isnan(xs)) {
-      std::cout << "DEBUG: this level gave a weight of nan, so I made it zero." << std::endl;
-      level_weights.push_back(0.0);
+    // Check whether the matrix element (B(F) + B(GT)) is nonvanishing for the
+    // current level. If it is, just set the weight equal to zero rather than
+    // calling total_xs. This will avoid unnecessary numerical integrations.
+    double matrix_el = residue_level_strengths[i];
+    double xs;
+    if (matrix_el == 0) {
+      xs = 0;
     }
     else {
-    level_weights.push_back(xs);
-    //std::cout << "DEBUG: This level was assigned weight = "
-    //  << xs << std::endl;
+      // If the matrix element is nonzero, assign a weight to this level equal
+      // to the total reaction cross section. Note that std::discrete_distribution
+      // automatically normalizes the weights, so we don't have to do that ourselves.
+      double xs = total_xs(level_energy, Ea, matrix_el);
+      //DEBUG
+      if (std::isnan(xs)) {
+        std::cout << "DEBUG: this level gave a weight of nan, so I made it zero." << std::endl;
+        xs = 0;
+      }
     }
+    level_weights.push_back(xs);
   }
 
   // Complain if none of the levels we have data for are kinematically allowed
@@ -335,22 +383,25 @@ void TMarleyReaction::create_event(double Ea) {
   //    << " MeV has probability " << n << " of being selected" << std::endl;
   //}
 
-
   // Sample a level index using our discrete distribution and the
   // current set of weights
   unsigned int l_index = ldist(marley_utils::rand_gen, params);
 
   // Get a pointer to the selected level
-  TMarleyLevel* plevel = pv_levels->at(l_index);
+  TMarleyLevel* plevel = residue_level_pointers.at(l_index);
 
   // Get the energy of the selected level. This will be
   // needed for sampling a scattering cosine.
   double E_level = plevel->get_numerical_energy();
   double md = md_gs + E_level;
 
+  // Get the matrix element (B(F) + B(GT) value) for the
+  // selected level
+  double matrix_element = residue_level_strengths.at(l_index);
+
   // Sample a scattering angle for the ejectile using
   // the differential cross section
-  double cos_theta_c = sample_ejectile_scattering_cosine(E_level, Ea);
+  double cos_theta_c = sample_ejectile_scattering_cosine(E_level, Ea, matrix_element);
   double theta_c = std::acos(cos_theta_c);
 
   // Use conservation of 4-momentum to compute the ejectile energy
@@ -379,15 +430,13 @@ void TMarleyReaction::create_event(double Ea) {
 // Compute the differential reaction cross section dsigma/dcos_theta
 // for a given final residue level, projectile energy, and ejectile
 // scattering cosine
-double TMarleyReaction::differential_xs(double E_level, double Ea, double cos_theta_c) {
+double TMarleyReaction::differential_xs(double E_level, double Ea,
+  double matrix_element, double cos_theta_c)
+{
 
   double Ec = this->ejectile_energy(E_level, Ea, cos_theta_c);
   double pc = marley_utils::real_sqrt(Ec*Ec - mc*mc);
 
-  // TODO: compute the matrix element using B(F) + B(GT)
-  // values and/or some other method
-  double matrix_element = 1;
-  
   // TODO: consider removing the constants GF, Vud, etc. since
   // for sampling they will not be needed (what matters is the
   // relative size of the differential cross section).
@@ -411,7 +460,7 @@ double TMarleyReaction::differential_xs(double E_level, double Ea, double cos_th
 // Numerically integrate the differential cross section over
 // cos(theta_c) = [-1,1] to get the total reaction cross section
 // for a given final residue level and projectile energy
-double TMarleyReaction::total_xs(double E_level, double Ea) {
+double TMarleyReaction::total_xs(double E_level, double Ea, double matrix_element) {
   // TODO: consider switching to a different integration method,
   // using tabulated data, etc.
 
@@ -423,7 +472,7 @@ double TMarleyReaction::total_xs(double E_level, double Ea) {
   // Create a forwarding call wrapper for the  differential_xs
   // member function that takes a single argument.
   std::function<double(double)> dxs = std::bind(
-    &TMarleyReaction::differential_xs, this, E_level, Ea, std::placeholders::_1);
+    &TMarleyReaction::differential_xs, this, E_level, Ea, matrix_element, std::placeholders::_1);
 
   // Numerically integrate using the call wrapper, the integration bounds,
   // and the number of subintervals
@@ -432,12 +481,13 @@ double TMarleyReaction::total_xs(double E_level, double Ea) {
 
 // Sample a scattering cosine for the ejectile using the differential
 // cross section defined in the member function differential_xs
-double TMarleyReaction::sample_ejectile_scattering_cosine(double E_level, double Ea) {
+double TMarleyReaction::sample_ejectile_scattering_cosine(double E_level,
+  double Ea, double matrix_element) {
 
   // Get the total cross section for this reaction based
   // on the projectile energy and final residue energy.
   // This will be used as a normalization factor.
-  double xstot = total_xs(E_level, Ea);
+  double xstot = total_xs(E_level, Ea, matrix_element);
 
   // Make a normalized version of the differential cross section
   // to use as our probability density function for sampling.
@@ -447,8 +497,8 @@ double TMarleyReaction::sample_ejectile_scattering_cosine(double E_level, double
   // without having to worry about the absolute scale of the differential cross
   // section (the normalized version has an average value of 0.5,
   // so an epsilon of, say, 1e-8 is perfectly usable).
-  std::function<double(double)> ndxs = [this, &xstot, &E_level, &Ea](double cos_theta_c)
-    -> double { return (1.0/xstot)*differential_xs(E_level, Ea, cos_theta_c); };
+  std::function<double(double)> ndxs = [this, &xstot, &E_level, &Ea, &matrix_element](double cos_theta_c)
+    -> double { return (1.0/xstot)*differential_xs(E_level, Ea, matrix_element, cos_theta_c); };
 
   // This variable will be loaded with the ejectile cosine that
   // corresponds to the largest differential xs

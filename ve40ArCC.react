@@ -15,7 +15,8 @@
 # M. Bhattacharya, et al., Phys. Rev. C 58, 3677 (1998).
 # 40Sc levels are used for observed strengths that did
 # not correspond to 40K levels known in 1998.
-#
+# The last energy is increased to match the ENSDF
+# level scheme better.
 # Particle IDs
 12 1000180400 11 1000190400
 # Particle Masses (MeV)
@@ -25,7 +26,7 @@
 # Level energies (MeV)
 2.28988 2.73038 2.95070 3.10975 3.14644 3.293 3.373850
 3.79758 3.84025 3.898 3.996 4.352 4.38400 4.697 4.761
-4.78865 4.848 5.027 5.223 5.696 6.006
+4.78865 4.848 5.027 5.223 5.696 6.106
 # B(F) + B(GT) values
 0.90 1.50 0.11 0.06 0.04 0.01 0.16 0.26 0.01
 0.05 0.11 0.29 3.84 0.31 0.38 0.47 0.36 0.23
