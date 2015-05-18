@@ -299,3 +299,36 @@ double marley_utils::real_sqrt(double num) {
     return std::sqrt(num);
   }
 }
+
+// For a given atomic number Z and mass number A, return a matching ENSDF nucid
+std::string marley_utils::nuc_id(int Z, int A) {
+  // Check to make sure Z and A have acceptable values
+  if (Z < 1 || A < 1 || A > 999) throw std::runtime_error(
+    std::string("The atomic number Z = ") + std::to_string(Z)
+    + " and the mass number A = " + std::to_string(A)
+    + " do not correspond to a valid ENSDF nucid.");
+
+  // Create a three-character string representing the mass number
+  std::string atomic_mass_number;
+  if (A < 10) {
+    atomic_mass_number = "  " + std::to_string(A);
+  }
+  else if (A < 100) {
+    atomic_mass_number = " " + std::to_string(A);
+  }
+  else {
+    atomic_mass_number = std::to_string(A);
+  }
+
+  // Get the element symbol as a string
+  std::string symbol = element_symbols.at(Z);
+
+  // Make the symbol completely uppercase
+  std::transform(symbol.begin(), symbol.end(), symbol.begin(), ::toupper);
+
+  // If the symbol is only one character, pad the string so that
+  // it is two characters long
+  if (symbol.length() == 1) symbol += " ";
+
+  return atomic_mass_number + symbol;
+}
