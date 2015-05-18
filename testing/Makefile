@@ -14,4 +14,4 @@ threshold: $(OBJ)
 .PHONY: clean
 
 clean:
-	rm -f *.o threshold
+	rm -f *.o threshold out.txt energy_hist.root
