@@ -8,7 +8,6 @@
 
 class TMarleyReaction {
   public:
-    TMarleyReaction();
     TMarleyReaction(std::string filename, TMarleyDecayScheme* scheme = nullptr);
     double fermi_function(int Z, int A, double E, bool electron);
     double fermi_approx(int Z, double E, bool electron);
@@ -30,18 +29,17 @@ class TMarleyReaction {
     // of this class for other reaction types
 
     // These masses are in MeV/c^2
-    double ma = 0; // nu_e
-    double mb = 37224.72; // 40Ar
-    double mc = 0.510998928; // e-
-    double md_gs = 37226.23; // 40K
+    double ma; // nu_e
+    double mb; // 40Ar
+    double mc; // e-
+    double md_gs; // 40K
     double GF = 1; //1.16637e-11; // Fermi coupling constant (MeV^(-2)) 
     double Vud = 0.97427; // abs(V_ud) (from CKM matrix)
     double Zf = 19;
     // Lab-frame total energy of the projectile at threshold
     // for this reaction (all final-state particles at rest
     // in the CM frame)
-    double Ea_threshold = ((mc + md_gs)*(mc + md_gs)
-      - ma*ma - mb*mb)/(2*mb);
+    double Ea_threshold;
     TMarleyDecayScheme* ds;
     std::vector<double> residue_level_energies; // Energy values from reaction dataset
     std::vector<double> residue_level_strengths; // B(F) + B(GT) values from reaction dataset

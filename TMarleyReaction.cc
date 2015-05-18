@@ -9,12 +9,6 @@
 #include "TMarleyReaction.hh"
 #include "TMarleyLevel.hh"
 
-TMarleyReaction::TMarleyReaction() {
-  // TODO: add stuff here
-  ds = nullptr;
-}
-
-
 TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* scheme) {
 
   std::regex rx_comment("#.*"); // Matches comment lines
@@ -44,10 +38,8 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
   // Read in the particle masses
   std::istringstream iss(line);
   iss >> ma >> mb >> mc >> md_gs;
-  std::cout << "DEBUG: I read ma = " << ma << std::endl;
-  std::cout << "DEBUG: I read mb = " << mb << std::endl;
-  std::cout << "DEBUG: I read mc = " << mc << std::endl;
-  std::cout << "DEBUG: I read md_gs = " << md_gs << std::endl;
+
+  Ea_threshold = ((mc + md_gs)*(mc + md_gs) - ma*ma - mb*mb)/(2*mb);
 
   // Read in the number of levels that have tabulated
   // B(F) + B(GT) data
@@ -56,7 +48,6 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
   iss.str(line); 
   iss.clear();
   iss >> num_levels;
-  std::cout << "DEBUG: I read num_levels = " << num_levels << std::endl;
 
   // Read in all of the level energies (in MeV)
   int j = 0;
@@ -78,7 +69,6 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
         + "Level energies must be unique and must be given in ascending order.");
       residue_level_energies.push_back(entry);
       ++j;
-      std::cout << "DEBUG: I read E = " << entry << std::endl;
       old_entry = entry;
     }
   }
@@ -92,7 +82,6 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
     while (iss >> entry) {
       residue_level_strengths.push_back(entry);
       ++j;
-      std::cout << "DEBUG: I read B(F) + B(GT) = " << entry << std::endl;
     }
   }
 
@@ -151,8 +140,8 @@ void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme) {
     // For each one, find a pointer to the level with the closest energy owned
     // by the decay scheme object.
     TMarleyLevel* plevel = ds->get_pointer_to_closest_level(*it);
-    std::cout << "DEBUG: I matched E = " << *it << " MeV to the ENSDF level "
-      << "with energy " << plevel->get_numerical_energy() << " MeV" << std::endl;
+    //std::cout << "DEBUG: I matched E = " << *it << " MeV to the ENSDF level "
+    //  << "with energy " << plevel->get_numerical_energy() << " MeV" << std::endl;
 
     // Complain if there are duplicates (if there are duplicates, we'll have
     // two different B(F) + B(GT) values for the same level object)
@@ -416,13 +405,15 @@ void TMarleyReaction::create_event(double Ea) {
 
   // Print results to std::cout
   //std::cout.precision(15);
-  std::cout << std::scientific;
-  std::cout << "E_level = " << E_level << std::endl;
-  std::cout << "cos_theta_c = " << cos_theta_c << std::endl;
-  std::cout << "Ec = " << Ec << std::endl;
-  std::cout << "Ed = " << Ed << std::endl;
-  std::cout << "cos_theta_d = " << cos_theta_d << std::endl;
-  
+  //std::cout << std::scientific;
+  //std::cout << "E_level = " << E_level << std::endl;
+  //std::cout << "cos_theta_c = " << cos_theta_c << std::endl;
+  //std::cout << "Ec = " << Ec << std::endl;
+  //std::cout << "Ed = " << Ed << std::endl;
+  //std::cout << "cos_theta_d = " << cos_theta_d << std::endl;
+  std::cout << "e- kinetic energy = " << Ec - mc << std::endl;
+  std::cout << "40K kinetic energy = " << Ed - md_gs - E_level << std::endl;
+
   // Simulate de-excitation gammas
   this->ds->do_cascade(plevel);
 }
