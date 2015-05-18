@@ -1,0 +1,8 @@
+cd ..
+make
+./react > ./testing/out.txt
+cd testing
+make
+./threshold
+root -l energy_hist.root
+
