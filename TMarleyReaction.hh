@@ -9,15 +9,15 @@
 class TMarleyReaction {
   public:
     TMarleyReaction();
-    TMarleyReaction(std::string filename);
+    TMarleyReaction(std::string filename, TMarleyDecayScheme* scheme = nullptr);
     double fermi_function(int Z, int A, double E, bool electron);
     double fermi_approx(int Z, double E, bool electron);
     double ejectile_energy(double E_level, double Ea, double cos_theta_c);
     double max_level_energy(double Ea);
     double get_threshold_energy();
-    double differential_xs(double E_level, double Ea, double cos_theta_c);
-    double total_xs(double E_level, double Ea);
-    double sample_ejectile_scattering_cosine(double E_level, double Ea);
+    double differential_xs(double E_level, double Ea, double matrix_element, double cos_theta_c);
+    double total_xs(double E_level, double Ea, double matrix_element);
+    double sample_ejectile_scattering_cosine(double E_level, double Ea, double matrix_element);
     void set_decay_scheme(TMarleyDecayScheme* scheme);
     void create_event(double Ea); // TODO: change this to return an event object
     std::string get_next_line(std::ifstream &file_in,
