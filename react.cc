@@ -9,7 +9,7 @@
 int main(){
 
   // Select the isotope and ENSDF file to use for the simulation
-  std::string nuc_id = " 40K ";
+  std::string nuc_id = marley_utils::nuc_id(19, 40); // 40K
   std::string filename = "ensdf.040";
 
   // Create a decay scheme object to store data
@@ -22,10 +22,6 @@ int main(){
   // Ea = E_threshold
   // Incident neutrino energy
   double Ea = 8; // MeV
-
-  // Use the parsed ENSDF nuclear structure
-  // data for simulating this reaction
-  //r.set_decay_scheme(&ds);
 
   // Simulate a reaction at the given
   // incident neutrino energy
@@ -46,9 +42,6 @@ int main(){
   //  double cos = -1.0 + i*0.01;
   //  std::cout << cos << " " << r.differential_xs(0, Ea, cos) << std::endl;
   //}
-
-  std::cout << std::endl << std::endl;
-  //ds.print_report();
 
   return 0;
 }
