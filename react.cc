@@ -1,9 +1,10 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "TMarleyDecayScheme.hh"
-#include "marley_utils.hh"
 
+#include "marley_utils.hh"
+#include "TMarleyDecayScheme.hh"
+#include "TMarleyEvent.hh"
 #include "TMarleyReaction.hh"
 
 int main(){
@@ -25,10 +26,10 @@ int main(){
 
   // Simulate a reaction at the given
   // incident neutrino energy
-  std::cout.precision(15);
-  std::cout << std::scientific;
-  for (int i = 1; i < 100; i++) {
-    r.create_event(Ea);
+  for (int i = 1; i <= 100; i++) {
+    TMarleyEvent e = r.create_event(Ea);
+    std::cout << std::endl << std::endl;
+    e.print_event();
     std::cout << std::endl << std::endl;
   }
 

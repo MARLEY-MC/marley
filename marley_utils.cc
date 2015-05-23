@@ -332,3 +332,35 @@ std::string marley_utils::nuc_id(int Z, int A) {
 
   return atomic_mass_number + symbol;
 }
+
+// Sample a random double uniformly between min and max using the default
+// random number generator marley_utils::rand_gen. The inclusive flag
+// determines whether or not max is included in the range. That is,
+// when inclusive == false, the sampling is done on the interval [min, max),
+// while inclusive == true uses [min, max].
+double marley_utils::uniform_random_double(double min, double max, bool inclusive) {
+  // Defaults to sampling from [0,1). We will always
+  // explicitly supply the upper and lower bounds to
+  // this distribution, so we won't worry about the
+  // default setting.
+  static std::uniform_real_distribution<double> udist;  
+
+  double max_to_use;
+
+  if (inclusive) { // sample from [min, max]
+
+    // Find the double value that comes immediately after max. This allows
+    // us to sample uniformly on [min, max] rather than [min,max). This trick comes from
+    // http://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution/uniform_real_distribution
+    max_to_use = std::nextafter(max, std::numeric_limits<double>::max());
+  }
+  else { // sample from [min, max)
+    max_to_use = max;
+  }
+
+  std::uniform_real_distribution<double>::param_type params(min, max_to_use);
+
+  // Sample a random double from this distribution
+  return udist(rand_gen, params);
+
+}

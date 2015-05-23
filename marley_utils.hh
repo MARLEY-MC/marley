@@ -38,6 +38,9 @@ namespace marley_utils {
   extern unsigned seed;
   extern std::knuth_b rand_gen;
 
+  // Sample a random number uniformly on either [min, max) or [min, max]
+  double uniform_random_double(double min, double max, bool inclusive);
+
   // Create an ENSDF nucid string given a nuclide's atomic number Z
   // and mass number A
   std::string nuc_id(int Z, int A);
