@@ -1,7 +1,7 @@
 CXX=g++
 CXXFLAGS=-std=c++11 -I. -Wall -Wextra #-Werror
 
-OBJ = marley_utils.o TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o react.o #parse.o
+OBJ = marley_utils.o TMarleyParticle.o TMarleyEvent.o TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o react.o #parse.o
 
 all: react
 

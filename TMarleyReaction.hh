@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "TMarleyDecayScheme.hh"
+#include "TMarleyEvent.hh"
 #include "TMarleyLevel.hh"
 
 class TMarleyReaction {
@@ -18,7 +19,7 @@ class TMarleyReaction {
     double total_xs(double E_level, double Ea, double matrix_element);
     double sample_ejectile_scattering_cosine(double E_level, double Ea, double matrix_element);
     void set_decay_scheme(TMarleyDecayScheme* scheme);
-    void create_event(double Ea); // TODO: change this to return an event object
+    TMarleyEvent create_event(double Ea);
     std::string get_next_line(std::ifstream &file_in,
       std::regex &rx, bool match) const;
 

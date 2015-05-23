@@ -6,8 +6,9 @@
 #include <stdexcept>
 
 #include "marley_utils.hh"
-#include "TMarleyReaction.hh"
+#include "TMarleyEvent.hh"
 #include "TMarleyLevel.hh"
+#include "TMarleyReaction.hh"
 
 TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* scheme) {
 
@@ -299,8 +300,9 @@ double TMarleyReaction::get_threshold_energy() {
   return Ea_threshold;
 }
 
-// TODO: change this to return an event object
-void TMarleyReaction::create_event(double Ea) {
+// Creates an event object by sampling the appropriate
+// quantities and performing kinematic calculations
+TMarleyEvent TMarleyReaction::create_event(double Ea) {
 
   // All hard-coded energies are in MeV
   double Etot = Ea + mb;
@@ -358,6 +360,7 @@ void TMarleyReaction::create_event(double Ea) {
     // calling total_xs. This will avoid unnecessary numerical integrations.
     double matrix_el = residue_level_strengths[i];
     double xs;
+
     if (matrix_el == 0) {
       xs = 0;
     }
@@ -365,7 +368,7 @@ void TMarleyReaction::create_event(double Ea) {
       // If the matrix element is nonzero, assign a weight to this level equal
       // to the total reaction cross section. Note that std::discrete_distribution
       // automatically normalizes the weights, so we don't have to do that ourselves.
-      double xs = total_xs(level_energy, Ea, matrix_el);
+      xs = total_xs(level_energy, Ea, matrix_el);
       //DEBUG
       if (std::isnan(xs)) {
         std::cout << "DEBUG: this level gave a weight of nan, so I made it zero." << std::endl;
@@ -391,10 +394,11 @@ void TMarleyReaction::create_event(double Ea) {
     level_weights.end());
 
   //DEBUG
+  //std::vector<double> probs = params.probabilities();
   //for (auto& n : probs)
   //{
   //  int i = &n - &(probs[0]);
-  //  std::cout << "DEBUG: level at " << pv_levels->at(i)->get_numerical_energy()
+  //  std::cout << "DEBUG: level at " << residue_level_pointers.at(i)->get_numerical_energy()
   //    << " MeV has probability " << n << " of being selected" << std::endl;
   //}
 
@@ -425,25 +429,65 @@ void TMarleyReaction::create_event(double Ea) {
 
   // Compute the energy and scattering angle of the residue
   double Ed = Etot - Ec;
-  double theta_d = std::asin(marley_utils::real_sqrt(Ec*Ec - mc*mc)
-    * std::sin(theta_c) / marley_utils::real_sqrt(Ed*Ed - md*md));
+  double pc = marley_utils::real_sqrt(Ec*Ec - mc*mc);
+  double pd_before_gammas = marley_utils::real_sqrt(Ed*Ed - md*md);
+  double theta_d = std::asin(pc * std::sin(theta_c) / pd_before_gammas);
   double cos_theta_d = std::cos(theta_d);
+
+  // Sample an azimuthal scattering angle (phi) uniformly on [0, 2*pi).
+  // We can do this because the matrix elements are azimuthally invariant
+  double phi = marley_utils::uniform_random_double(0, 2*marley_utils::pi, false);
+
+  // TODO: maybe consider the effect of nuclear recoils that happen when
+  // gammas are emitted
+  // Compute the momentum of the residue when it reaches the ground state
+  double Ed_gs = Ed - E_level;
+  double pd_gs = marley_utils::real_sqrt(Ed_gs*Ed_gs - md_gs*md_gs);
+
+  // Use the scattering angles to compute Cartesian 3-momentum components
+  // for the ejectile and residue
+  double pc_x = std::sin(theta_c)*std::cos(phi)*pc;
+  double pc_y = std::sin(theta_c)*std::sin(phi)*pc;
+  double pc_z = cos_theta_c*pc;
+  // The residue scattering angle (theta_d) is measured
+  // in the clockwise direction, so the x and y components
+  // of the residue 3-momentum pick up minus signs (sin[-x] = -sin[x])
+  double pd_x_gs = -std::sin(theta_d)*std::cos(phi)*pd_gs;
+  double pd_y_gs = -std::sin(theta_d)*std::sin(phi)*pd_gs;
+  double pd_z_gs = cos_theta_d*pd_gs;
 
   // Print results to std::cout
   //std::cout.precision(15);
   //std::cout << std::scientific;
-  //std::cout << "E_level = " << E_level << std::endl;
-  //std::cout << "cos_theta_c = " << cos_theta_c << std::endl;
-  //std::cout << "Ec = " << Ec << std::endl;
-  //std::cout << "Ed = " << Ed << std::endl;
-  //std::cout << "cos_theta_d = " << cos_theta_d << std::endl;
+  std::cout << "E_level = " << E_level << std::endl;
+  std::cout << "cos_theta_c = " << cos_theta_c << std::endl;
+  std::cout << "Ec = " << Ec << std::endl;
+  std::cout << "Ed = " << Ed << std::endl;
+  std::cout << "cos_theta_d = " << cos_theta_d << std::endl;
   std::cout << "e- kinetic energy = " << Ec - mc << std::endl;
   std::cout << "e- mass = " << mc << std::endl;
   std::cout << "40K kinetic energy = " << Ed - md_gs - E_level << std::endl;
   std::cout << "Ground state nuclear mass change = " << md_gs - mb << std::endl; 
 
-  // Simulate de-excitation gammas
-  this->ds->do_cascade(plevel);
+  // Create the event object and load it with the appropriate information
+  TMarleyEvent event(E_level);
+  // TODO: edit this to allow for projectile directions other than along the z-axis
+  // Add the projectile to this event's initial particle list
+  event.add_initial_particle(TMarleyParticle(pid_a, Ea, 0, 0, Ea - ma, ma));
+  // Add the target to this event's initial particle list
+  event.add_initial_particle(TMarleyParticle(pid_b, mb, 0, 0, 0, mb));
+  // Add the ejectile to this event's final particle list
+  event.add_final_particle(TMarleyParticle(pid_c, Ec, pc_x, pc_y, pc_z, mc));
+  // Add the residue to this event's final particle list. Don't include
+  // its excitation energy since we will soon create the de-excitation gamma rays
+  event.add_final_particle(TMarleyParticle(pid_d, Ed_gs, pd_x_gs, pd_y_gs, pd_z_gs, md_gs));
+
+  // Add the de-excitation gammas to this event's final particle list
+  // TODO: consider whether including 
+  this->ds->do_cascade(plevel, &event);
+
+  // Return the completed event object
+  return event;
 }
 
 // Compute the differential reaction cross section dsigma/dcos_theta
@@ -530,29 +574,13 @@ double TMarleyReaction::sample_ejectile_scattering_cosine(double E_level,
   // This is needed to correctly apply rejection sampling.
   double max_ndxs = marley_utils::maximize(ndxs, -1.0, 1.0, 1e-8, cmax);
 
-  // Find the double value that comes immediately after +1.0. This allows
-  // us to sample uniformly on [0,1] and [-1,1] rather than [0,1) and [-1,1).
-  // This trick comes from
-  // http://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution/uniform_real_distribution
-  static double after_one = std::nextafter(1.0, std::numeric_limits<double>::max());
-
-  // Create a uniform distribution object to perform the rejection sampling.
-  // Also create two sets of distribution parameters so that we can sample
-  // the horizontal and vertical parts using the same object.
-  static std::uniform_real_distribution<double> udist; // Defaults to sampling from [0,1). We will always
-                                                       // explicitly supply the upper and lower bounds to
-                                                       // this distribution, so we won't worry about the
-                                                       // default setting.
-  static std::uniform_real_distribution<double>::param_type height_params(0, after_one); // [0,1]
-  static std::uniform_real_distribution<double>::param_type cos_params(-1, after_one); // [-1,1]
-
   double cos_theta_c, height;
 
   do {
     // Sample cosine value uniformly from [-1,1]
-    cos_theta_c = udist(marley_utils::rand_gen, cos_params); 
+    cos_theta_c = marley_utils::uniform_random_double(-1, 1, true);
     // Sample height uniformly from [0, max_ndxs]
-    height = max_ndxs*udist(marley_utils::rand_gen, height_params);
+    height = max_ndxs*marley_utils::uniform_random_double(0, 1, true);
   }
   // Keep sampling until you get a height value less than the normalized
   // differential cross section evaluated at cos_theta_c

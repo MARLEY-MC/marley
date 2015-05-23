@@ -2,6 +2,7 @@
 #include <map>
 #include <regex>
 #include "TMarleyLevel.hh"
+#include "TMarleyEvent.hh"
 
 class TMarleyDecayScheme {
   public:
@@ -14,9 +15,9 @@ class TMarleyDecayScheme {
     std::vector<TMarleyLevel*>* get_sorted_level_pointers();
     void print_report(std::ostream& ostr = std::cout);
     TMarleyLevel* get_pointer_to_closest_level(double E_level);
-    void do_cascade(std::string initial_energy);
-    void do_cascade(double initial_energy);
-    void do_cascade(TMarleyLevel* initial_level);
+    //void do_cascade(std::string initial_energy);
+    //void do_cascade(double initial_energy);
+    void do_cascade(TMarleyLevel* initial_level, TMarleyEvent* p_event);
     void do_weisskopf(int i);
     void print_latex_table(std::ostream& ostr = std::cout);
 

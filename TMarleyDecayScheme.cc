@@ -10,17 +10,17 @@
 const double atomicMass = 40.; //Potassium 40... Maybe add more digits of precision. Make it accessible to functions w/o being global
 
 
-void TMarleyDecayScheme::do_cascade(std::string initial_energy) {
-  std::map<std::string, TMarleyLevel>::iterator it = levels.find(initial_energy);
-  if (it == levels.end()) {
-    throw std::range_error("Could not do cascade. Level with energy "
-      + initial_energy + " MeV not found.");
-  }
-  else {
-    TMarleyLevel* plevel = &(it->second);
-    do_cascade(plevel);
-  }
-}
+//void TMarleyDecayScheme::do_cascade(std::string initial_energy) {
+//  std::map<std::string, TMarleyLevel>::iterator it = levels.find(initial_energy);
+//  if (it == levels.end()) {
+//    throw std::range_error("Could not do cascade. Level with energy "
+//      + initial_energy + " MeV not found.");
+//  }
+//  else {
+//    TMarleyLevel* plevel = &(it->second);
+//    do_cascade(plevel);
+//  }
+//}
 
 // Returns a pointer to the level owned by this decay scheme object
 // that has the closest excitation energy to E_level (E_level
@@ -60,17 +60,19 @@ TMarleyLevel* TMarleyDecayScheme::get_pointer_to_closest_level(double E_level) {
 
 }
 
-void TMarleyDecayScheme::do_cascade(double initial_energy) {
+//void TMarleyDecayScheme::do_cascade(double initial_energy) {
+//
+//  // Since we were given a numerical initial energy in this
+//  // version of the function, search for the level whose energy is
+//  // closest to the given value of initial_energy. Then handle
+//  // the cascade in the usual way.
+//  TMarleyLevel* plevel = get_pointer_to_closest_level(initial_energy);
+//  do_cascade(plevel);
+//}
 
-  // Since we were given a numerical initial energy in this
-  // version of the function, search for the level whose energy is
-  // closest to the given value of initial_energy. Then handle
-  // the cascade in the usual way.
-  TMarleyLevel* plevel = get_pointer_to_closest_level(initial_energy);
-  do_cascade(plevel);
-}
-
-void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level) {
+void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
+  TMarleyEvent* p_event)
+{
   //std::cout << "Beginning gamma cascade at level with energy "
   //  << initial_level->get_string_energy() << " keV" << std::endl;
 
@@ -94,9 +96,30 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level) {
       //std::cout << "  emitted gamma with energy " << p_gamma->get_energy()
       //  << " MeV." New level has energy " << p_current_level->get_string_energy()
       //  << " keV." << std::endl;
-      std::cout.precision(15);
-      std::cout << std::scientific;
-      std::cout << "gamma energy = " << p_gamma->get_energy() << std::endl;
+      //std::cout.precision(15);
+      //std::cout << std::scientific;
+      //std::cout << "gamma energy = " << p_gamma->get_energy() << std::endl;
+      
+      // Add the gamma to the event object as a final particle. Note that
+      // photons have a particle id number of 22
+      double gamma_energy = p_gamma->get_energy();
+      // TODO: add parent pointer to gammas here
+      // Sample a direction assuming that the gammas are emitted
+      // isotropically in the nucleus's rest frame. Also don't bother
+      // to do a Lorentz boost to the lab frame (the nucleus is moving
+      // nonrelativistically, and it will likely collide with other
+      // nuclei before emitting some of the gammas anyway)
+      // sample from [-1,1]
+      double gamma_cos_theta = marley_utils::uniform_random_double(-1, 1, true);
+      double gamma_theta = std::acos(gamma_cos_theta);
+      // sample from [0,2*pi)
+      double gamma_phi = marley_utils::uniform_random_double(0, 2*marley_utils::pi, false);
+      // Compute 3-momentum components using the sampled angles
+      double gamma_px = std::sin(gamma_theta)*std::cos(gamma_phi)*gamma_energy;
+      double gamma_py = std::sin(gamma_theta)*std::sin(gamma_phi)*gamma_energy;
+      double gamma_pz = gamma_cos_theta*gamma_energy;
+      p_event->add_final_particle(TMarleyParticle(22, gamma_energy, gamma_px,
+        gamma_py, gamma_pz, 0));
     }
   }
 
