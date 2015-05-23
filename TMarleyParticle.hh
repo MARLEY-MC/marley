@@ -3,7 +3,8 @@
 
 class TMarleyParticle {
   public:
-    TMarleyParticle(int id, double E, double p_x, double p_y, double p_z, double m);
+    TMarleyParticle(int id, double E, double p_x, double p_y, double p_z, double m,
+      TMarleyParticle* Parent = nullptr);
     double get_total_energy();
     double get_mass();
     void set_parent(TMarleyParticle* p);

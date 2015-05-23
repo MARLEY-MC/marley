@@ -1,22 +1,73 @@
 #include <iostream>
+#include <stdexcept>
 
 #include "TMarleyEvent.hh"
 
 TMarleyEvent::TMarleyEvent(double E_level) {
   E_residue_level = E_level;
   reaction = nullptr;
-  //projectile = nullptr;
-  //target = nullptr;
-  //ejectile = nullptr;
-  //residue = nullptr;
+  projectile = nullptr;
+  target = nullptr;
+  ejectile = nullptr;
+  residue = nullptr;
 }
 
-void TMarleyEvent::add_initial_particle(TMarleyParticle p) {
+// Sets one of the special particle pointers
+// (e.g., TMarleyParticle::projectile) according
+// to the supplied ParticleRole
+void TMarleyEvent::assign_particle_pointer(TMarleyParticle* p,
+  TMarleyEvent::ParticleRole r)
+{
+  switch(r) {
+    case TMarleyEvent::ParticleRole::projectile:
+      projectile = p;
+      break;
+    case TMarleyEvent::ParticleRole::target:
+      target = p;
+      break;
+    case TMarleyEvent::ParticleRole::ejectile:
+      ejectile = p;
+      break;
+    case TMarleyEvent::ParticleRole::residue:
+      residue = p;
+      break;
+    default: // Do nothing if the particle does not have a
+      break; // special role in this event
+  }
+}
+
+TMarleyParticle* TMarleyEvent::get_residue() {
+  return residue;
+}
+
+void TMarleyEvent::add_initial_particle(TMarleyParticle p,
+  TMarleyEvent::ParticleRole r)
+{
   initial_particles.push_back(p);
+
+  if (r == TMarleyEvent::ParticleRole::ejectile)
+    throw std::runtime_error(std::string("The ejectile")
+    + " is not an initial state particle role.");
+  if (r == TMarleyEvent::ParticleRole::residue)
+    throw std::runtime_error(std::string("The residue")
+    + " is not an initial state particle role.");
+
+  assign_particle_pointer(&(initial_particles.back()), r);
 }
 
-void TMarleyEvent::add_final_particle(TMarleyParticle p) {
+void TMarleyEvent::add_final_particle(TMarleyParticle p,
+  TMarleyEvent::ParticleRole r)
+{
   final_particles.push_back(p);
+
+  if (r == TMarleyEvent::ParticleRole::projectile)
+    throw std::runtime_error(std::string("The projectile")
+    + " is not an final state particle role.");
+  if (r == TMarleyEvent::ParticleRole::target)
+    throw std::runtime_error(std::string("The target")
+    + " is not an final state particle role.");
+
+  assign_particle_pointer(&(final_particles.back()), r);
 }
 
 void TMarleyEvent::set_reaction(TMarleyReaction* r) {

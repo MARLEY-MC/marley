@@ -1,7 +1,7 @@
 #include "TMarleyParticle.hh"
 
 TMarleyParticle::TMarleyParticle(int id, double E, double p_x,
-  double p_y, double p_z, double m)
+  double p_y, double p_z, double m, TMarleyParticle* Parent)
 {
   particle_id = id;
   total_energy = E;
@@ -9,7 +9,7 @@ TMarleyParticle::TMarleyParticle(int id, double E, double p_x,
   py = p_y;
   pz = p_z;
   mass = m;
-  parent = nullptr;
+  parent = Parent;
 }
 
 double TMarleyParticle::get_total_energy() {
