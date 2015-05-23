@@ -471,16 +471,21 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
 
   // Create the event object and load it with the appropriate information
   TMarleyEvent event(E_level);
+  event.set_reaction(this);
   // TODO: edit this to allow for projectile directions other than along the z-axis
   // Add the projectile to this event's initial particle list
-  event.add_initial_particle(TMarleyParticle(pid_a, Ea, 0, 0, Ea - ma, ma));
+  event.add_initial_particle(TMarleyParticle(pid_a, Ea, 0, 0, Ea - ma, ma),
+    TMarleyEvent::ParticleRole::projectile);
   // Add the target to this event's initial particle list
-  event.add_initial_particle(TMarleyParticle(pid_b, mb, 0, 0, 0, mb));
+  event.add_initial_particle(TMarleyParticle(pid_b, mb, 0, 0, 0, mb),
+    TMarleyEvent::ParticleRole::target);
   // Add the ejectile to this event's final particle list
-  event.add_final_particle(TMarleyParticle(pid_c, Ec, pc_x, pc_y, pc_z, mc));
+  event.add_final_particle(TMarleyParticle(pid_c, Ec, pc_x, pc_y, pc_z, mc),
+    TMarleyEvent::ParticleRole::ejectile);
   // Add the residue to this event's final particle list. Don't include
   // its excitation energy since we will soon create the de-excitation gamma rays
-  event.add_final_particle(TMarleyParticle(pid_d, Ed_gs, pd_x_gs, pd_y_gs, pd_z_gs, md_gs));
+  event.add_final_particle(TMarleyParticle(pid_d, Ed_gs, pd_x_gs, pd_y_gs, pd_z_gs, md_gs),
+    TMarleyEvent::ParticleRole::residue);
 
   // Add the de-excitation gammas to this event's final particle list
   // TODO: consider whether including 
