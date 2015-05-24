@@ -560,7 +560,7 @@ double TMarleyReaction::sample_ejectile_scattering_cosine(double E_level,
   // Make a normalized version of the differential cross section
   // to use as our probability density function for sampling.
   // Note that, since we are using a rejection sampling method,
-  // this is not strictly necessary. That being said, doing so
+  // normalization is not strictly necessary. That being said, doing so
   // allows us to set our value of epsilon for marley_utils::maximize
   // without having to worry about the absolute scale of the differential cross
   // section (the normalized version has an average value of 0.5,
@@ -568,28 +568,8 @@ double TMarleyReaction::sample_ejectile_scattering_cosine(double E_level,
   std::function<double(double)> ndxs = [this, &xstot, &E_level, &Ea, &matrix_element](double cos_theta_c)
     -> double { return (1.0/xstot)*differential_xs(E_level, Ea, matrix_element, cos_theta_c); };
 
-  // This variable will be loaded with the ejectile cosine that
-  // corresponds to the largest differential xs
-  // We don't actually use this, but currently it's
-  // a required parameter of marley_utils::maximize
-  double cmax;
-
-  // Get the maximum value of the normalized differential cross section for
-  // the given projectile energy and final residue energy.
-  // This is needed to correctly apply rejection sampling.
-  double max_ndxs = marley_utils::maximize(ndxs, -1.0, 1.0, 1e-8, cmax);
-
-  double cos_theta_c, height;
-
-  do {
-    // Sample cosine value uniformly from [-1,1]
-    cos_theta_c = marley_utils::uniform_random_double(-1, 1, true);
-    // Sample height uniformly from [0, max_ndxs]
-    height = max_ndxs*marley_utils::uniform_random_double(0, 1, true);
-  }
-  // Keep sampling until you get a height value less than the normalized
-  // differential cross section evaluated at cos_theta_c
-  while (height > ndxs(cos_theta_c));
+  // Sample a scattering cosine value using this probability density function
+  double cos_theta_c = marley_utils::rejection_sample(ndxs, -1, 1, 1e-8);
 
   return cos_theta_c;
 }

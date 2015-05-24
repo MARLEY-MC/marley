@@ -364,3 +364,41 @@ double marley_utils::uniform_random_double(double min, double max, bool inclusiv
   return udist(rand_gen, params);
 
 }
+
+// Sample from a given 1D probability density function f(x)
+// on the interval [xmin, xmax] using a simple rejection method:
+// (1) find the maximum of the function on [xmin, xmax]
+// (2) sample an x value uniformly over the function f(x)'s domain
+// (3) sample a y value uniformly over [0, max(f(x))]
+// (4) if y <= f(x), accept the sampled x value
+// (5) if y > f(x), reject the sampled x value, and return
+// to step 2 to try again
+// Note that f(x) does not need to be normalized, but its range
+// must be nonnegative
+double marley_utils::rejection_sample(std::function<double(double)> f,
+  double xmin, double xmax, double max_search_tolerance)
+{
+  // This variable will be loaded with the value of x
+  // that corresponds to the maximum of f(x).
+  // We don't actually use this, but currently it's
+  // a required parameter of marley_utils::maximize
+  double x_at_max;
+
+  // Get the maximum value of f(x). This is needed to
+  // correctly apply rejection sampling.
+  double fmax = marley_utils::maximize(f, xmin, xmax, max_search_tolerance, x_at_max);
+
+  double x, y;
+
+  do {
+    // Sample x value uniformly from [xmin, xmax]
+    x = marley_utils::uniform_random_double(xmin, xmax, true);
+    // Sample y uniformly from [0, fmax]
+    y = marley_utils::uniform_random_double(0, fmax, true);
+  }
+  // Keep sampling until you get a y value less than f(x) 
+  // (the probability density function evaluated at the sampled value of x)
+  while (y > f(x));
+
+  return x;
+}
