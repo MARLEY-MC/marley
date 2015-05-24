@@ -6,10 +6,6 @@
 #include "marley_utils.hh"
 #include "TMarleyDecayScheme.hh"
 
-// TODO: move this to an appropriate spot
-const double atomicMass = 40.; //Potassium 40... Maybe add more digits of precision. Make it accessible to functions w/o being global
-
-
 //void TMarleyDecayScheme::do_cascade(std::string initial_energy) {
 //  std::map<std::string, TMarleyLevel>::iterator it = levels.find(initial_energy);
 //  if (it == levels.end()) {
@@ -140,6 +136,10 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename) 
 
   this->nuc_id = nucid;
   this->file_name = filename;
+
+  // Get the atomic mass number from the first 3 characters
+  // of the ENSDF nucid
+  atomic_mass_number = std::stoi(nucid.substr(0,3));
 
   // Regular expressions for identifying ensdf record types
   //std::string generic_nuc_id = "^[[:alnum:] ]{5}";
@@ -663,11 +663,11 @@ double TMarleyDecayScheme::doubleFact(int i){
 }
 
 double TMarleyDecayScheme::calcBE (int i){
-  return pow(1.2, 2*i) * 9 / (4*marley_utils::pi) / (i + 3) / (i + 3) * pow(atomicMass, 2*i/3.0);
+  return pow(1.2, 2*i) * 9 / (4*marley_utils::pi) / (i + 3) / (i + 3) * pow(atomic_mass_number, 2*i/3.0);
 }
 
 double TMarleyDecayScheme::calcBM (int i){
-  return pow(1.2, 2*i - 2) * 90/marley_utils::pi / (i + 3) / (i + 3) * pow(atomicMass, (2*i - 2)/3.0);
+  return pow(1.2, 2*i - 2) * 90/marley_utils::pi / (i + 3) / (i + 3) * pow(atomic_mass_number, (2*i - 2)/3.0);
 }
 
 double TMarleyDecayScheme::calcf (int i){
