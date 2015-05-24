@@ -41,6 +41,10 @@ namespace marley_utils {
   // Sample a random number uniformly on either [min, max) or [min, max]
   double uniform_random_double(double min, double max, bool inclusive);
 
+  // Sample a random number x from the pdf f(x) on the interval [xmin, xmax]
+  double rejection_sample(std::function<double(double)> f, double xmin,
+    double xmax, double max_search_tolerance);
+
   // Create an ENSDF nucid string given a nuclide's atomic number Z
   // and mass number A
   std::string nuc_id(int Z, int A);
