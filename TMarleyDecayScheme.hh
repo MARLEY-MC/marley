@@ -32,6 +32,8 @@ class TMarleyDecayScheme {
     std::string process_continuation_records(std::ifstream &file_in,
       std::string &record, std::regex &rx_cont_record) const;
 
+    int atomic_mass_number;
+
     // Functions for calculating Weisskopf estimates
     double doubleFact(int i); // Calculating double factorials x!!
     double calcBE(int i);

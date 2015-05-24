@@ -155,7 +155,7 @@ void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme) {
   // ahead and associate it with this reaction
   ds = scheme;
 
-  // Clear the list of pointers to the ENSDF levels. This will need to 
+  // Clear the list of pointers to the ENSDF levels. This will need to
   // be remade each time we associate nuclear structure data with this
   // reaction object
   residue_level_pointers.clear();
@@ -521,7 +521,7 @@ double TMarleyReaction::differential_xs(double E_level, double Ea,
   // In: Muon Physics, Volume II: Weak Interactions.
   // Ed. by V. W. Hughes and C. S. Wu.
   return (1.0/(2*std::acos(-1)))*GF*GF*Vud*Vud
-    *pc*Ec*fermi_function(Zf, 40, Ec, true)*matrix_element
+    *pc*Ec*fermi_function(Zf, Af, Ec, true)*matrix_element
     /(1.0 + (Ea/mb)*(1 - (Ec/pc)*cos_theta_c));
 }
 
