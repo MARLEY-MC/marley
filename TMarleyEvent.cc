@@ -40,6 +40,18 @@ TMarleyParticle* TMarleyEvent::get_residue() {
   return residue;
 }
 
+TMarleyParticle* TMarleyEvent::get_ejectile() {
+  return ejectile;
+}
+
+TMarleyParticle* TMarleyEvent::get_projectile() {
+  return projectile;
+}
+
+TMarleyParticle* TMarleyEvent::get_target() {
+  return target;
+}
+
 void TMarleyEvent::add_initial_particle(TMarleyParticle p,
   TMarleyEvent::ParticleRole r)
 {
@@ -98,4 +110,8 @@ void TMarleyEvent::print_event() {
     std::cout << "id: " << i->get_id() << "   energy: " << i->get_total_energy()
       << " MeV" << std::endl;
   }
+}
+
+double TMarleyEvent::get_E_level() {
+  return E_residue_level;
 }
