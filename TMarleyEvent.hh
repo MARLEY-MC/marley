@@ -25,6 +25,10 @@ class TMarleyEvent {
     std::vector<TMarleyParticle>* get_initial_particles();
     std::vector<TMarleyParticle>* get_final_particles();
     TMarleyParticle* get_residue();
+    TMarleyParticle* get_ejectile();
+    TMarleyParticle* get_projectile();
+    TMarleyParticle* get_target();
+    double get_E_level();
 
   private:
     void assign_particle_pointer(TMarleyParticle* p,

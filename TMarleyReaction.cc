@@ -459,15 +459,15 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
   // Print results to std::cout
   //std::cout.precision(15);
   //std::cout << std::scientific;
-  std::cout << "E_level = " << E_level << std::endl;
-  std::cout << "cos_theta_c = " << cos_theta_c << std::endl;
-  std::cout << "Ec = " << Ec << std::endl;
-  std::cout << "Ed = " << Ed << std::endl;
-  std::cout << "cos_theta_d = " << cos_theta_d << std::endl;
-  std::cout << "e- kinetic energy = " << Ec - mc << std::endl;
-  std::cout << "e- mass = " << mc << std::endl;
-  std::cout << "40K kinetic energy = " << Ed - md_gs - E_level << std::endl;
-  std::cout << "Ground state nuclear mass change = " << md_gs - mb << std::endl; 
+  //std::cout << "E_level = " << E_level << std::endl;
+  //std::cout << "cos_theta_c = " << cos_theta_c << std::endl;
+  //std::cout << "Ec = " << Ec << std::endl;
+  //std::cout << "Ed = " << Ed << std::endl;
+  //std::cout << "cos_theta_d = " << cos_theta_d << std::endl;
+  //std::cout << "e- kinetic energy = " << Ec - mc << std::endl;
+  //std::cout << "e- mass = " << mc << std::endl;
+  //std::cout << "40K kinetic energy = " << Ed - md_gs - E_level << std::endl;
+  //std::cout << "Ground state nuclear mass change = " << md_gs - mb << std::endl; 
 
   // Create the event object and load it with the appropriate information
   TMarleyEvent event(E_level);
