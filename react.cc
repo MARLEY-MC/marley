@@ -62,24 +62,25 @@ int main(){
 
   // Simulate a charged current reaction
   double E_level, e_eminus;
-  for (int i = 1; i <= 1000; i++) {
+  for (int i = 1; i <= 10000; i++) {
     std::cout << "Event Count = " << i << std::endl;
 
     // Sample a supernova neutrino energy
     Ea = marley_utils::rejection_sample(f, 4.36, 50, 1e-8);
 
+    // Create an event using the charged current reaction
     TMarleyEvent e = r.create_event(Ea);
 
-    std::cout << std::endl << std::endl;
-    //e.print_event();
-    std::cout << std::endl << std::endl;
-    
     E_level = e.get_E_level();    
-    e_eminus = (e.get_final_particles()->at(0)).get_total_energy(); 
+    e_eminus = e.get_ejectile()->get_total_energy(); 
     std::cout << "neutrino energy = " << Ea << std::endl;
     std::cout << "E_level = " << E_level << std::endl;
     std::cout << "e- energy = " << e_eminus << std::endl;
 
+    //e.print_event();
+    std::cout << std::endl << std::endl;
+    std::cout << std::endl << std::endl;
+    
     hist->Fill(e_eminus, E_level);
   }
 

@@ -1,5 +1,5 @@
 #pragma once
-#include <vector>
+#include <list>
 #include <string>
 
 #include "TMarleyParticle.hh"
@@ -22,8 +22,8 @@ class TMarleyEvent {
     void add_final_particle(TMarleyParticle p,
       ParticleRole r = ParticleRole::none);
     void set_reaction(TMarleyReaction* r);
-    std::vector<TMarleyParticle>* get_initial_particles();
-    std::vector<TMarleyParticle>* get_final_particles();
+    std::list<TMarleyParticle>* get_initial_particles();
+    std::list<TMarleyParticle>* get_final_particles();
     TMarleyParticle* get_residue();
     TMarleyParticle* get_ejectile();
     TMarleyParticle* get_projectile();
@@ -34,14 +34,14 @@ class TMarleyEvent {
     void assign_particle_pointer(TMarleyParticle* p,
       TMarleyEvent::ParticleRole r);
 
-    std::vector<TMarleyParticle> initial_particles;
-    std::vector<TMarleyParticle> final_particles;
+    std::list<TMarleyParticle> initial_particles;
+    std::list<TMarleyParticle> final_particles;
 
-    // Pointers to special elements of the vector of initial particles
+    // Pointers to special elements of the list of initial particles
     TMarleyParticle* projectile;
     TMarleyParticle* target;
 
-    // Pointers to special elements of the vector of final particles
+    // Pointers to special elements of the list of final particles
     TMarleyParticle* ejectile;
     TMarleyParticle* residue;
 
