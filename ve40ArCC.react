@@ -1,6 +1,5 @@
 # MARLEY reaction data for nu_e on 40Ar
-# Prepared on 10 May 2015 by S. J. Gardiner
-# Revised on 30 May 2015 by S. J. Gardiner
+# Prepared on 30 May 2015 by S. J. Gardiner
 #
 # Particle IDs conform to the 2013 revision of
 # the Particle Data Group Monte Carlo Particle
@@ -12,33 +11,76 @@
 # (see http://amdc.impcas.ac.cn/evaluation/data2012/ame.html)
 # and converted using 1 amu = 931.494061 MeV
 #
-# B(F) + B(GT) values are taken from
-# M. Bhattacharya, et al., Phys. Rev. C 58, 3677 (1998).
-# 40Sc levels are used for observed strengths that did
-# not correspond to 40K levels known in 1998.
-# The last energy is increased to match the ENSDF
-# level scheme better.
+# Bound state B(GT) values are taken from
+# M. Bhattacharya, et al., Phys. Rev. C 80, 055501 (2009).
+# The B(F) value for the isobaric analog state (IAS)
+# at 4.384 MeV is taken from M. Bhattacharya, et al.,
+# Phys. Rev. C 58, 3677 (1998).
+#
 # Particle IDs
 12 1000180400 11 1000190400
 # Particle Masses (MeV)
 0 37224.7225 0.510998928 37226.2269
-# Number of levels included
-21
+# Number of bound levels included
+13
 # Level energies (MeV)
-2.28988 2.73038 2.95070 3.10975 3.14644 3.293 3.373850
-3.79758 3.84025 3.898 3.996 4.352 4.38400 4.697 4.761
-4.78865 4.848 5.027 5.223 5.696 6.106
-# B(F) + B(GT) values were taken from the 1998 paper
-# above. The B(GT) values were then quenched
-# by multiplying by (gV/gA)^2 = (1/1.26)^2
-# as described in footnote b of Table I in
-# M. Bhattacharya, et al., Phys. Rev. C 80, 055501 (2009).
-# The B(F) + B(GT) values given in the 1998 paper were
-#0.90 1.50 0.11 0.06 0.04 0.01 0.16 0.26 0.01
-#0.05 0.11 0.29 3.84 0.31 0.38 0.47 0.36 0.23
-#0.03 0.11 0.13
-# Our modified B(F) + B(GT) values (including the GT
-# strength quenching mentioned above) are
-0.566893 0.944822 0.069287 0.0377929 0.0251953 0.00629882 0.100781
-0.163769 0.00629882 0.0314941 0.069287 0.182666 3.84 0.195263 0.239355
-0.296044 0.226757 0.144873 0.0188964 0.069287 0.0818846
+2.333 2.775 3.204 3.503 3.870 4.384 4.421 4.763 5.162
+5.681 6.118 6.790 7.468
+# B(GT) values + B(F) value for IAS at 4.384 MeV
+1.03 0.94 0.04 0.10 0.28 3.84 0.54 0.30 0.37
+0.13 0.30 0.45 0.04
+# The first two resonance level energies and B(GT)
+# values were observed by Bhattacharya, et al. (the
+# 2009 paper mentioned above). The observed level at
+# 7.795(33) MeV is nominally below the neutron emission
+# threshold at 7.79951 MeV, but the quoted uncertainty
+# of 0.033 MeV is large enough that the level could
+# easily be either bound or unbound. There is no gamma
+# ray emission data available for this level, and
+# the technique used by Bhattacharya to measure B(GT)
+# for this level did not rely on observing particles
+# from its de-excitation. The ENSDF database gives
+# this level's energy as 7.799 MeV, citing a 40K level
+# density measurement (Abfalterer, et al., Phys. Rev. C 62,
+# 064312 (2000)) but not a direct observation of this
+# level. Given that, to the best of my knowledge,
+# no de-excitation gammas have ever been observed for
+# this level, I have decided to assume that it is
+# neutron unbound. To avoid potential numerical
+# round-off problems in MARLEY, I have increased the
+# accepted energy for this level from 7.795 MeV
+# to 7.800 MeV (a change well within the quoted
+# uncertainty [+0.15*sigma] and closer to the ENSDF
+# accepted value of 7.799 MeV).
+#
+# The other resonance B(GT) values are theoretical
+# estimates based on a QRPA calculation. They were extracted
+# using WebPlotDigitizer (http://arohatgi.info/WebPlotDigitizer/)
+# from the plot of QRPA integrated GT(-) strength
+# given in figure 3 of M. Cheoun, et al.,
+# Eur. Phys. J. A 48, 137 (2012). The resonance state
+# B(GT) values were then rescaled (*1.4) so that
+# the resulting QRPA integrated B(GT) strength
+# approximately matched the experimental
+# integrated B(GT) strength at the highest
+# measured experimental level (7.952 MeV)
+#
+# Number of unbound resonances included
+42
+# Experimental resonance energies
+7.800 7.952
+# QRPA resonance energies
+9.49986 9.72871 10.2627 10.339 10.7967 11.1781 11.4833 12.9327
+13.3904 13.4667 14.2295 14.3821 14.4584 15.2212 15.3738 15.4501
+16.1366 16.2129 18.2726 18.3489 18.8829 18.9591 20.1797 20.256
+20.8663 20.9425 21.858 21.9342 22.0105 22.8497 26.3587 27.5793
+27.9607 29.105 29.4101 30.5544 30.6307 33.1481 37.8777 39.8611
+# Experimental resonance B(GT) values
+0.09 0.61
+# QRPA resonance B(GT) values
+0.0459211 0.0459211 1.46947 0.0459211 0.137763 0.275527 1.23987
+0.137763 0.183684 0.0459211 0.183684 4.1329 0.0459211 0.0918422
+0.367369 0.0459211 4.86764 0.0459211 0.82658 0.0459211 0.505132
+0.0459211 0.0459211 0.0459211 1.88276 0.0459211 0.321448 0.137763
+0.0459211 0.0459211 0.0918422 0.137763 0.0459211 0.0459211 0.0459211
+0.0459211 0.0459211 0.0459211 0.137763 0.0459211
