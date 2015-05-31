@@ -1,5 +1,6 @@
 # MARLEY reaction data for nu_e on 40Ar
 # Prepared on 10 May 2015 by S. J. Gardiner
+# Revised on 30 May 2015 by S. J. Gardiner
 #
 # Particle IDs conform to the 2013 revision of
 # the Particle Data Group Monte Carlo Particle
@@ -27,7 +28,17 @@
 2.28988 2.73038 2.95070 3.10975 3.14644 3.293 3.373850
 3.79758 3.84025 3.898 3.996 4.352 4.38400 4.697 4.761
 4.78865 4.848 5.027 5.223 5.696 6.106
-# B(F) + B(GT) values
-0.90 1.50 0.11 0.06 0.04 0.01 0.16 0.26 0.01
-0.05 0.11 0.29 3.84 0.31 0.38 0.47 0.36 0.23
-0.03 0.11 0.13
+# B(F) + B(GT) values were taken from the 1998 paper
+# above. The B(GT) values were then quenched
+# by multiplying by (gV/gA)^2 = (1/1.26)^2
+# as described in footnote b of Table I in
+# M. Bhattacharya, et al., Phys. Rev. C 80, 055501 (2009).
+# The B(F) + B(GT) values given in the 1998 paper were
+#0.90 1.50 0.11 0.06 0.04 0.01 0.16 0.26 0.01
+#0.05 0.11 0.29 3.84 0.31 0.38 0.47 0.36 0.23
+#0.03 0.11 0.13
+# Our modified B(F) + B(GT) values (including the GT
+# strength quenching mentioned above) are
+0.566893 0.944822 0.069287 0.0377929 0.0251953 0.00629882 0.100781
+0.163769 0.00629882 0.0314941 0.069287 0.182666 3.84 0.195263 0.239355
+0.296044 0.226757 0.144873 0.0188964 0.069287 0.0818846
