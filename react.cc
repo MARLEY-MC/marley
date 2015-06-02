@@ -7,6 +7,7 @@
 #include "TMarleyDecayScheme.hh"
 #include "TMarleyEvent.hh"
 #include "TMarleyReaction.hh"
+#include "TMarleyMassTable.hh"
 
 // ROOT Stuff
 #include "TH2D.h"
@@ -54,10 +55,10 @@ int main(){
 
   TMarleyReaction r("ve40ArCC.react", &ds);
 
-  //// TODO: debug numerical errors that arise when
-  //// Ea = E_threshold
-  //// Incident neutrino energy
-  //double Ea = 8; // MeV
+  // TODO: debug numerical errors that arise when
+  // Ea = E_threshold
+
+  // Incident neutrino energy
   double Ea;
 
   // Simulate a charged current reaction
@@ -83,19 +84,6 @@ int main(){
     
     hist->Fill(e_eminus, E_level);
   }
-
-  //double E_threshold = r.get_threshold_energy();
-  //std::cout << "threshold Ea = "
-  //  << E_threshold
-  //  << std::endl;
-  //std::cout << "max E_level at threshold = "
-  //  << r.max_level_energy(E_threshold)
-  //  << std::endl;
-
-  //for(int i = 0; i < 200; i++) {
-  //  double cos = -1.0 + i*0.01;
-  //  std::cout << cos << " " << r.differential_xs(0, Ea, cos) << std::endl;
-  //}
 
   hist->GetXaxis()->SetTitle("E_{e^-} [MeV]");
   hist->GetYaxis()->SetTitle("E_{level} [MeV]");

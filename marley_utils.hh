@@ -16,6 +16,10 @@ namespace marley_utils {
   // standard MARLEY energy units (MeV)
   const double MeV = 1e-3;
 
+  // Conversion factor to use when expressing atomic masses (micro-amu)
+  // in standard MARLEY energy units (MeV)
+  const double micro_amu = 0.000931494061;
+
   // Consistent value of pi to use throughout all of MARLEY
   const double pi = std::acos(-1);
 
@@ -157,7 +161,11 @@ namespace marley_utils {
     return trim_left_inplace(trim_right_inplace(s,delimiters), delimiters);
   }
 
+  // Lookup table for element symbols (keys are atomic numbers Z,
+  // values are symbols on the periodic table). The symbol "nn" is
+  // used for a neutron to match the ENSDF convention.
   const std::map<int, std::string> element_symbols = {
+    { 0, "nn"},
     { 1, "H" },
     { 2, "He" },
     { 3, "Li" },
