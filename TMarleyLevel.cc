@@ -83,6 +83,14 @@ int TMarleyLevel::get_iparity() const
   return iparity;
 }
 
+// TODO: Add capability to handle half-integer spins
+// to this function. Also refine this based on all of the
+// possible JPI formats (see description for this field
+// in the ENSDF format documentation).
+// TODO: Consider changing TMarleyLevel so that it can
+// be constructed using numerical spins and parities.
+// This will help you to parse TALYS level data files
+// more efficiently.
 void TMarleyLevel::set_spin_parity(std::string jpi) {
   spin_parity = jpi;
 

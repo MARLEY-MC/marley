@@ -1,3 +1,4 @@
+#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -99,7 +100,7 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
       // Add the gamma to the event object as a final particle. Note that
       // photons have a particle id number of 22
       double gamma_energy = p_gamma->get_energy();
-      // TODO: add parent pointer to gammas here
+
       // Sample a direction assuming that the gammas are emitted
       // isotropically in the nucleus's rest frame. Also don't bother
       // to do a Lorentz boost to the lab frame (the nucleus is moving
@@ -108,8 +109,10 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
       // sample from [-1,1]
       double gamma_cos_theta = marley_utils::uniform_random_double(-1, 1, true);
       double gamma_theta = std::acos(gamma_cos_theta);
+
       // sample from [0,2*pi)
       double gamma_phi = marley_utils::uniform_random_double(0, 2*marley_utils::pi, false);
+
       // Compute 3-momentum components using the sampled angles
       double gamma_px = std::sin(gamma_theta)*std::cos(gamma_phi)*gamma_energy;
       double gamma_py = std::sin(gamma_theta)*std::sin(gamma_phi)*gamma_energy;
@@ -132,38 +135,60 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
 }
 
 
-TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename) {
+TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename,
+  TMarleyDecayScheme::FileFormat ff)
+{
 
   this->nuc_id = nucid;
   this->file_name = filename;
 
   // Get the atomic mass number from the first 3 characters
   // of the ENSDF nucid
-  atomic_mass_number = std::stoi(nucid.substr(0,3));
+  this->atomic_mass_number = std::stoi(nucid.substr(0,3));
+
+  // Parse the data file using the appropriate format
+  switch (ff) {
+
+    case FileFormat::ensdf:
+      parse_ensdf(); 
+      break;
+
+    case FileFormat::talys:
+      parse_talys();
+      break;
+
+    default:
+      throw std::runtime_error(std::string("Invalid file format ")
+        + " supplied to TMarleyDecayScheme constructor.");
+  }
+
+}
+
+void TMarleyDecayScheme::parse_ensdf() {
 
   // Regular expressions for identifying ensdf record types
   //std::string generic_nuc_id = "^[[:alnum:] ]{5}";
-  std::string primary_record = "[ 1]";
-  std::string continuation_record = "[^ 1]";
-  std::string record_data = ".{71}";
+  static const std::string primary_record = "[ 1]";
+  static const std::string continuation_record = "[^ 1]";
+  static const std::string record_data = ".{71}";
   
-  std::regex rx_end_record("\\s*"); // Matches blank lines
+  static const std::regex rx_end_record("\\s*"); // Matches blank lines
   //std::regex rx_generic_primary_identification_record(nuc_id + primary_record + "   " + record_data);
-  std::regex rx_primary_identification_record(nuc_id + primary_record
+  static const std::regex rx_primary_identification_record(nuc_id + primary_record
     + "   ADOPTED LEVELS.{57}"); //"   ADOPTED LEVELS(, GAMMAS.{49}|.{57})");
-  std::regex rx_primary_level_record(nuc_id + primary_record + " L " + record_data);
-  std::regex rx_continuation_level_record(nuc_id + continuation_record + " L " + record_data);
-  std::regex rx_primary_gamma_record(nuc_id + primary_record + " G " + record_data);
-  std::regex rx_continuation_gamma_record(nuc_id + continuation_record + " G " + record_data);
+  static const std::regex rx_primary_level_record(nuc_id + primary_record + " L " + record_data);
+  static const std::regex rx_continuation_level_record(nuc_id + continuation_record + " L " + record_data);
+  static const std::regex rx_primary_gamma_record(nuc_id + primary_record + " G " + record_data);
+  static const std::regex rx_continuation_gamma_record(nuc_id + continuation_record + " G " + record_data);
  
   // Open the ENSDF file for parsing
-  std::ifstream file_in(filename);
+  std::ifstream file_in(file_name);
 
   // If the file doesn't exist or some other error
   // occurred, complain and give up.
   if (!file_in.good()) {
     throw std::runtime_error(std::string("Could not read from the ") +
-      "file " + filename);
+      "file " + file_name);
   }
 
   std::string line; // String to store the current line
@@ -172,22 +197,23 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename) 
   std::string record; // String that will store the full text
                       // (all lines) of the current ENSDF record
 
-  //bool found_decay_scheme = false; // Flag that indicates whether or not
+  bool found_decay_scheme = false; // Flag that indicates whether or not
                                    // gamma decay scheme data were found for the
                                    // current nuc_id.
 
   while (!file_in.eof()) {
     std::getline(file_in, line);
     if (std::regex_match(line, rx_primary_identification_record)) {
-      //found_decay_scheme = true;
+      found_decay_scheme = true;
       break;
     }
   }
 
-  //if (!found_decay_scheme) {
-  //  std::cout << "Gamma decay scheme data (adopted levels, gammas) for " + nuc_id << std::endl;
-  //  std::cout << "could not be found in the file " + filename << std::endl;
-  //}
+  if (!found_decay_scheme) {
+    throw std::runtime_error(std::string("Gamma decay scheme data ")
+      + "(adopted levels, gammas) for " + nuc_id
+      + "could not be found in the ENSDF data file " + file_name);
+  }
   //else {
   //  std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using ENSDF dataset" << std::endl;
   //  std::cout << line << std::endl;
@@ -324,8 +350,179 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename) 
 
 }
 
+void TMarleyDecayScheme::parse_talys() {
+  // First line in a TALYS level dataset has fortran
+  // format (2i4, 2i5, 56x, i4, a2)
+  // General regex for this line:
+  // std::regex nuclide_line("[0-9 ]{18} {56}[0-9 ]{4}.{2}");
+  static const std::regex nuclide_line("[0-9 ]{18} {57}" + nuc_id);
+
+
+  // Each line describing a level has fortran
+  // format (i4, f11.6, f6.1, 3x, i2, i3, 19x, e9.3, 1x, 2a1, a18)
+  static const std::regex level_line(std::string("[0-9 ]{8}\\.[0-9]{6}")
+    + "(?:[0-9 ]{4}\\.[0-9]| {6}) {3}(?:[0-9 ]{2}| {2})[0-9 ]{3} {19}(?:[0-9]\\."
+    + "[0-9]{3}[Ee][+-][0-9]{2}| {9}) .{20}");
+
+  // Each line describing a gamma ray transition has
+  // fortran format (29x, i3, f10.6, e10.3, 5x, a1)
+  static const std::regex gamma_line(std::string(" {29}[0-9 ]{3}")
+    + "[0-9 ]{3}\\.[0-9]{6}[0-9 ]{2}\\.[0-9]{3}"
+    + "[Ee][+-][0-9]{2} {5}.");
+
+  // Open the TALYs level data file for parsing
+  std::ifstream file_in(file_name);
+
+  // If the file doesn't exist or some other error
+  // occurred, complain and give up.
+  if (!file_in.good()) {
+    throw std::runtime_error(std::string("Could not read from the ") +
+      "file " + file_name);
+  }
+
+  std::string line; // String to store the current line
+                    // of the TALYS file during parsing
+
+  bool found_decay_scheme = false;
+
+  while (!file_in.eof()) {
+    std::getline(file_in, line);
+    if (std::regex_match(line, nuclide_line)) {
+      found_decay_scheme = true; 
+      break;
+    }
+  }
+
+  if (!found_decay_scheme) {
+    throw std::runtime_error(std::string("Gamma decay scheme data ")
+      + "(adopted levels, gammas) for " + nuc_id
+      + "could not be found in the TALYS data file " + file_name);
+  }
+  //else {
+  //  std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using TALYS dataset" << std::endl;
+  //  std::cout << line << std::endl;
+  //}
+
+  // Dummy integer and number of excited levels for this nuclide
+  int dummy, num_excited_levels; 
+
+  // Read in the number of excited levels from the first line of data
+  std::istringstream iss(line);
+  iss >> dummy >> dummy >> dummy >> num_excited_levels;
+
+  // Pointer to the current level object being filled with gamma ray data
+  TMarleyLevel* p_current_level = nullptr; 
+
+  // Temporary vectors to store level energies and pointers to newly
+  // created level objects. These are used to calculate gamma ray energies
+  // and assign level pointers
+  std::vector<double> level_energies; std::vector<TMarleyLevel*> level_ps;
+
+  for (int i = 0; i <= num_excited_levels; i++) {
+
+    // Get the next line of the file. This will be a discrete level record
+    std::getline(file_in, line);
+
+    // Load the new line into our istringstream object for parsing. Reset
+    // the stream so that we start parsing from the beginning of the string.
+    iss.str(line);
+    iss.clear();
+
+    // Read in this level's index, energy, spin, parity, and
+    // number of gamma transitions
+    int level_num, parity, num_gammas;
+    double level_energy, spin;
+    iss >> level_num >> level_energy >> spin >> parity >> num_gammas;
+
+    // Convert the level energy and spin parity to suitable strings.
+    // These are needed for the current version of the TMarleyLevel constructor.
+    // If you encounter a nonsensical parity value, complain.
+    // When creating the level energy string, convert to keV, then to a string.
+    // This will keep the string consistent with the conventions we use
+    // for parsing ENSDF format data
+    std::string string_level_energy = std::to_string(level_energy/marley_utils::MeV);
+    std::string string_spin_parity;
+
+    // Get the fractional part of the spin. If it is zero, construct
+    // the spin string using an integer spin
+    double ipart;
+    if (std::modf(spin, &ipart) == 0.0) {
+      string_spin_parity = std::to_string(static_cast<int>(ipart));
+    }
+
+    // If the fractional part of the spin is nonzero, assume that
+    // the spin is half-integer, and construct the spin string
+    // appropriately
+    else {
+      string_spin_parity = std::to_string(static_cast<int>(ipart));
+      string_spin_parity += "/2";
+    }
+
+    // Add the sign of the parity to the spin-parity string
+    if (parity == 1) {
+      string_spin_parity += "+";
+    }
+    else if (parity == -1) {
+      string_spin_parity += "-";
+    }
+    else throw std::runtime_error(std::string("Invalid parity value ")
+      + std::to_string(parity) + " encountered in TALYS dataset "
+      + file_name); 
+
+    // Construct a new level object and add it to the decay scheme
+    this->add_level(TMarleyLevel(string_level_energy, string_spin_parity));
+
+    // Get a pointer to the newly-added level
+    p_current_level = this->get_level(string_level_energy);
+
+    // Add the numerical energy for this level and a pointer
+    // to the newly-created level object to our temporary arrays.
+    // These will be used when creating gammas for each level.
+    level_energies.push_back(level_energy);
+    level_ps.push_back(p_current_level);
+
+    for (int j = 0; j < num_gammas; j++) {
+
+      // Get the next line of the file. This will be a gamma record
+      std::getline(file_in, line);
+
+      // Load the new line into our istringstream object for parsing. Reset
+      // the stream so that we start parsing from the beginning of the string.
+      iss.str(line);
+      iss.clear();
+
+      // Read in the index of the final level and branching ratio
+      // for this gamma transition
+      int gamma_final_level_num;
+      double br;
+      iss >> gamma_final_level_num >> br;
+
+      // Process this gamma if it has a nonvanishing
+      // branching ratio and is associated with a discrete level
+      if (br > 0 && p_current_level != nullptr) {
+
+        // Compute the gamma ray's energy in MeV by subtracting the energy
+        // of the final level from the energy of the initial level
+        double gamma_energy = level_energy - level_energies.at(gamma_final_level_num);
+
+        // Create a gamma ray object and add it to the current level object
+        p_current_level->add_gamma(TMarleyGamma(gamma_energy, br, p_current_level));
+
+        // Get a pointer to the newly-created gamma ray object
+        TMarleyGamma* p_current_gamma = &(p_current_level->get_gammas()->back());
+
+        // Set the gamma ray's final level pointer to point to
+        // the appropriate level object
+        p_current_gamma->set_end_level(level_ps.at(gamma_final_level_num));
+      }
+    }
+  } 
+
+  file_in.close();
+}
+
 std::string TMarleyDecayScheme::process_continuation_records(std::ifstream &file_in,
-  std::string &record, std::regex &rx_cont_record) const {
+  std::string &record, const std::regex &rx_cont_record) const {
 
   std::string line;
   while (!file_in.eof()) {

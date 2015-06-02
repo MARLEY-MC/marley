@@ -6,7 +6,13 @@
 
 class TMarleyDecayScheme {
   public:
-    TMarleyDecayScheme(std::string nucid, std::string filename);
+    // The FileFormat type is used to tell the decay scheme class
+    // which format to assume when parsing the file supplied to
+    // the constructor
+    enum class FileFormat { ensdf, talys };
+
+    TMarleyDecayScheme(std::string nucid, std::string filename,
+      FileFormat ff = FileFormat::ensdf);
     std::string get_nuc_id() const;
     void set_nuc_id(std::string id);
     void add_level(const TMarleyLevel level);
@@ -30,7 +36,7 @@ class TMarleyDecayScheme {
     static bool compare_level_energies(TMarleyLevel* first,
       TMarleyLevel* second);
     std::string process_continuation_records(std::ifstream &file_in,
-      std::string &record, std::regex &rx_cont_record) const;
+      std::string &record, const std::regex &rx_cont_record) const;
 
     int atomic_mass_number;
 
@@ -41,5 +47,10 @@ class TMarleyDecayScheme {
     double calcf(int i);
     double calcTE(int i, double dE, double BE_i, double f_i);
     double calcTM(int i, double dE, double BM_i, double f_i);
+
+    // Functions called by the constructor to parse the
+    // different nuclear data formats accepted by this class
+    void parse_ensdf();
+    void parse_talys();
 
 };
