@@ -303,7 +303,7 @@ double marley_utils::real_sqrt(double num) {
 // For a given atomic number Z and mass number A, return a matching ENSDF nucid
 std::string marley_utils::nuc_id(int Z, int A) {
   // Check to make sure Z and A have acceptable values
-  if (Z < 1 || A < 1 || A > 999) throw std::runtime_error(
+  if (Z < 0 || A < 1 || A > 999) throw std::runtime_error(
     std::string("The atomic number Z = ") + std::to_string(Z)
     + " and the mass number A = " + std::to_string(A)
     + " do not correspond to a valid ENSDF nucid.");
