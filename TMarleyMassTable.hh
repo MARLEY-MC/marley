@@ -4,9 +4,11 @@
 class TMarleyMassTable {
 
   public:
-    double get_particle_mass(int particle_id);
-    double get_atomic_mass(int nucleus_pid);
-    double get_atomic_mass(int Z, int A);
+    static double get_particle_mass(int particle_id);
+    static double get_atomic_mass(int nucleus_pid);
+    static double get_atomic_mass(int Z, int A);
+    static double get_proton_separation_energy(int Z, int A);
+    static double get_neutron_separation_energy(int Z, int A);
 
   private:
   // Factor to use when converting from micro-amu to MeV
@@ -19,4 +21,10 @@ class TMarleyMassTable {
   // Lookup table for atomic masses. Keys are PDG particle
   // ID numbers for the nuclei, values are masses in micro-amu.
   static const std::unordered_map<int, double> atomic_masses;
+
+  // Convert the atomic number Z and the mass number A into
+  // a PDG-compliant particle ID number
+  inline static int get_nucleus_pid(int Z, int A) {
+    return 10000*Z + 10*A + 1000000000;
+  }
 };
