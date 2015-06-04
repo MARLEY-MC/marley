@@ -6,6 +6,7 @@
 #include "TMarleyDecayScheme.hh"
 #include "TMarleyEvent.hh"
 #include "TMarleyLevel.hh"
+#include "TMarleyMassTable.hh"
 
 class TMarleyReaction {
   public:
@@ -22,6 +23,7 @@ class TMarleyReaction {
     TMarleyEvent create_event(double Ea);
     std::string get_next_line(std::ifstream &file_in,
       std::regex &rx, bool match) const;
+    void evaporate_nucleons(double E_level);
 
   private:
     double ma; // projectile mass

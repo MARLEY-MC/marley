@@ -1,15 +1,9 @@
-# MARLEY reaction data for nu_e on 40Ar
-# Prepared on 30 May 2015 by S. J. Gardiner
+# MARLEY reaction data for charged-current nu_e on 40Ar
+# Prepared on 4 June 2015 by S. J. Gardiner
 #
-# Particle IDs conform to the 2013 revision of
-# the Particle Data Group Monte Carlo Particle
-# Numbering Scheme
+# Particle IDs conform to the 2013 revision of the Particle
+# Data Group Monte Carlo Particle Numbering Scheme
 # (see http://pdg.lbl.gov/2014/reviews/rpp2014-rev-monte-carlo-numbering.pdf)
-#
-# Atomic masses are taken from 
-# the 2012 Atomic Mass Evaluation
-# (see http://amdc.impcas.ac.cn/evaluation/data2012/ame.html)
-# and converted using 1 amu = 931.494061 MeV
 #
 # Bound state B(GT) values are taken from
 # M. Bhattacharya, et al., Phys. Rev. C 80, 055501 (2009).
@@ -17,43 +11,32 @@
 # at 4.384 MeV is taken from M. Bhattacharya, et al.,
 # Phys. Rev. C 58, 3677 (1998).
 #
-# Particle IDs
-12 1000180400 11 1000190400
-# Particle Masses (MeV)
-0 37224.7225 0.510998928 37226.2269
-# Number of bound levels included
-13
-# Level energies (MeV)
-2.333 2.775 3.204 3.503 3.870 4.384 4.421 4.763 5.162
-5.681 6.118 6.790 7.468
-# B(GT) values + B(F) value for IAS at 4.384 MeV
-1.03 0.94 0.04 0.10 0.28 3.84 0.54 0.30 0.37
-0.13 0.30 0.45 0.04
-# The first two resonance level energies and B(GT)
-# values were observed by Bhattacharya, et al. (the
-# 2009 paper mentioned above). The observed level at
-# 7.795(33) MeV is nominally below the neutron emission
-# threshold at 7.79951 MeV, but the quoted uncertainty
-# of 0.033 MeV is large enough that the level could
-# easily be either bound or unbound. There is no gamma
-# ray emission data available for this level, and
-# the technique used by Bhattacharya to measure B(GT)
-# for this level did not rely on observing particles
-# from its de-excitation. The ENSDF database gives
-# this level's energy as 7.799 MeV, citing a 40K level
-# density measurement (Abfalterer, et al., Phys. Rev. C 62,
-# 064312 (2000)) but not a direct observation of this
-# level. Given that, to the best of my knowledge,
-# no de-excitation gammas have ever been observed for
-# this level, I have decided to assume that it is
-# neutron unbound. To avoid potential numerical
-# round-off problems in MARLEY, I have increased the
-# accepted energy for this level from 7.795 MeV
-# to 7.800 MeV (a change well within the quoted
-# uncertainty [+0.15*sigma] and closer to the ENSDF
-# accepted value of 7.799 MeV).
+# The first two unbound level energies (starting
+# at E_level = 7.795 MeV) and B(GT) values
+# were observed by Bhattacharya, et al. (the 2009 paper
+# mentioned above). The observed level at 7.795(33) MeV is
+# nominally below the neutron emission threshold at 7.79951
+# MeV, but the quoted uncertainty of 0.033 MeV is large
+# enough that the level could easily be either neutron
+# bound or unbound. The level is definitely above the
+# proton emission threshold of 7.582 MeV. The technique
+# used by Bhattacharya to measure B(GT) for this level did
+# not rely on observing particles from its de-excitation.
+# The ENSDF database gives this level's energy as 7.799
+# MeV, citing a 40K level density measurement (Abfalterer,
+# et al., Phys. Rev. C 62, 064312 (2000)) but not a direct
+# observation of this level. In the absence of experimental
+# observations of particle emission from this level, you
+# may want to take the pessimistic route (from the
+# perspective of seeing the emitted particles in CAPTAIN)
+# and assume that this level is neutron unbound. An easy way
+# of implementing such a change would be to increase the
+# accepted energy for this level from 7.795 MeV to 7.800
+# MeV (a change well within the quoted uncertainty
+# [+0.15*sigma] and closer to the ENSDF accepted value of
+# 7.799 MeV).
 #
-# The other resonance B(GT) values are theoretical
+# The other unbound B(GT) values are theoretical
 # estimates based on a QRPA calculation. They were extracted
 # using WebPlotDigitizer (http://arohatgi.info/WebPlotDigitizer/)
 # from the plot of QRPA integrated GT(-) strength
@@ -65,16 +48,24 @@
 # integrated B(GT) strength at the highest
 # measured experimental level (7.952 MeV)
 #
-# Number of unbound resonances included
-42
-# Experimental resonance energies
-7.800 7.952
+# Particle IDs
+12 1000180400 11 1000190400
+# Total number of levels included
+55
+# Bound level energies (MeV)
+2.333 2.775 3.204 3.503 3.870 4.384 4.421 4.763 5.162
+5.681 6.118 6.790 7.468
+# Experimental unbound level energies
+7.795 7.952
 # QRPA resonance energies
 9.49986 9.72871 10.2627 10.339 10.7967 11.1781 11.4833 12.9327
 13.3904 13.4667 14.2295 14.3821 14.4584 15.2212 15.3738 15.4501
 16.1366 16.2129 18.2726 18.3489 18.8829 18.9591 20.1797 20.256
 20.8663 20.9425 21.858 21.9342 22.0105 22.8497 26.3587 27.5793
 27.9607 29.105 29.4101 30.5544 30.6307 33.1481 37.8777 39.8611
+# B(GT) values + B(F) value for IAS at 4.384 MeV
+1.03 0.94 0.04 0.10 0.28 3.84 0.54 0.30 0.37
+0.13 0.30 0.45 0.04
 # Experimental resonance B(GT) values
 0.09 0.61
 # QRPA resonance B(GT) values

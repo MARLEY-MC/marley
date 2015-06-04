@@ -42,16 +42,30 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
   Zf = (pid_d % 10000000)/10000;
   Af = (pid_b % 10000)/10;
 
-  // Read in the particle masses
-  line = get_next_line(file_in, rx_comment, false);
-  iss.str(line); 
-  iss.clear();
-  iss >> ma >> mb >> mc >> md_gs;
+  // Get the particle masses from the mass table
+  ma = TMarleyMassTable::get_particle_mass(pid_a);
+  mc = TMarleyMassTable::get_particle_mass(pid_c);
+
+  // If the target (particle b) or residue (particle d)
+  // has a particle ID greater than 10^9, assume that it
+  // is an atom rather than a bare nucleus
+  if (pid_b > 1000000000) {
+    mb = TMarleyMassTable::get_atomic_mass(pid_b);
+  }
+  else {
+    mb = TMarleyMassTable::get_particle_mass(pid_b);
+  }
+
+  if (pid_d > 1000000000) {
+    md_gs = TMarleyMassTable::get_atomic_mass(pid_d);
+  }
+  else {
+    md_gs = TMarleyMassTable::get_particle_mass(pid_d);
+  }
 
   Ea_threshold = ((mc + md_gs)*(mc + md_gs) - ma*ma - mb*mb)/(2*mb);
 
-  // Read in the number of levels that have tabulated
-  // B(F) + B(GT) data
+  // Read in the number of levels that have tabulated B(F) + B(GT) data
   int num_levels;
   line = get_next_line(file_in, rx_comment, false);
   iss.str(line); 
@@ -160,10 +174,25 @@ void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme) {
   // reaction object
   residue_level_pointers.clear();
 
+  // Calculate the proton and neutron emission thresholds. Use the smaller
+  // of the two to check for unbound levels
+  double Sp = TMarleyMassTable::get_proton_separation_energy(Zf, Af);
+  double Sn = TMarleyMassTable::get_neutron_separation_energy(Zf, Af);
+  double nucleon_emission_threshold = std::min(Sp, Sn);
+
   // Cycle through each of the level energies given in the reaction dataset. 
   for(std::vector<double>::iterator it = residue_level_energies.begin();
   it != residue_level_energies.end(); ++it)
   {
+    // If the level is above the nucleon emission threshold, assign it a null
+    // level pointer. Such levels will be handled by a nucleon evaporation routine
+    // and therefore do not need pointers to level objects describing their
+    // de-excitation gammas.
+    if ((*it) > nucleon_emission_threshold) {
+      residue_level_pointers.push_back(nullptr);
+      continue;
+    }
+
     // For each one, find a pointer to the level with the closest energy owned
     // by the decay scheme object.
     TMarleyLevel* plevel = ds->get_pointer_to_closest_level(*it);
@@ -348,9 +377,17 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
   // of zero for efficiency.
   for(unsigned int i = 0; i < residue_level_pointers.size(); ++i) {
 
+    double level_energy;
+
     // Get the excitation energy for the current level
-    double level_energy = residue_level_pointers[i]->get_numerical_energy();
-    //std::cout << "DEBUG: Found level with energy = " << level_energy << std::endl;
+    if (residue_level_pointers[i] != nullptr) {
+      level_energy = residue_level_pointers[i]->get_numerical_energy();
+    }
+    else {
+      // Level is unbound, so just use the energy given in the reaction dataset
+      // rather than trying to find its ENSDF version
+      level_energy = residue_level_energies[i];
+    }
 
     // Exit the loop early if you reach a level with an energy that's too high
     if (level_energy > max_E_level) break;
@@ -411,7 +448,15 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
 
   // Get the energy of the selected level. This will be
   // needed for sampling a scattering cosine.
-  double E_level = plevel->get_numerical_energy();
+  double E_level;
+  if (plevel != nullptr) {
+    E_level = plevel->get_numerical_energy();
+  }
+  else {
+    // Level is unbound, so use the level energy found in the reaction dataset
+    E_level = residue_level_energies.at(l_index);
+  }
+
   double md = md_gs + E_level;
 
   // Get the matrix element (B(F) + B(GT) value) for the
@@ -430,8 +475,8 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
   // Compute the energy and scattering angle of the residue
   double Ed = Etot - Ec;
   double pc = marley_utils::real_sqrt(Ec*Ec - mc*mc);
-  double pd_before_gammas = marley_utils::real_sqrt(Ed*Ed - md*md);
-  double theta_d = std::asin(pc * std::sin(theta_c) / pd_before_gammas);
+  double pd_before_deexcitation = marley_utils::real_sqrt(Ed*Ed - md*md);
+  double theta_d = std::asin(pc * std::sin(theta_c) / pd_before_deexcitation);
   double cos_theta_d = std::cos(theta_d);
 
   // Sample an azimuthal scattering angle (phi) uniformly on [0, 2*pi).
@@ -439,7 +484,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
   double phi = marley_utils::uniform_random_double(0, 2*marley_utils::pi, false);
 
   // TODO: maybe consider the effect of nuclear recoils that happen when
-  // gammas are emitted
+  // gammas/nucleons are emitted
   // Compute the momentum of the residue when it reaches the ground state
   double Ed_gs = Ed - E_level;
   double pd_gs = marley_utils::real_sqrt(Ed_gs*Ed_gs - md_gs*md_gs);
@@ -487,12 +532,23 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
   event.add_final_particle(TMarleyParticle(pid_d, Ed_gs, pd_x_gs, pd_y_gs, pd_z_gs, md_gs),
     TMarleyEvent::ParticleRole::residue);
 
-  // Add the de-excitation gammas to this event's final particle list
-  // TODO: consider whether including 
-  this->ds->do_cascade(plevel, &event);
+  if (plevel != nullptr) {
+    // The selected level is bound, so add the de-excitation gammas
+    // to this event's final particle list
+    this->ds->do_cascade(plevel, &event);
+  }
+  else {
+    // The selected level is unbound, so handle nucleon emission, etc.
+    this->evaporate_nucleons(E_level);
+  }
 
   // Return the completed event object
   return event;
+}
+
+void TMarleyReaction::evaporate_nucleons(double E_level) {
+  // TODO: implement this
+  std::cout << "!!!!E_level = " << E_level << std::endl;
 }
 
 // Compute the differential reaction cross section dsigma/dcos_theta

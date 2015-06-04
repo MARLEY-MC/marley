@@ -4,23 +4,38 @@
 double TMarleyMassTable::get_particle_mass(int particle_id) {
   // Find the particle's mass in the lookup table, and convert its
   // value from micro-amu to MeV
-  return TMarleyMassTable::micro_amu *
-    TMarleyMassTable::particle_masses.at(particle_id);
+  return micro_amu * particle_masses.at(particle_id);
 }
 
 double TMarleyMassTable::get_atomic_mass(int nucleus_pid) {
   // Find the atom's mass in the lookup table (using its
   // nucleus's particle ID number), and convert its
   // value from micro-amu to MeV
-  return TMarleyMassTable::micro_amu *
-    TMarleyMassTable::atomic_masses.at(nucleus_pid);
+  return micro_amu * atomic_masses.at(nucleus_pid);
 }
 
 double TMarleyMassTable::get_atomic_mass(int Z, int A) {
   // Compute the nucleus's particle ID number
-  int pid = 10000*Z + 10*A + 1000000000;
+  int pid = get_nucleus_pid(Z, A);
   // Look up the mass using this particle ID
   return get_atomic_mass(pid);
+}
+
+double TMarleyMassTable::get_proton_separation_energy(int Z, int A) {
+  double mi = atomic_masses.at(get_nucleus_pid(Z, A));
+  double mp = particle_masses.at(2212); 
+  double me = particle_masses.at(11);
+  double mf = atomic_masses.at(get_nucleus_pid(Z-1, A-1));
+
+  return micro_amu*((mf + mp + me) - mi);
+}
+
+double TMarleyMassTable::get_neutron_separation_energy(int Z, int A) {
+  double mi = atomic_masses.at(get_nucleus_pid(Z, A));
+  double mn = particle_masses.at(2112); 
+  double mf = atomic_masses.at(get_nucleus_pid(Z, A-1));
+
+  return micro_amu*((mf + mn) - mi);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
