@@ -38,6 +38,10 @@ double fermi_dirac_distribution(double C, bool e_flavor, bool anti, double nu_en
 
 int main(){
 
+  //for (int i = 1; i < 8; i++)
+  //  TMarleyMassTable::print_separation_energies(19, 40, i);
+  //std::cout << std::endl << std::endl;
+
   // Sample from electron flavor supernova neutrinos for C = 0.55
   std::function<double(double)> f = std::bind(fermi_dirac_distribution, 0.55,
     true, false, std::placeholders::_1);
@@ -72,16 +76,16 @@ int main(){
     // Create an event using the charged current reaction
     TMarleyEvent e = r.create_event(Ea);
 
-    E_level = e.get_E_level();    
-    e_eminus = e.get_ejectile()->get_total_energy(); 
-    std::cout << "neutrino energy = " << Ea << std::endl;
-    std::cout << "E_level = " << E_level << std::endl;
-    std::cout << "e- energy = " << e_eminus << std::endl;
+    E_level = e.get_E_level();
+    e_eminus = e.get_ejectile()->get_total_energy();
+    //std::cout << "neutrino energy = " << Ea << std::endl;
+    //std::cout << "E_level = " << E_level << std::endl;
+    //std::cout << "e- energy = " << e_eminus << std::endl;
 
-    //e.print_event();
+    e.print_event();
     std::cout << std::endl << std::endl;
     std::cout << std::endl << std::endl;
-    
+
     hist->Fill(e_eminus, E_level);
   }
 
@@ -90,7 +94,7 @@ int main(){
   
   TFile *rootFile = new TFile("hist.root","RECREATE");
   hist->Write();
-  rootFile->Close(); 
+  rootFile->Close();
 
   return 0;
 }

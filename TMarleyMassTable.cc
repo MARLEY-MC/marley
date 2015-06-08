@@ -1,3 +1,6 @@
+#include <iostream>
+#include <functional>
+
 #include "marley_utils.hh"
 #include "TMarleyMassTable.hh"
 
@@ -37,6 +40,97 @@ double TMarleyMassTable::get_neutron_separation_energy(int Z, int A) {
 
   return micro_amu*((mf + mn) - mi);
 }
+
+// Places the n_objects into n_boxes starting with all of them in
+// the first box (i.e., vec = {n_object, 0, 0, ..., 0}).
+// This function uses a method inspired by the accepted answer at
+// http://stackoverflow.com/questions/4647120/next-composition-of-n-into-k-parts-does-anyone-have-a-working-algorithm
+void TMarleyMassTable::iterate_multicombination_counts(unsigned n_objects,
+  std::vector<unsigned>& vec, std::function<void(std::vector<unsigned>&)> f,
+  unsigned n_boxes)
+{
+  unsigned n;
+  if (n_boxes > 1) {
+    for (n = 0; n <= n_objects; n++) {
+      vec.at(vec.size() - n_boxes) = n_objects - n;
+      iterate_multicombination_counts(n, vec, f, n_boxes - 1);
+    }
+  }
+  else {
+    vec.back() = n_objects;
+    f(vec);
+  }
+}
+
+void TMarleyMassTable::iterate_multicombination_counts(unsigned n_boxes, unsigned n_objects,
+  std::function<void(std::vector<unsigned>&)> f)
+{
+  std::vector<unsigned> vec(n_boxes, 0);
+  iterate_multicombination_counts(n_objects, vec, f, n_boxes);
+}
+
+double TMarleyMassTable::get_particle_separation_energy(int Z, int A, int pid) {
+  int Zx = get_particle_Z(pid);
+  int Zf = Z - Zx;
+  int Af = A - get_particle_A(pid);
+
+  double extra_mass = Zx*particle_masses.at(11)
+    + particle_masses.at(pid);
+
+  double m_atom_initial = atomic_masses.at(get_nucleus_pid(Z, A));
+  double m_atom_final = atomic_masses.at(get_nucleus_pid(Zf, Af));
+
+  return micro_amu*(m_atom_final - m_atom_initial + extra_mass);
+}
+
+
+void TMarleyMassTable::print_separation_energy(int Z, int A,
+  std::vector<unsigned>& fragment_counts)
+{
+  int Zf = Z;
+  int Af = A;
+
+  double extra_mass = 0;
+
+  int fragment_pid, Zx, nx;
+  int num_fragment_types = fragment_pids.size();
+
+  for(int i = 0; i < num_fragment_types; ++i)
+  {
+    fragment_pid = fragment_pids.at(i);
+    nx = fragment_counts.at(i);
+    Zx = get_particle_Z(fragment_pid);
+
+    Af -= nx*get_particle_A(fragment_pid);
+    Zf -= nx*Zx;
+
+    extra_mass += nx*(Zx*particle_masses.at(11)
+      + particle_masses.at(fragment_pid));
+
+    std::cout << nx << " (" << fragment_pid << ") ";
+  }
+
+  double m_atom_initial = atomic_masses.at(get_nucleus_pid(Z, A));
+  double m_atom_final = atomic_masses.at(get_nucleus_pid(Zf, Af));
+
+  double separation_energy = micro_amu*(m_atom_final - m_atom_initial + extra_mass);
+
+  std::cout << "sep. energy = " << separation_energy << " MeV" << std::endl;
+}
+
+
+void TMarleyMassTable::print_separation_energies(int Z, int A, unsigned n) {
+
+  std::function<void(std::vector<unsigned>&)> print = std::bind(print_separation_energy,
+    Z, A, std::placeholders::_1);
+
+  iterate_multicombination_counts(fragment_pids.size(), n, print);
+}
+
+// Particle IDs for all of the nuclear fragments that will
+// be considered when calculating separation energies
+const std::vector<int> TMarleyMassTable::fragment_pids = {2212,
+  2112, 1000010020, 1000010030, 1000020030, 1000020040};
 
 ////////////////////////////////////////////////////////////////////////////////
 // MARLEY particle and atomic mass data
