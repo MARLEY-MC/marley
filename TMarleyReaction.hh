@@ -3,10 +3,12 @@
 #include <regex>
 #include <string>
 #include <vector>
+
 #include "TMarleyDecayScheme.hh"
 #include "TMarleyEvent.hh"
 #include "TMarleyLevel.hh"
 #include "TMarleyMassTable.hh"
+#include "TMarleyEvaporationThreshold.hh"
 
 class TMarleyReaction {
   public:
@@ -23,7 +25,6 @@ class TMarleyReaction {
     TMarleyEvent create_event(double Ea);
     std::string get_next_line(std::ifstream &file_in,
       std::regex &rx, bool match) const;
-    void evaporate_nucleons(double E_level);
 
   private:
     double ma; // projectile mass
@@ -42,4 +43,13 @@ class TMarleyReaction {
     std::vector<double> residue_level_energies; // Energy values from reaction dataset
     std::vector<double> residue_level_strengths; // B(F) + B(GT) values from reaction dataset
     std::vector<TMarleyLevel*> residue_level_pointers; // Pointers to the corresponding ENSDF decay scheme levels
+
+    // Particle IDs for all of the nuclear fragments that will
+    // be considered when calculating separation energies
+    const std::vector<int> fragment_pids = {2212, 2112, 1000010020,
+      1000010030, 1000020030, 1000020040};
+    std::vector<TMarleyEvaporationThreshold> evaporation_thresholds;
+    void compute_evaporation_thresholds();
+    void evaporate_particles(double E_level, TMarleyEvent* p_event,
+      double Ed_gs, double theta_res, double phi_res);
 };

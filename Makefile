@@ -1,7 +1,7 @@
 CXX=g++
 CXXFLAGS=-std=c++11 -I. -Wall -Wextra -Werror `root-config --cflags`
 
-OBJ = marley_utils.o TMarleyParticle.o TMarleyEvent.o TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o TMarleyMassTable.o react.o #parse.o
+OBJ = marley_utils.o TMarleyParticle.o TMarleyEvent.o TMarleyEvaporationThreshold.o TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o TMarleyMassTable.o react.o #parse.o
 
 all: react
 
