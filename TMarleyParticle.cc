@@ -1,7 +1,22 @@
 #include "TMarleyParticle.hh"
 
+//#ifdef USE_ROOT
+//#ifndef __CINT__
+//ClassImp(TMarleyParticle);
+//#endif
+//#endif
+
+TMarleyParticle::TMarleyParticle() {
+  particle_id = 0;
+  total_energy = 0.0;
+  px = 0.0;
+  py = 0.0;
+  pz = 0.0;
+  mass = 0.0;
+}
+
 TMarleyParticle::TMarleyParticle(int id, double E, double p_x,
-  double p_y, double p_z, double m, TMarleyParticle* Parent)
+  double p_y, double p_z, double m)
 {
   particle_id = id;
   total_energy = E;
@@ -9,7 +24,6 @@ TMarleyParticle::TMarleyParticle(int id, double E, double p_x,
   py = p_y;
   pz = p_z;
   mass = m;
-  parent = Parent;
 }
 
 double TMarleyParticle::get_total_energy() {
@@ -36,16 +50,8 @@ int TMarleyParticle::get_id() {
   return particle_id;
 }
 
-TMarleyParticle* TMarleyParticle::get_parent() {
-  return parent;
-}
-
 std::vector<TMarleyParticle*>* TMarleyParticle::get_children() {
   return &children;
-}
-
-void TMarleyParticle::set_parent(TMarleyParticle* p) {
-  parent = p;
 }
 
 void TMarleyParticle::add_child(TMarleyParticle* child) {

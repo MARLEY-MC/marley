@@ -1,19 +1,22 @@
 #pragma once
 #include <vector>
 
+//#ifdef USE_ROOT
+//#include "TObject.h"
+//class TMarleyParticle: public TObject {
+//#else
 class TMarleyParticle {
+//#endif
   public:
-    TMarleyParticle(int id, double E, double p_x, double p_y, double p_z, double m,
-      TMarleyParticle* Parent = nullptr);
+    TMarleyParticle();
+    TMarleyParticle(int id, double E, double p_x, double p_y, double p_z, double m);
     double get_total_energy();
     double get_mass();
-    void set_parent(TMarleyParticle* p);
     void add_child(TMarleyParticle* child);
     double get_px();
     double get_py();
     double get_pz();
     int get_id();
-    TMarleyParticle* get_parent();
     std::vector<TMarleyParticle*>* get_children();
 
   private:
@@ -23,6 +26,12 @@ class TMarleyParticle {
                      // by the Particle Data Group
                      // (see http://pdg.lbl.gov/2014/reviews/rpp2014-rev-monte-carlo-numbering.pdf)
     double mass; // MeV 
-    TMarleyParticle* parent; // nullptr for primary particles
-    std::vector<TMarleyParticle*> children; // secondary particles created by this one
+
+    // Pointers to secondary particles created by this one
+    std::vector<TMarleyParticle*> children;
+
+  //#ifdef USE_ROOT
+  //public:
+  //  ClassDef(TMarleyParticle, 1);
+  //#endif
 };
