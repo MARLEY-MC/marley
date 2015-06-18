@@ -3,6 +3,12 @@
 
 #include "TMarleyEvent.hh"
 
+//#ifdef USE_ROOT
+//#ifndef __CINT__
+//ClassImp(TMarleyEvent);
+//#endif
+//#endif
+
 TMarleyEvent::TMarleyEvent(double E_level) {
   E_residue_level = E_level;
   reaction = nullptr;
@@ -19,16 +25,16 @@ void TMarleyEvent::assign_particle_pointer(TMarleyParticle* p,
   TMarleyEvent::ParticleRole r)
 {
   switch(r) {
-    case TMarleyEvent::ParticleRole::projectile:
+    case TMarleyEvent::ParticleRole::pr_projectile:
       projectile = p;
       break;
-    case TMarleyEvent::ParticleRole::target:
+    case TMarleyEvent::ParticleRole::pr_target:
       target = p;
       break;
-    case TMarleyEvent::ParticleRole::ejectile:
+    case TMarleyEvent::ParticleRole::pr_ejectile:
       ejectile = p;
       break;
-    case TMarleyEvent::ParticleRole::residue:
+    case TMarleyEvent::ParticleRole::pr_residue:
       residue = p;
       break;
     default: // Do nothing if the particle does not have a
@@ -57,10 +63,10 @@ void TMarleyEvent::add_initial_particle(TMarleyParticle p,
 {
   initial_particles.push_back(p);
 
-  if (r == TMarleyEvent::ParticleRole::ejectile)
+  if (r == TMarleyEvent::ParticleRole::pr_ejectile)
     throw std::runtime_error(std::string("The ejectile")
     + " is not an initial state particle role.");
-  if (r == TMarleyEvent::ParticleRole::residue)
+  if (r == TMarleyEvent::ParticleRole::pr_residue)
     throw std::runtime_error(std::string("The residue")
     + " is not an initial state particle role.");
 
@@ -72,10 +78,10 @@ void TMarleyEvent::add_final_particle(TMarleyParticle p,
 {
   final_particles.push_back(p);
 
-  if (r == TMarleyEvent::ParticleRole::projectile)
+  if (r == TMarleyEvent::ParticleRole::pr_projectile)
     throw std::runtime_error(std::string("The projectile")
     + " is not an final state particle role.");
-  if (r == TMarleyEvent::ParticleRole::target)
+  if (r == TMarleyEvent::ParticleRole::pr_target)
     throw std::runtime_error(std::string("The target")
     + " is not an final state particle role.");
 

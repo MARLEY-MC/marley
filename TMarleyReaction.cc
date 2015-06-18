@@ -550,20 +550,20 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
   // TODO: edit this to allow for projectile directions other than along the z-axis
   // Add the projectile to this event's initial particle list
   event.add_initial_particle(TMarleyParticle(pid_a, Ea, 0, 0, Ea - ma, ma),
-    TMarleyEvent::ParticleRole::projectile);
+    TMarleyEvent::ParticleRole::pr_projectile);
   // Add the target to this event's initial particle list
   event.add_initial_particle(TMarleyParticle(pid_b, mb, 0, 0, 0, mb),
-    TMarleyEvent::ParticleRole::target);
+    TMarleyEvent::ParticleRole::pr_target);
   // Add the ejectile to this event's final particle list
   event.add_final_particle(TMarleyParticle(pid_c, Ec, pc_x, pc_y, pc_z, mc),
-    TMarleyEvent::ParticleRole::ejectile);
+    TMarleyEvent::ParticleRole::pr_ejectile);
 
   if (plevel != nullptr) {
     // The selected level is bound, so it will only decay via gamma emission.
     // Add the residue to this event's final particle list. Don't include
     // its excitation energy since we will soon create the de-excitation gamma rays
     event.add_final_particle(TMarleyParticle(pid_d, Ed_gs, pd_x_gs, pd_y_gs, pd_z_gs, md_gs),
-      TMarleyEvent::ParticleRole::residue);
+      TMarleyEvent::ParticleRole::pr_residue);
 
     // Add the de-excitation gammas to this event's final particle list
     this->ds->do_cascade(plevel, &event);
@@ -624,7 +624,7 @@ void TMarleyReaction::evaporate_particles(double E_level, TMarleyEvent* p_event,
 
   // Add the final-state residue to this event's list of final particles
   p_event->add_final_particle(TMarleyParticle(pid_res, E_res, p_res_x, p_res_y, p_res_z, m_res),
-    TMarleyEvent::ParticleRole::residue);
+    TMarleyEvent::ParticleRole::pr_residue);
 
   // Sample an azimuthal emission angle (phi) uniformly on [0, 2*pi).
   double phi_fragment = marley_utils::uniform_random_double(0, 2*marley_utils::pi, false);
@@ -637,9 +637,11 @@ void TMarleyReaction::evaporate_particles(double E_level, TMarleyEvent* p_event,
   double p_fragment_z = cos_theta_fragment*p_fragment;
 
   // Add the evaporated fragment to this event's list of final particles
-  TMarleyParticle* p_residue = p_event->get_residue();
   p_event->add_final_particle(TMarleyParticle(fragment_pid, E_fragment, p_fragment_x,
-    p_fragment_y, p_fragment_z, m_fragment, p_residue));
+    p_fragment_y, p_fragment_z, m_fragment));
+
+  // Add the evaporated fragment to the residue's children
+  TMarleyParticle* p_residue = p_event->get_residue();
   p_residue->add_child(&(p_event->get_final_particles()->back())); 
 }
 

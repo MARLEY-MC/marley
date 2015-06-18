@@ -118,14 +118,12 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
       double gamma_py = std::sin(gamma_theta)*std::sin(gamma_phi)*gamma_energy;
       double gamma_pz = gamma_cos_theta*gamma_energy;
       
-      // Get a pointer to the residue from this event 
-      TMarleyParticle* p_residue = p_event->get_residue();
-
       // Add the new gamma to the event
       p_event->add_final_particle(TMarleyParticle(22, gamma_energy, gamma_px,
-        gamma_py, gamma_pz, 0, p_residue));
+        gamma_py, gamma_pz, 0));
 
       // Add this gamma to the residue's children
+      TMarleyParticle* p_residue = p_event->get_residue();
       p_residue->add_child(&(p_event->get_final_particles()->back()));
     }
   }

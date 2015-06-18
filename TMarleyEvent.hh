@@ -6,21 +6,29 @@
 
 class TMarleyReaction;
 
+//#ifdef USE_ROOT
+//#include "TObject.h"
+//class TMarleyEvent: public TObject {
+//#else
 class TMarleyEvent {
+//#endif
   public:
     // The ParticleRole type is used to tell the event class
     // about what role a newly added particle plays in
     // the event
-    enum class ParticleRole { projectile, target,
-      ejectile, residue, none };
+    // TODO: revert this to an "enum class" statement
+    // when the ROOT dictionary generator (rootcint)
+    // adds support for them
+    enum /*class*/ ParticleRole { pr_projectile, pr_target,
+      pr_ejectile, pr_residue, pr_none };
 
-    TMarleyEvent(double E_level);
-    std::string create_G4_macro(); // TODO: implement this
+    TMarleyEvent(double E_level = 0.0);
+    //std::string create_G4_macro(); // TODO: implement this
     void print_event();
     void add_initial_particle(TMarleyParticle p,
-      ParticleRole r = ParticleRole::none);
+      ParticleRole r = ParticleRole::pr_none);
     void add_final_particle(TMarleyParticle p,
-      ParticleRole r = ParticleRole::none);
+      ParticleRole r = ParticleRole::pr_none);
     void set_reaction(TMarleyReaction* r);
     std::list<TMarleyParticle>* get_initial_particles();
     std::list<TMarleyParticle>* get_final_particles();
@@ -37,6 +45,7 @@ class TMarleyEvent {
     std::list<TMarleyParticle> initial_particles;
     std::list<TMarleyParticle> final_particles;
 
+
     // Pointers to special elements of the list of initial particles
     TMarleyParticle* projectile;
     TMarleyParticle* target;
@@ -46,9 +55,15 @@ class TMarleyEvent {
     TMarleyParticle* residue;
 
     // Pointer to the reaction object that created this event
-    TMarleyReaction* reaction;
+    TMarleyReaction* reaction; //! Don't save to ROOT file
+
 
     // Excitation energy (in MeV) of the residue (always
     // zero for residues that have no excited states)
     double E_residue_level;
+
+  //#ifdef USE_ROOT
+  //public:
+  //  ClassDef(TMarleyEvent, 1);
+  //#endif
 };
