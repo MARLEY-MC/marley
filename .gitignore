@@ -4,3 +4,5 @@ parse
 react
 *.root
 *.swp
+root_dict.cc
+root_dict.h
