@@ -1,12 +1,7 @@
 #pragma once
 #include <vector>
 
-//#ifdef USE_ROOT
-//#include "TObject.h"
-//class TMarleyParticle: public TObject {
-//#else
 class TMarleyParticle {
-//#endif
   public:
     TMarleyParticle();
     TMarleyParticle(int id, double E, double p_x, double p_y, double p_z, double m);
@@ -29,9 +24,4 @@ class TMarleyParticle {
 
     // Pointers to secondary particles created by this one
     std::vector<TMarleyParticle*> children;
-
-  //#ifdef USE_ROOT
-  //public:
-  //  ClassDef(TMarleyParticle, 1);
-  //#endif
 };
