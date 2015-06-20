@@ -2,7 +2,9 @@ CXX=g++
 CXXFLAGS=-std=c++11 -I. -Wall -Wextra -Werror
 USE_ROOT=yes
 
-OBJ = marley_utils.o TMarleyParticle.o TMarleyEvent.o TMarleyEvaporationThreshold.o TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o TMarleyMassTable.o react.o #parse.o
+OBJ = marley_utils.o TMarleyParticle.o TMarleyEvent.o TMarleyEvaporationThreshold.o
+OBJ += TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o
+OBJ += TMarleyMassTable.o
 
 ifdef USE_ROOT
 # Adding the g++ compiler option -DUSE_ROOT to the CXXFLAGS
@@ -11,17 +13,28 @@ ifdef USE_ROOT
 # Currently none of the core MARLEY classes use such
 # preprocessor directives, but the example executable
 # react does.
+#
+# The root_dict.o object file should be added
+# to the list of prerequisites for any executable
+# that uses TTrees containing TMarleyEvents
+# or TMarleyParticles
 CXXFLAGS += `root-config --cflags` -DUSE_ROOT
-OBJ += root_dict.o
+OBJ_DICT = root_dict.o
 LDFLAGS=`root-config --libs`
 endif
 
-all: react
+all: parse react validate
 
 %.o: %.c
 	$(CXX) -c -o $@
 
-react: $(OBJ)
+parse: $(OBJ) parse.o
+	$(CXX) -o $@ $^
+
+react: $(OBJ) $(OBJ_DICT) react.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+validate: $(OBJ) $(OBJ_DICT) validate.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # Add more header files to the prerequisites for
@@ -42,10 +55,7 @@ root_dict.o: TMarleyParticle.hh TMarleyEvent.hh
 	rootcint root_dict.cc -c $(subst .hh,.hh+,$^)
 	$(CXX) $(CXXFLAGS) -c -o root_dict.o root_dict.cc
 
-#parse: $(OBJ)
-#	$(CXX) -o $@ $^
-
 .PHONY: clean
 
 clean:
-	rm -f *.o react root_dict.cc root_dict.h
+	rm -f *.o parse react validate root_dict.cc root_dict.h
