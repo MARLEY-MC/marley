@@ -6,12 +6,7 @@
 
 class TMarleyReaction;
 
-//#ifdef USE_ROOT
-//#include "TObject.h"
-//class TMarleyEvent: public TObject {
-//#else
 class TMarleyEvent {
-//#endif
   public:
     // The ParticleRole type is used to tell the event class
     // about what role a newly added particle plays in
@@ -61,9 +56,4 @@ class TMarleyEvent {
     // Excitation energy (in MeV) of the residue (always
     // zero for residues that have no excited states)
     double E_residue_level;
-
-  //#ifdef USE_ROOT
-  //public:
-  //  ClassDef(TMarleyEvent, 1);
-  //#endif
 };
