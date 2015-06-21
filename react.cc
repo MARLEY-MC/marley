@@ -1,21 +1,16 @@
-#include <iostream>
 #include <functional>
+#include <iostream>
 #include <string>
 #include <vector>
 
 #include "marley_utils.hh"
 #include "TMarleyDecayScheme.hh"
 #include "TMarleyEvent.hh"
-#include "TMarleyReaction.hh"
 #include "TMarleyMassTable.hh"
+#include "TMarleyReaction.hh"
 
 #ifdef USE_ROOT
-// ROOT Stuff
-#include "TH2D.h"
-#include "TCanvas.h"
-#include "TAxis.h"
 #include "TFile.h"
-#include "TLatex.h"
 #include "TTree.h"
 #endif
 
@@ -28,11 +23,11 @@ double fermi_dirac_distribution(double C, bool e_flavor, bool anti, double nu_en
     T = 3.5; // temperature in MeV
     N_nu = 2.8;  // total number of electron neutrinos expected (x10^57)
   }
-  else if(e_flavor && anti){
+  else if(e_flavor && anti) {
     T = 5.0; // temperature in MeV
     N_nu = 1.9;  // total number of electron anti-neutrinos expected (x10^57)
   }
-  else if(!e_flavor && (!anti || anti)){
+  else { // !e_flavor
     T = 8.0; // temperature in MeV
     N_nu = 5.0; // total number of mu+tau neutrinos + anti-neutrinos expected (x10^57)
   }
@@ -50,9 +45,6 @@ int main(){
     true, false, std::placeholders::_1);
 
   #ifdef USE_ROOT
-  TH2D hist = TH2D("hist", "E_{e^-} vs E_level",
-    100, 0, 50, 25, 0, 6); // MeV
-
   // Create a pointer to an event object. This will
   // be used to fill the event tree with the
   // events generated in the loop below
@@ -67,6 +59,9 @@ int main(){
   // Create a branch in this ROOT tree, and associate
   // it with the event pointer we made before
   event_tree.Branch("events", &p_event, 32000, 99);
+
+  // Number of MB written to the ROOT file
+  double MB_written = 0;
   #endif
 
   // Select the isotope and ENSDF file to use for the simulation
@@ -82,13 +77,15 @@ int main(){
   // TODO: debug numerical errors that arise when
   // Ea = E_threshold
 
-  // Incident neutrino energy
-  double Ea;
-
   // Simulate a charged current reaction
-  double E_level, e_eminus;
-  for (int i = 1; i <= 100; i++) {
-    std::cout << "Event Count = " << i << std::endl;
+  int n_events = 1000;
+  double Ea; // Incident neutrino energy
+
+  // Set the precision for outputting floating-point numbers
+  std::cout << std::fixed;
+  std::cout.precision(3);
+
+  for (int i = 1; i <= n_events; ++i) {
 
     // Sample a supernova neutrino energy
     Ea = marley_utils::rejection_sample(f, 4.36, 50, 1e-8);
@@ -96,50 +93,28 @@ int main(){
     // Create an event using the charged current reaction
     TMarleyEvent e = r.create_event(Ea);
 
-    E_level = e.get_E_level();
-    e_eminus = e.get_ejectile()->get_total_energy();
-
-    e.print_event();
-    //std::cout << "neutrino energy = " << Ea << std::endl;
-    std::cout << std::endl;
-    std::cout << "E_level = " << E_level << std::endl;
-    std::cout << "e- energy = " << e_eminus << std::endl;
-    std::cout << std::endl << std::endl;
-    std::cout << std::endl << std::endl;
+    std::cout << "Event Count = " << i << "/" << n_events << std::endl;
 
     #ifdef USE_ROOT
-    hist.Fill(e_eminus, E_level);
-
     // Get the address of this event object
     p_event = new TMarleyEvent;
     *p_event = e;
+
     // Store this event in the ROOT tree
-    int bytes_written = event_tree.Fill();
-    std::cout << "bytes written = " << bytes_written << std::endl;
+    MB_written += event_tree.Fill()/1e6;
+    std::cout << "MB written = " << MB_written << std::endl;
+    //std::cout << "Elapsed time = "
+    // Move up one line in std::cout
+    std::cout << "\033[F";
     #endif
+
+    // Move up one line in std::cout
+    std::cout << "\033[F";
   }
 
   #ifdef USE_ROOT
-  hist.GetXaxis()->SetTitle("E_{e^-} [MeV]");
-  hist.GetYaxis()->SetTitle("E_{level} [MeV]");
-
   event_tree.Write();
   treeFile.Close();
-
-  TFile histFile("hist.root","RECREATE");
-  hist.Write();
-  histFile.Close();
-
-  // Read the tree back from the file and
-  // display each event
-  TMarleyEvent* pe = new TMarleyEvent;
-  TFile file("event_tree.root");
-  TTree* t = static_cast<TTree*>(file.Get("event_tree"));
-  t->GetBranch("events")->SetAddress(&pe);
-  for (int i = 0, n = t->GetEntries(); i < n; ++i) {
-    t->GetEntry(i);
-    std::cout << "n_children = " << pe->get_residue()->get_children()->size() << std::endl;
-  }
   #endif
 
   return 0;
