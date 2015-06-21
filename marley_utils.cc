@@ -439,47 +439,6 @@ std::string marley_utils::num_bytes_to_string(double bytes,
   return out.str();
 }
 
-// This function is based on code taken from the accepted answer at
-// http://stackoverflow.com/questions/15957805/extract-year-month-day-etc-from-stdchronotime-point-in-c
-//
-// Function that returns a string representation (in the format
-// days hours:minutes:seconds) of a std::chrono::system_clock::duration object
-std::string marley_utils::duration_to_string(
-  std::chrono::system_clock::duration duration)
-{
-  marley_utils::days d = std::chrono::duration_cast
-    <marley_utils::days>(duration);
-  duration -= d;
-
-  std::chrono::hours h = std::chrono::duration_cast
-    <std::chrono::hours>(duration);
-  duration -= h;
-
-  std::chrono::minutes m = std::chrono::duration_cast
-    <std::chrono::minutes>(duration);
-  duration -= m;
-
-  std::chrono::seconds s = std::chrono::duration_cast
-    <std::chrono::seconds>(duration);
-  duration -= s;
-
-  int day_count = d.count();
-  int hour_count = h.count();
-  int minute_count = m.count();
-  int second_count = s.count();
-
-  std::ostringstream out;
-  if (day_count > 0) out << day_count << " days ";
-  if (hour_count < 10) out << "0";
-  out << hour_count << ":";
-  if (minute_count < 10) out << "0";
-  out << minute_count << ":";
-  if (second_count < 10) out << "0";
-  out << second_count;
-
-  return out.str();
-}
-
 // This function exploits the observation (given in the first answer at
 // http://stackoverflow.com/questions/11062804/measuring-the-runtime-of-a-c-code)
 // that the difference of two std::chrono::system_clock::time_point objects
@@ -495,5 +454,6 @@ std::string marley_utils::elapsed_time_string(
   std::chrono::system_clock::duration time_elapsed
     = end_time - start_time;
 
-  return marley_utils::duration_to_string(time_elapsed);
+  return marley_utils::duration_to_string
+    <std::chrono::system_clock::duration>(time_elapsed);
 }

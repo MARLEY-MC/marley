@@ -170,12 +170,58 @@ namespace marley_utils {
   // representing the amount of memory in more readable units
   std::string num_bytes_to_string(double bytes, unsigned precision = 3);
 
-  // Extra std::chrono::duration helper type
-  typedef std::chrono::duration<int, std::ratio<86400>> days;
+  // Generalized std::chrono::duration helper types
+  template <typename repType> using
+    seconds = std::chrono::duration<repType>;
+  template <typename repType> using
+    minutes = std::chrono::duration<repType, std::ratio<60>>;
+  template <typename repType> using
+    hours = std::chrono::duration<repType, std::ratio<3600>>;
+  template <typename repType> using
+    days = std::chrono::duration<repType, std::ratio<86400>>;
 
+  // This function is a generalized version of code taken from the accepted answer at
+  // http://stackoverflow.com/questions/15957805/extract-year-month-day-etc-from-stdchronotime-point-in-c
+  //
   // Function that returns a string representation (in the
   // format days hours:minutes:seconds) of a std::chrono::duration object
-  std::string duration_to_string(std::chrono::system_clock::duration duration);
+  template <typename repType, typename periodType = std::ratio<1>> std::string duration_to_string(
+    std::chrono::duration<repType, periodType> duration)
+  {
+    int day_count = static_cast<int>(std::chrono::duration_cast
+      <marley_utils::days<repType>>(duration) / (marley_utils::days<repType>(1)));
+    duration -= marley_utils::days<repType>(day_count);
+
+    int hour_count = static_cast<int>(std::chrono::duration_cast
+      <marley_utils::hours<repType>>(duration) / (marley_utils::hours<repType>(1)));
+    duration -= marley_utils::hours<repType>(hour_count);
+
+    int minute_count = static_cast<int>(std::chrono::duration_cast
+      <marley_utils::minutes<repType>>(duration) / (marley_utils::minutes<repType>(1)));
+    duration -= marley_utils::minutes<repType>(minute_count);
+
+    int second_count = static_cast<int>(std::chrono::duration_cast
+      <marley_utils::seconds<repType>>(duration) / (marley_utils::seconds<repType>(1)));
+    duration -= marley_utils::seconds<repType>(second_count);
+
+    std::ostringstream out;
+    if (day_count > 0) out << day_count << " days ";
+    if (hour_count < 10) out << "0";
+    out << hour_count << ":";
+    if (minute_count < 10) out << "0";
+    out << minute_count << ":";
+    if (second_count < 10) out << "0";
+    out << second_count;
+
+    return out.str();
+  }
+
+  template <typename durationType> std::string duration_to_string(
+    durationType duration)
+  {
+    return duration_to_string<typename durationType::rep,
+      typename durationType::period>(duration);
+  }
 
   // Function that takes two std::system_clock::time_point objects and returns
   // a string (in the same format as marley_utils::duration_to_string)
