@@ -126,7 +126,14 @@ int main(){
       = std::chrono::system_clock::now();
     std::cout << "Elapsed time: "
       << marley_utils::elapsed_time_string(start_time_point,
-      current_time_point) << std::endl;
+      current_time_point) << " (Estimated total run time: ";
+
+    marley_utils::seconds<float> estimated_total_time =
+      (current_time_point - start_time_point)*(static_cast<float>(n_events)/i);
+
+    std::cout << marley_utils::duration_to_string
+      <marley_utils::seconds<float>>(estimated_total_time)
+      << ")" << std::endl;
 
     // Store this event in the ROOT tree
     event_tree.Fill();
