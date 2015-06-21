@@ -149,16 +149,20 @@ double marley_utils::minimize(const std::function<double(double)> f, // [in] obj
     static const double c = 0.5*(3.0 - std::sqrt(5.0));
     static const double SQRT_DBL_EPSILON = std::sqrt(DBL_EPSILON);
     
-    double& a = leftEnd; double& b = rightEnd; double& x = minLoc;
+    double& a = leftEnd;
+    double& b = rightEnd;
+    double& x = minLoc;
 
-    v = w = x = a + c*(b - a); d = e = 0.0;
+    v = w = x = a + c*(b - a);
+    d = e = 0.0;
     fv = fw = fx = f(x);
 
     // Check stopping criteria
-    while (fabs(x - m) > t2 - 0.5*(b - a))
+    while (m = 0.5*(a + b),
+      tol = SQRT_DBL_EPSILON*fabs(x) + epsilon,
+      t2 = 2.0*tol,
+      fabs(x - m) > t2 - 0.5*(b - a))
     {
-        m = 0.5*(a + b);
-        tol = SQRT_DBL_EPSILON*fabs(x) + epsilon; t2 = 2.0*tol;
         p = q = r = 0.0;
         if (fabs(e) > tol)
         {

@@ -74,7 +74,11 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
 
   // Read in all of the level energies (in MeV)
   int j = 0;
-  double entry, old_entry;
+  double entry;
+  // Set the old energy entry to the lowest representable double
+  // value. This guarantees that we always read in the first energy
+  // value given in the reaction data file
+  double old_entry = std::numeric_limits<double>::lowest();
   while (j < num_levels && file_in.good()) {
     line = get_next_line(file_in, rx_comment, false);
     iss.str(line);

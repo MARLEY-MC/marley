@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-std=c++11 -I. -Wall -Wextra -Werror
+CXXFLAGS=-std=c++11 -I. -Wall -Wextra -Wpedantic -Werror #-O3
 USE_ROOT=yes
 
 OBJ = marley_utils.o TMarleyParticle.o TMarleyEvent.o TMarleyEvaporationThreshold.o
