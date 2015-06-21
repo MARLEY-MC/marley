@@ -52,6 +52,8 @@ int main(){
   std::cout << "MARLEY started on "
     << std::put_time(std::localtime(&start_time), "%c %Z")
     << std::endl;
+  std::cout << "Seed for random number generator: "
+    << marley_utils::seed << std::endl;
 
   //for (int i = 1; i < 8; i++)
   //  TMarleyMassTable::print_separation_energies(19, 40, i);
@@ -117,11 +119,7 @@ int main(){
       << " (" << i*100/static_cast<double>(n_events)
       << "% complete)" << std::endl;
 
-    #ifdef USE_ROOT
-    // Get the address of this event object
-    p_event = new TMarleyEvent;
-    *p_event = e;
-
+    // Print timing information
     std::chrono::system_clock::time_point current_time_point
       = std::chrono::system_clock::now();
     std::cout << "Elapsed time: "
@@ -135,23 +133,42 @@ int main(){
       <marley_utils::seconds<float>>(estimated_total_time)
       << ")" << std::endl;
 
+    #ifdef USE_ROOT
+    // Get the address of this event object
+    p_event = new TMarleyEvent;
+    *p_event = e;
+
     // Store this event in the ROOT tree
     event_tree.Fill();
     data_written = marley_utils::num_bytes_to_string(treeFile.GetBytesWritten(),2);
     std::cout << "Data written = " << data_written << "\033[K" << std::endl;
-    // Move up one line in std::cout
+    #endif
+
+    std::time_t estimated_end_time = std::chrono::system_clock::to_time_t(
+      start_time_point + std::chrono::duration_cast
+      <std::chrono::system_clock::duration>(estimated_total_time));
+
+    std::cout << "MARLEY is estimated to terminate on "
+      << std::put_time(std::localtime(&estimated_end_time), "%c %Z")
+      << std::endl;
+
+    #ifdef USE_ROOT
+    // Move up an extra line if we're using ROOT and
+    // therefore displaying information about the
+    // amount of data written to disk
     std::cout << "\033[F";
     #endif
 
-    // Move up two lines in std::cout
-    std::cout << "\033[F\033[F";
+    // Move up three lines in std::cout
+    std::cout << "\033[F\033[F\033[F";
   }
 
+  std::cout << "\033[E";
   #ifdef USE_ROOT
   event_tree.Write();
   treeFile.Close();
   data_written = marley_utils::num_bytes_to_string(treeFile.GetBytesWritten());
-  std::cout << "\033[E" << "Data written = " << data_written << "\033[K" << std::endl;
+  std::cout << "Data written = " << data_written << "\033[K" << std::endl;
   #endif
 
   // Display the time that the program terminated
@@ -161,8 +178,7 @@ int main(){
 
   std::cout << "MARLEY terminated normally on "
     << std::put_time(std::localtime(&end_time), "%c %Z")
-    << std::endl;
+    << "\033[K\033[E\033[K";
 
-  std::cout << std::endl << std::endl;
   return 0;
 }
