@@ -1,4 +1,6 @@
+#include <chrono>
 #include <functional>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -36,6 +38,21 @@ double fermi_dirac_distribution(double C, bool e_flavor, bool anti, double nu_en
 
 int main(){
 
+  // Get the time that the program was started
+  std::chrono::system_clock::time_point start_time_point
+    = std::chrono::system_clock::now();
+
+  std::time_t start_time = std::chrono::system_clock::to_time_t(start_time_point);
+
+  std::cout << marley_utils::marley_logo << std::endl;
+  std::cout << "\"Don't worry about a thing," << std::endl;
+  std::cout << "'Cause every little thing gonna be all right.\"" << std::endl;
+  std::cout << "-- Bob, \"Three Little Birds\"" << std::endl << std::endl;
+
+  std::cout << "MARLEY started on "
+    << std::put_time(std::localtime(&start_time), "%c %Z")
+    << std::endl;
+
   //for (int i = 1; i < 8; i++)
   //  TMarleyMassTable::print_separation_energies(19, 40, i);
   //std::cout << std::endl << std::endl;
@@ -60,8 +77,9 @@ int main(){
   // it with the event pointer we made before
   event_tree.Branch("events", &p_event, 32000, 99);
 
-  // Number of MB written to the ROOT file
-  double MB_written = 0;
+  // The amount of data written to the ROOT file
+  // represented as a string (e.g., "10 MB")
+  std::string data_written;
   #endif
 
   // Select the isotope and ENSDF file to use for the simulation
@@ -81,41 +99,63 @@ int main(){
   int n_events = 1000;
   double Ea; // Incident neutrino energy
 
-  // Set the precision for outputting floating-point numbers
-  std::cout << std::fixed;
-  std::cout.precision(3);
+  // Display all floating-point numbers without
+  // using scientific notation and using
+  // one decimal digit
+  std::cout << std::fixed << std::setprecision(1);
 
   for (int i = 1; i <= n_events; ++i) {
 
     // Sample a supernova neutrino energy
-    Ea = marley_utils::rejection_sample(f, 4.36, 50, 1e-8);
+    Ea = marley_utils::rejection_sample(f, 4.36, 50);
 
     // Create an event using the charged current reaction
     TMarleyEvent e = r.create_event(Ea);
 
-    std::cout << "Event Count = " << i << "/" << n_events << std::endl;
+    // Print a status message showing the current number of events
+    std::cout << "Event Count = " << i << "/" << n_events
+      << " (" << i*100/static_cast<double>(n_events)
+      << "% complete)" << std::endl;
 
     #ifdef USE_ROOT
     // Get the address of this event object
     p_event = new TMarleyEvent;
     *p_event = e;
 
+    std::chrono::system_clock::time_point current_time_point
+      = std::chrono::system_clock::now();
+    std::cout << "Elapsed time: "
+      << marley_utils::elapsed_time_string(start_time_point,
+      current_time_point) << std::endl;
+
     // Store this event in the ROOT tree
-    MB_written += event_tree.Fill()/1e6;
-    std::cout << "MB written = " << MB_written << std::endl;
-    //std::cout << "Elapsed time = "
+    event_tree.Fill();
+    data_written = marley_utils::num_bytes_to_string(treeFile.GetBytesWritten(),2);
+    std::cout << "Data written = " << data_written << "\033[K" << std::endl;
     // Move up one line in std::cout
     std::cout << "\033[F";
     #endif
 
-    // Move up one line in std::cout
-    std::cout << "\033[F";
+    // Move up two lines in std::cout
+    std::cout << "\033[F\033[F";
   }
 
   #ifdef USE_ROOT
   event_tree.Write();
   treeFile.Close();
+  data_written = marley_utils::num_bytes_to_string(treeFile.GetBytesWritten());
+  std::cout << "\033[E" << "Data written = " << data_written << "\033[K" << std::endl;
   #endif
 
+  // Display the time that the program terminated
+  std::chrono::system_clock::time_point end_time_point
+    = std::chrono::system_clock::now();
+  std::time_t end_time = std::chrono::system_clock::to_time_t(end_time_point);
+
+  std::cout << "MARLEY terminated normally on "
+    << std::put_time(std::localtime(&end_time), "%c %Z")
+    << std::endl;
+
+  std::cout << std::endl << std::endl;
   return 0;
 }
