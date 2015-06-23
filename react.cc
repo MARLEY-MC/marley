@@ -1,4 +1,5 @@
 #include <chrono>
+#include <csignal>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -36,6 +37,31 @@ double fermi_dirac_distribution(double C, bool e_flavor, bool anti, double nu_en
   return (C/std::pow(T,3))*(std::pow(nu_energy,2)/(1+std::exp(nu_energy/(T-eta))))*N_nu;
 }
 
+// Flag that will alert the main event generation loop that
+// the user has interrupted the program's execution (probably
+// by pressing ctrl+c). This is a global variable (out of
+// necessity, since it must be modified by our signal handler),
+// but its scope is limited to this source file by the use
+// of the static keyword in its declaration.
+volatile static std::sig_atomic_t interrupted = false;
+
+// Macro that we can use to suppress unused parameter warnings for our signal
+// handler function. We don't need the signal code s, but we have to include it
+// in the function declraration to keep std::signal happy. This trick was taken
+// from the accepted answer at
+// http://stackoverflow.com/questions/3599160/unused-parameter-warnings-in-c-code
+#define UNUSED(x) (void)(x)
+
+// Function that will be used to handle a SIGINT signal
+// in our event generation loop. The method used here is
+// taken from the second answer at
+// http://stackoverflow.com/questions/19366503/in-c-when-interrupted-with-ctrl-c-call-a-function-with-arguments-other-than-s
+void signal_handler(int s)
+{
+  UNUSED(s);
+  interrupted = true;
+}
+
 int main(){
 
   // Get the time that the program was started
@@ -54,10 +80,6 @@ int main(){
     << std::endl;
   std::cout << "Seed for random number generator: "
     << marley_utils::seed << std::endl;
-
-  //for (int i = 1; i < 8; i++)
-  //  TMarleyMassTable::print_separation_energies(19, 40, i);
-  //std::cout << std::endl << std::endl;
 
   // Sample from electron flavor supernova neutrinos for C = 0.55
   std::function<double(double)> f = std::bind(fermi_dirac_distribution, 0.55,
@@ -106,7 +128,15 @@ int main(){
   // one decimal digit
   std::cout << std::fixed << std::setprecision(1);
 
-  for (int i = 1; i <= n_events; ++i) {
+  // Use the signal handler defined above to deal with
+  // SIGINT signals (e.g., ctrl+c interruptions initiated
+  // by the user). This will allow us to terminate the
+  // loop gracefully, leaving a valid event tree file, etc.
+  std::signal(SIGINT, signal_handler);
+
+  // Generate all of the requested events. End the loop early
+  // if the user interrupts execution (e.g., via ctrl+C)
+  for (int i = 1; i <= n_events && !interrupted; ++i) {
 
     // Sample a supernova neutrino energy
     Ea = marley_utils::rejection_sample(f, 4.36, 50);
@@ -176,8 +206,13 @@ int main(){
     = std::chrono::system_clock::now();
   std::time_t end_time = std::chrono::system_clock::to_time_t(end_time_point);
 
-  std::cout << "MARLEY terminated normally on "
-    << std::put_time(std::localtime(&end_time), "%c %Z")
+  if (!interrupted) {
+    std::cout << "MARLEY terminated normally on ";
+  }
+  else {
+    std::cout << "MARLEY was interrupted by the user on ";
+  }
+  std::cout << std::put_time(std::localtime(&end_time), "%c %Z")
     << "\033[K\033[E\033[K";
 
   return 0;
