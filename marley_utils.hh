@@ -40,8 +40,8 @@ namespace marley_utils {
 
   // Random number generator that will be used when selecting gammas for
   // cascade simulations.
-  extern unsigned seed;
-  extern std::knuth_b rand_gen;
+  extern uint_fast64_t seed;
+  extern std::mt19937_64 rand_gen; // Use the 64-bit Mersenne Twister RNG
 
   // Sample a random number uniformly on either [min, max) or [min, max]
   double uniform_random_double(double min, double max, bool inclusive);
@@ -205,7 +205,12 @@ namespace marley_utils {
     duration -= marley_utils::seconds<repType>(second_count);
 
     std::ostringstream out;
-    if (day_count > 0) out << day_count << " days ";
+    if (day_count > 1) {
+      out << day_count << " days ";
+    }
+    if (day_count == 1) {
+      out << day_count << " day ";
+    }
     if (hour_count < 10) out << "0";
     out << hour_count << ":";
     if (minute_count < 10) out << "0";
