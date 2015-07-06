@@ -90,10 +90,13 @@ std::string marley_utils::latex_table_4 = "\\end{longtable}\n"
   "\\end{document}";
 
 // Random number generator that will be used when selecting gammas for
-// cascade simulations. Seed it using the system time
-unsigned marley_utils::seed = std::chrono::system_clock::now().time_since_epoch().count();
-std::knuth_b marley_utils::rand_gen(seed);
-
+// cascade simulations. Seed it using the system time.
+// This is an attempt to do a decent job of seeding the random number
+// generator, but optimally accomplishing this can be tricky (see, for
+// example, http://www.pcg-random.org/posts/cpp-seeding-surprises.html)
+uint_fast64_t marley_utils::seed = std::chrono::system_clock::now().time_since_epoch().count();
+std::seed_seq seed_sequence{marley_utils::seed};
+std::mt19937_64 marley_utils::rand_gen(seed_sequence);
 
 // This implementation of the complex gamma function is based on the
 // Lanczos approximation and its Python implementation given

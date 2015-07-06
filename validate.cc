@@ -8,6 +8,7 @@
 #include <list>
 #include <vector>
 
+#include "marley_utils.hh"
 #include "TMarleyEvent.hh"
 
 #include "TFile.h"
@@ -18,8 +19,9 @@ int main(){
 
   // Open a file containing a ROOT tree filled with MARLEY events.
   // Associate the tree with a TMarleyEvent pointer.
-  TFile file("event_tree.root");
-  TTree* t = static_cast<TTree*>(file.Get("event_tree"));
+  TFile* file = new TFile("event_tree.root", "READ");
+  TTree* t = nullptr;
+  file->GetObject("MARLEY Event Tree", t);
   TMarleyEvent* e = new TMarleyEvent;
   t->GetBranch("events")->SetAddress(&e);
 
@@ -57,7 +59,8 @@ int main(){
   }
 
   // Close the event tree ROOT file
-  file.Close();
+  file->Close();
+  delete file;
 
   // Find the minimum and maximum changes in the total energy of an event
   double max_change_in_E = *(std::max_element(delta_Es.begin(), delta_Es.end()));
@@ -77,9 +80,10 @@ int main(){
   for(double dE : delta_Es) delta_E_histogram.Fill(dE);
 
   // Write the energy change histogram to new a ROOT file
-  file.Open("validation.root","RECREATE");
+  file = new TFile("validation.root","RECREATE");
   delta_E_histogram.Write();
-  file.Close();
+  file->Close();
+  delete file;
 
   return 0;
 }
