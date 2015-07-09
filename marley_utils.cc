@@ -460,3 +460,29 @@ std::string marley_utils::elapsed_time_string(
   return marley_utils::duration_to_string
     <std::chrono::system_clock::duration>(time_elapsed);
 }
+
+// Efficiently read in an entire file as a std::string
+// This function was taken from
+// http://insanecoding.blogspot.in/2011/11/how-to-read-in-file-in-c.html
+std::string marley_utils::get_file_contents(std::string filename) {
+
+  // Read from the file using a stream. Ignore windows line ending changes
+  std::ifstream in(filename.c_str(), std::ios::in | std::ios::binary);
+
+  if (in) {
+    std::string contents;
+
+    // Determine the size of the file. Allocate sufficient memory
+    // so that the string can hold the entire file without
+    // resizing itself
+    in.seekg(0, std::ios::end);
+    contents.resize(in.tellg());
+    in.seekg(0, std::ios::beg);
+
+    // Slurp in the entire file
+    in.read(&contents[0], contents.size());
+    in.close();
+    return contents;
+  }
+  throw std::runtime_error("Could not read from file " + filename);
+}
