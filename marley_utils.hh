@@ -82,6 +82,9 @@ namespace marley_utils {
   void solve_quadratic_equation(double A, double B,
     double C, double &solPlus, double &solMinus);
 
+  // Efficiently read in an entire file as a std::string
+  std::string get_file_contents(std::string filename);
+
   // String containing all of the characters that will be
   // considered whitespace by default in the string
   // manipulation functions below 
