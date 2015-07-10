@@ -23,7 +23,7 @@ OBJ_DICT = root_dict.o
 LDFLAGS=`root-config --libs`
 endif
 
-all: parse react validate check_dist
+all: parse react validate check
 
 %.o: %.c
 	$(CXX) -c -o $@
@@ -37,7 +37,7 @@ react: $(OBJ) $(OBJ_DICT) react.o
 validate: $(OBJ) $(OBJ_DICT) validate.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-check_dist: $(OBJ) $(OBJ_DICT) check_dist.o
+check: $(OBJ) $(OBJ_DICT) check.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # Add more header files to the prerequisites for

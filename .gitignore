@@ -3,6 +3,7 @@ data/
 parse
 react
 validate
+check
 *.root
 *.swp
 root_dict.cc
