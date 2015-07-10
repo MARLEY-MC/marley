@@ -4,7 +4,7 @@ USE_ROOT=yes
 
 OBJ = marley_utils.o TMarleyParticle.o TMarleyEvent.o TMarleyEvaporationThreshold.o
 OBJ += TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o
-OBJ += TMarleyMassTable.o
+OBJ += TMarleyMassTable.o TMarleyStructureDatabase.o
 
 ifdef USE_ROOT
 # Adding the g++ compiler option -DUSE_ROOT to the CXXFLAGS
