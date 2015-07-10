@@ -1,6 +1,10 @@
 #pragma once
 #include <unordered_map>
 
+// TODO: Consider using a namespace (possibly with an anonymous namespace
+// in the source file to encapsulate the current private members)
+// rather than a class for the mass table. For more thoughts on this
+// possibility, see http://www.cplusplus.com/forum/general/121429/
 class TMarleyMassTable {
 
   public:
