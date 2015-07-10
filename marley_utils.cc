@@ -486,3 +486,26 @@ std::string marley_utils::get_file_contents(std::string filename) {
   }
   throw std::runtime_error("Could not read from file " + filename);
 }
+
+// Advance to the next line of an ifstream that either matches (match == true)
+// or does not match (match == false) a given regular expression
+std::string marley_utils::get_next_line(std::ifstream &file_in,
+  const std::regex &rx, bool match) {
+
+  std::string line;
+  while (!file_in.eof() && file_in.good()) {
+    // Get the next line of the file
+    std::getline(file_in, line);
+
+    // Check to see if the new line fulfills the search criteria
+    if (std::regex_match(line, rx) == match) {
+      // If it does, return it
+      return line;
+    }
+    // If not, keep looking
+  }
+
+  // If the end of the file is encountered before a suitable
+  // line is found, return an empty string
+  return std::string("");
+}

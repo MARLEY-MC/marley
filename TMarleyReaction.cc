@@ -29,7 +29,7 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
 
   // TODO: add more error handling for this function
 
-  line = get_next_line(file_in, rx_comment, false);
+  line = marley_utils::get_next_line(file_in, rx_comment, false);
 
   // Read in the particle IDs
   std::istringstream iss(line);
@@ -67,7 +67,7 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
 
   // Read in the number of levels that have tabulated B(F) + B(GT) data
   int num_levels;
-  line = get_next_line(file_in, rx_comment, false);
+  line = marley_utils::get_next_line(file_in, rx_comment, false);
   iss.str(line); 
   iss.clear();
   iss >> num_levels;
@@ -80,7 +80,7 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
   // value given in the reaction data file
   double old_entry = std::numeric_limits<double>::lowest();
   while (j < num_levels && file_in.good()) {
-    line = get_next_line(file_in, rx_comment, false);
+    line = marley_utils::get_next_line(file_in, rx_comment, false);
     iss.str(line);
     iss.clear();
     while (iss >> entry) {
@@ -103,7 +103,7 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
   // Read in all of the level B(F) + B(GT) values
   j = 0;
   while (j < num_levels && file_in.good()) {
-    line = get_next_line(file_in, rx_comment, false);
+    line = marley_utils::get_next_line(file_in, rx_comment, false);
     iss.str(line);
     iss.clear();
     while (iss >> entry) {
@@ -127,29 +127,6 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
   }
 
   file_in.close();
-}
-
-// Advance to the next line of a file that either matches (match == true)
-// or does not match (match == false) a given regular expression
-std::string TMarleyReaction::get_next_line(std::ifstream &file_in,
-  std::regex &rx, bool match) const {
-
-  std::string line;
-  while (!file_in.eof()) {
-    // Get the next line of the file
-    std::getline(file_in, line);
- 
-    // Check to see if the new line fulfills the search criteria
-    if (std::regex_match(line, rx) == match) {
-      // If it does, return it
-      return line;
-    }
-    // If not, keep looking
-  }
-
-  // If the end of the file is encountered before a suitable
-  // line is found, return an empty string
-  return std::string("");
 }
 
 // Associate a decay scheme object with this reaction. This will provide
