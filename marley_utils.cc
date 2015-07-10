@@ -330,7 +330,7 @@ std::string marley_utils::nuc_id(int Z, int A) {
   std::string symbol = element_symbols.at(Z);
 
   // Make the symbol completely uppercase
-  std::transform(symbol.begin(), symbol.end(), symbol.begin(), ::toupper);
+  to_uppercase_inplace(symbol);
 
   // If the symbol is only one character, pad the string so that
   // it is two characters long

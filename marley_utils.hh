@@ -124,6 +124,32 @@ namespace marley_utils {
     return s;
   }
 
+  // Function that converts a std::string object to
+  // all uppercase in place and returns a reference to
+  // it afterwards
+  inline std::string& to_uppercase_inplace(std::string& s) {
+    std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+    return s;
+  }
+
+  // Functions for padding std::string objects in place.  They all return
+  // references to the string afterwards.  These functions are based on
+  // http://stackoverflow.com/a/667219/4081973
+  inline std::string& pad_left_inplace(std::string &str,
+    const size_t len, const char pad_char = ' ')
+  {
+    if(len > str.size())
+    str.insert(0, len - str.size(), pad_char);
+    return str;
+  }
+
+  inline std::string& pad_right_inplace(std::string &str,
+    const size_t len, const char pad_char = ' ')
+  {
+    if(len > str.size())
+    str.append(len - str.size(), pad_char);
+    return str;
+  }
 
   // These std::string trimming functions were taken from code
   // presented here: http://www.cplusplus.com/faq/sequences/strings/trim/
