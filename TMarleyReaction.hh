@@ -23,8 +23,6 @@ class TMarleyReaction {
     double sample_ejectile_scattering_cosine(double E_level, double Ea, double matrix_element);
     void set_decay_scheme(TMarleyDecayScheme* scheme);
     TMarleyEvent create_event(double Ea);
-    std::string get_next_line(std::ifstream &file_in,
-      std::regex &rx, bool match) const;
 
   private:
     double ma; // projectile mass

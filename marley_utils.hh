@@ -9,6 +9,7 @@
 #include <functional>
 #include <map>
 #include <random>
+#include <regex>
 #include <string>
 
 namespace marley_utils {
@@ -85,6 +86,11 @@ namespace marley_utils {
   // Efficiently read in an entire file as a std::string
   std::string get_file_contents(std::string filename);
 
+  // Advance to the next line of an ifstream that either matches (match == true)
+  // or does not match (match == false) a given regular expression
+  std::string get_next_line(std::ifstream &file_in, const std::regex &rx,
+    bool match);
+
   // String containing all of the characters that will be
   // considered whitespace by default in the string
   // manipulation functions below 
@@ -109,6 +115,15 @@ namespace marley_utils {
     std::transform(new_s.begin(), new_s.end(), new_s.begin(), ::tolower);
     return new_s;
   }
+
+  // Function that converts a std::string object to
+  // all lowercase in place and returns a reference to
+  // it afterwards
+  inline std::string& to_lowercase_inplace(std::string& s) {
+    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+    return s;
+  }
+
 
   // These std::string trimming functions were taken from code
   // presented here: http://www.cplusplus.com/faq/sequences/strings/trim/
@@ -135,8 +150,8 @@ namespace marley_utils {
     return trim_left_copy(trim_right_copy(s, delimiters), delimiters);
   }
   
-  // The second three alter the original string, returning it
-  // after it has been trimmed. 
+  // The second three alter the original string, returning a
+  // reference to it after it has been trimmed.
   inline std::string& trim_right_inplace(std::string& s,
     const std::string& delimiters = whitespace)
   {
