@@ -509,3 +509,26 @@ std::string marley_utils::get_next_line(std::ifstream &file_in,
   // line is found, return an empty string
   return std::string("");
 }
+
+// Trim an ENSDF nucid string and make two-letter element symbols have a
+// lowercase last letter. Currently, no checking is done to see if the
+// string is a valid nucid.
+std::string marley_utils::nucid_to_symbol(std::string nucid) {
+  if (nucid.length() != 5) {
+    // Split the string into "A" and "element name" pieces
+    std::smatch m;
+    std::regex_search(nucid, m, std::regex("[0-9]+"));
+    std::string z_str = m.str();
+    std::string e_str = m.suffix().str();
+
+    // If the element name has more than one letter,
+    // then make the last one lowercase.
+    if (e_str.length() > 1)
+      e_str.back() = tolower(e_str.back());
+    return z_str + e_str;
+  }
+  // The nucid is 5 characters long, so getting our
+  // desired format is a lot easier
+  nucid.back() = tolower(nucid.back());
+  return marley_utils::trim_copy(nucid);
+}

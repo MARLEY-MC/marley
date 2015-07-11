@@ -7,6 +7,29 @@
 #include "marley_utils.hh"
 #include "TMarleyDecayScheme.hh"
 
+// ***** Constants used for ENSDF file parsing *****
+//const std::regex TMarleyDecayScheme::ensdf_generic_nuc_id("^[[:alnum:] ]{5}");
+const std::string TMarleyDecayScheme::ensdf_primary_record = "[ 1]";
+const std::string TMarleyDecayScheme::ensdf_continuation_record = "[^ 1]";
+const std::string TMarleyDecayScheme::ensdf_record_data = ".{71}";
+
+const std::regex TMarleyDecayScheme::rx_ensdf_end_record("\\s*"); // Matches blank lines
+//const std::regex TMarleyDecayScheme::rx_generic_primary_identification_record(
+//  ensdf_generic_nuc_id + ensdf_primary_record + "   " + ensdf_record_data);
+
+// ***** Constants used for TALYS file parsing *****
+// Each line describing a level has fortran
+// format (i4, f11.6, f6.1, 3x, i2, i3, 19x, e9.3, 1x, 2a1, a18)
+//const std::regex TMarleyDecayScheme::rx_talys_level_line(std::string("[0-9 ]{8}\\.[0-9]{6}")
+//  + "(?:[0-9 ]{4}\\.[0-9]| {6}) {3}(?:[0-9 ]{2}| {2})[0-9 ]{3} {19}(?:[0-9]\\."
+//  + "[0-9]{3}[Ee][+-][0-9]{2}| {9}) .{20}");
+
+// Each line describing a gamma ray transition has
+// fortran format (29x, i3, f10.6, e10.3, 5x, a1)
+//const std::regex TMarleyDecayScheme::rx_talys_gamma_line(std::string(" {29}[0-9 ]{3}")
+//  + "[0-9 ]{3}\\.[0-9]{6}[0-9 ]{2}\\.[0-9]{3}"
+//  + "[Ee][+-][0-9]{2} {5}.");
+
 //void TMarleyDecayScheme::do_cascade(std::string initial_energy) {
 //  std::map<std::string, TMarleyLevel>::iterator it = levels.find(initial_energy);
 //  if (it == levels.end()) {
@@ -165,19 +188,12 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename,
 void TMarleyDecayScheme::parse_ensdf() {
 
   // Regular expressions for identifying ensdf record types
-  //std::string generic_nuc_id = "^[[:alnum:] ]{5}";
-  static const std::string primary_record = "[ 1]";
-  static const std::string continuation_record = "[^ 1]";
-  static const std::string record_data = ".{71}";
-  
-  static const std::regex rx_end_record("\\s*"); // Matches blank lines
-  //std::regex rx_generic_primary_identification_record(nuc_id + primary_record + "   " + record_data);
-  static const std::regex rx_primary_identification_record(nuc_id + primary_record
+  const std::regex rx_primary_identification_record(nuc_id + ensdf_primary_record
     + "   ADOPTED LEVELS.{57}"); //"   ADOPTED LEVELS(, GAMMAS.{49}|.{57})");
-  static const std::regex rx_primary_level_record(nuc_id + primary_record + " L " + record_data);
-  static const std::regex rx_continuation_level_record(nuc_id + continuation_record + " L " + record_data);
-  static const std::regex rx_primary_gamma_record(nuc_id + primary_record + " G " + record_data);
-  static const std::regex rx_continuation_gamma_record(nuc_id + continuation_record + " G " + record_data);
+  const std::regex rx_primary_level_record(nuc_id + ensdf_primary_record + " L " + ensdf_record_data);
+  const std::regex rx_continuation_level_record(nuc_id + ensdf_continuation_record + " L " + ensdf_record_data);
+  const std::regex rx_primary_gamma_record(nuc_id + ensdf_primary_record + " G " + ensdf_record_data);
+  const std::regex rx_continuation_gamma_record(nuc_id + ensdf_continuation_record + " G " + ensdf_record_data);
  
   // Open the ENSDF file for parsing
   std::ifstream file_in(file_name);
@@ -186,7 +202,7 @@ void TMarleyDecayScheme::parse_ensdf() {
   // occurred, complain and give up.
   if (!file_in.good()) {
     throw std::runtime_error(std::string("Could not read from the ") +
-      "file " + file_name);
+      "ENSDF data file " + file_name);
   }
 
   std::string line; // String to store the current line
@@ -199,18 +215,20 @@ void TMarleyDecayScheme::parse_ensdf() {
                                    // gamma decay scheme data were found for the
                                    // current nuc_id.
 
+  //std::cout << "DEBUG: Searching for nucid '" << nuc_id << "'" << std::endl;
   while (!file_in.eof()) {
     std::getline(file_in, line);
     if (std::regex_match(line, rx_primary_identification_record)) {
       found_decay_scheme = true;
+      //std::cout << "DEBUG: Found nucid '" << nuc_id << "'" << std::endl;
       break;
     }
   }
 
   if (!found_decay_scheme) {
     throw std::runtime_error(std::string("Gamma decay scheme data ")
-      + "(adopted levels, gammas) for " + nuc_id
-      + "could not be found in the ENSDF data file " + file_name);
+      + "(adopted levels, gammas) for " + marley_utils::nucid_to_symbol(nuc_id)
+      + " could not be found in the ENSDF data file " + file_name);
   }
   //else {
   //  std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using ENSDF dataset" << std::endl;
@@ -224,6 +242,7 @@ void TMarleyDecayScheme::parse_ensdf() {
   TMarleyLevel* p_current_level = nullptr; // Pointer to the current level object
                                           // being filled with gamma ray data 
 
+  //std::cout << "DEBUG: Parsing data for nucid '" << nuc_id << "'" << std::endl;
   while (!file_in.eof()) {
     // Get the next line of the file
     // unless we already did
@@ -232,6 +251,7 @@ void TMarleyDecayScheme::parse_ensdf() {
 
     // Level Record
     if (std::regex_match(line, rx_primary_level_record)) {
+      //std::cout << "DEBUG:   Parsing level" << std::endl;
       record = line;
       line = this->process_continuation_records(file_in, record, rx_continuation_level_record);
       no_advance = true;
@@ -251,6 +271,7 @@ void TMarleyDecayScheme::parse_ensdf() {
 
     // Gamma Record
     else if (std::regex_match(line, rx_primary_gamma_record)) {
+      //std::cout << "DEBUG:   Parsing gamma" << std::endl;
       record = line;
       line = this->process_continuation_records(file_in,
         record, rx_continuation_gamma_record);
@@ -272,7 +293,8 @@ void TMarleyDecayScheme::parse_ensdf() {
 
     }
 
-    else if (std::regex_match(line, rx_end_record)) {
+    else if (std::regex_match(line, rx_ensdf_end_record)) {
+      //std::cout << "DEBUG:   Found end of data" << std::endl;
       break;
     }
 
@@ -294,6 +316,7 @@ void TMarleyDecayScheme::parse_ensdf() {
 
     // Calculate Weisskopf Estimates here if gamma data is not known
     if( (*j)->get_gamma_status() == false ) {
+      //std::cout << "DEBUG: Computing WE" << std::endl;
       do_weisskopf(j - this->pv_sorted_levels.begin());
     }
 
@@ -353,20 +376,7 @@ void TMarleyDecayScheme::parse_talys() {
   // format (2i4, 2i5, 56x, i4, a2)
   // General regex for this line:
   // std::regex nuclide_line("[0-9 ]{18} {56}[0-9 ]{4}.{2}");
-  static const std::regex nuclide_line("[0-9 ]{18} {57}" + nuc_id);
-
-
-  // Each line describing a level has fortran
-  // format (i4, f11.6, f6.1, 3x, i2, i3, 19x, e9.3, 1x, 2a1, a18)
-  static const std::regex level_line(std::string("[0-9 ]{8}\\.[0-9]{6}")
-    + "(?:[0-9 ]{4}\\.[0-9]| {6}) {3}(?:[0-9 ]{2}| {2})[0-9 ]{3} {19}(?:[0-9]\\."
-    + "[0-9]{3}[Ee][+-][0-9]{2}| {9}) .{20}");
-
-  // Each line describing a gamma ray transition has
-  // fortran format (29x, i3, f10.6, e10.3, 5x, a1)
-  static const std::regex gamma_line(std::string(" {29}[0-9 ]{3}")
-    + "[0-9 ]{3}\\.[0-9]{6}[0-9 ]{2}\\.[0-9]{3}"
-    + "[Ee][+-][0-9]{2} {5}.");
+  const std::regex nuclide_line("[0-9 ]{18} {57}" + nuc_id);
 
   // Open the TALYs level data file for parsing
   std::ifstream file_in(file_name);
@@ -375,7 +385,7 @@ void TMarleyDecayScheme::parse_talys() {
   // occurred, complain and give up.
   if (!file_in.good()) {
     throw std::runtime_error(std::string("Could not read from the ") +
-      "file " + file_name);
+      "TALYS data file " + file_name);
   }
 
   std::string line; // String to store the current line
@@ -393,8 +403,8 @@ void TMarleyDecayScheme::parse_talys() {
 
   if (!found_decay_scheme) {
     throw std::runtime_error(std::string("Gamma decay scheme data ")
-      + "(adopted levels, gammas) for " + nuc_id
-      + "could not be found in the TALYS data file " + file_name);
+      + "(adopted levels, gammas) for " + marley_utils::nucid_to_symbol(nuc_id)
+      + " could not be found in the TALYS data file " + file_name);
   }
   //else {
   //  std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using TALYS dataset" << std::endl;

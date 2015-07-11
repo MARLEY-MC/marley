@@ -16,12 +16,6 @@ class TMarleyMassTable {
     static double get_particle_separation_energy(int Z, int A, int pid);
     static void print_separation_energies(int Z, int A, unsigned n);
 
-    // Convert the atomic number Z and the mass number A into
-    // a PDG-compliant particle ID number
-    static inline int get_nucleus_pid(int Z, int A) {
-      return 10000*Z + 10*A + 1000000000;
-    }
-
     static inline int get_particle_Z(int pid) {
       // proton
       if (pid == 2212) return 1;
