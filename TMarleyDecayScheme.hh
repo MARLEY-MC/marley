@@ -54,4 +54,16 @@ class TMarleyDecayScheme {
     void parse_ensdf();
     void parse_talys();
 
+    // ***** Constants used for ENSDF file parsing *****
+    //static const std::regex ensdf_generic_nuc_id("^[[:alnum:] ]{5}");
+    static const std::string ensdf_primary_record;
+    static const std::string ensdf_continuation_record;
+    static const std::string ensdf_record_data;
+
+    static const std::regex rx_ensdf_end_record; // Matches blank lines
+    //static const std::regex rx_generic_primary_identification_record;
+
+    // ***** Constants used for TALYS file parsing *****
+    //static const std::regex rx_talys_level_line;
+    //static const std::regex rx_talys_gamma_line;
 };

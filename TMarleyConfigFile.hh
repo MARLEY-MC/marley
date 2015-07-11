@@ -7,6 +7,8 @@
 #include <string>
 #include <unordered_set>
 
+#include "TMarleyDecayScheme.hh"
+
 class TMarleyConfigFile {
   public:
 
@@ -14,7 +16,7 @@ class TMarleyConfigFile {
     // load requests within this configuration file
     struct StructureRecord {
       std::string filename;
-      std::string format;
+      TMarleyDecayScheme::FileFormat format;
       std::unordered_set<std::string> nucids;
     };
 
@@ -68,6 +70,16 @@ class TMarleyConfigFile {
     static const std::regex rx_num;
     // Matches trimmed ENSDF-style nucids
     static const std::regex rx_nucid;
+
+    // Convert a lowercase, trimmed string file format
+    // description for the structure data to a
+    // TMarleyDecayScheme::FileFormat
+    TMarleyDecayScheme::FileFormat string_to_format(
+      const std::string& string);
+
+    // Convert a TMarleyDecayScheme::FileFormat value
+    // to a std::string
+    std::string format_to_string(const TMarleyDecayScheme::FileFormat ff);
 
 
     // Get the next word from a parsed line. If errors occur, complain.

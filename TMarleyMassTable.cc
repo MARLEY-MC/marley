@@ -19,24 +19,24 @@ double TMarleyMassTable::get_atomic_mass(int nucleus_pid) {
 
 double TMarleyMassTable::get_atomic_mass(int Z, int A) {
   // Compute the nucleus's particle ID number
-  int pid = get_nucleus_pid(Z, A);
+  int pid = marley_utils::get_nucleus_pid(Z, A);
   // Look up the mass using this particle ID
   return get_atomic_mass(pid);
 }
 
 double TMarleyMassTable::get_proton_separation_energy(int Z, int A) {
-  double mi = atomic_masses.at(get_nucleus_pid(Z, A));
+  double mi = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
   double mp = particle_masses.at(2212); 
   double me = particle_masses.at(11);
-  double mf = atomic_masses.at(get_nucleus_pid(Z-1, A-1));
+  double mf = atomic_masses.at(marley_utils::get_nucleus_pid(Z-1, A-1));
 
   return micro_amu*((mf + mp + me) - mi);
 }
 
 double TMarleyMassTable::get_neutron_separation_energy(int Z, int A) {
-  double mi = atomic_masses.at(get_nucleus_pid(Z, A));
+  double mi = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
   double mn = particle_masses.at(2112); 
-  double mf = atomic_masses.at(get_nucleus_pid(Z, A-1));
+  double mf = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A-1));
 
   return micro_amu*((mf + mn) - mi);
 }
@@ -77,8 +77,8 @@ double TMarleyMassTable::get_particle_separation_energy(int Z, int A, int pid) {
   double extra_mass = Zx*particle_masses.at(11)
     + particle_masses.at(pid);
 
-  double m_atom_initial = atomic_masses.at(get_nucleus_pid(Z, A));
-  double m_atom_final = atomic_masses.at(get_nucleus_pid(Zf, Af));
+  double m_atom_initial = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
+  double m_atom_final = atomic_masses.at(marley_utils::get_nucleus_pid(Zf, Af));
 
   return micro_amu*(m_atom_final - m_atom_initial + extra_mass);
 }
@@ -110,8 +110,8 @@ void TMarleyMassTable::print_separation_energy(int Z, int A,
     std::cout << nx << " (" << fragment_pid << ") ";
   }
 
-  double m_atom_initial = atomic_masses.at(get_nucleus_pid(Z, A));
-  double m_atom_final = atomic_masses.at(get_nucleus_pid(Zf, Af));
+  double m_atom_initial = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
+  double m_atom_final = atomic_masses.at(marley_utils::get_nucleus_pid(Zf, Af));
 
   double separation_energy = micro_amu*(m_atom_final - m_atom_initial + extra_mass);
 

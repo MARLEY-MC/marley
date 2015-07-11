@@ -7,7 +7,7 @@
 #include <chrono>
 #include <complex>
 #include <functional>
-#include <map>
+#include <unordered_map>
 #include <random>
 #include <regex>
 #include <string>
@@ -58,6 +58,12 @@ namespace marley_utils {
   // Create an ENSDF nucid string given a nuclide's atomic number Z
   // and mass number A
   std::string nuc_id(int Z, int A);
+
+  // Return the PDG particle ID that corresponds to a ground-state
+  // nucleus with atomic number Z and mass number A
+  inline int get_nucleus_pid(int Z, int A) {
+    return 10000*Z + 10*A + 1000000000;
+  }
 
   // Take the square root of a number. Assume that a negative argument is
   // due to roundoff error and return zero in such cases rather than NaN.
@@ -214,6 +220,11 @@ namespace marley_utils {
   // representing the amount of memory in more readable units
   std::string num_bytes_to_string(double bytes, unsigned precision = 3);
 
+  // Trim an ENSDF nucid string and make two-letter element symbols have a
+  // lowercase last letter. Currently, no checking is done to see if the
+  // string is a valid nucid.
+  std::string nucid_to_symbol(std::string nucid);
+
   // Generalized std::chrono::duration helper types
   template <typename repType> using
     seconds = std::chrono::duration<repType>;
@@ -280,10 +291,10 @@ namespace marley_utils {
     std::chrono::system_clock::time_point &end_time);
 
   // Lookup table for element symbols (keys are atomic numbers Z,
-  // values are symbols on the periodic table). The symbol "nn" is
+  // values are symbols on the periodic table). The symbol "Nn" is
   // used for a neutron to match the ENSDF convention.
-  const std::map<int, std::string> element_symbols = {
-    { 0, "nn"},
+  const std::unordered_map<int, std::string> element_symbols = {
+    { 0, "Nn"},
     { 1, "H" },
     { 2, "He" },
     { 3, "Li" },
@@ -402,6 +413,133 @@ namespace marley_utils {
     { 116, "Lv" },
     //{ 117, "Uus" },
     //{ 118, "Uuo" },
+  };
+
+  // TODO: consider other ways of adding support for fast reverse lookups
+  // in the element_symbols map rather than reproducing its contents here
+  // Lookup table for atomic numbers (keys are symbols on the periodic table,
+  // values are atomic numbers Z). The symbol "Nn" is used for a neutron to
+  // match the ENSDF convention.
+  const std::unordered_map<std::string, int> atomic_numbers = {
+    {"Nn", 0    },
+    {"H" , 1    },
+    {"He", 2    },
+    {"Li", 3    },
+    {"Be", 4    },
+    {"B" , 5    },
+    {"C" , 6    },
+    {"N" , 7    },
+    {"O" , 8    },
+    {"F" , 9    },
+    {"Ne", 10   },
+    {"Na", 11   },
+    {"Mg", 12   },
+    {"Al", 13   },
+    {"Si", 14   },
+    {"P" , 15   },
+    {"S" , 16   },
+    {"Cl", 17   },
+    {"Ar", 18   },
+    {"K" , 19   },
+    {"Ca", 20   },
+    {"Sc", 21   },
+    {"Ti", 22   },
+    {"V" , 23   },
+    {"Cr", 24   },
+    {"Mn", 25   },
+    {"Fe", 26   },
+    {"Co", 27   },
+    {"Ni", 28   },
+    {"Cu", 29   },
+    {"Zn", 30   },
+    {"Ga", 31   },
+    {"Ge", 32   },
+    {"As", 33   },
+    {"Se", 34   },
+    {"Br", 35   },
+    {"Kr", 36   },
+    {"Rb", 37   },
+    {"Sr", 38   },
+    {"Y" , 39   },
+    {"Zr", 40   },
+    {"Nb", 41   },
+    {"Mo", 42   },
+    {"Tc", 43   },
+    {"Ru", 44   },
+    {"Rh", 45   },
+    {"Pd", 46   },
+    {"Ag", 47   },
+    {"Cd", 48   },
+    {"In", 49   },
+    {"Sn", 50   },
+    {"Sb", 51   },
+    {"Te", 52   },
+    {"I" , 53   },
+    {"Xe", 54   },
+    {"Cs", 55   },
+    {"Ba", 56   },
+    {"La", 57   },
+    {"Ce", 58   },
+    {"Pr", 59   },
+    {"Nd", 60   },
+    {"Pm", 61   },
+    {"Sm", 62   },
+    {"Eu", 63   },
+    {"Gd", 64   },
+    {"Tb", 65   },
+    {"Dy", 66   },
+    {"Ho", 67   },
+    {"Er", 68   },
+    {"Tm", 69   },
+    {"Yb", 70   },
+    {"Lu", 71   },
+    {"Hf", 72   },
+    {"Ta", 73   },
+    {"W" , 74   },
+    {"Re", 75   },
+    {"Os", 76   },
+    {"Ir", 77   },
+    {"Pt", 78   },
+    {"Au", 79   },
+    {"Hg", 80   },
+    {"Tl", 81   },
+    {"Pb", 82   },
+    {"Bi", 83   },
+    {"Po", 84   },
+    {"At", 85   },
+    {"Rn", 86   },
+    {"Fr", 87   },
+    {"Ra", 88   },
+    {"Ac", 89   },
+    {"Th", 90   },
+    {"Pa", 91   },
+    {"U" , 92   },
+    {"Np", 93   },
+    {"Pu", 94   },
+    {"Am", 95   },
+    {"Cm", 96   },
+    {"Bk", 97   },
+    {"Cf", 98   },
+    {"Es", 99   },
+    {"Fm", 100  },
+    {"Md", 101  },
+    {"No", 102  },
+    {"Lr", 103  },
+    {"Rf", 104  },
+    {"Db", 105  },
+    {"Sg", 106  },
+    {"Bh", 107  },
+    {"Hs", 108  },
+    {"Mt", 109  },
+    {"Ds", 110  },
+    {"Rg", 111  },
+    {"Cn", 112  },
+    //{ "Uut", 113 },
+    {"Fl", 114  },
+    //{ "Uup", 115 },
+    {"Lv", 116  },
+    //{ "Uus", 117 },
+    //{ "Uuo", 118 },
   };
 
   const std::string marley_logo = "╔╦╗╔═╗╦═╗╦  ╔═╗╦ ╦\n"

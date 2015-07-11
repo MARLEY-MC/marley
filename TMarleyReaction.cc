@@ -586,7 +586,7 @@ void TMarleyReaction::evaporate_particles(double E_level, TMarleyEvent* p_event,
   // Get the particle ID for the residue in its final state
   int Zres = Zf - TMarleyMassTable::get_particle_Z(fragment_pid);
   int Ares = Af - TMarleyMassTable::get_particle_A(fragment_pid);
-  int pid_res = TMarleyMassTable::get_nucleus_pid(Zres, Ares);
+  int pid_res = marley_utils::get_nucleus_pid(Zres, Ares);
   double m_res = TMarleyMassTable::get_atomic_mass(pid_res);
 
   // TODO: correct the kinematics for this function to account for nuclear recoil, etc.

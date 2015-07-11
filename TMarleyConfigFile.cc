@@ -119,12 +119,20 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
     else if (keyword == "structure") {
       StructureRecord sr;
       next_word_from_line(iss, sr.filename, keyword, line_num);
-      next_word_from_line(iss, sr.format, keyword, line_num);
-      if (sr.format != "ensdf" && sr.format != "talys")
-        throw std::runtime_error(std::string("Unknown")
-          + " nuclear structure format '" + sr.format
+      std::string format_string;
+      next_word_from_line(iss, format_string, keyword, line_num);
+      try {
+        sr.format = string_to_format(format_string);
+      }
+      // If the format is invalid, catch the exception thrown
+      // by the converter and throw a different one so that
+      // the error message is more easily understood
+      catch (const std::runtime_error& e) {
+         throw std::runtime_error(std::string("Unknown")
+          + " nuclear structure format '" + format_string
           + "' specified on line " + std::to_string(line_num)
           + " of the configuration file " + filename);
+      }
       // Require at least one nuclide specifier on this line
       // by using next_word_from_line here with exceptions enabled
       // and then using it with exceptions disabled in the loop
@@ -249,6 +257,32 @@ void TMarleyConfigFile::print_summary(std::ostream& os) {
       os << " " << trimmed_id;
     }
     os << " from " << sr.filename << " ("
-      << sr.format << " format)" << std::endl;
+      << TMarleyConfigFile::format_to_string(sr.format)
+      << " format)" << std::endl;
   }
+}
+
+TMarleyDecayScheme::FileFormat
+  TMarleyConfigFile::string_to_format(
+  const std::string& string)
+{
+  if (string == "ensdf")
+    return TMarleyDecayScheme::FileFormat::ensdf;
+  else if (string == "talys")
+    return TMarleyDecayScheme::FileFormat::talys;
+  else throw std::runtime_error(std::string("Unrecognized file")
+    + " format '" + string + "' passed to"
+    + " TMarleyConfigFile::string_to_format()");
+}
+
+std::string TMarleyConfigFile::format_to_string(
+  const TMarleyDecayScheme::FileFormat ff)
+{
+  if (ff == TMarleyDecayScheme::FileFormat::ensdf)
+    return std::string("ensdf");
+  else if (ff == TMarleyDecayScheme::FileFormat::talys)
+    return std::string("talys");
+  else throw std::runtime_error(std::string("Unrecognized")
+    + " TMarleyDecayScheme::FileFormat value passed to"
+    + " TMarleyConfigFile::format_to_string()");
 }
