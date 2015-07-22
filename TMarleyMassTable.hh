@@ -14,6 +14,7 @@ class TMarleyMassTable {
     static double get_proton_separation_energy(int Z, int A);
     static double get_neutron_separation_energy(int Z, int A);
     static double get_particle_separation_energy(int Z, int A, int pid);
+    static double get_binding_energy(int Z, int A);
     static void print_separation_energies(int Z, int A, unsigned n);
 
     static inline int get_particle_Z(int pid) {

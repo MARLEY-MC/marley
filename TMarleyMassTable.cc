@@ -17,6 +17,15 @@ double TMarleyMassTable::get_atomic_mass(int nucleus_pid) {
   return micro_amu * atomic_masses.at(nucleus_pid);
 }
 
+double TMarleyMassTable::get_binding_energy(int Z, int A) {
+  int N = A - Z;
+  double m_hydrogen_1 = atomic_masses.at(1000010010);
+  double mn = particle_masses.at(2112); 
+  double mN = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
+
+  return micro_amu*(Z*m_hydrogen_1 + N*mn - mN);
+}
+
 double TMarleyMassTable::get_atomic_mass(int Z, int A) {
   // Compute the nucleus's particle ID number
   int pid = marley_utils::get_nucleus_pid(Z, A);
