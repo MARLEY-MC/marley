@@ -30,7 +30,14 @@ inline double f(double r, double R, double a) {
 
 // Partial derivative with respect to r of the Woods-Saxon shape
 inline double dfdr(double r, double R, double a) {
-  double temp = std::exp((r - R)/a);
+  // In the limit as r -> +-infinity, this goes to zero.
+  // We pick an upper limit for the exponent to avoid evaluating
+  // the function explicitly when r gets too large (otherwise, C++
+  // returns NaN because the function becomes indeterminate in double
+  // precision (infinity/infinity or 0/0)
+  double exponent = (r - R) / a;
+  if (std::abs(exponent) > 100.) return 0;
+  double temp = std::exp(exponent);
   return -temp / (a * std::pow(1 + temp, 2));
 }
 
@@ -137,6 +144,7 @@ int main() {
   double r_max_3 = 2*r_max_1;
 
   double E = 0.0013; // MeV
+  std::cout << "E = " << E << std::endl;
 
   for (r = 2*h; r < r_max_1; r += h) {
     temp = u_n;
