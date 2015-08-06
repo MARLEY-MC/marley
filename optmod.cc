@@ -21,7 +21,7 @@ const double lambda_piplus2 = std::pow(hbarc / mpiplus, 2);
 const double micro_amu = 0.000931494061;
 const double m_fragment = 1008664.91585 * micro_amu; //TMarleyMassTable::get_particle_mass(2112);
 const double m_nucleus = 39963998.166 * micro_amu; //TMarleyMassTable::get_atomic_mass(19, 40);
-const double mu  = 1 / (1/m_fragment + 1/m_nucleus); // Reduced mass
+const double mu  = (m_fragment * m_nucleus) / (m_fragment + m_nucleus); // Reduced mass (MeV)
 
 // Woods-Saxon shape
 inline double f(double r, double R, double a) {
@@ -50,7 +50,7 @@ inline double Vc(double r, double R, int Z, int z) {
 }
 
 std::complex<double> optical_model_potential(double r, double E,
-  int z, int Z, int A, double j, double l)
+  int z, int Z, int A, int two_j, int two_l)
 {
   //double SnA = TMarleyMassTable::get_neutron_separation_energy(Z, A);
   //double SnB = TMarleyMassTable::get_neutron_separation_energy(Z, A + 1);
@@ -89,11 +89,10 @@ std::complex<double> optical_model_potential(double r, double E,
 
   double f_v = f(r, Rv, av);
   double dfdr_d = dfdr(r, Rd, ad);
-  const double THREE_EIGHTHS = 3.0/8.0;
   // Eigenvalue of the spin-orbit operator
-  // l.sigma = j*(j + 1)  - l*(l + 1) -  s*(s + 1)/2
+  // l.sigma = (j*(j + 1)  - l*(l + 1) -  s*(s + 1))/2
   // where the particle spin s = 1/2 for nucleons
-  double spin_orbit_eigenvalue = 0.5*(j*(j + 1) - l*(l + 1) - THREE_EIGHTHS);
+  double spin_orbit_eigenvalue = 0.125*(two_j*(two_j + 2) - two_l*(two_l + 2) - 1.5);
   double factor_so = lambda_piplus2 * dfdr(r, Rso, aso)
     * spin_orbit_eigenvalue / r;
 
@@ -115,63 +114,147 @@ std::complex<double> optical_model_potential(double r, double E,
 
 
 inline std::complex<double> a(double r, double E, int z, int Z,
-  int A, double j, double l)
+  int A, int two_j, int two_l)
 {
-  return -l*(l + 1)/std::pow(r, 2) + 2*mu*E/hbarc2
-    - 2*mu*optical_model_potential(r, E, z, Z, A, j, l)/hbarc2;
+  return (-0.25 * two_l * (two_l + 2) / std::pow(r, 2)) +
+    2 * mu * (E - optical_model_potential(r, E, z, Z, A, two_j, two_l)) / hbarc2;
 }
+
+// Using the Numerov method (see https://en.wikipedia.org/wiki/Numerov%27s_method for details),
+// compute the value of the radial wavefunction u(r) that satisfies the Schrödinger equation
+// (d^2/dr^2 + a(r))u(r) = 0, where a(r) = -l*(l+1)/r^2 + k^2 - 2*mu*V(r)/hbar^2,
+// V(r) is the potential, and the wavenumber k = sqrt(2*mu*E)/hbar, where E is
+// the particle's (nonrelativistic) energy and mu is its reduced mass. In this function,
+// we use 2*l rather than l in the input so that half-integer orbital angular momenta
+// may be represented using integer values.
+//template<typename numType>
+//numType numerov_radial_wavefunction(std::function<numType(double)> V,
+//  double R, int two_l, double mu, double E, numType u0, numType u1, double h)
+//{
+//  double h2_over_twelve = std::pow(h, 2) / 12.0;
+//
+//  double centrifugal_term = -ONE_FOURTH * two_l * (two_l + 2) / std::pow(r, 2);
+//  double factor = 2 * mu / hbarc2;
+//  double k2 = factor * E;
+//  double constant_terms = centrifugal_term + k2;
+//
+//  numType u_n = u1;
+//  numType u_n_minus_one = u0;
+//
+//  numType a_n_minus_one, a_n, a_n_plus_one, temp;
+//
+//  double r;
+//
+//  for (r = 2*h,
+//    a_n = constant_terms - factor * V(h),
+//    a_n_plus_one = constant_terms - factor * V(2*h); r < R; r += h)
+//  {
+//    a_n_minus_one = a_n;
+//    a_n = a_n_plus_one;
+//    a_n_plus_one = constant_terms - factor * V(r + h);
+//
+//    temp = u_n;
+//
+//    u_n = ((2.0 - 10*h2_over_twelve*a_n)*u_n
+//      - (1.0 + h2_over_twelve*a_n_minus_one)*u_n_minus_one)
+//      / (1.0 + h2_over_twelve*a_n_plus_one);
+//
+//    u_n_minus_one = temp;
+//  }
+//
+//  return u_n;
+//}
+
 
 int main() {
 
   double Z = 19;
   double z = 0;
   int A = 40;
-  double j = 0.5;
-  double l = 0.0;
+  int two_j = 2;
+  int two_l = 0;
 
-  double h = 0.1; // Step size (fm)
-  double h2 = std::pow(h, 2);
-  std::complex<double> u1 = 0, u2 = 0, u3 = 0;
-  std::complex<double> u_n = h;
-  std::complex<double> u_n_minus_one = 0;
-  std::complex<double> temp = 0;
-  const double FIVE_SIXTHS = 5.0/6.0;
-  const double ONE_TWELFTH = 1.0/12.0;
+  double h = 0.001; // Step size (fm)
+  double h2_over_twelve = std::pow(h, 2) / 12.0;
 
-  double r;
   double r_max_1 = 12; // Matching radius (fm)
   double r_max_2 = 1.5*r_max_1;
   double r_max_3 = 2*r_max_1;
 
-  double E = 0.0013; // MeV
+  double E = 0.100; // MeV
   std::cout << "E = " << E << std::endl;
 
+  std::complex<double> u1 = 0, u2 = 0, u3 = 0;
+
+  //double factor = 2 * mu / hbarc2;
+  //double k2 = factor * E;
+
+  std::complex<double> a_n_minus_two;
+  // a(r) really blows up at the origin for the optical model potential, but we're saved
+  // by the boundary condition that u(0) = 0. We just need something finite here, but we might
+  // as well make it zero.
+  std::complex<double> a_n_minus_one = 0;
+  std::complex<double> a_n = a(h, E, z, Z, A, two_j, two_l);
+
+  std::complex<double> u_n_minus_two;
+  // Boundary condition that the wavefunction vanishes at the origin (the optical model
+  // potential blows up at r = 0)
+  std::complex<double> u_n_minus_one = 0;
+  // Asymptotic approximation for a regular potential (see J. Thijssen, Computational
+  // Physics, p. 20 for details). We really just need something finite and nonzero here, since
+  // our specific choice only determines the overall normalization, which isn't important for
+  // determining the transmission coefficients.
+  std::complex<double> u_n = std::pow(h, (two_l / 2) + 1);
+
+  double r;
+
   for (r = 2*h; r < r_max_1; r += h) {
-    temp = u_n;
-    u_n = ((2.0 - FIVE_SIXTHS*h2*a(r, E, z, Z, A, j, l))*u_n
-      - (1.0 + ONE_TWELFTH*h2*a(r - h, E, z, Z, A, j, l))*u_n_minus_one)
-      / (1.0 + ONE_TWELFTH*h2*a(r + h, E, z, Z, A, j, l));
-    u_n_minus_one = temp;
+    a_n_minus_two = a_n_minus_one;
+    a_n_minus_one = a_n;
+    a_n = a(r, E, z, Z, A, two_j, two_l);
+
+    u_n_minus_two = u_n_minus_one;
+    u_n_minus_one = u_n;
+
+    u_n = ((2.0 - 10*h2_over_twelve*a_n_minus_one)*u_n_minus_one
+      - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
+      / (1.0 + h2_over_twelve*a_n);
+
+    std::cout << "Loop 1: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
   }
 
   u1 = u_n;
 
   for (; r < r_max_2; r += h) {
-    temp = u_n;
-    u_n = ((2.0 - FIVE_SIXTHS*h2*a(r, E, z, Z, A, j, l))*u_n
-      - (1.0 + ONE_TWELFTH*h2*a(r - h, E, z, Z, A, j, l))*u_n_minus_one)
-      / (1.0 + ONE_TWELFTH*h2*a(r + h, E, z, Z, A, j, l));
-    u_n_minus_one = temp;
+    a_n_minus_two = a_n_minus_one;
+    a_n_minus_one = a_n;
+    a_n = a(r, E, z, Z, A, two_j, two_l);
+
+    u_n_minus_two = u_n_minus_one;
+    u_n_minus_one = u_n;
+
+    u_n = ((2.0 - 10*h2_over_twelve*a_n_minus_one)*u_n_minus_one
+      - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
+      / (1.0 + h2_over_twelve*a_n);
+
+    std::cout << "Loop 2: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
   }
 
   u2 = u_n;
 
   for (; r < r_max_3; r += h) {
-    temp = u_n;
-    u_n = ((2.0 - FIVE_SIXTHS*h2*a(r, E, z, Z, A, j, l))*u_n
-      - (1.0 + ONE_TWELFTH*h2*a(r - h, E, z, Z, A, j, l))*u_n_minus_one)
-      / (1.0 + ONE_TWELFTH*h2*a(r + h, E, z, Z, A, j, l));
-    u_n_minus_one = temp;
+    a_n_minus_two = a_n_minus_one;
+    a_n_minus_one = a_n;
+    a_n = a(r, E, z, Z, A, two_j, two_l);
+
+    u_n_minus_two = u_n_minus_one;
+    u_n_minus_one = u_n;
+
+    u_n = ((2.0 - 10*h2_over_twelve*a_n_minus_one)*u_n_minus_one
+      - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
+      / (1.0 + h2_over_twelve*a_n);
+
+    std::cout << "Loop 3: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
   }
 
   u3 = u_n;
@@ -188,7 +271,7 @@ int main() {
   std::cout << "eta = " << eta << std::endl;
 
   // Compute the Coulomb wavefunctions at the matching radii
-  Coulomb_wave_functions cwf(false, 0, eta);
+  Coulomb_wave_functions cwf(true, two_l / 2, eta);
   std::complex<double> dummy, Hplus1, Hminus1, Hplus2, Hminus2, Hplus3, Hminus3;
   //std::complex<double> dummy, F1, G1, F2, G2, F3, G3;
   //cwf.F_dF(k*r_max_1, F1, dummy);
