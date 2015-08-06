@@ -98,7 +98,7 @@ std::complex<double> optical_model_potential(double r, double E,
 
   double Vv = v1 * (1 - v2*Ediff + v3*Ediff2 - v4*Ediff3) * f_v;
   double Wv = w1 * Ediff2 / (Ediff2 + std::pow(w2, 2)) * f_v;
-  double Wd = d1 * Ediff2 * std::exp(-d2 * Ediff) * dfdr_d
+  double Wd = -4 * ad * d1 * Ediff2 * std::exp(-d2 * Ediff) * dfdr_d
     / (Ediff2 + std::pow(d3, 2));
   double Vso = vso1 * std::exp(-vso2 * Ediff) * factor_so;
   double Wso = wso1 * Ediff2 * factor_so / (Ediff2 + std::pow(wso2, 2));
