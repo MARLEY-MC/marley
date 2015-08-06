@@ -50,7 +50,7 @@ inline double Vc(double r, double R, int Z, int z) {
 }
 
 std::complex<double> optical_model_potential(double r, double E,
-  int z, int Z, int A, int two_j, int two_l)
+  int z, int Z, int A, int two_j, int l)
 {
   //double SnA = TMarleyMassTable::get_neutron_separation_energy(Z, A);
   //double SnB = TMarleyMassTable::get_neutron_separation_energy(Z, A + 1);
@@ -92,7 +92,9 @@ std::complex<double> optical_model_potential(double r, double E,
   // Eigenvalue of the spin-orbit operator
   // l.sigma = (j*(j + 1)  - l*(l + 1) -  s*(s + 1))/2
   // where the particle spin s = 1/2 for nucleons
-  double spin_orbit_eigenvalue = 0.125*(two_j*(two_j + 2) - two_l*(two_l + 2) - 1.5);
+  const int two_s = 1;
+  double spin_orbit_eigenvalue = 0.5*(0.25*(two_j*(two_j + 2)
+    - two_s*(two_s + 2)) - l*(l + 1));
   double factor_so = lambda_piplus2 * dfdr(r, Rso, aso)
     * spin_orbit_eigenvalue / r;
 
@@ -114,10 +116,10 @@ std::complex<double> optical_model_potential(double r, double E,
 
 
 inline std::complex<double> a(double r, double E, int z, int Z,
-  int A, int two_j, int two_l)
+  int A, int two_j, int l)
 {
-  return (-0.25 * two_l * (two_l + 2) / std::pow(r, 2)) +
-    2 * mu * (E - optical_model_potential(r, E, z, Z, A, two_j, two_l)) / hbarc2;
+  return (-l*(l+1) / std::pow(r, 2)) +
+    2 * mu * (E - optical_model_potential(r, E, z, Z, A, two_j, l)) / hbarc2;
 }
 
 // Using the Numerov method (see https://en.wikipedia.org/wiki/Numerov%27s_method for details),
@@ -129,11 +131,11 @@ inline std::complex<double> a(double r, double E, int z, int Z,
 // may be represented using integer values.
 //template<typename numType>
 //numType numerov_radial_wavefunction(std::function<numType(double)> V,
-//  double R, int two_l, double mu, double E, numType u0, numType u1, double h)
+//  double R, int l, double mu, double E, numType u0, numType u1, double h)
 //{
 //  double h2_over_twelve = std::pow(h, 2) / 12.0;
 //
-//  double centrifugal_term = -ONE_FOURTH * two_l * (two_l + 2) / std::pow(r, 2);
+//  double centrifugal_term = -l * (l + 1) / std::pow(r, 2);
 //  double factor = 2 * mu / hbarc2;
 //  double k2 = factor * E;
 //  double constant_terms = centrifugal_term + k2;
@@ -171,18 +173,19 @@ int main() {
   double Z = 19;
   double z = 0;
   int A = 40;
-  int two_j = 2;
-  int two_l = 0;
+  int two_j = 1;
+  int l = 0;
 
-  double h = 0.001; // Step size (fm)
+  double h = 0.1; // Step size (fm)
   double h2_over_twelve = std::pow(h, 2) / 12.0;
 
   double r_max_1 = 12; // Matching radius (fm)
-  double r_max_2 = 1.5*r_max_1;
-  double r_max_3 = 2*r_max_1;
+  double r_max_2 = 1.1*r_max_1;
+  double r_max_3 = 1.2*r_max_1;
 
-  double E = 0.100; // MeV
-  std::cout << "E = " << E << std::endl;
+  double E; // MeV
+  std::cout << "E?" << std::endl;
+  std::cin >> E;
 
   std::complex<double> u1 = 0, u2 = 0, u3 = 0;
 
@@ -194,7 +197,7 @@ int main() {
   // by the boundary condition that u(0) = 0. We just need something finite here, but we might
   // as well make it zero.
   std::complex<double> a_n_minus_one = 0;
-  std::complex<double> a_n = a(h, E, z, Z, A, two_j, two_l);
+  std::complex<double> a_n = a(h, E, z, Z, A, two_j, l);
 
   std::complex<double> u_n_minus_two;
   // Boundary condition that the wavefunction vanishes at the origin (the optical model
@@ -204,14 +207,14 @@ int main() {
   // Physics, p. 20 for details). We really just need something finite and nonzero here, since
   // our specific choice only determines the overall normalization, which isn't important for
   // determining the transmission coefficients.
-  std::complex<double> u_n = std::pow(h, (two_l / 2) + 1);
+  std::complex<double> u_n = std::pow(h, l + 1);
 
   double r;
 
   for (r = 2*h; r < r_max_1; r += h) {
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = a(r, E, z, Z, A, two_j, two_l);
+    a_n = a(r, E, z, Z, A, two_j, l);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -220,7 +223,7 @@ int main() {
       - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
       / (1.0 + h2_over_twelve*a_n);
 
-    std::cout << "Loop 1: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
+    //std::cout << "Loop 1: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
   }
 
   u1 = u_n;
@@ -228,7 +231,7 @@ int main() {
   for (; r < r_max_2; r += h) {
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = a(r, E, z, Z, A, two_j, two_l);
+    a_n = a(r, E, z, Z, A, two_j, l);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -237,7 +240,7 @@ int main() {
       - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
       / (1.0 + h2_over_twelve*a_n);
 
-    std::cout << "Loop 2: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
+    //std::cout << "Loop 2: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
   }
 
   u2 = u_n;
@@ -245,7 +248,7 @@ int main() {
   for (; r < r_max_3; r += h) {
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = a(r, E, z, Z, A, two_j, two_l);
+    a_n = a(r, E, z, Z, A, two_j, l);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -254,7 +257,7 @@ int main() {
       - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
       / (1.0 + h2_over_twelve*a_n);
 
-    std::cout << "Loop 3: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
+    //std::cout << "Loop 3: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
   }
 
   u3 = u_n;
@@ -271,7 +274,7 @@ int main() {
   std::cout << "eta = " << eta << std::endl;
 
   // Compute the Coulomb wavefunctions at the matching radii
-  Coulomb_wave_functions cwf(true, two_l / 2, eta);
+  Coulomb_wave_functions cwf(true, l, eta);
   std::complex<double> dummy, Hplus1, Hminus1, Hplus2, Hminus2, Hplus3, Hminus3;
   //std::complex<double> dummy, F1, G1, F2, G2, F3, G3;
   //cwf.F_dF(k*r_max_1, F1, dummy);
@@ -287,12 +290,12 @@ int main() {
   cwf.H_dH(1, k*r_max_3, Hplus3, dummy);
   cwf.H_dH(-1, k*r_max_3, Hminus3, dummy);
 
-  std::cout << "Hplus1 = " << Hplus1 << std::endl;
-  std::cout << "Hminus1 = " << Hminus1 << std::endl;
-  std::cout << "Hplus2 = " << Hplus2 << std::endl;
-  std::cout << "Hminus2 = " << Hminus2 << std::endl;
-  std::cout << "Hplus3 = " << Hplus3 << std::endl;
-  std::cout << "Hminus3 = " << Hminus3 << std::endl;
+  //std::cout << "Hplus1 = " << Hplus1 << std::endl;
+  //std::cout << "Hminus1 = " << Hminus1 << std::endl;
+  //std::cout << "Hplus2 = " << Hplus2 << std::endl;
+  //std::cout << "Hminus2 = " << Hminus2 << std::endl;
+  //std::cout << "Hplus3 = " << Hplus3 << std::endl;
+  //std::cout << "Hminus3 = " << Hminus3 << std::endl;
 
   // Compute the transmission coefficient a few different ways
   // to compare different matching radii
