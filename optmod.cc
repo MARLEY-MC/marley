@@ -33,6 +33,9 @@ class SphericalOpticalModel {
     SphericalOpticalModel(int z, int a);
     std::complex<double> optical_model_potential(double r, double E,
       int fragment_pid, int two_j, int l, int two_s);
+    double transmission_coefficient(double E, int fragment_pid, int two_j,
+      int l, int two_s, double h);
+
     inline double get_fragment_reduced_mass(int fragment_pid) {
       return reduced_masses.at(fragment_pid);
     }
@@ -309,38 +312,23 @@ SphericalOpticalModel::SphericalOpticalModel(int z, int a) {
 //  return u_n;
 //}
 
-
-int main() {
-
-  double Z = 19;
-  int A = 40;
-  int fragment_pid = HELION;
-
-  SphericalOpticalModel som(Z, A);
-
-  int l = 0;
-  int two_s = 1;
-  int two_j = 2*l + two_s;
-
-  double h = 0.1; // Step size (fm)
+double SphericalOpticalModel::transmission_coefficient(double E,
+  int fragment_pid, int two_j, int l, int two_s, double h)
+{
   double h2_over_twelve = std::pow(h, 2) / 12.0;
 
+  // TODO: adjust method for determining matching radius
   double r_max_1 = 12; // Matching radius (fm)
-  double r_max_2 = 1.1*r_max_1;
-  double r_max_3 = 1.2*r_max_1;
+  double r_max_2 = 1.2*r_max_1;
 
-  double E; // MeV
-  std::cout << "E?" << std::endl;
-  std::cin >> E;
-
-  std::complex<double> u1 = 0, u2 = 0, u3 = 0;
+  std::complex<double> u1 = 0, u2 = 0;
 
   std::complex<double> a_n_minus_two;
   // a(r) really blows up at the origin for the optical model potential, but we're saved
   // by the boundary condition that u(0) = 0. We just need something finite here, but we might
   // as well make it zero.
   std::complex<double> a_n_minus_one = 0;
-  std::complex<double> a_n = som.a(h, E, fragment_pid, two_j, l, two_s);
+  std::complex<double> a_n = a(h, E, fragment_pid, two_j, l, two_s);
 
   std::complex<double> u_n_minus_two;
   // Boundary condition that the wavefunction vanishes at the origin (the optical model
@@ -357,7 +345,7 @@ int main() {
   for (r = 2*h; r < r_max_1; r += h) {
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = som.a(r, E, fragment_pid, two_j, l, two_s);
+    a_n = a(r, E, fragment_pid, two_j, l, two_s);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -365,8 +353,6 @@ int main() {
     u_n = ((2.0 - 10*h2_over_twelve*a_n_minus_one)*u_n_minus_one
       - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
       / (1.0 + h2_over_twelve*a_n);
-
-    //std::cout << "Loop 1: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
   }
 
   u1 = u_n;
@@ -374,7 +360,7 @@ int main() {
   for (; r < r_max_2; r += h) {
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = som.a(r, E, fragment_pid, two_j, l, two_s);
+    a_n = a(r, E, fragment_pid, two_j, l, two_s);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -382,78 +368,51 @@ int main() {
     u_n = ((2.0 - 10*h2_over_twelve*a_n_minus_one)*u_n_minus_one
       - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
       / (1.0 + h2_over_twelve*a_n);
-
-    //std::cout << "Loop 2: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
   }
 
   u2 = u_n;
 
-  for (; r < r_max_3; r += h) {
-    a_n_minus_two = a_n_minus_one;
-    a_n_minus_one = a_n;
-    a_n = som.a(r, E, fragment_pid, two_j, l, two_s);
-
-    u_n_minus_two = u_n_minus_one;
-    u_n_minus_one = u_n;
-
-    u_n = ((2.0 - 10*h2_over_twelve*a_n_minus_one)*u_n_minus_one
-      - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
-      / (1.0 + h2_over_twelve*a_n);
-
-    //std::cout << "Loop 3: r = " << r << ", u_n = " << u_n << ", a_n = " << a_n << std::endl;
-  }
-
-  u3 = u_n;
-
-  std::cout << "u1(" << r_max_1 << " fm) = " << u1 << std::endl;
-  std::cout << "u2(" << r_max_2 << " fm) = " << u2 << std::endl;
-  std::cout << "u3(" << r_max_3 << " fm) = " << u3 << std::endl;
+  //std::cout << "u1(" << r_max_1 << " fm) = " << u1 << std::endl;
+  //std::cout << "u2(" << r_max_2 << " fm) = " << u2 << std::endl;
 
   // Coulomb parameter
-  double mu = som.get_fragment_reduced_mass(fragment_pid);
+  double mu = get_fragment_reduced_mass(fragment_pid);
   int z = TMarleyMassTable::get_particle_Z(fragment_pid);
   double k = std::sqrt(2.0 * mu * E) / hbarc;
   double eta = mu * Z * z * e2 / (hbarc2 * k);
 
-  std::cout << "k = " << k << std::endl;
-  std::cout << "eta = " << eta << std::endl;
+  //std::cout << "k = " << k << std::endl;
+  //std::cout << "eta = " << eta << std::endl;
 
   // Compute the Coulomb wavefunctions at the matching radii
   Coulomb_wave_functions cwf(true, l, eta);
-  std::complex<double> dummy, Hplus1, Hminus1, Hplus2, Hminus2, Hplus3, Hminus3;
-  //std::complex<double> dummy, F1, G1, F2, G2, F3, G3;
-  //cwf.F_dF(k*r_max_1, F1, dummy);
-  //cwf.G_dG(k*r_max_1, G1, dummy);
-  //cwf.F_dF(k*r_max_2, F2, dummy);
-  //cwf.G_dG(k*r_max_2, G2, dummy);
-  //cwf.F_dF(k*r_max_3, F3, dummy);
-  //cwf.G_dG(k*r_max_3, G3, dummy);
+  std::complex<double> dummy, Hplus1, Hminus1, Hplus2, Hminus2;
   cwf.H_dH(1, k*r_max_1, Hplus1, dummy);
   cwf.H_dH(-1, k*r_max_1, Hminus1, dummy);
   cwf.H_dH(1, k*r_max_2, Hplus2, dummy);
   cwf.H_dH(-1, k*r_max_2, Hminus2, dummy);
-  cwf.H_dH(1, k*r_max_3, Hplus3, dummy);
-  cwf.H_dH(-1, k*r_max_3, Hminus3, dummy);
 
   //std::cout << "Hplus1 = " << Hplus1 << std::endl;
   //std::cout << "Hminus1 = " << Hminus1 << std::endl;
   //std::cout << "Hplus2 = " << Hplus2 << std::endl;
   //std::cout << "Hminus2 = " << Hminus2 << std::endl;
-  //std::cout << "Hplus3 = " << Hplus3 << std::endl;
-  //std::cout << "Hminus3 = " << Hminus3 << std::endl;
 
-  // Compute the transmission coefficient a few different ways
-  // to compare different matching radii
-  std::complex<double> S1 = (u1*Hminus2 - u2*Hminus1) / (u1*Hplus2 - u2*Hplus1);
-  std::complex<double> S2 = (u1*Hminus3 - u3*Hminus1) / (u1*Hplus3 - u3*Hplus1);
-  std::complex<double> S3 = (u3*Hminus2 - u2*Hminus3) / (u3*Hplus2 - u2*Hplus3);
-  double T1 = 1.0 - std::norm(S1);
-  double T2 = 1.0 - std::norm(S2);
-  double T3 = 1.0 - std::norm(S3);
-  std::cout << "S1 = " << S1 << std::endl;
-  std::cout << "S2 = " << S2 << std::endl;
-  std::cout << "S3 = " << S3 << std::endl;
-  std::cout << "T1 = " << T1 << std::endl;
-  std::cout << "T2 = " << T2 << std::endl;
-  std::cout << "T3 = " << T3 << std::endl;
+  // Compute the transmission coefficient using the radial wavefunction
+  // evaluated at the two matching radii
+  std::complex<double> S = (u1*Hminus2 - u2*Hminus1) / (u1*Hplus2 - u2*Hplus1);
+  return 1.0 - std::norm(S);
+}
+
+int main() {
+
+  double Z = 19;
+  int A = 40;
+
+  SphericalOpticalModel som(Z, A);
+
+  for (double E = 0.1; E < 50.; E += 0.1) {
+    double T = som.transmission_coefficient(E, PROTON, 1, 0, 1, 0.1);
+    std::cout << "E = " << E << ", T = " << T << std::endl;
+  }
+
 }
