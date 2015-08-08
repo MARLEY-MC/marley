@@ -8,6 +8,8 @@
 #include "cwfcomp.hh"
 #include "cwfcomp.cc"
 
+#include "/home/sjg/Desktop/marley/TMarleyMassTable.hh"
+
 // Constants
 const double alpha = 7.2973525698e-3; // Fine structure constant
 const double hbarc = 197.3269631; // MeV * fm
@@ -18,108 +20,248 @@ const double mpiplus = 139.57018; // MeV
 // Squared pion Compton wavelength in fm
 const double lambda_piplus2 = std::pow(hbarc / mpiplus, 2);
 
-const double micro_amu = 0.000931494061;
-const double m_fragment = 1008664.91585 * micro_amu; //TMarleyMassTable::get_particle_mass(2112);
-const double m_nucleus = 39963998.166 * micro_amu; //TMarleyMassTable::get_atomic_mass(19, 40);
-const double mu  = (m_fragment * m_nucleus) / (m_fragment + m_nucleus); // Reduced mass (MeV)
+// Particle IDs
+const int NEUTRON = 2112;
+const int PROTON = 2212;
+const int DEUTERON = 1000010020;
+const int TRITON = 1000010030;
+const int HELION = 1000020030;
+const int ALPHA = 1000020040;
 
-// Woods-Saxon shape
-inline double f(double r, double R, double a) {
-  return std::pow(1 + std::exp((r - R) / a), -1);
-}
+class SphericalOpticalModel {
+  public:
+    SphericalOpticalModel(int z, int a);
+    std::complex<double> optical_model_potential(double r, double E,
+      int fragment_pid, int two_j, int l, int two_s);
+    inline double get_fragment_reduced_mass(int fragment_pid) {
+      return reduced_masses.at(fragment_pid);
+    }
 
-// Partial derivative with respect to r of the Woods-Saxon shape
-inline double dfdr(double r, double R, double a) {
-  // In the limit as r -> +-infinity, this goes to zero.
-  // We pick an upper limit for the exponent to avoid evaluating
-  // the function explicitly when r gets too large (otherwise, C++
-  // returns NaN because the function becomes indeterminate in double
-  // precision (infinity/infinity or 0/0)
-  double exponent = (r - R) / a;
-  if (std::abs(exponent) > 100.) return 0;
-  double temp = std::exp(exponent);
-  return -temp / (a * std::pow(1 + temp, 2));
-}
+    // Non-derivative radial Schrödinger equation terms to use for computing transmission
+    // coefficients via the Numerov method
+    inline std::complex<double> a(double r, double E, int fragment_pid,
+      int two_j, int l, int two_s)
+    {
+      return (-l*(l+1) / std::pow(r, 2)) +
+        2 * reduced_masses.at(fragment_pid) * (E - optical_model_potential(r,
+        E, fragment_pid, two_j, l, two_s)) / hbarc2;
+    }
 
-// Coulomb potential for a point particle with charge z*e interacting with a
-// uniformly charged sphere with radius R and charge Z*e
-inline double Vc(double r, double R, int Z, int z) {
-  if (Z == 0 || z == 0) return 0;
-  else if (r < R) return Z * z * e2 * (3 - std::pow(r / R, 2)) / (2 * R);
-  else return Z * z * e2 / r;
-}
+  private:
+    // Woods-Saxon shape
+    inline double f(double r, double R, double a) {
+      return std::pow(1 + std::exp((r - R) / a), -1);
+    }
 
-std::complex<double> optical_model_potential(double r, double E,
-  int z, int Z, int A, int two_j, int l)
+    // Partial derivative with respect to r of the Woods-Saxon shape
+    inline double dfdr(double r, double R, double a) {
+      // In the limit as r -> +-infinity, this goes to zero.
+      // We pick an upper limit for the exponent to avoid evaluating
+      // the function explicitly when r gets too large (otherwise, C++
+      // returns NaN because the function becomes indeterminate in double
+      // precision (infinity/infinity or 0/0)
+      double exponent = (r - R) / a;
+      if (std::abs(exponent) > 100.) return 0;
+      double temp = std::exp(exponent);
+      return -temp / (a * std::pow(1 + temp, 2));
+    }
+
+    // Coulomb potential for a point particle with charge z*e interacting with a
+    // uniformly charged sphere with radius R and charge Z*e
+    inline double Vc(double r, double R, int Z, int z) {
+      if (Z == 0 || z == 0) return 0;
+      else if (r < R) return Z * z * e2 * (3 - std::pow(r / R, 2)) / (2 * R);
+      else return Z * z * e2 / r;
+    }
+
+    // Nuclear atomic and mass numbers
+    int Z, A;
+    // Neutron parameters
+    double v1n, v2n, v3n, v4n, w1n, w2n, d1n, d2n, d3n, vso1n, vso2n;
+    double wso1n, wso2n, Efn, Rvn, avn, Rdn, adn, Rso_n, aso_n;
+    // Proton parameters
+    double v1p, v2p, v3p, v4p, w1p, w2p, d1p, d2p, d3p, vso1p, vso2p;
+    double wso1p, wso2p, Efp, Vcbar_p, Rvp, avp, Rdp, adp, Rso_p, aso_p;
+    // Radius for nuclear Coulomb potential
+    double Rc;
+    // Reduced mass lookup table
+    std::unordered_map<int, double> reduced_masses;
+};
+
+std::complex<double> SphericalOpticalModel::optical_model_potential(double r, double E,
+  int fragment_pid, int two_j, int l, int two_s)
 {
-  //double SnA = TMarleyMassTable::get_neutron_separation_energy(Z, A);
-  //double SnB = TMarleyMassTable::get_neutron_separation_energy(Z, A + 1);
-  //double Ef = -0.5*(SnA + SnB); // Fermi energy
-  const double ONE_THIRD = 1.0/3.0;
 
-  double N_minus_Z_over_A = (A - 2.0*Z)/A;
-  double v1 = 59.30 - 21.0*N_minus_Z_over_A - 0.024*A; // MeV
-  double v2 = 0.007228 - 1.48e-6*A; // MeV^(-1)
-  double v3 = 1.994e-5 - 2.0e-8*A; // MeV^(-2)
-  double v4 = 7e-9; // MeV^(-3)
-  double w1 = 12.195 + 0.0167*A; // MeV
-  double w2 = 73.55 + 0.0795*A; // MeV
-  double d1 = 16.0 - 16.0*N_minus_Z_over_A; // MeV
-  double d2 = 0.0180 + 0.003802/(1 + std::exp((A - 156.0)/8.0)); // MeV^(-1)
-  double d3 = 11.5; // MeV
-  double vso1 = 5.922 + 0.0030*A; // MeV
-  double vso2 = 0.0040; // MeV^(-1)
-  double wso1 = -3.1; // MeV
-  double wso2 = 160.0; // MeV
-  double Ef = -11.2814 + 0.02646*A; // MeV
-  
-  double A_to_the_one_third = std::pow(A, ONE_THIRD);
-  double Rv = 1.3039*A_to_the_one_third - 0.4054; // fm
-  double av = 0.6778 - 1.487e-4*A; // fm
-  double Rd = 1.3424*A_to_the_one_third - 0.01585; // fm
-  double ad = 0.5446 - 1.656e-4*A; // fm // Different for n,p
-  double Rso = 1.1854*A_to_the_one_third - 0.647; // fm
-  double aso = 0.59; // fm
-  double Rc = 1.198*A_to_the_one_third + 0.697/A_to_the_one_third
-    + 12.994*std::pow(A_to_the_one_third, -4);
+  // Fragment atomic, mass, and neutron numbers
+  int z = TMarleyMassTable::get_particle_Z(fragment_pid);
+  int a = TMarleyMassTable::get_particle_A(fragment_pid);
+  int n = a - z;
 
-  double Ediff = E - Ef;
-  double Ediff2 = std::pow(Ediff, 2);
-  double Ediff3 = std::pow(Ediff, 3);
+  // Geometrical parameters
+  double Rv = 0;
+  double av = 0;
+  double Rd = 0;
+  double ad = 0;
+  double Rso = 0;
+  double aso = 0;
+
+  // Terms in the spherical optical model potential
+  double Vv = 0;
+  double Wv = 0;
+  double Wd = 0;
+  double Vso = 0;
+  double Wso = 0;
+
+  // Energy to use when computing folded potentials
+  double E_eff = E / a;
+
+  if (n > 0) {
+    double Ediff_n = E_eff - Efn;
+    double Ediff_n2 = std::pow(Ediff_n, 2);
+    double Ediff_n3 = std::pow(Ediff_n, 3);
+
+    Vv += n * v1n * (1 - v2n*Ediff_n + v3n*Ediff_n2 - v4n*Ediff_n3);
+    Wv += n * w1n * Ediff_n2 / (Ediff_n2 + std::pow(w2n, 2));
+    Wd += n * d1n * Ediff_n2 * std::exp(-d2n * Ediff_n)
+      / (Ediff_n2 + std::pow(d3n, 2));
+
+    Rv += n * Rvn;
+    av += n * avn;
+    Rd += n * Rdn;
+    ad += n * adn;
+    Rso += n * Rso_n;
+    aso += n * aso_n;
+
+    if (two_s != 0) {
+      Vso += vso1n * std::exp(-vso2n * Ediff_n);
+      Wso += wso1n * Ediff_n2 / (Ediff_n2 + std::pow(wso2n, 2));
+    }
+  }
+
+  if (z > 0) {
+    double Ediff_p = E_eff - Efp;
+    double Ediff_p2 = std::pow(Ediff_p, 2);
+    double Ediff_p3 = std::pow(Ediff_p, 3);
+
+    Vv += z * v1p * (1 - v2p*Ediff_p + v3p*Ediff_p2 - v4p*Ediff_p3
+      + Vcbar_p*(v2p - 2*v3p*Ediff_p + 3*v4p*Ediff_p2));
+    Wv += z * w1p * Ediff_p2 / (Ediff_p2 + std::pow(w2p, 2));
+    Wd += z * d1p * Ediff_p2 * std::exp(-d2p * Ediff_p)
+      / (Ediff_p2 + std::pow(d3p, 2));
+
+    Rv += z * Rvp;
+    av += z * avp;
+    Rd += z * Rdp;
+    ad += z * adp;
+    Rso += z * Rso_p;
+    aso += z * aso_p;
+
+    if (two_s != 0) {
+      Vso += vso1p * std::exp(-vso2p * Ediff_p);
+      Wso += wso1p * Ediff_p2 / (Ediff_p2 + std::pow(wso2p, 2));
+    }
+  }
+
+  if (a != 1) {
+    Rv /= a;
+    av /= a;
+    Rd /= a;
+    ad /= a;
+    Rso /= a;
+    aso /= a;
+  }
 
   double f_v = f(r, Rv, av);
   double dfdr_d = dfdr(r, Rd, ad);
-  // Eigenvalue of the spin-orbit operator
-  // l.sigma = (j*(j + 1)  - l*(l + 1) -  s*(s + 1))/2
-  // where the particle spin s = 1/2 for nucleons
-  const int two_s = 1;
-  double spin_orbit_eigenvalue = 0.5*(0.25*(two_j*(two_j + 2)
-    - two_s*(two_s + 2)) - l*(l + 1));
-  double factor_so = lambda_piplus2 * dfdr(r, Rso, aso)
-    * spin_orbit_eigenvalue / r;
 
-  double Vv = v1 * (1 - v2*Ediff + v3*Ediff2 - v4*Ediff3) * f_v;
-  double Wv = w1 * Ediff2 / (Ediff2 + std::pow(w2, 2)) * f_v;
-  double Wd = -4 * ad * d1 * Ediff2 * std::exp(-d2 * Ediff) * dfdr_d
-    / (Ediff2 + std::pow(d3, 2));
-  double Vso = vso1 * std::exp(-vso2 * Ediff) * factor_so;
-  double Wso = wso1 * Ediff2 * factor_so / (Ediff2 + std::pow(wso2, 2));
+  Vv *= f_v;
+  Wv *= f_v;
+  Wd *= -4 * ad * dfdr_d;
 
-  //std::cout << "V = " << Vv << std::endl;
-  //std::cout << "W = " << Wv << std::endl;
-  //std::cout << "Wd = " << Wd << std::endl;
-  //std::cout << "Vso = " << Vso << std::endl;
-  //std::cout << "Wso = " << Wso << std::endl;
+  if (two_s != 0) {
+    // Eigenvalue of the spin-orbit operator
+    // l.sigma = (j*(j + 1)  - l*(l + 1) -  s*(s + 1))/2
+    double spin_orbit_eigenvalue = 0.5*(0.25*(two_j*(two_j + 2)
+      - two_s*(two_s + 2)) - l*(l + 1));
+    double factor_so = lambda_piplus2 * dfdr(r, Rso, aso)
+      * spin_orbit_eigenvalue / r;
 
+    Vso *= factor_so;
+    Wso *= factor_so;
+
+    // Adjust spin-orbit potentials for multi-nucleon fragments
+    if (a > 1) {
+      Vso /= a * std::max(z, n);
+    }
+  }
+ 
   return std::complex<double>(-Vv + Vso + Vc(r, Rc, z, Z), -Wv - Wd + Wso);
 }
 
 
-inline std::complex<double> a(double r, double E, int z, int Z,
-  int A, int two_j, int l)
-{
-  return (-l*(l+1) / std::pow(r, 2)) +
-    2 * mu * (E - optical_model_potential(r, E, z, Z, A, two_j, l)) / hbarc2;
+SphericalOpticalModel::SphericalOpticalModel(int z, int a) {
+  Z = z;
+  A = a;
+
+  int N = A - Z; // Neutron number
+
+  double A_to_the_one_third = std::pow(A, 1.0/3.0);
+
+  // Initialize the spherical optical model parameters (see TALYS 1.6 manual)
+
+  // Neutrons
+  v1n = 59.30 - 21.0*(N - Z)/A - 0.024*A; // MeV
+  v2n = 0.007228 - 1.48e-6*A; // MeV^(-1)
+  v3n = 1.994e-5 - 2.0e-8*A; // MeV^(-2)
+  v4n = 7e-9; // MeV^(-3)
+  w1n = 12.195 + 0.0167*A; // MeV
+  w2n = 73.55 + 0.0795*A; // MeV
+  d1n = 16.0 - 16.0*(N - Z)/A; // MeV
+  d2n = 0.0180 + 0.003802/(1 + std::exp((A - 156.)/8.0)); // MeV^(-1)
+  d3n = 11.5; // MeV
+  vso1n = 5.922 + 0.0030*A; // MeV
+  vso2n = 0.0040; // MeV^(-1)
+  wso1n = -3.1; // MeV
+  wso2n = 160.; // MeV
+  Efn = -11.2814 + 0.02646*A; // MeV
+  Rvn = 1.3039*A_to_the_one_third - 0.4054; // fm
+  avn = 0.6778 - 1.487e-4*A; // fm
+  Rdn = 1.3424*A_to_the_one_third - 0.01585*std::pow(A_to_the_one_third, 2); // fm
+  adn = 0.5446 - 1.656e-4*A; // fm
+  Rso_n = 1.1854*A_to_the_one_third - 0.647; // fm
+  aso_n = 0.59; // fm
+
+  // Protons
+  v1p = 59.30 + 21.0*(N - Z)/A - 0.024*A; // MeV
+  v2p = 0.007067 + 4.23e-6*A; // MeV^(-1)
+  v3p = 1.729e-5 + 1.136e-8*A; // MeV^(-2)
+  v4p = v4n; // MeV^(-3)
+  w1p = 14.667 + 0.009629*A; // MeV
+  w2p = w2n; // MeV
+  d1p = 16.0 + 16.0*(N - Z)/A; // MeV
+  d2p = d2n; // MeV^(-1)
+  d3p = d3n; // MeV
+  vso1p = vso1n; // MeV
+  vso2p = vso2n; // MeV^(-1)
+  wso1p = wso1n; // MeV
+  wso2p = wso2n; // MeV
+  Efp = -8.4075 + 0.01378*A; // MeV
+  Rvp = Rvn;
+  avp = avn;
+  Rdp = Rdn;
+  adp = 0.5187 + 5.205e-4*A; // fm
+  Rso_p = Rso_n;
+  aso_p = aso_n;
+  Rc = 1.198*A_to_the_one_third + 0.697/A_to_the_one_third
+    + 12.994*std::pow(A_to_the_one_third, -4); // fm
+  Vcbar_p = 1.73 * Z / Rc; // MeV
+
+  // Compute and store reduced masses for all of the fragments of interest
+  double m_nucleus = TMarleyMassTable::get_atomic_mass(Z, A);
+  for (auto pid : TMarleyMassTable::get_fragment_pids()) {
+    double m_fragment = TMarleyMassTable::get_particle_mass(pid);
+    reduced_masses[pid] = (m_fragment * m_nucleus) / (m_fragment + m_nucleus);
+  }
 }
 
 // Using the Numerov method (see https://en.wikipedia.org/wiki/Numerov%27s_method for details),
@@ -171,10 +313,14 @@ inline std::complex<double> a(double r, double E, int z, int Z,
 int main() {
 
   double Z = 19;
-  double z = 0;
   int A = 40;
-  int two_j = 1;
+  int fragment_pid = HELION;
+
+  SphericalOpticalModel som(Z, A);
+
   int l = 0;
+  int two_s = 1;
+  int two_j = 2*l + two_s;
 
   double h = 0.1; // Step size (fm)
   double h2_over_twelve = std::pow(h, 2) / 12.0;
@@ -189,15 +335,12 @@ int main() {
 
   std::complex<double> u1 = 0, u2 = 0, u3 = 0;
 
-  //double factor = 2 * mu / hbarc2;
-  //double k2 = factor * E;
-
   std::complex<double> a_n_minus_two;
   // a(r) really blows up at the origin for the optical model potential, but we're saved
   // by the boundary condition that u(0) = 0. We just need something finite here, but we might
   // as well make it zero.
   std::complex<double> a_n_minus_one = 0;
-  std::complex<double> a_n = a(h, E, z, Z, A, two_j, l);
+  std::complex<double> a_n = som.a(h, E, fragment_pid, two_j, l, two_s);
 
   std::complex<double> u_n_minus_two;
   // Boundary condition that the wavefunction vanishes at the origin (the optical model
@@ -214,7 +357,7 @@ int main() {
   for (r = 2*h; r < r_max_1; r += h) {
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = a(r, E, z, Z, A, two_j, l);
+    a_n = som.a(r, E, fragment_pid, two_j, l, two_s);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -231,7 +374,7 @@ int main() {
   for (; r < r_max_2; r += h) {
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = a(r, E, z, Z, A, two_j, l);
+    a_n = som.a(r, E, fragment_pid, two_j, l, two_s);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -248,7 +391,7 @@ int main() {
   for (; r < r_max_3; r += h) {
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = a(r, E, z, Z, A, two_j, l);
+    a_n = som.a(r, E, fragment_pid, two_j, l, two_s);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -267,6 +410,8 @@ int main() {
   std::cout << "u3(" << r_max_3 << " fm) = " << u3 << std::endl;
 
   // Coulomb parameter
+  double mu = som.get_fragment_reduced_mass(fragment_pid);
+  int z = TMarleyMassTable::get_particle_Z(fragment_pid);
   double k = std::sqrt(2.0 * mu * E) / hbarc;
   double eta = mu * Z * z * e2 / (hbarc2 * k);
 
