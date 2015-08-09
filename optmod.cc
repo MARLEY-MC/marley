@@ -20,7 +20,7 @@ const double mpiplus = 139.57018; // MeV
 // Squared pion Compton wavelength in fm
 const double lambda_piplus2 = std::pow(hbarc / mpiplus, 2);
 
-// Particle IDs
+// Fragment particle IDs
 const int NEUTRON = 2112;
 const int PROTON = 2212;
 const int DEUTERON = 1000010020;
@@ -267,51 +267,6 @@ SphericalOpticalModel::SphericalOpticalModel(int z, int a) {
   }
 }
 
-// Using the Numerov method (see https://en.wikipedia.org/wiki/Numerov%27s_method for details),
-// compute the value of the radial wavefunction u(r) that satisfies the Schrödinger equation
-// (d^2/dr^2 + a(r))u(r) = 0, where a(r) = -l*(l+1)/r^2 + k^2 - 2*mu*V(r)/hbar^2,
-// V(r) is the potential, and the wavenumber k = sqrt(2*mu*E)/hbar, where E is
-// the particle's (nonrelativistic) energy and mu is its reduced mass. In this function,
-// we use 2*l rather than l in the input so that half-integer orbital angular momenta
-// may be represented using integer values.
-//template<typename numType>
-//numType numerov_radial_wavefunction(std::function<numType(double)> V,
-//  double R, int l, double mu, double E, numType u0, numType u1, double h)
-//{
-//  double h2_over_twelve = std::pow(h, 2) / 12.0;
-//
-//  double centrifugal_term = -l * (l + 1) / std::pow(r, 2);
-//  double factor = 2 * mu / hbarc2;
-//  double k2 = factor * E;
-//  double constant_terms = centrifugal_term + k2;
-//
-//  numType u_n = u1;
-//  numType u_n_minus_one = u0;
-//
-//  numType a_n_minus_one, a_n, a_n_plus_one, temp;
-//
-//  double r;
-//
-//  for (r = 2*h,
-//    a_n = constant_terms - factor * V(h),
-//    a_n_plus_one = constant_terms - factor * V(2*h); r < R; r += h)
-//  {
-//    a_n_minus_one = a_n;
-//    a_n = a_n_plus_one;
-//    a_n_plus_one = constant_terms - factor * V(r + h);
-//
-//    temp = u_n;
-//
-//    u_n = ((2.0 - 10*h2_over_twelve*a_n)*u_n
-//      - (1.0 + h2_over_twelve*a_n_minus_one)*u_n_minus_one)
-//      / (1.0 + h2_over_twelve*a_n_plus_one);
-//
-//    u_n_minus_one = temp;
-//  }
-//
-//  return u_n;
-//}
-
 double SphericalOpticalModel::transmission_coefficient(double E,
   int fragment_pid, int two_j, int l, int two_s, double h)
 {
@@ -403,16 +358,158 @@ double SphericalOpticalModel::transmission_coefficient(double E,
   return 1.0 - std::norm(S);
 }
 
+class BackshiftedFermiGasModel {
+  public:
+    static double liquid_drop_model_mass_excess(int Z, int A);
+    static double level_density(int Z, int A, double Ex); // rho(Ex)
+    // rho(Ex, J, Pi) with the assumption of parity equipartition
+    static double level_density(int Z, int A, double Ex, int two_J);
+  private:
+    // Version of the level density function used internally
+    static double level_density(int Z, int A, double Ex, double& sigma);
+
+    // Parameters from global level density fit performed in A. J. Koning,
+    // et al., Nucl. Phys. A810 (2008) pp. 13-76.
+    static const double alpha;
+    static const double beta;
+    static const double gamma_1;
+    static const double delta_global;
+
+    // Liquid drop model parameters
+    static const double Mn;
+    static const double MH;
+    static const double a1;
+    static const double a2;
+    static const double kappa;
+    static const double c3;
+    static const double c4;
+};
+
+// Parameters from global level density fit performed in A. J. Koning,
+// et al., Nucl. Phys. A810 (2008) pp. 13-76.
+const double BackshiftedFermiGasModel::alpha = 0.0722396;
+const double BackshiftedFermiGasModel::beta = 0.195267;
+const double BackshiftedFermiGasModel::gamma_1 = 0.410289;
+const double BackshiftedFermiGasModel::delta_global = 0.173015;
+
+// Liquid drop model parameters
+const double BackshiftedFermiGasModel::Mn = 8.07144; // MeV
+const double BackshiftedFermiGasModel::MH = 7.28899; // MeV
+const double BackshiftedFermiGasModel::a1 = 15.677; // MeV
+const double BackshiftedFermiGasModel::a2 = 18.56; // MeV
+const double BackshiftedFermiGasModel::kappa = 1.79;
+const double BackshiftedFermiGasModel::c3 = 0.717; // MeV
+const double BackshiftedFermiGasModel::c4 = 1.21129; // MeV
+
+double BackshiftedFermiGasModel::level_density(int Z, int A, double Ex) {
+  double dummy;
+  return level_density(Z, A, Ex, dummy);
+}
+
+double BackshiftedFermiGasModel::level_density(int Z, int A, double Ex, int two_J) {
+  double sigma;
+  double rho = level_density(Z, A, Ex, sigma);
+  double two_sigma2 = 2 * std::pow(sigma, 2);
+  return 0.5 * ((two_J + 1) / two_sigma2) * std::exp(-0.25 * std::pow(two_J + 1, 2)
+    / two_sigma2) * rho;
+}
+
+// Returns the total level density rho(Ex) and store the spin cut-off parameter in sigma
+double BackshiftedFermiGasModel::level_density(int Z, int A, double Ex, double& sigma) {
+  int N = A - Z;
+  double A_to_the_one_third = std::pow(A, 1.0/3.0);
+
+  // Asymptotic level density parameter
+  double a_tilde = alpha*A + beta*std::pow(A_to_the_one_third, 2);
+  // Damping parameter
+  double gamma = gamma_1 / A_to_the_one_third;
+  // Shell correction energy
+  double delta_W = TMarleyMassTable::get_mass_excess(Z, A)
+    - liquid_drop_model_mass_excess(Z, A);
+  // Energy shift
+  double Delta_BFM = delta_global;
+  bool z_odd = Z % 2;
+  bool n_odd = N % 2;
+  // There will be no change to the energy shift if the nucleus is odd-even
+  if (z_odd && n_odd) Delta_BFM += -12/std::sqrt(A);
+  else if (!z_odd && !n_odd) Delta_BFM += 12/std::sqrt(A);
+
+  // Effective excitation energy
+  double U = Ex - Delta_BFM;
+
+  // Level density parameter
+  double a;
+  if (Ex <= Delta_BFM) {
+    // Use first-order Taylor expansion for small energies
+    a = a_tilde * (1 + gamma * delta_W);
+  }
+  else {
+    a = a_tilde * (1 + (delta_W / U) * (1 - std::exp(-gamma * U)));
+  }
+
+  // Spin cut-off parameter
+  double sigma_d_global = 0.83*std::pow(A, 0.26);
+  double Sn = TMarleyMassTable::get_neutron_separation_energy(Z, A);
+  double sigma_F2;
+  double Ed = 0;
+  // Use Delta_BFM as Ed if the excitation energy is too small to avoid
+  // numerical problems when computing sigma_F.
+  // TODO: Replace Ed here with database of local fits taken from RIPL-3 or TALYS
+  //if (U > 0) Ed = 0;
+  //else Ed = Delta_BFM;
+
+  if (Ex <= Ed) sigma = sigma_d_global;
+  else {
+    sigma_F2 = 0.01389 * std::pow(A_to_the_one_third, 5)
+      * std::sqrt(a * U) / a_tilde;
+    if (Ex >= Sn) sigma = std::sqrt(sigma_F2);
+    else {
+      // Ed < Ex < Sn
+      double sigma_d2 = std::pow(sigma_d_global, 2);
+      sigma = std::sqrt(sigma_d2 + (Ex - Ed)
+        * (sigma_F2 - sigma_d2) / (Sn - Ed));
+    }
+  }
+
+  double aU = a * U;
+  double sqrt_aU = std::sqrt(aU);
+  return std::pow(12 * sigma * (std::sqrt(2 * sqrt_aU)*U*std::exp(-2 * sqrt_aU)
+    + std::exp(-aU - 1)/a), -1);
+}
+
+double BackshiftedFermiGasModel::liquid_drop_model_mass_excess(int Z, int A) {
+  int N = A - Z;
+
+  double kappa_term = kappa * std::pow((N - Z) / static_cast<double>(A), 2);
+  double c1 = a1 * (1 - kappa_term);
+  double c2 = a2 * (1 - kappa_term);
+
+  double Evol = -c1 * A; 
+  double Esur = c2 * std::pow(A, 2.0/3.0);
+  double Ecoul = (c3 / std::pow(A, 1.0/3.0) - c4 / A) * std::pow(Z, 2);
+
+  double delta_LDM = 0;
+  bool z_odd = Z % 2;
+  bool n_odd = N % 2;
+  // delta_LDM will be zero if the nucleus is odd-even
+  if (z_odd && n_odd) delta_LDM = 11/std::sqrt(A);
+  else if (!z_odd && !n_odd) delta_LDM = -11/std::sqrt(A);
+
+  return Mn * N + MH * Z + Evol + Esur + Ecoul + delta_LDM;
+}
+
 int main() {
 
-  double Z = 19;
+  int Z = 19;
   int A = 40;
 
   SphericalOpticalModel som(Z, A);
 
-  for (double E = 0.1; E < 50.; E += 0.1) {
-    double T = som.transmission_coefficient(E, PROTON, 1, 0, 1, 0.1);
-    std::cout << "E = " << E << ", T = " << T << std::endl;
-  }
+  //for (double E = 0.1; E < 50.; E += 0.1) {
+  //  double T = som.transmission_coefficient(E, PROTON, 1, 0, 1, 0.1);
+  //  std::cout << "E = " << E << ", T = " << T << std::endl;
+  //}
 
+  std::cout << BackshiftedFermiGasModel::level_density(Z, A, 0.1)
+    << std::endl;
 }
