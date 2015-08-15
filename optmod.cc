@@ -9,11 +9,14 @@
 #include "cwfcomp.cc"
 
 #include "/home/sjg/Desktop/marley/TMarleyMassTable.hh"
+#include "/home/sjg/Desktop/marley/marley_utils.hh"
 
 // Constants
 const double alpha = 7.2973525698e-3; // Fine structure constant
 const double hbarc = 197.3269631; // MeV * fm
 const double hbarc2 = std::pow(hbarc, 2); // MeV^2 * fm^2
+// Constant to use when converting from mb to MeV^(-2)
+const double mb = 1/3.89379338e5; // MeV^(-2) mb^(-1)
 const double e2 = hbarc * alpha; // Elementary charge (in MeV*fm)
 // Mass of a charged pion
 const double mpiplus = 139.57018; // MeV
@@ -498,6 +501,104 @@ double BackshiftedFermiGasModel::liquid_drop_model_mass_excess(int Z, int A) {
   return Mn * N + MH * Z + Evol + Esur + Ecoul + delta_LDM;
 }
 
+enum class TransitionType { electric, magnetic };
+double gamma_strength_function(int Z, int A, TransitionType type,
+  int l, double e_gamma)
+{
+  // TODO: improve this error message
+  if (l < 1) throw std::runtime_error(std::string("Invalid multipolarity")
+    + std::to_string(l) + " given for gamma ray strength"
+    + " function calculation");
+
+  // The strength, energy, and width of the giant resonance for a transition of
+  // type x (E or M) and multipolarity l
+  double sigma_xl, e_xl, gamma_xl;
+
+  if (type == TransitionType::electric) {
+    if (l == 1) {
+      e_xl = 31.2*std::pow(A, -1.0/3.0) + 20.6*std::pow(A, -1.0/6.0);
+      gamma_xl = 0.026*std::pow(e_xl, 1.91);
+      sigma_xl = 1.2*120*(A-Z)*Z/(A*marley_utils::pi*gamma_xl)*mb;
+    }
+    if (l > 1) {
+      // Values for E2 transitions
+      e_xl = 63*std::pow(A, -1.0/3.0);
+      gamma_xl = 6.11 - 0.012*A;
+      sigma_xl = 0.00014 * std::pow(Z, 2) * e_xl
+        / (std::pow(A, 1.0/3.0) * gamma_xl) * mb;
+      // If this is an E2 transition, we're done. Otherwise,
+      // compute the giant resonance strength iteratively
+      for (int i = 2; i < l; ++i) {
+        sigma_xl *= 8e-4;
+      }
+    }
+  }
+  else if (type == TransitionType::magnetic) {
+    // Values for M1 transitions
+    // The commented-out version is for RIPL-1
+    //double factor_m1 = 1.58e-9*std::pow(A, 0.47);
+    // RIPL-2 factor
+    const double e_gamma_ref = 7.0; // MeV
+    double factor_m1 = gamma_strength_function(Z, A,
+      TransitionType::electric, 1, e_gamma_ref)
+      / (0.0588 * std::pow(A, 0.878));
+    gamma_xl = 4.0;
+    e_xl = 41*std::pow(A, -1.0/3.0);
+    sigma_xl = (std::pow(std::pow(e_gamma_ref, 2) - std::pow(e_xl, 2), 2)
+      + std::pow(e_gamma_ref, 2) * std::pow(gamma_xl, 2))
+      * (3 * std::pow(marley_utils::pi, 2) * factor_m1)
+      / (e_gamma_ref * std::pow(gamma_xl, 2));
+    // If this is an M1 transition, we're done. Otherwise,
+    // compute the giant resonance strength iteratively
+    for (int i = 1; i < l; ++i) {
+      sigma_xl *= 8e-4;
+    }
+  }
+  // TODO: improve this error message
+  else throw std::runtime_error(std::string("Invalid transition type")
+    + " given for gamma ray strength function calculation");
+
+  // Now that we have the appropriate giant resonance parameters,
+  // calculate the strength function using the Brink-Axel expression.
+  // Note that the strength function has units of MeV^(-3)
+  double f_xl = (sigma_xl * std::pow(e_gamma, 3 - 2*l)
+    * std::pow(gamma_xl, 2)) / ((2*l + 1) * std::pow(marley_utils::pi, 2)
+    * (std::pow(std::pow(e_gamma, 2) - std::pow(e_xl, 2), 2)
+    + std::pow(e_gamma, 2) * std::pow(gamma_xl, 2)));
+
+  //std::cout << "E_xl = " << e_xl
+  //  << " gamma_xl = " << gamma_xl
+  //  << " sigma_xl = " << sigma_xl
+  //  << std::endl;
+
+  return f_xl;
+}
+
+double gamma_transmission_coefficient(int Z, int A, TransitionType type,
+  int l, double e_gamma)
+{
+  return 2 * marley_utils::pi * gamma_strength_function(Z, A, type,
+    l, e_gamma) * std::pow(e_gamma, 2*l + 1);
+}
+
+//int main() {
+//  int Z = 19;
+//  int A = 40;
+//  std::string s_type;
+//  int l;
+//  TransitionType type;
+//  double e_gamma;
+//
+//  std::cout << "Input type, l, and E_gamma" << std::endl;
+//  while(true) {
+//    std::cin >> s_type >> l >> e_gamma;
+//    if (s_type == "e") type = TransitionType::electric;
+//    else type = TransitionType::magnetic;
+//    std::cout << gamma_strength_function(Z, A, type, l, e_gamma)
+//      << std::endl;
+//  }
+//}
+
 int main() {
 
   int Z = 19;
@@ -505,11 +606,13 @@ int main() {
 
   SphericalOpticalModel som(Z, A);
 
-  //for (double E = 0.1; E < 50.; E += 0.1) {
-  //  double T = som.transmission_coefficient(E, PROTON, 1, 0, 1, 0.1);
-  //  std::cout << "E = " << E << ", T = " << T << std::endl;
-  //}
+  for (double E = 0.1; E < 50.; E += 0.1) {
+    double T = som.transmission_coefficient(E, PROTON, 1, 0, 1, 0.1);
+    double rho = BackshiftedFermiGasModel::level_density(Z, A, E);
+    std::cout << "E = " << E << ", T = " << T << ", rho = "
+      << rho << std::endl;
+  }
+  std::cout << TMarleyMassTable::get_mass_excess(Z, A)
+    - BackshiftedFermiGasModel::liquid_drop_model_mass_excess(Z, A) << std::endl;
 
-  std::cout << BackshiftedFermiGasModel::level_density(Z, A, 0.1)
-    << std::endl;
 }
