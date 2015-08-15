@@ -46,10 +46,10 @@ class TMarleyMassTable {
       return fragment_pids;
     }
 
-  private:
     // Factor to use when converting from micro-amu to MeV
     static constexpr double micro_amu = 0.000931494061;
 
+  private:
     // Lookup table for particle masses. Keys are PDG particle
     // ID numbers, values are masses in micro-amu.
     static const std::unordered_map<int, double> particle_masses;
