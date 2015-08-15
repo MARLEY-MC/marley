@@ -1,5 +1,7 @@
 #pragma once
 #include <unordered_map>
+#include <functional>
+#include <vector>
 
 // TODO: Consider using a namespace (possibly with an anonymous namespace
 // in the source file to encapsulate the current private members)
@@ -15,6 +17,7 @@ class TMarleyMassTable {
     static double get_neutron_separation_energy(int Z, int A);
     static double get_particle_separation_energy(int Z, int A, int pid);
     static double get_binding_energy(int Z, int A);
+    static double get_mass_excess(int Z, int A);
     static void print_separation_energies(int Z, int A, unsigned n);
 
     static inline int get_particle_Z(int pid) {
@@ -37,6 +40,10 @@ class TMarleyMassTable {
       else if (pid > 1000000000) return (pid % 10000)/10;
       // other particle
       else return 0;
+    }
+
+    static inline const std::vector<int>& get_fragment_pids() {
+      return fragment_pids;
     }
 
   private:
