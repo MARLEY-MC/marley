@@ -30,7 +30,8 @@ TMarleyGamma* TMarleyLevel::sample_gamma() {
   }
 }
 
-void TMarleyLevel::add_gamma(const TMarleyGamma& gamma) {
+// Add a new gamma object to the level and return a pointer to it
+TMarleyGamma* TMarleyLevel::add_gamma(const TMarleyGamma& gamma) {
   // Update the vector of gamma objects
   gammas.push_back(gamma);
 
@@ -46,6 +47,8 @@ void TMarleyLevel::add_gamma(const TMarleyGamma& gamma) {
   // Update the gamma status to known
   gammas_known = true;
 
+  // Return a pointer to the newly added gamma
+  return &gammas.back();
 }
 
 double TMarleyLevel::get_energy() const {

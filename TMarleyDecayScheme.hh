@@ -27,24 +27,28 @@ class TMarleyDecayScheme {
     void print_latex_table(std::ostream& ostr = std::cout);
     void assign_theoretical_RIs(TMarleyLevel* level_i);
 
+    friend std::ostream& operator<< (std::ostream& out,
+      const TMarleyDecayScheme& ds);
+
+    friend std::istream& operator>> (std::istream& in,
+      TMarleyDecayScheme& ds);
+
   private:
+    int Z; // atomic number
+    int A; // mass number
     std::string nuc_id;
-    std::string file_name;
     std::list<TMarleyLevel> levels;
     std::vector<TMarleyLevel*> pv_sorted_levels;
     std::vector<double> sorted_level_energies;
-    static bool compare_level_energies(TMarleyLevel* first,
-      TMarleyLevel* second);
+
+    // Helper function for processing ENSDF file continuation records
     std::string process_continuation_records(std::ifstream &file_in,
       std::string &record, const std::regex &rx_cont_record) const;
 
-    int Z; // atomic number
-    int A; // mass number
-
     // Functions called by the constructor to parse the
     // different nuclear data formats accepted by this class
-    void parse_ensdf();
-    void parse_talys();
+    void parse_ensdf(std::string filename);
+    void parse_talys(std::string filename);
 
     // Default level parity
     static const TMarleyParity DEFAULT_PARITY;

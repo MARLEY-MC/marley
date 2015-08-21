@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 class TMarleyLevel;
 
 class TMarleyGamma {
@@ -14,8 +15,6 @@ class TMarleyGamma {
   private:
     double fEnergy;
     double fRI;
-    double fCC;
-    double fTI; 
     TMarleyLevel* pStartLevel;
     TMarleyLevel* pEndLevel;
 };

@@ -3,8 +3,6 @@
 TMarleyGamma::TMarleyGamma(double energy, double ri, TMarleyLevel* start_level) {
   fEnergy = energy;
   fRI = ri;
-  fCC = 0;
-  fTI = 0;
   pStartLevel = start_level;
   pEndLevel = nullptr;
 }
