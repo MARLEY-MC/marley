@@ -101,9 +101,15 @@ class TMarleyParity {
     }
 
     // Allows implicit or explicit casts of TMarleyParity to int
-    inline operator int() {
+    inline operator int() const {
       if (is_positive) return 1;
       else return -1;
+    }
+
+    // Converts the parity to a string
+    inline std::string str() const {
+      if (is_positive) return std::string("+");
+      else return std::string("-");
     }
 
   private:

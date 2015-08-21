@@ -30,11 +30,16 @@ namespace marley_utils {
   // published by the Particle Data Group.
   
   // Fine structure constant 
-  const double alpha = 7.2973525698e-3;
+  constexpr double alpha = 7.2973525698e-3;
   // Conversion factor used to switch to natural units (hbar = c = 1)
-  const double hbar_c = 197.3269718; // MeV*fm
+  constexpr double hbar_c = 197.3269718; // MeV*fm
+  constexpr double hbar_c2 = std::pow(hbar_c, 2); // MeV^2 * fm^2
   // Electron mass
-  const double m_e = 0.510998928; // MeV
+  constexpr double m_e = 0.510998928; // MeV
+  // Constant to use when converting from mb to MeV^(-2)
+  constexpr double mb = 1/3.89379338e5; // MeV^(-2) mb^(-1)
+  // Square of the elementary charge
+  constexpr double e2 = hbar_c * alpha; // MeV*fm
 
   // Strings to use for latex table output of ENSDF data
   extern std::string latex_table_1, latex_table_2, latex_table_3, latex_table_4;
@@ -224,6 +229,10 @@ namespace marley_utils {
   // lowercase last letter. Currently, no checking is done to see if the
   // string is a valid nucid.
   std::string nucid_to_symbol(std::string nucid);
+
+  // Similar to nucid_to_symbol, but returns the atomic number as an integer
+  // instead
+  int nucid_to_Z(std::string nucid);
 
   // Generalized std::chrono::duration helper types
   template <typename repType> using

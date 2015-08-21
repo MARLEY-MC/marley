@@ -6,41 +6,19 @@
 #include <vector>
 #include "marley_utils.hh"
 #include "TMarleyDecayScheme.hh"
+#include "TMarleyNuclearPhysics.hh"
+
+// Default level parity is +
+const TMarleyParity TMarleyDecayScheme::DEFAULT_PARITY = 1;
 
 // ***** Constants used for ENSDF file parsing *****
-//const std::regex TMarleyDecayScheme::ensdf_generic_nuc_id("^[[:alnum:] ]{5}");
 const std::string TMarleyDecayScheme::ensdf_primary_record = "[ 1]";
 const std::string TMarleyDecayScheme::ensdf_continuation_record = "[^ 1]";
 const std::string TMarleyDecayScheme::ensdf_record_data = ".{71}";
-
 const std::regex TMarleyDecayScheme::rx_ensdf_end_record("\\s*"); // Matches blank lines
-//const std::regex TMarleyDecayScheme::rx_generic_primary_identification_record(
-//  ensdf_generic_nuc_id + ensdf_primary_record + "   " + ensdf_record_data);
-
-// ***** Constants used for TALYS file parsing *****
-// Each line describing a level has fortran
-// format (i4, f11.6, f6.1, 3x, i2, i3, 19x, e9.3, 1x, 2a1, a18)
-//const std::regex TMarleyDecayScheme::rx_talys_level_line(std::string("[0-9 ]{8}\\.[0-9]{6}")
-//  + "(?:[0-9 ]{4}\\.[0-9]| {6}) {3}(?:[0-9 ]{2}| {2})[0-9 ]{3} {19}(?:[0-9]\\."
-//  + "[0-9]{3}[Ee][+-][0-9]{2}| {9}) .{20}");
-
-// Each line describing a gamma ray transition has
-// fortran format (29x, i3, f10.6, e10.3, 5x, a1)
-//const std::regex TMarleyDecayScheme::rx_talys_gamma_line(std::string(" {29}[0-9 ]{3}")
-//  + "[0-9 ]{3}\\.[0-9]{6}[0-9 ]{2}\\.[0-9]{3}"
-//  + "[Ee][+-][0-9]{2} {5}.");
-
-//void TMarleyDecayScheme::do_cascade(std::string initial_energy) {
-//  std::map<std::string, TMarleyLevel>::iterator it = levels.find(initial_energy);
-//  if (it == levels.end()) {
-//    throw std::range_error("Could not do cascade. Level with energy "
-//      + initial_energy + " MeV not found.");
-//  }
-//  else {
-//    TMarleyLevel* plevel = &(it->second);
-//    do_cascade(plevel);
-//  }
-//}
+const std::regex TMarleyDecayScheme::rx_paren_group("\\(([^)]+)\\)([+-])");
+const std::regex TMarleyDecayScheme::rx_spin("([0-9]+(?:/2)?)");
+const std::regex TMarleyDecayScheme::rx_jpi("([0-9]+(?:/2)?)([+-])?");
 
 // Returns a pointer to the level owned by this decay scheme object
 // that has the closest excitation energy to E_level (E_level
@@ -80,21 +58,11 @@ TMarleyLevel* TMarleyDecayScheme::get_pointer_to_closest_level(double E_level) {
 
 }
 
-//void TMarleyDecayScheme::do_cascade(double initial_energy) {
-//
-//  // Since we were given a numerical initial energy in this
-//  // version of the function, search for the level whose energy is
-//  // closest to the given value of initial_energy. Then handle
-//  // the cascade in the usual way.
-//  TMarleyLevel* plevel = get_pointer_to_closest_level(initial_energy);
-//  do_cascade(plevel);
-//}
-
 void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
-  TMarleyEvent* p_event)
+  TMarleyEvent* p_event) const
 {
   //std::cout << "Beginning gamma cascade at level with energy "
-  //  << initial_level->get_string_energy() << " keV" << std::endl;
+  //  << initial_level->get_energy() << " MeV" << std::endl;
 
   bool cascade_finished = false;
 
@@ -114,8 +82,8 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
           + "Cannot continue cascade.");
       }
       //std::cout << "  emitted gamma with energy " << p_gamma->get_energy()
-      //  << " MeV." New level has energy " << p_current_level->get_string_energy()
-      //  << " keV." << std::endl;
+      //  << " MeV." New level has energy " << p_current_level->get_energy()
+      //  << " MeV." << std::endl;
       //std::cout.precision(15);
       //std::cout << std::scientific;
       //std::cout << "gamma energy = " << p_gamma->get_energy() << std::endl;
@@ -152,7 +120,14 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
   }
 
   //std::cout << "Finished gamma cascade at level with energy "
-  //  << p_current_level->get_string_energy() << std::endl;
+  //  << p_current_level->get_energy() << std::endl;
+}
+
+TMarleyDecayScheme::TMarleyDecayScheme(int z, int a, std::string filename,
+  TMarleyDecayScheme::FileFormat ff)
+{
+  std::string id = marley_utils::nuc_id(z, a);
+  TMarleyDecayScheme(id, filename, ff);
 }
 
 
@@ -160,12 +135,14 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename,
   TMarleyDecayScheme::FileFormat ff)
 {
 
-  this->nuc_id = nucid;
-  this->file_name = filename;
+  nuc_id = nucid;
+  file_name = filename;
 
   // Get the atomic mass number from the first 3 characters
   // of the ENSDF nucid
-  this->atomic_mass_number = std::stoi(nucid.substr(0,3));
+  A = std::stoi(nucid.substr(0,3));
+  // Get the atomic number from the nucid using the element symbol
+  Z = marley_utils::nucid_to_Z(nucid);
 
   // Parse the data file using the appropriate format
   switch (ff) {
@@ -183,6 +160,47 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename,
         + " supplied to TMarleyDecayScheme constructor.");
   }
 
+}
+
+// Load a level with TMarleyGamma objects based on theoretical gamma-ray
+// transition relative intensities
+void TMarleyDecayScheme::assign_theoretical_RIs(TMarleyLevel* level_i) {
+  // Remove any existing gamma objects from the level
+  level_i->clear_gammas();
+
+  // Loop over the decay scheme's levels in ascending order of energy until you
+  // reach the initial level.
+  int l;
+  bool initial_spin_is_zero = level_i->get_two_J() == 0;
+  for (auto level_f : pv_sorted_levels) {
+
+    // If we've reached the initial level, end the loop
+    if (level_f == level_i) break;
+
+    // 0->0 EM transitions aren't allowed due to angular momentum conservation
+    // (photons are spin 1), so if the initial and final spins are zero, skip
+    // ahead to the next final level.
+    if (initial_spin_is_zero && level_f->get_two_J() == 0) continue;
+
+    // Determine the type (electric or magnetic) and multipolarity of the gamma
+    // transition between these two levels
+    auto type = TMarleyNuclearPhysics::determine_gamma_transition_type(level_i,
+      level_f, l);
+
+    // Approximate the gamma energy by the energy difference between the two levels
+    // TODO: consider adding a nuclear recoil correction here
+    double e_gamma = level_i->get_energy() - level_f->get_energy();
+
+    // TODO: allow the user to choose which gamma-ray transition model to use 
+    // (Weisskopf single-particle estimates, Brink-Axel strength functions, etc.)
+    // Note that we don't need to normalize the relative intensities since the
+    // std::discrete_distribution already takes care of that for us
+    double ri = TMarleyNuclearPhysics::weisskopf_partial_decay_width(A, type,
+      l, e_gamma);
+
+    // Add a new gamma object representing this transition to the initial level
+    level_i->add_gamma(TMarleyGamma(e_gamma, ri, level_i));
+  }
 }
 
 void TMarleyDecayScheme::parse_ensdf() {
@@ -253,27 +271,80 @@ void TMarleyDecayScheme::parse_ensdf() {
     if (std::regex_match(line, rx_primary_level_record)) {
       //std::cout << "DEBUG:   Parsing level" << std::endl;
       record = line;
-      line = this->process_continuation_records(file_in, record, rx_continuation_level_record);
+      line = process_continuation_records(file_in, record, rx_continuation_level_record);
       no_advance = true;
         
       // Extract the level energy (in keV) as a trimmed string from the ENSDF level record
-      std::string level_energy = marley_utils::trim_copy(record.substr(9,10)); 
+      std::string level_energy_str = marley_utils::trim_copy(record.substr(9,10)); 
+
+      // Convert the energy to MeV and double-precision
+      double level_energy = std::stod(level_energy_str) * marley_utils::MeV;
 
       // Also extract the spin-parity of the level
-      std::string spin_parity = marley_utils::trim_copy(record.substr(21,18));
+      std::string jpi = marley_utils::trim_copy(record.substr(21,18));
+
+      // Process the spin-parity string
+      // TODO: Improve the processing procedure used here. Right now, all that
+      // is done is the following:
+      // 1. Preprocess any parenthesized groups with multiple J values and
+      // a single parity so that "(1,2,3)+" becomes "(1+,2+,3+)"
+      // 2. Search for the first number plus sign or number without a sign.
+      // If one is found, use it to determine the level spin-parity. If not,
+      // use the default values.
+      std::smatch match;
+    
+      // If a parity is applied to a parenthesized group in the ENSDF file, remove
+      // the parentheses and apply that parity to every spin in the group
+      if (std::regex_match(jpi, match, rx_paren_group)) {
+        std::string spins = match[1];
+        std::string parity = match[2];
+        jpi = std::regex_replace(spins, rx_spin, "$1" + parity);
+      }
+    
+      int two_J;
+      TMarleyParity parity;
+    
+      // Search for a spin-parity entry like "3" or "1/2-"
+      if (std::regex_search(jpi, match, rx_jpi)) {
+        // Determine the level parity
+        if (match.size() > 2) {
+          if (match[2] == "+") parity = TMarleyParity(1);
+          else if (match[2] == "-") parity = TMarleyParity(-1);
+          else if (marley_utils::trim_copy(match[2]) == "")
+            parity = DEFAULT_PARITY;
+          else throw std::runtime_error(std::string("Invalid parity ")
+            + match[2].str() + " encountered while setting a TMarleyLevel "
+            + "parity value.");
+        }
+        // Use the default parity value if the parity could not be determined
+        else parity = DEFAULT_PARITY;
+    
+        std::string spin = match[1]; 
+    
+        // Check for half-integer spin and compute 2J appropriately
+        // based on the result of the check
+        size_t spin_size = spin.size();
+        if (spin_size > 2 && spin.substr(spin_size - 2) == "/2")
+          two_J = std::stoi(spin.substr(0, spin_size - 2));
+        else two_J = 2 * std::stoi(spin);
+      }
+      else {
+        parity = DEFAULT_PARITY;
+        if (A % 2) two_J = DEFAULT_FERMION_TWOJ;
+        else two_J = DEFAULT_BOSON_TWOJ;
+      }
 
       // Add a new level object to this decay scheme object using these data
-      this->add_level(TMarleyLevel(level_energy, spin_parity));
-
-      // Update the current level pointer
-      p_current_level = this->get_level(level_energy);
+      // and update the current level pointer to point to it
+      p_current_level = add_level(TMarleyLevel(level_energy,
+        two_J, parity));
     }
 
     // Gamma Record
     else if (std::regex_match(line, rx_primary_gamma_record)) {
       //std::cout << "DEBUG:   Parsing gamma" << std::endl;
       record = line;
-      line = this->process_continuation_records(file_in,
+      line = process_continuation_records(file_in,
         record, rx_continuation_gamma_record);
       no_advance = true;
 
@@ -310,18 +381,17 @@ void TMarleyDecayScheme::parse_ensdf() {
 
   // Cycle through each of the level objects. We will assign end level pointers
   // to each gamma owned by each level.
-  for(std::vector<TMarleyLevel*>::iterator j = this->pv_sorted_levels.begin();
-    j != this->pv_sorted_levels.end(); ++j)
+  for(std::vector<TMarleyLevel*>::iterator j = pv_sorted_levels.begin();
+    j != pv_sorted_levels.end(); ++j)
   {
-
-    // Calculate Weisskopf Estimates here if gamma data is not known
+    // Calculate theoretical gamma-ray relative intensities here if they are
+    // unknown for the current level
     if( (*j)->get_gamma_status() == false ) {
-      //std::cout << "DEBUG: Computing WE" << std::endl;
-      do_weisskopf(j - this->pv_sorted_levels.begin());
+      assign_theoretical_RIs(*j);
     }
 
     std::vector<TMarleyGamma>* p_gammas = (*j)->get_gammas();
-    double initial_level_energy = (*j)->get_numerical_energy();
+    double initial_level_energy = (*j)->get_energy();
 
     for(std::vector<TMarleyGamma>::iterator k = p_gammas->begin();
       k != p_gammas->end(); ++k) 
@@ -333,13 +403,13 @@ void TMarleyDecayScheme::parse_ensdf() {
 
       // Search for the corresponding energy using the vector of level energies
       std::vector<double>::iterator p_final_level_energy = std::lower_bound(
-        this->sorted_level_energies.begin(), this->sorted_level_energies.end(),
+        sorted_level_energies.begin(), sorted_level_energies.end(),
         final_level_energy); 
 
       // Determine the index of the final level energy appropriately
-      unsigned int e_index = std::distance(this->sorted_level_energies.begin(),
+      unsigned int e_index = std::distance(sorted_level_energies.begin(),
         p_final_level_energy);
-      if (e_index == this->sorted_level_energies.size()) {
+      if (e_index == sorted_level_energies.size()) {
         // The calculated final level energy is greater than
         // every energy in the vector. We will therefore assume
         // that the gamma decay takes us to the highest level in
@@ -353,15 +423,15 @@ void TMarleyDecayScheme::parse_ensdf() {
         // first element, we still need to check which of the
         // two levels found (one on each side) is really the
         // closest. Do so and reassign the index if needed.
-        if (std::abs(final_level_energy - this->sorted_level_energies[e_index])
-          > std::abs(final_level_energy - this->sorted_level_energies[e_index - 1]))
+        if (std::abs(final_level_energy - sorted_level_energies[e_index])
+          > std::abs(final_level_energy - sorted_level_energies[e_index - 1]))
         {
           --e_index;
         }
       }
 
       // Use the index to assign the appropriate end level pointer to this gamma
-      k->set_end_level(this->pv_sorted_levels[e_index]);
+      k->set_end_level(pv_sorted_levels[e_index]);
 
     }
 
@@ -438,54 +508,24 @@ void TMarleyDecayScheme::parse_talys() {
 
     // Read in this level's index, energy, spin, parity, and
     // number of gamma transitions
-    int level_num, parity, num_gammas;
+    int level_num, pi, num_gammas;
     double level_energy, spin;
-    iss >> level_num >> level_energy >> spin >> parity >> num_gammas;
+    iss >> level_num >> level_energy >> spin >> pi >> num_gammas;
 
-    // Convert the level energy and spin parity to suitable strings.
-    // These are needed for the current version of the TMarleyLevel constructor.
-    // If you encounter a nonsensical parity value, complain.
-    // When creating the level energy string, convert to keV, then to a string.
-    // This will keep the string consistent with the conventions we use
-    // for parsing ENSDF format data
-    std::string string_level_energy = std::to_string(level_energy/marley_utils::MeV);
-    std::string string_spin_parity;
+    // Compute two times the spin so that we can represent half-integer
+    // nuclear level spins as integers
+    int twoJ = std::round(2 * spin);
 
-    // Get the fractional part of the spin. If it is zero, construct
-    // the spin string using an integer spin
-    double ipart;
-    if (std::modf(spin, &ipart) == 0.0) {
-      string_spin_parity = std::to_string(static_cast<int>(ipart));
-    }
+    // Create a parity object to use when constructing the level
+    TMarleyParity parity = pi;
 
-    // If the fractional part of the spin is nonzero, assume that
-    // the spin is half-integer, and construct the spin string
-    // appropriately
-    else {
-      string_spin_parity = std::to_string(static_cast<int>(ipart));
-      string_spin_parity += "/2";
-    }
+    // Construct a new level object and add it to the decay scheme. Get
+    // a pointer to the newly-added level
+    p_current_level = add_level(TMarleyLevel(level_energy, twoJ, parity));
 
-    // Add the sign of the parity to the spin-parity string
-    if (parity == 1) {
-      string_spin_parity += "+";
-    }
-    else if (parity == -1) {
-      string_spin_parity += "-";
-    }
-    else throw std::runtime_error(std::string("Invalid parity value ")
-      + std::to_string(parity) + " encountered in TALYS dataset "
-      + file_name); 
-
-    // Construct a new level object and add it to the decay scheme
-    this->add_level(TMarleyLevel(string_level_energy, string_spin_parity));
-
-    // Get a pointer to the newly-added level
-    p_current_level = this->get_level(string_level_energy);
-
-    // Add the numerical energy for this level and a pointer
-    // to the newly-created level object to our temporary arrays.
-    // These will be used when creating gammas for each level.
+    // Add the energy for this level and a pointer to the newly-created level
+    // object to our temporary arrays.  These will be used when creating gammas
+    // for each level.
     level_energies.push_back(level_energy);
     level_ps.push_back(p_current_level);
 
@@ -555,33 +595,33 @@ std::string TMarleyDecayScheme::process_continuation_records(std::ifstream &file
   return std::string("");
 }
 
-void TMarleyDecayScheme::print_report(std::ostream& ostr) {
+void TMarleyDecayScheme::print_report(std::ostream& ostr) const {
   // Cycle through each of the levels owned by this decay scheme
   // object in order of increasing energy
-  for(std::vector<TMarleyLevel*>::iterator j = this->pv_sorted_levels.begin();
-    j != this->pv_sorted_levels.end(); ++j)
+  for(auto j : pv_sorted_levels)
   {
 
-    //std::string sp = (*j)->get_spin_parity();
-    int spin = (*j)->get_ispin();
-    int parity = (*j)->get_iparity();
+    int twoj = j->get_two_J();
+    std::string spin = std::to_string(twoj / 2);
+    // If 2*J is odd, then the level has half-integer spin
+    if (twoj % 2) spin += "/2";
+    TMarleyParity parity = j->get_parity();
     
     //if (sp.empty()) sp = "UNKNOWN";
     
-    ostr << "Level at " << (*j)->get_string_energy()
-	 << " keV has spin-parity " << spin << " " << parity << std::endl; // changed from sp to spin and parity
-    std::vector<TMarleyGamma>* p_gammas = (*j)->get_gammas();
+    ostr << "Level at " << j->get_energy()
+	 << " MeV has spin-parity " << spin << parity << std::endl;
+    std::vector<TMarleyGamma>* p_gammas = j->get_gammas();
 
     // Cycle through each of the gammas owned by the current level
     // (according to the ENSDF specification, these will already be
     // sorted in order of increasing energy)
-    for(std::vector<TMarleyGamma>::iterator k = p_gammas->begin();
-      k != p_gammas->end(); ++k) 
+    for(auto &k : *p_gammas)
     {
-      ostr << "  has a gamma with energy " << k->get_energy() << " MeV";
+      ostr << "  has a gamma with energy " << k.get_energy() << " MeV";
       ostr << " (transition to level at "
-        << k->get_end_level()->get_string_energy() << " keV)" << std::endl;
-      ostr << "    and relative photon intensity " << k->get_ri() << std::endl; 
+        << k.get_end_level()->get_energy() << " MeV)" << std::endl;
+      ostr << "    and relative photon intensity " << k.get_ri() << std::endl; 
     }
 
   }
@@ -594,11 +634,11 @@ void TMarleyDecayScheme::print_latex_table(std::ostream& ostr) {
     std::string("{\\textbf{Levels") +
     " and $\\boldsymbol{\\gamma}$ transitions \n for " +
     "\\isotope[\\boldsymbol{" +
-    marley_utils::trim_copy(this->nuc_id.substr(0,3)) +
-    "}]{\\textbf{" + this->nuc_id.substr(3,1) +
+    marley_utils::trim_copy(nuc_id.substr(0,3)) +
+    "}]{\\textbf{" + nuc_id.substr(3,1) +
     marley_utils::trim_copy(
       marley_utils::to_lowercase(nuc_id.substr(4,1))) + 
-    "}} \n from file " + this->file_name + " ";
+    "}} \n from file " + file_name + " ";
 
   ostr << marley_utils::latex_table_1;
 
@@ -611,15 +651,15 @@ void TMarleyDecayScheme::print_latex_table(std::ostream& ostr) {
   ostr << marley_utils::latex_table_3;
   // Cycle through each of the levels owned by this decay scheme
   // object in order of increasing energy
-  for(std::vector<TMarleyLevel*>::iterator j = this->pv_sorted_levels.begin();
-    j != this->pv_sorted_levels.end(); ++j)
+  for(std::vector<TMarleyLevel*>::iterator j = pv_sorted_levels.begin();
+    j != pv_sorted_levels.end(); ++j)
   {
 
-    std::string sp = (*j)->get_spin_parity();
-    if (sp.empty()) sp = "?";
-    if (sp == "UNNATURAL") sp = "unnat.";
+    std::string sp = (*j)->get_spin_parity_string();
+    //if (sp.empty()) sp = "?";
+    //if (sp == "UNNATURAL") sp = "unnat.";
 
-    ostr << (*j)->get_string_energy() << " & "
+    ostr << (*j)->get_energy() << " & "
       << sp  << " & ";
 
     std::vector<TMarleyGamma>* p_gammas = (*j)->get_gammas();
@@ -630,7 +670,7 @@ void TMarleyDecayScheme::print_latex_table(std::ostream& ostr) {
     if (p_gammas->empty()) {
       ostr << " &  &";
       // If this is the last row of the table, don't add extra space.
-      if (j == this->pv_sorted_levels.end() - 1) {
+      if (j == pv_sorted_levels.end() - 1) {
         ostr << "" << std::endl;
       }
       else {
@@ -650,13 +690,13 @@ void TMarleyDecayScheme::print_latex_table(std::ostream& ostr) {
       // Output information about the current gamma
       ostr << k->get_energy() << " & "
         << k->get_ri() << " & "
-        << k->get_end_level()->get_string_energy();
+        << k->get_end_level()->get_energy();
       // Add vertical space after the final gamma row. Also prevent page breaks
       // in the middle of a list of gammas by outputting a star at the end of
       // each row except the final gamma row.
       if (k == p_gammas->end() - 1) {
 	// Don't add the extra row space for the very last row in the table
-	if (j >= this->pv_sorted_levels.end() - 1) {
+	if (j >= pv_sorted_levels.end() - 1) {
           ostr << std::endl;
         }
         else {
@@ -685,20 +725,20 @@ void TMarleyDecayScheme::set_nuc_id(std::string id) {
 bool TMarleyDecayScheme::compare_level_energies(TMarleyLevel* first,
   TMarleyLevel* second)
 {
-  return first->get_numerical_energy() < second->get_numerical_energy();
+  return first->get_energy() < second->get_energy();
 }
 
-void TMarleyDecayScheme::add_level(TMarleyLevel level) {
-  // Add the level to the std::map of level objects. Use the
-  // string version of its energy in keV as the key.
-  std::string energy_string = level.get_string_energy();
-  levels[energy_string] = level;
+// Adds a new level to the decay scheme and returns a pointer to it
+TMarleyLevel* TMarleyDecayScheme::add_level(TMarleyLevel level) {
+
+  // Add the level to the list of level objects.
+  levels.push_back(level);
 
   // Get a pointer to the just-added level object
-  TMarleyLevel* p_level = &(levels[energy_string]);
+  TMarleyLevel* p_level = &levels.back();
 
-  // Get this level's numerical energy
-  double l_energy = p_level->get_numerical_energy();
+  // Get this level's energy
+  double l_energy = p_level->get_energy();
 
   // Figure out where this level should go in the
   // vector of sorted level energies 
@@ -717,173 +757,15 @@ void TMarleyDecayScheme::add_level(TMarleyLevel level) {
   // Also add a pointer to the new level object at the
   // appropriate place in our energy-sorted vector of pointers
   pv_sorted_levels.insert(pv_sorted_levels.begin() + index, p_level);
-}
 
+  // Return a pointer to the newly-added level
+  return p_level;
+}
 
 std::vector<TMarleyLevel*>* TMarleyDecayScheme::get_sorted_level_pointers() {
   return &pv_sorted_levels;
 }
 
-
-std::map<std::string, TMarleyLevel>* TMarleyDecayScheme::get_levels() {
+std::list<TMarleyLevel>* TMarleyDecayScheme::get_levels() {
   return &levels;
-}
-
-TMarleyLevel* TMarleyDecayScheme::get_level(std::string energy) {
-  return &(levels.at(energy));
-}
-
-void TMarleyDecayScheme::do_weisskopf(int i){
-  TMarleyLevel* init = this->pv_sorted_levels[i];
-  TMarleyLevel* current = nullptr;
-  double deltaE;
-  int deltaJ; // Difference in spin
-  int parProd; // Product of parities
-  double trans_rate;
-  double min_rate = 1e+16; // Minimum rate for transitions. Those below this are neglected. Come up with a good way to determine this rate.
-  int lambda;
-  double BE, BM, f;
-  double E_i, E_f;
-
-  for(int j = i-1; j > 0; j--){
-      current = this->pv_sorted_levels[j];
-      E_i = init->get_numerical_energy();
-      E_f = current->get_numerical_energy();
-	
-      deltaE = E_i - E_f;
-	    
-      //Determine which type of EM transition takes place
-      deltaJ = std::abs(init->get_ispin() - current->get_ispin());
-      parProd = init->get_iparity() * current->get_iparity();
-
-      if(parProd == 1) //Meaning parity stays the same
-	switch (deltaJ){
-	  case 0:
-	  case 1:
-	    lambda = 0;
-	    BM = calcBM(lambda + 1);
-	    f = calcf(lambda + 1);
-	    trans_rate = calcTM(lambda, deltaE, BM, f);
-	    if ( trans_rate > min_rate )
-	      init->add_weiss(E_f, trans_rate);
-	    break;
-		  
-	  case 2:
-	    lambda = 1;
-	    BE = calcBE(lambda + 1);
-	    f = calcf(lambda + 1);
-	    trans_rate = calcTE(lambda, deltaE, BE, f);
-	    if ( trans_rate > min_rate )
-	      init->add_weiss(E_f, trans_rate);
-	    break;
-		  
-	  case 3:
-	    lambda = 2;
-	    BM = calcBM(lambda + 1);
-	    f = calcf(lambda + 1);
-	    trans_rate = calcTM(lambda, deltaE, BM, f);
-	    if ( trans_rate > min_rate )
-	      init->add_weiss(E_f, trans_rate);
-	    break;
-		  
-	  default:
-	    if( deltaJ % 2 == 0 ){
-	      BE = calcBE(deltaJ);
-	      f = calcf(deltaJ);
-	      trans_rate = calcTE(deltaJ, deltaE, BE, f);
-	      if ( trans_rate > min_rate )
-		init->add_weiss(E_f, trans_rate);
-	    }
-	    else if( (deltaJ + 1) % 2 == 0 ){
-		BM = calcBM(deltaJ);
-		f = calcf(deltaJ);
-		trans_rate = calcTM(deltaJ, deltaE, BM, f);
-		if ( trans_rate > min_rate )
-		  init->add_weiss(E_f, trans_rate);
-	      }
-	    else
-	      std::cout << "Warning! Something bad happened! deltaJ = " << deltaJ << std::endl;
-	    break;
-	  }
-	    
-      else //Meaning parity changes
-	switch ( deltaJ )
-	  {
-	  case 0:
-	  case 1:
-	    lambda = 0;
-	    BE = calcBE(deltaJ + 1);
-	    f = calcf(deltaJ + 1);
-	    trans_rate = calcTE(lambda, deltaE, BE, f);
-	    if ( trans_rate > min_rate )
-	      init->add_weiss(E_f, trans_rate);
-	    break;
-		  
-	  case 2:
-	    lambda = 1;
-	    BM = calcBM(deltaJ + 1);
-	    f = calcf(deltaJ + 1);
-	    trans_rate = calcTM(lambda, deltaE, BM, f);
-	    if ( trans_rate > min_rate )
-	      init->add_weiss(E_f, trans_rate);
-	    break;
-		  
-	  case 3:
-	    lambda = 2;
-	    BE = calcBE(deltaJ + 1);
-	    f = calcf(deltaJ + 1);
-	    trans_rate = calcTE(lambda, deltaE, BE, f);
-	    if ( trans_rate > min_rate )
-	      init->add_weiss(E_f, trans_rate);
-	    break;
-		  
-	  default:
-	    if( deltaJ % 2 == 0 ){
-	      BM = calcBM(deltaJ);
-	      f = calcf(deltaJ);
-	      trans_rate = calcTM(deltaJ, deltaE, BM, f);
-	      if ( trans_rate > min_rate )
-		init->add_weiss(E_f, trans_rate);
-	    }
-	    else if( (deltaJ + 1) % 2 == 0 ){
-	      BE = calcBM(deltaJ);
-	      f = calcf(deltaJ);
-	      trans_rate = calcTE(deltaJ, deltaE, BE, f);
-	      if ( trans_rate > min_rate )
-		init->add_weiss(E_f, trans_rate);
-	    }
-	    else
-	      std::cout << "Warning! Something bad happened! deltaJ = " << deltaJ << std::endl;
-	    break;
-	  }  
-    }
-  init->calc_ri();
-}
-
-double TMarleyDecayScheme::doubleFact(int i){
-  if (i == 0 || i == 1)
-    return 1;
-  else
-    return i * doubleFact(i - 2);
-}
-
-double TMarleyDecayScheme::calcBE (int i){
-  return pow(1.2, 2*i) * 9 / (4*marley_utils::pi) / (i + 3) / (i + 3) * pow(atomic_mass_number, 2*i/3.0);
-}
-
-double TMarleyDecayScheme::calcBM (int i){
-  return pow(1.2, 2*i - 2) * 90/marley_utils::pi / (i + 3) / (i + 3) * pow(atomic_mass_number, (2*i - 2)/3.0);
-}
-
-double TMarleyDecayScheme::calcf (int i){
-  double x = doubleFact(2*i + 1);
-  return (i + 1)/(i*x*x);
-}
-
-double TMarleyDecayScheme::calcTE(int i, double dE, double BE_i, double f_i){
-  return 5.498e+22 * pow (dE/197330, 2*i + 1) * BE_i * f_i;
-}
-
-double TMarleyDecayScheme::calcTM(int i, double dE, double BM_i, double f_i){
-  return 6.080e+20 * pow (dE/197330, 2*i + 1) * BM_i * f_i;
 }

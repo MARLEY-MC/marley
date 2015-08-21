@@ -1,24 +1,16 @@
 #include <string>
 #include <vector>
 #include <regex>
-#include <iostream> // For testing
 #include "marley_utils.hh"
 #include "TMarleyLevel.hh"
+#include "TMarleyParity.hh"
 
-TMarleyLevel::TMarleyLevel(std::string energy, std::string jpi) {
-  sEnergy = energy;
-  // Converts the energy string into a double and also converts from
-  // the standard ENSDF energy units (keV) to MeV.
-  // TODO: Consider whether keeping the string version of the energy
-  // in keV is really the best solution
-  fEnergy = std::stod(energy) * marley_utils::MeV;
+TMarleyLevel::TMarleyLevel(double E, int twoJ, TMarleyParity pi) {
+  energy = E;
+  two_J = twoJ;
+  parity = pi;
 
   gammas_known = false; // The default is that gammas are not known
-  weisskopf_estimates.push_back(std::vector<double>()); // Energy
-  weisskopf_estimates.push_back(std::vector<double>()); // Transition rate
-  
-  this->set_spin_parity(jpi); // Need to convert jpi to integers in the constructor... Maybe do this a better way
-  //spin_parity = jpi;
 }
 
 /// Choose a gamma owned by this level randomly based on the relative
@@ -56,139 +48,29 @@ void TMarleyLevel::add_gamma(const TMarleyGamma& gamma) {
 
 }
 
-double TMarleyLevel::get_numerical_energy() const {
-  return fEnergy; 
+double TMarleyLevel::get_energy() const {
+  return energy; 
 }
 
-std::string TMarleyLevel::get_string_energy() const {
-  return sEnergy; 
+void TMarleyLevel::set_energy(double E) {
+  energy = E;
 }
 
-void TMarleyLevel::set_energy(std::string energy) {
-  sEnergy = energy;
-  fEnergy = std::stod(energy);
+int TMarleyLevel::get_two_J() const {
+  return two_J;
 }
 
-std::string TMarleyLevel::get_spin_parity() const {
-  return spin_parity;
+void TMarleyLevel::set_two_J(int twoJ) {
+  two_J = twoJ;
 }
 
-int TMarleyLevel::get_ispin() const
+TMarleyParity TMarleyLevel::get_parity() const
 {
-  return ispin;
+  return parity;
 }
 
-int TMarleyLevel::get_iparity() const
-{
-  return iparity;
-}
-
-// TODO: Add capability to handle half-integer spins
-// to this function. Also refine this based on all of the
-// possible JPI formats (see description for this field
-// in the ENSDF format documentation).
-// TODO: Consider changing TMarleyLevel so that it can
-// be constructed using numerical spins and parities.
-// This will help you to parse TALYS level data files
-// more efficiently.
-void TMarleyLevel::set_spin_parity(std::string jpi) {
-  spin_parity = jpi;
-
-  // Regular expressions for identifying spin/parity - try to condense if possible
-  std::regex jp ("[0-9][+-]"); //For the case jp
-  std::regex j1_j2p ("\\([0-9],[0-9]\\)[+-]"); //For the case (j1,j2)p
-  std::regex j1p1_j2p2("\\([0-9][+-][,:][0-9][+-]\\)"); // (j1p1,j2p2) or (j1p1:j2p2)
-  std::regex jp_par("[0-9]\\([+-]\\)"); // j(p)
-  std::regex j1p1_j2p2_nopar("[0-9][+-],[0-9][+-]"); // j1p1,j2p2
-  std::regex le_jp("\\(LE [0-9]\\)[+-]"); // (LE j)p
-  std::regex j1_j2p2("\\([0-9],[0-9][+-]\\)"); // (j1,j2p2) -------- Not behaving correctly. Check this.
-  std::regex jp_inpar("\\([0-9][+-]\\)"); // (jp)
-
-  if(std::regex_match(spin_parity, jp)) // jp
-    {
-      ispin = std::stoi(spin_parity.substr(0,1));
-      
-      if(spin_parity.substr(1,2) == "+")
-	iparity = 1;
-      else
-	iparity = -1;
-    }
-
-  else if (std::regex_match(spin_parity, j1_j2p)) // (j1,j2)p
-    {
-      ispin = std::stoi(spin_parity.substr(1,2)); //Picking the first spin only
-	  	  
-      if(spin_parity.substr(5,6) == "+")
-	iparity = 1;
-      else
-	iparity = -1;
-    }
-
-  else if (std::regex_match(spin_parity, j1p1_j2p2)) // (j1p1,j2p2) or (j1p1:j2p2)
-    {
-      ispin = std::stod(spin_parity.substr(1,2));
-	 	  
-      if(spin_parity.substr(2,3) == "+")
-	iparity = 1;
-      else
-	iparity = -1;
-    }
-
-  else if (std::regex_match(spin_parity, jp_par)) // j(p)
-    {
-      ispin = std::stoi(spin_parity.substr(0,1));
-     
-      if(spin_parity.substr(2,3) == "+")
-	iparity = 1;
-      else
-	iparity = -1;
-    }
-
-  else if (std::regex_match(spin_parity, jp_inpar)) // (jp)
-    {
-      ispin = std::stoi(spin_parity.substr(1,2));
-      
-      if(spin_parity.substr(2,3) == "+")
-	iparity = 1;
-      else
-	iparity = -1;
-    }
-
-  else if (std::regex_match(spin_parity, j1p1_j2p2_nopar)) // j1p1,j2p2 (no parenthesis)
-    {
-      ispin = std::stoi(spin_parity.substr(0,1));
-	 	  
-      if(spin_parity.substr(1,2) == "+")
-	iparity = 1;
-      else
-	iparity = -1;
-    }
-
-  else if (std::regex_match(spin_parity, le_jp)) // (LE j)p
-    {
-      ispin = std::stoi(spin_parity.substr(4,5));
-      
-      if(spin_parity.substr(6,7) == "+")
-	iparity = 1;
-      else
-	iparity = -1;
-    }
-
-  else if (std::regex_match(spin_parity, j1_j2p2)) // (j1,j2p2) //---------------Not working correctly for (j,jp)
-    {
-      ispin = std::stoi(spin_parity.substr(3,4)); //Picking the first spin only
-
-      if(spin_parity.substr(4,5) == "+")
-	iparity = 1;
-      else
-	iparity = -1;
-    }
-    
-  else //Default jp is 1+
-    {
-      ispin = 1;
-      iparity = 1;
-    }
+void TMarleyLevel::set_parity(TMarleyParity pi) {
+  parity = pi;
 }
 
 void TMarleyLevel::clear_gammas() {
@@ -207,35 +89,14 @@ std::vector<TMarleyGamma>* TMarleyLevel::get_gammas() {
   return &gammas;
 }
 
-
 bool TMarleyLevel::get_gamma_status() const
 {
   return gammas_known;
 }
 
-void TMarleyLevel::add_weiss(const double& final_energy, const double& trans_rate)
-{
-  weisskopf_estimates[0].push_back(final_energy);
-  weisskopf_estimates[1].push_back(trans_rate);
+std::string TMarleyLevel::get_spin_parity_string() const {
+  std::string str = std::to_string(two_J / 2);
+  // If 2*J is odd, then the level has half-integer spin
+  if (two_J % 2) str += "/2";
+  return str + parity.str();
 }
-
-void TMarleyLevel::calc_ri()
-{
-  // Find the sum of all transitions
-  double trans_sum = 0;
-  for(unsigned int i = 0; i < weisskopf_estimates[1].size(); i++)
-    trans_sum += weisskopf_estimates[1][i] ;
-
-  // Calculate the relative intensity for each given transition and add the gamma to the current level object
-  double e_gamma = 0;
-  double ri = 0;
-  for(unsigned int i = 0; i < weisskopf_estimates[0].size(); i++)
-    {
-      e_gamma = this->get_numerical_energy() - weisskopf_estimates[0][i];
-      ri = weisskopf_estimates[1][i]/trans_sum;
-      TMarleyGamma gamma(e_gamma, ri, this);
-      this->add_gamma(gamma);
-    }
-}
-
-

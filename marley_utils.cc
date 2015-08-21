@@ -532,3 +532,30 @@ std::string marley_utils::nucid_to_symbol(std::string nucid) {
   nucid.back() = tolower(nucid.back());
   return marley_utils::trim_copy(nucid);
 }
+
+// Converts an ENSDF nucid to an atomic number. Currently, no checking is done
+// to see if the string is a valid nucid.
+int marley_utils::nucid_to_Z(std::string nucid) {
+  // String that will be loaded with the element symbol
+  std::string e_str;
+
+  if (nucid.length() != 5) {
+    // Extract the element name from the string
+    std::smatch m;
+    std::regex_search(nucid, m, std::regex("[0-9]+"));
+    e_str = m.suffix().str();
+
+    // If the element name has more than one letter,
+    // then make the last one lowercase.
+    if (e_str.length() > 1)
+      e_str.back() = tolower(e_str.back());
+  }
+  else {
+    // The nucid is 5 characters long, so getting our
+    // desired format is a lot easier
+    nucid.back() = tolower(nucid.back());
+    e_str = nucid.substr(nucid.size() - 2); // Get the last two characters
+    marley_utils::trim_right_inplace(e_str); // Trims the string if needed
+  }
+  return atomic_numbers.at(e_str);
+}
