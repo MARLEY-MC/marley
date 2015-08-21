@@ -12,8 +12,9 @@ int main() {
   for (auto &id : nuc_ids) {
     TMarleyDecayScheme ds = TMarleyDecayScheme(id, filename);
     //ofs.open(marley_utils::trim_copy(id) + ".txt", std::ofstream::trunc);
-    ds.print_report();//(ofs);
-    std::cout << std::endl;
+    std::cout << ds; 
+    //ds.print_report();//(ofs);
+    //std::cout << std::endl;
     //ofs.close();
   }
 

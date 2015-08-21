@@ -10,7 +10,7 @@ class TMarleyLevel {
     /// @param jpi a string containing the spin
     /// and parity of the level (e.g., 0+)
     TMarleyLevel(double E, int twoJ, TMarleyParity pi);
-    void add_gamma(const TMarleyGamma& gamma);
+    TMarleyGamma* add_gamma(const TMarleyGamma& gamma);
     void clear_gammas();
     std::vector<TMarleyGamma>* get_gammas();
     bool get_gamma_status() const;

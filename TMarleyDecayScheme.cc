@@ -136,7 +136,6 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename,
 {
 
   nuc_id = nucid;
-  file_name = filename;
 
   // Get the atomic mass number from the first 3 characters
   // of the ENSDF nucid
@@ -148,11 +147,11 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename,
   switch (ff) {
 
     case FileFormat::ensdf:
-      parse_ensdf(); 
+      parse_ensdf(filename); 
       break;
 
     case FileFormat::talys:
-      parse_talys();
+      parse_talys(filename);
       break;
 
     default:
@@ -203,7 +202,7 @@ void TMarleyDecayScheme::assign_theoretical_RIs(TMarleyLevel* level_i) {
   }
 }
 
-void TMarleyDecayScheme::parse_ensdf() {
+void TMarleyDecayScheme::parse_ensdf(std::string filename) {
 
   // Regular expressions for identifying ensdf record types
   const std::regex rx_primary_identification_record(nuc_id + ensdf_primary_record
@@ -214,13 +213,13 @@ void TMarleyDecayScheme::parse_ensdf() {
   const std::regex rx_continuation_gamma_record(nuc_id + ensdf_continuation_record + " G " + ensdf_record_data);
  
   // Open the ENSDF file for parsing
-  std::ifstream file_in(file_name);
+  std::ifstream file_in(filename);
 
   // If the file doesn't exist or some other error
   // occurred, complain and give up.
   if (!file_in.good()) {
     throw std::runtime_error(std::string("Could not read from the ") +
-      "ENSDF data file " + file_name);
+      "ENSDF data file " + filename);
   }
 
   std::string line; // String to store the current line
@@ -246,7 +245,7 @@ void TMarleyDecayScheme::parse_ensdf() {
   if (!found_decay_scheme) {
     throw std::runtime_error(std::string("Gamma decay scheme data ")
       + "(adopted levels, gammas) for " + marley_utils::nucid_to_symbol(nuc_id)
-      + " could not be found in the ENSDF data file " + file_name);
+      + " could not be found in the ENSDF data file " + filename);
   }
   //else {
   //  std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using ENSDF dataset" << std::endl;
@@ -441,7 +440,7 @@ void TMarleyDecayScheme::parse_ensdf() {
 
 }
 
-void TMarleyDecayScheme::parse_talys() {
+void TMarleyDecayScheme::parse_talys(std::string filename) {
   // First line in a TALYS level dataset has fortran
   // format (2i4, 2i5, 56x, i4, a2)
   // General regex for this line:
@@ -449,13 +448,13 @@ void TMarleyDecayScheme::parse_talys() {
   const std::regex nuclide_line("[0-9 ]{18} {57}" + nuc_id);
 
   // Open the TALYs level data file for parsing
-  std::ifstream file_in(file_name);
+  std::ifstream file_in(filename);
 
   // If the file doesn't exist or some other error
   // occurred, complain and give up.
   if (!file_in.good()) {
     throw std::runtime_error(std::string("Could not read from the ") +
-      "TALYS data file " + file_name);
+      "TALYS data file " + filename);
   }
 
   std::string line; // String to store the current line
@@ -474,7 +473,7 @@ void TMarleyDecayScheme::parse_talys() {
   if (!found_decay_scheme) {
     throw std::runtime_error(std::string("Gamma decay scheme data ")
       + "(adopted levels, gammas) for " + marley_utils::nucid_to_symbol(nuc_id)
-      + " could not be found in the TALYS data file " + file_name);
+      + " could not be found in the TALYS data file " + filename);
   }
   //else {
   //  std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using TALYS dataset" << std::endl;
@@ -638,7 +637,7 @@ void TMarleyDecayScheme::print_latex_table(std::ostream& ostr) {
     "}]{\\textbf{" + nuc_id.substr(3,1) +
     marley_utils::trim_copy(
       marley_utils::to_lowercase(nuc_id.substr(4,1))) + 
-    "}} \n from file " + file_name + " ";
+    "}} \n";// from file " + filename + " ";
 
   ostr << marley_utils::latex_table_1;
 
@@ -722,12 +721,6 @@ void TMarleyDecayScheme::set_nuc_id(std::string id) {
   nuc_id = id;
 }
 
-bool TMarleyDecayScheme::compare_level_energies(TMarleyLevel* first,
-  TMarleyLevel* second)
-{
-  return first->get_energy() < second->get_energy();
-}
-
 // Adds a new level to the decay scheme and returns a pointer to it
 TMarleyLevel* TMarleyDecayScheme::add_level(TMarleyLevel level) {
 
@@ -768,4 +761,58 @@ std::vector<TMarleyLevel*>* TMarleyDecayScheme::get_sorted_level_pointers() {
 
 std::list<TMarleyLevel>* TMarleyDecayScheme::get_levels() {
   return &levels;
+}
+
+std::ostream& operator<< (std::ostream& out,
+  const TMarleyDecayScheme& ds)
+{
+  size_t num_levels = ds.pv_sorted_levels.size();
+  out << ds.Z << " " << ds.A << " " << num_levels << std::endl;
+  for (size_t i = 0; i < num_levels; ++i) {
+    TMarleyLevel* l = ds.pv_sorted_levels.at(i);
+    out << "  " << l->get_energy() << " " << l->get_two_J() << " "
+      << l->get_parity() << " " << l->get_gamma_status()
+      << " " << l->get_gammas()->size() << std::endl;
+    for (auto &g : *l->get_gammas()) {
+      out << "    " << g.get_energy() << " " << g.get_ri();
+      std::vector<TMarleyLevel*>::const_iterator pv_end
+        = ds.pv_sorted_levels.cbegin() + i;
+      std::vector<TMarleyLevel*>::const_iterator cit
+        = std::find(ds.pv_sorted_levels.cbegin(), pv_end, g.get_end_level());
+      int level_f_idx = -1;
+      if (cit != pv_end) {
+        level_f_idx = std::distance(ds.pv_sorted_levels.cbegin(), cit);
+      }
+      out << " " << level_f_idx << std::endl;
+    }
+  }
+  return out;
+}
+
+std::istream& operator>> (std::istream& in,
+  TMarleyDecayScheme& ds)
+{
+  size_t num_levels;
+  in >> ds.Z >> ds.A >> num_levels;
+
+  double energy, ri;
+  int two_j;
+  TMarleyParity pi;
+  bool g_status;
+  size_t num_gammas;
+  int level_f_idx;
+  TMarleyLevel* l;
+  TMarleyGamma* g;
+
+  for (size_t i = 0; i < num_levels; ++i) {
+    in >> energy >> two_j >> pi >> g_status >> num_gammas;
+    l = ds.add_level(TMarleyLevel(energy, two_j, pi));
+    for (size_t j = 0; j < num_gammas; ++j) {
+      in >> energy >> ri >> level_f_idx;
+      g = l->add_gamma(TMarleyGamma(energy, ri, l));
+      if (level_f_idx >= 0)
+        g->set_end_level(ds.pv_sorted_levels.at(level_f_idx));
+    }
+  }
+  return in;
 }
