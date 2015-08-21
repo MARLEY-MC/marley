@@ -181,7 +181,7 @@ void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme) {
     // by the decay scheme object.
     TMarleyLevel* plevel = ds->get_pointer_to_closest_level(*it);
     //std::cout << "DEBUG: I matched E = " << *it << " MeV to the ENSDF level "
-    //  << "with energy " << plevel->get_numerical_energy() << " MeV" << std::endl;
+    //  << "with energy " << plevel->get_energy() << " MeV" << std::endl;
 
     // Complain if there are duplicates (if there are duplicates, we'll have
     // two different B(F) + B(GT) values for the same level object)
@@ -190,7 +190,7 @@ void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme) {
       // residue_level_pointers already contains plevel
       throw std::runtime_error(std::string("Reaction dataset gives two level energies ")
         + "that refer to the same ENSDF level at "
-        + std::to_string(plevel->get_numerical_energy()) + " MeV");
+        + std::to_string(plevel->get_energy()) + " MeV");
     }
 
     // TODO: add check to see if the energy of the chosen level is very different
@@ -392,7 +392,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
 
     // Get the excitation energy for the current level
     if (residue_level_pointers[i] != nullptr) {
-      level_energy = residue_level_pointers[i]->get_numerical_energy();
+      level_energy = residue_level_pointers[i]->get_energy();
     }
     else {
       // Level is unbound, so just use the energy given in the reaction dataset
@@ -446,7 +446,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
   //for (auto& n : probs)
   //{
   //  int i = &n - &(probs[0]);
-  //  std::cout << "DEBUG: level at " << residue_level_pointers.at(i)->get_numerical_energy()
+  //  std::cout << "DEBUG: level at " << residue_level_pointers.at(i)->get_energy()
   //    << " MeV has probability " << n << " of being selected" << std::endl;
   //}
 
@@ -461,7 +461,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
   // needed for sampling a scattering cosine.
   double E_level;
   if (plevel != nullptr) {
-    E_level = plevel->get_numerical_energy();
+    E_level = plevel->get_energy();
   }
   else {
     // Level is unbound, so use the level energy found in the reaction dataset
