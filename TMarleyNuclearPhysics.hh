@@ -3,14 +3,15 @@
 
 #include "TMarleyLevel.hh"
 #include "TMarleyMassTable.hh"
+#include "TMarleyParity.hh"
 #include "marley_utils.hh"
 
 class TMarleyNuclearPhysics {
   public:
     enum class TransitionType { electric, magnetic };
 
-    static TransitionType determine_gamma_transition_type(int Ji, int Pi,
-      int Jf, int Pf, int& l);
+    static TransitionType determine_gamma_transition_type(int twoJi,
+      TMarleyParity Pi, int twoJf, TMarleyParity Pf, int& l);
 
     static TransitionType determine_gamma_transition_type(TMarleyLevel* level_i,
       TMarleyLevel* level_f, int&l);
