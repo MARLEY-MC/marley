@@ -5,39 +5,47 @@ using TrType = TMarleyNuclearPhysics::TransitionType;
 TrType TMarleyNuclearPhysics::determine_gamma_transition_type(
   TMarleyLevel* level_i, TMarleyLevel* level_f, int& l)
 {
-  int Ji = level_i->get_two_J() / 2;
+  int twoJi = level_i->get_two_J();
   TMarleyParity Pi = level_i->get_parity();
 
-  int Jf = level_f->get_two_J() / 2;
+  int twoJf = level_f->get_two_J();
   TMarleyParity Pf = level_f->get_parity();
 
-  return determine_gamma_transition_type(Ji, Pi, Jf, Pf, l);
+  return determine_gamma_transition_type(twoJi, Pi, twoJf, Pf, l);
 }
 
 
-// Returns whether a gamma transition from a nuclear state with spin Ji and
-// parity Pi to a state with spin Jf and parity Pf is electric or magnetic.
+// Returns whether a gamma transition from a nuclear state with spin twoJi / 2 and
+// parity Pi to a state with spin twoJf / 2 and parity Pf is electric or magnetic.
 // Also loads the integer l with the multipolarity of the transition.
-TrType TMarleyNuclearPhysics::determine_gamma_transition_type(int Ji,
-  int Pi, int Jf, int Pf, int& l)
+TrType TMarleyNuclearPhysics::determine_gamma_transition_type(int twoJi,
+  TMarleyParity Pi, int twoJf, TMarleyParity Pf, int& l)
 {
   // TODO: reconsider how to handle this situation
-  if (Ji == 0 && Jf == 0) throw std::runtime_error(
+  if (twoJi == 0 && twoJf == 0) throw std::runtime_error(
     std::string("0 -> 0 EM transitions are not allowed."));
 
-  int delta_J = std::abs(Jf - Ji);
-  int Pi_times_Pf = Pi * Pf;
-  // TODO: add error check to verify that each parity is either +1 or -1
+  int two_delta_J = std::abs(twoJf - twoJi);
+  // Odd values of two_delta_J are unphysical because they represent EM
+  // transitions where the total angular momentum changes by half (photons are
+  // spin 1)
+  if (two_delta_J % 2) throw std::runtime_error(std::string("Unphysical ")
+    + "EM transition encountered between nuclear levels with spins 2*Ji = "
+    + std::to_string(twoJi) + " and 2*Jf = " + std::to_string(twoJf));
+
+  TMarleyParity Pi_times_Pf = Pi * Pf;
 
   // Determine the multipolarity of this transition. Load l with the result.
-  if (delta_J == 0) l = 1;
-  else l = delta_J;
+  if (two_delta_J == 0) l = 1;
+  // We already checked for unphysical odd values of two_delta_J above, so
+  // using integer division here will always give the expected result.
+  else l = two_delta_J / 2;
 
   // Determine whether this transition is electric or magnetic based on its
   // multipolarity and whether or not there is a change of parity
 
   // Pi * Pf = -1 gives electric transitions for odd l
-  int electric_parity;
+  TMarleyParity electric_parity;
   if (l % 2) electric_parity = -1; // l is odd
   // Pi * Pf = +1 gives electric transitions for even l
   else electric_parity = 1; // l is even
