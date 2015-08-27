@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 
+#include "TMarleyFragment.hh"
 #include "TMarleyLevel.hh"
 #include "TMarleyMassTable.hh"
 #include "TMarleyParity.hh"
@@ -36,11 +37,7 @@ class TMarleyNuclearPhysics {
     static constexpr double lambda_piplus2 = std::pow(marley_utils::hbar_c
       / mpiplus, 2); // fm
 
-    // Fragment particle IDs
-    static constexpr int NEUTRON = 2112;
-    static constexpr int PROTON = 2212;
-    static constexpr int DEUTERON = 1000010020;
-    static constexpr int TRITON = 1000010030;
-    static constexpr int HELION = 1000020030;
-    static constexpr int ALPHA = 1000020040;
+    // Table of nuclear fragments that will be considered when computing
+    // branching ratios for nuclear de-excitations.
+    static const std::vector<TMarleyFragment> fragments;
 };

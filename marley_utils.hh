@@ -14,6 +14,16 @@
 
 namespace marley_utils {
 
+  // Frequently used particle IDs
+  static constexpr int PHOTON = 22;
+  static constexpr int ELECTRON = 11;
+  static constexpr int NEUTRON = 2112;
+  static constexpr int PROTON = 2212;
+  static constexpr int DEUTERON = 1000010020;
+  static constexpr int TRITON = 1000010030;
+  static constexpr int HELION = 1000020030;
+  static constexpr int ALPHA = 1000020040;
+
   // Conversion factor to use when expressing ENSDF energies (keV) in
   // standard MARLEY energy units (MeV)
   const double MeV = 1e-3;
@@ -40,6 +50,9 @@ namespace marley_utils {
   constexpr double mb = 1/3.89379338e5; // MeV^(-2) mb^(-1)
   // Square of the elementary charge
   constexpr double e2 = hbar_c * alpha; // MeV*fm
+  // Constant to use when approximating nuclear radii via
+  // r = r0 * A^(1/3), where A is the nucleus's mass number
+  constexpr double r0 = 1.2; // fm
 
   // Strings to use for latex table output of ENSDF data
   extern std::string latex_table_1, latex_table_2, latex_table_3, latex_table_4;
@@ -67,7 +80,8 @@ namespace marley_utils {
   // Return the PDG particle ID that corresponds to a ground-state
   // nucleus with atomic number Z and mass number A
   inline int get_nucleus_pid(int Z, int A) {
-    return 10000*Z + 10*A + 1000000000;
+    if (Z == 0 && A == 1) return NEUTRON;
+    else return 10000*Z + 10*A + 1000000000;
   }
 
   // Take the square root of a number. Assume that a negative argument is

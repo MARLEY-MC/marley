@@ -21,10 +21,8 @@ class TMarleyMassTable {
     static void print_separation_energies(int Z, int A, unsigned n);
 
     static inline int get_particle_Z(int pid) {
-      // proton
-      if (pid == 2212) return 1;
-      // neutron
-      else if (pid == 2112) return 0;
+      if (pid == marley_utils::PROTON) return 1;
+      else if (pid == marley_utils::NEUTRON) return 0;
       // nuclear fragment
       else if (pid > 1000000000) return (pid % 10000000)/10000;
       // other particle
@@ -32,10 +30,8 @@ class TMarleyMassTable {
     }
 
     static inline int get_particle_A(int pid) {
-      // proton
-      if (pid == 2212) return 1;
-      // neutron
-      else if (pid == 2112) return 1;
+      if (pid == marley_utils::PROTON) return 1;
+      else if (pid == marley_utils::NEUTRON) return 1;
       // nuclear fragment
       else if (pid > 1000000000) return (pid % 10000)/10;
       // other particle
