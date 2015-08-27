@@ -2,6 +2,18 @@
 
 using TrType = TMarleyNuclearPhysics::TransitionType;
 
+// Table of nuclear fragments that will be considered when computing
+// branching ratios for nuclear de-excitations. Spin-parity values are taken
+// from nuclear ground states listed in the 10/2014 release of ENSDF.
+const std::vector<TMarleyFragment> TMarleyNuclearPhysics::fragments = {
+  TMarleyFragment(marley_utils::NEUTRON, 1, 1),
+  TMarleyFragment(marley_utils::PROTON, 1, 1),
+  TMarleyFragment(marley_utils::DEUTERON, 2, 1),
+  TMarleyFragment(marley_utils::TRITON, 1, 1),
+  TMarleyFragment(marley_utils::HELION, 1, 1),
+  TMarleyFragment(marley_utils::ALPHA, 0, 1),
+};
+
 TrType TMarleyNuclearPhysics::determine_gamma_transition_type(
   TMarleyLevel* level_i, TMarleyLevel* level_f, int& l)
 {
@@ -13,7 +25,6 @@ TrType TMarleyNuclearPhysics::determine_gamma_transition_type(
 
   return determine_gamma_transition_type(twoJi, Pi, twoJf, Pf, l);
 }
-
 
 // Returns whether a gamma transition from a nuclear state with spin twoJi / 2 and
 // parity Pi to a state with spin twoJf / 2 and parity Pf is electric or magnetic.
@@ -136,7 +147,7 @@ double TMarleyNuclearPhysics::weisskopf_partial_decay_width(int A,
     * std::pow(3.0 / (l + 3), 2);
 
   // Estimated nuclear radius (fm)
-  double R = 1.2 * std::pow(A, 1.0/3.0);
+  double R = marley_utils::r0 * std::pow(A, 1.0/3.0);
 
   // Electric transition partial decay width
   double el_width = 2 * marley_utils::alpha * lambda
@@ -147,7 +158,7 @@ double TMarleyNuclearPhysics::weisskopf_partial_decay_width(int A,
   }
 
   else if (type == TransitionType::magnetic) {
-    double mp = TMarleyMassTable::get_particle_mass(PROTON);
+    double mp = TMarleyMassTable::get_particle_mass(marley_utils::PROTON);
     return 10 * el_width * std::pow(marley_utils::hbar_c / (mp * R), 2);
   }
 

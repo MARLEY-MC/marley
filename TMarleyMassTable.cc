@@ -20,7 +20,7 @@ double TMarleyMassTable::get_atomic_mass(int nucleus_pid) {
 double TMarleyMassTable::get_binding_energy(int Z, int A) {
   int N = A - Z;
   double m_hydrogen_1 = atomic_masses.at(1000010010);
-  double mn = particle_masses.at(2112); 
+  double mn = particle_masses.at(marley_utils::NEUTRON); 
   double mN = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
 
   return micro_amu*(Z*m_hydrogen_1 + N*mn - mN);
@@ -40,8 +40,8 @@ double TMarleyMassTable::get_atomic_mass(int Z, int A) {
 
 double TMarleyMassTable::get_proton_separation_energy(int Z, int A) {
   double mi = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
-  double mp = particle_masses.at(2212); 
-  double me = particle_masses.at(11);
+  double mp = particle_masses.at(marley_utils::PROTON); 
+  double me = particle_masses.at(marley_utils::ELECTRON);
   double mf = atomic_masses.at(marley_utils::get_nucleus_pid(Z-1, A-1));
 
   return micro_amu*((mf + mp + me) - mi);
@@ -49,7 +49,7 @@ double TMarleyMassTable::get_proton_separation_energy(int Z, int A) {
 
 double TMarleyMassTable::get_neutron_separation_energy(int Z, int A) {
   double mi = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
-  double mn = particle_masses.at(2112); 
+  double mn = particle_masses.at(marley_utils::NEUTRON); 
   double mf = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A-1));
 
   return micro_amu*((mf + mn) - mi);
@@ -88,7 +88,7 @@ double TMarleyMassTable::get_particle_separation_energy(int Z, int A, int pid) {
   int Zf = Z - Zx;
   int Af = A - get_particle_A(pid);
 
-  double extra_mass = Zx*particle_masses.at(11)
+  double extra_mass = Zx*particle_masses.at(marley_utils::ELECTRON)
     + particle_masses.at(pid);
 
   double m_atom_initial = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
@@ -118,7 +118,7 @@ void TMarleyMassTable::print_separation_energy(int Z, int A,
     Af -= nx*get_particle_A(fragment_pid);
     Zf -= nx*Zx;
 
-    extra_mass += nx*(Zx*particle_masses.at(11)
+    extra_mass += nx*(Zx*particle_masses.at(marley_utils::ELECTRON)
       + particle_masses.at(fragment_pid));
 
     std::cout << nx << " (" << fragment_pid << ") ";
@@ -143,8 +143,14 @@ void TMarleyMassTable::print_separation_energies(int Z, int A, unsigned n) {
 
 // Particle IDs for all of the nuclear fragments that will
 // be considered when calculating separation energies
-const std::vector<int> TMarleyMassTable::fragment_pids = {2212,
-  2112, 1000010020, 1000010030, 1000020030, 1000020040};
+const std::vector<int> TMarleyMassTable::fragment_pids = {
+  marley_utils::PROTON,
+  marley_utils::NEUTRON,
+  marley_utils::DEUTERON,
+  marley_utils::TRITON,
+  marley_utils::HELION,
+  marley_utils::ALPHA
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // MARLEY particle and atomic mass data
