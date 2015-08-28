@@ -212,7 +212,7 @@ void TMarleyReaction::compute_evaporation_thresholds() {
     // Compute the separation energy for the current fragment and add it
     // to the vector of evaporation thresholds
     evaporation_thresholds.push_back(TMarleyEvaporationThreshold(
-      TMarleyMassTable::get_particle_separation_energy(Zf, Af, *it), *it));
+      TMarleyMassTable::get_fragment_separation_energy(Zf, Af, *it), *it));
   }
 
   // Sort the vector of evaporation thresholds in order of increasing energy
