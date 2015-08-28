@@ -10,80 +10,109 @@ double TMarleyMassTable::get_particle_mass(int particle_id) {
   return micro_amu * particle_masses.at(particle_id);
 }
 
-double TMarleyMassTable::get_atomic_mass(int nucleus_pid) {
-  // Find the atom's mass in the lookup table (using its
-  // nucleus's particle ID number), and convert its
-  // value from micro-amu to MeV
-  return micro_amu * atomic_masses.at(nucleus_pid);
+double TMarleyMassTable::get_atomic_mass(int nucleus_pid, bool theory_ok) {
+  bool exp;
+  double mass = lookup_atomic_mass(nucleus_pid, exp,
+    theory_ok);
+  if (exp) mass *= micro_amu;
+  return mass;
 }
 
-double TMarleyMassTable::get_binding_energy(int Z, int A) {
+double TMarleyMassTable::lookup_atomic_mass(int nucleus_pid, bool& exp,
+  bool theory_ok)
+{
+  // Find the atom's mass (in micro-amu) in the lookup table using its
+  // nucleus's particle ID number. If it can't be found, either return a
+  // theoretical mass using the liquid drop model or throw an error.
+  // std::unordered_map<int, double>::iterator search
+  auto search = atomic_masses.find(nucleus_pid);
+
+  // If the mass was found in the lookup table, return it and flag it as an
+  // experimental value
+  if (search != atomic_masses.end()) {
+    exp = true;
+    return search->second;
+  }
+  // Otherwise, return a theoretical estimate using the liquid drop model or
+  // throw an error depending on whether the user has indicated that using a
+  // theoretical estimate is acceptable. For either case, set the experimental
+  // flag to false.
+  else {
+    exp = false;
+
+    int Z = get_particle_Z(nucleus_pid);
+    int A = get_particle_A(nucleus_pid);
+
+    if (theory_ok) {
+      return liquid_drop_model_atomic_mass(Z, A);
+    }
+    else throw std::runtime_error(std::string("Entry for Z = ")
+      + std::to_string(Z) + " and A = " + std::to_string(A)
+      + " not found in the MARLEY atomic mass table.");
+  }
+}
+
+double TMarleyMassTable::lookup_atomic_mass(int Z, int A, bool& exp,
+  bool theory_ok)
+{
+  int nucleus_pid = marley_utils::get_nucleus_pid(Z, A);
+
+  auto search = atomic_masses.find(nucleus_pid);
+
+  // If the mass was found in the lookup table, return it and flag it as an
+  // experimental value
+  if (search != atomic_masses.end()) {
+    exp = true;
+    return search->second;
+  }
+  // Otherwise, return a theoretical estimate using the liquid drop model or
+  // throw an error depending on whether the user has indicated that using a
+  // theoretical estimate is acceptable. For either case, set the experimental
+  // flag to false.
+  else {
+    exp = false;
+
+    if (theory_ok) {
+      return liquid_drop_model_atomic_mass(Z, A);
+    }
+    else throw std::runtime_error(std::string("Entry for Z = ")
+      + std::to_string(Z) + " and A = " + std::to_string(A)
+      + " not found in the MARLEY atomic mass table.");
+  }
+}
+
+double TMarleyMassTable::get_binding_energy(int Z, int A, bool theory_ok) {
   int N = A - Z;
   double m_hydrogen_1 = atomic_masses.at(1000010010);
   double mn = particle_masses.at(marley_utils::NEUTRON); 
-  double mN = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
 
-  return micro_amu*(Z*m_hydrogen_1 + N*mn - mN);
+  bool exp;
+  double mN = lookup_atomic_mass(Z, A, exp, theory_ok);
+
+  // Experimental masses are given in micro-amu, while our liquid drop model
+  // estimates are given in MeV, so adjust the calculation appropriately
+  // depending on which unit we are using for mN.
+  if (exp) return micro_amu * (Z*m_hydrogen_1 + N*mn - mN);
+  else return micro_amu * (Z*m_hydrogen_1 + N*mn) - mN;
 }
 
-double TMarleyMassTable::get_mass_excess(int Z, int A) {
-  double mN = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
-  return micro_amu*(mN - A*1e6);
+double TMarleyMassTable::get_mass_excess(int Z, int A, bool theory_ok) {
+  bool exp;
+  double mN = lookup_atomic_mass(Z, A, exp, theory_ok);
+  if (exp) return micro_amu*(mN - A*1e6);
+  else return mN - micro_amu*A*1e6;
 }
 
-double TMarleyMassTable::get_atomic_mass(int Z, int A) {
-  // Compute the nucleus's particle ID number
-  int pid = marley_utils::get_nucleus_pid(Z, A);
-  // Look up the mass using this particle ID
-  return get_atomic_mass(pid);
+double TMarleyMassTable::get_atomic_mass(int Z, int A, bool theory_ok) {
+  bool exp;
+  double mass = lookup_atomic_mass(Z, A, exp, theory_ok);
+  if (exp) mass *= micro_amu;
+  return mass;
 }
 
-double TMarleyMassTable::get_proton_separation_energy(int Z, int A) {
-  double mi = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
-  double mp = particle_masses.at(marley_utils::PROTON); 
-  double me = particle_masses.at(marley_utils::ELECTRON);
-  double mf = atomic_masses.at(marley_utils::get_nucleus_pid(Z-1, A-1));
-
-  return micro_amu*((mf + mp + me) - mi);
-}
-
-double TMarleyMassTable::get_neutron_separation_energy(int Z, int A) {
-  double mi = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
-  double mn = particle_masses.at(marley_utils::NEUTRON); 
-  double mf = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A-1));
-
-  return micro_amu*((mf + mn) - mi);
-}
-
-// Places the n_objects into n_boxes starting with all of them in
-// the first box (i.e., vec = {n_object, 0, 0, ..., 0}).
-// This function uses a method inspired by the accepted answer at
-// http://stackoverflow.com/questions/4647120/next-composition-of-n-into-k-parts-does-anyone-have-a-working-algorithm
-void TMarleyMassTable::iterate_multicombination_counts(unsigned n_objects,
-  std::vector<unsigned>& vec, std::function<void(std::vector<unsigned>&)> f,
-  unsigned n_boxes)
+double TMarleyMassTable::get_fragment_separation_energy(int Z, int A, int pid,
+  bool theory_ok)
 {
-  unsigned n;
-  if (n_boxes > 1) {
-    for (n = 0; n <= n_objects; n++) {
-      vec.at(vec.size() - n_boxes) = n_objects - n;
-      iterate_multicombination_counts(n, vec, f, n_boxes - 1);
-    }
-  }
-  else {
-    vec.back() = n_objects;
-    f(vec);
-  }
-}
-
-void TMarleyMassTable::iterate_multicombination_counts(unsigned n_boxes, unsigned n_objects,
-  std::function<void(std::vector<unsigned>&)> f)
-{
-  std::vector<unsigned> vec(n_boxes, 0);
-  iterate_multicombination_counts(n_objects, vec, f, n_boxes);
-}
-
-double TMarleyMassTable::get_particle_separation_energy(int Z, int A, int pid) {
   int Zx = get_particle_Z(pid);
   int Zf = Z - Zx;
   int Af = A - get_particle_A(pid);
@@ -91,54 +120,42 @@ double TMarleyMassTable::get_particle_separation_energy(int Z, int A, int pid) {
   double extra_mass = Zx*particle_masses.at(marley_utils::ELECTRON)
     + particle_masses.at(pid);
 
-  double m_atom_initial = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
-  double m_atom_final = atomic_masses.at(marley_utils::get_nucleus_pid(Zf, Af));
+  bool exp_i, exp_f;
+  double m_atom_initial = lookup_atomic_mass(Z, A, exp_i, theory_ok);
+  double m_atom_final = lookup_atomic_mass(Zf, Af, exp_f, theory_ok);
 
-  return micro_amu*(m_atom_final - m_atom_initial + extra_mass);
-}
-
-
-void TMarleyMassTable::print_separation_energy(int Z, int A,
-  std::vector<unsigned>& fragment_counts)
-{
-  int Zf = Z;
-  int Af = A;
-
-  double extra_mass = 0;
-
-  int fragment_pid, Zx, nx;
-  int num_fragment_types = fragment_pids.size();
-
-  for(int i = 0; i < num_fragment_types; ++i)
-  {
-    fragment_pid = fragment_pids.at(i);
-    nx = fragment_counts.at(i);
-    Zx = get_particle_Z(fragment_pid);
-
-    Af -= nx*get_particle_A(fragment_pid);
-    Zf -= nx*Zx;
-
-    extra_mass += nx*(Zx*particle_masses.at(marley_utils::ELECTRON)
-      + particle_masses.at(fragment_pid));
-
-    std::cout << nx << " (" << fragment_pid << ") ";
+  if (exp_i) {
+    if (exp_f) return micro_amu*(m_atom_final - m_atom_initial + extra_mass);
+    else return m_atom_final + micro_amu*(extra_mass - m_atom_initial);
   }
-
-  double m_atom_initial = atomic_masses.at(marley_utils::get_nucleus_pid(Z, A));
-  double m_atom_final = atomic_masses.at(marley_utils::get_nucleus_pid(Zf, Af));
-
-  double separation_energy = micro_amu*(m_atom_final - m_atom_initial + extra_mass);
-
-  std::cout << "sep. energy = " << separation_energy << " MeV" << std::endl;
+  else if (exp_f) return micro_amu*(m_atom_final + extra_mass) - m_atom_initial;
+  else return micro_amu*extra_mass + m_atom_final - m_atom_initial;
 }
 
+// Implements the liquid drop model for computing nuclear mass excesses. Based
+// on the parameterization given in A. J. Koning, et al., Nucl. Phys. A 810
+// (2008) pp. 13-76 for use with the back-shifted Fermi gas nuclear level
+// density model. Returns a value in MeV.
+double TMarleyMassTable::liquid_drop_model_mass_excess(int Z, int A) {
+  int N = A - Z;
 
-void TMarleyMassTable::print_separation_energies(int Z, int A, unsigned n) {
+  double kappa_term = kappa * std::pow((N - Z) / static_cast<double>(A), 2);
+  double c1 = a1 * (1 - kappa_term);
+  double c2 = a2 * (1 - kappa_term);
 
-  std::function<void(std::vector<unsigned>&)> print = std::bind(print_separation_energy,
-    Z, A, std::placeholders::_1);
+  double Evol = -c1 * A;
+  double Esur = c2 * std::pow(A, 2.0/3.0);
+  double Ecoul = (c3 / std::pow(A, 1.0/3.0) - c4 / A) * std::pow(Z, 2);
 
-  iterate_multicombination_counts(fragment_pids.size(), n, print);
+  double delta_LDM = 0;
+  bool z_odd = Z % 2;
+  bool n_odd = N % 2;
+
+  // delta_LDM will be zero if the nucleus is odd-even
+  if (z_odd && n_odd) delta_LDM = 11/std::sqrt(A);
+  else if (!z_odd && !n_odd) delta_LDM = -11/std::sqrt(A);
+
+  return Mn * N + MH * Z + Evol + Esur + Ecoul + delta_LDM;
 }
 
 // Particle IDs for all of the nuclear fragments that will
