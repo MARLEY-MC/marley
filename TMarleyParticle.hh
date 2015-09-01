@@ -5,13 +5,13 @@ class TMarleyParticle {
   public:
     TMarleyParticle();
     TMarleyParticle(int id, double E, double p_x, double p_y, double p_z, double m);
-    double get_total_energy();
-    double get_mass();
+    double get_total_energy() const;
+    double get_mass() const;
     void add_child(TMarleyParticle* child);
-    double get_px();
-    double get_py();
-    double get_pz();
-    int get_id();
+    double get_px() const;
+    double get_py() const;
+    double get_pz() const;
+    int get_id() const;
     std::vector<TMarleyParticle*>* get_children();
 
   private:

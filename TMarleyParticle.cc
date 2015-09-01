@@ -26,27 +26,27 @@ TMarleyParticle::TMarleyParticle(int id, double E, double p_x,
   mass = m;
 }
 
-double TMarleyParticle::get_total_energy() {
+double TMarleyParticle::get_total_energy() const {
   return total_energy;
 }
 
-double TMarleyParticle::get_mass() {
+double TMarleyParticle::get_mass() const {
   return mass;
 }
 
-double TMarleyParticle::get_px() {
+double TMarleyParticle::get_px() const {
   return px;
 }
 
-double TMarleyParticle::get_py() {
+double TMarleyParticle::get_py() const {
   return py;
 }
 
-double TMarleyParticle::get_pz() {
+double TMarleyParticle::get_pz() const {
   return pz;
 }
 
-int TMarleyParticle::get_id() {
+int TMarleyParticle::get_id() const {
   return particle_id;
 }
 
