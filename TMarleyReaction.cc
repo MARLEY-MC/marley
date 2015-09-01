@@ -639,11 +639,6 @@ double TMarleyReaction::differential_xs(double E_level, double Ea,
   double Ec = this->ejectile_energy(E_level, Ea, cos_theta_c);
   double pc = marley_utils::real_sqrt(Ec*Ec - mc*mc);
 
-  // TODO: consider removing the constants GF, Vud, etc. since
-  // for sampling they will not be needed (what matters is the
-  // relative size of the differential cross section).
-  // This may reduce numerical error.
-  
   // TODO: adjust this differential cross section expression
   // as needed
   
@@ -654,9 +649,54 @@ double TMarleyReaction::differential_xs(double E_level, double Ea,
   // J. D. Walecka, "Semileptonic Weak Interactions in Nuclei,"
   // In: Muon Physics, Volume II: Weak Interactions.
   // Ed. by V. W. Hughes and C. S. Wu.
-  return (1.0/(2*std::acos(-1)))*GF*GF*Vud*Vud
+ 
+  // The constants GF and Vud have been removed since,
+  // for sampling, they will not be needed (what matters is the
+  // relative size of the differential cross section).
+  // This might reduce numerical error.
+  return (1.0/(2*std::acos(-1)))// * std::pow(GF, 2) * std::pow(Vud, 2)
     *pc*Ec*fermi_function(Zf, Af, Ec, true)*matrix_element
     /(1.0 + (Ea/mb)*(1 - (Ec/pc)*cos_theta_c));
+}
+
+// Compute the total reaction cross section (including all final nuclear levels)
+// in units of MeV^(-2)
+double TMarleyReaction::total_xs(double Ea) {
+  double max_E_level = max_level_energy(Ea);
+  double xs = 0;
+  for(unsigned int i = 0; i < residue_level_pointers.size(); ++i) {
+
+    double level_energy;
+
+    // Get the excitation energy for the current level
+    if (residue_level_pointers[i] != nullptr) {
+      level_energy = residue_level_pointers[i]->get_energy();
+    }
+    else {
+      // Level is unbound, so just use the energy given in the reaction dataset
+      // rather than trying to find its ENSDF version
+      level_energy = residue_level_energies[i];
+    }
+
+    // Exit the loop early if you reach a level with an energy that's too high
+    if (level_energy > max_E_level) break;
+
+    // Check whether the matrix element (B(F) + B(GT)) is nonvanishing for the
+    // current level. If it is, just set the weight equal to zero rather than
+    // calling total_xs. This will avoid unnecessary numerical integrations.
+    double matrix_el = residue_level_strengths[i];
+
+    if (matrix_el == 0) {
+      xs += 0;
+    }
+    else {
+      // If the matrix element is nonzero, assign a weight to this level equal
+      // to the total reaction cross section. Note that std::discrete_distribution
+      // automatically normalizes the weights, so we don't have to do that ourselves.
+      xs += total_xs(level_energy, Ea, matrix_el);
+    }
+  }
+  return std::pow(GF, 2) * std::pow(Vud, 2) * xs;
 }
 
 // Numerically integrate the differential cross section over
