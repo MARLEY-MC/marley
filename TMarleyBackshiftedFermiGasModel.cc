@@ -42,7 +42,7 @@ double TMarleyBackshiftedFermiGasModel::level_density(int Z, int A, double Ex, d
 
   // Level density parameter
   double a;
-  if (Ex <= Delta_BFM) {
+  if (U <= 0) { // Equivalently, Ex <= Delta_BFM
     // Use first-order Taylor expansion for small energies
     a = a_tilde * (1 + gamma * delta_W);
   }
@@ -55,14 +55,14 @@ double TMarleyBackshiftedFermiGasModel::level_density(int Z, int A, double Ex, d
   double Sn = TMarleyMassTable::get_fragment_separation_energy(Z, A,
     marley_utils::NEUTRON);
   double sigma_F2;
-  double Ed = 0;
-  // Use Delta_BFM as Ed if the excitation energy is too small to avoid
-  // numerical problems when computing sigma_F.
   // TODO: Replace Ed here with database of local fits taken from RIPL-3 or TALYS
-  //if (U > 0) Ed = 0;
-  //else Ed = Delta_BFM;
+  double Ed = 0;
 
-  if (Ex <= Ed) sigma = sigma_d_global;
+  // To avoid numerical problems, we will always use the discrete spin cutoff parameter for U <= Ed.
+  // The TALYS manual suggests using this for Ex <= Ed, but this isn't a huge change. The actual TALYS
+  // code may make this same choice.
+  // TODO: Look into this more.
+  if (U <= Ed) sigma = sigma_d_global;
   else {
     sigma_F2 = 0.01389 * std::pow(A_to_the_one_third, 5)
       * std::sqrt(a * U) / a_tilde;
@@ -73,6 +73,12 @@ double TMarleyBackshiftedFermiGasModel::level_density(int Z, int A, double Ex, d
       sigma = std::sqrt(sigma_d2 + (Ex - Ed)
         * (sigma_F2 - sigma_d2) / (Sn - Ed));
     }
+  }
+
+  // For very small excitation energies, take the limit of the total
+  // level density as U -> 0 to prevent numerical issues.
+  if (U <= 0) {
+    return std::exp(1) * a / (12 * sigma);
   }
 
   double aU = a * U;

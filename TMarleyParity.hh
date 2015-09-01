@@ -26,6 +26,18 @@ class TMarleyParity {
       is_positive = parity.is_positive;
     }
 
+    // The minus unary operator creates a copy of a parity
+    // object with a flipped value
+    friend inline TMarleyParity operator-(const TMarleyParity& parity) {
+      return TMarleyParity(!parity.is_positive);
+    }
+
+    // The not unary operator flips a parity value in place
+    friend inline TMarleyParity& operator!(TMarleyParity& parity) {
+      parity.is_positive = !parity.is_positive;
+      return parity;
+    }
+
     inline TMarleyParity& operator= (const TMarleyParity& parity) {
       // Do the copy
       is_positive = parity.is_positive;

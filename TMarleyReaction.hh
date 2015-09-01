@@ -10,6 +10,8 @@
 #include "TMarleyMassTable.hh"
 #include "TMarleyEvaporationThreshold.hh"
 
+class TMarleyGenerator;
+
 class TMarleyReaction {
   public:
     TMarleyReaction(std::string filename, TMarleyDecayScheme* scheme = nullptr);
@@ -20,9 +22,10 @@ class TMarleyReaction {
     double get_threshold_energy();
     double differential_xs(double E_level, double Ea, double matrix_element, double cos_theta_c);
     double total_xs(double E_level, double Ea, double matrix_element);
-    double sample_ejectile_scattering_cosine(double E_level, double Ea, double matrix_element);
+    double sample_ejectile_scattering_cosine(double E_level, double Ea,
+      double matrix_element, TMarleyGenerator& gen);
     void set_decay_scheme(TMarleyDecayScheme* scheme);
-    TMarleyEvent create_event(double Ea);
+    TMarleyEvent create_event(double Ea, TMarleyGenerator& gen);
 
   private:
     double ma; // projectile mass
@@ -49,5 +52,6 @@ class TMarleyReaction {
     std::vector<TMarleyEvaporationThreshold> evaporation_thresholds;
     void compute_evaporation_thresholds();
     void evaporate_particles(double E_level, TMarleyEvent* p_event,
-      double Ed_gs, double theta_res, double phi_res);
+      double Ed_gs, double theta_res, double phi_res,
+      TMarleyGenerator& gen);
 };

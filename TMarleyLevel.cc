@@ -1,7 +1,9 @@
 #include <string>
 #include <vector>
 #include <regex>
+
 #include "marley_utils.hh"
+#include "TMarleyGenerator.hh"
 #include "TMarleyLevel.hh"
 #include "TMarleyParity.hh"
 
@@ -16,7 +18,7 @@ TMarleyLevel::TMarleyLevel(double E, int twoJ, TMarleyParity pi) {
 /// Choose a gamma owned by this level randomly based on the relative
 /// intensities of all of the gammas.  Return a pointer to the gamma that was
 /// chosen.  If this level doesn't have any gammas, return a null pointer.
-TMarleyGamma* TMarleyLevel::sample_gamma() {
+TMarleyGamma* TMarleyLevel::sample_gamma(TMarleyGenerator& gen) {
   if (gammas.empty()) {
     return nullptr;
   }
@@ -24,7 +26,7 @@ TMarleyGamma* TMarleyLevel::sample_gamma() {
     // Get the index of the gamma to return by randomly sampling from the
     // discrete distribution gamma_dist using the standard marley_utils random
     // number generator.
-    int g_index = gamma_dist(marley_utils::rand_gen);
+    int g_index = gen.discrete_sample(gamma_dist);
     // Return a pointer to the corresponding gamma
     return &(gammas[g_index]);
   }
