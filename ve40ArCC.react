@@ -18,10 +18,9 @@
 # nominally below the neutron emission threshold at 7.79951
 # MeV, but the quoted uncertainty of 0.033 MeV is large
 # enough that the level could easily be either neutron
-# bound or unbound. The level is definitely above the
-# proton emission threshold of 7.582 MeV. The technique
-# used by Bhattacharya to measure B(GT) for this level did
-# not rely on observing particles from its de-excitation.
+# bound or unbound. The technique used by Bhattacharya
+# to measure B(GT) for this level did not rely on
+# observing particles from its de-excitation.
 # The ENSDF database gives this level's energy as 7.799
 # MeV, citing a 40K level density measurement (Abfalterer,
 # et al., Phys. Rev. C 62, 064312 (2000)) but not a direct
@@ -41,7 +40,7 @@
 # using WebPlotDigitizer (http://arohatgi.info/WebPlotDigitizer/)
 # from the plot of QRPA integrated GT(-) strength
 # given in figure 3 of M. Cheoun, et al.,
-# Eur. Phys. J. A 48, 137 (2012). The resonance state
+# Eur. Phys. J. A 48, 137 (2012). The unbound state
 # B(GT) values were then rescaled (*1.4) so that
 # the resulting QRPA integrated B(GT) strength
 # approximately matched the experimental
@@ -57,7 +56,7 @@
 5.681 6.118 6.790 7.468
 # Experimental unbound level energies
 7.795 7.952
-# QRPA resonance energies
+# QRPA unbound energies
 9.49986 9.72871 10.2627 10.339 10.7967 11.1781 11.4833 12.9327
 13.3904 13.4667 14.2295 14.3821 14.4584 15.2212 15.3738 15.4501
 16.1366 16.2129 18.2726 18.3489 18.8829 18.9591 20.1797 20.256
@@ -66,9 +65,9 @@
 # B(GT) values + B(F) value for IAS at 4.384 MeV
 1.03 0.94 0.04 0.10 0.28 3.84 0.54 0.30 0.37
 0.13 0.30 0.45 0.04
-# Experimental resonance B(GT) values
+# Experimental unbound B(GT) values
 0.09 0.61
-# QRPA resonance B(GT) values
+# QRPA unbound B(GT) values
 0.0459211 0.0459211 1.46947 0.0459211 0.137763 0.275527 1.23987
 0.137763 0.183684 0.0459211 0.183684 4.1329 0.0459211 0.0918422
 0.367369 0.0459211 4.86764 0.0459211 0.82658 0.0459211 0.505132
