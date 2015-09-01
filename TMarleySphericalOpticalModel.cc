@@ -7,7 +7,7 @@
 #include "nucl/cwfcomp.cc"
 
 std::complex<double> TMarleySphericalOpticalModel::optical_model_potential(
-  double r, double E, int fragment_pid, int two_j, int l, int two_s)
+  double r, double E, int fragment_pid, int two_j, int l, int two_s) const
 {
 
   // Fragment atomic, mass, and neutron numbers
@@ -183,7 +183,7 @@ TMarleySphericalOpticalModel::TMarleySphericalOpticalModel(int z, int a) {
 }
 
 double TMarleySphericalOpticalModel::transmission_coefficient(double E,
-  int fragment_pid, int two_j, int l, int two_s, double h)
+  int fragment_pid, int two_j, int l, int two_s, double h) const
 {
   double h2_over_twelve = std::pow(h, 2) / 12.0;
 

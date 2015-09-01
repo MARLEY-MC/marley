@@ -2,8 +2,10 @@
 #include <iostream>
 #include <list>
 #include <regex>
-#include "TMarleyLevel.hh"
+
 #include "TMarleyEvent.hh"
+#include "TMarleyLevel.hh"
+#include "TMarleyParity.hh"
 
 class TMarleyDecayScheme {
   public:
@@ -23,7 +25,8 @@ class TMarleyDecayScheme {
     std::vector<TMarleyLevel*>* get_sorted_level_pointers();
     void print_report(std::ostream& ostr = std::cout) const;
     TMarleyLevel* get_pointer_to_closest_level(double E_level);
-    void do_cascade(TMarleyLevel* initial_level, TMarleyEvent* p_event) const;
+    void do_cascade(TMarleyLevel* initial_level, TMarleyEvent* p_event,
+      TMarleyGenerator& gen) const;
     void print_latex_table(std::ostream& ostr = std::cout);
     void assign_theoretical_RIs(TMarleyLevel* level_i);
 
@@ -32,6 +35,14 @@ class TMarleyDecayScheme {
 
     friend std::istream& operator>> (std::istream& in,
       TMarleyDecayScheme& ds);
+
+    inline int get_Z() {
+      return Z;
+    }
+
+    inline int get_A() {
+      return A;
+    }
 
   private:
     int Z; // atomic number
@@ -49,6 +60,24 @@ class TMarleyDecayScheme {
     // different nuclear data formats accepted by this class
     void parse_ensdf(std::string filename);
     void parse_talys(std::string filename);
+
+    inline void parse(std::string filename, FileFormat ff = FileFormat::ensdf) {
+      // Parse the data file using the appropriate format
+      switch (ff) {
+
+        case FileFormat::ensdf:
+          parse_ensdf(filename); 
+          break;
+
+        case FileFormat::talys:
+          parse_talys(filename);
+          break;
+
+        default:
+          throw std::runtime_error(std::string("Invalid file format ")
+            + " supplied to TMarleyDecayScheme constructor.");
+      }
+    }
 
     // Default level parity
     static const TMarleyParity DEFAULT_PARITY;

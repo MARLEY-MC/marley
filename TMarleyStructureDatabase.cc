@@ -77,8 +77,9 @@ void TMarleyStructureDatabase::add_from_record(
   // Add a decay scheme for each nucid listed in the structure
   // record to the database
   for (const auto& id : sr.nucids) {
-    //std::cout << "DEBUG: adding nucid '" << id << "' from file "
-    //  << sr.filename << std::endl;
+    std::cout << "Loading nuclear structure data for "
+      << marley_utils::trim_copy(id)
+      << " from file " << sr.filename << std::endl;
     add_decay_scheme(id,
       TMarleyDecayScheme(id, sr.filename, sr.format));
   }

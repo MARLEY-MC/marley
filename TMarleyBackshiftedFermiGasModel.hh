@@ -1,3 +1,4 @@
+#pragma once
 // TODO: change this from an all-static class so that one can create objects
 // with local fit parameters for a specific nuclide
 class TMarleyBackshiftedFermiGasModel {

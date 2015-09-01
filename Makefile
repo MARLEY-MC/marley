@@ -1,11 +1,14 @@
 CXX=g++
-CXXFLAGS=-g -std=c++11 -I. -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter #-O3
+CXXFLAGS=-g -std=c++11 -I. -O3 #-Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter
 USE_ROOT=yes
 
 OBJ = marley_utils.o TMarleyParticle.o TMarleyEvent.o TMarleyEvaporationThreshold.o
-OBJ += TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o
+OBJ += TMarleyGenerator.o TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o
+OBJ += TMarleyDecayScheme.o
 OBJ += TMarleyMassTable.o TMarleyStructureDatabase.o TMarleyConfigFile.o
-OBJ += TMarleyNuclearPhysics.o
+OBJ += TMarleyNuclearPhysics.o TMarleyBackshiftedFermiGasModel.o
+OBJ += TMarleySphericalOpticalModel.o TMarleyIntegrator.o
+OBJ += TMarleyNeutrinoSource.o
 
 ifdef USE_ROOT
 # Adding the g++ compiler option -DUSE_ROOT to the CXXFLAGS
@@ -39,6 +42,9 @@ validate: $(OBJ) $(OBJ_DICT) validate.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 check: $(OBJ) $(OBJ_DICT) check.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+mass: $(OBJ) mass.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # Add more header files to the prerequisites for

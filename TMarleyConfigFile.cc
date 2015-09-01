@@ -49,16 +49,17 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
     line = marley_utils::get_next_line(file_in, rx_comment_or_empty, false),
     line != ""; ++line_num)
   {
-    // Convert the line to all lowercase (this is an easy way of
-    // getting case-insensitivity)
-    marley_utils::to_lowercase_inplace(line);
-
     // Load the stream with the new line
     iss.clear();
     iss.str(line);
 
     // Read the first word (the keyword for that line) from the stream
     iss >> keyword;
+    // Convert the keyword to all lowercase (this is an easy way of
+    // getting case-insensitivity). We do the case conversion word-by-word
+    // rather than as a whole line because case is important for certain
+    // items in the input (particularly file names).
+    marley_utils::to_lowercase_inplace(keyword);
 
     // String to store the keyword argument currently being processed
     std::string arg;
@@ -81,18 +82,18 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
       }
     }
     else if (keyword == "reaction") {
-      next_word_from_line(iss, arg, keyword, line_num);
+      next_word_from_line(iss, arg, keyword, line_num, true, false);
       reaction_filenames.insert(arg);
     }
     else if (keyword == "rootfile") {
       #ifdef USE_ROOT
-      next_word_from_line(iss, arg, keyword, line_num);
+      next_word_from_line(iss, arg, keyword, line_num, true, false);
       root_filename = arg;
       #else
       // TODO: change this to a warning that this will be ignored
       throw std::runtime_error(std::string("Cannot set")
         + " ROOT filename. MARLEY must be compiled"
-        + "with ROOT support.");
+        + " with ROOT support.");
       #endif
     }
     else if (keyword == "writeroot") {
@@ -111,14 +112,14 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
           + " of the configuration file " + filename);
       }
       #else
-      throw std::runtime_error(std::string("Cannot write")
-        + " events to a ROOT file. MARLEY must be compiled"
-        + "with ROOT support.");
+      throw std::runtime_error(std::string("The writeroot")
+        + " keyword may only be used when MARLEY is compiled"
+        + " with ROOT support.");
       #endif
     }
     else if (keyword == "structure") {
       StructureRecord sr;
-      next_word_from_line(iss, sr.filename, keyword, line_num);
+      next_word_from_line(iss, sr.filename, keyword, line_num, true, false);
       std::string format_string;
       next_word_from_line(iss, format_string, keyword, line_num);
       try {
@@ -202,9 +203,11 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
 }
 
 // Get the next word from a parsed line. If errors occur, complain.
-bool TMarleyConfigFile::next_word_from_line(std::istringstream& iss, std::string& word,
-  const std::string& keyword, const int line_number,
-  bool enable_exceptions)
+// The last argument determines whether the next word should be
+// converted to all lowercase or left as is.
+bool TMarleyConfigFile::next_word_from_line(std::istringstream& iss,
+  std::string& word, const std::string& keyword, const int line_number,
+  bool enable_exceptions, bool make_lowercase)
 {
   if (iss.eof()) {
     if (!enable_exceptions) return false;
@@ -223,12 +226,14 @@ bool TMarleyConfigFile::next_word_from_line(std::istringstream& iss, std::string
       + std::to_string(line_number)
       + " of the configuration file " + filename);
   }
+  if (make_lowercase) marley_utils::to_lowercase_inplace(word);
   return true;
 }
 
 
 void TMarleyConfigFile::print_summary(std::ostream& os) {
   os << "seed: " << seed << std::endl;
+  #ifdef USE_ROOT
   os << "writeroot: ";
   if (writeroot && check_before_root_file_overwrite)
     os << "yes";
@@ -236,6 +241,7 @@ void TMarleyConfigFile::print_summary(std::ostream& os) {
   else os << "no";
   os << std::endl;
   os << "rootfile: " << root_filename << std::endl;
+  #endif
   for (const auto& rfile: reaction_filenames)
     os << "reaction: " << rfile << std::endl;
   for (const auto& sr: structure_records) {

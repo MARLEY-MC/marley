@@ -81,9 +81,10 @@ class TMarleyConfigFile {
     // to a std::string
     std::string format_to_string(const TMarleyDecayScheme::FileFormat ff);
 
-
     // Get the next word from a parsed line. If errors occur, complain.
+    // The last argument determines whether the next word should be
+    // converted to all lowercase or left as is.
     bool next_word_from_line(std::istringstream& iss, std::string& word,
       const std::string& keyword, const int line_number,
-      bool enable_exceptions = true);
+      bool enable_exceptions = true, bool make_lowercase = true);
 };

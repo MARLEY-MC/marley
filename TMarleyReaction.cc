@@ -7,6 +7,7 @@
 
 #include "marley_utils.hh"
 #include "TMarleyEvent.hh"
+#include "TMarleyGenerator.hh"
 #include "TMarleyLevel.hh"
 #include "TMarleyReaction.hh"
 
@@ -342,8 +343,9 @@ double TMarleyReaction::get_threshold_energy() {
 
 // Creates an event object by sampling the appropriate
 // quantities and performing kinematic calculations
-TMarleyEvent TMarleyReaction::create_event(double Ea) {
-
+TMarleyEvent TMarleyReaction::create_event(double Ea,
+  TMarleyGenerator& gen)
+{
   // All hard-coded energies are in MeV
   double Etot = Ea + mb;
 
@@ -452,7 +454,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
 
   // Sample a level index using our discrete distribution and the
   // current set of weights
-  unsigned int l_index = ldist(marley_utils::rand_gen, params);
+  unsigned int l_index = gen.discrete_sample(ldist, params);
 
   // Get a pointer to the selected level
   TMarleyLevel* plevel = residue_level_pointers.at(l_index);
@@ -476,7 +478,8 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
 
   // Sample a scattering angle for the ejectile using
   // the differential cross section
-  double cos_theta_c = sample_ejectile_scattering_cosine(E_level, Ea, matrix_element);
+  double cos_theta_c = sample_ejectile_scattering_cosine(E_level, Ea,
+    matrix_element, gen);
   double theta_c = std::acos(cos_theta_c);
 
   // Use conservation of 4-momentum to compute the ejectile energy
@@ -492,7 +495,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
 
   // Sample an azimuthal scattering angle (phi) uniformly on [0, 2*pi).
   // We can do this because the matrix elements are azimuthally invariant
-  double phi = marley_utils::uniform_random_double(0, 2*marley_utils::pi, false);
+  double phi = gen.uniform_random_double(0, 2*marley_utils::pi, false);
 
   // TODO: maybe consider the effect of nuclear recoils that happen when
   // gammas/nucleons are emitted
@@ -547,11 +550,11 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
       TMarleyEvent::ParticleRole::pr_residue);
 
     // Add the de-excitation gammas to this event's final particle list
-    this->ds->do_cascade(plevel, &event);
+    this->ds->do_cascade(plevel, &event, gen);
   }
   else {
     // The selected level is unbound, so handle nucleon emission, etc.
-    this->evaporate_particles(E_level, &event, Ed_gs, theta_d, phi);
+    this->evaporate_particles(E_level, &event, Ed_gs, theta_d, phi, gen);
   }
 
   // Return the completed event object
@@ -559,7 +562,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea) {
 }
 
 void TMarleyReaction::evaporate_particles(double E_level, TMarleyEvent* p_event,
-  double Ed_gs, double theta_res, double phi_res)
+  double Ed_gs, double theta_res, double phi_res, TMarleyGenerator& gen)
 {
   // Find the highest-energy particle evaporation threshold that is
   // greater than the residue excitation energy E_level
@@ -608,9 +611,9 @@ void TMarleyReaction::evaporate_particles(double E_level, TMarleyEvent* p_event,
     TMarleyEvent::ParticleRole::pr_residue);
 
   // Sample an azimuthal emission angle (phi) uniformly on [0, 2*pi).
-  double phi_fragment = marley_utils::uniform_random_double(0, 2*marley_utils::pi, false);
+  double phi_fragment = gen.uniform_random_double(0, 2*marley_utils::pi, false);
   // Sample a polar emission cosine (cos[theta]) uniformly on [-1, 1].
-  double cos_theta_fragment = marley_utils::uniform_random_double(-1, 1, true);
+  double cos_theta_fragment = gen.uniform_random_double(-1, 1, true);
   double theta_fragment = std::acos(cos_theta_fragment);
   // Get the Cartesian components of the evaporated fragment's 3-momentum
   double p_fragment_x = std::sin(theta_fragment)*std::cos(phi_fragment)*p_fragment;
@@ -681,7 +684,8 @@ double TMarleyReaction::total_xs(double E_level, double Ea, double matrix_elemen
 // Sample a scattering cosine for the ejectile using the differential
 // cross section defined in the member function differential_xs
 double TMarleyReaction::sample_ejectile_scattering_cosine(double E_level,
-  double Ea, double matrix_element) {
+  double Ea, double matrix_element, TMarleyGenerator& gen)
+{
 
   // Get the total cross section for this reaction based
   // on the projectile energy and final residue energy.
@@ -700,7 +704,7 @@ double TMarleyReaction::sample_ejectile_scattering_cosine(double E_level,
     -> double { return (1.0/xstot)*differential_xs(E_level, Ea, matrix_element, cos_theta_c); };
 
   // Sample a scattering cosine value using this probability density function
-  double cos_theta_c = marley_utils::rejection_sample(ndxs, -1, 1, 1e-8);
+  double cos_theta_c = gen.rejection_sample(ndxs, -1, 1);
 
   return cos_theta_c;
 }

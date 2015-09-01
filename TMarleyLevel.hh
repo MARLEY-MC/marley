@@ -3,6 +3,8 @@
 #include "TMarleyGamma.hh"
 #include "TMarleyParity.hh"
 
+class TMarleyGenerator;
+
 /// A class that represents an ENSDF nuclear energy level
 
 class TMarleyLevel {
@@ -20,7 +22,7 @@ class TMarleyLevel {
     void set_energy(double E);
     void set_two_J(int twoJ);
     void set_parity(TMarleyParity pi);
-    TMarleyGamma* sample_gamma();
+    TMarleyGamma* sample_gamma(TMarleyGenerator& gen);
     std::string get_spin_parity_string() const;
 
   private:

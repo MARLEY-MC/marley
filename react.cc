@@ -9,35 +9,14 @@
 #include <vector>
 
 #include "marley_utils.hh"
-#include "TMarleyDecayScheme.hh"
+#include "TMarleyConfigFile.hh"
+#include "TMarleyGenerator.hh"
 #include "TMarleyEvent.hh"
-#include "TMarleyMassTable.hh"
-#include "TMarleyReaction.hh"
 
 #ifdef USE_ROOT
 #include "TFile.h"
 #include "TTree.h"
 #endif
-
-double fermi_dirac_distribution(double C, bool e_flavor, bool anti, double nu_energy){
-  double eta = 0;
-  double T = 0;
-  double N_nu;
-
-  if(e_flavor && !anti){
-    T = 3.5; // temperature in MeV
-    N_nu = 2.8;  // total number of electron neutrinos expected (x10^57)
-  }
-  else if(e_flavor && anti) {
-    T = 5.0; // temperature in MeV
-    N_nu = 1.9;  // total number of electron anti-neutrinos expected (x10^57)
-  }
-  else { // !e_flavor
-    T = 8.0; // temperature in MeV
-    N_nu = 5.0; // total number of mu+tau neutrinos + anti-neutrinos expected (x10^57)
-  }
-  return (C/std::pow(T,3))*(std::pow(nu_energy,2)/(1+std::exp(nu_energy/(T-eta))))*N_nu;
-}
 
 // Flag that will alert the main event generation loop that
 // the user has interrupted the program's execution (probably
@@ -64,7 +43,69 @@ void signal_handler(int s)
   interrupted = true;
 }
 
-int main(){
+// Global help message string. Its scope is limited to this
+// source file via the static keyword
+static const std::string help_message1 = "Usage: ";
+static const std::string help_message2 = " [OPTION...] FILE\n"
+"\n"
+"  -h, --help     Print this help message\n"
+"  -v, --version  Print version and exit\n";
+
+inline void print_help(std::string executable_name) {
+  std::cout << help_message1 + executable_name + help_message2;
+  exit(0);
+}
+
+inline void print_version() {
+  std::cout << "react (MARLEY) v0.1" << std::endl;
+  exit(0);
+}
+
+int main(int argc, char* argv[]){
+
+  // TODO: if you need command line parsing beyond the
+  // trivial stuff used here, consider using a header-only
+  // option parser library like cxxopts (https://github.com/jarro2783/cxxopts)
+  std::string config_file_name;
+
+  // If the user has not supplied any command-line
+  // arguments, display the standard help message
+  // and exit
+  if (argc <= 1) {
+    print_help(argv[0]);
+  }
+  // The first command-line argument does not begin with a
+  // hyphen, so assume that it is the configuration file name.
+  else if (std::string(argv[1]).substr(0,1) != "-") {
+    config_file_name = argv[1];
+  }
+  // The first command-line argument begins with a hyphen,
+  // so treat it as an option and react accordingly.
+  // All of the current options cannot be combined, so
+  // just parse the first one and ignore the others.
+  else {
+    std::string option = argv[1];
+    if (option == "-h" || option == "--help") {
+      print_help(argv[0]);
+    }
+    else if (option == "-v" || option == "--version") {
+      print_version();
+    }
+    else {
+     std::cout << argv[0] << ": unrecognized "
+       << "command line option '" <<  option
+       << "'" << std::endl;
+     print_help(argv[0]);
+    }
+  }
+
+  TMarleyConfigFile cf(config_file_name);
+  TMarleyGenerator gen(cf);
+
+  std::cout << marley_utils::marley_logo << std::endl;
+  std::cout << "\"Don't worry about a thing," << std::endl;
+  std::cout << "'Cause every little thing gonna be all right.\"" << std::endl;
+  std::cout << "-- Bob, \"Three Little Birds\"" << std::endl << std::endl;
 
   // Get the time that the program was started
   std::chrono::system_clock::time_point start_time_point
@@ -72,22 +113,14 @@ int main(){
 
   std::time_t start_time = std::chrono::system_clock::to_time_t(start_time_point);
 
-  std::cout << marley_utils::marley_logo << std::endl;
-  std::cout << "\"Don't worry about a thing," << std::endl;
-  std::cout << "'Cause every little thing gonna be all right.\"" << std::endl;
-  std::cout << "-- Bob, \"Three Little Birds\"" << std::endl << std::endl;
 
   std::cout << "MARLEY started on "
     << std::put_time(std::localtime(&start_time), "%c %Z")
     << std::endl;
   #ifndef USE_ROOT
   std::cout << "Seed for random number generator: "
-    << marley_utils::seed << std::endl;
+    << gen.get_seed() << std::endl;
   #endif
-
-  // Sample from electron flavor supernova neutrinos for C = 0.55
-  std::function<double(double)> f = std::bind(fermi_dirac_distribution, 0.55,
-    true, false, std::placeholders::_1);
 
   int num_old_events = 0;
   #ifdef USE_ROOT
@@ -139,12 +172,12 @@ int main(){
     // we will convert it to a std::string object first
     // TODO: consider writing both the RNG seed and the RNG state string
     // to the UserInfo array of TObjects (a member of the event TTree)
-    std::string dummy_str = std::to_string(marley_utils::seed);
+    std::string dummy_str = std::to_string(gen.get_seed());
     treeFile.WriteObject(&dummy_str, "MARLEY RNG Seed");
 
     // Notify the user of the seed that will be used for this run
     std::cout << "Seed for random number generator: "
-    << marley_utils::seed << std::endl;
+    << gen.get_seed() << std::endl;
   }
 
   // If we were able to read in the event tree from the file, get
@@ -163,10 +196,8 @@ int main(){
     std::string* p_rng_state_string = nullptr;
     treeFile.GetObject("MARLEY RNG State String", p_rng_state_string);
 
-    // TODO: add error handling here (p_rng_state_string may be nullptr)
     // Use the state string to reset the MARLEY RNG
-    std::stringstream strstr(*p_rng_state_string);
-    strstr >> marley_utils::rand_gen;
+    gen.seed_using_state_string(p_rng_state_string);
 
     // Get previous RNG seed from the ROOT file
     std::string* p_rng_seed_str = nullptr;
@@ -186,22 +217,11 @@ int main(){
   std::string data_written;
   #endif
 
-  // Select the isotope and ENSDF file to use for the simulation
-  std::string nuc_id = marley_utils::nuc_id(19, 40); // 40K
-  std::string filename = "ensdf.040";
-
-  // Create a decay scheme object to store data
-  // imported from the ENSDF file
-  TMarleyDecayScheme ds(nuc_id, filename);
-
-  TMarleyReaction r("ve40ArCC.react", &ds);
-
   // TODO: debug numerical errors that arise when
   // Ea = E_threshold
 
   // Simulate a charged current reaction
   int n_events = 1000;
-  double Ea; // Incident neutrino energy
 
   // Display all floating-point numbers without
   // using scientific notation and using
@@ -218,12 +238,8 @@ int main(){
   // if the user interrupts execution (e.g., via ctrl+C)
   for (int i = 1 + num_old_events; i <= n_events && !interrupted; ++i) {
 
-    // Sample a supernova neutrino energy
-    Ea = marley_utils::rejection_sample(f, 4.36, 50);
-
-    // Create an event using the charged current reaction
-    TMarleyEvent e = r.create_event(Ea);
-
+    // Create an event using the generator object
+    TMarleyEvent e = gen.create_event();
 
     #ifdef USE_ROOT
     // Get the address of this event object
@@ -294,9 +310,7 @@ int main(){
   // disk. This will allow MARLEY to resume event generation from where
   // it left off with no loss of consistency. This trick is based on
   // http://stackoverflow.com/questions/18361050/saving-random-number-generator-state-in-c11
-  std::stringstream ss;
-  ss << marley_utils::rand_gen;
-  std::string rng_state_string = ss.str();
+  std::string rng_state_string = gen.get_state_string();
   treeFile.WriteObject(&rng_state_string, "MARLEY RNG State String", "WriteDelete");
 
   // Close the ROOT file and print final information about

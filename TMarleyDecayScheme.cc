@@ -4,8 +4,10 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+
 #include "marley_utils.hh"
 #include "TMarleyDecayScheme.hh"
+#include "TMarleyGenerator.hh"
 #include "TMarleyNuclearPhysics.hh"
 
 // Default level parity is +
@@ -59,7 +61,7 @@ TMarleyLevel* TMarleyDecayScheme::get_pointer_to_closest_level(double E_level) {
 }
 
 void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
-  TMarleyEvent* p_event) const
+  TMarleyEvent* p_event, TMarleyGenerator& gen) const
 {
   //std::cout << "Beginning gamma cascade at level with energy "
   //  << initial_level->get_energy() << " MeV" << std::endl;
@@ -70,7 +72,7 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
 
   while (!cascade_finished) {
     // Randomly select a gamma to produce
-    TMarleyGamma* p_gamma = p_current_level->sample_gamma();
+    TMarleyGamma* p_gamma = p_current_level->sample_gamma(gen);
     if (p_gamma == nullptr) {
       //std::cout << "  this level does not have any gammas" << std::endl;
       cascade_finished = true;
@@ -98,11 +100,11 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
       // nonrelativistically, and it will likely collide with other
       // nuclei before emitting some of the gammas anyway)
       // sample from [-1,1]
-      double gamma_cos_theta = marley_utils::uniform_random_double(-1, 1, true);
+      double gamma_cos_theta = gen.uniform_random_double(-1, 1, true);
       double gamma_theta = std::acos(gamma_cos_theta);
 
       // sample from [0,2*pi)
-      double gamma_phi = marley_utils::uniform_random_double(0, 2*marley_utils::pi, false);
+      double gamma_phi = gen.uniform_random_double(0, 2*marley_utils::pi, false);
 
       // Compute 3-momentum components using the sampled angles
       double gamma_px = std::sin(gamma_theta)*std::cos(gamma_phi)*gamma_energy;
@@ -126,8 +128,10 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
 TMarleyDecayScheme::TMarleyDecayScheme(int z, int a, std::string filename,
   TMarleyDecayScheme::FileFormat ff)
 {
-  std::string id = marley_utils::nuc_id(z, a);
-  TMarleyDecayScheme(id, filename, ff);
+  Z = Z;
+  A = a;
+  nuc_id = marley_utils::nuc_id(z, a);
+  parse(filename, ff);
 }
 
 
@@ -142,23 +146,8 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename,
   A = std::stoi(nucid.substr(0,3));
   // Get the atomic number from the nucid using the element symbol
   Z = marley_utils::nucid_to_Z(nucid);
-
-  // Parse the data file using the appropriate format
-  switch (ff) {
-
-    case FileFormat::ensdf:
-      parse_ensdf(filename); 
-      break;
-
-    case FileFormat::talys:
-      parse_talys(filename);
-      break;
-
-    default:
-      throw std::runtime_error(std::string("Invalid file format ")
-        + " supplied to TMarleyDecayScheme constructor.");
-  }
-
+  // Parse the data file
+  parse(filename, ff);
 }
 
 // Load a level with TMarleyGamma objects based on theoretical gamma-ray
@@ -445,7 +434,11 @@ void TMarleyDecayScheme::parse_talys(std::string filename) {
   // format (2i4, 2i5, 56x, i4, a2)
   // General regex for this line:
   // std::regex nuclide_line("[0-9 ]{18} {56}[0-9 ]{4}.{2}");
-  const std::regex nuclide_line("[0-9 ]{18} {57}" + nuc_id);
+  std::string nuc_id_copy = nuc_id;
+  // Make the last character of the nuc_id lowercase to follow the TALYS convention
+  nuc_id_copy.back() = tolower(nuc_id_copy.back());
+  
+  const std::regex nuclide_line("[0-9 ]{18} {57}" + nuc_id_copy);
 
   // Open the TALYs level data file for parsing
   std::ifstream file_in(filename);
