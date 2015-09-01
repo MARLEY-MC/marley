@@ -17,6 +17,7 @@ namespace marley_utils {
   // Frequently used particle IDs
   static constexpr int PHOTON = 22;
   static constexpr int ELECTRON = 11;
+  static constexpr int ELECTRON_NEUTRINO = 12;
   static constexpr int NEUTRON = 2112;
   static constexpr int PROTON = 2212;
   static constexpr int DEUTERON = 1000010020;

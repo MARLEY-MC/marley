@@ -21,6 +21,10 @@ class TMarleyReaction {
     double max_level_energy(double Ea);
     double get_threshold_energy();
     double differential_xs(double E_level, double Ea, double matrix_element, double cos_theta_c);
+    // Total reaction cross section (in MeV^(-2)), including all final nuclear levels
+    double total_xs(double Ea);
+    // Total cross section for a given final nuclear level energy, in
+    // units convenient for sampling
     double total_xs(double E_level, double Ea, double matrix_element);
     double sample_ejectile_scattering_cosine(double E_level, double Ea,
       double matrix_element, TMarleyGenerator& gen);
@@ -32,8 +36,8 @@ class TMarleyReaction {
     double mb; // target mass
     double mc; // ejectile mass
     double md_gs; // residue mass
-    double GF = 1; //1.16637e-11; // Fermi coupling constant (MeV^(-2)) 
-    double Vud = 0.97427; // abs(V_ud) (from CKM matrix)
+    static constexpr double GF = 1.16637e-11; // Fermi coupling constant (MeV^(-2)) 
+    static constexpr double Vud = 0.97427; // abs(V_ud) (from CKM matrix)
     int Zi, Ai, Zf, Af; // Initial and final values of the atomic and mass numbers
     int pid_a, pid_b, pid_c, pid_d; // Particle IDs for all 4 particles
     // Lab-frame total energy of the projectile at threshold

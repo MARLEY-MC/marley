@@ -47,6 +47,9 @@ check: $(OBJ) $(OBJ_DICT) check.o
 mass: $(OBJ) mass.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
+plots: $(OBJ) $(OBJ_DICT) plots.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
 # Add more header files to the prerequisites for
 # root_dict.o if you would like to store other
 # MARLEY classes in ROOT trees. All such classes
