@@ -1,3 +1,3 @@
-seed 382928218
+seed 2921118218
 structure ensdf.040 ensdf 40K
 reaction ve40ArCC_1998.react

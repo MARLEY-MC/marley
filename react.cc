@@ -221,7 +221,7 @@ int main(int argc, char* argv[]){
   // Ea = E_threshold
 
   // Simulate a charged current reaction
-  int n_events = 1000;
+  int n_events = 1e6;
 
   // Display all floating-point numbers without
   // using scientific notation and using
