@@ -66,51 +66,31 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
 
   Ea_threshold = ((mc + md_gs)*(mc + md_gs) - ma*ma - mb*mb)/(2*mb);
 
-  // Read in the number of levels that have tabulated B(F) + B(GT) data
-  int num_levels;
-  line = marley_utils::get_next_line(file_in, rx_comment, false);
-  iss.str(line); 
-  iss.clear();
-  iss >> num_levels;
+  // Read in all of the level energy (MeV) and squared matrix element (B(F) +
+  // B(GT) strength) pairs.
 
-  // Read in all of the level energies (in MeV)
-  int j = 0;
-  double entry;
   // Set the old energy entry to the lowest representable double
   // value. This guarantees that we always read in the first energy
   // value given in the reaction data file
-  double old_entry = std::numeric_limits<double>::lowest();
-  while (j < num_levels && file_in.good()) {
-    line = marley_utils::get_next_line(file_in, rx_comment, false);
+  double old_energy = std::numeric_limits<double>::lowest();
+  while (line = marley_utils::get_next_line(file_in, rx_comment, false),
+    file_in.good())
+  {
     iss.str(line);
     iss.clear();
-    while (iss >> entry) {
-      // TODO: consider implementing a sorting procedure rather than strictly
-      // enforcing that energies must be given in ascending order. Note that
-      // you will need to alter the order of the B(F) + B(GT) values
-      // as well if you sort the energies.
-      
-      // The order of the entries is important because later uses of the
-      // residue_level_energies vector assume that they are sorted in
-      // order of ascending energy.
-      if (old_entry >= entry) throw std::runtime_error(std::string("Invalid reaction dataset. ")
-        + "Level energies must be unique and must be given in ascending order.");
-      residue_level_energies.push_back(entry);
-      ++j;
-      old_entry = entry;
-    }
-  }
+    // TODO: consider implementing a sorting procedure rather than strictly
+    // enforcing that energies must be given in ascending order.
 
-  // Read in all of the level B(F) + B(GT) values
-  j = 0;
-  while (j < num_levels && file_in.good()) {
-    line = marley_utils::get_next_line(file_in, rx_comment, false);
-    iss.str(line);
-    iss.clear();
-    while (iss >> entry) {
-      residue_level_strengths.push_back(entry);
-      ++j;
-    }
+    // The order of the entries is important because later uses of the
+    // residue_level_energies vector assume that they are sorted in
+    // order of ascending energy.
+    double energy, strength;
+    iss >> energy >> strength;
+    if (old_energy >= energy) throw std::runtime_error(std::string("Invalid reaction dataset. ")
+      + "Level energies must be unique and must be given in ascending order.");
+    residue_level_energies.push_back(energy);
+    residue_level_strengths.push_back(strength);
+    old_energy = energy;
   }
 
   // Compute nuclear fragment evaporation thresholds for the residue
