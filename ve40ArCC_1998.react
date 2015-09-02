@@ -1,0 +1,114 @@
+# MARLEY reaction data for charged-current nu_e on 40Ar
+# Prepared on 1 September 2015 by S. J. Gardiner
+#
+# Particle IDs conform to the 2013 revision of the Particle
+# Data Group Monte Carlo Particle Numbering Scheme
+# (see http://pdg.lbl.gov/2014/reviews/rpp2014-rev-monte-carlo-numbering.pdf)
+#
+# B(GT) values for levels below 7.0 MeV are taken from
+# M. Bhattacharya, et al., Phys. Rev. C 58, 3677 (1998).
+# The B(GT) values were then quenched
+# by multiplying by (gV/gA)^2 = (1/1.26)^2
+# as described in footnote b of Table I in
+# M. Bhattacharya, et al., Phys. Rev. C 80, 055501 (2009).
+# The B(F) + B(GT) values given in the 1998 paper were
+# 0.90 1.50 0.11 0.06 0.04 0.01 0.16 0.26 0.01
+# 0.05 0.11 0.29 3.84 0.31 0.38 0.47 0.36 0.23
+# 0.03 0.11 0.13
+# The B(F) value for the isobaric analog state (IAS)
+# at 4.384 MeV is taken from the same paper.
+# 40Sc levels are used for observed strengths that did
+# not correspond to 40K levels known in 1998.
+#
+# B(GT) values for levels above 7.0 MeV are theoretical
+# estimates based on a QRPA calculation. They were extracted
+# using WebPlotDigitizer (http://arohatgi.info/WebPlotDigitizer/)
+# from the plot of QRPA integrated GT(-) strength
+# given in figure 3 of M. Cheoun, et al.,
+# Eur. Phys. J. A 48, 137 (2012).
+# The threshold for using theoretical B(GT) values
+# was determined by choosing the first level from
+# the QRPA calculation for which (1) the QRPA
+# integrated B(GT) strength exceeded the experimental
+# integrated B(GT) strength at the highest measured
+# experimental level, and (2) the integrated B(GT)
+# strength for the entire combined dataset (experimental
+# plus theoretical values) agreed well with the
+# integrated B(GT) strength from the QRPA calculation.
+# QRPA strengths for levels below this cutoff were ignored.
+#
+# Particle IDs
+12 1000180400 11 1000190400
+# Experimental Ex, B(GT) pairs taken from
+# M. Bhattacharya, et al., Phys. Rev. C 58,
+# 3677 (1998) and quenched as described above.
+# Bound 40K states
+2.28988	0.566893
+2.73038 0.944822
+2.9507  0.069287
+3.10975 0.0377929
+3.14644 0.0251953
+3.293   0.00629882
+3.37385 0.100781
+3.79758 0.163769
+3.84025 0.00629882
+3.898   0.0314941
+3.996   0.069287
+4.352   0.182666
+# B(F) strength to isobaric analog state at 4.384 MeV
+4.384   3.84
+4.697   0.195263
+4.761   0.239355
+4.78865 0.296044
+4.848   0.226757
+5.027   0.144873
+5.223   0.0188964
+5.696   0.069287
+# This level's energy was nudged upwards slightly to match
+# the ENSDF level scheme more closely.
+6.106   0.0818846
+# Theoretical Ex, B(GT) pairs taken from
+# M. Cheoun, et al., Eur. Phys. J. A 48,
+# 137 (2012).
+7.28761 0.0328008
+# Unbound 40K states
+9.49986 0.0328008
+9.72871 0.0328008
+10.2627 1.04962
+10.339  0.0328008
+10.7967 0.0984023
+11.1781 0.196805
+11.4833 0.885621
+12.9327 0.0984023
+13.3904 0.131203
+13.4667 0.0328008
+14.2295 0.131203
+14.3821 2.95207
+14.4584 0.0328008
+15.2212 0.0656016
+15.3738 0.262406
+15.4501 0.0328008
+16.1366 3.47688
+16.2129 0.0328008
+18.2726 0.590414
+18.3489 0.0328008
+18.8829 0.360809
+18.9591 0.0328008
+20.1797 0.0328008
+20.256  0.0328008
+20.8663 1.34483
+20.9425 0.0328008
+21.858  0.229605
+21.9342 0.0984023
+22.0105 0.0328008
+22.8497 0.0328008
+26.3587 0.0656016
+27.5793 0.0984023
+27.9607 0.0328008
+29.105  0.0328008
+29.4101 0.0328008
+30.5544 0.0328008
+30.6307 0.0328008
+33.1481 0.0328008
+37.8777 0.0984023
+39.8611 0.0328008

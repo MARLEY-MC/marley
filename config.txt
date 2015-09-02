@@ -1,3 +1,3 @@
 seed 382928218
-structure z019 talys 40K 39K
-reaction ve40ArCC.react
+structure ensdf.040 ensdf 40K
+reaction ve40ArCC_1998.react
