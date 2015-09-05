@@ -30,10 +30,11 @@ class TMarleyNeutrinoSource {
       return type;
     }
 
-  private:
     // Toy model of supernova neutrino spectrum
     static double fermi_dirac_distribution(double T, double N_nu,
       double nu_energy);
+
+  private:
     // Normalization constant for Fermi-Dirac distribution
     static constexpr double C = 0.55;
     // Temperature offset for Fermi-Dirac distribution
