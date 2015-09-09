@@ -245,7 +245,10 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
   // Coulomb parameter
   double mu = get_fragment_reduced_mass(fragment_pid);
   int z = TMarleyMassTable::get_particle_Z(fragment_pid);
-  double k = std::sqrt(2.0 * mu * E) / marley_utils::hbar_c;
+  double k = marley_utils::real_sqrt(2.0 * mu * E) / marley_utils::hbar_c;
+  // If k == 0, then eta blows up, so use a really small k instead of zero
+  // (or a negative k due to roundoff error)
+  if (k <= 0) k = 1e-8; //DEBUG!
   double eta = mu * Z * z * marley_utils::e2 / (marley_utils::hbar_c2 * k);
 
   // Compute the Coulomb wavefunctions at the matching radii
