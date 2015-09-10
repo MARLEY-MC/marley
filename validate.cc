@@ -33,6 +33,7 @@ int main(){
 
     // Load the current event
     t->GetEntry(i);
+    //std::cout << std::endl << "Event " << i << std::endl;
 
     // Compute the sum of all of the initial particle total energies
     // for the current event
@@ -51,6 +52,7 @@ int main(){
       it != fparts->end(); ++it)
     {
       Ef += it->get_total_energy();
+      //std::cout << "Final particle: ID = " << it->get_id() << std::endl;
     }
 
     double change_in_E = Ef - Ei;

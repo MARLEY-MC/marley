@@ -8,6 +8,7 @@
 #include "marley_utils.hh"
 #include "TMarleyEvent.hh"
 #include "TMarleyGenerator.hh"
+#include "TMarleyKinematics.hh"
 #include "TMarleyLevel.hh"
 #include "TMarleyReaction.hh"
 
@@ -469,31 +470,26 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   // Compute the energy and scattering angle of the residue
   double Ed = Etot - Ec;
   double pc = marley_utils::real_sqrt(Ec*Ec - mc*mc);
-  double pd_before_deexcitation = marley_utils::real_sqrt(Ed*Ed - md*md);
-  double theta_d = std::asin(pc * std::sin(theta_c) / pd_before_deexcitation);
+  double pd = marley_utils::real_sqrt(Ed*Ed - md*md);
+  double theta_d = std::asin(pc * std::sin(theta_c) / pd);
   double cos_theta_d = std::cos(theta_d);
 
   // Sample an azimuthal scattering angle (phi) uniformly on [0, 2*pi).
   // We can do this because the matrix elements are azimuthally invariant
   double phi = gen.uniform_random_double(0, 2*marley_utils::pi, false);
 
-  // TODO: maybe consider the effect of nuclear recoils that happen when
-  // gammas/nucleons are emitted
-  // Compute the momentum of the residue when it reaches the ground state
-  double Ed_gs = Ed - E_level;
-  double pd_gs = marley_utils::real_sqrt(Ed_gs*Ed_gs - md_gs*md_gs);
-
   // Use the scattering angles to compute Cartesian 3-momentum components
   // for the ejectile and residue
   double pc_x = std::sin(theta_c)*std::cos(phi)*pc;
   double pc_y = std::sin(theta_c)*std::sin(phi)*pc;
   double pc_z = cos_theta_c*pc;
+
   // The residue scattering angle (theta_d) is measured
   // in the clockwise direction, so the x and y components
   // of the residue 3-momentum pick up minus signs (sin[-x] = -sin[x])
-  double pd_x_gs = -std::sin(theta_d)*std::cos(phi)*pd_gs;
-  double pd_y_gs = -std::sin(theta_d)*std::sin(phi)*pd_gs;
-  double pd_z_gs = cos_theta_d*pd_gs;
+  double pd_x = -std::sin(theta_d) * std::cos(phi) * pd;
+  double pd_y = -std::sin(theta_d) * std::sin(phi) * pd;
+  double pd_z = cos_theta_d * pd;
 
   // Print results to std::cout
   //std::cout.precision(15);
@@ -521,20 +517,18 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   // Add the ejectile to this event's final particle list
   event.add_final_particle(TMarleyParticle(pid_c, Ec, pc_x, pc_y, pc_z, mc),
     TMarleyEvent::ParticleRole::pr_ejectile);
+  // Add the residue to this event's final particle list.
+  event.add_final_particle(TMarleyParticle(pid_d, Ed, pd_x, pd_y, pd_z, md),
+    TMarleyEvent::ParticleRole::pr_residue);
 
   if (plevel != nullptr) {
     // The selected level is bound, so it will only decay via gamma emission.
-    // Add the residue to this event's final particle list. Don't include
-    // its excitation energy since we will soon create the de-excitation gamma rays
-    event.add_final_particle(TMarleyParticle(pid_d, Ed_gs, pd_x_gs, pd_y_gs, pd_z_gs, md_gs),
-      TMarleyEvent::ParticleRole::pr_residue);
-
     // Add the de-excitation gammas to this event's final particle list
     this->ds->do_cascade(plevel, &event, gen);
   }
   else {
     // The selected level is unbound, so handle nucleon emission, etc.
-    this->evaporate_particles(E_level, &event, Ed_gs, theta_d, phi, gen);
+    this->evaporate_particles(E_level, &event, Ed, theta_d, phi, gen);
   }
 
   // Return the completed event object
@@ -572,40 +566,32 @@ void TMarleyReaction::evaporate_particles(double E_level, TMarleyEvent* p_event,
   int pid_res = marley_utils::get_nucleus_pid(Zres, Ares);
   double m_res = TMarleyMassTable::get_atomic_mass(pid_res);
 
-  // TODO: correct the kinematics for this function to account for nuclear recoil, etc.
+  // Get the mass of the fragment
   double m_fragment = TMarleyMassTable::get_particle_mass(fragment_pid); 
-  double E_fragment = m_fragment + E_level - sep_energy;
-  double p_fragment = marley_utils::real_sqrt(E_fragment*E_fragment - m_fragment*m_fragment);
 
-  double E_res = Ed_gs - m_fragment + sep_energy;
-  double p_res = marley_utils::real_sqrt(E_res*E_res - m_res*m_res);
-  // The residue scattering angle (theta_d) is measured
-  // in the clockwise direction, so the x and y components
-  // of the residue 3-momentum pick up minus signs (sin[-x] = -sin[x])
-  double p_res_x = -std::sin(theta_res)*std::cos(phi_res)*p_res;
-  double p_res_y = -std::sin(theta_res)*std::sin(phi_res)*p_res;
-  double p_res_z = std::cos(theta_res)*p_res;
+  // Create particle objects to store the recoiling residue and the fragment
+  TMarleyParticle new_res(pid_res, m_res);
+  TMarleyParticle frag(fragment_pid, m_fragment);
 
-  // Add the final-state residue to this event's list of final particles
-  p_event->add_final_particle(TMarleyParticle(pid_res, E_res, p_res_x, p_res_y, p_res_z, m_res),
-    TMarleyEvent::ParticleRole::pr_residue);
-
+  // TODO: consider changing fragment emission so that it is anisotropic
   // Sample an azimuthal emission angle (phi) uniformly on [0, 2*pi).
   double phi_fragment = gen.uniform_random_double(0, 2*marley_utils::pi, false);
   // Sample a polar emission cosine (cos[theta]) uniformly on [-1, 1].
   double cos_theta_fragment = gen.uniform_random_double(-1, 1, true);
-  double theta_fragment = std::acos(cos_theta_fragment);
-  // Get the Cartesian components of the evaporated fragment's 3-momentum
-  double p_fragment_x = std::sin(theta_fragment)*std::cos(phi_fragment)*p_fragment;
-  double p_fragment_y = std::sin(theta_fragment)*std::sin(phi_fragment)*p_fragment;
-  double p_fragment_z = cos_theta_fragment*p_fragment;
+
+  // Load the particle objects with their correct final energies and momenta
+  // based on the two-body decay of the original nucleus
+  TMarleyKinematics::two_body_decay(*(p_event->get_residue()), frag, new_res,
+    cos_theta_fragment, phi_fragment);
+
+  // Update the residue to adjust for effects of fragment emission
+  TMarleyParticle* p_residue = p_event->get_residue();
+  *p_residue = new_res;
 
   // Add the evaporated fragment to this event's list of final particles
-  p_event->add_final_particle(TMarleyParticle(fragment_pid, E_fragment, p_fragment_x,
-    p_fragment_y, p_fragment_z, m_fragment));
+  p_event->add_final_particle(frag);
 
   // Add the evaporated fragment to the residue's children
-  TMarleyParticle* p_residue = p_event->get_residue();
   p_residue->add_child(&(p_event->get_final_particles()->back())); 
 }
 

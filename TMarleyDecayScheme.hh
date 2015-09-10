@@ -47,6 +47,7 @@ class TMarleyDecayScheme {
   private:
     int Z; // atomic number
     int A; // mass number
+    int pid; // particle ID number for this nucleus
     std::string nuc_id;
     std::list<TMarleyLevel> levels;
     std::vector<TMarleyLevel*> pv_sorted_levels;

@@ -8,6 +8,7 @@
 #include "marley_utils.hh"
 #include "TMarleyDecayScheme.hh"
 #include "TMarleyGenerator.hh"
+#include "TMarleyKinematics.hh"
 #include "TMarleyNuclearPhysics.hh"
 
 // Default level parity is +
@@ -89,34 +90,42 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
       //std::cout.precision(15);
       //std::cout << std::scientific;
       //std::cout << "gamma energy = " << p_gamma->get_energy() << std::endl;
+
+      // Get the excitation energy of the end level. This will be added to
+      // the ground state mass of the nucleus to determine its
+      // post-gamma-emission mass.
+      double Exf = p_current_level->get_energy();
+
+      // Create new particle objects to represent the emitted gamma and
+      // recoiling nucleus
+      TMarleyParticle gamma(marley_utils::PHOTON, 0);
+      TMarleyParticle nucleus(pid, TMarleyMassTable::get_atomic_mass(pid)
+        + Exf);
       
       // Add the gamma to the event object as a final particle. Note that
       // photons have a particle id number of 22
       double gamma_energy = p_gamma->get_energy();
 
       // Sample a direction assuming that the gammas are emitted
-      // isotropically in the nucleus's rest frame. Also don't bother
-      // to do a Lorentz boost to the lab frame (the nucleus is moving
-      // nonrelativistically, and it will likely collide with other
-      // nuclei before emitting some of the gammas anyway)
-      // sample from [-1,1]
-      double gamma_cos_theta = gen.uniform_random_double(-1, 1, true);
-      double gamma_theta = std::acos(gamma_cos_theta);
+      // isotropically in the nucleus's rest frame.
+      double gamma_cos_theta = gen.uniform_random_double(-1, 1, true); // sample from [-1,1]
+      double gamma_phi = gen.uniform_random_double(0, 2*marley_utils::pi, false); // sample from [0,2*pi)
 
-      // sample from [0,2*pi)
-      double gamma_phi = gen.uniform_random_double(0, 2*marley_utils::pi, false);
+      TMarleyParticle* p_residue = p_event->get_residue();
 
-      // Compute 3-momentum components using the sampled angles
-      double gamma_px = std::sin(gamma_theta)*std::cos(gamma_phi)*gamma_energy;
-      double gamma_py = std::sin(gamma_theta)*std::sin(gamma_phi)*gamma_energy;
-      double gamma_pz = gamma_cos_theta*gamma_energy;
-      
+      // Determine the final energies and momenta for the recoiling nucleus and
+      // emitted gamma ray. Store them in the final state particle objects.
+      TMarleyKinematics::two_body_decay(*p_residue, gamma, nucleus,
+        gamma_cos_theta, gamma_phi);
+
+      // Update the residue for this event to take into account changes from
+      // gamma ray emission
+      *p_residue = nucleus;
+
       // Add the new gamma to the event
-      p_event->add_final_particle(TMarleyParticle(22, gamma_energy, gamma_px,
-        gamma_py, gamma_pz, 0));
+      p_event->add_final_particle(gamma);
 
       // Add this gamma to the residue's children
-      TMarleyParticle* p_residue = p_event->get_residue();
       p_residue->add_child(&(p_event->get_final_particles()->back()));
     }
   }
@@ -128,9 +137,10 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
 TMarleyDecayScheme::TMarleyDecayScheme(int z, int a, std::string filename,
   TMarleyDecayScheme::FileFormat ff)
 {
-  Z = Z;
+  Z = z;
   A = a;
   nuc_id = marley_utils::nuc_id(z, a);
+  pid = marley_utils::get_nucleus_pid(z, a);
   parse(filename, ff);
 }
 
@@ -146,6 +156,8 @@ TMarleyDecayScheme::TMarleyDecayScheme(std::string nucid, std::string filename,
   A = std::stoi(nucid.substr(0,3));
   // Get the atomic number from the nucid using the element symbol
   Z = marley_utils::nucid_to_Z(nucid);
+  // Get the particle id number based on Z and A
+  pid = marley_utils::get_nucleus_pid(Z, A);
   // Parse the data file
   parse(filename, ff);
 }
