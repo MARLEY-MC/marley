@@ -268,18 +268,22 @@ double TMarleyReaction::ejectile_energy(double E_level, double Ea, double cos_th
   double md = md_gs + E_level;
 
   double Etot = Ea + mb;
+  double Etot2 = std::pow(Etot, 2);
+
+  double mc2 = std::pow(mc, 2);
+  double md2 = std::pow(md, 2);
+  double ctc2 = std::pow(cos_theta_c, 2);
 
   // Squared 3-momentum of the projectile
-  double p2a = Ea*Ea - ma*ma;
+  double p2a = std::pow(Ea, 2) - std::pow(ma, 2);
 
   // Quadratic formula coefficients from 4-momentum
   // conservation solution in the lab frame
-  double A = 4*Etot*Etot - 4*p2a*cos_theta_c*cos_theta_c;
+  double A = 4*Etot2 - 4*p2a*ctc2;
 
-  double B = 4*Etot*(md*md + p2a - mc*mc - Etot*Etot);
+  double B = 4*Etot*(md2 + p2a - mc2 - Etot2);
 
-  double C = std::pow((Etot*Etot + mc*mc - md*md - p2a), 2)
-    + 4*mc*mc*p2a*cos_theta_c*cos_theta_c;
+  double C = std::pow((Etot2 + mc2 - md2 - p2a), 2) + 4*mc2*p2a*ctc2;
 
   // There are two solutions of the quadratic equation 
   // that correspond to forward and backward scattering
@@ -423,15 +427,6 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   // level sampling distribution
   std::discrete_distribution<unsigned int>::param_type params(level_weights.begin(),
     level_weights.end());
-
-  //DEBUG
-  //std::vector<double> probs = params.probabilities();
-  //for (auto& n : probs)
-  //{
-  //  int i = &n - &(probs[0]);
-  //  std::cout << "DEBUG: level at " << residue_level_pointers.at(i)->get_energy()
-  //    << " MeV has probability " << n << " of being selected" << std::endl;
-  //}
 
   // Sample a level index using our discrete distribution and the
   // current set of weights
