@@ -1,17 +1,45 @@
 #pragma once
+#include <cmath>
 #include <vector>
 
 class TMarleyParticle {
   public:
     TMarleyParticle();
+    TMarleyParticle(int id, double m);
+    TMarleyParticle(int id, double p_x, double p_y, double p_z, double m);
     TMarleyParticle(int id, double E, double p_x, double p_y, double p_z, double m);
     double get_total_energy() const;
+
+    inline void set_total_energy(double Etot) {
+      total_energy = Etot;
+    }
+
     double get_mass() const;
     void add_child(TMarleyParticle* child);
     double get_px() const;
+
+    inline void set_px(double p_x) {
+      px = p_x;
+    }
+
     double get_py() const;
+
+    inline void set_py(double p_y) {
+      py = p_y;
+    }
+
     double get_pz() const;
+
+    inline void set_pz(double p_z) {
+      pz = p_z;
+    }
+
     int get_id() const;
+
+    inline double get_momentum_magnitude() const {
+      return std::sqrt(std::pow(px, 2) + std::pow(py, 2) + std::pow(pz, 2));
+    }
+
     std::vector<TMarleyParticle*>* get_children();
 
   private:
