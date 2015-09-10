@@ -8,7 +8,7 @@ OBJ += TMarleyDecayScheme.o
 OBJ += TMarleyMassTable.o TMarleyStructureDatabase.o TMarleyConfigFile.o
 OBJ += TMarleyNuclearPhysics.o TMarleyBackshiftedFermiGasModel.o
 OBJ += TMarleySphericalOpticalModel.o TMarleyIntegrator.o
-OBJ += TMarleyNeutrinoSource.o
+OBJ += TMarleyNeutrinoSource.o TMarleyKinematics.o
 
 ifdef USE_ROOT
 # Adding the g++ compiler option -DUSE_ROOT to the CXXFLAGS
@@ -44,7 +44,7 @@ validate: $(OBJ) $(OBJ_DICT) validate.o
 check: $(OBJ) $(OBJ_DICT) check.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-mass: $(OBJ) mass.o
+check_kinem: $(OBJ) check_kinem.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 plots: $(OBJ) $(OBJ_DICT) plots.o

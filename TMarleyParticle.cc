@@ -15,6 +15,28 @@ TMarleyParticle::TMarleyParticle() {
   mass = 0.0;
 }
 
+TMarleyParticle::TMarleyParticle(int id, double m) {
+  particle_id = id;
+  total_energy = m;
+  px = 0.0;
+  py = 0.0;
+  pz = 0.0;
+  mass = m;
+}
+
+TMarleyParticle::TMarleyParticle(int id, double p_x,
+  double p_y, double p_z, double m)
+{
+  particle_id = id;
+  px = p_x;
+  py = p_y;
+  pz = p_z;
+  mass = m;
+  total_energy = std::sqrt(std::pow(p_x, 2)
+    + std::pow(p_y, 2) + std::pow(p_z, 2)
+    + std::pow(m, 2));
+}
+
 TMarleyParticle::TMarleyParticle(int id, double E, double p_x,
   double p_y, double p_z, double m)
 {
