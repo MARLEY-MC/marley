@@ -31,11 +31,10 @@ void TMarleyKinematics::rotate_momentum_vector(double x, double y, double z,
 void TMarleyKinematics::lorentz_boost(double beta_x, double beta_y,
   double beta_z, TMarleyParticle& particle_to_boost)
 {
-  double beta2 = std::pow(beta_x, 2) + std::pow(beta_y, 2)
-    + std::pow(beta_z, 2);
+  double beta2 = get_beta2(beta_x, beta_y, beta_z);
+
   // If beta is zero in all directions, then we don't need to do the boost at all
   if (beta2 == 0) return;
-  // TODO: add error check that beta2 < 1
 
   // Calculate the Lorentz factor based on the boost velocity
   double gamma = 1 / std::sqrt(1 - beta2);
@@ -150,3 +149,73 @@ void TMarleyKinematics::two_body_decay(const TMarleyParticle& initial_particle,
   lorentz_boost(beta_x, beta_y, beta_z, first_product);
   lorentz_boost(beta_x, beta_y, beta_z, second_product);
 }
+
+// Get the square of the total energy of two particles in their center of
+// momentum frame
+double TMarleyKinematics::get_mandelstam_s(const TMarleyParticle& p1,
+  const TMarleyParticle& p2)
+{
+  double E1 = p1.get_total_energy();
+  double m1 = p1.get_mass();
+  double E2 = p2.get_total_energy();
+  double m2 = p2.get_mass();
+
+  // If one of the particles is at rest, use a shortcut. Otherwise,
+  // Lorentz transform to the center of momentum frame to determine
+  // the total cm frame energy
+  if (E1 == m1) return std::pow(m1, 2) + std::pow(m2, 2) + 2 * m1 * E2;
+  else if (E2 == m2) return std::pow(m1, 2) + std::pow(m2, 2) + 2 * m2 * E1;
+  else {
+    // Get total energy, momentum, and mass values for the two particles
+    double E_tot = E1 + E2;
+    double px_tot = p1.get_px() + p2.get_px();
+    double py_tot = p1.get_py() + p2.get_py();
+    double pz_tot = p1.get_pz() + p2.get_pz();
+    double m_tot = m1 + m2;
+
+    // Get boost parameters for a Lorentz transform to the center of momentum
+    // frame
+    double beta_x = px_tot / E_tot;
+    double beta_y = py_tot / E_tot;
+    double beta_z = pz_tot / E_tot;
+
+    // Calculate the Lorentz factor based on the boost velocity
+    double beta2 = get_beta2(beta_x, beta_y, beta_z);
+    double gamma = 1 / std::sqrt(1 - beta2);
+
+    // Compute the total boosted energy in the cm frame
+    double beta_dot_p_tot = beta_x * px_tot + beta_y * py_tot + beta_z * pz_tot;
+    double E_tot_cm = gamma * (E_tot - beta_dot_p_tot);
+
+    // The new energy could conceivably dip slightly below the total rest mass
+    // of the particles due to roundoff errors. If this is the case,
+    // set it to the total rest mass.
+    if (E_tot_cm < m_tot) E_tot_cm = m_tot;
+
+    return std::pow(E_tot_cm, 2);
+  }
+}
+
+//// Compute final particle energies and momenta for the two-two scattering
+//// reaction b(a,c)d and store the results in particles c and d. Note that
+//// particles a and b are passed by value so that we can Lorentz boost
+//// them to the center-of-momentum frame without altering the originals.
+//void TMarleyKinematics::two_two_scatter(TMarleyParticle a, TMarleyParticle b,
+//  TMarleyParticle &c, TMarleyParticle &d, double cos_theta_c, double phi_c)
+//{
+//  // Get total energy and momentum values for the two initial particles
+//  double E_tot = a.get_total_energy() + b.get_total_energy();
+//  double px_tot = a.get_px() + b.get_px();
+//  double py_tot = a.get_py() + b.get_py();
+//  double pz_tot = a.get_pz() + b.get_pz();
+//
+//  // Boost both initial particles into the center of momentum frame
+//  double beta_x = px_tot / E_tot;
+//  double beta_y = py_tot / E_tot;
+//  double beta_z = pz_tot / E_tot;
+//  lorentz_boost(beta_x, beta_y, beta_z, a);
+//  lorentz_boost(beta_x, beta_y, beta_z, b);
+//
+//  // Get the total center of mass energy
+//  double E_tot_cm = a.get_total_energy() + b.get_total_energy();
+//}
