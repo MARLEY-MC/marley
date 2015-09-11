@@ -20,4 +20,24 @@ class TMarleyKinematics {
     // Rotates a particle's 3-momentum so that it points in the (x, y, z) direction
     static void rotate_momentum_vector(double x, double y, double z,
       TMarleyParticle& particle_to_rotate);
+
+    // Gets the square of the total energy in the center of momentum frame for
+    // two particles
+    static double get_mandelstam_s(const TMarleyParticle& p1,
+      const TMarleyParticle& p2);
+
+  private:
+    inline static double get_beta2(double beta_x, double beta_y,
+      double beta_z)
+    {
+      double beta2 = std::pow(beta_x, 2) + std::pow(beta_y, 2)
+        + std::pow(beta_z, 2);
+      if (beta2 == 1) throw std::runtime_error(std::string("Cannot perform")
+        + " Lorentz boost because \u03B2^2 = 1 and therefore the Lorentz factor"
+        + "\u03B3 is infinite.");
+      else if (beta2 > 1) throw std::runtime_error(std::string("Cannot perform")
+        + " Lorentz boost because \u03B2^2 = " + std::to_string(beta2) + " > 1,"
+        + " which is unphysical.");
+      return beta2;
+    }
 };

@@ -367,7 +367,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   // TODO: add more error checks as necessary
   
   // The pointers in residue_level_pointers are ordered by increasing energy
-  // (this currently enforced by the reaction data format and is checked
+  // (this is currently enforced by the reaction data format and is checked
   // during parsing). Iterate over the levels, assigning the total cross section
   // for each level as its weight until you reach the end of residue_level_pointers
   // or a level that is kinematically forbidden. If the matrix element B(F) + B(GT)
@@ -615,7 +615,7 @@ double TMarleyReaction::differential_xs(double E_level, double Ea,
   // for sampling, they will not be needed (what matters is the
   // relative size of the differential cross section).
   // This might reduce numerical error.
-  return (1.0/(2*std::acos(-1)))// * std::pow(GF, 2) * std::pow(Vud, 2)
+  return (1.0/(2*marley_utils::pi))// * std::pow(GF, 2) * std::pow(Vud, 2)
     *pc*Ec*fermi_function(Zf, Af, Ec, true)*matrix_element
     /(1.0 + (Ea/mb)*(1 - (Ec/pc)*cos_theta_c));
 }
