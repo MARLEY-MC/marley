@@ -44,38 +44,55 @@ void prepare_integrated_bgts(const std::vector<double>& Es,
 
 int main(){
 
-  //// Create plot of total reaction cross section
-  //std::vector<double> Eas;
-  //std::vector<double> tot_xs;
-  //std::cout << std::setprecision(16) << std::scientific;
-  //TMarleyDecayScheme ds(19, 40, "ensdf.040");
-  //TMarleyReaction r("ve40ArCC_1998.react", &ds);
-  //for (double Ea = 4.4; Ea < 60; Ea += 0.1) {
-  //  Eas.push_back(Ea);
-  //  tot_xs.push_back(1e12 * r.total_xs(Ea) / marley_utils::mb); // fb
-  //}
+  // Create plot of total reaction cross section
+  std::vector<double> Eas;
+  std::vector<double> tot_xs;
+  std::vector<double> tot_xs_cm;
+  //std::vector<double> tot_xs_diffs;
+  std::cout << std::setprecision(16) << std::scientific;
+  TMarleyDecayScheme ds(19, 40, "ensdf.040");
+  TMarleyReaction r("ve40ArCC_1998.react", &ds);
+  for (double Ea = 4.4; Ea < 60; Ea += 0.1) {
+    Eas.push_back(Ea);
+    tot_xs.push_back(1e12 * r.total_xs(Ea) / marley_utils::mb); // fb
+    tot_xs_cm.push_back(1e12 * r.total_xs_cm(Ea) / marley_utils::mb); // fb
+  }
 
-  //TGraph xs(tot_xs.size(), &Eas.front(), &tot_xs.front());
-  //xs.SetLineColor(4);
-  //xs.SetLineWidth(3);
+  //for (int i = 0; i < tot_xs.size(); ++i)
+  //  tot_xs_diffs.push_back(tot_xs[i] - tot_xs_cm[i]);
+
+  TGraph xs(tot_xs.size(), &Eas.front(), &tot_xs.front());
+  xs.SetLineColor(4);
+  xs.SetLineWidth(3);
+
+  TGraph xs_cm(tot_xs_cm.size(), &Eas.front(), &tot_xs_cm.front());
+  xs_cm.SetLineColor(2);
+  xs_cm.SetLineStyle(2);
+  xs_cm.SetLineWidth(3);
+
+  //TGraph xs_diffs(tot_xs_diffs.size(), &Eas.front(), &tot_xs_diffs.front());
+  //xs_diffs.SetLineColor(4);
+  //xs_diffs.SetLineWidth(3);
 
   TCanvas canvas;
 
-  //xs.Draw("AL");
+  //xs_diffs.Draw("AL");
+  xs.Draw("AL");
+  xs.SetTitle("Total Cross Section for CC   #nu_{e} on  ^{40}Ar");
+  xs.GetXaxis()->SetTitle("Neutrino Energy (MeV)");
+  xs.GetXaxis()->CenterTitle();
+  xs.GetXaxis()->SetTitleOffset(1.3);
+  xs.GetYaxis()->SetTitle("Cross Section (fb)");
+  xs.GetYaxis()->CenterTitle();
 
-  //xs.SetTitle("Total Cross Section for CC   #nu_{e} on  ^{40}Ar");
-  //xs.GetXaxis()->SetTitle("Neutrino Energy (MeV)");
-  //xs.GetXaxis()->CenterTitle();
-  //xs.GetXaxis()->SetTitleOffset(1.3);
-  //xs.GetYaxis()->SetTitle("Cross Section (fb)");
-  //xs.GetYaxis()->CenterTitle();
+  xs_cm.Draw("L");
 
-  ////canvas.SetLogy();
+  canvas.SetLogy();
 
-  //canvas.SaveAs("xs.pdf");
+  canvas.SaveAs("xs.pdf");
 
-  //canvas.Clear();
-  ////return 0;
+  canvas.Clear();
+  return 0;
 
   //// Create plot of B(GT) strength
   //std::vector<double> cheoun2012_Exs_40K;

@@ -621,6 +621,63 @@ double TMarleyReaction::differential_xs(double E_level, double Ea,
 }
 
 // Compute the total reaction cross section (including all final nuclear levels)
+// in units of MeV^(-2) using the center of mass frame.
+double TMarleyReaction::total_xs_cm(double Ea) {
+  double max_E_level = max_level_energy(Ea);
+  double xs = 0;
+  for(unsigned int i = 0; i < residue_level_pointers.size(); ++i) {
+
+    double level_energy;
+
+    // Get the excitation energy for the current level
+    if (residue_level_pointers[i] != nullptr) {
+      level_energy = residue_level_pointers[i]->get_energy();
+    }
+    else {
+      // Level is unbound, so just use the energy given in the reaction dataset
+      // rather than trying to find its ENSDF version
+      level_energy = residue_level_energies[i];
+    }
+
+    // Exit the loop early if you reach a level with an energy that's too high
+    if (level_energy > max_E_level) break;
+
+    // Check whether the matrix element (B(F) + B(GT)) is nonvanishing for the
+    // current level. If it is, just set the weight equal to zero rather than
+    // computing the total xs.
+    double matrix_el = residue_level_strengths[i];
+
+    if (matrix_el == 0) {
+      xs += 0;
+    }
+    else {
+      // If the matrix element is nonzero, assign a weight to this level equal
+      // to the total reaction cross section. Note that std::discrete_distribution
+      // automatically normalizes the weights, so we don't have to do that ourselves.
+
+      double ma2 = std::pow(ma, 2);
+      double mb2 = std::pow(mb, 2);
+      double mc2 = std::pow(mc, 2);
+      double md2 = std::pow(md_gs + level_energy, 2);
+
+      // Compute Mandelstam s (the square of the total CM frame energy)
+      double s = ma2 + mb2 + 2 * mb * Ea;
+      double sqrt_s = std::sqrt(s);
+
+      // Compute CM frame energies for two of the particles. Also
+      // compute the ejectile CM frame momentum.
+      double Eb_cm = (s + mb2 - ma2) / (2 * sqrt_s);
+      double Ec_cm = (s + mc2 - md2) / (2 * sqrt_s);
+      double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2);
+
+      xs += fermi_function(Zf, Af, Ec_cm, true) * matrix_el * pc_cm * Ec_cm
+        * Eb_cm * (sqrt_s - Ec_cm) / s;
+    }
+  }
+  return std::pow(GF, 2) * std::pow(Vud, 2) * xs / marley_utils::pi;
+}
+
+// Compute the total reaction cross section (including all final nuclear levels)
 // in units of MeV^(-2)
 double TMarleyReaction::total_xs(double Ea) {
   double max_E_level = max_level_energy(Ea);
