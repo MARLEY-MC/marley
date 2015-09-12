@@ -102,9 +102,7 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
       TMarleyParticle nucleus(pid, TMarleyMassTable::get_atomic_mass(pid)
         + Exf);
       
-      // Add the gamma to the event object as a final particle. Note that
-      // photons have a particle id number of 22
-      double gamma_energy = p_gamma->get_energy();
+      //double gamma_energy = p_gamma->get_energy();
 
       // Sample a direction assuming that the gammas are emitted
       // isotropically in the nucleus's rest frame.
