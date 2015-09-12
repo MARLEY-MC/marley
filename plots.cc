@@ -33,7 +33,7 @@ void prepare_integrated_bgts(const std::vector<double>& Es,
   for (double e = 0.; e <= max_E; e += 0.1) {
     double ibgt = 0.;
     plot_Es.push_back(e);
-    for (int j = 0; j < Es.size(); ++j) {
+    for (size_t j = 0; j < Es.size(); ++j) {
       double Enew = Es.at(j);
       if (Enew >= e) break;
       ibgt += bgts.at(j);
@@ -47,15 +47,13 @@ int main(){
   // Create plot of total reaction cross section
   std::vector<double> Eas;
   std::vector<double> tot_xs;
-  std::vector<double> tot_xs_cm;
   //std::vector<double> tot_xs_diffs;
   std::cout << std::setprecision(16) << std::scientific;
   TMarleyDecayScheme ds(19, 40, "ensdf.040");
   TMarleyReaction r("ve40ArCC_1998.react", &ds);
   for (double Ea = 4.4; Ea < 60; Ea += 0.1) {
     Eas.push_back(Ea);
-    tot_xs.push_back(1e12 * r.total_xs(Ea) / marley_utils::mb); // fb
-    tot_xs_cm.push_back(1e12 * r.total_xs_cm(Ea) / marley_utils::mb); // fb
+    tot_xs.push_back(1e12 * r.total_xs_cm(Ea) / marley_utils::mb); // fb
   }
 
   //for (int i = 0; i < tot_xs.size(); ++i)
@@ -64,11 +62,6 @@ int main(){
   TGraph xs(tot_xs.size(), &Eas.front(), &tot_xs.front());
   xs.SetLineColor(4);
   xs.SetLineWidth(3);
-
-  TGraph xs_cm(tot_xs_cm.size(), &Eas.front(), &tot_xs_cm.front());
-  xs_cm.SetLineColor(2);
-  xs_cm.SetLineStyle(2);
-  xs_cm.SetLineWidth(3);
 
   //TGraph xs_diffs(tot_xs_diffs.size(), &Eas.front(), &tot_xs_diffs.front());
   //xs_diffs.SetLineColor(4);
@@ -85,132 +78,131 @@ int main(){
   xs.GetYaxis()->SetTitle("Cross Section (fb)");
   xs.GetYaxis()->CenterTitle();
 
-  xs_cm.Draw("L");
-
-  canvas.SetLogy();
+  canvas.SetLogy(1);
 
   canvas.SaveAs("xs.pdf");
 
   canvas.Clear();
-  return 0;
+  canvas.SetLogy(0);
+  //return 0;
 
-  //// Create plot of B(GT) strength
-  //std::vector<double> cheoun2012_Exs_40K;
-  //std::vector<double> cheoun2012_bgts;
-  //std::vector<double> bhattacharya1998_Exs_40K;
-  //std::vector<double> bhattacharya1998_bgts;
-  //std::vector<double> bhattacharya2009_Exs_40K;
-  //std::vector<double> bhattacharya2009_bgts;
-  //std::vector<double> accepted1998_Exs_40K;
-  //std::vector<double> accepted1998_bgts;
-  //std::vector<double> accepted2009_Exs_40K;
-  //std::vector<double> accepted2009_bgts;
-  //double Ex, bgt;
+  // Create plot of B(GT) strength
+  std::vector<double> cheoun2012_Exs_40K;
+  std::vector<double> cheoun2012_bgts;
+  std::vector<double> bhattacharya1998_Exs_40K;
+  std::vector<double> bhattacharya1998_bgts;
+  std::vector<double> bhattacharya2009_Exs_40K;
+  std::vector<double> bhattacharya2009_bgts;
+  std::vector<double> accepted1998_Exs_40K;
+  std::vector<double> accepted1998_bgts;
+  std::vector<double> accepted2009_Exs_40K;
+  std::vector<double> accepted2009_bgts;
+  double Ex, bgt;
 
-  //std::ifstream file1("cheoun2012/bgt_qrpa_calc_cheoun2012");
-  //while (file1 >> Ex >> bgt) {
-  //  cheoun2012_Exs_40K.push_back(Ex);
-  //  cheoun2012_bgts.push_back(bgt);
-  //}
+  std::ifstream file1("cheoun2012/bgt_qrpa_calc_cheoun2012");
+  while (file1 >> Ex >> bgt) {
+    cheoun2012_Exs_40K.push_back(Ex);
+    cheoun2012_bgts.push_back(bgt);
+  }
 
-  //ifstream file2("cheoun2012/bgt_data_bhattacharya1998");
-  //while (file2 >> Ex >> bgt) {
-  //  bhattacharya1998_Exs_40K.push_back(Ex);
-  //  bhattacharya1998_bgts.push_back(bgt);
-  //}
+  ifstream file2("cheoun2012/bgt_data_bhattacharya1998");
+  while (file2 >> Ex >> bgt) {
+    bhattacharya1998_Exs_40K.push_back(Ex);
+    bhattacharya1998_bgts.push_back(bgt);
+  }
 
-  //ifstream file3("cheoun2012/bgt_data_bhattacharya2009");
-  //while (file3 >> Ex >> bgt) {
-  //  bhattacharya2009_Exs_40K.push_back(Ex);
-  //  bhattacharya2009_bgts.push_back(bgt);
-  //}
+  ifstream file3("cheoun2012/bgt_data_bhattacharya2009");
+  while (file3 >> Ex >> bgt) {
+    bhattacharya2009_Exs_40K.push_back(Ex);
+    bhattacharya2009_bgts.push_back(bgt);
+  }
 
-  //ifstream file4("cheoun2012/accepted_bgt_data_exp1998");
-  //while (file4 >> Ex >> bgt) {
-  //  accepted1998_Exs_40K.push_back(Ex);
-  //  accepted1998_bgts.push_back(bgt);
-  //}
+  ifstream file4("cheoun2012/accepted_bgt_data_exp1998");
+  while (file4 >> Ex >> bgt) {
+    accepted1998_Exs_40K.push_back(Ex);
+    accepted1998_bgts.push_back(bgt);
+  }
 
-  //ifstream file5("cheoun2012/accepted_bgt_data_exp2009");
-  //while (file5 >> Ex >> bgt) {
-  //  accepted2009_Exs_40K.push_back(Ex);
-  //  accepted2009_bgts.push_back(bgt);
-  //}
+  ifstream file5("cheoun2012/accepted_bgt_data_exp2009");
+  while (file5 >> Ex >> bgt) {
+    accepted2009_Exs_40K.push_back(Ex);
+    accepted2009_bgts.push_back(bgt);
+  }
 
-  //std::vector<double> cheoun2012_plot_Es;
-  //std::vector<double> cheoun2012_plot_ibgts;
-  //prepare_integrated_bgts(cheoun2012_Exs_40K, cheoun2012_bgts,
-  //  cheoun2012_plot_Es, cheoun2012_plot_ibgts, 60.1);
-  //TGraph cheoun2012(cheoun2012_plot_Es.size(),
-  //  &cheoun2012_plot_Es.front(), &cheoun2012_plot_ibgts.front());
-  //cheoun2012.SetLineColor(3);
-  //cheoun2012.SetLineWidth(3);
+  std::vector<double> cheoun2012_plot_Es;
+  std::vector<double> cheoun2012_plot_ibgts;
+  prepare_integrated_bgts(cheoun2012_Exs_40K, cheoun2012_bgts,
+    cheoun2012_plot_Es, cheoun2012_plot_ibgts, 60.1);
+  TGraph cheoun2012(cheoun2012_plot_Es.size(),
+    &cheoun2012_plot_Es.front(), &cheoun2012_plot_ibgts.front());
+  cheoun2012.SetLineColor(3);
+  cheoun2012.SetLineWidth(3);
 
-  //std::vector<double> bhattacharya1998_plot_Es;
-  //std::vector<double> bhattacharya1998_plot_ibgts;
-  //prepare_integrated_bgts(bhattacharya1998_Exs_40K, bhattacharya1998_bgts,
-  //  bhattacharya1998_plot_Es, bhattacharya1998_plot_ibgts,
-  //  bhattacharya1998_Exs_40K.back() + 0.2);
-  //TGraph bhattacharya1998(bhattacharya1998_plot_Es.size(),
-  //  &bhattacharya1998_plot_Es.front(), &bhattacharya1998_plot_ibgts.front());
-  //bhattacharya1998.SetLineColor(4);
-  //bhattacharya1998.SetLineWidth(3);
+  std::vector<double> bhattacharya1998_plot_Es;
+  std::vector<double> bhattacharya1998_plot_ibgts;
+  prepare_integrated_bgts(bhattacharya1998_Exs_40K, bhattacharya1998_bgts,
+    bhattacharya1998_plot_Es, bhattacharya1998_plot_ibgts,
+    bhattacharya1998_Exs_40K.back() + 0.2);
+  TGraph bhattacharya1998(bhattacharya1998_plot_Es.size(),
+    &bhattacharya1998_plot_Es.front(), &bhattacharya1998_plot_ibgts.front());
+  bhattacharya1998.SetLineColor(4);
+  bhattacharya1998.SetLineWidth(3);
 
-  //std::vector<double> bhattacharya2009_plot_Es;
-  //std::vector<double> bhattacharya2009_plot_ibgts;
-  //prepare_integrated_bgts(bhattacharya2009_Exs_40K, bhattacharya2009_bgts,
-  //  bhattacharya2009_plot_Es, bhattacharya2009_plot_ibgts,
-  //  bhattacharya2009_Exs_40K.back() + 0.2);
-  //TGraph bhattacharya2009(bhattacharya2009_plot_Es.size(),
-  //  &bhattacharya2009_plot_Es.front(), &bhattacharya2009_plot_ibgts.front());
-  //bhattacharya2009.SetLineColor(2);
-  //bhattacharya2009.SetLineWidth(3);
+  std::vector<double> bhattacharya2009_plot_Es;
+  std::vector<double> bhattacharya2009_plot_ibgts;
+  prepare_integrated_bgts(bhattacharya2009_Exs_40K, bhattacharya2009_bgts,
+    bhattacharya2009_plot_Es, bhattacharya2009_plot_ibgts,
+    bhattacharya2009_Exs_40K.back() + 0.2);
+  TGraph bhattacharya2009(bhattacharya2009_plot_Es.size(),
+    &bhattacharya2009_plot_Es.front(), &bhattacharya2009_plot_ibgts.front());
+  bhattacharya2009.SetLineColor(2);
+  bhattacharya2009.SetLineWidth(3);
 
-  //TColor saddle_brown(1756, 0.545098, 0.270588, 0.0745098);
-  //std::vector<double> accepted1998_plot_Es;
-  //std::vector<double> accepted1998_plot_ibgts;
-  //prepare_integrated_bgts(accepted1998_Exs_40K, accepted1998_bgts,
-  //  accepted1998_plot_Es, accepted1998_plot_ibgts, 60.1);
-  //TGraph accepted1998(accepted1998_plot_Es.size(),
-  //  &accepted1998_plot_Es.front(), &accepted1998_plot_ibgts.front());
-  //accepted1998.SetLineColor(1756);
-  //accepted1998.SetLineWidth(3);
-  //accepted1998.SetLineStyle(2);
+  TColor saddle_brown(1756, 0.545098, 0.270588, 0.0745098);
+  std::vector<double> accepted1998_plot_Es;
+  std::vector<double> accepted1998_plot_ibgts;
+  prepare_integrated_bgts(accepted1998_Exs_40K, accepted1998_bgts,
+    accepted1998_plot_Es, accepted1998_plot_ibgts, 60.1);
+  TGraph accepted1998(accepted1998_plot_Es.size(),
+    &accepted1998_plot_Es.front(), &accepted1998_plot_ibgts.front());
+  accepted1998.SetLineColor(1756);
+  accepted1998.SetLineWidth(3);
+  accepted1998.SetLineStyle(2);
 
-  //std::vector<double> accepted2009_plot_Es;
-  //std::vector<double> accepted2009_plot_ibgts;
-  //prepare_integrated_bgts(accepted2009_Exs_40K, accepted2009_bgts,
-  //  accepted2009_plot_Es, accepted2009_plot_ibgts, 60.1);
-  //TGraph accepted2009(accepted2009_plot_Es.size(),
-  //  &accepted2009_plot_Es.front(), &accepted2009_plot_ibgts.front());
-  //accepted2009.SetLineColor(1);
-  //accepted2009.SetLineWidth(3);
-  //accepted2009.SetLineStyle(2);
+  std::vector<double> accepted2009_plot_Es;
+  std::vector<double> accepted2009_plot_ibgts;
+  prepare_integrated_bgts(accepted2009_Exs_40K, accepted2009_bgts,
+    accepted2009_plot_Es, accepted2009_plot_ibgts, 60.1);
+  TGraph accepted2009(accepted2009_plot_Es.size(),
+    &accepted2009_plot_Es.front(), &accepted2009_plot_ibgts.front());
+  accepted2009.SetLineColor(1);
+  accepted2009.SetLineWidth(3);
+  accepted2009.SetLineStyle(2);
 
-  //cheoun2012.Draw("AL");
-  //cheoun2012.SetTitle("Integrated Gamow-Teller Strength for CC   #nu_{e} on  ^{40}Ar");
-  //cheoun2012.GetXaxis()->SetTitle("^{40}K* Excitation Energy (MeV)");
-  //cheoun2012.GetXaxis()->CenterTitle();
-  //cheoun2012.GetXaxis()->SetTitleOffset(1.3);
-  //cheoun2012.GetYaxis()->SetTitle("Integrated B(GT)");
-  //cheoun2012.GetYaxis()->CenterTitle();
+  cheoun2012.Draw("AL");
+  cheoun2012.SetTitle("Integrated Gamow-Teller Strength for CC   #nu_{e} on  ^{40}Ar");
+  cheoun2012.GetXaxis()->SetTitle("^{40}K* Excitation Energy (MeV)");
+  cheoun2012.GetXaxis()->CenterTitle();
+  cheoun2012.GetXaxis()->SetTitleOffset(1.3);
+  cheoun2012.GetYaxis()->SetTitle("Integrated B(GT)");
+  cheoun2012.GetYaxis()->CenterTitle();
 
-  //bhattacharya1998.Draw("L");
-  //bhattacharya2009.Draw("L");
-  //accepted1998.Draw("L");
-  //accepted2009.Draw("L");
+  bhattacharya1998.Draw("L");
+  bhattacharya2009.Draw("L");
+  accepted1998.Draw("L");
+  accepted2009.Draw("L");
 
-  //TLegend legend(0.37, 0.1, 0.9, 0.5);
-  //legend.SetMargin(0.2);
-  //legend.AddEntry(&bhattacharya1998, "#splitline{Analog Decay Experiment Data}{from Bhattacharya, et al. (1998)}", "l");
-  //legend.AddEntry(&cheoun2012, "QRPA from Cheoun, et al. (2012)", "l");
-  //legend.AddEntry(&bhattacharya2009, "#splitline{(p,n) Data from Bhattacharya,}{et al. (2009)}", "l");
-  //legend.AddEntry(&accepted1998, "MARLEY B(GT) based on 1998 data", "l");
-  //legend.AddEntry(&accepted2009, "MARLEY B(GT) based on 2009 data", "l");
-  //legend.Draw();
+  TLegend legend(0.37, 0.1, 0.9, 0.5);
+  legend.SetMargin(0.2);
+  legend.AddEntry(&bhattacharya1998, "#splitline{Analog Decay Experiment Data}{from Bhattacharya, et al. (1998)}", "l");
+  legend.AddEntry(&cheoun2012, "QRPA from Cheoun, et al. (2012)", "l");
+  legend.AddEntry(&bhattacharya2009, "#splitline{(p,n) Data from Bhattacharya,}{et al. (2009)}", "l");
+  legend.AddEntry(&accepted1998, "MARLEY B(GT) based on 1998 data", "l");
+  legend.AddEntry(&accepted2009, "MARLEY B(GT) based on 2009 data", "l");
+  legend.Draw();
 
-  //canvas.SaveAs("bgt.pdf");
-  //canvas.Clear();
+  canvas.SaveAs("bgt.pdf");
+  canvas.Clear();
 
   // Open a file containing a ROOT tree filled with MARLEY events.
   // Associate the tree with a TMarleyEvent pointer.
@@ -283,14 +275,14 @@ int main(){
   // Use 100 bins, and adjust the upper limit of the last bin so that
   // the maximum observed value just barely falls within it.
   TH1D gamma_E_histogram("gamma_E_histogram",
-    "De-excitation  #gamma-ray spectrum for CC FD   #nu_{e} on  ^{40}Ar (2009 data); Energy [MeV]; Counts",
+    "De-excitation  #gamma-ray spectrum for CC FD   #nu_{e} on  ^{40}Ar; Energy [MeV]; Counts",
     100, 0, 1.1*std::nextafter(E_gmax, DBL_MAX));
   // Do the same thing for the other two particle types
   TH1D electron_E_histogram("electron_E_histogram",
-    "Electron spectrum for CC FD   #nu_{e} on  ^{40}Ar (2009 data); Total Energy [MeV]; Counts",
+    "Electron spectrum for CC FD   #nu_{e} on  ^{40}Ar; Total Energy [MeV]; Counts",
     100, 0, 1.1*std::nextafter(E_emax, DBL_MAX));
   TH1D neutrino_E_histogram("neutrino_E_histogram",
-    "Fermi-Dirac  #nu_{e}  spectrum (2009 data); Total Energy [MeV]; Counts",
+    "Fermi-Dirac  #nu_{e}  spectrum; Total Energy [MeV]; Counts",
     100, 0, 1.1*std::nextafter(E_nmax, DBL_MAX));
 
   // Fill the histograms with values

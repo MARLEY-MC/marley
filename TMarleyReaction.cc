@@ -109,6 +109,11 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
   }
 
   file_in.close();
+
+  // Precompute these squared masses for speed
+  ma2 = std::pow(ma, 2);
+  mb2 = std::pow(mb, 2);
+  mc2 = std::pow(mc, 2);
 }
 
 // Associate a decay scheme object with this reaction. This will provide
@@ -262,49 +267,6 @@ double TMarleyReaction::fermi_approx(int Z, double E, bool electron){
   return 2*marley_utils::pi*eta/(1-std::exp(-2*marley_utils::pi*eta));
 }
 
-double TMarleyReaction::ejectile_energy(double E_level, double Ea, double cos_theta_c) {
-
-  // All energies are in MeV
-  double md = md_gs + E_level;
-
-  double Etot = Ea + mb;
-  double Etot2 = std::pow(Etot, 2);
-
-  double mc2 = std::pow(mc, 2);
-  double md2 = std::pow(md, 2);
-  double ctc2 = std::pow(cos_theta_c, 2);
-
-  // Squared 3-momentum of the projectile
-  double p2a = std::pow(Ea, 2) - std::pow(ma, 2);
-
-  // Quadratic formula coefficients from 4-momentum
-  // conservation solution in the lab frame
-  double A = 4*Etot2 - 4*p2a*ctc2;
-
-  double B = 4*Etot*(md2 + p2a - mc2 - Etot2);
-
-  double C = std::pow((Etot2 + mc2 - md2 - p2a), 2) + 4*mc2*p2a*ctc2;
-
-  // There are two solutions of the quadratic equation 
-  // that correspond to forward and backward scattering
-  // solutions. Find both of them and load Ecplus and
-  // Ecminus with the results.
-  double Ecplus, Ecminus;
-  marley_utils::solve_quadratic_equation(A, B, C, Ecplus, Ecminus);
-
-  // Assume we are above the backward threshold, and match the
-  // correct solution to the physical ejectile energy.
-  // TODO: generalize this to include cases where we're below
-  // the backward threshold
-  if (cos_theta_c >= 0) {
-    return Ecplus; // Forward scattering
-  }
-  else {
-    return Ecminus; // Backward scattering
-  }
-
-}
-
 // Return the maximum residue excitation energy E_level that can
 // be achieved in the lab frame for a given projectile energy Ea
 // (this corresponds to the final particles all being produced
@@ -331,9 +293,6 @@ double TMarleyReaction::get_threshold_energy() {
 TMarleyEvent TMarleyReaction::create_event(double Ea,
   TMarleyGenerator& gen)
 {
-  // All hard-coded energies are in MeV
-  double Etot = Ea + mb;
-
   // Sample a final residue energy level. First,
   // check to make sure the given projectile energy
   // is above threshold for this reaction.
@@ -373,6 +332,8 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   // or a level that is kinematically forbidden. If the matrix element B(F) + B(GT)
   // for a level vanishes, skip computing the total cross section and assign a weight
   // of zero for efficiency.
+  bool at_least_one_nonzero_matrix_el = false;
+
   for(unsigned int i = 0; i < residue_level_pointers.size(); ++i) {
 
     double level_energy;
@@ -403,12 +364,14 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
       // If the matrix element is nonzero, assign a weight to this level equal
       // to the total reaction cross section. Note that std::discrete_distribution
       // automatically normalizes the weights, so we don't have to do that ourselves.
-      xs = total_xs(level_energy, Ea, matrix_el);
+      xs = total_xs_cm(level_energy, Ea, matrix_el);
       //DEBUG
       if (std::isnan(xs)) {
         std::cout << "DEBUG: this level gave a weight of nan, so I made it zero." << std::endl;
         xs = 0;
       }
+      if (!at_least_one_nonzero_matrix_el && xs != 0)
+        at_least_one_nonzero_matrix_el = true;
     }
     level_weights.push_back(xs);
   }
@@ -421,6 +384,15 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
       + "for a projectile energy of " + std::to_string(Ea)
       + " MeV (max E_level = " + std::to_string(max_E_level)
       + " MeV).");
+  }
+
+  // Complain if none of the levels have nonzero weight (this means that
+  // all kinematically allowed levels have a vanishing matrix element)
+  if (!at_least_one_nonzero_matrix_el) {
+    throw std::runtime_error(std::string("Could not create this event. All ")
+      + "kinematically accessible levels for a projectile energy of "
+      + std::to_string(Ea) + " MeV (max E_level = " + std::to_string(max_E_level)
+      + " MeV) have vanishing matrix elements.");
   }
 
   // Create a list of parameters used to supply the weights to our discrete
@@ -447,74 +419,64 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   }
 
   double md = md_gs + E_level;
+  double md2 = std::pow(md, 2);
 
-  // Get the matrix element (B(F) + B(GT) value) for the
-  // selected level
-  double matrix_element = residue_level_strengths.at(l_index);
+  // Sample a CM frame scattering cosine for the ejectile.
+  double cos_theta_c_cm = sample_cos_theta_c_cm(gen);
+  double sin_theta_c_cm = marley_utils::real_sqrt(1
+    - std::pow(cos_theta_c_cm, 2));
 
-  // Sample a scattering angle for the ejectile using
-  // the differential cross section
-  double cos_theta_c = sample_ejectile_scattering_cosine(E_level, Ea,
-    matrix_element, gen);
-  double theta_c = std::acos(cos_theta_c);
-
-  // Use conservation of 4-momentum to compute the ejectile energy
-  // based on the sampled scattering angle
-  double Ec = this->ejectile_energy(E_level, Ea, cos_theta_c);
-
-  // Compute the energy and scattering angle of the residue
-  double Ed = Etot - Ec;
-  double pc = marley_utils::real_sqrt(Ec*Ec - mc*mc);
-  double pd = marley_utils::real_sqrt(Ed*Ed - md*md);
-  double theta_d = std::asin(pc * std::sin(theta_c) / pd);
-  double cos_theta_d = std::cos(theta_d);
-
-  // Sample an azimuthal scattering angle (phi) uniformly on [0, 2*pi).
+  // Sample a CM frame azimuthal scattering angle (phi) uniformly on [0, 2*pi).
   // We can do this because the matrix elements are azimuthally invariant
-  double phi = gen.uniform_random_double(0, 2*marley_utils::pi, false);
+  double phi_c_cm = gen.uniform_random_double(0, 2*marley_utils::pi, false);
 
-  // Use the scattering angles to compute Cartesian 3-momentum components
-  // for the ejectile and residue
-  double pc_x = std::sin(theta_c)*std::cos(phi)*pc;
-  double pc_y = std::sin(theta_c)*std::sin(phi)*pc;
-  double pc_z = cos_theta_c*pc;
+  // Compute Mandelstam s (the square of the total CM frame energy)
+  double s = ma2 + mb2 + 2 * mb * Ea;
+  double sqrt_s = std::sqrt(s);
 
-  // The residue scattering angle (theta_d) is measured
-  // in the clockwise direction, so the x and y components
-  // of the residue 3-momentum pick up minus signs (sin[-x] = -sin[x])
-  double pd_x = -std::sin(theta_d) * std::cos(phi) * pd;
-  double pd_y = -std::sin(theta_d) * std::sin(phi) * pd;
-  double pd_z = cos_theta_d * pd;
+  // Determine the CM frame energies and momenta of the ejectile
+  double Ec_cm = (s + mc2 - md2) / (2 * sqrt_s);
+  double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2);
 
-  // Print results to std::cout
-  //std::cout.precision(15);
-  //std::cout << std::scientific;
-  //std::cout << "E_level = " << E_level << std::endl;
-  //std::cout << "cos_theta_c = " << cos_theta_c << std::endl;
-  //std::cout << "Ec = " << Ec << std::endl;
-  //std::cout << "Ed = " << Ed << std::endl;
-  //std::cout << "cos_theta_d = " << cos_theta_d << std::endl;
-  //std::cout << "e- kinetic energy = " << Ec - mc << std::endl;
-  //std::cout << "e- mass = " << mc << std::endl;
-  //std::cout << "40K kinetic energy = " << Ed - md_gs - E_level << std::endl;
-  //std::cout << "Ground state nuclear mass change = " << md_gs - mb << std::endl; 
+  double pc_cm_x = sin_theta_c_cm * std::cos(phi_c_cm) * pc_cm;
+  double pc_cm_y = sin_theta_c_cm * std::sin(phi_c_cm) * pc_cm;
+  double pc_cm_z = cos_theta_c_cm * pc_cm;
+
+  // Determine the CM frame energy. Roundoff errors may cause Ed_cm to dip
+  // below md, which is unphysical. Prevent this from occurring by allowing md
+  // to be the minimum value of Ed_cm. Also note that, in the CM frame, the
+  // residue and ejectile have equal and opposite momenta.
+  double Ed_cm = std::max(sqrt_s - Ec_cm, md);
+
+  // Create particle objects representing the projectile and target in the lab frame
+  // TODO: edit this to allow for projectile directions other than along the z-axis
+  TMarleyParticle projectile(pid_a, Ea, 0, 0,
+    marley_utils::real_sqrt(std::pow(Ea, 2) - ma2), ma);
+
+  TMarleyParticle target(pid_b, mb, 0, 0, 0, mb);
+
+  // Create particle objects representing the ejectile and residue in the CM
+  // frame.
+  TMarleyParticle ejectile(pid_c, Ec_cm, pc_cm_x, pc_cm_y, pc_cm_z, mc);
+  TMarleyParticle residue(pid_d, Ed_cm, -pc_cm_x, -pc_cm_y, -pc_cm_z, md);
+
+  // Boost the ejectile and residue into the lab frame.
+  // TODO: edit this to allow for projectile directions other than along the z-axis
+  double beta_z = Ea / (Ea + mb);
+  TMarleyKinematics::lorentz_boost(0, 0, -beta_z, ejectile);
+  TMarleyKinematics::lorentz_boost(0, 0, -beta_z, residue);
 
   // Create the event object and load it with the appropriate information
   TMarleyEvent event(E_level);
   event.set_reaction(this);
-  // TODO: edit this to allow for projectile directions other than along the z-axis
   // Add the projectile to this event's initial particle list
-  event.add_initial_particle(TMarleyParticle(pid_a, Ea, 0, 0, Ea - ma, ma),
-    TMarleyEvent::ParticleRole::pr_projectile);
+  event.add_initial_particle(projectile, TMarleyEvent::ParticleRole::pr_projectile);
   // Add the target to this event's initial particle list
-  event.add_initial_particle(TMarleyParticle(pid_b, mb, 0, 0, 0, mb),
-    TMarleyEvent::ParticleRole::pr_target);
+  event.add_initial_particle(target, TMarleyEvent::ParticleRole::pr_target);
   // Add the ejectile to this event's final particle list
-  event.add_final_particle(TMarleyParticle(pid_c, Ec, pc_x, pc_y, pc_z, mc),
-    TMarleyEvent::ParticleRole::pr_ejectile);
+  event.add_final_particle(ejectile, TMarleyEvent::ParticleRole::pr_ejectile);
   // Add the residue to this event's final particle list.
-  event.add_final_particle(TMarleyParticle(pid_d, Ed, pd_x, pd_y, pd_z, md),
-    TMarleyEvent::ParticleRole::pr_residue);
+  event.add_final_particle(residue, TMarleyEvent::ParticleRole::pr_residue);
 
   if (plevel != nullptr) {
     // The selected level is bound, so it will only decay via gamma emission.
@@ -523,7 +485,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   }
   else {
     // The selected level is unbound, so handle nucleon emission, etc.
-    this->evaporate_particles(E_level, &event, Ed, theta_d, phi, gen);
+    this->evaporate_particles(E_level, &event, gen);
   }
 
   // Return the completed event object
@@ -531,7 +493,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
 }
 
 void TMarleyReaction::evaporate_particles(double E_level, TMarleyEvent* p_event,
-  double Ed_gs, double theta_res, double phi_res, TMarleyGenerator& gen)
+  TMarleyGenerator& gen)
 {
   // Find the highest-energy particle evaporation threshold that is
   // greater than the residue excitation energy E_level
@@ -553,7 +515,6 @@ void TMarleyReaction::evaporate_particles(double E_level, TMarleyEvent* p_event,
   // for the emitted particle.
   --i_thresh;
   int fragment_pid = i_thresh->get_fragment_pid();
-  double sep_energy = i_thresh->get_separation_energy();
 
   // Get the particle ID for the residue in its final state
   int Zres = Zf - TMarleyMassTable::get_particle_Z(fragment_pid);
@@ -590,36 +551,6 @@ void TMarleyReaction::evaporate_particles(double E_level, TMarleyEvent* p_event,
   p_residue->add_child(&(p_event->get_final_particles()->back())); 
 }
 
-// Compute the differential reaction cross section dsigma/dcos_theta
-// for a given final residue level, projectile energy, and ejectile
-// scattering cosine
-double TMarleyReaction::differential_xs(double E_level, double Ea,
-  double matrix_element, double cos_theta_c)
-{
-
-  double Ec = this->ejectile_energy(E_level, Ea, cos_theta_c);
-  double pc = marley_utils::real_sqrt(Ec*Ec - mc*mc);
-
-  // TODO: adjust this differential cross section expression
-  // as needed
-  
-  // This expression for the differential cross section
-  // dsigma/dcos_theta comes from Kuramoto, et al.,
-  // Nucl. Phys. A512 (1990) 711-736. It is modified
-  // using a nuclear recoil correction factor taken from
-  // J. D. Walecka, "Semileptonic Weak Interactions in Nuclei,"
-  // In: Muon Physics, Volume II: Weak Interactions.
-  // Ed. by V. W. Hughes and C. S. Wu.
- 
-  // The constants GF and Vud have been removed since,
-  // for sampling, they will not be needed (what matters is the
-  // relative size of the differential cross section).
-  // This might reduce numerical error.
-  return (1.0/(2*marley_utils::pi))// * std::pow(GF, 2) * std::pow(Vud, 2)
-    *pc*Ec*fermi_function(Zf, Af, Ec, true)*matrix_element
-    /(1.0 + (Ea/mb)*(1 - (Ec/pc)*cos_theta_c));
-}
-
 // Compute the total reaction cross section (including all final nuclear levels)
 // in units of MeV^(-2) using the center of mass frame.
 double TMarleyReaction::total_xs_cm(double Ea) {
@@ -654,10 +585,6 @@ double TMarleyReaction::total_xs_cm(double Ea) {
       // If the matrix element is nonzero, assign a weight to this level equal
       // to the total reaction cross section. Note that std::discrete_distribution
       // automatically normalizes the weights, so we don't have to do that ourselves.
-
-      double ma2 = std::pow(ma, 2);
-      double mb2 = std::pow(mb, 2);
-      double mc2 = std::pow(mc, 2);
       double md2 = std::pow(md_gs + level_energy, 2);
 
       // Compute Mandelstam s (the square of the total CM frame energy)
@@ -677,92 +604,37 @@ double TMarleyReaction::total_xs_cm(double Ea) {
   return std::pow(GF, 2) * std::pow(Vud, 2) * xs / marley_utils::pi;
 }
 
-// Compute the total reaction cross section (including all final nuclear levels)
-// in units of MeV^(-2)
-double TMarleyReaction::total_xs(double Ea) {
-  double max_E_level = max_level_energy(Ea);
-  double xs = 0;
-  for(unsigned int i = 0; i < residue_level_pointers.size(); ++i) {
-
-    double level_energy;
-
-    // Get the excitation energy for the current level
-    if (residue_level_pointers[i] != nullptr) {
-      level_energy = residue_level_pointers[i]->get_energy();
-    }
-    else {
-      // Level is unbound, so just use the energy given in the reaction dataset
-      // rather than trying to find its ENSDF version
-      level_energy = residue_level_energies[i];
-    }
-
-    // Exit the loop early if you reach a level with an energy that's too high
-    if (level_energy > max_E_level) break;
-
-    // Check whether the matrix element (B(F) + B(GT)) is nonvanishing for the
-    // current level. If it is, just set the weight equal to zero rather than
-    // calling total_xs. This will avoid unnecessary numerical integrations.
-    double matrix_el = residue_level_strengths[i];
-
-    if (matrix_el == 0) {
-      xs += 0;
-    }
-    else {
-      // If the matrix element is nonzero, assign a weight to this level equal
-      // to the total reaction cross section. Note that std::discrete_distribution
-      // automatically normalizes the weights, so we don't have to do that ourselves.
-      xs += total_xs(level_energy, Ea, matrix_el);
-    }
-  }
-  return std::pow(GF, 2) * std::pow(Vud, 2) * xs;
-}
-
-// Numerically integrate the differential cross section over
-// cos(theta_c) = [-1,1] to get the total reaction cross section
-// for a given final residue level and projectile energy
-double TMarleyReaction::total_xs(double E_level, double Ea, double matrix_element) {
-  // TODO: consider switching to a different integration method,
-  // using tabulated data, etc.
-
-  // Numerically integrate the differential cross section over
-  // the interval cos(theta_c) = [-1,1] using the composite
-  // trapezoidal rule over n subintervals
-  static const int n = 1e3;
-
-  // Create a forwarding call wrapper for the  differential_xs
-  // member function that takes a single argument.
-  std::function<double(double)> dxs = std::bind(
-    &TMarleyReaction::differential_xs, this, E_level, Ea, matrix_element, std::placeholders::_1);
-
-  // Numerically integrate using the call wrapper, the integration bounds,
-  // and the number of subintervals
-  return marley_utils::num_integrate(dxs, -1.0, 1.0, n); 
-}
-
-// Sample a scattering cosine for the ejectile using the differential
-// cross section defined in the member function differential_xs
-double TMarleyReaction::sample_ejectile_scattering_cosine(double E_level,
-  double Ea, double matrix_element, TMarleyGenerator& gen)
+// Compute the total reaction cross section for a given level (ignoring some
+// constants for speed, since this version of the function is intended for use
+// in sampling only) using the center of mass frame
+double TMarleyReaction::total_xs_cm(double E_level, double Ea,
+  double matrix_element)
 {
+  // Don't bother to compute anything if the matrix element vanishes for this level
+  if (matrix_element == 0) return 0;
+  else {
+    double md2 = std::pow(md_gs + E_level, 2);
 
-  // Get the total cross section for this reaction based
-  // on the projectile energy and final residue energy.
-  // This will be used as a normalization factor.
-  double xstot = total_xs(E_level, Ea, matrix_element);
+    // Compute Mandelstam s (the square of the total CM frame energy)
+    double s = ma2 + mb2 + 2 * mb * Ea;
+    double sqrt_s = std::sqrt(s);
 
-  // Make a normalized version of the differential cross section
-  // to use as our probability density function for sampling.
-  // Note that, since we are using a rejection sampling method,
-  // normalization is not strictly necessary. That being said, doing so
-  // allows us to set our value of epsilon for marley_utils::maximize
-  // without having to worry about the absolute scale of the differential cross
-  // section (the normalized version has an average value of 0.5,
-  // so an epsilon of, say, 1e-8 is perfectly usable).
-  std::function<double(double)> ndxs = [this, &xstot, &E_level, &Ea, &matrix_element](double cos_theta_c)
-    -> double { return (1.0/xstot)*differential_xs(E_level, Ea, matrix_element, cos_theta_c); };
+    // Compute CM frame energies for two of the particles. Also
+    // compute the ejectile CM frame momentum.
+    double Eb_cm = (s + mb2 - ma2) / (2 * sqrt_s);
+    double Ec_cm = (s + mc2 - md2) / (2 * sqrt_s);
+    double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2);
 
-  // Sample a scattering cosine value using this probability density function
-  double cos_theta_c = gen.rejection_sample(ndxs, -1, 1);
+    return fermi_function(Zf, Af, Ec_cm, true) * matrix_element * pc_cm * Ec_cm
+      * Eb_cm * (sqrt_s - Ec_cm) / s;
+  }
+}
 
-  return cos_theta_c;
+// Sample an ejectile scattering cosine in the CM frame.
+// TODO: change this when you implement form factors in the matrix
+// elements that depend on the scattering angle. You will then need
+// to use the matrix elements to sample the scattering cosine (the
+// distribution will no longer be isotropic).
+double TMarleyReaction::sample_cos_theta_c_cm(TMarleyGenerator& gen) {
+  return gen.uniform_random_double(-1, 1, true);
 }

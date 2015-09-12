@@ -17,26 +17,23 @@ class TMarleyReaction {
     TMarleyReaction(std::string filename, TMarleyDecayScheme* scheme = nullptr);
     double fermi_function(int Z, int A, double E, bool electron);
     double fermi_approx(int Z, double E, bool electron);
-    double ejectile_energy(double E_level, double Ea, double cos_theta_c);
     double max_level_energy(double Ea);
     double get_threshold_energy();
-    double differential_xs(double E_level, double Ea, double matrix_element, double cos_theta_c);
     // Total reaction cross section (in MeV^(-2)), including all final nuclear levels
-    double total_xs(double Ea);
     double total_xs_cm(double Ea);
     // Total cross section for a given final nuclear level energy, in
     // units convenient for sampling
-    double total_xs(double E_level, double Ea, double matrix_element);
-    double sample_ejectile_scattering_cosine(double E_level, double Ea,
-      double matrix_element, TMarleyGenerator& gen);
+    double total_xs_cm(double E_level, double Ea, double matrix_element);
     void set_decay_scheme(TMarleyDecayScheme* scheme);
     TMarleyEvent create_event(double Ea, TMarleyGenerator& gen);
+    double sample_cos_theta_c_cm(TMarleyGenerator& gen);
 
   private:
     double ma; // projectile mass
     double mb; // target mass
     double mc; // ejectile mass
     double md_gs; // residue mass
+    double ma2, mb2, mc2; // Squared masses
     static constexpr double GF = 1.16637e-11; // Fermi coupling constant (MeV^(-2)) 
     static constexpr double Vud = 0.97427; // abs(V_ud) (from CKM matrix)
     int Zi, Ai, Zf, Af; // Initial and final values of the atomic and mass numbers
@@ -57,6 +54,5 @@ class TMarleyReaction {
     std::vector<TMarleyEvaporationThreshold> evaporation_thresholds;
     void compute_evaporation_thresholds();
     void evaporate_particles(double E_level, TMarleyEvent* p_event,
-      double Ed_gs, double theta_res, double phi_res,
       TMarleyGenerator& gen);
 };

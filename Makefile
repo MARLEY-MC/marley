@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-g -std=c++11 -I. -O3 #-Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter
+CXXFLAGS=-g -std=c++11 -I. -O3 -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter
 USE_ROOT=yes
 
 OBJ = marley_utils.o TMarleyParticle.o TMarleyEvent.o TMarleyEvaporationThreshold.o
@@ -7,7 +7,7 @@ OBJ += TMarleyGenerator.o TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o
 OBJ += TMarleyDecayScheme.o
 OBJ += TMarleyMassTable.o TMarleyStructureDatabase.o TMarleyConfigFile.o
 OBJ += TMarleyNuclearPhysics.o TMarleyBackshiftedFermiGasModel.o
-OBJ += TMarleySphericalOpticalModel.o TMarleyIntegrator.o
+OBJ += TMarleyIntegrator.o
 OBJ += TMarleyNeutrinoSource.o TMarleyKinematics.o
 
 ifdef USE_ROOT
@@ -29,25 +29,31 @@ endif
 
 all: parse react validate check
 
+# Don't use our standard warnings for this object file. You need to
+# fix the issues in the cwfcomp library that you borrowed or rewrite
+# the code.
+TMarleySphericalOpticalModel.o: TMarleySphericalOpticalModel.cc
+	g++ -g -std=c++11 -I. -O3 -c -o $@ $^
+
 %.o: %.c
 	$(CXX) -c -o $@
 
-parse: $(OBJ) parse.o
+parse: $(OBJ) parse.o TMarleySphericalOpticalModel.o
 	$(CXX) -o $@ $^
 
-react: $(OBJ) $(OBJ_DICT) react.o
+react: $(OBJ) $(OBJ_DICT) react.o TMarleySphericalOpticalModel.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-validate: $(OBJ) $(OBJ_DICT) validate.o
+validate: $(OBJ) $(OBJ_DICT) validate.o TMarleySphericalOpticalModel.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-check: $(OBJ) $(OBJ_DICT) check.o
+check: $(OBJ) $(OBJ_DICT) check.o TMarleySphericalOpticalModel.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-check_kinem: $(OBJ) check_kinem.o
+check_kinem: $(OBJ) check_kinem.o TMarleySphericalOpticalModel.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-plots: $(OBJ) $(OBJ_DICT) plots.o
+plots: $(OBJ) $(OBJ_DICT) plots.o TMarleySphericalOpticalModel.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # Add more header files to the prerequisites for
