@@ -23,6 +23,7 @@ class TMarleyReaction {
     double differential_xs(double E_level, double Ea, double matrix_element, double cos_theta_c);
     // Total reaction cross section (in MeV^(-2)), including all final nuclear levels
     double total_xs(double Ea);
+    double total_xs_cm(double Ea);
     // Total cross section for a given final nuclear level energy, in
     // units convenient for sampling
     double total_xs(double E_level, double Ea, double matrix_element);
