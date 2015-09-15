@@ -67,8 +67,9 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
 
   Ea_threshold = ((mc + md_gs)*(mc + md_gs) - ma*ma - mb*mb)/(2*mb);
 
-  // Read in all of the level energy (MeV) and squared matrix element (B(F) +
-  // B(GT) strength) pairs.
+  // Read in all of the level energy (MeV), squared matrix element (B(F) or
+  // B(GT) strength), and matrix element type identifier (0 represents
+  // B(F), 1 represents B(GT)) triplets.
 
   // Set the old energy entry to the lowest representable double
   // value. This guarantees that we always read in the first energy
@@ -85,12 +86,13 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
     // The order of the entries is important because later uses of the
     // residue_level_energies vector assume that they are sorted in
     // order of ascending energy.
-    double energy, strength;
-    iss >> energy >> strength;
+    double energy, strength, strength_id;
+    iss >> energy >> strength >> strength_id;
     if (old_energy >= energy) throw std::runtime_error(std::string("Invalid reaction dataset. ")
       + "Level energies must be unique and must be given in ascending order.");
     residue_level_energies.push_back(energy);
     residue_level_strengths.push_back(strength);
+    residue_level_strength_ids.push_back(strength_id);
     old_energy = energy;
   }
 
@@ -421,8 +423,20 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   double md = md_gs + E_level;
   double md2 = std::pow(md, 2);
 
+  // Compute Mandelstam s (the square of the total CM frame energy)
+  double s = ma2 + mb2 + 2 * mb * Ea;
+  double sqrt_s = std::sqrt(s);
+
+  // Determine the CM frame energy, momentum, and velocity of the ejectile
+  double Ec_cm = (s + mc2 - md2) / (2 * sqrt_s);
+  double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2);
+  double beta_c_cm = pc_cm / Ec_cm;
+
   // Sample a CM frame scattering cosine for the ejectile.
-  double cos_theta_c_cm = sample_cos_theta_c_cm(gen);
+  double matrix_el = residue_level_strengths.at(l_index);
+  double m_type = residue_level_strength_ids.at(l_index);
+  double cos_theta_c_cm = sample_cos_theta_c_cm(matrix_el, m_type, beta_c_cm,
+    gen);
   double sin_theta_c_cm = marley_utils::real_sqrt(1
     - std::pow(cos_theta_c_cm, 2));
 
@@ -430,21 +444,14 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   // We can do this because the matrix elements are azimuthally invariant
   double phi_c_cm = gen.uniform_random_double(0, 2*marley_utils::pi, false);
 
-  // Compute Mandelstam s (the square of the total CM frame energy)
-  double s = ma2 + mb2 + 2 * mb * Ea;
-  double sqrt_s = std::sqrt(s);
-
-  // Determine the CM frame energies and momenta of the ejectile
-  double Ec_cm = (s + mc2 - md2) / (2 * sqrt_s);
-  double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2);
-
+  // Determine the Cartesian components of the ejectile's CM frame momentum
   double pc_cm_x = sin_theta_c_cm * std::cos(phi_c_cm) * pc_cm;
   double pc_cm_y = sin_theta_c_cm * std::sin(phi_c_cm) * pc_cm;
   double pc_cm_z = cos_theta_c_cm * pc_cm;
 
-  // Determine the CM frame energy. Roundoff errors may cause Ed_cm to dip
-  // below md, which is unphysical. Prevent this from occurring by allowing md
-  // to be the minimum value of Ed_cm. Also note that, in the CM frame, the
+  // Determine the residue's CM frame energy. Roundoff errors may cause Ed_cm to
+  // dip below md, which is unphysical. Prevent this from occurring by allowing
+  // md to be the minimum value of Ed_cm. Also note that, in the CM frame, the
   // residue and ejectile have equal and opposite momenta.
   double Ed_cm = std::max(sqrt_s - Ec_cm, md);
 
@@ -631,10 +638,30 @@ double TMarleyReaction::total_xs_cm(double E_level, double Ea,
 }
 
 // Sample an ejectile scattering cosine in the CM frame.
-// TODO: change this when you implement form factors in the matrix
-// elements that depend on the scattering angle. You will then need
-// to use the matrix elements to sample the scattering cosine (the
-// distribution will no longer be isotropic).
-double TMarleyReaction::sample_cos_theta_c_cm(TMarleyGenerator& gen) {
-  return gen.uniform_random_double(-1, 1, true);
+double TMarleyReaction::sample_cos_theta_c_cm(double matrix_el, int m_type,
+  double beta_c_cm, TMarleyGenerator& gen)
+{
+  // Choose the correct form factor to use based on the matrix element type.
+  // Note that our rejection sampling technique does not require that we
+  // normalize the form factors before sampling from them.
+  // TODO: implement a more general way of labeling these matrix elements
+  std::function<double(double)> form_factor;
+
+  if (m_type == 0) {
+    // B(F)
+    form_factor = [&beta_c_cm](double cos_theta_c_cm)
+      -> double { return 1. + beta_c_cm * cos_theta_c_cm; };
+  }
+  else if (m_type == 1) {
+    // B(GT)
+    form_factor = [&beta_c_cm](double cos_theta_c_cm)
+      -> double { return (3. - beta_c_cm * cos_theta_c_cm) / 3.; };
+  }
+  else throw std::runtime_error(std::string("Unrecognized matrix element")
+    + " type " + std::to_string(m_type) + " encountered while sampling a"
+    + " CM frame scattering angle");
+
+  // Sample a CM frame scattering cosine using the appropriate form factor for
+  // this matrix element.
+  return gen.rejection_sample(form_factor, -1, 1);
 }
