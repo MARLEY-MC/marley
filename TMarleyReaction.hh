@@ -26,7 +26,8 @@ class TMarleyReaction {
     double total_xs_cm(double E_level, double Ea, double matrix_element);
     void set_decay_scheme(TMarleyDecayScheme* scheme);
     TMarleyEvent create_event(double Ea, TMarleyGenerator& gen);
-    double sample_cos_theta_c_cm(TMarleyGenerator& gen);
+    double sample_cos_theta_c_cm(double matrix_el, int m_type,
+      double beta_c_cm, TMarleyGenerator& gen);
 
   private:
     double ma; // projectile mass
@@ -44,7 +45,12 @@ class TMarleyReaction {
     double Ea_threshold;
     TMarleyDecayScheme* ds;
     std::vector<double> residue_level_energies; // Energy values from reaction dataset
-    std::vector<double> residue_level_strengths; // B(F) + B(GT) values from reaction dataset
+    std::vector<double> residue_level_strengths; // B(F) and B(GT) values from reaction dataset
+    // TODO: come up with a more general way of representing what kind of matrix element
+    // is given in a reaction dataset entry. Right now 0 represents B(F) and 1 represents B(GT),
+    // but when you start to include other kinds of matrix elements (e.g., forbidden transitions)
+    // this will need to change.
+    std::vector<double> residue_level_strength_ids; // Matrix element type identifiers from reaction dataset
     std::vector<TMarleyLevel*> residue_level_pointers; // Pointers to the corresponding ENSDF decay scheme levels
 
     // Particle IDs for all of the nuclear fragments that will
