@@ -433,9 +433,9 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   double beta_c_cm = pc_cm / Ec_cm;
 
   // Sample a CM frame scattering cosine for the ejectile.
-  double matrix_el = residue_level_strengths.at(l_index);
+  //double matrix_el = residue_level_strengths.at(l_index);
   double m_type = residue_level_strength_ids.at(l_index);
-  double cos_theta_c_cm = sample_cos_theta_c_cm(matrix_el, m_type, beta_c_cm,
+  double cos_theta_c_cm = sample_cos_theta_c_cm(/*matrix_el,*/ m_type, beta_c_cm,
     gen);
   double sin_theta_c_cm = marley_utils::real_sqrt(1
     - std::pow(cos_theta_c_cm, 2));
@@ -638,7 +638,7 @@ double TMarleyReaction::total_xs_cm(double E_level, double Ea,
 }
 
 // Sample an ejectile scattering cosine in the CM frame.
-double TMarleyReaction::sample_cos_theta_c_cm(double matrix_el, int m_type,
+double TMarleyReaction::sample_cos_theta_c_cm(/*double matrix_el,*/ int m_type,
   double beta_c_cm, TMarleyGenerator& gen)
 {
   // Choose the correct form factor to use based on the matrix element type.

@@ -26,7 +26,7 @@ class TMarleyReaction {
     double total_xs_cm(double E_level, double Ea, double matrix_element);
     void set_decay_scheme(TMarleyDecayScheme* scheme);
     TMarleyEvent create_event(double Ea, TMarleyGenerator& gen);
-    double sample_cos_theta_c_cm(double matrix_el, int m_type,
+    double sample_cos_theta_c_cm(/*double matrix_el,*/ int m_type,
       double beta_c_cm, TMarleyGenerator& gen);
 
   private:
