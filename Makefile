@@ -35,6 +35,12 @@ all: parse react validate check
 TMarleySphericalOpticalModel.o: TMarleySphericalOpticalModel.cc
 	g++ -g -std=c++11 -I. -O3 -c -o $@ $^
 
+coulomb.o: coulomb.cc
+	g++ -g -std=c++11 -I. -O3 -c -o $@ $^
+
+coulomb: coulomb.o
+	g++ -g -std=c++11 -I. -O3 -o $@ $^
+
 %.o: %.c
 	$(CXX) -c -o $@
 

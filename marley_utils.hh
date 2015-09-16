@@ -34,7 +34,12 @@ namespace marley_utils {
   const double micro_amu = 0.000931494061;
 
   // Consistent value of pi to use throughout all of MARLEY
-  const double pi = std::acos(-1);
+  constexpr double pi = std::acos(-1);
+  constexpr double two_pi = 2*pi;
+  constexpr double sqrt_two_pi = std::sqrt(two_pi);
+
+  // Imaginary unit
+  constexpr std::complex<double> i(0, 1);
 
   // The physical constants given here were all taken from
   // the 2014 edition of the Review of Particle Physics
