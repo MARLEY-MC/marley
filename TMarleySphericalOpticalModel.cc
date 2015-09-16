@@ -1,10 +1,5 @@
+#include "meta_numerics.hh"
 #include "TMarleySphericalOpticalModel.hh"
-
-// TODO: fix this ugly include pattern that the
-// cwfcomp people forced you to use
-#include "nucl/complex_functions.hh"
-#include "nucl/cwfcomp.hh"
-#include "nucl/cwfcomp.cc"
 
 std::complex<double> TMarleySphericalOpticalModel::optical_model_potential(
   double r, double E, int fragment_pid, int two_j, int l, int two_s) const
@@ -252,12 +247,18 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
   double eta = mu * Z * z * marley_utils::e2 / (marley_utils::hbar_c2 * k);
 
   // Compute the Coulomb wavefunctions at the matching radii
-  Coulomb_wave_functions cwf(true, l, eta);
-  std::complex<double> dummy, Hplus1, Hminus1, Hplus2, Hminus2;
-  cwf.H_dH(1, k*r_max_1, Hplus1, dummy);
-  cwf.H_dH(-1, k*r_max_1, Hminus1, dummy);
-  cwf.H_dH(1, k*r_max_2, Hplus2, dummy);
-  cwf.H_dH(-1, k*r_max_2, Hminus2, dummy);
+  double F, G;
+  std::complex<double> Hplus1, Hminus1, Hplus2, Hminus2;
+  F = meta_numerics::CoulombF(l, eta, k*r_max_1);
+  G = meta_numerics::CoulombG(l, eta, k*r_max_1);
+  Hplus1 = std::complex<double>(G, F);
+  // H+ and H- are complex conjugates of each other
+  Hminus1 = std::conj(Hplus1);
+
+  F = meta_numerics::CoulombF(l, eta, k*r_max_2);
+  G = meta_numerics::CoulombG(l, eta, k*r_max_2);
+  Hplus2 = std::complex<double>(G, F);
+  Hminus2 = std::conj(Hplus2);
 
   // Compute the transmission coefficient using the radial wavefunction
   // evaluated at the two matching radii
