@@ -2,12 +2,12 @@ CXX=g++
 CXXFLAGS=-g -std=c++11 -I. -O3 -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter
 USE_ROOT=yes
 
-OBJ = marley_utils.o TMarleyParticle.o TMarleyEvent.o TMarleyEvaporationThreshold.o
-OBJ += TMarleyGenerator.o TMarleyReaction.o TMarleyGamma.o TMarleyLevel.o
-OBJ += TMarleyDecayScheme.o
+OBJ = marley_utils.o meta_numerics.o TMarleyParticle.o TMarleyEvent.o
+OBJ += TMarleyEvaporationThreshold.o TMarleyGenerator.o TMarleyReaction.o
+OBJ += TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o
 OBJ += TMarleyMassTable.o TMarleyStructureDatabase.o TMarleyConfigFile.o
 OBJ += TMarleyNuclearPhysics.o TMarleyBackshiftedFermiGasModel.o
-OBJ += TMarleyIntegrator.o
+OBJ += TMarleyIntegrator.o TMarleySphericalOpticalModel.o
 OBJ += TMarleyNeutrinoSource.o TMarleyKinematics.o
 
 ifdef USE_ROOT
@@ -29,40 +29,25 @@ endif
 
 all: parse react validate check
 
-# Don't use our standard warnings for this object file. You need to
-# fix the issues in the cwfcomp library that you borrowed or rewrite
-# the code.
-TMarleySphericalOpticalModel.o: TMarleySphericalOpticalModel.cc
-	g++ -g -std=c++11 -I. -O3 -c -o $@ $^
-
-coulomb.o: coulomb.cc
-	g++ -g -std=c++11 -I. -O3 -c -o $@ $^
-
-meta_numerics.o: meta_numerics.cc
-	g++ -g -std=c++11 -I. -O3 -c -o $@ $^
-
-coulomb: coulomb.o meta_numerics.o
-	g++ -g -std=c++11 -I. -O3 -o $@ $^
-
 %.o: %.c
 	$(CXX) -c -o $@
 
-parse: $(OBJ) parse.o TMarleySphericalOpticalModel.o
+parse: $(OBJ) parse.o
 	$(CXX) -o $@ $^
 
-react: $(OBJ) $(OBJ_DICT) react.o TMarleySphericalOpticalModel.o
+react: $(OBJ) $(OBJ_DICT) react.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-validate: $(OBJ) $(OBJ_DICT) validate.o TMarleySphericalOpticalModel.o
+validate: $(OBJ) $(OBJ_DICT) validate.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-check: $(OBJ) $(OBJ_DICT) check.o TMarleySphericalOpticalModel.o
+check: $(OBJ) $(OBJ_DICT) check.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-check_kinem: $(OBJ) check_kinem.o TMarleySphericalOpticalModel.o
+brs: $(OBJ) $(OBJ_DICT) brs.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
-plots: $(OBJ) $(OBJ_DICT) plots.o TMarleySphericalOpticalModel.o
+plots: $(OBJ) $(OBJ_DICT) plots.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # Add more header files to the prerequisites for
@@ -86,4 +71,4 @@ root_dict.o: TMarleyParticle.hh TMarleyEvent.hh
 .PHONY: clean
 
 clean:
-	rm -f *.o parse react validate root_dict.cc root_dict.h
+	rm -f *.o parse react validate brs root_dict.cc root_dict.h
