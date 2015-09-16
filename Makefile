@@ -38,7 +38,10 @@ TMarleySphericalOpticalModel.o: TMarleySphericalOpticalModel.cc
 coulomb.o: coulomb.cc
 	g++ -g -std=c++11 -I. -O3 -c -o $@ $^
 
-coulomb: coulomb.o
+meta_numerics.o: meta_numerics.cc
+	g++ -g -std=c++11 -I. -O3 -c -o $@ $^
+
+coulomb: coulomb.o meta_numerics.o
 	g++ -g -std=c++11 -I. -O3 -o $@ $^
 
 %.o: %.c
