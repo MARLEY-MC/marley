@@ -46,22 +46,31 @@ int main(){
 
   // Create plot of total reaction cross section
   std::vector<double> Eas;
-  std::vector<double> tot_xs;
+  std::vector<double> tot_xs_1998;
+  std::vector<double> tot_xs_2009;
   //std::vector<double> tot_xs_diffs;
   std::cout << std::setprecision(16) << std::scientific;
   TMarleyDecayScheme ds(19, 40, "ensdf.040");
-  TMarleyReaction r("ve40ArCC_1998.react", &ds);
+  TMarleyReaction r1998("ve40ArCC_1998.react", &ds);
+  TMarleyReaction r2009("ve40ArCC_2009.react", &ds);
   for (double Ea = 4.4; Ea < 60; Ea += 0.1) {
     Eas.push_back(Ea);
-    tot_xs.push_back(1e12 * r.total_xs_cm(Ea) / marley_utils::mb); // fb
+    tot_xs_1998.push_back(1e15 * r1998.total_xs_cm(Ea)
+      / marley_utils::mb); // 1e-42 cm^2
+    tot_xs_2009.push_back(1e15 * r2009.total_xs_cm(Ea)
+      / marley_utils::mb); // 1e-42 cm^2
   }
 
   //for (int i = 0; i < tot_xs.size(); ++i)
   //  tot_xs_diffs.push_back(tot_xs[i] - tot_xs_cm[i]);
 
-  TGraph xs(tot_xs.size(), &Eas.front(), &tot_xs.front());
-  xs.SetLineColor(4);
-  xs.SetLineWidth(3);
+  TGraph xs1998(tot_xs_1998.size(), &Eas.front(), &tot_xs_1998.front());
+  xs1998.SetLineColor(4);
+  xs1998.SetLineWidth(3);
+
+  TGraph xs2009(tot_xs_2009.size(), &Eas.front(), &tot_xs_2009.front());
+  xs2009.SetLineColor(2);
+  xs2009.SetLineWidth(3);
 
   //TGraph xs_diffs(tot_xs_diffs.size(), &Eas.front(), &tot_xs_diffs.front());
   //xs_diffs.SetLineColor(4);
@@ -70,13 +79,22 @@ int main(){
   TCanvas canvas;
 
   //xs_diffs.Draw("AL");
-  xs.Draw("AL");
-  xs.SetTitle("Total Cross Section for CC   #nu_{e} on  ^{40}Ar");
-  xs.GetXaxis()->SetTitle("Neutrino Energy (MeV)");
-  xs.GetXaxis()->CenterTitle();
-  xs.GetXaxis()->SetTitleOffset(1.3);
-  xs.GetYaxis()->SetTitle("Cross Section (fb)");
-  xs.GetYaxis()->CenterTitle();
+  xs1998.Draw("AL");
+  xs1998.SetTitle("Total Cross Section for CC   #nu_{e} on  ^{40}Ar");
+  xs1998.GetXaxis()->SetTitle("Neutrino Energy (MeV)");
+  xs1998.GetXaxis()->CenterTitle();
+  xs1998.GetXaxis()->SetTitleOffset(1.3);
+  xs1998.GetYaxis()->SetTitle("Cross Section (10^{ -42} cm^{2})");
+  xs1998.GetYaxis()->CenterTitle();
+
+  xs2009.Draw("L");
+
+  TLegend xs_legend(0.3, 0.15, 0.9, 0.3);
+  xs_legend.SetMargin(0.2);
+  xs_legend.SetTextSize(0.03);
+  xs_legend.AddEntry(&xs1998, "MARLEY #nu_{e}ArCC total cross section based on 1998 data", "l");
+  xs_legend.AddEntry(&xs2009, "MARLEY #nu_{e}ArCC total cross section based on 2009 data", "l");
+  xs_legend.Draw();
 
   canvas.SetLogy(1);
 
@@ -84,7 +102,7 @@ int main(){
 
   canvas.Clear();
   canvas.SetLogy(0);
-  //return 0;
+  return 0;
 
   // Create plot of B(GT) strength
   std::vector<double> cheoun2012_Exs_40K;
