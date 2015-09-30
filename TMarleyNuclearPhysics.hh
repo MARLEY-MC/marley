@@ -94,10 +94,10 @@ class TMarleyNuclearPhysics {
     // given nuclear level via emission of the fragment f.
     static double hf_fragment_partial_width(int Zi, int Ai, double Ex,
       int twoJi, TMarleyParity Pi, const TMarleyFragment& f,
-      const TMarleySphericalOpticalModel& om, /*const*/ TMarleyDecayScheme& ds);
+      const TMarleySphericalOpticalModel& om, const TMarleyDecayScheme& ds);
 
     static double hf_gamma_partial_width(double Ex, int twoJi,
-      TMarleyParity Pi, /*const*/ TMarleyDecayScheme& ds);
+      TMarleyParity Pi, const TMarleyDecayScheme& ds);
 
     // Table of nuclear fragments that will be considered when computing
     // branching ratios for nuclear de-excitations.
@@ -143,7 +143,7 @@ class TMarleyNuclearPhysics {
     static double fragment_discrete_partial_width(double Exf_max, double Mconst,
       double Mfgs_ion, double Mi, int twoJi, TMarleyParity Pi, int fragment_pid,
       int two_s, TMarleyParity Pa, const TMarleySphericalOpticalModel& om,
-      /*const*/ std::vector<TMarleyLevel*>* sorted_lps);
+      const std::vector<TMarleyLevel*>* sorted_lps);
 
     static double gamma_continuum_partial_width(int Z, int A, int twoJi,
       double Exi, double Exf);

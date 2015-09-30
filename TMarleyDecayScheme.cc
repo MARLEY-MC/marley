@@ -758,7 +758,7 @@ TMarleyLevel* TMarleyDecayScheme::add_level(TMarleyLevel level) {
   return p_level;
 }
 
-std::vector<TMarleyLevel*>* TMarleyDecayScheme::get_sorted_level_pointers() {
+const std::vector<TMarleyLevel*>* TMarleyDecayScheme::get_sorted_level_pointers() const {
   return &pv_sorted_levels;
 }
 
