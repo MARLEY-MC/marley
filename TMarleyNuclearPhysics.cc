@@ -211,7 +211,7 @@ double TMarleyNuclearPhysics::gamma_continuum_partial_width(int Z, int A,
 // density) predicted by the Hauser-Feshbach statistical model for decay of a
 // given nuclear level via gamma-ray emission.
 double TMarleyNuclearPhysics::hf_gamma_partial_width(double Ex, int twoJi,
-  TMarleyParity Pi, /*const*/ TMarleyDecayScheme& ds)
+  TMarleyParity Pi, const TMarleyDecayScheme& ds)
 {
   int Z = ds.get_Z();
   int A = ds.get_A();
@@ -221,8 +221,8 @@ double TMarleyNuclearPhysics::hf_gamma_partial_width(double Ex, int twoJi,
   // until the new level energy exceeds the maximum value. For each
   // energetically allowed level, compute a gamma ray transmission coefficient
   // for it and add it to the total.
-  std::vector<TMarleyLevel*>* sorted_lps = ds.get_sorted_level_pointers();
-  for (/*const*/ auto& level_f : *sorted_lps) {
+  const std::vector<TMarleyLevel*>* sorted_lps = ds.get_sorted_level_pointers();
+  for (const auto& level_f : *sorted_lps) {
     int twoJf = level_f->get_two_J();
     // 0->0 EM transitions aren't allowed due to angular momentum conservation
     // (photons are spin 1), so if the initial and final spins are zero, skip
@@ -277,7 +277,7 @@ double TMarleyNuclearPhysics::hf_gamma_partial_width(double Ex, int twoJi,
 // given nuclear level via emission of the fragment f.
 double TMarleyNuclearPhysics::hf_fragment_partial_width(int Zi, int Ai,
   double Ex, int twoJi, TMarleyParity Pi, const TMarleyFragment& f,
-  const TMarleySphericalOpticalModel& om, /*const*/ TMarleyDecayScheme& ds)
+  const TMarleySphericalOpticalModel& om, const TMarleyDecayScheme& ds)
 {
   // Get information about the current fragment
   int two_s = f.get_two_s();
@@ -332,7 +332,7 @@ double TMarleyNuclearPhysics::hf_fragment_partial_width(int Zi, int Ai,
 
   // Get a pointer to the vector of sorted pointers to levels in the decay
   // scheme
-  std::vector<TMarleyLevel*>* sorted_lps = ds.get_sorted_level_pointers();
+  const std::vector<TMarleyLevel*>* sorted_lps = ds.get_sorted_level_pointers();
 
   double discrete_width = fragment_discrete_partial_width(Exf_max, Mconst,
     Mfgs_ion, Mi, twoJi, Pi, fragment_pid, two_s, Pa, om, sorted_lps);
@@ -407,7 +407,7 @@ double TMarleyNuclearPhysics::fragment_discrete_partial_width(double Exf_max,
   double Mconst, double Mfgs_ion, double Mi, int twoJi, TMarleyParity Pi,
   int fragment_pid, int two_s, TMarleyParity Pa,
   const TMarleySphericalOpticalModel& om,
-  /*const*/ std::vector<TMarleyLevel*>* sorted_lps)
+  const std::vector<TMarleyLevel*>* sorted_lps)
 {
   double discrete_width = 0;
   // Loop over the final discrete nuclear levels in order of increasing energy
@@ -415,7 +415,7 @@ double TMarleyNuclearPhysics::fragment_discrete_partial_width(double Exf_max,
   // energetically allowed level, if a transition to it for a given fragment
   // orbital angular momentum l and total angular momentum j conserves parity,
   // then compute an optical model transmission coefficient and add it to the total.
-  for (/*const*/ auto& level : *sorted_lps) {
+  for (const auto& level : *sorted_lps) {
     double Exf = level->get_energy();
     if (Exf < Exf_max) {
       double Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);

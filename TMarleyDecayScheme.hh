@@ -22,7 +22,7 @@ class TMarleyDecayScheme {
     void set_nuc_id(std::string id);
     TMarleyLevel* add_level(const TMarleyLevel level);
     std::list<TMarleyLevel>* get_levels();
-    std::vector<TMarleyLevel*>* get_sorted_level_pointers();
+    const std::vector<TMarleyLevel*>* get_sorted_level_pointers() const;
     void print_report(std::ostream& ostr = std::cout) const;
     TMarleyLevel* get_pointer_to_closest_level(double E_level);
     void do_cascade(TMarleyLevel* initial_level, TMarleyEvent* p_event,
@@ -36,11 +36,11 @@ class TMarleyDecayScheme {
     friend std::istream& operator>> (std::istream& in,
       TMarleyDecayScheme& ds);
 
-    inline int get_Z() {
+    inline int get_Z() const {
       return Z;
     }
 
-    inline int get_A() {
+    inline int get_A() const {
       return A;
     }
 
