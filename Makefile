@@ -7,8 +7,8 @@ OBJ += TMarleyEvaporationThreshold.o TMarleyGenerator.o TMarleyReaction.o
 OBJ += TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o
 OBJ += TMarleyMassTable.o TMarleyStructureDatabase.o TMarleyConfigFile.o
 OBJ += TMarleyNuclearPhysics.o TMarleyBackshiftedFermiGasModel.o
-OBJ += TMarleyIntegrator.o TMarleySphericalOpticalModel.o
-OBJ += TMarleyNeutrinoSource.o TMarleyKinematics.o
+OBJ += TMarleySphericalOpticalModel.o TMarleyNeutrinoSource.o
+OBJ += TMarleyKinematics.o
 
 ifdef USE_ROOT
 # Adding the g++ compiler option -DUSE_ROOT to the CXXFLAGS
