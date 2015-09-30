@@ -8,7 +8,6 @@
 #include "TMarleyMassTable.hh"
 #include "TMarleySphericalOpticalModel.hh"
 #include "TMarleyNuclearPhysics.hh"
-#include "TMarleyIntegrator.hh"
 #include "TMarleyGenerator.hh"
 
 int main() {
