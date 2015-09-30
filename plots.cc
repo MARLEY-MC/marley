@@ -102,7 +102,6 @@ int main(){
 
   canvas.Clear();
   canvas.SetLogy(0);
-  return 0;
 
   // Create plot of B(GT) strength
   std::vector<double> cheoun2012_Exs_40K;
@@ -232,6 +231,8 @@ int main(){
 
   // Particle energies from all events
   std::vector<double> gamma_Es, electron_Es, neutrino_Es;
+  // Excitation energies of residual nucleus
+  std::vector<double> nuc_Exs;
   // Total number of gamma rays emitted
   int num_gammas = 0;
   // Total number of events
@@ -243,6 +244,8 @@ int main(){
 
     // Load the current event
     t->GetEntry(i);
+
+    nuc_Exs.push_back(e->get_E_level());
 
     // Loop over the initial particles. For each neutrino, store
     // its energy.
@@ -302,17 +305,24 @@ int main(){
   TH1D neutrino_E_histogram("neutrino_E_histogram",
     "Fermi-Dirac  #nu_{e}  spectrum; Total Energy [MeV]; Counts",
     100, 0, 1.1*std::nextafter(E_nmax, DBL_MAX));
+  // Do the same thing for the residual nucleus excitation energies
+  TH1D ex_residue_histogram("Ex_40K",
+    "Strength to ^{40}K states; Excitation Energy [MeV]; Counts",
+    100, 0., 50.);
+
 
   // Fill the histograms with values
   for(const double& eg : gamma_Es) gamma_E_histogram.Fill(eg);
   for(const double& ee : electron_Es) electron_E_histogram.Fill(ee);
   for(const double& en : neutrino_Es) neutrino_E_histogram.Fill(en);
+  for(const double& ex : nuc_Exs) ex_residue_histogram.Fill(ex);
 
   //// Write the histograms to new a ROOT file
   //file = new TFile("plot_histograms.root","RECREATE");
   //gamma_E_histogram.Write();
   //electron_E_histogram.Write();
   //neutrino_E_histogram.Write();
+  //ex_residue_histogram.Write();
   //file->Close();
   //delete file;
 
@@ -358,6 +368,16 @@ int main(){
   //fd.Draw("L");
 
   canvas.SaveAs("E_neutrino.pdf");
+
+  canvas.Clear();
+  ex_residue_histogram.Draw();
+  ex_residue_histogram.SetLineWidth(1.8);
+  ex_residue_histogram.GetXaxis()->SetTitleOffset(1.2);
+  ex_residue_histogram.GetYaxis()->SetTitleOffset(1.5);
+  ex_residue_histogram.GetXaxis()->CenterTitle();
+  ex_residue_histogram.GetYaxis()->CenterTitle();
+
+  canvas.SaveAs("E_residue.pdf");
 
   return 0;
 }
