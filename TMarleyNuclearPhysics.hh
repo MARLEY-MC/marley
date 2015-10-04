@@ -8,6 +8,7 @@
 #include "TMarleyMassTable.hh"
 #include "TMarleyParity.hh"
 #include "TMarleySphericalOpticalModel.hh"
+#include "TMarleyStructureDatabase.hh"
 #include "marley_utils.hh"
 
 class TMarleyNuclearPhysics {
@@ -105,6 +106,11 @@ class TMarleyNuclearPhysics {
       return fragments;
     }
 
+    static bool hauser_feshbach_decay(int Zi, int Ai,
+      const TMarleyParticle& initial_particle, TMarleyParticle& first_product,
+      TMarleyParticle& second_product, double& Ex, int& twoJ, TMarleyParity& Pi,
+      TMarleyStructureDatabase& db, TMarleyGenerator& gen);
+
   private:
     // Mass of a charged pion
     static constexpr double mpiplus = 139.57018; // MeV
@@ -148,6 +154,15 @@ class TMarleyNuclearPhysics {
     static double gamma_continuum_partial_width(int Z, int A, int twoJi,
       double Exi, double Exf);
 
+    // Based on some initial parameters (including the nuclear 2J and parity)
+    // determine the final nuclear spin and parity after a Hauser-Feshbach
+    // decay and store them in twoJ and Pi
+    static void sample_gamma_spin_parity(int Z, int A, int& twoJ,
+      TMarleyParity& Pi, double Exi, double Exf, TMarleyGenerator& gen);
+    static void sample_fragment_spin_parity(int& twoJ, TMarleyParity& Pi,
+      const TMarleyFragment& f, const TMarleySphericalOpticalModel& om,
+      TMarleyGenerator& gen, double Exf, double Ea);
+
     static inline double gamma_cpw(int Z, int A, int mpol, int twoJf,
       double e_gamma, double Exf)
     {
@@ -160,5 +175,42 @@ class TMarleyNuclearPhysics {
       double rho = TMarleyBackshiftedFermiGasModel::level_density(Z, A, Exf,
         twoJf);
       return (tcE + tcM) * rho;
+    }
+
+    // Helper function used when sampling continuum spin-parities for gamma-ray
+    // transitions
+    static inline double store_gamma_pws(int Z, int A, double Exf, int twoJf,
+      TMarleyParity Pi, std::vector<double>& widths, std::vector<int>& twoJfs,
+      std::vector<TMarleyParity>& Pfs, double tcE, double tcM, int mpol)
+    {
+      // Note that since our level density model assumes equipartition of parity,
+      // we can multiply both transition types by the same level density function.
+      double rho = TMarleyBackshiftedFermiGasModel::level_density(Z, A, Exf,
+        twoJf);
+
+      TMarleyParity Pf;
+      double combined_width = 0.;
+
+      // Compute and store information for the electric transition
+      double width = tcE * rho;
+      combined_width += width;
+      twoJfs.push_back(twoJf);
+      // Electric transitions represent a parity flip for odd multipolarities
+      if (mpol % 2) Pf = -Pi;
+      else Pf = Pi;
+      Pfs.push_back(Pf);
+      widths.push_back(width);
+
+      // Compute and store information for the magnetic transition
+      width = tcM * rho;
+      combined_width += width;
+      twoJfs.push_back(twoJf);
+      // Magnetic transitions have opposite final parity from electric
+      // transitions of the same multipolarity
+      !Pf;
+      Pfs.push_back(Pf);
+      widths.push_back(width);
+
+      return combined_width;
     }
 };

@@ -26,7 +26,7 @@ class TMarleyDecayScheme {
     void print_report(std::ostream& ostr = std::cout) const;
     TMarleyLevel* get_pointer_to_closest_level(double E_level);
     void do_cascade(TMarleyLevel* initial_level, TMarleyEvent* p_event,
-      TMarleyGenerator& gen) const;
+      TMarleyGenerator& gen);
     void print_latex_table(std::ostream& ostr = std::cout);
     void assign_theoretical_RIs(TMarleyLevel* level_i);
 

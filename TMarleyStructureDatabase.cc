@@ -60,7 +60,9 @@ void TMarleyStructureDatabase::add_decay_scheme(const std::string nucid,
 // Note that the nucid must strictly conform to the ENSDF conventions (3 mass number
 // characters [left-padded] followed by 2 upper-case element symbol
 // characters [right-padded])
-TMarleyDecayScheme* TMarleyStructureDatabase::get_decay_scheme(const std::string nucid) {
+TMarleyDecayScheme* TMarleyStructureDatabase::get_decay_scheme(
+  const std::string nucid)
+{
   std::unordered_map<std::string, TMarleyDecayScheme>::iterator
     it = decay_scheme_table.find(nucid);
   if (it == decay_scheme_table.end()) return nullptr;
