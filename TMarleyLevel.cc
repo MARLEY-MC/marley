@@ -18,7 +18,7 @@ TMarleyLevel::TMarleyLevel(double E, int twoJ, TMarleyParity pi) {
 /// Choose a gamma owned by this level randomly based on the relative
 /// intensities of all of the gammas.  Return a pointer to the gamma that was
 /// chosen.  If this level doesn't have any gammas, return a null pointer.
-TMarleyGamma* TMarleyLevel::sample_gamma(TMarleyGenerator& gen) {
+const TMarleyGamma* TMarleyLevel::sample_gamma(TMarleyGenerator& gen) {
   if (gammas.empty()) {
     return nullptr;
   }

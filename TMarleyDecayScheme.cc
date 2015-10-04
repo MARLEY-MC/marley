@@ -62,7 +62,7 @@ TMarleyLevel* TMarleyDecayScheme::get_pointer_to_closest_level(double E_level) {
 }
 
 void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
-  TMarleyEvent* p_event, TMarleyGenerator& gen) const
+  TMarleyEvent* p_event, TMarleyGenerator& gen)
 {
   //std::cout << "Beginning gamma cascade at level with energy "
   //  << initial_level->get_energy() << " MeV" << std::endl;
@@ -73,7 +73,7 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
 
   while (!cascade_finished) {
     // Randomly select a gamma to produce
-    TMarleyGamma* p_gamma = p_current_level->sample_gamma(gen);
+    const TMarleyGamma* p_gamma = p_current_level->sample_gamma(gen);
     if (p_gamma == nullptr) {
       //std::cout << "  this level does not have any gammas" << std::endl;
       cascade_finished = true;
