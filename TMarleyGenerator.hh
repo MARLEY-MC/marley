@@ -71,10 +71,8 @@ class TMarleyGenerator {
       return structure_db;
     }
 
-    // Assume equipartition of parity and use a Bernoulli distribution
-    // with p = 0.5 to generate random parities
-    inline TMarleyParity sample_parity() {
-      return TMarleyParity(bernoulli_dist(rand_gen));
+    inline const std::vector<TMarleyReaction>& get_reactions() const {
+      return reactions;
     }
 
   private:
@@ -86,10 +84,6 @@ class TMarleyGenerator {
     static constexpr double DEFAULT_REJECTION_SAMPLING_TOLERANCE = 1e-8;
     // Initialization code shared by multiple constructors
     void init(const TMarleyConfigFile& cf);
-
-    // Bernoulli distribution used to generate random boolean values.
-    // Default constructor (used here) generates true 50% of the time.
-    std::bernoulli_distribution bernoulli_dist;
 
     TMarleyNeutrinoSource nu_source;
     TMarleyStructureDatabase structure_db;

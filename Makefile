@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-g -std=c++11 -I. -O3 -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter
+CXXFLAGS=-g -O3 -std=c++11 -I. -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter
 USE_ROOT=yes
 
 OBJ = marley_utils.o meta_numerics.o TMarleyParticle.o TMarleyEvent.o
@@ -45,6 +45,9 @@ check: $(OBJ) $(OBJ_DICT) check.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 brs: $(OBJ) $(OBJ_DICT) brs.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+brs2: $(OBJ) $(OBJ_DICT) brs2.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 plots: $(OBJ) $(OBJ_DICT) plots.o

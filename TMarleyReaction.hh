@@ -28,6 +28,26 @@ class TMarleyReaction {
     TMarleyEvent create_event(double Ea, TMarleyGenerator& gen);
     double sample_cos_theta_c_cm(/*double matrix_el,*/ int m_type,
       double beta_c_cm, TMarleyGenerator& gen);
+    inline size_t get_num_levels() const {
+      return residue_level_energies.size();
+    }
+    inline double get_level_energy(size_t index, bool& bound,
+      double& strength)
+   {
+      strength = residue_level_strengths[index];
+
+      // Get the excitation energy for the current level
+      if (residue_level_pointers[index] != nullptr) {
+        bound = true;
+        return residue_level_pointers[index]->get_energy();
+      }
+      else {
+        bound = false;
+        // Level is unbound, so just use the energy given in the reaction dataset
+        // rather than trying to find its ENSDF version
+        return residue_level_energies[index];
+      }
+    }
 
   private:
     double ma; // projectile mass
