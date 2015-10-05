@@ -111,6 +111,18 @@ class TMarleyNuclearPhysics {
       TMarleyParticle& second_product, double& Ex, int& twoJ, TMarleyParity& Pi,
       TMarleyStructureDatabase& db, TMarleyGenerator& gen);
 
+    static void hf_test(int Zi, int Ai,
+      const TMarleyParticle& initial_particle, double Ex,
+      int twoJ, TMarleyParity Pi,
+      TMarleyStructureDatabase& db, TMarleyGenerator& gen);
+
+    static void hf_test2(int Zi, int Ai,
+      const TMarleyParticle& initial_particle, double Ex,
+      int twoJ, TMarleyParity Pi,
+      TMarleyStructureDatabase& db, TMarleyGenerator& gen,
+      size_t num_trials, std::vector<double>& KEs,
+      std::vector<int>& f_pids);
+
   private:
     // Mass of a charged pion
     static constexpr double mpiplus = 139.57018; // MeV

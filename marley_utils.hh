@@ -303,6 +303,20 @@ namespace marley_utils {
     std::chrono::system_clock::time_point &start_time,
     std::chrono::system_clock::time_point &end_time);
 
+  // Lookup table for particle symbols (keys are PDG particle IDs,
+  // values are symbols).
+  const std::unordered_map<int, std::string> particle_symbols = {
+    { 22, "g"},//"\u03B3"},
+    { 11, "e"},
+    { 12, "nu_e"},//"\u03BD"},
+    { 2112, "n"},
+    { 2212, "p"},
+    { 1000010020, "d"},
+    { 1000010030, "t"},
+    { 1000020030, "h"},
+    { 1000020040, "a"},//"\u03B1"},
+  };
+
   // Lookup table for element symbols (keys are atomic numbers Z,
   // values are symbols on the periodic table). The symbol "Nn" is
   // used for a neutron to match the ENSDF convention.
