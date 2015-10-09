@@ -4,6 +4,7 @@
 
 #include "TMarleyBackshiftedFermiGasModel.hh"
 #include "TMarleyFragment.hh"
+#include "TMarleyHFTable.hh"
 #include "TMarleyLevel.hh"
 #include "TMarleyMassTable.hh"
 #include "TMarleyParity.hh"
@@ -131,6 +132,22 @@ class TMarleyNuclearPhysics {
         std::unordered_map<const TMarleyFragment*, double>& E_c_mins,
         std::unordered_map<const TMarleyFragment*, double>& Exf_maxes);
 
+    // Based on some initial parameters (including the nuclear 2J and parity)
+    // determine the final nuclear spin and parity after a Hauser-Feshbach
+    // decay and store them in twoJ and Pi
+    static void sample_gamma_spin_parity(int Z, int A, int& twoJ,
+      TMarleyParity& Pi, double Exi, double Exf, TMarleyGenerator& gen);
+    static void sample_fragment_spin_parity(int& twoJ, TMarleyParity& Pi,
+      const TMarleyFragment& f, const TMarleySphericalOpticalModel& om,
+      TMarleyGenerator& gen, double Exf, double Ea);
+
+    // Create a table that can be used to sample Hauser-Feshbach decay events
+    static TMarleyHFTable create_hf_table(int Zi, int Ai,
+      const TMarleyParticle& initial_particle,
+      double Ex, int twoJ, TMarleyParity Pi, TMarleyStructureDatabase& db,
+      TMarleyGenerator& gen);
+
+
   private:
     // Mass of a charged pion
     static constexpr double mpiplus = 139.57018; // MeV
@@ -173,15 +190,6 @@ class TMarleyNuclearPhysics {
 
     static double gamma_continuum_partial_width(int Z, int A, int twoJi,
       double Exi, double Exf);
-
-    // Based on some initial parameters (including the nuclear 2J and parity)
-    // determine the final nuclear spin and parity after a Hauser-Feshbach
-    // decay and store them in twoJ and Pi
-    static void sample_gamma_spin_parity(int Z, int A, int& twoJ,
-      TMarleyParity& Pi, double Exi, double Exf, TMarleyGenerator& gen);
-    static void sample_fragment_spin_parity(int& twoJ, TMarleyParity& Pi,
-      const TMarleyFragment& f, const TMarleySphericalOpticalModel& om,
-      TMarleyGenerator& gen, double Exf, double Ea);
 
     static inline double gamma_cpw(int Z, int A, int mpol, int twoJf,
       double e_gamma, double Exf)

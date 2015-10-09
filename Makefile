@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-g -O3 -std=c++11 -I. -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter
+CXXFLAGS=-g -O3 -std=c++14 -I. -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter
 USE_ROOT=yes
 
 OBJ = marley_utils.o meta_numerics.o TMarleyParticle.o TMarleyEvent.o
@@ -8,7 +8,7 @@ OBJ += TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o
 OBJ += TMarleyMassTable.o TMarleyStructureDatabase.o TMarleyConfigFile.o
 OBJ += TMarleyNuclearPhysics.o TMarleyBackshiftedFermiGasModel.o
 OBJ += TMarleySphericalOpticalModel.o TMarleyNeutrinoSource.o
-OBJ += TMarleyKinematics.o
+OBJ += TMarleyKinematics.o TMarleyDecayChannel.o
 
 ifdef USE_ROOT
 # Adding the g++ compiler option -DUSE_ROOT to the CXXFLAGS
@@ -51,6 +51,9 @@ brs2: $(OBJ) $(OBJ_DICT) brs2.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 brs3: $(OBJ) $(OBJ_DICT) brs3.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+brs4: $(OBJ) $(OBJ_DICT) brs4.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 plots: $(OBJ) $(OBJ_DICT) plots.o
