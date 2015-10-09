@@ -1580,3 +1580,159 @@ void TMarleyNuclearPhysics::hf_test2(int Zi, int Ai,
   }
 
 }
+
+void TMarleyNuclearPhysics::hf_test3(int Zi, int Ai,
+  const TMarleyParticle& initial_particle,
+  double Ex, int twoJ, TMarleyParity Pi, TMarleyStructureDatabase& db,
+  std::unordered_map<const TMarleyFragment*,
+    std::function<double(double)> >& funcs,
+  std::unordered_map<const TMarleyFragment*, double>& total_c_widths,
+  std::unordered_map<const TMarleyFragment*, double>& E_c_mins,
+  std::unordered_map<const TMarleyFragment*, double>& Exf_maxes)
+{
+
+  funcs.clear();
+  total_c_widths.clear();
+  E_c_mins.clear();
+  Exf_maxes.clear();
+
+  double Mi = initial_particle.get_mass();
+  double Migs = Mi - Ex;
+  double me = TMarleyMassTable::get_particle_mass(marley_utils::ELECTRON);
+
+  for (const auto& f : TMarleyNuclearPhysics::get_fragments()) {
+    int Zf = Zi - f.get_Z();
+    int Af = Ai - f.get_A();
+
+    TMarleySphericalOpticalModel om(Zf, Af);
+    TMarleyDecayScheme* ds = db.get_decay_scheme(Zf, Af);
+
+    // Get information about the current fragment
+    int two_s = f.get_two_s();
+    TMarleyParity Pa = f.get_parity();
+    int fragment_pid = f.get_pid();
+  
+    // Get various masses that will be needed for fragment emission kinematics
+    // (including nuclear recoil)
+    double Ma = f.get_mass();
+    double Mfgs = TMarleyMassTable::get_atomic_mass(Zf, Af);
+    // Fragment atomic number
+    int Za = f.get_Z();
+    // Approximate the ground state rest energy of the negative ion (with
+    // charge Za-) formed when the bare fragment f is emitted by adding Za
+    // electron masses to the atomic mass for the final nucleus.
+    double Mfgs_ion = Mfgs + Za*me;
+    // Get fragment separation energy without a redundant mass table lookup
+    double Sa = Mfgs_ion + Ma - Migs;
+  
+    // Determine the maximum excitation energy available after fragment emission
+    // in the final nucleus. Use a simpler functional form as a shortcut if
+    // the fragment is neutral [and can therefore be emitted with arbitrarily
+    // low kinetic energy due to the absence of a Coulomb barrier])
+    double Exf_max;
+    double Vc; // Coulomb barrier
+    if (f.get_Z() == 0) {
+      Vc = 0;
+      Exf_max = Ex - Sa;
+    }
+    else {
+      Vc = coulomb_barrier(Zf, Af, Za, f.get_A()); // Ea_min = Vc
+      Exf_max = std::sqrt(std::pow(Mi - Ma, 2) - 2*Vc*Mi) - Mfgs_ion;
+    }
+  
+    // The fragment kinetic energy depends on the final level energy. For speed,
+    // we precompute here a portion of the fragment energy that doesn't depend on
+    // the final level energy.
+    double Mconst = (Ex - Sa) * (Mi + Mfgs_ion - Ma);
+  
+    // Check if emission of this fragment is energetically allowed. If we're below
+    // the fragment emission threshold, the partial decay width is zero, so we can
+    // skip this fragment rather than slogging through the calculation.
+    // We'll also skip it if we're exactly at threshold to avoid numerical problems.
+    if (Mconst / (2 * Mi) - Vc <= 0) continue;
+
+    // Let the continuum go down to 0 MeV unless there is a decay scheme object
+    // available for the final nuclide (we'll check this in a second).
+    double E_c_min = 0;
+  
+    // If discrete level data is available for the final nuclide, get decay
+    // widths for each accessible level
+    if (ds != nullptr) {
+
+      // Get a pointer to the vector of sorted pointers to levels in the decay
+      // scheme
+      const std::vector<TMarleyLevel*>* sorted_lps = ds->get_sorted_level_pointers();
+
+      // Use the maximum discrete level energy from the decay scheme object as the
+      // lower bound for the continuum
+      // TODO: consider whether this is the best approach
+      if (sorted_lps->size() > 0) E_c_min = sorted_lps->back()->get_energy();
+    } 
+
+    // If transitions to the energy continuum are possible, include the
+    // continuum in the decay channels
+    if (Exf_max > E_c_min) {
+  
+      // Create a forwarding call wrapper for the continuum partial width member
+      // function that takes a single argument.
+      std::function<double(double)> cpw = std::bind(
+        &fragment_continuum_partial_width, Mconst, Mfgs_ion, Mi, twoJ, Pi,
+        fragment_pid, two_s, Pa, om, std::placeholders::_1 /*Exf*/);
+  
+      // Numerically integrate using the call wrapper, the integration bounds, and
+      // the number of subintervals
+      double continuum_width = marley_utils::num_integrate(cpw, E_c_min,
+        Exf_max, DEFAULT_CONTINUUM_SUBINTERVALS);
+
+      // Store information for this decay channel
+      funcs[&f] = cpw;
+      total_c_widths[&f] = continuum_width;
+      E_c_mins[&f] = E_c_min;
+      Exf_maxes[&f] = Exf_max;
+    }
+  }
+
+  TMarleyDecayScheme* ds = db.get_decay_scheme(Zi, Ai);
+
+  // Let the continuum go down to 0 MeV unless there is a decay scheme object
+  // available for the final nuclide (we'll check this in a second).
+  double E_c_min = 0;
+
+  // If discrete level data is available for this nuclide, get gamma decay
+  // widths for each accessible level
+  if (ds != nullptr) {
+
+    // Loop over the final discrete nuclear levels in order of increasing energy
+    // until the new level energy exceeds the maximum value. For each
+    // energetically allowed level, compute a gamma ray transmission coefficient
+    // for it
+    const std::vector<TMarleyLevel*>* sorted_lps = ds->get_sorted_level_pointers();
+
+    // Use the maximum discrete level energy from the decay scheme object as the
+    // lower bound for the continuum.
+    // TODO: consider whether this is the best approach
+    if (sorted_lps->size() > 0) E_c_min = sorted_lps->back()->get_energy();
+  }
+
+  // If gamma transitions to the energy continuum are possible, include them
+  // in the possible decay channels
+  if (Ex > E_c_min) {
+
+    // Create a forwarding call wrapper for the continuum partial width member
+    // function that takes a single argument.
+    std::function<double(double)> gpw = std::bind(&gamma_continuum_partial_width,
+      Zi, Ai, twoJ, Ex, std::placeholders::_1 /*Exf*/);
+
+    // Numerically integrate using the call wrapper, the integration bounds, and
+    // the number of subintervals
+    double continuum_width = marley_utils::num_integrate(gpw, E_c_min, Ex,
+      DEFAULT_CONTINUUM_SUBINTERVALS);
+
+    // Store information for this decay channel
+    funcs[nullptr] = gpw;
+    total_c_widths[nullptr] = continuum_width;
+    E_c_mins[nullptr] = E_c_min;
+    Exf_maxes[nullptr] = Ex;
+  }
+
+}

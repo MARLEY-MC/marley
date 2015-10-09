@@ -123,6 +123,14 @@ class TMarleyNuclearPhysics {
       size_t num_trials, std::vector<double>& KEs,
       std::vector<int>& f_pids);
 
+    static void hf_test3(int Zi, int Ai, const TMarleyParticle& initial_particle,
+        double Ex, int twoJ, TMarleyParity Pi, TMarleyStructureDatabase& db,
+        std::unordered_map<const TMarleyFragment*,
+          std::function<double(double)> >& funcs,
+        std::unordered_map<const TMarleyFragment*, double>& total_c_widths,
+        std::unordered_map<const TMarleyFragment*, double>& E_c_mins,
+        std::unordered_map<const TMarleyFragment*, double>& Exf_maxes);
+
   private:
     // Mass of a charged pion
     static constexpr double mpiplus = 139.57018; // MeV
