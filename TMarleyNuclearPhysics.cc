@@ -1868,14 +1868,31 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
       std::function<double(double)> cpw = std::bind(
         &fragment_continuum_partial_width, Mconst, Mfgs_ion, Mi, twoJ, Pi,
         fragment_pid, two_s, Pa, om, std::placeholders::_1 /*Exf*/);
-  
-      // Numerically integrate using the call wrapper, the integration bounds, and
-      // the number of subintervals
-      double continuum_width = marley_utils::num_integrate(cpw, E_c_min,
-        Exf_max, DEFAULT_CONTINUUM_SUBINTERVALS);
 
-      // Store information for this decay channel
-      hftable.add_continuum_fragment_channel(f, gen, om, E_c_min, Exf_max,
+      double Emin = E_c_min;
+      double Emax = E_c_min + continuum_bin_resolution;
+      for (; Emax < Exf_max;
+        Emin += continuum_bin_resolution, Emax += continuum_bin_resolution)
+      {
+        // Numerically integrate using the call wrapper, the integration bounds, and
+        // the number of subintervals
+        double continuum_width = marley_utils::num_integrate(cpw, Emin,
+          Emax, DEFAULT_CONTINUUM_BIN_SUBINTERVALS);
+
+        // Store information for this decay channel
+        hftable.add_continuum_fragment_channel(f, gen, om, Emin, Emax,
+          Mconst, Mfgs, Migs, continuum_width, false);
+        total_width += continuum_width;
+      }
+
+      // We've reached the last bin, so Emin < Exf_max and Emax >= Exf_max.
+      // We want to include the maximum final excitation energy in the final bin,
+      // so do the same thing for it, but set use_upper_edge to true this time.
+      // Also use Exf_max as the upper edge value, since energies above it are
+      // kinematically forbidden.
+      double continuum_width = marley_utils::num_integrate(cpw, Emin,
+        Exf_max, DEFAULT_CONTINUUM_BIN_SUBINTERVALS);
+      hftable.add_continuum_fragment_channel(f, gen, om, Emin, Exf_max,
         Mconst, Mfgs, Migs, continuum_width, true);
       total_width += continuum_width;
     }
@@ -1940,15 +1957,36 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
     std::function<double(double)> gpw = std::bind(&gamma_continuum_partial_width,
       Zi, Ai, twoJ, Ex, std::placeholders::_1 /*Exf*/);
 
-    // Numerically integrate using the call wrapper, the integration bounds, and
-    // the number of subintervals
-    double continuum_width = marley_utils::num_integrate(gpw, E_c_min, Ex,
-      DEFAULT_CONTINUUM_SUBINTERVALS);
+    double Emin = E_c_min;
+    double Emax = E_c_min + continuum_bin_resolution;
+    for (; Emax < Ex;
+      Emin += continuum_bin_resolution, Emax += continuum_bin_resolution)
+    {
+      // Numerically integrate using the call wrapper, the integration bounds, and
+      // the number of subintervals
+      double continuum_width = marley_utils::num_integrate(gpw, Emin,
+        Emax, DEFAULT_CONTINUUM_BIN_SUBINTERVALS);
 
-    // Store information for this decay channel
-    hftable.add_continuum_gamma_channel(gen, Zi, Ai, E_c_min, Ex,
+      // Store information for this decay channel
+      hftable.add_continuum_gamma_channel(gen, Zi, Ai, Emin, Emax,
+        continuum_width, false);
+      total_width += continuum_width;
+      std::cout << "DEBUG: Emin = " << Emin << ", Emax = " << Emax
+        << ", center = " << Emin + ((Emax - Emin) / 2.0) << std::endl;
+    }
+
+    // We've reached the last bin, so Emin < Ex and Emax >= Ex.
+    // We want to include the maximum final excitation energy in the final bin,
+    // so do the same thing for it, but set use_upper_edge to true this time.
+    // Also use Ex as the upper edge value, since energies above it are
+    // kinematically forbidden.
+    double continuum_width = marley_utils::num_integrate(gpw, Emin,
+      Ex, DEFAULT_CONTINUUM_BIN_SUBINTERVALS);
+    hftable.add_continuum_gamma_channel(gen, Zi, Ai, Emin, Ex,
       continuum_width, true);
     total_width += continuum_width;
+    std::cout << "DEBUG: Emin = " << Emin << ", Emax = " << Emax
+      << ", center = " << Emin + ((Emax - Emin) / 2.0) << std::endl;
   }
 
   // Throw an error if all decays are impossible
