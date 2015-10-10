@@ -1977,8 +1977,8 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
       hftable.add_continuum_gamma_channel(gen, Zi, Ai, Emin, Emax,
         continuum_width, false);
       total_width += continuum_width;
-      std::cout << "DEBUG: Emin = " << Emin << ", Emax = " << Emax
-        << ", center = " << Emin + ((Emax - Emin) / 2.0) << std::endl;
+      //std::cout << "DEBUG: Emin = " << Emin << ", Emax = " << Emax
+      //  << ", center = " << Emin + ((Emax - Emin) / 2.0) << std::endl;
     }
 
     // We've reached the last bin, so Emin < Ex and Emax >= Ex.
@@ -1991,8 +1991,8 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
     hftable.add_continuum_gamma_channel(gen, Zi, Ai, Emin, Ex,
       continuum_width, true);
     total_width += continuum_width;
-    std::cout << "DEBUG: Emin = " << Emin << ", Emax = " << Emax
-      << ", center = " << Emin + ((Emax - Emin) / 2.0) << std::endl;
+    //std::cout << "DEBUG: Emin = " << Emin << ", Emax = " << Emax
+    //  << ", center = " << Emin + ((Emax - Emin) / 2.0) << std::endl;
   }
 
   // Throw an error if all decays are impossible
