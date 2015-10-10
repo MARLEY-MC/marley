@@ -5,3 +5,5 @@ structure ensdf.039 ensdf 39K 39Ar
 #structure /home/sjg/Desktop/ensdf_22_Oct_2014/ensdf.037 ensdf 37Ar 37Cl
 structure /home/sjg/Desktop/ensdf_22_Oct_2014/ensdf.036 ensdf 36Cl
 reaction ve40ArCC_2009.react
+contbin 0.1
+contbinsubs 1
