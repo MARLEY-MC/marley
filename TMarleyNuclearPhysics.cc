@@ -1745,6 +1745,12 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
 {
   TMarleyHFTable hftable;
 
+  // Get the continuum bin resolution and the number of subintervals to use
+  // when numerically integrating to get the continuum bin partial widths from
+  // the structure database.
+  double continuum_bin_resolution = db.get_contbin_width();
+  size_t num_cbin_subs = db.get_contbin_num_subs();
+
   double Mi = initial_particle.get_mass();
   double Migs = Mi - Ex;
   double me = TMarleyMassTable::get_particle_mass(marley_utils::ELECTRON);
@@ -1877,7 +1883,7 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
         // Numerically integrate using the call wrapper, the integration bounds, and
         // the number of subintervals
         double continuum_width = marley_utils::num_integrate(cpw, Emin,
-          Emax, DEFAULT_CONTINUUM_BIN_SUBINTERVALS);
+          Emax, num_cbin_subs);
 
         // Store information for this decay channel
         hftable.add_continuum_fragment_channel(f, gen, om, Emin, Emax,
@@ -1891,7 +1897,7 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
       // Also use Exf_max as the upper edge value, since energies above it are
       // kinematically forbidden.
       double continuum_width = marley_utils::num_integrate(cpw, Emin,
-        Exf_max, DEFAULT_CONTINUUM_BIN_SUBINTERVALS);
+        Exf_max, num_cbin_subs);
       hftable.add_continuum_fragment_channel(f, gen, om, Emin, Exf_max,
         Mconst, Mfgs, Migs, continuum_width, true);
       total_width += continuum_width;
@@ -1965,7 +1971,7 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
       // Numerically integrate using the call wrapper, the integration bounds, and
       // the number of subintervals
       double continuum_width = marley_utils::num_integrate(gpw, Emin,
-        Emax, DEFAULT_CONTINUUM_BIN_SUBINTERVALS);
+        Emax, num_cbin_subs);
 
       // Store information for this decay channel
       hftable.add_continuum_gamma_channel(gen, Zi, Ai, Emin, Emax,
@@ -1981,7 +1987,7 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
     // Also use Ex as the upper edge value, since energies above it are
     // kinematically forbidden.
     double continuum_width = marley_utils::num_integrate(gpw, Emin,
-      Ex, DEFAULT_CONTINUUM_BIN_SUBINTERVALS);
+      Ex, num_cbin_subs);
     hftable.add_continuum_gamma_channel(gen, Zi, Ai, Emin, Ex,
       continuum_width, true);
     total_width += continuum_width;

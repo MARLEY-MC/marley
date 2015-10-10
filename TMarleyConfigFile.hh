@@ -50,6 +50,20 @@ class TMarleyConfigFile {
     #endif
     void print_summary(std::ostream& os = std::cout);
 
+    inline double get_contbin_width() const { return contbin_width; }
+    inline size_t get_contbin_num_subs() const { return contbin_num_subs; }
+
+    // Default number of subintervals to use when integrating Hauser-Feshbach
+    // fragment and gamma decay widths over a bin in the energy continuum.
+    // By default, We'll approximate the decay width using a single trapezoid
+    // since the underlying approximation of using continuum bins is that the
+    // decay width varies slowly over a bin.
+    static constexpr int DEFAULT_CONTINUUM_BIN_SUBINTERVALS = 1;
+
+    // Default energy resolution to use when binning the continuum of final
+    // nuclear excitation energies for Hauser-Feshbach model calculations.
+    static constexpr double DEFAULT_CONTINUUM_BIN_RESOLUTION = 0.1; // MeV
+
   private:
 
     std::string filename;
@@ -57,6 +71,9 @@ class TMarleyConfigFile {
     std::unordered_set<std::string> reaction_filenames;
 
     std::vector<StructureRecord> structure_records;
+
+    double contbin_width;
+    size_t contbin_num_subs;
 
     #ifdef USE_ROOT
     std::string root_filename;
@@ -66,7 +83,9 @@ class TMarleyConfigFile {
 
     // Matches comment lines and empty lines
     static const std::regex rx_comment_or_empty;
-    // Matches positive integers
+    // Matches non-negative integers
+    static const std::regex rx_nonneg_int;
+    // Matches all numbers, including floats
     static const std::regex rx_num;
     // Matches trimmed ENSDF-style nucids
     static const std::regex rx_nucid;

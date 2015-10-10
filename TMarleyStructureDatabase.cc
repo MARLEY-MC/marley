@@ -2,12 +2,16 @@
 #include "TMarleyStructureDatabase.hh"
 
 TMarleyStructureDatabase::TMarleyStructureDatabase() {
+  contbin_width = TMarleyConfigFile::DEFAULT_CONTINUUM_BIN_RESOLUTION;
+  contbin_num_subs = TMarleyConfigFile::DEFAULT_CONTINUUM_BIN_SUBINTERVALS;
 }
 
 TMarleyStructureDatabase::TMarleyStructureDatabase(
   const TMarleyConfigFile& cf)
 {
   add_all_from_config_file(cf);
+  contbin_width = cf.get_contbin_width();
+  contbin_num_subs = cf.get_contbin_num_subs();
 }
 
 void TMarleyStructureDatabase::add_decay_scheme(const std::string nucid,

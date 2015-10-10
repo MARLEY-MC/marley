@@ -80,4 +80,4 @@ root_dict.o: TMarleyParticle.hh TMarleyEvent.hh
 .PHONY: clean
 
 clean:
-	rm -f *.o parse react validate brs root_dict.cc root_dict.h
+	rm -f *.o parse react validate brs brs2 brs3 brs4 root_dict.cc root_dict.h

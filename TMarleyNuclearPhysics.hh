@@ -166,28 +166,18 @@ class TMarleyNuclearPhysics {
 
     // Maximum value of the orbital angular momentum to use in Hauser-Feshbach
     // calculations
+    // TODO: make this a user-controlled value specified in the configuration file
     static constexpr int l_max = 2;
 
     // Default step size for computing optical model transmission coefficients via
     // the Numerov method
+    // TODO: make this a user-controlled value specified in the configuration file
     static constexpr double DEFAULT_NUMEROV_STEP_SIZE = 0.1; // fm
 
     // Default number of subintervals to use when integrating fragment and gamma
     // decay widths over the energy continuum.
     // TODO: remove this when you don't need to use it in old testing code anymore
     static constexpr int DEFAULT_CONTINUUM_SUBINTERVALS = 50;
-
-    // Default number of subintervals to use when integrating fragment and
-    // gamma decay widths over a bin in the energy continuum.
-    // We'll approximate the decay width using a single trapezoid since the
-    // underlying approximation of using continuum bins is that the decay width
-    // varies slowly over a bin.
-    static constexpr int DEFAULT_CONTINUUM_BIN_SUBINTERVALS = 1;
-
-    // Energy resolution to use when binning the continuum of final
-    // nuclear excitation energies.
-    // TODO: change this to a user-controlled value in the configuration file
-    static constexpr double continuum_bin_resolution = 0.1; // MeV
 
     // Helper functions used internally while computing decay widths using
     // the Hauser-Feshbach statistical model
