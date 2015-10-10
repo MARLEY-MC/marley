@@ -2,6 +2,7 @@
 
 #include "TMarleyFragment.hh"
 #include "TMarleyGenerator.hh"
+#include "TMarleyKinematics.hh"
 #include "TMarleyLevel.hh"
 #include "TMarleyParity.hh"
 #include "TMarleySphericalOpticalModel.hh"
@@ -36,6 +37,16 @@ class TMarleyDecayChannel {
     // if this is a continuum de-excitation channel)
     virtual double get_bin_center_Exf() = 0;
 
+    // Return the minimum possible fragment kinetic energy
+    // (as measured in the rest frame of the initial nucleus)
+    // for this decay channel.
+    virtual double get_min_KE(int Zi, int Ai, double Exi) = 0;
+
+    // Return the maximum possible fragment kinetic energy
+    // (as measured in the rest frame of the initial nucleus)
+    // for this decay channel.
+    virtual double get_max_KE(int Zi, int Ai, double Exi) = 0;
+
   protected:
     // Flag indicating whether this decay channel accesses the
     // unbound continuum (true) or a discrete level (false)
@@ -60,9 +71,11 @@ class TMarleyFragmentDecayChannel : public TMarleyDecayChannel {
     virtual void get_post_decay_parameters(double& Ex, int& two_J,
       TMarleyParity& Pi) = 0;
 
-    // Return the final excitation energy (at the center of the bin
-    // if this is a continuum de-excitation channel)
     virtual double get_bin_center_Exf() = 0;
+
+    virtual double get_min_KE(int Zi, int Ai, double Exi) = 0;
+
+    virtual double get_max_KE(int Zi, int Ai, double Exi) = 0;
 
   protected:
     const TMarleyFragment& fragment;
@@ -88,6 +101,10 @@ class TMarleyGammaDecayChannel : public TMarleyDecayChannel {
     // Return the final excitation energy (at the center of the bin
     // if this is a continuum de-excitation channel)
     virtual double get_bin_center_Exf() = 0;
+
+    virtual double get_min_KE(int Zi, int Ai, double Exi) = 0;
+
+    virtual double get_max_KE(int Zi, int Ai, double Exi) = 0;
 };
 
 class TMarleyDiscreteFragmentDecayChannel : public TMarleyFragmentDecayChannel {
@@ -116,10 +133,34 @@ class TMarleyDiscreteFragmentDecayChannel : public TMarleyFragmentDecayChannel {
       return final_level.get_energy();
     }
 
+    inline double get_min_KE(int Zi, int Ai, double Exi) {
+      return get_KE(Zi, Ai, Exi);
+    }
+
+    inline double get_max_KE(int Zi, int Ai, double Exi) {
+      return get_KE(Zi, Ai, Exi);
+    }
+
   private:
     TMarleyLevel& final_level; // Pointer to final level in a nuclear decay scheme,
                                // nullptr if in the unbound continuum
     //int l;      // Orbital angular momentum of the outgoing fragment
+
+    inline double get_KE(int Zi, int Ai, double Exi) {
+      double Migs = TMarleyMassTable::get_atomic_mass(Zi, Ai);
+      int Za = fragment.get_Z();
+      int Zf = Zi - Za;
+      int Af = Ai - fragment.get_A();
+      double Mfgs = TMarleyMassTable::get_atomic_mass(Zf, Af)
+        + Za * TMarleyMassTable::get_particle_mass(marley_utils::ELECTRON);
+      TMarleyParticle initial(marley_utils::get_nucleus_pid(Zi, Ai),
+        Migs + Exi);
+      TMarleyParticle frag(fragment.get_pid(), fragment.get_mass());
+      TMarleyParticle final_nuc(marley_utils::get_nucleus_pid(Zf, Af),
+        Mfgs + final_level.get_energy());
+      TMarleyKinematics::two_body_decay(initial, frag, final_nuc, 0., 0.);
+      return frag.get_total_energy() - frag.get_mass();
+    }
 };
 
 class TMarleyDiscreteGammaDecayChannel : public TMarleyGammaDecayChannel {
@@ -147,9 +188,28 @@ class TMarleyDiscreteGammaDecayChannel : public TMarleyGammaDecayChannel {
       return final_level.get_energy();
     }
 
+    inline double get_min_KE(int Zi, int Ai, double Exi) {
+      return get_KE(Zi, Ai, Exi);
+    }
+
+    inline double get_max_KE(int Zi, int Ai, double Exi) {
+      return get_KE(Zi, Ai, Exi);
+    }
+
   private:
-    TMarleyLevel& final_level; // Pointer to final level in a nuclear decay scheme,
-                               // nullptr if in the unbound continuum
+
+    inline double get_KE(int Zi, int Ai, double Exi) {
+      int Npid = marley_utils::get_nucleus_pid(Zi, Ai);
+      double Mfgs = TMarleyMassTable::get_atomic_mass(Zi, Ai);
+      TMarleyParticle initial(Npid, Mfgs + Exi);
+      TMarleyParticle gamma(marley_utils::PHOTON,
+        TMarleyMassTable::get_particle_mass(marley_utils::PHOTON));
+      TMarleyParticle final_nuc(Npid, Mfgs + final_level.get_energy());
+      TMarleyKinematics::two_body_decay(initial, gamma, final_nuc, 0., 0.);
+      return gamma.get_total_energy() - gamma.get_mass();
+    }
+
+    TMarleyLevel& final_level; // Reference to final level in a nuclear decay scheme
     //int l;      // Orbital angular momentum of the outgoing fragment
 };
 
@@ -196,6 +256,16 @@ class TMarleyContinuumFragmentDecayChannel : public TMarleyFragmentDecayChannel,
       Migs = migs;
     }
 
+    // Get the minimum and maximum values of the outgoing fragment's kinetic
+    // energy (in the initial nucleus's rest frame) for this continuum bin
+    inline double get_min_KE(int Zi, int Ai, double Exi) {
+      return get_KE(Zi, Ai, Exi, Emax);
+    }
+
+    inline double get_max_KE(int Zi, int Ai, double Exi) {
+      return get_KE(Zi, Ai, Exi, Emin);
+    }
+
     void get_post_decay_parameters(double& Ex, int& two_J, TMarleyParity& Pi);
 
     // Return the final excitation energy at the center of this bin
@@ -211,6 +281,22 @@ class TMarleyContinuumFragmentDecayChannel : public TMarleyFragmentDecayChannel,
 
     // Optical model to use for sampling final spin-parity
     const TMarleySphericalOpticalModel& om;
+
+    inline double get_KE(int Zi, int Ai, double Exi, double Exf) {
+      double Migs = TMarleyMassTable::get_atomic_mass(Zi, Ai);
+      int Za = fragment.get_Z();
+      int Zf = Zi - Za;
+      int Af = Ai - fragment.get_A();
+      double Mfgs = TMarleyMassTable::get_atomic_mass(Zf, Af)
+        + Za * TMarleyMassTable::get_particle_mass(marley_utils::ELECTRON);
+      TMarleyParticle initial(marley_utils::get_nucleus_pid(Zi, Ai),
+        Migs + Exi);
+      TMarleyParticle frag(fragment.get_pid(), fragment.get_mass());
+      TMarleyParticle final_nuc(marley_utils::get_nucleus_pid(Zf, Af),
+        Mfgs + Exf);
+      TMarleyKinematics::two_body_decay(initial, frag, final_nuc, 0., 0.);
+      return frag.get_total_energy() - frag.get_mass();
+    }
 };
 
 class TMarleyContinuumGammaDecayChannel : public TMarleyGammaDecayChannel,
@@ -224,6 +310,30 @@ class TMarleyContinuumGammaDecayChannel : public TMarleyGammaDecayChannel,
     {
       Zi = Zinitial;
       Ai = Ainitial;
+    }
+
+    // Get the minimum and maximum values of the outgoing fragment's kinetic
+    // energy (in the initial nucleus's rest frame) for this continuum bin
+    inline double get_min_KE(int Z, int A, double Exi) {
+      int Npid = marley_utils::get_nucleus_pid(Z, A);
+      double Mfgs = TMarleyMassTable::get_atomic_mass(Z, A);
+      TMarleyParticle initial(Npid, Mfgs + Exi);
+      TMarleyParticle gamma(marley_utils::PHOTON,
+        TMarleyMassTable::get_particle_mass(marley_utils::PHOTON));
+      TMarleyParticle final_nuc(Npid, Mfgs + Emax);
+      TMarleyKinematics::two_body_decay(initial, gamma, final_nuc, 0., 0.);
+      return gamma.get_total_energy() - gamma.get_mass();
+    }
+
+    inline double get_max_KE(int Z, int A, double Exi) {
+      int Npid = marley_utils::get_nucleus_pid(Z, A);
+      double Mfgs = TMarleyMassTable::get_atomic_mass(Z, A);
+      TMarleyParticle initial(Npid, Mfgs + Exi);
+      TMarleyParticle gamma(marley_utils::PHOTON,
+        TMarleyMassTable::get_particle_mass(marley_utils::PHOTON));
+      TMarleyParticle final_nuc(Npid, Mfgs + Emin);
+      TMarleyKinematics::two_body_decay(initial, gamma, final_nuc, 0., 0.);
+      return gamma.get_total_energy() - gamma.get_mass();
     }
 
     void get_post_decay_parameters(double& Ex, int& twoJ, TMarleyParity& Pi);

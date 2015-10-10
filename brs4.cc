@@ -11,9 +11,10 @@
 #include "TMarleyKinematics.hh"
 #include "TMarleyNuclearPhysics.hh"
 
+#include "TAxis.h"
+#include "TCanvas.h"
 #include "TFile.h"
 #include "TH1D.h"
-#include "TCanvas.h"
 
 static const std::unordered_map<int, int> f_br_plot_ids = {
   { marley_utils::PHOTON, 10},
@@ -55,9 +56,6 @@ int main() {
     TMarleyParticle initial(marley_utils::get_nucleus_pid(Zi, Ai),
       TMarleyMassTable::get_atomic_mass(Zi, Ai) + Exi);
 
-    //std::vector<double> KEs;
-    //std::vector<int> f_pids;
-
     TMarleyHFTable hftable = TMarleyNuclearPhysics::create_hf_table(Zi, Ai,
       initial, Exi, twoJi, Pi, gen.get_structure_db(), gen);
 
@@ -95,17 +93,17 @@ int main() {
     // Get the decay channel objects from the HFTable
     const auto& dc_vec = hftable.get_channels();
 
-    std::vector<double> KEs;
     std::vector<double> widths;
     std::vector<bool> c_flags;
+    std::vector<size_t> dc_indices;
 
     double total_width = hftable.get_total_width();
 
     for (const auto& pid : pids) {
 
-      KEs.clear();
       widths.clear();
       c_flags.clear();
+      dc_indices.clear();
 
       int id = f_br_plot_ids.at(pid);
 
@@ -118,43 +116,27 @@ int main() {
       size_t num_channels = 0;
 
       // Loop over each of the decay channels
-      for (size_t j = 0; j < hftable.get_widths().size(); ++j) {
+      for (size_t k = 0; k < hftable.get_widths().size(); ++k) {
 	// If the current decay channel is for the current final particle, then
 	// add the partial decay width to the total. Also get the outgoing
 	// kinetic energy for the fragment corresponding to the center of the
 	// final energy bin for this channel
-        if (pid == dc_vec.at(j)->get_fragment_pid()) {
+        if (pid == dc_vec.at(k)->get_fragment_pid()) {
 
-          double dc_width = hftable.get_widths().at(j);
+          double dc_width = hftable.get_widths().at(k);
           widths.push_back(dc_width);
 
           width += dc_width;
  
           TMarleyParticle first_product = TMarleyParticle(pid,
-            dc_vec.at(j)->get_fragment_mass());
+            dc_vec.at(k)->get_fragment_mass());
 
-          double Exf = dc_vec.at(j)->get_bin_center_Exf();
-
-          int Za = dc_vec.at(j)->get_fragment_Z();
-          int Zf = Zi - Za;
-          int Af = Ai - dc_vec.at(j)->get_fragment_A();
-          double Mfgs = TMarleyMassTable::get_atomic_mass(Zf, Af)
-            + Za*TMarleyMassTable::get_particle_mass(marley_utils::ELECTRON);
-          
-          TMarleyParticle second_product = TMarleyParticle(
-            marley_utils::get_nucleus_pid(Zf, Af), Mfgs + Exf);
-
-          TMarleyKinematics::two_body_decay(initial, first_product,
-            second_product, 0., 0.);
-
-          double KE = first_product.get_total_energy()
-            - first_product.get_mass();
-
-          KEs.push_back(KE);
-
+          double KE = dc_vec.at(k)->get_max_KE(Zi, Ai, Exi);
           if (max_KE < KE) max_KE = KE;
 
-          c_flags.push_back(dc_vec.at(j)->is_continuum());
+          c_flags.push_back(dc_vec.at(k)->is_continuum());
+
+          dc_indices.push_back(k);
 
           ++num_channels;
         }
@@ -181,12 +163,57 @@ int main() {
         + "; Kinetic Energy [MeV]; Partial Branching Ratio").c_str(),
         100, 0, 1.3*std::nextafter(max_KE, DBL_MAX));
 
+      TAxis& Xax = *frag_E_histogram.GetXaxis();
       for (size_t i = 0; i < widths.size(); ++i) {
         double partial_br = widths.at(i) / width;
-        frag_E_histogram.Fill(KEs.at(i), partial_br);
-        std::cout << "Decay via emission of a " << KEs.at(i) << " MeV "
+        bool cont = c_flags.at(i);
+	// If this is a discrete bin, just fill the histogram using the width
+	// and bin-center kinetic energy.
+        if (!cont) frag_E_histogram.Fill(
+          dc_vec.at(dc_indices.at(i))->get_max_KE(Zi, Ai, Exi), partial_br);
+	// If this is a continuum bin, fill one or more histogram bins with
+	// their respective fractions of the width for this bin, assuming (as
+	// we have done during discretization) that the decay width is uniform
+	// over the continuum bin.
+        else {
+          double KE_min = dc_vec.at(dc_indices.at(i))->get_min_KE(Zi, Ai, Exi);
+          double KE_max = dc_vec.at(dc_indices.at(i))->get_max_KE(Zi, Ai, Exi);
+          double Delta_KE = KE_max - KE_min;
+          //std::cout << "DEBUG: KEmin = " << KE_min << ", KEmax = " << KE_max << std::endl;
+          size_t min_idx = Xax.FindBin(KE_min);
+          size_t max_idx = Xax.FindBin(KE_max);
+          for (size_t idx = min_idx; idx <= max_idx; ++idx) {
+            double up_edge = Xax.GetBinUpEdge(idx);
+            double low_edge = Xax.GetBinLowEdge(idx);
+            double center = Xax.GetBinCenter(idx);
+            double frac; // Fraction of continuum bin occupied by histogram bin
+            if (up_edge <= KE_max) {
+              if (low_edge >= KE_min)
+                // The current histogram bin falls entirely inside the continuum bin
+                frac = (up_edge - low_edge) / Delta_KE;
+              else
+                // The low edge of the histogram bin is outside, and the upper edge is inside
+                frac = (up_edge - KE_min) / Delta_KE;
+            }
+            else {
+              if (low_edge >= KE_min)
+                // The upper edge is outside, the low edge is inside
+                frac = (KE_max - low_edge) / Delta_KE;
+              else
+                // Both the upper edge and low edge are outside, so this continuum
+                // bin is entirely contained in the histogram bin
+                frac = 1.;
+            }
+
+            //std::cout << "DEBUG: low_edge = " << low_edge << ", up_edge = "
+            //  << up_edge << ", frac = " << frac << std::endl;
+            frag_E_histogram.Fill(center, frac * partial_br);
+          }
+        }
+        std::cout << "Decay via emission of a "
+          << dc_vec.at(dc_indices.at(i))->get_min_KE(Zi, Ai, Exi) << " MeV "
           << pname_string << " has partial BR = " << partial_br;
-        if (c_flags.at(i)) std::cout << " (continuum bin)";
+        if (cont) std::cout << " (continuum bin)";
         std::cout << std::endl;
       }
 
