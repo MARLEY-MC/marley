@@ -61,6 +61,9 @@ class TMarleyStructureDatabase {
       else return it->second;
     }
 
+    inline double get_contbin_width() const { return contbin_width; }
+    inline size_t get_contbin_num_subs() const { return contbin_num_subs; }
+
   private:
     // Lookup table for TMarleyDecayScheme objects.
     // Keys are ENSDF-style nucIDs, values are decay schemes.
@@ -71,4 +74,10 @@ class TMarleyStructureDatabase {
     // Lookup table for TMarleySphericalOpticalModel objects.
     // Keys are PDG particle IDs, values are optical models.
     std::unordered_map<int, TMarleySphericalOpticalModel> optical_model_table;
+
+    // Resolution to use when binning the nuclear energy level continuum
+    double contbin_width;
+    // Number of subintervals to use when computing the partial decay width for
+    // a continuum bin
+    double contbin_num_subs;
 };

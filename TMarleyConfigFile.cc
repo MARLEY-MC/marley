@@ -3,8 +3,11 @@
 
 // Matches comment lines and empty lines
 const std::regex TMarleyConfigFile::rx_comment_or_empty = std::regex("#.*|\\s*");
-// Matches positive integers
-const std::regex TMarleyConfigFile::rx_num = std::regex("[0-9]+");
+// Matches non-negative integers
+const std::regex TMarleyConfigFile::rx_nonneg_int = std::regex("[0-9]+");
+// Matches all numbers, including floats (see
+// http://www.regular-expressions.info/floatingpoint.html)
+const std::regex TMarleyConfigFile::rx_num = std::regex("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?");
 // Matches trimmed ENSDF-style nucids
 const std::regex TMarleyConfigFile::rx_nucid = std::regex("[1-9][0-9]{0,2}[A-Za-z]{1,2}");
 
@@ -17,6 +20,8 @@ TMarleyConfigFile::TMarleyConfigFile() {
   check_before_root_file_overwrite = true;
   root_filename = "events.root";
   #endif
+  contbin_width = DEFAULT_CONTINUUM_BIN_RESOLUTION;
+  contbin_num_subs = DEFAULT_CONTINUUM_BIN_SUBINTERVALS;
 }
 
 // Call the default constructor first to set all configuration
@@ -72,7 +77,7 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
       // If "device" is used, seed the random number generator using random_device 
       // TODO: implement this
       //else if (arg == "device");
-      else if (!std::regex_match(arg, rx_num))
+      else if (!std::regex_match(arg, rx_nonneg_int))
         throw std::runtime_error(std::string("Invalid random number seed")
           + "encountered on line " + std::to_string(line_num)
           + " of the configuration file " + filename);
@@ -142,7 +147,7 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
         // If a numeric specifier is given for the nuclide,
         // assume that it has the format Z*1000 + A, and
         // create an ENSDF nucid accordingly
-        if (std::regex_match(arg, rx_num)) {
+        if (std::regex_match(arg, rx_nonneg_int)) {
           int dummy = std::stoi(arg);
           int Z = dummy / 1000;
           int A = dummy % 1000;
@@ -161,7 +166,7 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
           if (arg.length() != 5) {
             // Split the string into "A" and "element name" pieces
             std::smatch m;
-            std::regex_search(arg, m, rx_num);
+            std::regex_search(arg, m, rx_nonneg_int);
             std::string z_str = m.str();
             std::string e_str = m.suffix().str();
 
@@ -187,6 +192,38 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
       // Add this structure record to the master vector
       structure_records.push_back(sr);
 
+    }
+    else if (keyword == "contbin") {
+      next_word_from_line(iss, arg, keyword, line_num, true, false);
+      if (!std::regex_match(arg, rx_num))
+        throw std::runtime_error(std::string("Non-numeric")
+        + " continuum bin width '" + arg
+        + "' given on line " + std::to_string(line_num)
+        + " of the configuration file " + filename);
+      double width = std::stod(arg);
+      if (width <= 0.)
+        throw std::runtime_error(std::string("Continuum")
+        + " bin width '" + arg
+        + "' given on line " + std::to_string(line_num)
+        + " of the configuration file " + filename
+        + " must be positive.");
+      contbin_width = width;
+    }
+    else if (keyword == "contbinsubs") {
+      next_word_from_line(iss, arg, keyword, line_num, true, false);
+      if (!std::regex_match(arg, rx_nonneg_int))
+        throw std::runtime_error(std::string("Invalid")
+        + " number of continuum bin subintervals '" + arg
+        + "' given on line " + std::to_string(line_num)
+        + " of the configuration file " + filename);
+      int subs = std::stoi(arg);
+      if (subs <= 0)
+        throw std::runtime_error(std::string("Number")
+        + " of continuum bin subintervals '" + arg
+        + "' given on line " + std::to_string(line_num)
+        + " of the configuration file " + filename
+        + " must be positive.");
+      contbin_num_subs = subs;
     }
     else {
       std::cerr << "Warning: Ignoring unrecognized keyword '"
@@ -255,7 +292,7 @@ void TMarleyConfigFile::print_summary(std::ostream& os) {
       // then make its second letter lowercase. Also change
       // the ENSDF code for a neutron ("NN") to "n"
       std::string element_symbol = trimmed_id.substr(trimmed_id.size() - 2);
-      if (!std::regex_match(element_symbol.substr(0,1), rx_num)) {
+      if (!std::regex_match(element_symbol.substr(0,1), rx_nonneg_int)) {
         element_symbol.back() = tolower(element_symbol.back());
         if (element_symbol == "Nn") element_symbol = "n";
         trimmed_id = trimmed_id.erase(trimmed_id.size() - 2) + element_symbol;
