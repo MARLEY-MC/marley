@@ -56,6 +56,9 @@ brs3: $(OBJ) $(OBJ_DICT) brs3.o
 brs4: $(OBJ) $(OBJ_DICT) brs4.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
+hf: $(OBJ) $(OBJ_DICT) hf.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
 plots: $(OBJ) $(OBJ_DICT) plots.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 

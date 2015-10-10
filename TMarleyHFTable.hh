@@ -85,6 +85,10 @@ class TMarleyHFTable {
       return total_width;
     }
 
+    inline size_t get_num_channels() const {
+      return decay_channels.size();
+    }
+
   private:
     std::vector<std::unique_ptr<TMarleyDecayChannel> > decay_channels;
     std::vector<double> widths;
