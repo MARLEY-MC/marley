@@ -159,7 +159,7 @@ class TMarleyDiscreteFragmentDecayChannel : public TMarleyFragmentDecayChannel {
       TMarleyParticle final_nuc(marley_utils::get_nucleus_pid(Zf, Af),
         Mfgs + final_level.get_energy());
       TMarleyKinematics::two_body_decay(initial, frag, final_nuc, 0., 0.);
-      return frag.get_total_energy() - frag.get_mass();
+      return frag.get_kinetic_energy();
     }
 };
 
@@ -206,7 +206,7 @@ class TMarleyDiscreteGammaDecayChannel : public TMarleyGammaDecayChannel {
         TMarleyMassTable::get_particle_mass(marley_utils::PHOTON));
       TMarleyParticle final_nuc(Npid, Mfgs + final_level.get_energy());
       TMarleyKinematics::two_body_decay(initial, gamma, final_nuc, 0., 0.);
-      return gamma.get_total_energy() - gamma.get_mass();
+      return gamma.get_kinetic_energy();
     }
 
     TMarleyLevel& final_level; // Reference to final level in a nuclear decay scheme
@@ -295,7 +295,7 @@ class TMarleyContinuumFragmentDecayChannel : public TMarleyFragmentDecayChannel,
       TMarleyParticle final_nuc(marley_utils::get_nucleus_pid(Zf, Af),
         Mfgs + Exf);
       TMarleyKinematics::two_body_decay(initial, frag, final_nuc, 0., 0.);
-      return frag.get_total_energy() - frag.get_mass();
+      return frag.get_kinetic_energy();
     }
 };
 
@@ -322,7 +322,7 @@ class TMarleyContinuumGammaDecayChannel : public TMarleyGammaDecayChannel,
         TMarleyMassTable::get_particle_mass(marley_utils::PHOTON));
       TMarleyParticle final_nuc(Npid, Mfgs + Emax);
       TMarleyKinematics::two_body_decay(initial, gamma, final_nuc, 0., 0.);
-      return gamma.get_total_energy() - gamma.get_mass();
+      return gamma.get_kinetic_energy();
     }
 
     inline double get_max_KE(int Z, int A, double Exi) {
@@ -333,7 +333,7 @@ class TMarleyContinuumGammaDecayChannel : public TMarleyGammaDecayChannel,
         TMarleyMassTable::get_particle_mass(marley_utils::PHOTON));
       TMarleyParticle final_nuc(Npid, Mfgs + Emin);
       TMarleyKinematics::two_body_decay(initial, gamma, final_nuc, 0., 0.);
-      return gamma.get_total_energy() - gamma.get_mass();
+      return gamma.get_kinetic_energy();
     }
 
     void get_post_decay_parameters(double& Ex, int& twoJ, TMarleyParity& Pi);

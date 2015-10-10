@@ -40,6 +40,10 @@ class TMarleyParticle {
       return std::sqrt(std::pow(px, 2) + std::pow(py, 2) + std::pow(pz, 2));
     }
 
+    inline double get_kinetic_energy() const {
+      return std::max(total_energy - mass, 0.);
+    }
+
     std::vector<TMarleyParticle*>* get_children();
 
   private:
