@@ -8,3 +8,4 @@ check
 *.swp
 root_dict.cc
 root_dict.h
+E_lev*.pdf
