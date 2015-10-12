@@ -96,7 +96,7 @@ class TMarleyNuclearPhysics {
     // given nuclear level via emission of the fragment f.
     static double hf_fragment_partial_width(int Zi, int Ai, double Ex,
       int twoJi, TMarleyParity Pi, const TMarleyFragment& f,
-      const TMarleySphericalOpticalModel& om, const TMarleyDecayScheme& ds);
+      /*const*/ TMarleySphericalOpticalModel& om, const TMarleyDecayScheme& ds);
 
     static double hf_gamma_partial_width(double Ex, int twoJi,
       TMarleyParity Pi, const TMarleyDecayScheme& ds);
@@ -138,7 +138,7 @@ class TMarleyNuclearPhysics {
     static void sample_gamma_spin_parity(int Z, int A, int& twoJ,
       TMarleyParity& Pi, double Exi, double Exf, TMarleyGenerator& gen);
     static void sample_fragment_spin_parity(int& twoJ, TMarleyParity& Pi,
-      const TMarleyFragment& f, const TMarleySphericalOpticalModel& om,
+      const TMarleyFragment& f, /*const*/ TMarleySphericalOpticalModel& om,
       TMarleyGenerator& gen, double Exf, double Ea);
 
     // Create a table that can be used to sample Hauser-Feshbach decay events
@@ -183,12 +183,12 @@ class TMarleyNuclearPhysics {
     // the Hauser-Feshbach statistical model
     static double fragment_continuum_partial_width(double Mconst,
       double Mfgs_ion, double Mi, int twoJi, TMarleyParity Pi, int fragment_pid,
-      int two_s, TMarleyParity Pa, const TMarleySphericalOpticalModel& om,
+      int two_s, TMarleyParity Pa, /*const*/ TMarleySphericalOpticalModel& om,
       double Exf);
 
     static double fragment_discrete_partial_width(double Exf_max, double Mconst,
       double Mfgs_ion, double Mi, int twoJi, TMarleyParity Pi, int fragment_pid,
-      int two_s, TMarleyParity Pa, const TMarleySphericalOpticalModel& om,
+      int two_s, TMarleyParity Pa, /*const*/ TMarleySphericalOpticalModel& om,
       const std::vector<TMarleyLevel*>* sorted_lps);
 
     static double gamma_continuum_partial_width(int Z, int A, int twoJi,

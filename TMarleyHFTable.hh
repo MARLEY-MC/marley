@@ -34,7 +34,7 @@ class TMarleyHFTable {
     }
 
     inline void add_continuum_fragment_channel(const TMarleyFragment& frag,
-      TMarleyGenerator& gener, const TMarleySphericalOpticalModel& optmod,
+      TMarleyGenerator& gener, /*const*/ TMarleySphericalOpticalModel& optmod,
       double E_min, double E_max, double mconst, double mfgs, double migs,
       double width, bool use_upper_edge = false)
     {

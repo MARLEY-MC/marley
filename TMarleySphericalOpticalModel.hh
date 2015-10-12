@@ -11,9 +11,9 @@ class TMarleySphericalOpticalModel {
   public:
     TMarleySphericalOpticalModel(int z, int a);
     std::complex<double> optical_model_potential(double r, double E,
-      int fragment_pid, int two_j, int l, int two_s) const;
+      int fragment_pid, int two_j, int l, int two_s);
     double transmission_coefficient(double E, int fragment_pid, int two_j,
-      int l, int two_s, double h) const;
+      int l, int two_s, double h);
 
     inline int get_Z() const {
       return Z;
@@ -24,6 +24,12 @@ class TMarleySphericalOpticalModel {
     }
 
   private:
+
+    // Helper functions for computing the optical model potential
+    void calculate_om_parameters(double E, int fragment_pid, int two_j,
+      int l, int two_s);
+    std::complex<double> omp(double r) const;
+
     // Woods-Saxon shape
     inline double f(double r, double R, double a) const {
       return std::pow(1 + std::exp((r - R) / a), -1);
@@ -57,12 +63,11 @@ class TMarleySphericalOpticalModel {
 
     // Non-derivative radial Schrödinger equation terms to use for computing transmission
     // coefficients via the Numerov method
-    inline std::complex<double> a(double r, double E, int fragment_pid,
-      int two_j, int l, int two_s) const
+    inline std::complex<double> a(double r, double E, int fragment_pid, int l) //const
     {
       return (-l*(l+1) / std::pow(r, 2)) +
-        2 * reduced_masses.at(fragment_pid) * (E - optical_model_potential(r,
-        E, fragment_pid, two_j, l, two_s)) / marley_utils::hbar_c2;
+        2 * reduced_masses.at(fragment_pid) * (E - omp(r))
+        / marley_utils::hbar_c2;
     }
 
     // Nuclear atomic and mass numbers
@@ -83,4 +88,10 @@ class TMarleySphericalOpticalModel {
     // Squared pion Compton wavelength
     static constexpr double lambda_piplus2 = std::pow(marley_utils::hbar_c
       / mpiplus, 2); // fm
+
+    // Temporary storage for optical model calculations
+    double Rv, av, Rd, ad, Rso, aso; // Geometrical parameters
+    double Vv, Wv, Wd, Vso, Wso; // Energy-dependent terms in the potential
+    double spin_orbit_eigenvalue; // Eigenvalue of the spin-orbit operator
+    int z; // Fragment atomic number
 };

@@ -44,7 +44,7 @@ class TMarleyStructureDatabase {
 
     // If the requested optical model object already exists in the lookup table,
     // return it. If not, create it, add it to the table, and then return it.
-    inline const TMarleySphericalOpticalModel& get_optical_model(const int Z,
+    inline /*const*/ TMarleySphericalOpticalModel& get_optical_model(const int Z,
       const int A)
     {
       int pid = marley_utils::get_nucleus_pid(Z, A);

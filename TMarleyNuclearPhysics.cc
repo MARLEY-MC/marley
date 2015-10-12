@@ -280,7 +280,7 @@ double TMarleyNuclearPhysics::hf_gamma_partial_width(double Ex, int twoJi,
 // given nuclear level via emission of the fragment f.
 double TMarleyNuclearPhysics::hf_fragment_partial_width(int Zi, int Ai,
   double Ex, int twoJi, TMarleyParity Pi, const TMarleyFragment& f,
-  const TMarleySphericalOpticalModel& om, const TMarleyDecayScheme& ds)
+  /*const*/ TMarleySphericalOpticalModel& om, const TMarleyDecayScheme& ds)
 {
   // Get information about the current fragment
   int two_s = f.get_two_s();
@@ -370,7 +370,7 @@ double TMarleyNuclearPhysics::hf_fragment_partial_width(int Zi, int Ai,
 
 double TMarleyNuclearPhysics::fragment_continuum_partial_width(double Mconst,
   double Mfgs_ion, double Mi, int twoJi, TMarleyParity Pi, int fragment_pid,
-  int two_s, TMarleyParity Pa, const TMarleySphericalOpticalModel& om,
+  int two_s, TMarleyParity Pa, /*const*/ TMarleySphericalOpticalModel& om,
   double Exf)
 {
   double Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
@@ -409,7 +409,7 @@ double TMarleyNuclearPhysics::fragment_continuum_partial_width(double Mconst,
 double TMarleyNuclearPhysics::fragment_discrete_partial_width(double Exf_max,
   double Mconst, double Mfgs_ion, double Mi, int twoJi, TMarleyParity Pi,
   int fragment_pid, int two_s, TMarleyParity Pa,
-  const TMarleySphericalOpticalModel& om,
+  /*const*/ TMarleySphericalOpticalModel& om,
   const std::vector<TMarleyLevel*>* sorted_lps)
 {
   double discrete_width = 0;
@@ -482,7 +482,7 @@ bool TMarleyNuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
     int Zf = Zi - f.get_Z();
     int Af = Ai - f.get_A();
 
-    const TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
+    /*const*/ TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
     TMarleyDecayScheme* ds = db.get_decay_scheme(Zf, Af);
 
     // Get information about the current fragment
@@ -738,7 +738,7 @@ bool TMarleyNuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
       double Ea = (Mconst - Exf*(2*mfgs + Exf)) / (2 * Mi);
       int Zf = Zi - fr->get_Z();
       int Af = Ai - fr->get_A();
-      const TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
+      /*const*/ TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
       sample_fragment_spin_parity(twoJ, Pi, *fr, om, gen, Exf, Ea);
     }
     else sample_gamma_spin_parity(Zi, Ai, twoJ, Pi, Ex, Exf, gen);
@@ -843,7 +843,7 @@ void TMarleyNuclearPhysics::sample_gamma_spin_parity(int Z, int A,
 
 void TMarleyNuclearPhysics::sample_fragment_spin_parity(int& twoJ,
   TMarleyParity& Pi, const TMarleyFragment& f,
-  const TMarleySphericalOpticalModel& om, TMarleyGenerator& gen,
+  /*const*/ TMarleySphericalOpticalModel& om, TMarleyGenerator& gen,
   double Exf, double Ea)
 {
   int fragment_pid = f.get_pid();
@@ -931,7 +931,7 @@ void TMarleyNuclearPhysics::hf_test(int Zi, int Ai,
     int Zf = Zi - f.get_Z();
     int Af = Ai - f.get_A();
 
-    const TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
+    /*const*/ TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
     TMarleyDecayScheme* ds = db.get_decay_scheme(Zf, Af);
 
     // Get information about the current fragment
@@ -1195,7 +1195,7 @@ void TMarleyNuclearPhysics::hf_test(int Zi, int Ai,
         double Ea = (Mconst - Exf*(2*mfgs + Exf)) / (2 * Mi);
         int Zf = Zi - fr->get_Z();
         int Af = Ai - fr->get_A();
-        const TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
+        /*const*/ TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
         sample_fragment_spin_parity(twoJf, Pf, *fr, om, gen, Exf, Ea);
       }
       else sample_gamma_spin_parity(Zi, Ai, twoJf, Pf, Ex, Exf, gen);
@@ -1277,7 +1277,7 @@ void TMarleyNuclearPhysics::hf_test2(int Zi, int Ai,
     int Zf = Zi - f.get_Z();
     int Af = Ai - f.get_A();
 
-    const TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
+    /*const*/ TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
     TMarleyDecayScheme* ds = db.get_decay_scheme(Zf, Af);
 
     // Get information about the current fragment
@@ -1535,7 +1535,7 @@ void TMarleyNuclearPhysics::hf_test2(int Zi, int Ai,
         double Ea = (Mconst - Exf*(2*mfgs + Exf)) / (2 * Mi);
         int Zf = Zi - fr->get_Z();
         int Af = Ai - fr->get_A();
-        const TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
+        /*const*/ TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
         sample_fragment_spin_parity(twoJ, Pi, *fr, om, gen, Exf, Ea);
       }
       else sample_gamma_spin_parity(Zi, Ai, twoJ, Pi, Ex, Exf, gen);
@@ -1605,7 +1605,7 @@ void TMarleyNuclearPhysics::hf_test3(int Zi, int Ai,
     int Zf = Zi - f.get_Z();
     int Af = Ai - f.get_A();
 
-    const TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
+    /*const*/ TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
     TMarleyDecayScheme* ds = db.get_decay_scheme(Zf, Af);
 
     // Get information about the current fragment
@@ -1761,7 +1761,7 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
     int Zf = Zi - f.get_Z();
     int Af = Ai - f.get_A();
 
-    const TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
+    /*const*/ TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
     TMarleyDecayScheme* ds = db.get_decay_scheme(Zf, Af);
 
     // Get information about the current fragment
