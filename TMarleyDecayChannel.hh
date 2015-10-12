@@ -246,7 +246,7 @@ class TMarleyContinuumFragmentDecayChannel : public TMarleyFragmentDecayChannel,
 {
   public:
     inline TMarleyContinuumFragmentDecayChannel(const TMarleyFragment& frag,
-      TMarleyGenerator& gener, const TMarleySphericalOpticalModel& optmod,
+      TMarleyGenerator& gener, /*const*/ TMarleySphericalOpticalModel& optmod,
       double E_min, double E_max, double mconst, double mfgs, double migs,
       bool use_upper_edge = false): TMarleyFragmentDecayChannel(frag, true),
       TMarleyContinuumBin(E_min, E_max, gener, use_upper_edge), om(optmod)
@@ -280,7 +280,7 @@ class TMarleyContinuumFragmentDecayChannel : public TMarleyFragmentDecayChannel,
     double Migs;
 
     // Optical model to use for sampling final spin-parity
-    const TMarleySphericalOpticalModel& om;
+    /*const*/ TMarleySphericalOpticalModel& om;
 
     inline double get_KE(int Zi, int Ai, double Exi, double Exf) {
       double Migs = TMarleyMassTable::get_atomic_mass(Zi, Ai);

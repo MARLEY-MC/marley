@@ -2,28 +2,71 @@
 #include "TMarleySphericalOpticalModel.hh"
 
 std::complex<double> TMarleySphericalOpticalModel::optical_model_potential(
-  double r, double E, int fragment_pid, int two_j, int l, int two_s) const
+  double r, double E, int fragment_pid, int two_j, int l, int two_s)
 {
+  calculate_om_parameters(E, fragment_pid, two_j, l, two_s);
+  return omp(r);
+}
 
+// Finish an optical model potential calculation by taking the r
+// dependence into account
+std::complex<double> TMarleySphericalOpticalModel::omp(double r) const
+{
+  double f_v = f(r, Rv, av);
+  double dfdr_d = dfdr(r, Rd, ad);
+
+  double temp_Vv = Vv * f_v;
+  double temp_Wv = Wv * f_v;
+  double temp_Wd = -4 * Wd * ad * dfdr_d;
+
+  double temp_Vso = 0;
+  double temp_Wso = 0;
+
+  if (spin_orbit_eigenvalue != 0) {
+
+    double factor_so = lambda_piplus2 * dfdr(r, Rso, aso)
+      * spin_orbit_eigenvalue / r;
+
+    temp_Vso = Vso * factor_so;
+    temp_Wso = Wso * factor_so;
+  }
+
+  return std::complex<double>(-temp_Vv + temp_Vso + Vc(r, Rc, z, Z),
+    -temp_Wv - temp_Wd + temp_Wso);
+}
+
+// Compute all of the pieces of the optical model that depend on the
+// fragment's energy E but not on its distance from the origin r.
+// Store them in the appropriate class members.
+void TMarleySphericalOpticalModel::calculate_om_parameters(double E,
+  int fragment_pid, int two_j, int l, int two_s)
+{
   // Fragment atomic, mass, and neutron numbers
-  int z = TMarleyMassTable::get_particle_Z(fragment_pid);
+  z = TMarleyMassTable::get_particle_Z(fragment_pid);
   int a = TMarleyMassTable::get_particle_A(fragment_pid);
   int n = a - z;
 
+  // Eigenvalue of the spin-orbit operator
+  // l.sigma = (j*(j + 1)  - l*(l + 1) -  s*(s + 1))/2
+  bool spin_zero = two_s == 0;
+  if (spin_zero) spin_orbit_eigenvalue = 0;
+  else spin_orbit_eigenvalue = 0.5*(0.25*(two_j*(two_j + 2)
+    - two_s*(two_s + 2)) - l*(l + 1));
+
   // Geometrical parameters
-  double Rv = 0;
-  double av = 0;
-  double Rd = 0;
-  double ad = 0;
-  double Rso = 0;
-  double aso = 0;
+  Rv = 0;
+  av = 0;
+  Rd = 0;
+  ad = 0;
+  Rso = 0;
+  aso = 0;
 
   // Terms in the spherical optical model potential
-  double Vv = 0;
-  double Wv = 0;
-  double Wd = 0;
-  double Vso = 0;
-  double Wso = 0;
+  Vv = 0;
+  Wv = 0;
+  Wd = 0;
+  Vso = 0;
+  Wso = 0;
 
   // Energy to use when computing folded potentials
   double E_eff = E / a;
@@ -45,7 +88,7 @@ std::complex<double> TMarleySphericalOpticalModel::optical_model_potential(
     Rso += n * Rso_n;
     aso += n * aso_n;
 
-    if (two_s != 0) {
+    if (!spin_zero) {
       Vso += vso1n * std::exp(-vso2n * Ediff_n);
       Wso += wso1n * Ediff_n2 / (Ediff_n2 + std::pow(wso2n, 2));
     }
@@ -69,7 +112,7 @@ std::complex<double> TMarleySphericalOpticalModel::optical_model_potential(
     Rso += z * Rso_p;
     aso += z * aso_p;
 
-    if (two_s != 0) {
+    if (!spin_zero) {
       Vso += vso1p * std::exp(-vso2p * Ediff_p);
       Wso += wso1p * Ediff_p2 / (Ediff_p2 + std::pow(wso2p, 2));
     }
@@ -84,33 +127,12 @@ std::complex<double> TMarleySphericalOpticalModel::optical_model_potential(
     aso /= a;
   }
 
-  double f_v = f(r, Rv, av);
-  double dfdr_d = dfdr(r, Rd, ad);
-
-  Vv *= f_v;
-  Wv *= f_v;
-  Wd *= -4 * ad * dfdr_d;
-
-  if (two_s != 0) {
-    // Eigenvalue of the spin-orbit operator
-    // l.sigma = (j*(j + 1)  - l*(l + 1) -  s*(s + 1))/2
-    double spin_orbit_eigenvalue = 0.5*(0.25*(two_j*(two_j + 2)
-      - two_s*(two_s + 2)) - l*(l + 1));
-    double factor_so = lambda_piplus2 * dfdr(r, Rso, aso)
-      * spin_orbit_eigenvalue / r;
-
-    Vso *= factor_so;
-    Wso *= factor_so;
-
+  if ((!spin_zero) && (a > 1)) {
     // Adjust spin-orbit potentials for multi-nucleon fragments
-    if (a > 1) {
-      Vso /= a * std::max(z, n);
-    }
+    Vso /= a * std::max(z, n);
+    //Wso /= a * std::max(z, n); TODO: check if you need to add this
   }
- 
-  return std::complex<double>(-Vv + Vso + Vc(r, Rc, z, Z), -Wv - Wd + Wso);
 }
-
 
 TMarleySphericalOpticalModel::TMarleySphericalOpticalModel(int z, int a) {
   Z = z;
@@ -178,8 +200,13 @@ TMarleySphericalOpticalModel::TMarleySphericalOpticalModel(int z, int a) {
 }
 
 double TMarleySphericalOpticalModel::transmission_coefficient(double E,
-  int fragment_pid, int two_j, int l, int two_s, double h) const
+  int fragment_pid, int two_j, int l, int two_s, double h) //const
 {
+
+  // Update the optical model parameters stored in this object for the
+  // given fragment, energy, and angular momenta
+  calculate_om_parameters(E, fragment_pid, two_j, l, two_s);
+
   double h2_over_twelve = std::pow(h, 2) / 12.0;
 
   // TODO: adjust method for determining matching radius
@@ -193,7 +220,7 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
   // by the boundary condition that u(0) = 0. We just need something finite here, but we might
   // as well make it zero.
   std::complex<double> a_n_minus_one = 0;
-  std::complex<double> a_n = a(h, E, fragment_pid, two_j, l, two_s);
+  std::complex<double> a_n = a(h, E, fragment_pid, l);
 
   std::complex<double> u_n_minus_two;
   // Boundary condition that the wavefunction vanishes at the origin (the optical model
@@ -210,7 +237,7 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
   for (r = 2*h; r < r_max_1; r += h) {
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = a(r, E, fragment_pid, two_j, l, two_s);
+    a_n = a(r, E, fragment_pid, l);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -225,7 +252,7 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
   for (; r < r_max_2; r += h) {
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = a(r, E, fragment_pid, two_j, l, two_s);
+    a_n = a(r, E, fragment_pid, l);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -239,7 +266,6 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
 
   // Coulomb parameter
   double mu = get_fragment_reduced_mass(fragment_pid);
-  int z = TMarleyMassTable::get_particle_Z(fragment_pid);
   double k = marley_utils::real_sqrt(2.0 * mu * E) / marley_utils::hbar_c;
   // If k == 0, then eta blows up, so use a really small k instead of zero
   // (or a negative k due to roundoff error)
