@@ -47,11 +47,14 @@ void TMarleySphericalOpticalModel::calculate_om_parameters(double E,
   int n = a - z;
 
   // Eigenvalue of the spin-orbit operator
-  // l.sigma = (j*(j + 1)  - l*(l + 1) -  s*(s + 1))/2
+  // 2*(l.s) = j*(j + 1)  - l*(l + 1) -  s*(s + 1)
+  // = 0.25*((2j - 2s)*(2j + 2s + 2)) - l*(l+1)
+  // (to keep the units right we take hbar = 1).
   bool spin_zero = two_s == 0;
   if (spin_zero) spin_orbit_eigenvalue = 0;
-  else spin_orbit_eigenvalue = 0.5*(0.25*(two_j*(two_j + 2)
-    - two_s*(two_s + 2)) - l*(l + 1));
+  else spin_orbit_eigenvalue = 0.25*((two_j - two_s)
+    * (two_j + two_s + 2)) - l*(l + 1);
+
 
   // Geometrical parameters
   Rv = 0;
@@ -89,8 +92,10 @@ void TMarleySphericalOpticalModel::calculate_om_parameters(double E,
     aso += n * aso_n;
 
     if (!spin_zero) {
-      Vso += vso1n * std::exp(-vso2n * Ediff_n);
-      Wso += wso1n * Ediff_n2 / (Ediff_n2 + std::pow(wso2n, 2));
+      double Ediff_so_n = E - Efn;
+      double Ediff_so_n2 = std::pow(Ediff_so_n, 2);
+      Vso += vso1n * std::exp(-vso2n * Ediff_so_n);
+      Wso += wso1n * Ediff_so_n2 / (Ediff_so_n2 + std::pow(wso2n, 2));
     }
   }
 
@@ -113,24 +118,35 @@ void TMarleySphericalOpticalModel::calculate_om_parameters(double E,
     aso += z * aso_p;
 
     if (!spin_zero) {
-      Vso += vso1p * std::exp(-vso2p * Ediff_p);
-      Wso += wso1p * Ediff_p2 / (Ediff_p2 + std::pow(wso2p, 2));
+      double Ediff_so_p = E - Efp;
+      double Ediff_so_p2 = std::pow(Ediff_so_p, 2);
+      Vso += vso1p * std::exp(-vso2p * Ediff_so_p);
+      Wso += wso1p * Ediff_so_p2 / (Ediff_so_p2 + std::pow(wso2p, 2));
     }
   }
 
-  if (a != 1) {
+  if (a > 1) {
     Rv /= a;
     av /= a;
     Rd /= a;
     ad /= a;
     Rso /= a;
     aso /= a;
-  }
 
-  if ((!spin_zero) && (a > 1)) {
-    // Adjust spin-orbit potentials for multi-nucleon fragments
-    Vso /= a * std::max(z, n);
-    //Wso /= a * std::max(z, n); TODO: check if you need to add this
+    // Apply folding factor for composite particle spin-orbit potentials
+    if (!spin_zero) {
+      bool z_odd = z % 2;
+      bool n_odd = n % 2;
+      // This factor stays zero for even-even nuclides (which should all be
+      // spin-zero anyway)
+      double factor = 0.;
+      if (z_odd && n_odd) factor = 2.0; // odd-odd
+      else if (z_odd != n_odd) factor = 1.0; // even-odd
+      factor /= 2*a;
+
+      Vso *= factor;
+      Wso *= factor;
+    }
   }
 }
 
