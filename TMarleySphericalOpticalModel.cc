@@ -9,8 +9,8 @@ std::complex<double> TMarleySphericalOpticalModel::optical_model_potential(
 }
 
 // Finish an optical model potential calculation by taking the r
-// dependence into account
-std::complex<double> TMarleySphericalOpticalModel::omp(double r) const
+// dependence into account. Don't add in the Coulomb potential.
+std::complex<double> TMarleySphericalOpticalModel::omp_minus_Vc(double r) const
 {
   double f_v = f(r, Rv, av);
   double dfdr_d = dfdr(r, Rd, ad);
@@ -31,7 +31,7 @@ std::complex<double> TMarleySphericalOpticalModel::omp(double r) const
     temp_Wso = Wso * factor_so;
   }
 
-  return std::complex<double>(-temp_Vv + temp_Vso + Vc(r, Rc, z, Z),
+  return std::complex<double>(-temp_Vv + temp_Vso,
     -temp_Wv - temp_Wd + temp_Wso);
 }
 
@@ -209,10 +209,6 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
 
   double h2_over_twelve = std::pow(h, 2) / 12.0;
 
-  // TODO: adjust method for determining matching radius
-  double r_max_1 = 12; // Matching radius (fm)
-  double r_max_2 = 1.2*r_max_1;
-
   std::complex<double> u1 = 0, u2 = 0;
 
   std::complex<double> a_n_minus_two;
@@ -232,12 +228,18 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
   // determining the transmission coefficients.
   std::complex<double> u_n = std::pow(h, l + 1);
 
-  double r;
+  // Optical model potential with and without the Coulomb potential included
+  std::complex<double> U, U_minus_Vc;
 
-  for (r = 2*h; r < r_max_1; r += h) {
+  double r = h;
+  do {
+    r += h;
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = a(r, E, fragment_pid, l);
+
+    U_minus_Vc = omp_minus_Vc(r),
+    U = U_minus_Vc + Vc(r, Rc, z, Z);
+    a_n = a(r, E, fragment_pid, l, U);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -246,10 +248,20 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
       - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
       / (1.0 + h2_over_twelve*a_n);
   }
+  while (std::abs(U_minus_Vc) > MATCHING_RADIUS_THRESHOLD);
 
+  double r_match_1 = r;
   u1 = u_n;
 
-  for (; r < r_max_2; r += h) {
+  // TODO: consider using a more sophisticated method for choosing the second
+  // matching radius
+  // Advance at least as far as r_max. The actual maximum value used (which
+  // will be an integer multiple of the step size h) will be assigned to
+  // r_match_2.
+  double r_max = 1.2 * r_match_1;
+
+  do {
+    r += h;
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
     a_n = a(r, E, fragment_pid, l);
@@ -261,8 +273,12 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
       - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
       / (1.0 + h2_over_twelve*a_n);
   }
+  while (r < r_max);
 
+  double r_match_2 = r;
   u2 = u_n;
+
+  //std::cout << "DEBUG: r1 = " << r_match_1 << ", r2 = " << r_match_2 << std::endl;
 
   // Coulomb parameter
   double mu = get_fragment_reduced_mass(fragment_pid);
@@ -275,14 +291,14 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
   // Compute the Coulomb wavefunctions at the matching radii
   double F, G;
   std::complex<double> Hplus1, Hminus1, Hplus2, Hminus2;
-  F = meta_numerics::CoulombF(l, eta, k*r_max_1);
-  G = meta_numerics::CoulombG(l, eta, k*r_max_1);
+  F = meta_numerics::CoulombF(l, eta, k*r_match_1);
+  G = meta_numerics::CoulombG(l, eta, k*r_match_1);
   Hplus1 = std::complex<double>(G, F);
   // H+ and H- are complex conjugates of each other
   Hminus1 = std::conj(Hplus1);
 
-  F = meta_numerics::CoulombF(l, eta, k*r_max_2);
-  G = meta_numerics::CoulombG(l, eta, k*r_max_2);
+  F = meta_numerics::CoulombF(l, eta, k*r_match_2);
+  G = meta_numerics::CoulombG(l, eta, k*r_match_2);
   Hplus2 = std::complex<double>(G, F);
   Hminus2 = std::conj(Hplus2);
 
