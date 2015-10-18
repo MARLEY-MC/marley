@@ -10,9 +10,12 @@
 #include "TMarleyGenerator.hh"
 #include "TMarleyKinematics.hh"
 #include "TMarleyLevel.hh"
+#include "TMarleyNuclearPhysics.hh"
 #include "TMarleyReaction.hh"
 
-TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* scheme) {
+TMarleyReaction::TMarleyReaction(std::string filename,
+  TMarleyStructureDatabase& db)
+{
 
   std::regex rx_comment("#.*"); // Matches comment lines
 
@@ -93,24 +96,20 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
     residue_level_energies.push_back(energy);
     residue_level_strengths.push_back(strength);
     residue_level_strength_ids.push_back(strength_id);
+    // Initialize all of the level pointers to nullptr. This may be changed
+    // later if discrete level data can be found for the residual nucleus.
+    residue_level_pointers.push_back(nullptr);
     old_energy = energy;
   }
 
-  // Compute nuclear fragment evaporation thresholds for the residue
-  compute_evaporation_thresholds();
-
-  // If a pointer to a decay scheme object is supplied
-  // to the constructor, associate it with this reaction.
-  // If not, note that we don't have nuclear structure data
-  // associated with this reaction yet.
-  if (scheme != nullptr) {
-    set_decay_scheme(scheme);
-  }
-  else {
-    ds = nullptr;
-  }
-
   file_in.close();
+
+  // If discrete level data are available for the residual nucleus, use them to
+  // assign values to the level pointers and refine the level energies. If not,
+  // keep all of the level pointers nullptr (treat them just like unbound
+  // levels) and use the energies given in the reaction dataset.
+  TMarleyDecayScheme* scheme = db.get_decay_scheme(Zf, Af);
+  if (scheme != nullptr) set_decay_scheme(scheme);
 
   // Precompute these squared masses for speed
   ma2 = std::pow(ma, 2);
@@ -120,17 +119,17 @@ TMarleyReaction::TMarleyReaction(std::string filename, TMarleyDecayScheme* schem
 
 // Associate a decay scheme object with this reaction. This will provide
 // nuclear structure data for sampling final residue energy levels.
-void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme) {
+void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* ds) {
 
-  if (scheme == nullptr) throw std::runtime_error(std::string("Null pointer")
-    + " passed to TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme)");
+  if (ds == nullptr) throw std::runtime_error(std::string("Null pointer")
+    + " passed to TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* ds)");
 
   // Check to see if the decay scheme being associated with this
   // reaction is for the correct nuclide. If the nuc_id in the decay
   // scheme object does not match the one we'd expect for this reaction's
   // final state nucleus, complain
   std::string reaction_nuc_id = marley_utils::nuc_id(Zf, Af);
-  std::string scheme_nuc_id = scheme->get_nuc_id();
+  std::string scheme_nuc_id = ds->get_nuc_id();
   if (reaction_nuc_id != scheme_nuc_id) throw
     std::runtime_error(std::string("Nuclear data mismatch: attempted ")
     + "to associate a decay scheme object that has ENSDF nucid "
@@ -138,38 +137,36 @@ void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme) {
     + " with a reaction object that has nucid "
     + marley_utils::trim_copy(reaction_nuc_id));
 
-  // The decay scheme object has passed our error checks, so go
-  // ahead and associate it with this reaction
-  ds = scheme;
-
-  // Clear the list of pointers to the ENSDF levels. This will need to
-  // be remade each time we associate nuclear structure data with this
-  // reaction object
-  residue_level_pointers.clear();
-
-  // Use the smallest nuclear fragment emission threshold to check
-  // for unbound levels. Note that the constructor sorts the evaporation
-  // threshold objects in order of increasing energy, so all we need to do
-  // is to look at the first one.
-  double unbound_threshold = evaporation_thresholds.front().get_separation_energy();
+  // Use the smallest nuclear fragment emission threshold to check for unbound
+  // levels. Before looking them up, start by setting the unbound threshold to
+  // infinity.
+  double unbound_threshold = std::numeric_limits<double>::max();
+  //std::cout << "DEBUG: unbound_threshold = " << unbound_threshold << std::endl;
+  for (const auto& f : TMarleyNuclearPhysics::get_fragments()) {
+    double thresh = TMarleyNuclearPhysics::get_fragment_emission_threshold(Zf,
+      Af, f);
+    //std::cout << "DEBUG: " << f.get_pid() << " emission threshold = " << thresh << std::endl;
+    if (thresh < unbound_threshold) unbound_threshold = thresh;
+    //std::cout << "DEBUG: unbound_threshold = " << unbound_threshold << std::endl;
+  }
 
   // Cycle through each of the level energies given in the reaction dataset. 
-  for(std::vector<double>::iterator it = residue_level_energies.begin();
-  it != residue_level_energies.end(); ++it)
+  for(size_t j = 0, s = residue_level_energies.size(); j < s; ++j)
   {
+    double en = residue_level_energies.at(j);
     // If the level is above the fragment emission threshold, assign it a null
     // level pointer. Such levels will be handled by a fragment evaporation routine
     // and therefore do not need pointers to level objects describing their
     // de-excitation gammas.
-    if ((*it) > unbound_threshold) {
-      residue_level_pointers.push_back(nullptr);
+    if (en > unbound_threshold) {
+      residue_level_pointers.at(j) = nullptr;
       continue;
     }
 
-    // For each one, find a pointer to the level with the closest energy owned
-    // by the decay scheme object.
-    TMarleyLevel* plevel = ds->get_pointer_to_closest_level(*it);
-    //std::cout << "DEBUG: I matched E = " << *it << " MeV to the ENSDF level "
+    // For each energy, find a pointer to the level with the closest energy
+    // owned by the decay scheme object.
+    TMarleyLevel* plevel = ds->get_pointer_to_closest_level(en);
+    //std::cout << "DEBUG: I matched E = " << en << " MeV to the ENSDF level "
     //  << "with energy " << plevel->get_energy() << " MeV" << std::endl;
 
     // Complain if there are duplicates (if there are duplicates, we'll have
@@ -187,36 +184,8 @@ void TMarleyReaction::set_decay_scheme(TMarleyDecayScheme* scheme) {
     // is likely incorrect.
 
     // Add the ENSDF level pointer to the list
-    residue_level_pointers.push_back(plevel);
+    residue_level_pointers.at(j) = plevel;
   }
-
-}
-
-void TMarleyReaction::compute_evaporation_thresholds() {
-
-  // Loop over the particle IDs for each of the possible nuclear evaporation fragments
-  for(std::vector<int>::const_iterator it = fragment_pids.begin();
-    it != fragment_pids.end(); ++it)
-  {
-    // Compute the separation energy for the current fragment and add it
-    // to the vector of evaporation thresholds
-    evaporation_thresholds.push_back(TMarleyEvaporationThreshold(
-      TMarleyMassTable::get_fragment_separation_energy(Zf, Af, *it), *it));
-  }
-
-  // Sort the vector of evaporation thresholds in order of increasing energy
-  std::sort(evaporation_thresholds.begin(), evaporation_thresholds.end(),
-    [](const TMarleyEvaporationThreshold &et1, const TMarleyEvaporationThreshold &et2)
-    -> bool { return et1.get_separation_energy() < et2.get_separation_energy(); });
-
-  //// DEBUG
-  //std::cout << std::endl << std::endl;
-  //for(std::vector<TMarleyEvaporationThreshold>::iterator i = evaporation_thresholds.begin();
-  //  i != evaporation_thresholds.end(); ++i)
-  //{
-  //  std::cout << "DEBUG: pid = " << i->get_fragment_pid() << " SE = "
-  //    << i->get_separation_energy() << std::endl;
-  //}
 }
 
 // Fermi function used in calculating cross-sections
@@ -304,6 +273,8 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
       + std::to_string(Ea_threshold) + " MeV.");
   }
 
+  // TODO: add more error checks as necessary
+
   // Calculate the maximum value of E_level that is
   // kinematically allowed
   double max_E_level = max_level_energy(Ea);
@@ -315,18 +286,8 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   // Its default constructor creates a single weight of 1.
   // We will always explicitly give it weights to use when sampling
   // levels, so we won't worry about its default behavior.
-  static std::discrete_distribution<unsigned int> ldist;
+  static std::discrete_distribution<size_t> ldist;
 
-  // Check that there is a decay scheme
-  // object associated with this reaction. Complain
-  // if there is a problem.
-  if (ds == nullptr) {
-    throw std::runtime_error(std::string("Could not create this event. No nuclear ")
-      + "structure data is associated with this reaction.");
-  } 
-
-  // TODO: add more error checks as necessary
-  
   // The pointers in residue_level_pointers are ordered by increasing energy
   // (this is currently enforced by the reaction data format and is checked
   // during parsing). Iterate over the levels, assigning the total cross section
@@ -336,7 +297,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   // of zero for efficiency.
   bool at_least_one_nonzero_matrix_el = false;
 
-  for(unsigned int i = 0; i < residue_level_pointers.size(); ++i) {
+  for(size_t i = 0; i < residue_level_pointers.size(); ++i) {
 
     double level_energy;
 
@@ -399,12 +360,12 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
 
   // Create a list of parameters used to supply the weights to our discrete
   // level sampling distribution
-  std::discrete_distribution<unsigned int>::param_type params(level_weights.begin(),
+  std::discrete_distribution<size_t>::param_type params(level_weights.begin(),
     level_weights.end());
 
   // Sample a level index using our discrete distribution and the
   // current set of weights
-  unsigned int l_index = gen.discrete_sample(ldist, params);
+  size_t l_index = gen.discrete_sample(ldist, params);
 
   // Get a pointer to the selected level
   TMarleyLevel* plevel = residue_level_pointers.at(l_index);
@@ -434,7 +395,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
 
   // Sample a CM frame scattering cosine for the ejectile.
   //double matrix_el = residue_level_strengths.at(l_index);
-  double m_type = residue_level_strength_ids.at(l_index);
+  int m_type = residue_level_strength_ids.at(l_index);
   double cos_theta_c_cm = sample_cos_theta_c_cm(/*matrix_el,*/ m_type, beta_c_cm,
     gen);
   double sin_theta_c_cm = marley_utils::real_sqrt(1
@@ -482,80 +443,66 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   event.add_initial_particle(target, TMarleyEvent::ParticleRole::pr_target);
   // Add the ejectile to this event's final particle list
   event.add_final_particle(ejectile, TMarleyEvent::ParticleRole::pr_ejectile);
+
+  bool continuum = (plevel == nullptr);
+  int Z = Zf;
+  int A = Af;
+  // Load the initial excitation energy into Ex.  This variable will be changed
+  // during every step of the Hauser-Feshbach decay cascade.
+  double Ex = E_level;
+
+  if (continuum) {
+    double cutoff = 0.001; // TODO: remove this hard-coded value
+    // Load the initial twoJ and parity values into twoJ and P.  These
+    // variables will be changed during every step of the Hauser-Feshbach decay
+    // cascade.
+    // Right now, matrix element types are represented with 0 <-> Fermi, 1 <-> Gamow-Teller.
+    // Since the transitions are from the 40Ar ground state (Jpi = 0+), these also
+    // correspond to the 40K* state spins.
+    // TODO: come up with a better way of determining the Jpi values that will
+    // work for forbidden transition operators.
+    int twoJ = 2*m_type;
+    // Fermi transition gives 0+ -> 0+, GT transition gives 0+ -> 1+
+    // TODO: include possibility of negative parity here.
+    TMarleyParity P(true); // positive parity
+    TMarleyStructureDatabase& db = gen.get_structure_db();
+    TMarleyParticle first, second;
+    // The selected level is unbound, so handle its de-excitation using
+    // the Hauser-Feshbach statistical model.
+    while (continuum && Ex > cutoff) {
+      continuum = TMarleyNuclearPhysics::hauser_feshbach_decay(Z, A, residue,
+        first, second, Ex, twoJ, P, db, gen);
+      //std::cout << "DEBUG: Decay to " << first.get_id() << " and " << second.get_id()
+      //  << std::endl;
+      //std::cout << second.get_id() << " is at Ex = " << Ex << " MeV."
+      //  << std::endl;
+
+      residue = second;
+      Z = TMarleyMassTable::get_particle_Z(residue.get_id());
+      A = TMarleyMassTable::get_particle_A(residue.get_id());
+
+      event.add_final_particle(first);
+    }
+  }
+
   // Add the residue to this event's final particle list.
   event.add_final_particle(residue, TMarleyEvent::ParticleRole::pr_residue);
 
-  if (plevel != nullptr) {
-    // The selected level is bound, so it will only decay via gamma emission.
-    // Add the de-excitation gammas to this event's final particle list
-    this->ds->do_cascade(plevel, &event, gen);
+  if (!continuum) {
+    // Either the selected initial level was bound (so it will only decay via
+    // gamma emission) or the Hauser-Feshbach decay process has now accessed a
+    // bound level in the residual nucleus. In either case, use gamma-ray decay
+    // scheme data to sample the de-excitation gammas and add them to this
+    // event's final particle list.
+    TMarleyDecayScheme* dec_scheme = gen.get_structure_db().get_decay_scheme(Z, A);
+    dec_scheme->do_cascade(dec_scheme->get_pointer_to_closest_level(Ex),
+      &event, gen);
   }
-  else {
-    // The selected level is unbound, so handle nucleon emission, etc.
-    this->evaporate_particles(E_level, &event, gen);
-  }
+
+  //std::cout << std::endl; //DEBUG
 
   // Return the completed event object
   return event;
-}
-
-void TMarleyReaction::evaporate_particles(double E_level, TMarleyEvent* p_event,
-  TMarleyGenerator& gen)
-{
-  // Find the highest-energy particle evaporation threshold that is
-  // greater than the residue excitation energy E_level
-  std::vector<TMarleyEvaporationThreshold>::iterator i_thresh =
-    std::upper_bound(evaporation_thresholds.begin(), evaporation_thresholds.end(),
-      E_level, [](const double E_level, const TMarleyEvaporationThreshold &et)
-      -> bool { return E_level < et.get_separation_energy(); });
-
-  if (i_thresh == evaporation_thresholds.begin()) throw
-    std::runtime_error(std::string("Particle evaporation attempted for ")
-      + "a residue excitation energy of " + std::to_string(E_level)
-      + " MeV, which is less than the particle evaporation threshold of "
-      + std::to_string(evaporation_thresholds.front().get_separation_energy())
-      + " MeV");
-
-  // Assume that the particle whose evaporation threshold energy is closest to
-  // the residue excitation energy (without exceeding it) will be emitted, leaving
-  // the residue in its ground state. Get the particle ID and separation energy
-  // for the emitted particle.
-  --i_thresh;
-  int fragment_pid = i_thresh->get_fragment_pid();
-
-  // Get the particle ID for the residue in its final state
-  int Zres = Zf - TMarleyMassTable::get_particle_Z(fragment_pid);
-  int Ares = Af - TMarleyMassTable::get_particle_A(fragment_pid);
-  int pid_res = marley_utils::get_nucleus_pid(Zres, Ares);
-  double m_res = TMarleyMassTable::get_atomic_mass(pid_res);
-
-  // Get the mass of the fragment
-  double m_fragment = TMarleyMassTable::get_particle_mass(fragment_pid); 
-
-  // Create particle objects to store the recoiling residue and the fragment
-  TMarleyParticle new_res(pid_res, m_res);
-  TMarleyParticle frag(fragment_pid, m_fragment);
-
-  // TODO: consider changing fragment emission so that it is anisotropic
-  // Sample an azimuthal emission angle (phi) uniformly on [0, 2*pi).
-  double phi_fragment = gen.uniform_random_double(0, 2*marley_utils::pi, false);
-  // Sample a polar emission cosine (cos[theta]) uniformly on [-1, 1].
-  double cos_theta_fragment = gen.uniform_random_double(-1, 1, true);
-
-  // Load the particle objects with their correct final energies and momenta
-  // based on the two-body decay of the original nucleus
-  TMarleyKinematics::two_body_decay(*(p_event->get_residue()), frag, new_res,
-    cos_theta_fragment, phi_fragment);
-
-  // Update the residue to adjust for effects of fragment emission
-  TMarleyParticle* p_residue = p_event->get_residue();
-  *p_residue = new_res;
-
-  // Add the evaporated fragment to this event's list of final particles
-  p_event->add_final_particle(frag);
-
-  // Add the evaporated fragment to the residue's children
-  p_residue->add_child(&(p_event->get_final_particles()->back())); 
 }
 
 // Compute the total reaction cross section (including all final nuclear levels)
@@ -563,7 +510,7 @@ void TMarleyReaction::evaporate_particles(double E_level, TMarleyEvent* p_event,
 double TMarleyReaction::total_xs_cm(double Ea) {
   double max_E_level = max_level_energy(Ea);
   double xs = 0;
-  for(unsigned int i = 0; i < residue_level_pointers.size(); ++i) {
+  for(size_t i = 0; i < residue_level_pointers.size(); ++i) {
 
     double level_energy;
 

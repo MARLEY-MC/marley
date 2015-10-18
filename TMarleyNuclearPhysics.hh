@@ -147,6 +147,8 @@ class TMarleyNuclearPhysics {
       double Ex, int twoJ, TMarleyParity Pi, TMarleyStructureDatabase& db,
       TMarleyGenerator& gen);
 
+    static double get_fragment_emission_threshold(const int Zi, const int Ai,
+      const TMarleyFragment& f);
 
   private:
     // Mass of a charged pion
