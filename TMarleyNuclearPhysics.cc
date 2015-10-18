@@ -449,6 +449,34 @@ double TMarleyNuclearPhysics::fragment_discrete_partial_width(double Exf_max,
   return discrete_width;
 }
 
+double TMarleyNuclearPhysics::get_fragment_emission_threshold(const int Zi,
+  const int Ai, const TMarleyFragment& f)
+{
+  int Zf = Zi - f.get_Z();
+  int Af = Ai - f.get_A();
+
+  // Get various masses that will be needed for fragment emission kinematics
+  // (including nuclear recoil)
+  double Migs = TMarleyMassTable::get_atomic_mass(Zi, Ai);
+  double Ma = f.get_mass();
+  double Mfgs = TMarleyMassTable::get_atomic_mass(Zf, Af);
+  double me = TMarleyMassTable::get_particle_mass(marley_utils::ELECTRON);
+  // Fragment atomic number
+  int Za = f.get_Z();
+  // Approximate the ground state rest energy of the negative ion (with
+  // charge Za-) formed when the bare fragment f is emitted by adding Za
+  // electron masses to the atomic mass for the final nucleus.
+  double Mfgs_ion = Mfgs + Za*me;
+
+  // Get Coulomb potential for this fragment
+  double Vc;
+  if (Za != 0) Vc = coulomb_barrier(Zf, Af, Za, f.get_A());
+  else Vc = 0.;
+
+  return Ma - Migs + Vc + marley_utils::real_sqrt(Vc * (2*Ma + Vc)
+    + std::pow(Mfgs_ion, 2));
+}
+
 // Loads the two product particle objects with the final-state particles from a
 // two-body Hauser-Feshbach decay of the initial particle. Also loads Ex, twoJ,
 // and Pi (which are originally assumed to contain the initial nuclear

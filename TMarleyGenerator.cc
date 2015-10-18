@@ -22,8 +22,7 @@ void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
     // a reaction object with a decay scheme. Let the generator handle communication
     // between reactions and nuclear data/models.
     std::cout << "Loading reaction data from file " << filename << std::endl;
-    reactions.push_back(TMarleyReaction(filename,
-      structure_db.get_decay_scheme(1000190400)));
+    reactions.push_back(TMarleyReaction(filename, structure_db));
   }
 
   // Create the neutrino source.

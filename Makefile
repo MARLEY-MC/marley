@@ -3,7 +3,7 @@ CXXFLAGS=-g -O3 -std=c++14 -I. -Wall -Wextra -Wpedantic -Werror -Wno-error=unuse
 USE_ROOT=yes
 
 OBJ = marley_utils.o meta_numerics.o TMarleyParticle.o TMarleyEvent.o
-OBJ += TMarleyEvaporationThreshold.o TMarleyGenerator.o TMarleyReaction.o
+OBJ += TMarleyGenerator.o TMarleyReaction.o
 OBJ += TMarleyGamma.o TMarleyLevel.o TMarleyDecayScheme.o
 OBJ += TMarleyMassTable.o TMarleyStructureDatabase.o TMarleyConfigFile.o
 OBJ += TMarleyNuclearPhysics.o TMarleyBackshiftedFermiGasModel.o
