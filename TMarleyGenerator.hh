@@ -21,8 +21,11 @@ class TMarleyGenerator {
     }
 
     inline TMarleyEvent create_event() {
-      double E_nu = nu_source.sample_neutrino_energy(*this);
-      return reactions.front().create_event(E_nu, *this);
+      double E_nu;
+      size_t r_index;
+      sample_reaction(E_nu, r_index);
+      //std::cout << "DEBUG: r_index = " << r_index << std::endl;
+      return reactions.at(r_index).create_event(E_nu, *this);
     }
 
     inline uint_fast64_t get_seed() const {
@@ -75,6 +78,21 @@ class TMarleyGenerator {
       return reactions;
     }
 
+    // Loads Ea with the energy of a reacting neutrino, and loads
+    // r_index with the index of the reaction it undergoes. Input
+    // values for Ea and r_index are ignored.
+    void sample_reaction(double& Ea, size_t& r_index);
+
+    // Returns the PDF that reacting neutrino energies obey. It is normalized
+    // between nu_source.E_min and nu_source.E_max.
+    inline double normalized_Ea_pdf(double Ea) {
+      return Ea_pdf(Ea);
+    }
+
+    inline TMarleyNeutrinoSource& get_nu_source() {
+      return nu_source;
+    }
+
   private:
     // Seed for the random number generator
     uint_fast64_t seed;
@@ -88,4 +106,15 @@ class TMarleyGenerator {
     TMarleyNeutrinoSource nu_source;
     TMarleyStructureDatabase structure_db;
     std::vector<TMarleyReaction> reactions;
+
+    // Use total cross sections for each reaction as weights for sampling a
+    // reaction type
+    std::vector<double> total_xs_values;
+    // Discrete distribution for sampling reaction types
+    std::discrete_distribution<size_t> r_index_dist;
+    // PDF used for sampling reacting neutrino energies
+    std::function<double(double)> Ea_pdf;
+
+    // Helper function for sampling reacting neutrino energies
+    double unnormalized_Ea_pdf(double Ea);
 };

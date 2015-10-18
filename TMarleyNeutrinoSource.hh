@@ -30,9 +30,23 @@ class TMarleyNeutrinoSource {
       return type;
     }
 
+    inline double get_Emax() {
+      return E_max;
+    }
+
+    inline double get_Emin() {
+      return E_min;
+    }
+
     // Toy model of supernova neutrino spectrum
     static double fermi_dirac_distribution(double T, double N_nu,
       double nu_energy);
+
+    // Compute spectrum using the current temperature and neutrino number
+    // (tot_num_nu) settings
+    inline double fd_distribution(double nu_energy) {
+      return fd_dist(nu_energy);
+    }
 
   private:
     // Normalization constant for Fermi-Dirac distribution
