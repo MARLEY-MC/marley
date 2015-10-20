@@ -1,9 +1,5 @@
-seed 92847212 
-structure ensdf.040 ensdf 40K
-structure ensdf.039 ensdf 39K 39Ar
-#structure /home/sjg/Desktop/ensdf_22_Oct_2014/ensdf.038 ensdf 38Ar
-#structure /home/sjg/Desktop/ensdf_22_Oct_2014/ensdf.037 ensdf 37Ar 37Cl
-structure /home/sjg/Desktop/ensdf_22_Oct_2014/ensdf.036 ensdf 36Cl
-reaction ve40ArCC_2009.react
-contbin 0.1
-contbinsubs 1
+seed 18301938
+structure /home/sjg/talys/structure/levels/exp/z019 talys 40K 39K 38K
+structure /home/sjg/talys/structure/levels/exp/z018 talys 37Ar 38Ar 39Ar
+structure /home/sjg/talys/structure/levels/exp/z017 talys 35Cl 36Cl 37Cl
+reaction ve40ArCC_1998.react
