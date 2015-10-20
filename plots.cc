@@ -300,7 +300,7 @@ int main(){
   // Use 100 bins, and adjust the upper limit of the last bin so that
   // the maximum observed value just barely falls within it.
   TH1D neutrino_E_histogram("neutrino_E_histogram",
-    "Fermi-Dirac  #nu_{e}  spectrum; Total Energy [MeV]; Counts",
+    "Interacting  #nu_{e}  from Fermi-Dirac source; Total Energy [MeV]; Counts",
     100, 0, 1.1*std::nextafter(E_nmax, DBL_MAX));
   // Do the same thing for the residual nucleus excitation energies
   TH1D ex_residue_histogram("Ex_40K",
@@ -378,9 +378,14 @@ int main(){
     // Create a histogram to store the gamma ray energies.
     // Use 100 bins, and adjust the upper limit of the last bin so that
     // the maximum observed value just barely falls within it.
-    TH1D KE_histogram("KE_histogram",
-      ("De-excitation " + symbol + " spectrum for CC FD   #nu_{e}"
-      " on  ^{40}Ar; Kinetic Energy [MeV]; Counts").c_str(),
+    std::string plot_title;
+    if (pid == marley_utils::ELECTRON) plot_title = std::string(
+      "Electron spectrum for CC FD   #nu_{e} on ")
+      + "  ^{40}Ar; Kinetic Energy [MeV]; Counts";
+    else plot_title = "De-excitation " + symbol
+      + " spectrum for CC FD   #nu_{e}"
+      + " on  ^{40}Ar; Kinetic Energy [MeV]; Counts";
+    TH1D KE_histogram("KE_histogram", plot_title.c_str(),
       100, 0, 1.1*std::nextafter(Emax, DBL_MAX));
     for(const double& e : pair.second) KE_histogram.Fill(e);
     canvas.Clear();
