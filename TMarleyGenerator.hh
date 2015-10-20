@@ -24,7 +24,6 @@ class TMarleyGenerator {
       double E_nu;
       size_t r_index;
       sample_reaction(E_nu, r_index);
-      //std::cout << "DEBUG: r_index = " << r_index << std::endl;
       return reactions.at(r_index).create_event(E_nu, *this);
     }
 
