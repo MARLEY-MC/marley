@@ -13,6 +13,7 @@
 #include "marley_utils.hh"
 #include "TMarleyDecayScheme.hh"
 #include "TMarleyEvent.hh"
+#include "TMarleyGenerator.hh"
 #include "TMarleyNeutrinoSource.hh"
 #include "TMarleyReaction.hh"
 
@@ -44,6 +45,8 @@ void prepare_integrated_bgts(const std::vector<double>& Es,
 
 int main(){
 
+  TMarleyGenerator gen("config.txt");
+
   // Create plot of total reaction cross section
   std::vector<double> Eas;
   std::vector<double> tot_xs_1998;
@@ -51,8 +54,8 @@ int main(){
   //std::vector<double> tot_xs_diffs;
   std::cout << std::setprecision(16) << std::scientific;
   TMarleyDecayScheme ds(19, 40, "ensdf.040");
-  TMarleyReaction r1998("ve40ArCC_1998.react", &ds);
-  TMarleyReaction r2009("ve40ArCC_2009.react", &ds);
+  TMarleyReaction r1998("ve40ArCC_1998.react", gen.get_structure_db());
+  TMarleyReaction r2009("ve40ArCC_2009.react", gen.get_structure_db());
   for (double Ea = 4.4; Ea < 60; Ea += 0.1) {
     Eas.push_back(Ea);
     tot_xs_1998.push_back(1e15 * r1998.total_xs_cm(Ea)
@@ -233,10 +236,14 @@ int main(){
   std::vector<double> gamma_Es, electron_Es, neutrino_Es;
   // Excitation energies of residual nucleus
   std::vector<double> nuc_Exs;
-  // Total number of gamma rays emitted
-  int num_gammas = 0;
   // Total number of events
   int n = t->GetEntries();
+
+  // Final particle kinetic energies (lookup table by PID)
+  std::unordered_map<int, std::vector<double> > fparticle_KEs;
+  // Final particle counts (lookup table by PID)
+  std::unordered_map<int, int> fparticle_counts;
+
 
   // Cycle through each event in the tree
   for (int i = 0; i < n; ++i) {
@@ -257,51 +264,41 @@ int main(){
       }
     }
 
-    // Loop over the final particles. For each gamma ray, store
-    // its energy and increment the gamma counter. Also store the
-    // energy of each electron.
+    // Loop over the final particles.
     std::list<TMarleyParticle>* fparts = e->get_final_particles();
     for(const auto& particle : *fparts) {
+
       int pid = particle.get_id();
-      if (pid == marley_utils::PHOTON) {
-        gamma_Es.push_back(particle.get_total_energy());
-        ++num_gammas;
+
+      std::unordered_map<int, std::vector<double> >::iterator it
+        = fparticle_KEs.find(pid);
+
+      if (it == fparticle_KEs.end()) {
+        // This is a particle that doesn't have a vector of kinetic energies yet
+        fparticle_KEs[pid] = std::vector<double>(1, particle.get_kinetic_energy());
+        fparticle_counts[pid] = 1;
       }
-      else if (pid == marley_utils::ELECTRON) {
-        electron_Es.push_back(particle.get_total_energy());
+      // This particle has a vector of kinetic energies already, so add it
+      else {
+        (it->second).push_back(particle.get_kinetic_energy());
+        ++fparticle_counts[pid];
       }
     }
   }
-
-  std::cout << "There were " << num_gammas << " produced in " << n
-    << " events." << std::endl;
 
   // Close the event tree ROOT file
   file->Close();
   delete file;
 
-  // Find the maximum gamma-ray energy
-  double E_gmax = 0, E_emax = 0, E_nmax = 0;
-  for (const double& eg : gamma_Es) {
-    if (eg > E_gmax) E_gmax = eg;
-  }
-  for (const double& ee : electron_Es) {
-    if (ee > E_emax) E_emax = ee;
-  }
+  // Find the maximum neutrino energy
+  double E_nmax = 0;
   for (const double& en : neutrino_Es) {
     if (en > E_nmax) E_nmax = en;
   }
 
-  // Create a histogram to store the gamma ray energies.
+  // Create a histogram to store the neutrino energies.
   // Use 100 bins, and adjust the upper limit of the last bin so that
   // the maximum observed value just barely falls within it.
-  TH1D gamma_E_histogram("gamma_E_histogram",
-    "De-excitation  #gamma-ray spectrum for CC FD   #nu_{e} on  ^{40}Ar; Energy [MeV]; Counts",
-    100, 0, 1.1*std::nextafter(E_gmax, DBL_MAX));
-  // Do the same thing for the other two particle types
-  TH1D electron_E_histogram("electron_E_histogram",
-    "Electron spectrum for CC FD   #nu_{e} on  ^{40}Ar; Total Energy [MeV]; Counts",
-    100, 0, 1.1*std::nextafter(E_emax, DBL_MAX));
   TH1D neutrino_E_histogram("neutrino_E_histogram",
     "Fermi-Dirac  #nu_{e}  spectrum; Total Energy [MeV]; Counts",
     100, 0, 1.1*std::nextafter(E_nmax, DBL_MAX));
@@ -312,8 +309,6 @@ int main(){
 
 
   // Fill the histograms with values
-  for(const double& eg : gamma_Es) gamma_E_histogram.Fill(eg);
-  for(const double& ee : electron_Es) electron_E_histogram.Fill(ee);
   for(const double& en : neutrino_Es) neutrino_E_histogram.Fill(en);
   for(const double& ex : nuc_Exs) ex_residue_histogram.Fill(ex);
 
@@ -327,23 +322,6 @@ int main(){
   //delete file;
 
   // Create PDFs plotting the spectra histograms
-  gamma_E_histogram.Draw();
-  gamma_E_histogram.GetYaxis()->SetTitleOffset(1.3);
-  gamma_E_histogram.GetXaxis()->CenterTitle();
-  gamma_E_histogram.GetYaxis()->CenterTitle();
-  gamma_E_histogram.GetXaxis()->SetTitleOffset(1.3);
-  gamma_E_histogram.SetLineWidth(1.8);
-  canvas.SaveAs("E_gamma.pdf");
-
-  canvas.Clear();
-  electron_E_histogram.Draw();
-  electron_E_histogram.GetXaxis()->SetTitleOffset(1.3);
-  electron_E_histogram.GetYaxis()->SetTitleOffset(1.5);
-  electron_E_histogram.GetXaxis()->CenterTitle();
-  electron_E_histogram.GetYaxis()->CenterTitle();
-  electron_E_histogram.SetLineWidth(1.8);
-  canvas.SaveAs("E_electron.pdf");
-
   canvas.Clear();
   neutrino_E_histogram.Draw();
   neutrino_E_histogram.SetLineWidth(1.8);
@@ -352,16 +330,14 @@ int main(){
   neutrino_E_histogram.GetXaxis()->CenterTitle();
   neutrino_E_histogram.GetYaxis()->CenterTitle();
 
-  //std::function<double(double)> f = std::bind(
-  //  &TMarleyNeutrinoSource::fermi_dirac_distribution,
-  //  3.5, 2.8, std::placeholders::_1 /*nu_energy*/);
-
-  //double integral = marley_utils::num_integrate(f, 0, 100, 1e5);
   //std::vector<double> nu_E_dist;
   //std::vector<double> nu_Es;
-  //for (double e = 0.; e <= 60; e += 0.1) {
+  //double Emin = gen.get_nu_source().get_Emin();
+  //double Emax = gen.get_nu_source().get_Emax();
+  //double step = (Emax - Emin) / 1e4;
+  //for (double e = Emin; e <= Emax; e += step) {
   //  nu_Es.push_back(e);
-  //  nu_E_dist.push_back(1e6 * f(e) / integral);
+  //  nu_E_dist.push_back(n * gen.normalized_Ea_pdf(e));
   //}
 
   //TGraph fd(nu_E_dist.size(), &nu_Es.front(), &nu_E_dist.front());
@@ -378,6 +354,45 @@ int main(){
   ex_residue_histogram.GetYaxis()->CenterTitle();
 
   canvas.SaveAs("E_residue.pdf");
+
+  // Loop over all of the final particles, making kinetic energy spectrum
+  // plots for each one
+  for (const auto& pair : fparticle_KEs) {
+    int pid = pair.first;
+    std::string symbol;
+    if (pid > marley_utils::ALPHA) {
+      int Z = TMarleyMassTable::get_particle_Z(pid);
+      int A = TMarleyMassTable::get_particle_A(pid);
+      symbol = std::to_string(A) + marley_utils::element_symbols.at(Z);
+    }
+    else symbol = marley_utils::particle_symbols.at(pid);
+
+    std::cout << symbol << " multiplicity per event = "
+      << static_cast<double>(fparticle_counts.at(pid)) / n
+      << std::endl;
+
+    // Get the maximum kinetic energy for this particle
+    double Emax = 0.;
+    for (const double& e : pair.second)
+      if (e > Emax) Emax = e;
+    // Create a histogram to store the gamma ray energies.
+    // Use 100 bins, and adjust the upper limit of the last bin so that
+    // the maximum observed value just barely falls within it.
+    TH1D KE_histogram("KE_histogram",
+      ("De-excitation " + symbol + " spectrum for CC FD   #nu_{e}"
+      " on  ^{40}Ar; Kinetic Energy [MeV]; Counts").c_str(),
+      100, 0, 1.1*std::nextafter(Emax, DBL_MAX));
+    for(const double& e : pair.second) KE_histogram.Fill(e);
+    canvas.Clear();
+    KE_histogram.Draw();
+    KE_histogram.GetXaxis()->SetTitleOffset(1.3);
+    KE_histogram.GetYaxis()->SetTitleOffset(1.5);
+    KE_histogram.GetXaxis()->CenterTitle();
+    KE_histogram.GetYaxis()->CenterTitle();
+    KE_histogram.SetLineWidth(1.8);
+
+    canvas.SaveAs(("KE_" + symbol + ".pdf").c_str());
+  }
 
   return 0;
 }

@@ -12,8 +12,8 @@ class TMarleyNeutrinoSource {
     // Use the default neutrino source settings
     inline TMarleyNeutrinoSource() {
       type = NeutrinoType::ElectronNeutrino;
-      E_min = 4.36;
-      E_max = 50;
+      E_min = 0.;
+      E_max = 150.;
       temperature = 3.5;
       tot_num_nu = 2.8;
       fd_dist = std::bind(&fermi_dirac_distribution, temperature, tot_num_nu,

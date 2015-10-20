@@ -27,9 +27,8 @@ void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
   // Create the neutrino source.
   // TODO: Implement configuration file keywords to adjust neutrino source
   // settings and remove hard-coded stuff here.
-  // 4.36, 50
-  nu_source = TMarleyNeutrinoSource(4.36, //DEBUG reactions.front().get_threshold_energy(),
-    50., TMarleyNeutrinoSource::NeutrinoType::ElectronNeutrino);
+  nu_source = TMarleyNeutrinoSource(0., 150.,
+    TMarleyNeutrinoSource::NeutrinoType::ElectronNeutrino);
 
   // Initialize the vector of total cross section values to be all zeros and
   // have as many entries as there are reactions available to this generator.
