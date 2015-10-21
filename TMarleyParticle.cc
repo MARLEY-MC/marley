@@ -79,3 +79,9 @@ std::vector<TMarleyParticle*>* TMarleyParticle::get_children() {
 void TMarleyParticle::add_child(TMarleyParticle* child) {
   children.push_back(child);
 }
+
+std::ostream& operator<< (std::ostream& out, const TMarleyParticle& p) {
+  out << p.particle_id << " " << p.total_energy << " " << p.px << " " << p.py
+    << " " << p.pz;
+  return out;
+}

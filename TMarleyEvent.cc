@@ -121,3 +121,15 @@ void TMarleyEvent::print_event() {
 double TMarleyEvent::get_E_level() {
   return E_residue_level;
 }
+
+std::ostream& operator<< (std::ostream& out, const TMarleyEvent& e) {
+  out << *(e.projectile) << std::endl;
+  //for (const TMarleyParticle& p : e.initial_particles) {
+  //  out << p << std::endl;
+  //}
+  //out << std::endl << std::endl;
+  for (const TMarleyParticle& p : e.final_particles) {
+    out << p << std::endl;
+  }
+  return out;
+}
