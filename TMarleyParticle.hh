@@ -16,6 +16,7 @@ class TMarleyParticle {
 
     double get_mass() const;
     void add_child(TMarleyParticle* child);
+
     double get_px() const;
 
     inline void set_px(double p_x) {
