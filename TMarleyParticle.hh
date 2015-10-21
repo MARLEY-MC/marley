@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <fstream>
 #include <vector>
 
 class TMarleyParticle {
@@ -46,6 +47,9 @@ class TMarleyParticle {
     }
 
     std::vector<TMarleyParticle*>* get_children();
+
+    friend std::ostream& operator<< (std::ostream& out,
+      const TMarleyParticle& p);
 
   private:
     double total_energy; // MeV

@@ -62,6 +62,9 @@ hf: $(OBJ) $(OBJ_DICT) hf.o
 plots: $(OBJ) $(OBJ_DICT) plots.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
+dump: $(OBJ) $(OBJ_DICT) dump.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
 nu_source_plot: $(OBJ) nu_source_plot.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
@@ -86,4 +89,5 @@ root_dict.o: TMarleyParticle.hh TMarleyEvent.hh
 .PHONY: clean
 
 clean:
-	rm -f *.o parse react validate brs brs2 brs3 brs4 root_dict.cc root_dict.h nu_source_plot
+	rm -f *.o parse react validate brs brs2 brs3 brs4 root_dict.cc
+	rm -f *.o root_dict.h nu_source_plot dump

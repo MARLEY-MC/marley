@@ -33,6 +33,9 @@ class TMarleyEvent {
     TMarleyParticle* get_target();
     double get_E_level();
 
+    friend std::ostream& operator<< (std::ostream& out,
+      const TMarleyEvent& e);
+
   private:
     void assign_particle_pointer(TMarleyParticle* p,
       TMarleyEvent::ParticleRole r);
