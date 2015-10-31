@@ -23,6 +23,7 @@ ifdef USE_ROOT
 # that uses TTrees containing TMarleyEvents
 # or TMarleyParticles
 CXXFLAGS += `root-config --cflags` -DUSE_ROOT
+OBJ += TMarleyROOTEvent.o
 OBJ_DICT = root_dict.o
 LDFLAGS=`root-config --libs`
 endif
@@ -84,7 +85,7 @@ exs: $(OBJ) $(OBJ_DICT) exs.o
 #    i/o by adding the '+' suffix to each prerequisite
 #    header file (.hh extension)
 # 3. Compile the dictionary source file
-root_dict.o: TMarleyParticle.hh TMarleyEvent.hh
+root_dict.o: TMarleyParticle.hh TMarleyROOTEvent.hh
 	rm -f root_dict.cc root_dict.h
 	rootcint root_dict.cc -c $(subst .hh,.hh+,$^)
 	$(CXX) $(CXXFLAGS) -c -o root_dict.o root_dict.cc

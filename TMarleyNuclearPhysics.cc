@@ -485,10 +485,11 @@ double TMarleyNuclearPhysics::get_fragment_emission_threshold(const int Zi,
 // continuum, or false if it is in a bound state level included in a decay
 // scheme object.
 bool TMarleyNuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
-  const TMarleyParticle& initial_particle, TMarleyParticle& first_product,
-  TMarleyParticle& second_product, double& Ex, int& twoJ, TMarleyParity& Pi,
+  const TMarleyAtom& initial_particle, TMarleyParticle& first_product,
+  TMarleyAtom& second_product, double& Ex, int& twoJ, TMarleyParity& Pi,
   TMarleyStructureDatabase& db, TMarleyGenerator& gen)
 {
+  int qi = initial_particle.get_charge(); // Get net charge of initial atom
   double Mi = initial_particle.get_mass();
   double Migs = Mi - Ex;
   double me = TMarleyMassTable::get_particle_mass(marley_utils::ELECTRON);
@@ -524,10 +525,10 @@ bool TMarleyNuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
     double Mfgs = TMarleyMassTable::get_atomic_mass(Zf, Af);
     // Fragment atomic number
     int Za = f.get_Z();
-    // Approximate the ground state rest energy of the negative ion (with
-    // charge Za-) formed when the bare fragment f is emitted by adding Za
-    // electron masses to the atomic mass for the final nucleus.
-    double Mfgs_ion = Mfgs + Za*me;
+    // Approximate the ground state rest energy of the ion formed when the bare
+    // fragment f is emitted by adding (Za - qi) electron masses to the atomic mass
+    // for the final nucleus.
+    double Mfgs_ion = Mfgs + (Za - qi)*me;
     // Get fragment separation energy without a redundant mass table lookup
     double Sa = Mfgs_ion + Ma - Migs;
   
@@ -743,6 +744,11 @@ bool TMarleyNuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
   bool discrete_level = lev != nullptr;
   bool evaporation = fr != nullptr;
 
+  // Final atomic net charge will be the same as the initial charge
+  // unless a charged fragment was evaporated away
+  int qf = qi;
+  if (evaporation) qf -= fr->get_Z();
+
   if (discrete_level) {
     Exf = lev->get_energy();
     twoJ = lev->get_two_J();
@@ -791,7 +797,7 @@ bool TMarleyNuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
   }
 
   first_product = TMarleyParticle(pid_frag, m_frag);
-  second_product = TMarleyParticle(pid_final, mfgs + Exf);
+  second_product = TMarleyAtom(pid_final, mfgs + Exf, qf);
 
   // TODO: consider changing this to a more realistic model
   // instead of isotropic emissions
