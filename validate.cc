@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "marley_utils.hh"
-#include "TMarleyEvent.hh"
+#include "TMarleyROOTEvent.hh"
 
 #include "TFile.h"
 #include "TH1D.h"
@@ -22,7 +22,7 @@ int main(){
   TFile* file = new TFile("event_tree.root", "READ");
   TTree* t = nullptr;
   file->GetObject("MARLEY Event Tree", t);
-  TMarleyEvent* e = new TMarleyEvent;
+  TMarleyROOTEvent* e = new TMarleyROOTEvent;
   t->GetBranch("events")->SetAddress(&e);
 
   // Change in energy between the initial and final states for each event
@@ -44,29 +44,26 @@ int main(){
     double Ei = 0.0;
     // Compute the total 3-momentum components as well
     double pxi = 0., pyi = 0., pzi = 0.;
-    std::list<TMarleyParticle>* iparts = e->get_initial_particles();
-    for(std::list<TMarleyParticle>::iterator it = iparts->begin();
-      it != iparts->end(); ++it)
+    std::list<TMarleyParticle>& iparts = e->get_initial_particles();
+    for(const auto& p : iparts)
     {
-      Ei += it->get_total_energy();
-      pxi += it->get_px();
-      pyi += it->get_py();
-      pzi += it->get_pz();
+      Ei += p.get_total_energy();
+      pxi += p.get_px();
+      pyi += p.get_py();
+      pzi += p.get_pz();
     }
 
     // Do the same thing for the final particles
     double Ef = 0.0;
     double pxf = 0., pyf = 0., pzf = 0.;
-    std::list<TMarleyParticle>* fparts = e->get_final_particles();
-    for(std::list<TMarleyParticle>::iterator it = fparts->begin();
-      it != fparts->end(); ++it)
+    std::list<TMarleyParticle>& fparts = e->get_final_particles();
+    for(const auto& p : fparts)
     {
       //std::cout << "Final particle: ID = " << it->get_id() << std::endl;
-      Ef += it->get_total_energy();
-      pxf += it->get_px();
-      pyf += it->get_py();
-      pzf += it->get_pz();
-
+      Ef += p.get_total_energy();
+      pxf += p.get_px();
+      pyf += p.get_py();
+      pzf += p.get_pz();
     }
 
     double change_in_E = Ef - Ei;

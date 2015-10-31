@@ -15,6 +15,7 @@
 
 #ifdef USE_ROOT
 #include "TFile.h"
+#include "TMarleyROOTEvent.hh"
 #include "TTree.h"
 #endif
 
@@ -127,7 +128,7 @@ int main(int argc, char* argv[]){
   // Create a pointer to an event object. This will
   // be used to fill the event tree with the
   // events generated in the loop below
-  TMarleyEvent* p_event = nullptr;
+  TMarleyROOTEvent* p_event = nullptr;
 
   // Check if the ROOT file used to store the event tree already exists
   std::string tree_file_name("event_tree.root");
@@ -161,7 +162,7 @@ int main(int argc, char* argv[]){
   // retrieving the old event tree, then make a new event tree
   if (!event_tree) {
     // Create a ROOT tree to store the events
-    event_tree = new TTree("MARLEY Event Tree", "A tree of TMarleyEvent objects");
+    event_tree = new TTree("MARLEY Event Tree", "A tree of TMarleyROOTEvent objects");
 
     // Create a branch in this ROOT tree, and associate
     // it with the event pointer we made before
@@ -243,8 +244,8 @@ int main(int argc, char* argv[]){
 
     #ifdef USE_ROOT
     // Get the address of this event object
-    p_event = new TMarleyEvent;
-    *p_event = e;
+    p_event = new TMarleyROOTEvent;
+    *p_event = e.make_root_event();
 
     // Store this event in the ROOT tree
     event_tree->Fill();

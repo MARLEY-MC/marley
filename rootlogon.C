@@ -3,11 +3,11 @@ void aclic_cpp11() {
   TString o;
   // Customize MakeSharedLib
   o = TString(gSystem->GetMakeSharedLib());
-  o = o.ReplaceAll(" -c ", " -std=c++11 -c ");
+  o = o.ReplaceAll(" -c ", " -std=c++14 -c ");
   gSystem->SetMakeSharedLib(o.Data());
   // Customize MakeExe
   o = TString(gSystem->GetMakeExe());
-  o = o.ReplaceAll(" -c ", " -std=c++11 -c ");
+  o = o.ReplaceAll(" -c ", " -std=c++14 -c ");
   gSystem->SetMakeExe(o.Data());
   // Customize interpreter's and compiler's flags
   // gSystem->AddIncludePath("-D__WHATEVER_YOU_NEED__");
@@ -20,7 +20,7 @@ void load_marley_dict() {
   // Load dictionaries for MARLEY classes that
   // can be written to ROOT files
   gROOT->ProcessLine(".L TMarleyParticle.cc+");
-  gROOT->ProcessLine(".L TMarleyEvent.cc+");
+  gROOT->ProcessLine(".L TMarleyROOTEvent.cc+");
 }
 
 void rootlogon() {
