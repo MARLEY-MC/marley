@@ -244,6 +244,10 @@ int main(){
   // Final particle counts (lookup table by PID)
   std::unordered_map<int, int> fparticle_counts;
 
+  // Storage for 3-momentum components used for momentum transfer plot
+  double nu_px = 0, nu_py = 0, nu_pz = 0, l_px = 0, l_py = 0, l_pz = 0;
+  // Vector of 3-momentum transfer values
+  std::vector<double> momentum_transfers;
 
   // Cycle through each event in the tree
   for (int i = 0; i < n; ++i) {
@@ -251,6 +255,8 @@ int main(){
 
     // Load the current event
     t->GetEntry(i);
+
+    bool found_nu = false, found_l = false;
 
     nuc_Exs.push_back(e->get_E_level());
 
@@ -261,6 +267,10 @@ int main(){
       int pid = particle.get_id();
       if (pid == marley_utils::ELECTRON_NEUTRINO) {
         neutrino_Es.push_back(particle.get_total_energy());
+        nu_px = particle.get_px();
+        nu_py = particle.get_py();
+        nu_pz = particle.get_pz();
+        found_nu = true;
       }
     }
 
@@ -269,6 +279,13 @@ int main(){
     for(const auto& particle : *fparts) {
 
       int pid = particle.get_id();
+
+      if (pid == marley_utils::ELECTRON) {
+        l_px = particle.get_px();
+        l_py = particle.get_py();
+        l_pz = particle.get_pz();
+        found_l = true;
+      }
 
       std::unordered_map<int, std::vector<double> >::iterator it
         = fparticle_KEs.find(pid);
@@ -284,6 +301,14 @@ int main(){
         ++fparticle_counts[pid];
       }
     }
+
+    if (found_nu && found_l) {
+      double qx = l_px - nu_px;
+      double qy = l_py - nu_py;
+      double qz = l_pz - nu_pz;
+      double q = std::sqrt(std::pow(qx, 2) + std::pow(qy, 2) + std::pow(qz, 2));
+      momentum_transfers.push_back(q);
+    }
   }
 
   // Close the event tree ROOT file
@@ -296,6 +321,12 @@ int main(){
     if (en > E_nmax) E_nmax = en;
   }
 
+  // Find the maximum momentum transfer
+  double qmax = 0;
+  for (const double& q : momentum_transfers) {
+    if (q > qmax) qmax = q;
+  }
+
   // Create a histogram to store the neutrino energies.
   // Use 100 bins, and adjust the upper limit of the last bin so that
   // the maximum observed value just barely falls within it.
@@ -306,11 +337,15 @@ int main(){
   TH1D ex_residue_histogram("Ex_40K",
     "Strength to ^{40}K* states; Excitation Energy [MeV]; Counts",
     100, 0., 50.);
-
+  // Do the same thing for the momentum transfers
+  TH1D q_histogram("q_hist",
+    "Momentum Transfer; q [MeV]; Counts",
+    100, 0., 1.1*std::nextafter(qmax, DBL_MAX));
 
   // Fill the histograms with values
   for(const double& en : neutrino_Es) neutrino_E_histogram.Fill(en);
   for(const double& ex : nuc_Exs) ex_residue_histogram.Fill(ex);
+  for(const double& q : momentum_transfers) q_histogram.Fill(q);
 
   //// Write the histograms to new a ROOT file
   //file = new TFile("plot_histograms.root","RECREATE");
@@ -355,6 +390,16 @@ int main(){
 
   canvas.SaveAs("E_residue.pdf");
 
+  canvas.Clear();
+  q_histogram.Draw();
+  q_histogram.SetLineWidth(1.8);
+  q_histogram.GetXaxis()->SetTitleOffset(1.2);
+  q_histogram.GetYaxis()->SetTitleOffset(1.5);
+  q_histogram.GetXaxis()->CenterTitle();
+  q_histogram.GetYaxis()->CenterTitle();
+
+  canvas.SaveAs("momentum_transfer.pdf");
+
   // Loop over all of the final particles, making kinetic energy spectrum
   // plots for each one
   for (const auto& pair : fparticle_KEs) {
@@ -382,6 +427,10 @@ int main(){
     if (pid == marley_utils::ELECTRON) plot_title = std::string(
       "Electron spectrum for CC FD   #nu_{e} on ")
       + "  ^{40}Ar; Kinetic Energy [MeV]; Counts";
+    else if (pid == marley_utils::PHOTON)
+       plot_title = std::string("De-excitation  #gamma-ray")
+       + " spectrum for CC FD   #nu_{e}"
+       + " on  ^{40}Ar; Energy [MeV]; Counts";
     else plot_title = "De-excitation " + symbol
       + " spectrum for CC FD   #nu_{e}"
       + " on  ^{40}Ar; Kinetic Energy [MeV]; Counts";
