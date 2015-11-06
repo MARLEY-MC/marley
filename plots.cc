@@ -56,7 +56,7 @@ int main(){
   TMarleyDecayScheme ds(19, 40, "ensdf.040");
   TMarleyReaction r1998("ve40ArCC_1998.react", gen.get_structure_db());
   TMarleyReaction r2009("ve40ArCC_2009.react", gen.get_structure_db());
-  for (double Ea = 4.4; Ea < 60; Ea += 0.1) {
+  for (double Ea = 0.; Ea < 100; Ea += 0.1) {
     Eas.push_back(Ea);
     tot_xs_1998.push_back(1e15 * r1998.total_xs_cm(Ea)
       / marley_utils::mb); // 1e-42 cm^2
@@ -81,9 +81,13 @@ int main(){
 
   TCanvas canvas;
 
+  canvas.SetLogy(1);
+
   //xs_diffs.Draw("AL");
   xs1998.Draw("AL");
   xs1998.SetTitle("Total Cross Section for CC   #nu_{e} on  ^{40}Ar");
+  xs1998.GetXaxis()->SetRangeUser(0.,100.);
+  xs1998.GetYaxis()->SetRangeUser(1e-3,10000);
   xs1998.GetXaxis()->SetTitle("Neutrino Energy (MeV)");
   xs1998.GetXaxis()->CenterTitle();
   xs1998.GetXaxis()->SetTitleOffset(1.3);
@@ -92,14 +96,12 @@ int main(){
 
   xs2009.Draw("L");
 
-  TLegend xs_legend(0.3, 0.15, 0.9, 0.3);
+  TLegend xs_legend(0.2, 0.15, 0.9, 0.3);
   xs_legend.SetMargin(0.2);
   xs_legend.SetTextSize(0.03);
-  xs_legend.AddEntry(&xs1998, "MARLEY #nu_{e}ArCC total cross section based on 1998 data", "l");
-  xs_legend.AddEntry(&xs2009, "MARLEY #nu_{e}ArCC total cross section based on 2009 data", "l");
+  xs_legend.AddEntry(&xs1998, "MARLEY #nu_{e}ArCC total cross section based on   ^{40}Ti decay data", "l");
+  xs_legend.AddEntry(&xs2009, "MARLEY #nu_{e}ArCC total cross section based on (p,n) data", "l");
   xs_legend.Draw();
-
-  canvas.SetLogy(1);
 
   canvas.SaveAs("xs.pdf");
 
