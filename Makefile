@@ -68,6 +68,9 @@ dump: $(OBJ) $(OBJ_DICT) dump.o
 nu_source_plot: $(OBJ) nu_source_plot.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
+exs: $(OBJ) $(OBJ_DICT) exs.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
 # Add more header files to the prerequisites for
 # root_dict.o if you would like to store other
 # MARLEY classes in ROOT trees. All such classes
