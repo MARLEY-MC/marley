@@ -51,10 +51,6 @@ class TMarleyParticle {
     friend std::ostream& operator<< (std::ostream& out,
       const TMarleyParticle& p);
 
-    //inline virtual TMarleyParticle* clone() const {
-    //  return new TMarleyParticle(*this);
-    //}
-
   private:
     double total_energy; // MeV
     double px, py, pz; // 3-momentum components
@@ -65,57 +61,4 @@ class TMarleyParticle {
 
     // Pointers to secondary particles created by this one
     std::vector<TMarleyParticle*> children;
-};
-
-// Represents an atom or ion. Since the 2014 PDG particle ID codes do not
-// include a prescription for representing ionization states of atoms, this
-// class adds that information as a new data member. The net electric charge of
-// the atom is expressed as an integer multiple of the proton charge.
-//
-// TODO: add exceptions for cases where the TMarleyAtom is constructed with
-// a particle ID that is inappropriate. You can also add a check for a sane
-// value of the charge.
-class TMarleyAtom : public TMarleyParticle {
-  public:
-
-    inline TMarleyAtom(int charge = 0): TMarleyParticle() {
-      net_charge = charge;
-    }
-
-    inline TMarleyAtom(int id, double m, int charge = 0): TMarleyParticle(id, m)
-    {
-      net_charge = charge;
-    }
-
-    TMarleyAtom(int id, double p_x, double p_y, double p_z, double m,
-      int charge = 0): TMarleyParticle(id, p_x, p_y, p_z, m)
-    {
-      net_charge = charge;
-    }
-
-    TMarleyAtom(int id, double E, double p_x, double p_y, double p_z,
-      double m, int charge = 0): TMarleyParticle(id, E, p_x, p_y, p_z, m)
-    {
-      net_charge = charge;
-    }
-
-    virtual inline int get_charge() const {
-      return net_charge;
-    }
-
-    virtual inline void set_charge(int charge) {
-      net_charge = charge;
-    }
-
-    //inline virtual TMarleyAtom* clone() const {
-    //  return new TMarleyAtom(*this);
-    //}
-
-    // TODO: remove this function when ROOT's dictionaries can handle deletion
-    // without explicit new and delete calls (i.e., can use smart pointers)
-    inline virtual ~TMarleyAtom() {
-    }
-
-  private:
-    int net_charge;
 };

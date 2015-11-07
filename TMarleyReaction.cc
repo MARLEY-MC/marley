@@ -38,7 +38,7 @@ TMarleyReaction::TMarleyReaction(std::string filename,
 
   // Read in the particle IDs
   std::istringstream iss(line);
-  iss >> pid_a >> pid_b >> pid_c >> pid_d >> q_d;
+  iss >> pid_a >> pid_b >> pid_c >> pid_d;
 
   // Get initial and final values of the nuclear
   // charge and mass number from the pids
@@ -62,12 +62,7 @@ TMarleyReaction::TMarleyReaction(std::string filename,
   }
 
   if (pid_d > 1000000000) {
-    // If particle d is an atom and is ionized as a result of this reaction
-    // (e.g., q_d != 0), then approximate its ground-state ionized mass by
-    // subtracting the appropriate number of electron masses from its atomic
-    // (i.e., neutral) ground state mass.
-    md_gs = TMarleyMassTable::get_atomic_mass(pid_d)
-      - (q_d * TMarleyMassTable::get_particle_mass(marley_utils::ELECTRON));
+    md_gs = TMarleyMassTable::get_atomic_mass(pid_d);
   }
   else {
     md_gs = TMarleyMassTable::get_particle_mass(pid_d);
@@ -426,12 +421,12 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
   TMarleyParticle projectile(pid_a, Ea, 0, 0,
     marley_utils::real_sqrt(std::pow(Ea, 2) - ma2), ma);
 
-  TMarleyAtom target(pid_b, mb, 0, 0, 0, mb);
+  TMarleyParticle target(pid_b, mb, 0, 0, 0, mb);
 
   // Create particle objects representing the ejectile and residue in the CM
   // frame.
   TMarleyParticle ejectile(pid_c, Ec_cm, pc_cm_x, pc_cm_y, pc_cm_z, mc);
-  TMarleyAtom residue(pid_d, Ed_cm, -pc_cm_x, -pc_cm_y, -pc_cm_z, md, q_d);
+  TMarleyParticle residue(pid_d, Ed_cm, -pc_cm_x, -pc_cm_y, -pc_cm_z, md);
 
   // Boost the ejectile and residue into the lab frame.
   // TODO: edit this to allow for projectile directions other than along the z-axis
@@ -471,8 +466,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
     // TODO: include possibility of negative parity here.
     TMarleyParity P(true); // positive parity
     TMarleyStructureDatabase& db = gen.get_structure_db();
-    TMarleyParticle first;
-    TMarleyAtom second;
+    TMarleyParticle first, second;
     // The selected level is unbound, so handle its de-excitation using
     // the Hauser-Feshbach statistical model.
     while (continuum && Ex > cutoff) {
@@ -502,7 +496,7 @@ TMarleyEvent TMarleyReaction::create_event(double Ea,
     // event's final particle list.
     TMarleyDecayScheme* dec_scheme = gen.get_structure_db().get_decay_scheme(Z, A);
     dec_scheme->do_cascade(dec_scheme->get_pointer_to_closest_level(Ex),
-      &event, gen, residue.get_charge());
+      &event, gen);
   }
 
   //std::cout << std::endl; //DEBUG

@@ -28,8 +28,8 @@
 # integrated B(GT) strength from the QRPA calculation.
 # QRPA strengths for levels below this cutoff were ignored.
 #
-# Particle IDs and final ion charge
-12 1000180400 11 1000190400 1
+# Particle IDs
+12 1000180400 11 1000190400
 # Experimental Ex, B(GT) pairs taken from
 # M. Bhattacharya, et al., Phys. Rev. C 80,
 # 055501 (2009).

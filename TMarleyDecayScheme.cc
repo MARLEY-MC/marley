@@ -62,7 +62,7 @@ TMarleyLevel* TMarleyDecayScheme::get_pointer_to_closest_level(double E_level) {
 }
 
 void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
-  TMarleyEvent* p_event, TMarleyGenerator& gen, int qIon)
+  TMarleyEvent* p_event, TMarleyGenerator& gen)
 {
   //std::cout << "Beginning gamma cascade at level with energy "
   //  << initial_level->get_energy() << " MeV" << std::endl;
@@ -99,9 +99,8 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
       // Create new particle objects to represent the emitted gamma and
       // recoiling nucleus
       TMarleyParticle gamma(marley_utils::PHOTON, 0);
-      TMarleyAtom nucleus(pid, TMarleyMassTable::get_atomic_mass(pid)
-        + Exf - qIon*TMarleyMassTable::get_particle_mass(
-        marley_utils::ELECTRON), qIon);
+      TMarleyParticle nucleus(pid, TMarleyMassTable::get_atomic_mass(pid)
+        + Exf);
       
       //double gamma_energy = p_gamma->get_energy();
 
@@ -125,7 +124,7 @@ void TMarleyDecayScheme::do_cascade(TMarleyLevel* initial_level,
       p_event->add_final_particle(gamma);
 
       // Add this gamma to the residue's children
-      p_residue->add_child(p_event->get_final_particles().back().get());
+      p_residue->add_child(&(p_event->get_final_particles()->back()));
     }
   }
 
