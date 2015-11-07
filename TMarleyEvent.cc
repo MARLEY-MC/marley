@@ -58,7 +58,7 @@ TMarleyParticle* TMarleyEvent::get_target() {
   return target;
 }
 
-void TMarleyEvent::add_initial_particle(TMarleyParticle p,
+void TMarleyEvent::add_initial_particle(const TMarleyParticle& p,
   TMarleyEvent::ParticleRole r)
 {
   initial_particles.push_back(p);
@@ -73,7 +73,7 @@ void TMarleyEvent::add_initial_particle(TMarleyParticle p,
   assign_particle_pointer(&(initial_particles.back()), r);
 }
 
-void TMarleyEvent::add_final_particle(TMarleyParticle p,
+void TMarleyEvent::add_final_particle(const TMarleyParticle& p,
   TMarleyEvent::ParticleRole r)
 {
   final_particles.push_back(p);
@@ -92,28 +92,18 @@ void TMarleyEvent::set_reaction(TMarleyReaction* r) {
   reaction = r;
 }
 
-std::list<TMarleyParticle>* TMarleyEvent::get_initial_particles() {
-  return &initial_particles;
-}
-
-std::list<TMarleyParticle>* TMarleyEvent::get_final_particles() {
-  return &final_particles;
-}
-
 // Prints information about this event to stdout
 void TMarleyEvent::print_event() {
   std::cout << "*** Initial particles ***" << std::endl;
-  for (std::list<TMarleyParticle>::iterator i = initial_particles.begin();
-    i != initial_particles.end(); ++i)
+  for (const auto& i : initial_particles)
   {
-    std::cout << "id: " << i->get_id() << "   energy: " << i->get_total_energy()
+    std::cout << "id: " << i.get_id() << "   energy: " << i.get_total_energy()
       << " MeV" << std::endl;
   }
   std::cout << std::endl << std::endl << "*** Final particles ***" << std::endl;
-  for (std::list<TMarleyParticle>::iterator i = final_particles.begin();
-    i != final_particles.end(); ++i)
+  for (const auto& f : final_particles)
   {
-    std::cout << "id: " << i->get_id() << "   energy: " << i->get_total_energy()
+    std::cout << "id: " << f.get_id() << "   energy: " << f.get_total_energy()
       << " MeV" << std::endl;
   }
 }
@@ -128,7 +118,7 @@ std::ostream& operator<< (std::ostream& out, const TMarleyEvent& e) {
   //  out << p << std::endl;
   //}
   //out << std::endl << std::endl;
-  for (const TMarleyParticle& p : e.final_particles) {
+  for (auto& p : e.final_particles) {
     out << p << std::endl;
   }
   return out;

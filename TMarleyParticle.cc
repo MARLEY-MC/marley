@@ -1,3 +1,4 @@
+#include "marley_utils.hh"
 #include "TMarleyParticle.hh"
 
 //#ifdef USE_ROOT
@@ -6,46 +7,61 @@
 //#endif
 //#endif
 
-TMarleyParticle::TMarleyParticle() {
-  particle_id = 0;
-  total_energy = 0.0;
-  px = 0.0;
-  py = 0.0;
-  pz = 0.0;
-  mass = 0.0;
-}
-
-TMarleyParticle::TMarleyParticle(int id, double m) {
-  particle_id = id;
-  total_energy = m;
-  px = 0.0;
-  py = 0.0;
-  pz = 0.0;
-  mass = m;
-}
-
-TMarleyParticle::TMarleyParticle(int id, double p_x,
-  double p_y, double p_z, double m)
+void TMarleyParticle::init(int id, double E, double p_x, double p_y, double p_z,
+  double m, int q)
 {
   particle_id = id;
-  px = p_x;
-  py = p_y;
-  pz = p_z;
-  mass = m;
-  total_energy = std::sqrt(std::pow(p_x, 2)
-    + std::pow(p_y, 2) + std::pow(p_z, 2)
-    + std::pow(m, 2));
-}
-
-TMarleyParticle::TMarleyParticle(int id, double E, double p_x,
-  double p_y, double p_z, double m)
-{
-  particle_id = id;
+  charge = q;
   total_energy = E;
   px = p_x;
   py = p_y;
   pz = p_z;
   mass = m;
+}
+
+TMarleyParticle::TMarleyParticle() {
+  init(0, 0., 0., 0., 0., 0., 0);
+}
+
+TMarleyParticle::TMarleyParticle(int id, double m) {
+  int q = marley_utils::get_particle_charge(id);
+  init(id, m, 0., 0., 0., m, q);
+}
+
+TMarleyParticle::TMarleyParticle(int id, double m, int q) {
+  init(id, m, 0., 0., 0., m, q);
+}
+
+TMarleyParticle::TMarleyParticle(int id, double p_x,
+  double p_y, double p_z, double m)
+{
+  int q = marley_utils::get_particle_charge(id);
+  total_energy = std::sqrt(std::pow(p_x, 2)
+    + std::pow(p_y, 2) + std::pow(p_z, 2)
+    + std::pow(m, 2));
+  init(id, total_energy, p_x, p_y, p_z, m, q);
+}
+
+TMarleyParticle::TMarleyParticle(int id, double p_x,
+  double p_y, double p_z, double m, int q)
+{
+  total_energy = std::sqrt(std::pow(p_x, 2)
+    + std::pow(p_y, 2) + std::pow(p_z, 2)
+    + std::pow(m, 2));
+  init(id, total_energy, p_x, p_y, p_z, m, q);
+}
+
+TMarleyParticle::TMarleyParticle(int id, double E, double p_x,
+  double p_y, double p_z, double m)
+{
+  int q = marley_utils::get_particle_charge(id);
+  init(id, E, p_x, p_y, p_z, m, q);
+}
+
+TMarleyParticle::TMarleyParticle(int id, double E, double p_x,
+  double p_y, double p_z, double m, int q)
+{
+  init(id, E, p_x, p_y, p_z, m, q);
 }
 
 double TMarleyParticle::get_total_energy() const {
@@ -70,10 +86,6 @@ double TMarleyParticle::get_pz() const {
 
 int TMarleyParticle::get_id() const {
   return particle_id;
-}
-
-std::vector<TMarleyParticle*>* TMarleyParticle::get_children() {
-  return &children;
 }
 
 void TMarleyParticle::add_child(TMarleyParticle* child) {

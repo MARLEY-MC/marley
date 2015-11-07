@@ -317,6 +317,33 @@ namespace marley_utils {
     { 1000020040, "a"},//"\u03B1"},
   };
 
+  // Lookup table for particle electric charges (keys are PDG particle IDs,
+  // values are charges expressed as integer multiples of the proton charge).
+  const std::unordered_map<int, int> particle_electric_charges = {
+    { 11, -1},
+    { 12, 0},
+    { 13, -1},
+    { 14, 0},
+    { 15, -1},
+    { 16, 0},
+    { 22, 0},
+    { 2112, 0},
+    { 2212, 1},
+    //{ 1000010020, 1}, // bare deuteron
+    //{ 1000010030, 1}, // bare triton
+    //{ 1000020030, 2}, // bare helion
+    //{ 1000020040, 2}, // bare alpha
+  };
+
+  // Looks up the electric charge of a particle based on its PDG particle ID
+  inline int get_particle_charge(int pid) {
+    // If a nuclear particle ID is supplied to this function, assume
+    // that it is a bare nucleus, and return its atomic number Z.
+    if (pid > 1000000000) return (pid % 10000000)/10000;
+    // Otherwise, use the lookup table to determine the charge
+    else return particle_electric_charges.at(pid);
+  }
+
   // Lookup table for element symbols (keys are atomic numbers Z,
   // values are symbols on the periodic table). The symbol "Nn" is
   // used for a neutron to match the ENSDF convention.
