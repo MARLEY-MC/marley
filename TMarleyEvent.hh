@@ -20,13 +20,17 @@ class TMarleyEvent {
     TMarleyEvent(double E_level = 0.0);
     //std::string create_G4_macro(); // TODO: implement this
     void print_event();
-    void add_initial_particle(TMarleyParticle p,
+    void add_initial_particle(const TMarleyParticle& p,
       ParticleRole r = ParticleRole::pr_none);
-    void add_final_particle(TMarleyParticle p,
+    void add_final_particle(const TMarleyParticle& p,
       ParticleRole r = ParticleRole::pr_none);
     void set_reaction(TMarleyReaction* r);
-    std::list<TMarleyParticle>* get_initial_particles();
-    std::list<TMarleyParticle>* get_final_particles();
+    inline std::list<TMarleyParticle>& get_initial_particles() {
+      return initial_particles;
+    }
+    inline std::list<TMarleyParticle>& get_final_particles() {
+      return final_particles;
+    }
     TMarleyParticle* get_residue();
     TMarleyParticle* get_ejectile();
     TMarleyParticle* get_projectile();

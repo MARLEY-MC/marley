@@ -264,8 +264,8 @@ int main(){
 
     // Loop over the initial particles. For each neutrino, store
     // its energy.
-    std::list<TMarleyParticle>* iparts = e->get_initial_particles();
-    for(const auto& particle : *iparts) {
+    std::list<TMarleyParticle>& iparts = e->get_initial_particles();
+    for(const auto& particle : iparts) {
       int pid = particle.get_id();
       if (pid == marley_utils::ELECTRON_NEUTRINO) {
         neutrino_Es.push_back(particle.get_total_energy());
@@ -277,8 +277,8 @@ int main(){
     }
 
     // Loop over the final particles.
-    std::list<TMarleyParticle>* fparts = e->get_final_particles();
-    for(const auto& particle : *fparts) {
+    std::list<TMarleyParticle>& fparts = e->get_final_particles();
+    for(const auto& particle : fparts) {
 
       int pid = particle.get_id();
 

@@ -59,6 +59,7 @@ class TMarleyReaction {
     static constexpr double Vud = 0.97427; // abs(V_ud) (from CKM matrix)
     int Zi, Ai, Zf, Af; // Initial and final values of the atomic and mass numbers
     int pid_a, pid_b, pid_c, pid_d; // Particle IDs for all 4 particles
+    int q_d; // Net charge of particle d (in units of the proton charge) following this reaction
 
     // Lab-frame total energy of the projectile at threshold
     // for this reaction (all final-state particles at rest
