@@ -12,7 +12,7 @@
 
 #include "marley_utils.hh"
 #include "TMarleyDecayScheme.hh"
-#include "TMarleyROOTEvent.hh"
+#include "TMarleyEvent.hh"
 #include "TMarleyGenerator.hh"
 #include "TMarleyNeutrinoSource.hh"
 #include "TMarleyReaction.hh"
@@ -231,7 +231,7 @@ int main(){
   TFile* file = new TFile("event_tree.root", "READ");
   TTree* t = nullptr;
   file->GetObject("MARLEY Event Tree", t);
-  TMarleyROOTEvent* e = new TMarleyROOTEvent;
+  TMarleyEvent* e = new TMarleyEvent;
   t->GetBranch("events")->SetAddress(&e);
 
   // Particle energies from all events
@@ -264,8 +264,8 @@ int main(){
 
     // Loop over the initial particles. For each neutrino, store
     // its energy.
-    std::list<TMarleyParticle>& iparts = e->get_initial_particles();
-    for(const auto& particle : iparts) {
+    std::list<TMarleyParticle>* iparts = e->get_initial_particles();
+    for(const auto& particle : *iparts) {
       int pid = particle.get_id();
       if (pid == marley_utils::ELECTRON_NEUTRINO) {
         neutrino_Es.push_back(particle.get_total_energy());
@@ -277,8 +277,8 @@ int main(){
     }
 
     // Loop over the final particles.
-    std::list<TMarleyParticle>& fparts = e->get_final_particles();
-    for(const auto& particle : fparts) {
+    std::list<TMarleyParticle>* fparts = e->get_final_particles();
+    for(const auto& particle : *fparts) {
 
       int pid = particle.get_id();
 

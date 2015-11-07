@@ -108,8 +108,8 @@ class TMarleyNuclearPhysics {
     }
 
     static bool hauser_feshbach_decay(int Zi, int Ai,
-      const TMarleyAtom& initial_particle, TMarleyParticle& first_product,
-      TMarleyAtom& second_product, double& Ex, int& twoJ, TMarleyParity& Pi,
+      const TMarleyParticle& initial_particle, TMarleyParticle& first_product,
+      TMarleyParticle& second_product, double& Ex, int& twoJ, TMarleyParity& Pi,
       TMarleyStructureDatabase& db, TMarleyGenerator& gen);
 
     static void hf_test(int Zi, int Ai,

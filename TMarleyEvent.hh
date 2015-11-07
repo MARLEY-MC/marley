@@ -1,10 +1,8 @@
 #pragma once
 #include <list>
-#include <memory>
 #include <string>
 
 #include "TMarleyParticle.hh"
-#include "TMarleyROOTEvent.hh"
 
 class TMarleyReaction;
 
@@ -20,20 +18,15 @@ class TMarleyEvent {
       pr_ejectile, pr_residue, pr_none };
 
     TMarleyEvent(double E_level = 0.0);
-
     //std::string create_G4_macro(); // TODO: implement this
     void print_event();
-    void add_initial_particle(const TMarleyParticle& p,
+    void add_initial_particle(TMarleyParticle p,
       ParticleRole r = ParticleRole::pr_none);
-    void add_final_particle(const TMarleyParticle& p,
+    void add_final_particle(TMarleyParticle p,
       ParticleRole r = ParticleRole::pr_none);
     void set_reaction(TMarleyReaction* r);
-    inline std::list<std::shared_ptr<TMarleyParticle> >& get_initial_particles() {
-      return initial_particles;
-    }
-    inline std::list<std::shared_ptr<TMarleyParticle> >& get_final_particles() {
-      return final_particles;
-    }
+    std::list<TMarleyParticle>* get_initial_particles();
+    std::list<TMarleyParticle>* get_final_particles();
     TMarleyParticle* get_residue();
     TMarleyParticle* get_ejectile();
     TMarleyParticle* get_projectile();
@@ -43,14 +36,13 @@ class TMarleyEvent {
     friend std::ostream& operator<< (std::ostream& out,
       const TMarleyEvent& e);
 
-    TMarleyROOTEvent make_root_event();
-
   private:
     void assign_particle_pointer(TMarleyParticle* p,
       TMarleyEvent::ParticleRole r);
 
-    std::list<std::shared_ptr<TMarleyParticle> > initial_particles;
-    std::list<std::shared_ptr<TMarleyParticle> > final_particles;
+    std::list<TMarleyParticle> initial_particles;
+    std::list<TMarleyParticle> final_particles;
+
 
     // Pointers to special elements of the list of initial particles
     TMarleyParticle* projectile;
@@ -62,6 +54,7 @@ class TMarleyEvent {
 
     // Pointer to the reaction object that created this event
     TMarleyReaction* reaction; //! Don't save to ROOT file
+
 
     // Excitation energy (in MeV) of the residue (always
     // zero for residues that have no excited states)
