@@ -215,7 +215,55 @@ TMarleySphericalOpticalModel::TMarleySphericalOpticalModel(int z, int a) {
   }
 }
 
+// Computes the total cross section (in barns) for a given fragment
+// scattering on this nucleus at a given kinetic energy E.
+//
+// The total cross section given here by the optical model may be directly
+// compared to experiment. Expressions exist for the optical model elastic and
+// reaction (absorption) cross sections, but these are hard to directly compare
+// to the data because the absorption cross section includes the compound
+// elastic channel.
+double TMarleySphericalOpticalModel::total_cross_section(double E,
+  int fragment_pid, int two_s, size_t l_max, double h) //const
+{
+  double sum = 0.;
+  for (size_t l = 0; l <= l_max; ++l) {
+    int two_l = 2*l;
+    for (int two_j = std::abs(two_l - two_s);
+      two_j <= two_l + two_s; two_j += 2)
+    {
+      std::complex<double> S = s_matrix_element(E, fragment_pid, two_j, l,
+        two_s, h);
+      sum += (two_j + 1) * (1 - S.real());
+    }
+  }
+
+  double mu = get_fragment_reduced_mass(fragment_pid);
+  double k = marley_utils::real_sqrt(2.0 * mu * E) / marley_utils::hbar_c;
+  // If k == 0, then eta blows up, so use a really small k instead of zero
+  // (or a negative k due to roundoff error)
+  if (k <= 0) k = 1e-8; //DEBUG!
+
+  // This expression is based on equation 3.2.34 from I. Thompson and F. Nunes,
+  // Nuclear Reactions for Astrophysics, p. 85. Note that we have reduced the
+  // coupled-channels form shown therein to a single channel, and we have also
+  // assumed that the nucleus has zero spin (spherical optical model).
+  //
+  // Compute the cross section in units of fm^2
+  double xs = marley_utils::two_pi * sum / ((two_s + 1) * std::pow(k, 2));
+  // Return the cross section in barns (1 b = 100 fm^2)
+  return xs / 100.;
+}
+
 double TMarleySphericalOpticalModel::transmission_coefficient(double E,
+  int fragment_pid, int two_j, int l, int two_s, double h) //const
+{
+  std::complex<double> S = s_matrix_element(E, fragment_pid, two_j, l,
+    two_s, h);
+  return 1.0 - std::norm(S);
+}
+
+std::complex<double> TMarleySphericalOpticalModel::s_matrix_element(double E,
   int fragment_pid, int two_j, int l, int two_s, double h) //const
 {
 
@@ -318,8 +366,8 @@ double TMarleySphericalOpticalModel::transmission_coefficient(double E,
   Hplus2 = std::complex<double>(G, F);
   Hminus2 = std::conj(Hplus2);
 
-  // Compute the transmission coefficient using the radial wavefunction
+  // Compute the S matrix element using the radial wavefunction
   // evaluated at the two matching radii
   std::complex<double> S = (u1*Hminus2 - u2*Hminus1) / (u1*Hplus2 - u2*Hplus1);
-  return 1.0 - std::norm(S);
+  return S;
 }

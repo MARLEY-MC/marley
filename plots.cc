@@ -450,5 +450,49 @@ int main(){
     canvas.SaveAs(("KE_" + symbol + ".pdf").c_str());
   }
 
+  // Plot the total neutron cross section predicted by the MARLEY optical
+  // model for a 39K target
+  TMarleySphericalOpticalModel om
+    = gen.get_structure_db().get_optical_model(19, 39);
+  std::vector<double> om_Es, om_xs;
+  // Evaluate the cross section at num logarithmic gridpoints
+  // between Estart and Eend
+  size_t num = 5000;
+  // Estart and Eend are chosen here based on the nominal range
+  // of validity for the global optical model of Koning and Delarouche
+  double Estart = 1e-3;
+  double Eend = 2e2;
+  for (size_t j = 0; j < num; ++j) {
+    double dj = j;
+    double E = Estart * std::pow(Eend / Estart, dj/num);
+    om_Es.push_back(E);
+    double xs = om.total_cross_section(E, marley_utils::NEUTRON,
+      1, 5, 0.1);
+    om_xs.push_back(xs); // barns
+    //std::cout << "E = " << E << ", xs = " << xs << std::endl;
+  }
+  TGraph om_graph(om_Es.size(), &om_Es.front(), &om_xs.front());
+  om_graph.SetLineColor(4);
+  om_graph.SetLineWidth(1);
+
+  canvas.SetLogx(1);
+  canvas.SetLogy(1);
+
+  om_graph.Draw("AL");
+  om_graph.SetTitle("Spherical Optical Model Total Cross Section for n on   ^{39}K");
+  //om_graph.GetXaxis()->SetRangeUser(0.,100.);
+  //om_graph.GetYaxis()->SetRangeUser(1e-3,10000);
+  om_graph.GetXaxis()->SetTitle("Neutron Kinetic Energy (MeV)");
+  om_graph.GetXaxis()->CenterTitle();
+  om_graph.GetXaxis()->SetTitleOffset(1.3);
+  om_graph.GetYaxis()->SetTitle("Cross Section (barns)");
+  om_graph.GetYaxis()->CenterTitle();
+
+  canvas.SaveAs("om_xs.pdf");
+
+  canvas.Clear();
+  canvas.SetLogx(0);
+  canvas.SetLogy(0);
+
   return 0;
 }
