@@ -12,8 +12,12 @@ class TMarleySphericalOpticalModel {
     TMarleySphericalOpticalModel(int z, int a);
     std::complex<double> optical_model_potential(double r, double E,
       int fragment_pid, int two_j, int l, int two_s);
+
     double transmission_coefficient(double E, int fragment_pid, int two_j,
       int l, int two_s, double h);
+
+    double total_cross_section(double E, int fragment_pid, int two_s,
+      size_t l_max, double h);
 
     inline int get_Z() const {
       return Z;
@@ -24,6 +28,11 @@ class TMarleySphericalOpticalModel {
     }
 
   private:
+
+    // Helper function for computing optical model transmission coefficients
+    // and cross sections
+    std::complex<double> s_matrix_element(double E, int fragment_pid, int two_j,
+      int l, int two_s, double h);
 
     // Helper functions for computing the optical model potential
     void calculate_om_parameters(double E, int fragment_pid, int two_j,
