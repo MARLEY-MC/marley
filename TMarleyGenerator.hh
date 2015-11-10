@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <random>
 #include <sstream>
 #include <vector>
@@ -24,8 +25,8 @@ class TMarleyGenerator {
       double E_nu;
       size_t r_index;
       sample_reaction(E_nu, r_index);
-      return reactions.at(r_index).create_event(marley_utils::ELECTRON_NEUTRINO,
-        E_nu, *this);
+      return reactions.at(r_index)->create_event(
+        marley_utils::ELECTRON_NEUTRINO, E_nu, *this);
     }
 
     inline uint_fast64_t get_seed() const {
@@ -41,7 +42,7 @@ class TMarleyGenerator {
 
     // Get a string that represents the current internal state of the random
     // number generator
-    inline std::string get_state_string() {
+	    inline std::string get_state_string() {
       std::stringstream ss;
       ss << rand_gen;
       return ss.str();
@@ -74,7 +75,9 @@ class TMarleyGenerator {
       return structure_db;
     }
 
-    inline const std::vector<TMarleyNuclearReaction>& get_reactions() const {
+    inline const std::vector<std::unique_ptr<TMarleyReaction> >& get_reactions()
+      const
+    {
       return reactions;
     }
 
@@ -105,7 +108,7 @@ class TMarleyGenerator {
 
     TMarleyNeutrinoSource nu_source;
     TMarleyStructureDatabase structure_db;
-    std::vector<TMarleyNuclearReaction> reactions;
+    std::vector<std::unique_ptr<TMarleyReaction> > reactions;
 
     // Use total cross sections for each reaction as weights for sampling a
     // reaction type
