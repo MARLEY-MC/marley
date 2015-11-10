@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 #include "TMarleyEvent.hh"
 #include "TMarleyMassTable.hh"
@@ -19,12 +20,17 @@ class TMarleyReaction {
     virtual TMarleyEvent create_event(int particle_id_a, double Ea,
       TMarleyGenerator& gen) = 0;
 
+    inline std::string get_description() { return description; }
+
   protected:
     // Particle ID numbers (PDG convention)
     int pid_a, pid_b, pid_c, pid_d;
     // Particle masses and squared masses (pre-computed for speed)
     double ma, mb, mc, md;
     double ma2, mb2, mc2, md2;
+
+    // String describing the reaction
+    std::string description;
 
     // Handles kinematics for the reaction, loading variables with the value of
     // Mandelstam s, the CM frame ejectile total energy, the CM frame ejectile

@@ -2,6 +2,8 @@
 #include "TMarleyGenerator.hh"
 
 TMarleyElectronReaction::TMarleyElectronReaction(size_t Z) {
+  description = std::string("\u03bd + e\u207b \u27f6 \u03bd + e\u207b");
+
   Zatom = Z;
 
   // The target is an electron. Since this is an elastic scattering

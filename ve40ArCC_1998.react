@@ -37,6 +37,8 @@
 # integrated B(GT) strength from the QRPA calculation.
 # QRPA strengths for levels below this cutoff were ignored.
 #
+# Reaction description
+νₑ + ⁴⁰Ar ⟶ ⁴⁰K* + e⁻
 # Particle IDs and final ion charge
 12 1000180400 11 1000190400 1
 # Experimental Ex, B(GT) pairs taken from

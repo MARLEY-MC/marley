@@ -1,5 +1,5 @@
-// Add C++11 support (currently non-default) to ACLiC
-void aclic_cpp11() {
+// Add C++14 support (currently non-default) to ACLiC
+void aclic_cpp14() {
   TString o;
   // Customize MakeSharedLib
   o = TString(gSystem->GetMakeSharedLib());
@@ -14,8 +14,8 @@ void aclic_cpp11() {
 }
 
 void load_marley_dict() {
-  // Instruct ACLiC to use C++11 compiler flags
-  aclic_cpp11();
+  // Instruct ACLiC to use C++14 compiler flags
+  aclic_cpp14();
 
   // Load dictionaries for MARLEY classes that
   // can be written to ROOT files
