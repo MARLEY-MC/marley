@@ -1,4 +1,8 @@
 #pragma once
+#include <cmath>
+#include <stdexcept>
+
+class TMarleyParticle;
 
 class TMarleyKinematics {
   public:
