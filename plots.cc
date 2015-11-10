@@ -15,7 +15,7 @@
 #include "TMarleyEvent.hh"
 #include "TMarleyGenerator.hh"
 #include "TMarleyNeutrinoSource.hh"
-#include "TMarleyReaction.hh"
+#include "TMarleyNuclearReaction.hh"
 
 #include "TFile.h"
 #include "TGraph.h"
@@ -54,18 +54,18 @@ int main(){
   //std::vector<double> tot_xs_diffs;
   std::cout << std::setprecision(16) << std::scientific;
   TMarleyDecayScheme ds(19, 40, "ensdf.040");
-  TMarleyReaction r1998("ve40ArCC_1998.react", gen.get_structure_db());
-  TMarleyReaction r2009("ve40ArCC_2009.react", gen.get_structure_db());
+  TMarleyNuclearReaction r1998("ve40ArCC_1998.react", gen.get_structure_db());
+  TMarleyNuclearReaction r2009("ve40ArCC_2009.react", gen.get_structure_db());
   for (double Ea = 0.; Ea < 100; Ea += 0.1) {
     Eas.push_back(Ea);
-    tot_xs_1998.push_back(1e15 * r1998.total_xs_cm(Ea)
+    tot_xs_1998.push_back(1e15 * r1998.total_xs(marley_utils::ELECTRON_NEUTRINO, Ea)
       / marley_utils::mb); // 1e-42 cm^2
-    tot_xs_2009.push_back(1e15 * r2009.total_xs_cm(Ea)
+    tot_xs_2009.push_back(1e15 * r2009.total_xs(marley_utils::ELECTRON_NEUTRINO, Ea)
       / marley_utils::mb); // 1e-42 cm^2
   }
 
   //for (int i = 0; i < tot_xs.size(); ++i)
-  //  tot_xs_diffs.push_back(tot_xs[i] - tot_xs_cm[i]);
+  //  tot_xs_diffs.push_back(tot_xs[i] - tot_xs[i]);
 
   TGraph xs1998(tot_xs_1998.size(), &Eas.front(), &tot_xs_1998.front());
   xs1998.SetLineColor(4);

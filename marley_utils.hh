@@ -17,13 +17,33 @@ namespace marley_utils {
   // Frequently used particle IDs
   static constexpr int PHOTON = 22;
   static constexpr int ELECTRON = 11;
+  static constexpr int POSITRON = -11;
   static constexpr int ELECTRON_NEUTRINO = 12;
+  static constexpr int ELECTRON_ANTINEUTRINO = -12;
+  static constexpr int MUON = 13;
+  static constexpr int MUON_NEUTRINO = 14;
+  static constexpr int MUON_ANTINEUTRINO = -14;
+  static constexpr int TAU = 15;
+  static constexpr int TAU_NEUTRINO = 16;
+  static constexpr int TAU_ANTINEUTRINO = -16;
   static constexpr int NEUTRON = 2112;
   static constexpr int PROTON = 2212;
   static constexpr int DEUTERON = 1000010020;
   static constexpr int TRITON = 1000010030;
   static constexpr int HELION = 1000020030;
   static constexpr int ALPHA = 1000020040;
+
+  // Fermi coupling constant (MeV^(-2)) 
+  static constexpr double GF = 1.16637e-11;
+
+  // Absolute value of the CKM matrix element for mixing between the up and
+  // down quarks abs(V_ud)
+  static constexpr double Vud = 0.97427;
+
+  // sin^2(theta_W) (sine squared of the weak mixing angle)
+  // Effective value taken from 2014 PDG Review of Particle Physics,
+  // Table 1.1, "Physical Constants"
+  static constexpr double sin2thetaw = 0.23155;
 
   // Conversion factor to use when expressing ENSDF energies (keV) in
   // standard MARLEY energy units (MeV)

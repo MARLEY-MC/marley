@@ -6,7 +6,7 @@
 #include "TMarleyConfigFile.hh"
 #include "TMarleyNeutrinoSource.hh"
 #include "TMarleyParity.hh"
-#include "TMarleyReaction.hh"
+#include "TMarleyNuclearReaction.hh"
 #include "TMarleyStructureDatabase.hh"
 
 class TMarleyGenerator {
@@ -24,7 +24,8 @@ class TMarleyGenerator {
       double E_nu;
       size_t r_index;
       sample_reaction(E_nu, r_index);
-      return reactions.at(r_index).create_event(E_nu, *this);
+      return reactions.at(r_index).create_event(marley_utils::ELECTRON_NEUTRINO,
+        E_nu, *this);
     }
 
     inline uint_fast64_t get_seed() const {
@@ -73,7 +74,7 @@ class TMarleyGenerator {
       return structure_db;
     }
 
-    inline const std::vector<TMarleyReaction>& get_reactions() const {
+    inline const std::vector<TMarleyNuclearReaction>& get_reactions() const {
       return reactions;
     }
 
@@ -104,7 +105,7 @@ class TMarleyGenerator {
 
     TMarleyNeutrinoSource nu_source;
     TMarleyStructureDatabase structure_db;
-    std::vector<TMarleyReaction> reactions;
+    std::vector<TMarleyNuclearReaction> reactions;
 
     // Use total cross sections for each reaction as weights for sampling a
     // reaction type

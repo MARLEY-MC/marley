@@ -20,7 +20,7 @@ void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
   size_t react_count = 0;
   for (const std::string& filename : cf.get_reaction_filenames()) {
     std::cout << "Loading reaction data from file " << filename << std::endl;
-    reactions.push_back(TMarleyReaction(filename, structure_db));
+    reactions.push_back(TMarleyNuclearReaction(filename, structure_db));
     ++react_count;
   }
 
@@ -122,7 +122,8 @@ double TMarleyGenerator::unnormalized_Ea_pdf(double Ea) {
   // Sum all of the reaction total cross sections, saving
   // each individual value along the way.
   for (size_t j = 0, s = reactions.size(); j < s; ++j) {
-    double total_xs = reactions.at(j).total_xs_cm(Ea); 
+    double total_xs = reactions.at(j).total_xs(marley_utils::ELECTRON_NEUTRINO,
+      Ea); 
     total_xs_values.at(j) = total_xs;
     pdf += total_xs;
   }

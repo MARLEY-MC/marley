@@ -5,9 +5,14 @@
 #include "TMarleyMassTable.hh"
 
 double TMarleyMassTable::get_particle_mass(int particle_id) {
+  int id = particle_id;
+  // The lookup table only includes entries for particles (as opposed to
+  // antiparticles), so flip the sign of the input particle id for the
+  // lookup if it represents an antiparticle.
+  if (id < 0) id *= -1;
   // Find the particle's mass in the lookup table, and convert its
   // value from micro-amu to MeV
-  return micro_amu * particle_masses.at(particle_id);
+  return micro_amu * particle_masses.at(id);
 }
 
 double TMarleyMassTable::get_atomic_mass(int nucleus_pid, bool theory_ok) {
