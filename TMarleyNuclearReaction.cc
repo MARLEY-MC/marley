@@ -35,6 +35,15 @@ TMarleyNuclearReaction::TMarleyNuclearReaction(std::string filename,
 
   line = marley_utils::get_next_line(file_in, rx_comment, false);
 
+  // Save the reaction description line
+  // TODO: consider changing this so that the description is automatically
+  // generated from the particle IDs rather than entered into the reaction
+  // data file by hand.
+  description = line;
+
+  // Move on to the next non-comment line
+  line = marley_utils::get_next_line(file_in, rx_comment, false);
+
   // Read in the particle IDs
   std::istringstream iss(line);
   iss >> pid_a >> pid_b >> pid_c >> pid_d >> q_d;

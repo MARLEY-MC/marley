@@ -24,16 +24,15 @@ void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
     // TODO: add weighting of the ES reaction by atom fraction
     // TODO: allow the user to specify the atomic target for e- ES reactions
     // TODO: Think about a less crude way of implementing this
-    if (filename == std::string("e-ES")) {
-      std::cout << "Including elastic scattering reactions \u03BD + e-"
-        << " -> \u03BD + e- for a 40K target" << std::endl;
+    if (filename == std::string("e-ES"))
       reactions.push_back(std::make_unique<TMarleyElectronReaction>(19));
-    }
     else {
       std::cout << "Loading reaction data from file " << filename << std::endl;
       reactions.push_back(std::make_unique<TMarleyNuclearReaction>(filename,
         structure_db));
     }
+    std::cout << "Added reaction " << reactions.back()->get_description()
+      << std::endl;
     ++react_count;
   }
 
