@@ -1,7 +1,9 @@
 #include <stdexcept>
 #include <string>
 
+#include "TMarleyElectronReaction.hh"
 #include "TMarleyGenerator.hh"
+#include "TMarleyNuclearReaction.hh"
 
 void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
   // Use the seed from the config file object to prepare the random number
@@ -19,15 +21,26 @@ void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
   // Create the reactions. Count them for later reference.
   size_t react_count = 0;
   for (const std::string& filename : cf.get_reaction_filenames()) {
-    std::cout << "Loading reaction data from file " << filename << std::endl;
-    reactions.push_back(TMarleyNuclearReaction(filename, structure_db));
+    // TODO: add weighting of the ES reaction by atom fraction
+    // TODO: allow the user to specify the atomic target for e- ES reactions
+    // TODO: Think about a less crude way of implementing this
+    if (filename == std::string("e-ES")) {
+      std::cout << "Including elastic scattering reactions \u03BD + e-"
+        << " -> \u03BD + e- for a 40K target" << std::endl;
+      reactions.push_back(std::make_unique<TMarleyElectronReaction>(19));
+    }
+    else {
+      std::cout << "Loading reaction data from file " << filename << std::endl;
+      reactions.push_back(std::make_unique<TMarleyNuclearReaction>(filename,
+        structure_db));
+    }
     ++react_count;
   }
 
   // Create the neutrino source.
   // TODO: Implement configuration file keywords to adjust neutrino source
   // settings and remove hard-coded stuff here.
-  nu_source = TMarleyNeutrinoSource(0., 150.,
+  nu_source = TMarleyNeutrinoSource(0., 100.,
     TMarleyNeutrinoSource::NeutrinoType::ElectronNeutrino);
 
   // Initialize the vector of total cross section values to be all zeros and
@@ -122,10 +135,10 @@ double TMarleyGenerator::unnormalized_Ea_pdf(double Ea) {
   // Sum all of the reaction total cross sections, saving
   // each individual value along the way.
   for (size_t j = 0, s = reactions.size(); j < s; ++j) {
-    double total_xs = reactions.at(j).total_xs(marley_utils::ELECTRON_NEUTRINO,
+    double tot_xs = reactions.at(j)->total_xs(marley_utils::ELECTRON_NEUTRINO,
       Ea); 
-    total_xs_values.at(j) = total_xs;
-    pdf += total_xs;
+    total_xs_values.at(j) = tot_xs;
+    pdf += tot_xs;
   }
   // Multiply the total cross section by the neutrino spectrum
   // from the source object to get the (unnormalized) PDF
