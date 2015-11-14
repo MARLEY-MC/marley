@@ -883,6 +883,63 @@ double meta_numerics::CoulombG (int L, double eta, double rho) {
   }
 
 }
+
+double meta_numerics::LegendrePe(int l, int m, double x) {
+  if (l < 0) throw std::runtime_error(std::string("Cannot compute")
+    + " the associated Legendre polynomial Pe{l = " + std::to_string(l)
+    + ", m = " + std::to_string(m) + "} because l must be nonnegative.");
+  if (m > l || m < 0) throw std::runtime_error(std::string("Cannot compute")
+    + " the associated Legendre polynomial Pe{l = " + std::to_string(l)
+    + ", m = " + std::to_string(m) + "} because l and m must"
+    + " satisfy the relation 0 <= m <= l");
+  if (std::abs(x) > 1.0) throw std::runtime_error(std::string("Cannot compute")
+    + " the associated Legendre polynomial Pe{l = " + std::to_string(l)
+    + ", m = " + std::to_string(m) + "}(x = " + std::to_string(x)
+    + "because x must satisfy the relation abs(x) <= 1.");
+  
+  double xx = (1.0 + x) * (1.0 - x);
+  // determine P{m,m}
+  double P0 = 1.0;
+  for (int k = 1; k <= m; k++) {
+    P0 *= (1.0 - 1.0 / (2 * k)) * xx;
+  }
+  P0 = std::sqrt(P0);
+  if (m % 2 != 0) P0 = -P0;
+  if (l == m) return (P0);
+  // determine P{m+1,m}
+  double s0 = std::sqrt(2*m + 1);
+  double P1 = x * s0 * P0;
+  // iterate up to P{l,m}
+  for (int k = m + 2; k <= l; k++) {
+    double s2 = std::sqrt((k - m) * (k + m));
+    double P2 = (x * (2 * k - 1) * P1 - s0 * P0) / s2;
+    // prepare for next iteration
+    s0 = s2;
+    P0 = P1;
+    P1 = P2;
+  }
+  return P1;
+}
+
+std::complex<double> meta_numerics::SphericalHarmonic (int l, int m, double theta, double phi) {
+  if (l < 0) throw std::runtime_error(std::string("Cannot compute")
+    + " the spherical harmonic with l = " + std::to_string(l) + ", m = "
+    + std::to_string(m) + ". The order l must be nonnegative.");
+  if (std::abs(m) > l) throw std::runtime_error(std::string("Cannot compute")
+    + " the spherical harmonic with l = " + std::to_string(l) + ", m = "
+    + std::to_string(m) + ". The sub-order m must satisfy -l <= m <= l.");
+
+  if (m < 0) {
+    std::complex<double> y = SphericalHarmonic(l, -m, theta, phi);
+    if ((m % 2) != 0) y = -y;
+    return std::conj(y);
+  }
+
+  double LP = std::sqrt((2*l + 1) / (4.0 * marley_utils::pi))
+    * LegendrePe(l, m, std::cos(theta));
+  double mp = m * phi;
+  return std::complex<double>(LP * std::cos(mp), LP * std::sin(mp));
+}
 // -- End Ms-PL licensed code
 
 //Microsoft Public License (Ms-PL)
