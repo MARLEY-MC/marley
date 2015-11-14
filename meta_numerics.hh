@@ -400,6 +400,45 @@ namespace meta_numerics {
   /// <seealso href="http://mathworld.wolfram.com/CoulombWaveFunction.html" />
   double CoulombG (int L, double eta, double rho);
 
+  // renormalized associated legendre polynomials Pe{l,m} = sqrt( (l-m)! / (l+m)! ) P{l,m}
+  // unlike the unrenormalized P{l,m}, the renormalized Pe{l,m} do not get too big
+  
+  // this is not quite the same renormalization used by NR; it omits a factor sqrt((2l+1)/4Pi)
+  // by omitting this factor, we avoid some unnecessary factors and divisions by 4Pi
+  
+  // the l-recurrsion (l-m) P{l,m} = x (2l-1) P{l-1,m} - (l+m-1) P{l-2,m} becomes
+  // sqrt((l-m)(l+m)) P{l,m} = x (2l-1) P{l-1,m} - sqrt((l-1-m)(l-1+m)) P{l-2,m}
+  // this is stable for increasing l
+  
+  // the initial value P{m,m} = (-1)^m (2m-1)!! (1-x^2)^(m/2) becomes
+  // Pe{m,m} = (-1)^m (2m-1)!! sqrt( (1-x^2)^m / (2m)! ) = (-1)^m sqrt( prod_{k=1}^{m} (2k-1) (1-x^2) / (2k) )
+  
+  double LegendrePe(int l, int m, double x);
+  
+  /// <summary>
+  /// Computes the value of a spherical harmonic function.
+  /// </summary>
+  /// <param name="l">The order, which must be non-negative.</param>
+  /// <param name="m">The sub-order, which must lie between -l and l inclusive.</param>
+  /// <param name="theta">The azimuthal angle &#x3B8;. This angle is
+  //usually expressed as between -&#x3C0;/2 and +&#x3C0;/2, with positive
+  //values representing the upper hemisphere and negative values
+  //representing the lower hemisphere.</param> / <param name="phi">The
+  //cylindrical angle &#x3C6;. This angle is usually expressed as between
+  //0 and 2&#x3C0;, measured counter-clockwise (as seen from above) from
+  //the positive x-axis. It is also possible to use negative values to
+  //represent clockwise movement. </param>
+  /// <returns>The value of Y<sub>l,m</sub>(&#x3B8;,&#x3C6;).</returns>
+  /// <exception cref="ArgumentOutOfRangeException"><paramref name="l"/>
+  //is negative, or <paramref name="m"/> lies outside the range [-l,
+  //l].</exception>
+  std::complex<double> SphericalHarmonic (int l, int m, double theta, double phi);
+  // spherical harmonics are used in spherically symmetric wave functions
+  // in QM, multipole expansions in EM, expansion of any function on a
+  // sphere
+  
+  // Y{l,m} = sqrt( (2l+1)/(4Pi) (l-m)!/(l+m)! ) P{l,m}; in terms of the
+  // renormalized Pe{l,m}, this is Y{l,m] = sqrt( (2l+1)/(4Pi) ) Pe{l,m}
 }
 // -- End Ms-PL licensed code
 
