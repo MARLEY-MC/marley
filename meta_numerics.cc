@@ -940,6 +940,351 @@ std::complex<double> meta_numerics::SphericalHarmonic (int l, int m, double thet
   double mp = m * phi;
   return std::complex<double>(LP * std::cos(mp), LP * std::sin(mp));
 }
+
+double meta_numerics::SphericalBesselJ(int n, double x) {
+
+  if (x < 0.0) {
+    if (n % 2 == 0) return SphericalBesselJ(n, -x);
+    else return -SphericalBesselJ(n, -x);
+  }
+
+  if (n < 0) {
+    if ((n % 2) == 0) return SphericalBesselY(-n - 1, x);
+    else return(-SphericalBesselY(-n - 1, x));
+  } 
+  else if (n == 0) return SphericalBesselJ_Zero(x);
+  else if (n == 1) return SphericalBesselJ_One(x);
+  else {
+    // if close enough to the origin, use the power series
+    if (x < 2.0 + 2.0 * std::sqrt(n)) return SphericalBesselJ_Series(n, x);
+    // if far enough from the origin, use the asymptotic expansion
+    else if (x > (32.0 + n * n / 2.0))
+      return std::sqrt(marley_utils::half_pi / x)
+      * Bessel_Asymptotic(n + 0.5, x).FirstSolutionValue();
+    // in the transition region, use Miller's algorithm
+    else return SphericalBesselJ_Miller(n, x);
+  }
+}
+
+double meta_numerics::SphericalBesselY(int n, double x) {
+
+  if (x < 0.0) {
+    if (n % 2 == 0) return -SphericalBesselY(n, -x);
+    else return SphericalBesselY(n, -x);
+  }
+
+  if (n < 0) {
+    if ((n % 2) == 0) return -SphericalBesselJ(-n - 1, x);
+    else return SphericalBesselJ(-n - 1, x);
+  }
+  else if (n == 0) return SphericalBesselY_Zero(x);
+  else if (n == 1) return SphericalBesselY_One(x);
+  else {
+    if (x < (2.0 + std::sqrt(n))) return SphericalBesselY_Series(n, x);
+    // if x is large enough, use asymptotic expansion
+    else if (x > (30.0 + 0.5 * n * n))
+      return std::sqrt(marley_utils::half_pi / x)
+      * Bessel_Asymptotic(n + 0.5, x).SecondSolutionValue();
+    else {
+      // move up using the recursion relation
+      double ym1 = SphericalBesselY_Zero(x);
+      double y = SphericalBesselY_One(x);
+      for (int k = 1; k < n; k++) {
+        double yp1 = (2 * k + 1) / x * y - ym1;
+        ym1 = y;
+        y = yp1;
+      }
+      return y;
+    }
+  }
+}
+
+double meta_numerics::SphericalBesselJ_Zero(double x) {
+  // It's fine to compute sin(x) / x explicitly, even for very very tiny x,
+  // as long as x is not actually zero.
+  if (x == 0.0) return 1.0;
+  else return std::sin(x) / x;
+}
+
+double meta_numerics::SphericalBesselJ_SeriesOne(double x) {
+  double xx = x * x / 2.0;
+  double dj = x / 3.0;
+  double j = dj;
+  for (int i = 1; i < SeriesMax; i++) {
+    double j_old = j;
+    dj = -dj * xx / i / (2 * i + 3);
+    j = j_old + dj;
+    if (j == j_old) return j;
+  }
+  throw std::runtime_error(std::string("meta_numerics::")
+    + "SphericalBesselJ_SeriesOne failed to converge.");
+}
+
+double meta_numerics::SphericalBesselJ_One(double x) {
+  if (std::abs(x) < 0.5) return SphericalBesselJ_SeriesOne(x);
+  else if (std::abs(x) > 100.0) return std::sqrt(marley_utils::half_pi / x)
+    * Bessel_Asymptotic(1.5, x).FirstSolutionValue();
+  else return (std::sin(x) / x - std::cos(x)) / x;
+}
+
+double meta_numerics::DoubleFactorial(int n) {
+  if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+    + " n!! for n = " + std::to_string(n));
+  else if (n < 32) return static_cast<double>(DoubleFactorial_Multiply(n));
+  else return std::round(std::exp(LogDoubleFactorial_Gamma(n)));
+}
+
+double meta_numerics::LogDoubleFactorial(int n) {
+  if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+    + " log(n!!) for n = " + std::to_string(n));
+  else if (n < 32)
+    return std::log(static_cast<double>(DoubleFactorial_Multiply(n)));
+  else return LogDoubleFactorial_Gamma(n);
+}
+
+long meta_numerics::DoubleFactorial_Multiply(int n) {
+  long f = 1;
+  for (int k = n; k > 1; k = k - 2) f *= k;
+  return f;
+}
+
+double meta_numerics::LogDoubleFactorial_Gamma(int n) {
+  if (n % 2 == 0) {
+    // m = n/2, n!! = 2^m Gamma(m+1)
+    int m = n / 2;
+    return m * marley_utils::log_2 + LogGamma(m + 1.0);
+  }
+  else {
+    // m = (n+1)/2, n!! = 2^m Gamma(m+1/2) / Sqrt(PI)
+    int m = (n + 1) / 2;
+    return m * marley_utils::log_2 + LogGamma(m + 0.5)
+      - std::log(marley_utils::pi) / 2.0;
+  }
+}
+
+double meta_numerics::SphericalBesselJ_Series(int n, double x) {
+  double xx = x * x / 2.0;
+  double df = std::exp(n * std::log(x) - LogDoubleFactorial(2 * n + 1));
+  double f = df;
+  for (int i = 1; i < SeriesMax; i++) {
+    double f_old = f;
+    df = -df * xx / i / (2 * (n + i) + 1);
+    f += df;
+    if (f == f_old) return f;
+  }
+  throw std::runtime_error(std::string("meta_numerics::")
+    + "SphericalBesselJ_Series failed to converge.");
+}
+
+double meta_numerics::SphericalBesselY_Series(int n, double x) {
+  double xx = x * x / 2.0;
+  double df = - DoubleFactorial(2 * n - 1)
+    / std::pow(x, n + 1);
+  double f = df;
+  for (int k = 1; k < SeriesMax; k++) {
+    double f_old = f;
+    df = -df * xx / k / (2 * (k - n) - 1);
+    f += df;
+    if (f == f_old) return f;
+  }
+  throw std::runtime_error(std::string("meta_numerics::")
+    + "SphericalBesselY_Series failed to converge.");
+}
+
+double meta_numerics::SphericalBesselY_Zero(double x) {
+  if (x == 0.0) return marley_utils::minus_infinity;
+  else return -std::cos(x) / x;
+}
+
+double meta_numerics::SphericalBesselY_SeriesOne(double x) {
+  if (x == 0) return marley_utils::minus_infinity;
+  double xx = x * x / 2.0;
+  double dy = - 1.0 / (x * x);
+  double y = dy;
+  for (int i = 1; i < SeriesMax; i++) {
+    double y_old = y;
+    dy = - dy * xx / i / (2 * i - 3);
+    y = y_old + dy;
+    if (y == y_old) return y;
+  }
+  throw std::runtime_error(std::string("meta_numerics::")
+    + "SphericalBesselY_SeriesOne failed to converge.");
+}
+
+double meta_numerics::SphericalBesselY_One(double x) {
+  if (std::abs(x) < 1.0) return SphericalBesselY_SeriesOne(x);
+  else if (std::abs(x) > 100.0) return std::sqrt(marley_utils::half_pi / x)
+    * Bessel_Asymptotic(1.5, x).SecondSolutionValue();
+  else return -(std::cos(x)/x + std::sin(x)) / x;
+}
+
+// Miller's method assumes a value at some high N and recurs downward
+// the result is then normalized using a sum relation or a known value
+double meta_numerics::SphericalBesselJ_Miller(int n, double x) {
+
+  // pick starting value for the downward recursion that
+  // takes us well into the x < nu regime, where J_nu decreases with nu
+  int kmax = n;
+  if (x > n) kmax = static_cast<int>(std::ceil(x));
+  kmax += 50; // since J_(nu+1)/J_(nu) ~ 1/2 for x~v, taking N steps supresses by 2^(N) = 10^(16) at N ~ 50
+
+  double jp1 = 0.0;
+  double j = 1.0 / (static_cast<double>(kmax)); // look for a better guess
+
+  // recur downward to order zero
+  // the recurrence j_{k-1} = (2k+1)/x * j_k - j_{k+1} is stable in this direction
+  for (int k = kmax; k > n; k--) {
+    double jm1 = (2 * k + 1) / x * j - jp1;
+    jp1 = j;
+    j = jm1;
+  }
+  double jn = j;
+  for (int k = n; k > 0; k--) {
+    double jm1 = (2 * k + 1) / x * j - jp1;
+    jp1 = j;
+    j = jm1;
+  }
+
+  // compute the value we should have got and use it to normalize our result
+  double j0 = SphericalBesselJ_Zero(x);
+  return (j0 / j) * jn;
+}
+
+meta_numerics::SolutionPair meta_numerics::Bessel_Asymptotic(double nu, double x) {
+
+  // pre-compute factors of nu and x as they appear in the series
+  double mu = 4.0 * nu * nu;
+  double xx = 8.0 * x;
+
+  // initialize P and Q
+  double P = 1.0; double R = 1.0;
+  double Q = 0.0; double S = 0.0;
+
+  // k is the current term number, k2 is (2k - 1), and t is the value of the current term
+  int k = 0;
+  int k2 = -1;
+  double t = 1.0;
+
+  while (true) {
+
+    double Q_old = Q; double P_old = P;
+    double R_old = R; double S_old = S;
+
+    k++; k2 += 2;
+    t /= k * xx;
+    S += (mu + k2 * (k2 + 2)) * t;
+    t *= (mu - k2 * k2);
+    Q += t;
+
+    k++; k2 += 2;
+    t /= -k * xx;
+    R += (mu + k2 * (k2 + 2)) * t;
+    t *= (mu - k2 * k2);
+    P += t;
+
+    if ((P == P_old) && (Q == Q_old) && (R == R_old) && (S == S_old))
+      break;
+
+    if (k > SeriesMax) throw std::runtime_error(std::string("meta_numerics::")
+      + "Bessel_Asymptotic failed to converge.");
+  }
+
+  // We attempted to move to a single trig evaluation so as to avoid errors when the two terms nearly cancel,
+  // but this seemed to cause problems, perhaps because the arctan angle cannot be determined with sufficient
+  // resolution. Investigate further.
+  /*
+  double M = N * MoreMath.Hypot(Q, P);
+  double phi = Math.Atan2(Q, P);
+  SolutionPair result2 = new SolutionPair(
+    M * Cos(x + phi, -(nu + 0.5) / 4.0),
+    -N * (R * s + S * c),
+    M * Sin(x + phi, -(nu + 0.5) / 4.0),
+    N * (R * c - S * s)
+  );
+   */
+
+  // This technique was used in the original Meta Numerics library. To avoid having to use
+  // the complicated techniques in the RangeReduction class, skip the reductions. Add them
+  // back in if you experience problems.
+  //
+  //// Compute sin and cosine of x - (\nu + 1/2)(\pi / 2)
+  //// Then we compute sine and cosine of (x1 - u1) with shift appropriate to (x0 - u0).
+  //
+  //// For maximum accuracy, we first reduce x = (x_0 + x_1) (\pi / 2), where x_0 is an integer and -0.5 < x1 < 0.5
+  //long x0; double x1;
+  //RangeReduction.ReduceByPiHalves(x, x0, x1);
+  //
+  //// Then we reduce (\nu + 1/2) = u_0 + u_1 where u_0 is an integer and -0.5 < u1 < 0.5
+  //double u = nu + 0.5;
+  //double ur = std::round(u);
+  //long u0 = static_cast<long>(ur);
+  //double u1 = u - ur;
+  //
+  //// Finally, we compute sine and cosine, having reduced the evaluation interval to -0.5 < \theta < 0.5
+  //double s1 = RangeReduction.Sin(x0 - u0, x1 - u1);
+  //double c1 = RangeReduction.Cos(x0 - u0, x1 - u1);
+  // Assemble the solution
+  //double N = std::sqrt(2.0 / marley_utils::pi / x);
+  //meta_numerics::SolutionPair result = meta_numerics::SolutionPair(
+  //  N * (c1 * P - s1 * Q), -N * (R * s1 + S * c1),
+  //  N * (s1 * P + c1 * Q), N * (R * c1 - S * s1)
+  //);
+
+  // Assemble the solution
+  double phi = x - (nu + 0.5)*marley_utils::half_pi;
+  double s1 = std::sin(phi);
+  double c1 = std::cos(phi);
+  double N = std::sqrt(2.0 / marley_utils::pi / x);
+  meta_numerics::SolutionPair result = meta_numerics::SolutionPair(
+    N * (c1 * P - s1 * Q), -N * (R * s1 + S * c1),
+    N * (s1 * P + c1 * Q), N * (R * c1 - S * s1)
+  );
+
+  return result;
+}
+
+/// <summary>
+/// Computes the natural logrithm of the Gamma function.
+/// </summary>
+/// <param name="x">The argument, which must be positive.</param>
+/// <returns>The log Gamma function ln(&#x393;(x)).</returns>
+/// <remarks>
+/// <para>Because &#x393;(x) grows rapidly for increasing positive x, it is often necessary to
+/// work with its logarithm in order to avoid overflow. This function returns accurate
+/// values of ln(&#x393;(x)) even for values of x which would cause &#x393;(x) to overflow.</para>
+/// </remarks>
+/// <exception cref="ArgumentOutOfRangeException"><paramref name="x"/> is negative or zero.</exception>
+/// <seealso cref="Gamma(double)" />
+double meta_numerics::LogGamma(double x) {
+  if (x <= 0.0) throw std::runtime_error(std::string("Cannot compute")
+    + " LogGamma(x) for x = " + std::to_string(x));
+  // For small arguments, use the Lanczos approximation.
+  else if (x < 16.0) return meta_numerics::Lanczos::LogGamma(x);
+  // For large arguments, the asymptotic series is even faster than the Lanczos approximation.
+  else return meta_numerics::LogGamma_Stirling(x);
+}
+
+double meta_numerics::LogGamma_Stirling(double x) {
+  // re-write to use (x-0.5) form to eliminate one one by storing log(2\pi)?
+  return (x * std::log(x) - x
+    - std::log(x / (2.0 * marley_utils::pi)) / 2.0 + Sum_Stirling(x));
+}
+
+double meta_numerics::Sum_Stirling(double x) {
+
+  double xx = x * x; // x^2 
+  double xk = x; // tracks x^{2k - 1}
+  double f = meta_numerics::Bernoulli[1] / 2.0 / xk; // k = 1 term
+  for (size_t k = 2; k < meta_numerics::Bernoulli.size(); k++) {
+    double f_old = f;
+    xk *= xx;
+    f += meta_numerics::Bernoulli[k] / (2 * k) / (2 * k - 1) / xk;
+    if (f == f_old) return f;
+  }
+
+  throw std::runtime_error(std::string("meta_numerics::")
+    + "Sum_Stirling failed to converge.");
+}
 // -- End Ms-PL licensed code
 
 //Microsoft Public License (Ms-PL)

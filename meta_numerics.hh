@@ -219,9 +219,9 @@ namespace meta_numerics {
       static double LogBeta (double x, double y);
   };
 
-  std::complex<double> LogGamma_Stirling (std::complex<double> z);
-  std::complex<double> LogGamma (std::complex<double> z);
-  std::complex<double> Psi (std::complex<double> z);
+  std::complex<double> LogGamma_Stirling(std::complex<double> z);
+  std::complex<double> LogGamma(std::complex<double> z);
+  std::complex<double> Psi(std::complex<double> z);
 
   /// <summary>
   /// Contains a pair of solutions to a differential equation.
@@ -439,6 +439,111 @@ namespace meta_numerics {
   
   // Y{l,m} = sqrt( (2l+1)/(4Pi) (l-m)!/(l+m)! ) P{l,m}; in terms of the
   // renormalized Pe{l,m}, this is Y{l,m] = sqrt( (2l+1)/(4Pi) ) Pe{l,m}
+
+  // **** Spherical Bessel functions ****
+
+  /// <summary>
+  /// Computes the regular spherical Bessel function of integer order.
+  /// </summary>
+  /// <param name="n">The order parameter.</param>
+  /// <param name="x">The argument.</param>
+  /// <returns> The value of j<sub>n</sub>(x).</returns>
+  /// <remarks>
+  /// <para>The spherical Bessel functions occur in solutions to the wave equations with spherical symmetry. The
+  /// regular spherical Bessel functions are finite at the origin, and thus occur in situations where the wave equation is satisfied
+  /// at the origin.</para>
+  /// <para>The regular spherical Bessel functions are related to the regular Bessel functions of half-integer order by
+  /// j<sub>n</sub>(x) = Sqrt(&#x3C0;/2x) J<sub>n+1/2</sub>(x).</para></remarks>
+  /// <seealso cref="SphericalBesselY" />
+  /// <seealso cref="BesselJ(double,double)"/>
+  /// <seealso href="http://mathworld.wolfram.com/SphericalBesselFunctionoftheFirstKind.html" />
+  double SphericalBesselJ(int n, double x);
+  
+  /// <summary>
+  /// Computes the irregular spherical Bessel function of integer order.
+  /// </summary>
+  /// <param name="n">The order parameter.</param>
+  /// <param name="x">The argument.</param>
+  /// <returns>The value of y<sub>n</sub>(x).</returns>
+  /// <seealso cref="SphericalBesselJ"/>
+  /// <seealso href="http://mathworld.wolfram.com/SphericalBesselFunctionoftheSecondKind.html" />
+  double SphericalBesselY(int n, double x);
+
+  double SphericalBesselJ_Zero(double x);
+  double SphericalBesselJ_SeriesOne(double x);
+  double SphericalBesselJ_One(double x);
+
+  /// <summary>
+  /// Computes the double factorial of the given integer.
+  /// </summary>
+  /// <param name="n">The argument, which must be positive.</param>
+  /// <returns>The value of n!!.</returns>
+  /// <remarks>
+  /// <para>The double factorial of an integer is the product all integers of the same parity, up to and including the integer.
+  /// Thus 5! = 5 * 3 * 1 = 15 and 6! = 6 * 4 * 2 = 48.</para>
+  /// </remarks>
+  /// <exception cref="ArgumentOutOfRangeException"><paramref name="n"/> is negative.</exception>
+  /// <seealso href="http://mathworld.wolfram.com/DoubleFactorial.html"/>
+  double DoubleFactorial(int n);
+
+  /// <summary>
+  /// Computes the natural logarithm of the double factorial of the given number.
+  /// </summary>
+  /// <param name="n">The argument.</param>
+  /// <returns>The value of ln(n!!).</returns>
+  /// <exception cref="ArgumentOutOfRangeException"><paramref name="n"/> is negative.</exception>
+  /// <seealso cref="DoubleFactorial"/>
+  double LogDoubleFactorial(int n);
+
+  long DoubleFactorial_Multiply(int n);
+  
+  double LogDoubleFactorial_Gamma(int n);
+ 
+  double SphericalBesselJ_Series(int n, double x);
+  double SphericalBesselY_Series(int n, double x);
+ 
+  double SphericalBesselY_Zero(double x);
+  double SphericalBesselY_SeriesOne(double x);
+  double SphericalBesselY_One(double x);
+ 
+  // Miller's method assumes a value at some high N and recurs downward
+  // the result is then normalized using a sum relation or a known value
+  double SphericalBesselJ_Miller(int n, double x);
+
+  // Hankel's asymptotic expansions for Bessel functions (A&S 9.2)
+  //   J = \sqrt{\frac{2}{\pi x}} \left[ P \cos\phi - Q \sin\phi \right]
+  //   Y = \sqrt{\frac{2}{\pi x}} \left[ P \sin\phi + Q \cos\phi \right]
+  // where \phi = x - \left( \nu / 2 + 1 / 4 \right) \pi and \mu = 4 \nu^2 and
+  //   P = 1 - \frac{(\mu-1)(\mu-9)}{2! (8x)^2} + \frac{(\mu-1)(\mu-9)(\mu-25)(\mu-49}{4! (8x)^4} + \cdots
+  //   Q = \frac{(\mu-1)}{8x} - \frac{(\mu-1)(\mu-9)(\mu-25)}{3! (8x)^3} + \cdots
+  // Derivatives have similiar expressions
+  //   J' = - \sqrt{\frac{2}{\pi x}} \left[ R \sin\phi + S \cos\phi \right]
+  //   Y' = \sqrt{\frac{2}{\pi x}} \left[ R \cos\phi - S \sin\phi \right]
+  // where
+  //   R = 1 - \frac{(\mu-1)(\mu+15)}{2! (8x)^2} + \cdots
+  //   S = \frac{(\mu+3)}{8x} - \frac{(\mu-1)(\mu - 9)(\mu+35)}{3! (8x)^3} + \cdots
+  
+  // For nu=0, this series converges to full precision in about 10 terms at x~100, and in about 25 terms even as low as x~25
+  // It fails to converge at all for lower x <~ 25
+  // Since the first correction term is ~ (4 \nu^2)^2 / (8 x)^2 ~ (\nu^2 / 2 x)^2, the minimum x should grow like \nu^2 / 2
+  SolutionPair Bessel_Asymptotic(double nu, double x);
+
+  /// <summary>
+  /// Computes the natural logrithm of the Gamma function.
+  /// </summary>
+  /// <param name="x">The argument, which must be positive.</param>
+  /// <returns>The log Gamma function ln(&#x393;(x)).</returns>
+  /// <remarks>
+  /// <para>Because &#x393;(x) grows rapidly for increasing positive x, it is often necessary to
+  /// work with its logarithm in order to avoid overflow. This function returns accurate
+  /// values of ln(&#x393;(x)) even for values of x which would cause &#x393;(x) to overflow.</para>
+  /// </remarks>
+  /// <exception cref="ArgumentOutOfRangeException"><paramref name="x"/> is negative or zero.</exception>
+  /// <seealso cref="Gamma(double)" />
+  double LogGamma(double x);
+
+  double LogGamma_Stirling(double x);
+  double Sum_Stirling(double x);
 }
 // -- End Ms-PL licensed code
 
