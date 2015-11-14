@@ -53,13 +53,21 @@ namespace marley_utils {
   // in standard MARLEY energy units (MeV)
   const double micro_amu = 0.000931494061;
 
+  // Infinities
+  constexpr double infinity = std::numeric_limits<double>::max();
+  constexpr double minus_infinity = -infinity;
+
   // Consistent value of pi to use throughout all of MARLEY
   constexpr double pi = std::acos(-1);
   constexpr double two_pi = 2*pi;
   constexpr double sqrt_two_pi = std::sqrt(two_pi);
+  constexpr double half_pi = pi/2.0;
 
   // Imaginary unit
   constexpr std::complex<double> i(0, 1);
+
+  // Natural logarithm of 2
+  constexpr double log_2 = std::log(2);
 
   // The physical constants given here were all taken from
   // the 2014 edition of the Review of Particle Physics
