@@ -544,6 +544,37 @@ namespace meta_numerics {
 
   double LogGamma_Stirling(double x);
   double Sum_Stirling(double x);
+
+  // orthogonal on [0,Infinity] with weight e^{-x}
+  /// <summary>
+  /// Computes the value of a Laguerre polynomial.
+  /// </summary>
+  /// <param name="n">The order, which must be non-negative.</param>
+  /// <param name="x">The argument, which must be non-negative.</param>
+  /// <returns>The value L<sub>n</sub>(x).</returns>
+  /// <remarks>
+  /// <para>Laguerre functions are orthogonal on the interval [0,+&#8734;) with the weight e<sup>-x</sup>.</para>
+  /// <img src="../images/LaguerreLOrthonormality.png" />
+  /// </remarks>
+  /// <exception cref="ArgumentOutOfRangeException"><paramref name="n"/> or <paramref name="x"/> is negative.</exception>
+  /// <seealso href="http://en.wikipedia.org/wiki/Laguerre_polynomial" />
+  /// <seealso href="http://mathworld.wolfram.com/LaguerrePolynomial.html" />
+  /// <seealso cref="LaguerreL(int,double,double)"/>
+  double LaguerreL(int n, double x);
+
+  /// <summary>
+  /// Computes the value of an associated Laguerre polynomial.
+  /// </summary>
+  /// <param name="n">The order, which must be non-negative.</param>
+  /// <param name="a">The associated order, which must be greater than -1.</param>
+  /// <param name="x">The argument.</param>
+  /// <returns>The value L<sub>n</sub><sup>a</sup>(x).</returns>
+  /// <remarks>
+  /// <para>The associated Laguerre polynomials are orthonogal on the interval [0,+&#8734;) with the weight
+  /// x<sup>a</sup> e<sup>-x</sup>.</para>
+  /// </remarks>
+  /// <seealso href="http://mathworld.wolfram.com/LaguerrePolynomial.html" />
+  double LaguerreL(int n, double a, double x);
 }
 // -- End Ms-PL licensed code
 

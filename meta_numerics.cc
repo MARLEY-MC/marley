@@ -1285,6 +1285,43 @@ double meta_numerics::Sum_Stirling(double x) {
   throw std::runtime_error(std::string("meta_numerics::")
     + "Sum_Stirling failed to converge.");
 }
+
+double meta_numerics::LaguerreL(int n, double x) {
+  if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+    + " LaguerreL for order n = " + std::to_string(n) + ".");
+  if (x < 0.) throw std::runtime_error(std::string("Cannot compute")
+    + " LaguerreL for argument x = " + std::to_string(x) + ".");
+
+  if (n==0) return(1.0);
+  // use recurrence (n+1)L_{n+1} = (2n+1-x)L_{n} - nL_{n-1}
+  double L0 = 1.0;
+  double L1 = 1.0 - x;
+  for (int k = 1; k < n; ++k) {
+    double L2 = ((2*k + 1 - x)*L1 - k*L0) / (k + 1);
+    L0 = L1;
+    L1 = L2;
+  }
+  return L1;
+}
+
+double meta_numerics::LaguerreL(int n, double a, double x) {
+  if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+    + " LaguerreL for order n = " + std::to_string(n) + ".");
+  if (x < 0.) throw std::runtime_error(std::string("Cannot compute")
+    + " LaguerreL for argument x = " + std::to_string(x) + ".");
+  if (a <= -1) throw std::runtime_error(std::string("Cannot compute")
+    + " LaguerreL for associated order a = " + std::to_string(a) + ".");
+
+  // standard recurrence on n is claimed stable
+  double L0 = 0.0; // L_{-1}
+  double L1 = 1.0; // L_{0}
+  for (int k = 0; k < n; ++k) {
+    double L2 = ((2 * k + 1 + a - x) * L1 - (k + a) * L0) / (k + 1);
+    L0 = L1;
+    L1 = L2;
+  }
+  return L1;
+}
 // -- End Ms-PL licensed code
 
 //Microsoft Public License (Ms-PL)
