@@ -9,6 +9,7 @@ OBJ += TMarleyDecayScheme.o TMarleyMassTable.o TMarleyStructureDatabase.o
 OBJ += TMarleyConfigFile.o TMarleyNuclearPhysics.o
 OBJ += TMarleyBackshiftedFermiGasModel.o TMarleySphericalOpticalModel.o
 OBJ += TMarleyNeutrinoSource.o TMarleyKinematics.o TMarleyDecayChannel.o
+OBJ += TMarleyIntegrator.o
 
 ifdef USE_ROOT
 # Adding the g++ compiler option -DUSE_ROOT to the CXXFLAGS
@@ -69,6 +70,9 @@ nu_source_plot: $(OBJ) nu_source_plot.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 exs: $(OBJ) $(OBJ_DICT) exs.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+test: $(OBJ) test.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 # Add more header files to the prerequisites for
