@@ -1,3 +1,5 @@
+#include <thread>
+
 #include "marley_utils.hh"
 #include "TMarleyConfigFile.hh"
 
@@ -22,6 +24,7 @@ TMarleyConfigFile::TMarleyConfigFile() {
   #endif
   contbin_width = DEFAULT_CONTINUUM_BIN_RESOLUTION;
   contbin_num_subs = DEFAULT_CONTINUUM_BIN_SUBINTERVALS;
+  num_threads = 1;
 }
 
 // Call the default constructor first to set all configuration
@@ -224,6 +227,48 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
         + " of the configuration file " + filename
         + " must be positive.");
       contbin_num_subs = subs;
+    }
+    else if (keyword == "threads") {
+      next_word_from_line(iss, arg, keyword, line_num, true, false);
+      if (!std::regex_match(arg, rx_nonneg_int))
+        throw std::runtime_error(std::string("Invalid")
+        + " number of parallel threads '" + arg
+        + "' given on line " + std::to_string(line_num)
+        + " of the configuration file " + filename);
+      int threads = std::stoi(arg);
+      if (threads <= 0)
+        throw std::runtime_error(std::string("Number")
+        + " of threads '" + arg + "' given on line "
+        + std::to_string(line_num) + " of the configuration file "
+        + filename + " must be positive.");
+
+      num_threads = static_cast<size_t>(threads);
+
+      std::string force;
+      bool forced = next_word_from_line(iss, force, keyword, line_num, false,
+        true);
+      if (forced && force != "force") throw std::runtime_error(
+        std::string("Trailing") + " argument that is not 'force'"
+        + " given for keyword " + keyword + " on line "
+        + std::to_string(line_num) + " of the configuration file "
+        + filename);
+
+      size_t num_allowed_threads = std::thread::hardware_concurrency();
+
+      // If the requested number of threads exceeds the recommendation for this
+      // machine, then complain. Allow the user to override this precautionary
+      // message using the word "force" on this line of the input file.
+      if (num_threads > 1 && num_threads > num_allowed_threads && !forced)
+        throw std::runtime_error(std::string("Number")
+          + " of threads '" + arg + "' given on line "
+          + std::to_string(line_num) + " of the configuration file "
+          + filename + " exceeds the number of concurrent threads supported"
+          + " by this machine (" + std::to_string(num_allowed_threads)
+          + ") according to std::thread::hardware_concurrency()."
+          + " To force usage of " + arg + " threads, add the word "
+          + "'force' (without quotes) at the end of line "
+          + std::to_string(line_num) + " of the configuration file "
+          + filename);
     }
     else {
       std::cerr << "Warning: Ignoring unrecognized keyword '"

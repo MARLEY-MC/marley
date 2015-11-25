@@ -42,7 +42,7 @@ class TMarleyGenerator {
 
     // Get a string that represents the current internal state of the random
     // number generator
-	    inline std::string get_state_string() {
+    inline std::string get_state_string() {
       std::stringstream ss;
       ss << rand_gen;
       return ss.str();
