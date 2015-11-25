@@ -52,6 +52,7 @@ class TMarleyConfigFile {
 
     inline double get_contbin_width() const { return contbin_width; }
     inline size_t get_contbin_num_subs() const { return contbin_num_subs; }
+    inline size_t get_num_threads() const { return num_threads; }
 
     // Default number of subintervals to use when integrating Hauser-Feshbach
     // fragment and gamma decay widths over a bin in the energy continuum.
@@ -71,6 +72,8 @@ class TMarleyConfigFile {
     std::unordered_set<std::string> reaction_filenames;
 
     std::vector<StructureRecord> structure_records;
+
+    size_t num_threads; // Number of threads to use to generate events in parallel
 
     double contbin_width;
     size_t contbin_num_subs;
