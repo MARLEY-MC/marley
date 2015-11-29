@@ -8,7 +8,7 @@
 // Clenshaw-Curtis quadrature at 2N sampling points.  (see
 // http://en.wikipedia.org/wiki/Clenshaw-Curtis_quadrature)
 double TMarleyIntegrator::num_integrate(const std::function<double(double)> &f,
-  double a, double b)
+  double a, double b) const
 {
   int two_N = 2*N;
   double A = (b - a)/2;

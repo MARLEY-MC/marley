@@ -473,6 +473,32 @@ namespace meta_numerics {
   double SphericalBesselJ_SeriesOne(double x);
   double SphericalBesselJ_One(double x);
 
+
+  /// <summary>
+  /// Computes the factorial of an integer.
+  /// </summary>
+  /// <param name="n">The argument, which must be non-negative.</param>
+  /// <returns>The value of n!.</returns>
+  /// <remarks>
+  /// <para>The factorial of an integer n is the product of all integers from 1 to n. For example, 4! = 4 * 3 * 2 * 1 = 24.</para>
+  /// <para>n! also has a combinatorial intrepretation as the number of permutations of n objects. For example, a set of 3
+  /// objects (abc) has 3! = 6 permutations: (abc), (bac), (cba), (acb), (cab), (bca).</para>
+  /// <para>Because n! grows extremely quickly with increasing n, we return the result as a double, even though
+  /// the value is always an integer. (13! would overlow an int, 21! would overflow a long, 171! overflows even a double.)</para>
+  /// <para>In order to deal with factorials of larger numbers, you can use the <see cref="LogFactorial"/> method, which
+  /// returns accurate values of ln(n!) even for values of n for which n! would overflow a double.</para>
+  /// <para>The factorial is generalized to non-integer arguments by the &#x393; function (<see cref="AdvancedMath.Gamma(double)"/>).</para>
+  /// </remarks>
+  /// <exception cref="ArgumentOutOfRangeException"><paramref name="n"/> is negative.</exception>
+  /// <seealso cref="LogFactorial"/>
+  /// <seealso cref="AdvancedMath.Gamma(double)"/>
+  /// <seealso href="http://en.wikipedia.org/wiki/Factorial"/>
+  inline double Factorial (int n) {
+    if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+      + " n! for n = " + std::to_string(n));
+    return std::round(std::tgamma(n + 1));
+  }
+
   /// <summary>
   /// Computes the double factorial of the given integer.
   /// </summary>
@@ -544,6 +570,22 @@ namespace meta_numerics {
 
   double LogGamma_Stirling(double x);
   double Sum_Stirling(double x);
+
+  /// <summary>
+  /// Computes the logarithm of the factorial of an integer.
+  /// </summary>
+  /// <param name="n">The argument, which must be non-negative.</param>
+  /// <returns>The value of ln(n!).</returns>
+  /// <remarks>
+  /// <para>This function provides accurate values of ln(n!) even for values of n which would cause n! to overflow.</para>
+  /// </remarks>
+  /// <exception cref="ArgumentOutOfRangeException"><paramref name="n"/> is negative.</exception>
+  /// <seealso cref="Factorial"/>
+  inline double LogFactorial (int n) {
+    if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+      + " ln(n!) for n = " + std::to_string(n));
+    return LogGamma(n + 1);
+  }
 
   // orthogonal on [0,Infinity] with weight e^{-x}
   /// <summary>
