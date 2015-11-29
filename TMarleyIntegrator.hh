@@ -24,7 +24,7 @@ class TMarleyIntegrator {
     // at 2N sampling points.
     // (see http://en.wikipedia.org/wiki/Clenshaw-Curtis_quadrature)
     double num_integrate(const std::function<double(double)> &f,
-      double a, double b);
+      double a, double b) const;
 
   private:
     // Use 2*N sampling points to perform numerical integration

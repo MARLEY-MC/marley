@@ -75,6 +75,9 @@ exs: $(OBJ) $(OBJ_DICT) exs.o
 test: $(OBJ) test.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
+spe: $(OBJ) spe.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
 # Add more header files to the prerequisites for
 # root_dict.o if you would like to store other
 # MARLEY classes in ROOT trees. All such classes
