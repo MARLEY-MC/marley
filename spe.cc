@@ -1,7 +1,13 @@
+#include <algorithm>
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
+
+#include <eigen/Core>
+#include <eigen/Eigenvalues>
 
 #include "marley_utils.hh"
 #include "meta_numerics.hh"
@@ -136,13 +142,144 @@ double WoodsSaxon::radial_3d_ho_wavefunction(int n, int l, double r) const {
     * meta_numerics::LaguerreL(n, l + 0.5, r_over_b_squared);
 }
 
-#include <iomanip>
+// Letters assigned to the values of the orbital angular momentum quantum
+// number l (see https://en.wikipedia.org/wiki/Azimuthal_quantum_number for
+// details)
+const std::unordered_map<int, std::string> orbital_ang_momentum_letters = {
+  { 0, "s" },
+  { 1, "p" },
+  { 2, "d" },
+  { 3, "f" },
+  { 4, "g" },
+  { 5, "h" },
+  { 6, "i" },
+  { 7, "k" },
+  { 8, "l" },
+  { 9, "m" },
+  { 10, "n" },
+};
+
+class SingleParticleEnergy {
+  public:
+    inline SingleParticleEnergy(double e, int nn, int twoj, int orbital_l,
+      double sumA2)
+    {
+      E = e;
+      n = nn;
+      two_j = twoj; 
+      l = orbital_l;
+      sum_A2 = sumA2;
+    }
+    inline double get_energy() const { return E; }
+    inline int get_n() const { return n; }
+    inline int get_l() const { return l; }
+    inline int get_two_j() const { return two_j; }
+    inline double get_sum_A2() const { return sum_A2; }
+  private:
+    double E, sum_A2;
+    int n, l, two_j;
+};
+
 int main() {
-  std::cout << std::setprecision(16);// << std::scientific;
-  TMarleyIntegrator integrator(100);
-  WoodsSaxon ws(19, 40);
-  std::cout << ws.matrix_element(integrator, 1, 0,
-    marley_utils::NEUTRON, 0, 0);
+
+  std::unordered_map<int, std::vector<SingleParticleEnergy> > results;
+
+  //std::cout << std::setprecision(16) << std::scientific;
+
+  // Create a numerical integrator object to help compute the Hamiltonian
+  // matrix elements.
+  TMarleyIntegrator intg(50);
+
+  constexpr int Z = 19;
+  constexpr int A = 40;
+  constexpr int l_max = 6;
+  const std::vector<int> pids = { marley_utils::NEUTRON,
+    marley_utils::PROTON };
+
+  // Create the Woods-Saxon Hamiltonian object
+  WoodsSaxon ws(Z, A);
+
+  // max_nu*max_nu Hamiltonian matrix in the harmonic oscillator basis
+  // Note that, since all of the matrix elements are real, we don't
+  // need to worry about using a matrix type with std::complex elements
+  constexpr size_t max_nu = 10;
+  Eigen::MatrixXd hamiltonian_matrix(max_nu, max_nu);
+
+  for (const auto pid : pids) {
+    // Initialize the current list of results with an empty vector
+    results[pid] = std::vector<SingleParticleEnergy>();
+    for (int l = 0; l <= l_max; ++l) {
+      for (int two_j = 2*l + 1; two_j >= std::abs(2*l - 1); two_j -= 2) {
+
+        // Load the matrix with its elements for this iteration
+        for (size_t i = 0; i < max_nu; ++i)
+          for (size_t j = 0; j < max_nu; ++j)
+            hamiltonian_matrix(i,j) = ws.matrix_element(intg, two_j, l, pid, i, j);
+
+        // Solve for the eigensystem of the new Hamiltonian matrix
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eisolve(hamiltonian_matrix);
+        if (eisolve.info() != Eigen::Success) {
+          std::cout << "Fatal error: failed to diagonalize the Hamiltonian matrix."
+            << std::endl;
+          return 1;
+        }
+
+        //std::cout << "*** pid = " << pid << ", l = " << l << ", two_j = "
+        //  << two_j << std::endl; std::cout << eisolve.eigenvalues() << std::endl;
+        //std::cout << eisolve.eigenvectors() << std::endl;
+
+        // If the diagonalization was successful, then print a report about the
+        // single-particle energies.
+        for (size_t c = 0; c < max_nu; ++c) {
+          //if (l > static_cast<int>(c)) continue;
+          double single_particle_energy = eisolve.eigenvalues()(c);
+          double sum_squared_coeffs = 0.;
+          for (size_t d = 0; d < max_nu; ++d)
+            sum_squared_coeffs += std::pow(eisolve.eigenvectors().col(c)(d), 2);
+          results.at(pid).push_back(SingleParticleEnergy(single_particle_energy,
+            c, two_j, l, sum_squared_coeffs));
+        }
+      }
+    }
+  }
+
+  // Print a report showing the computed single-particle energies
+  for (auto& pair : results) {
+    int pid = pair.first;
+    std::string symbol = marley_utils::particle_symbols.at(pid);
+    std::cout << "Table of single-particle energies for " << symbol
+      << " states in " << A << marley_utils::element_symbols.at(Z)
+      << std::endl;
+    std::cout << "Orbital\t\tnl2j\t\t(n+1)l(j+1/2)\t\tEnergy (MeV)\t\tSum(A^2)"
+      << std::endl;
+    auto& vec = pair.second;
+    // Sort the single-particle energies in ascending order
+    std::sort(vec.begin(), vec.end(), [](const SingleParticleEnergy& spe1,
+      const SingleParticleEnergy& spe2) -> bool { return spe1.get_energy()
+      < spe2.get_energy(); });
+    // Print the table
+    for (const auto& spe : vec) {
+      int n = spe.get_n();
+      int two_j = spe.get_two_j();
+      int l = spe.get_l();
+      std::cout << n << orbital_ang_momentum_letters.at(l);
+      if (two_j % 2) std::cout << two_j << "/2\t\t";
+      else std::cout << two_j / 2 << "\t\t";
+      std::cout << n << l << two_j << "\t\t"; 
+      std::cout << n + 1 << l << static_cast<int>(
+        std::round(two_j / 2.0 + 0.5)) << "\t\t";
+      std::cout << spe.get_energy() << "\t\t" << spe.get_sum_A2() << std::endl;
+    }
+  }
+  //std::cout << "The eigenvalues of H are:\n" << eisolve.eigenvalues()
+  //  << std::endl;
+  //std::cout << "Here's a matrix whose columns are eigenvectors of H \n"
+  //  << "corresponding to these eigenvalues:\n"
+  //  << eisolve.eigenvectors() << std::endl;
+  //std::cout << eisolve.eigenvectors().col(0)(0) << std::endl;
+  return 0;
+}
+
   //std::function<double(double)> f = [&ws](double t) -> double {
   //  if (t == 1) return 0.;
   //  double r = t / (1 - t);
@@ -151,5 +288,3 @@ int main() {
   //  return std::pow(r, 2) * g1 * g2 / std::pow(1 - t, 2);
   //};
   //std::cout << integrator.num_integrate(f, 0, 1) << std::endl;
-  return 0;
-}
