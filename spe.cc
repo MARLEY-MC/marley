@@ -184,17 +184,31 @@ int main() {
 
   std::unordered_map<int, std::vector<SingleParticleEnergy> > results;
 
-  //std::cout << std::setprecision(16) << std::scientific;
+  std::cout << std::setprecision(16) << std::scientific;
 
   // Create a numerical integrator object to help compute the Hamiltonian
   // matrix elements.
   TMarleyIntegrator intg(50);
 
-  constexpr int Z = 19;
+  constexpr int Z = 18;
   constexpr int A = 40;
   constexpr int l_max = 6;
   const std::vector<int> pids = { marley_utils::NEUTRON,
     marley_utils::PROTON };
+
+  // Calculate some useful quantities for QRAP input
+  double DeltaN = -0.5*(TMarleyMassTable::get_binding_energy(Z, A - 1)
+   - 2*TMarleyMassTable::get_binding_energy(Z, A)
+   + TMarleyMassTable::get_binding_energy(Z, A + 1));
+  double DeltaZ = -0.5*(TMarleyMassTable::get_binding_energy(Z - 1, A - 1)
+   - 2*TMarleyMassTable::get_binding_energy(Z, A)
+   + TMarleyMassTable::get_binding_energy(Z + 1, A + 1));
+  std::cout << "DeltaN = " << DeltaN << std::endl;
+  std::cout << "DeltaZ = " << DeltaZ << std::endl;
+  double QveCC = TMarleyMassTable::get_atomic_mass(Z + 1, A) - TMarleyMassTable::get_atomic_mass(Z, A);
+  std::cout << "QveCC = " << QveCC << std::endl;
+  double QvebarCC = TMarleyMassTable::get_atomic_mass(Z - 1, A) - TMarleyMassTable::get_atomic_mass(Z, A);
+  std::cout << "QvbareCC = " << QvebarCC << std::endl;
 
   // Create the Woods-Saxon Hamiltonian object
   WoodsSaxon ws(Z, A);
