@@ -1,43 +1,37 @@
 #include "TMarleyGenerator.hh"
 #include "TMarleyNeutrinoSource.hh"
 
-TMarleyNeutrinoSource::TMarleyNeutrinoSource(double Emin, double Emax,
-  NeutrinoType nu_type)
+// Particle IDs of each neutrino that could possibly be produced by a
+// source object
+const std::set<int> TMarleyNeutrinoSource::pids = {
+  marley_utils::ELECTRON_NEUTRINO,
+  marley_utils::ELECTRON_ANTINEUTRINO,
+  marley_utils::MUON_NEUTRINO,
+  marley_utils::MUON_ANTINEUTRINO,
+  marley_utils::TAU_NEUTRINO,
+  marley_utils::TAU_ANTINEUTRINO
+};
+
+double TMarleyFermiDiracNeutrinoSource::sample_energy(TMarleyGenerator& gen)
 {
-  type = nu_type;
-  E_min = Emin;
-  E_max = Emax;
-
-  if(type == NeutrinoType::ElectronNeutrino) {
-    temperature = 3.5;
-    // total number of electron neutrinos expected (x10^57)
-    tot_num_nu = 2.8;
-  }
-  else if(type == NeutrinoType::ElectronAntineutrino) {
-    temperature = 5.0;
-    // total number of electron anti-neutrinos expected (x10^57)
-    tot_num_nu = 1.9;
-  }
-  else { // muon or tauon flavor
-    temperature = 8.0;
-    // total number of mu+tau neutrinos + anti-neutrinos expected (x10^57)
-    tot_num_nu = 5.0;
-  }
-
-  // Create a forwarding call wrapper for Fermi-Dirac distribution function that
-  // takes a single argument. This will be used for rejection sampling of
-  // neutrino energies from this source.
-  fd_dist = std::bind(&fermi_dirac_distribution, temperature, tot_num_nu,
-    std::placeholders::_1 /*nu_energy*/);
-}
-
-double TMarleyNeutrinoSource::fermi_dirac_distribution(double T, double N_nu,
-  double nu_energy)
-{
-  return (C / std::pow(T, 3)) * (std::pow(nu_energy, 2)
-    / (1 + std::exp(nu_energy / (T - eta)))) * N_nu;
-}
-
-double TMarleyNeutrinoSource::sample_neutrino_energy(TMarleyGenerator& gen) {
   return gen.rejection_sample(fd_dist, E_min, E_max);
 }
+
+double TMarleyHistogramNeutrinoSource::sample_energy(TMarleyGenerator& gen) {
+  return gen.piecewise_constant_sample(energy_dist);
+}
+
+double TMarleyGridNeutrinoSource::sample_energy(TMarleyGenerator& gen) {
+  return gen.piecewise_linear_sample(energy_dist);
+}
+
+//double TMarleyHistogram::sample_value(TMarleyGenerator& gen) {
+//  size_t bin_index = gen.discrete_sample(bin_dist);
+//  double xmin = lower_bounds.at(bin_index);
+//  double xmax;
+//  if (bin_index < last_bin_index) xmax = lower_bounds.at(bin_index + 1);
+//  else if (bin_index == last_bin_index) xmax = x_max;
+//  else throw std::runtime_error(std::string("Bin")
+//    + " indexing error in TMarleyHistogram::sample_value()");
+//  return gen.uniform_random_double(xmin, xmax, true);
+//}

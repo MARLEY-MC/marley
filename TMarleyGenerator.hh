@@ -26,7 +26,7 @@ class TMarleyGenerator {
       size_t r_index;
       sample_reaction(E_nu, r_index);
       return reactions.at(r_index)->create_event(
-        marley_utils::ELECTRON_NEUTRINO, E_nu, *this);
+        nu_source.get_pid(), E_nu, *this);
     }
 
     inline uint_fast64_t get_seed() const {
@@ -71,6 +71,42 @@ class TMarleyGenerator {
       return disc_dist(rand_gen, params);
     }
 
+    // Sample from a piecewise constant distribution object
+    template <typename numType> inline numType
+      piecewise_constant_sample(std::piecewise_constant_distribution<numType>&
+      pc_dist)
+    {
+      return pc_dist(rand_gen);
+    }
+
+    // Sample from a piecewise constant distribution object using the
+    // parameters params
+    template <typename numType> inline numType
+      piecewise_constant_sample(std::piecewise_constant_distribution<numType>&
+      pc_dist, const typename
+      std::piecewise_constant_distribution<numType>::param_type& params)
+    {
+      return pc_dist(rand_gen, params);
+    }
+
+    // Sample from a piecewise linear distribution object
+    template <typename numType> inline numType
+      piecewise_linear_sample(std::piecewise_linear_distribution<numType>&
+      pl_dist)
+    {
+      return pl_dist(rand_gen);
+    }
+
+    // Sample from a piecewise linear distribution object using the
+    // parameters params
+    template <typename numType> inline numType
+      piecewise_linear_sample(std::piecewise_linear_distribution<numType>&
+      pl_dist, const typename
+      std::piecewise_linear_distribution<numType>::param_type& params)
+    {
+      return pl_dist(rand_gen, params);
+    }
+
     inline TMarleyStructureDatabase& get_structure_db() {
       return structure_db;
     }
@@ -106,7 +142,7 @@ class TMarleyGenerator {
     // Initialization code shared by multiple constructors
     void init(const TMarleyConfigFile& cf);
 
-    TMarleyNeutrinoSource nu_source;
+    TMarleyFermiDiracNeutrinoSource nu_source;
     TMarleyStructureDatabase structure_db;
     std::vector<std::unique_ptr<TMarleyReaction> > reactions;
 
