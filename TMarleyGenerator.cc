@@ -39,8 +39,7 @@ void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
   // Create the neutrino source.
   // TODO: Implement configuration file keywords to adjust neutrino source
   // settings and remove hard-coded stuff here.
-  nu_source = TMarleyNeutrinoSource(0., 100.,
-    TMarleyNeutrinoSource::NeutrinoType::ElectronNeutrino);
+  //nu_source = TMarleyFermiDiracNeutrinoSource;
 
   // Initialize the vector of total cross section values to be all zeros and
   // have as many entries as there are reactions available to this generator.
@@ -142,7 +141,7 @@ double TMarleyGenerator::unnormalized_Ea_pdf(double Ea) {
   // Multiply the total cross section by the neutrino spectrum
   // from the source object to get the (unnormalized) PDF
   // for sampling reacting neutrino energies.
-  pdf *= nu_source.fd_distribution(Ea);
+  pdf *= nu_source.fermi_dirac_distribution(Ea);
   return pdf;
 }
 
