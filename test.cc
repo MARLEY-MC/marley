@@ -1,25 +1,40 @@
-#include <cmath>
-#include <iomanip>
+#include <functional>
 #include <iostream>
-#include <thread>
 
-#include "TMarleyNuclearPhysics.hh"
-#include "TMarleyIntegrator.hh"
+#include "TMarleyGenerator.hh"
+#include "TMarleyNeutrinoSource.hh"
 
-double f(double x) {
-  return std::exp(-5.1*x) + std::sin(0.1*x) + 3.5*x - 2.;
-}
+#include "TH1D.h"
+#include "TCanvas.h"
 
 int main() {
-  std::cout << std::setprecision(16) << std::scientific;
-  TMarleyIntegrator integrator;
-  for (size_t j = 1; j < 1e5; ++j)
-    std::cout << "j = " << j << ", answer = "
-      << integrator.num_integrate(&f, -5., 5.1) << std::endl;
 
-  std::cout << TMarleyNuclearPhysics::coulomb_barrier(18,39,1,1) << std::endl;
+  TMarleyGenerator gen("config.txt");
 
-  std::cout << std::thread::hardware_concurrency() << std::endl;
+  std::vector<double> bins = { 0., 10., 20. };
+  std::vector<double> weights = { 1., 5., 1. };
 
+  TMarleyGridNeutrinoSource source(bins, weights,
+    marley_utils::ELECTRON_NEUTRINO,
+    InterpolationGrid<double>::InterpolationMethod::LinearLinear);
+
+  TH1D hist("hist", "hist; bin; counts",
+    100, -10., 30.);
+
+  std::function<double(double)> pdf = std::bind(&TMarleyGridNeutrinoSource::pdf, &source,
+    std::placeholders::_1);
+
+  //std::vector<double> energies;
+  for (size_t j = 0; j < 1e6; ++j) {
+    double e = gen.rejection_sample(pdf, source.get_Emin(),
+      source.get_Emax());
+    hist.Fill(e);
+  }
+
+  TCanvas canvas;
+  hist.Draw();
+  canvas.SaveAs("hist.pdf");
+
+  canvas.Clear();
   return 0;
 }

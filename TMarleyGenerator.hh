@@ -142,7 +142,7 @@ class TMarleyGenerator {
     // Initialization code shared by multiple constructors
     void init(const TMarleyConfigFile& cf);
 
-    TMarleyFermiDiracNeutrinoSource nu_source;
+    TMarleyGridNeutrinoSource nu_source;
     TMarleyStructureDatabase structure_db;
     std::vector<std::unique_ptr<TMarleyReaction> > reactions;
 
