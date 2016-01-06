@@ -333,7 +333,7 @@ int main(){
   // Use 100 bins, and adjust the upper limit of the last bin so that
   // the maximum observed value just barely falls within it.
   TH1D neutrino_E_histogram("neutrino_E_histogram",
-    "Interacting  #nu_{e}  from Fermi-Dirac source; Total Energy [MeV]; Counts",
+    "Interacting  #nu_{e}  from stopped  #pi beam source; Total Energy [MeV]; Counts",
     100, 0, 1.1*std::nextafter(E_nmax, DBL_MAX));
   // Do the same thing for the residual nucleus excitation energies
   TH1D ex_residue_histogram("Ex_40K",
@@ -427,14 +427,14 @@ int main(){
     // the maximum observed value just barely falls within it.
     std::string plot_title;
     if (pid == marley_utils::ELECTRON) plot_title = std::string(
-      "Electron spectrum for CC FD   #nu_{e} on ")
+      "Electron spectrum for CC stopped   #pi   #nu_{e} on ")
       + "  ^{40}Ar; Kinetic Energy [MeV]; Counts";
     else if (pid == marley_utils::PHOTON)
        plot_title = std::string("De-excitation  #gamma-ray")
-       + " spectrum for CC FD   #nu_{e}"
+       + " spectrum for CC stopped   #pi   #nu_{e}"
        + " on  ^{40}Ar; Energy [MeV]; Counts";
     else plot_title = "De-excitation " + symbol
-      + " spectrum for CC FD   #nu_{e}"
+      + " spectrum for CC stopped   #pi   #nu_{e}"
       + " on  ^{40}Ar; Kinetic Energy [MeV]; Counts";
     TH1D KE_histogram("KE_histogram", plot_title.c_str(),
       100, 0, 1.1*std::nextafter(Emax, DBL_MAX));
