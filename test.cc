@@ -11,28 +11,31 @@ int main() {
 
   TMarleyGenerator gen("config.txt");
 
-  std::vector<double> bins = { 0., 10., 20. };
-  std::vector<double> weights = { 1., 5., 1. };
 
-  TMarleyGridNeutrinoSource source(bins, weights,
-    marley_utils::ELECTRON_NEUTRINO,
-    InterpolationGrid<double>::InterpolationMethod::LinearLinear);
+  double m_mu = TMarleyMassTable::get_particle_mass(marley_utils::MUON);
 
-  TH1D hist("hist", "hist; bin; counts",
-    100, -10., 30.);
+  TH1D hist("neutrino_E_histogram", "Stopped #pi beam #nu_{e} spectrum; Total Energy [MeV]; Counts",
+    100, 0., m_mu/2 * 1.1);
 
-  std::function<double(double)> pdf = std::bind(&TMarleyGridNeutrinoSource::pdf, &source,
-    std::placeholders::_1);
+  TMarleyNeutrinoSource* source = gen.get_nu_source();
+
+  std::function<double(double)> pdf = [source](double E)
+    -> double { return source->pdf(E); };
 
   //std::vector<double> energies;
   for (size_t j = 0; j < 1e6; ++j) {
-    double e = gen.rejection_sample(pdf, source.get_Emin(),
-      source.get_Emax());
+    double e = gen.rejection_sample(pdf, source->get_Emin(),
+      source->get_Emax());
     hist.Fill(e);
   }
 
   TCanvas canvas;
   hist.Draw();
+  hist.SetLineWidth(1.8);
+  hist.GetXaxis()->SetTitleOffset(1.2);
+  hist.GetYaxis()->SetTitleOffset(1.5);
+  hist.GetXaxis()->CenterTitle();
+  hist.GetYaxis()->CenterTitle();
   canvas.SaveAs("hist.pdf");
 
   canvas.Clear();

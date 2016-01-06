@@ -162,7 +162,8 @@ class TMarleyFermiDiracNeutrinoSource : public TMarleyNeutrinoSource {
 class TMarleyFunctionNeutrinoSource : public TMarleyNeutrinoSource {
   public:
     inline TMarleyFunctionNeutrinoSource(const std::function<double(double)>&
-      prob_dens_func, int particle_id = marley_utils::ELECTRON_NEUTRINO,
+      prob_dens_func = [](double E) -> double { (void)(E); return 1; },
+      int particle_id = marley_utils::ELECTRON_NEUTRINO,
       double Emin = 0., double Emax = 100.)
       : TMarleyNeutrinoSource(particle_id)
     {

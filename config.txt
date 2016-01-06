@@ -1,7 +1,7 @@
-seed 334719
+seed 66638271
 structure /home/sjg/talys/structure/levels/exp/z019 talys 40K 39K 38K
 structure /home/sjg/talys/structure/levels/exp/z018 talys 37Ar 38Ar 39Ar
 structure /home/sjg/talys/structure/levels/exp/z017 talys 35Cl 36Cl 37Cl
 reaction ve40ArCC_1998.react
 #reaction e-ES
-threads 4
+#threads 4

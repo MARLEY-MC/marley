@@ -39,10 +39,17 @@ void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
   // Create the neutrino source.
   // TODO: Implement configuration file keywords to adjust neutrino source
   // settings and remove hard-coded stuff here.
-  std::vector<double> Es = { 0., 10., 20. };
-  std::vector<double> densities = { 1., 3., 1. };
-  nu_source = TMarleyGridNeutrinoSource(Es, densities,
-    marley_utils::ELECTRON_NEUTRINO);
+  //std::vector<double> Es = { 0., 10., 20. };
+  //std::vector<double> densities = { 1., 3., 1. };
+  //nu_source = TMarleyGridNeutrinoSource(Es, densities,
+  //  marley_utils::ELECTRON_NEUTRINO);
+  double m_mu = TMarleyMassTable::get_particle_mass(marley_utils::MUON);
+  double m_mu_to_the_minus_four = std::pow(m_mu, -4);
+
+  nu_source = TMarleyFunctionNeutrinoSource(
+    [m_mu, m_mu_to_the_minus_four](double E) -> double {
+      return 96.*std::pow(E,2)*m_mu_to_the_minus_four*(m_mu - 2*E);
+    }, marley_utils::ELECTRON_NEUTRINO, 0., m_mu/2.);
 
   // Initialize the vector of total cross section values to be all zeros and
   // have as many entries as there are reactions available to this generator.

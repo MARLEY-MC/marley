@@ -128,8 +128,8 @@ class TMarleyGenerator {
       return Ea_pdf(Ea);
     }
 
-    inline TMarleyNeutrinoSource& get_nu_source() {
-      return nu_source;
+    inline TMarleyNeutrinoSource* get_nu_source() {
+      return &nu_source;
     }
 
   private:
@@ -142,7 +142,7 @@ class TMarleyGenerator {
     // Initialization code shared by multiple constructors
     void init(const TMarleyConfigFile& cf);
 
-    TMarleyGridNeutrinoSource nu_source;
+    TMarleyFunctionNeutrinoSource nu_source;
     TMarleyStructureDatabase structure_db;
     std::vector<std::unique_ptr<TMarleyReaction> > reactions;
 
