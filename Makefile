@@ -66,6 +66,9 @@ plots: $(OBJ) $(OBJ_DICT) plots.o
 dump: $(OBJ) $(OBJ_DICT) dump.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
+hepevt: $(OBJ) $(OBJ_DICT) hepevt.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
 nu_source_plot: $(OBJ) nu_source_plot.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
