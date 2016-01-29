@@ -18,9 +18,10 @@ void dump_particle(const TMarleyParticle& p, std::ostream& os,
   if (track) os << "1 ";
   else os << "0 ";
 
-  os << p.get_id() << " 0 0 0 0 " << p.get_px() << " " << p.get_py() << " "
-    << p.get_pz() << " " << p.get_total_energy() << " " << p.get_mass()
-    << " " << " 0.0 0.0 0.0 0.0 " << std::endl;
+  // Factors of 1000. are used to convert MeV to GeV for the HEPEvt format
+  os << p.get_id() << " 0 0 0 0 " << p.get_px() / 1000. << " " << p.get_py() / 1000. << " "
+    << p.get_pz() / 1000. << " " << p.get_total_energy() / 1000. << " " << p.get_mass() / 1000.
+    << " 0. 0. 0. 0." << std::endl;
 }
 
 // Script to dump events from a MARLEY event tree file (in ROOT format) to
