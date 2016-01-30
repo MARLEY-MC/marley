@@ -133,6 +133,9 @@ namespace marley_utils {
   // or does not match (match == false) a given regular expression
   std::string get_next_line(std::ifstream &file_in, const std::regex &rx,
     bool match);
+  // Do the same, but store the number of lines used in num_lines
+  std::string get_next_line(std::ifstream &file_in, const std::regex &rx,
+    bool match, int& num_lines);
 
   // String containing all of the characters that will be
   // considered whitespace by default in the string

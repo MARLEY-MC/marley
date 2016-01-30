@@ -1,6 +1,7 @@
 #pragma once
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -8,6 +9,7 @@
 #include <unordered_set>
 
 #include "TMarleyDecayScheme.hh"
+#include "TMarleyNeutrinoSource.hh"
 
 class TMarleyConfigFile {
   public:
@@ -53,6 +55,9 @@ class TMarleyConfigFile {
     inline double get_contbin_width() const { return contbin_width; }
     inline size_t get_contbin_num_subs() const { return contbin_num_subs; }
     inline size_t get_num_threads() const { return num_threads; }
+    inline std::vector<std::unique_ptr<TMarleyNeutrinoSource> >& get_sources() {
+      return sources;
+    }
 
     // Default number of subintervals to use when integrating Hauser-Feshbach
     // fragment and gamma decay widths over a bin in the energy continuum.
@@ -78,20 +83,16 @@ class TMarleyConfigFile {
     double contbin_width;
     size_t contbin_num_subs;
 
+    // Neutrino sources will be created based on the specifications given in
+    // this file. When a TMarleyGenerator object is constructed using this
+    // configuration file, ownership will be transferred to the generator.
+    std::vector<std::unique_ptr<TMarleyNeutrinoSource> > sources;
+
     #ifdef USE_ROOT
     std::string root_filename;
     bool writeroot;
     bool check_before_root_file_overwrite;
     #endif
-
-    // Matches comment lines and empty lines
-    static const std::regex rx_comment_or_empty;
-    // Matches non-negative integers
-    static const std::regex rx_nonneg_int;
-    // Matches all numbers, including floats
-    static const std::regex rx_num;
-    // Matches trimmed ENSDF-style nucids
-    static const std::regex rx_nucid;
 
     // Convert a lowercase, trimmed string file format
     // description for the structure data to a

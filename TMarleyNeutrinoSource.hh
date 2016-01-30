@@ -11,7 +11,7 @@ class TMarleyNeutrinoSource {
   public:
 
     inline TMarleyNeutrinoSource(int particle_id, double w = 1.0) {
-      if (pids.count(particle_id) == 0) throw std::runtime_error(
+      if (!pid_is_allowed(particle_id)) throw std::runtime_error(
         std::string("Creating a neutrino source object that produces")
         + " particles with PDG ID number " + std::to_string(particle_id)
         + " is not allowed.");
@@ -20,6 +20,12 @@ class TMarleyNeutrinoSource {
         std::string("Cannot create a neutrino source object with a negative")
         + " weight.");
       else weight = w;
+    }
+
+    // Returns true if the particle ID passed to the function is allowed to be
+    // used by a neutrino source object, and returns false otherwise.
+    static inline bool pid_is_allowed(const int particle_id) {
+      return (pids.count(particle_id) > 0);
     }
 
     // Samples a neutrino energy in MeV
@@ -61,8 +67,8 @@ class TMarleyNeutrinoSource {
 class TMarleyMonoNeutrinoSource : public TMarleyNeutrinoSource {
   public:
     inline TMarleyMonoNeutrinoSource(int particle_id
-      = marley_utils::ELECTRON_NEUTRINO, double E = 10./* MeV*/)
-      : TMarleyNeutrinoSource(particle_id)
+      = marley_utils::ELECTRON_NEUTRINO, double weight = 1.0,
+      double E = 10./* MeV*/) : TMarleyNeutrinoSource(particle_id, weight)
     { 
       energy = E;
     }
@@ -100,10 +106,10 @@ class TMarleyMonoNeutrinoSource : public TMarleyNeutrinoSource {
 class TMarleyFermiDiracNeutrinoSource : public TMarleyNeutrinoSource {
   public:
     inline TMarleyFermiDiracNeutrinoSource(int particle_id
-      = marley_utils::ELECTRON_NEUTRINO,
+      = marley_utils::ELECTRON_NEUTRINO, double weight = 1.,
       double Emin = 0., double Emax = 100., double temp = 3.5,
       double e_t_a = 0.)
-      : TMarleyNeutrinoSource(particle_id)
+      : TMarleyNeutrinoSource(particle_id, weight)
     {
       E_min = Emin;
       E_max = Emax;
@@ -163,9 +169,9 @@ class TMarleyFunctionNeutrinoSource : public TMarleyNeutrinoSource {
   public:
     inline TMarleyFunctionNeutrinoSource(const std::function<double(double)>&
       prob_dens_func = [](double E) -> double { (void)(E); return 1; },
-      int particle_id = marley_utils::ELECTRON_NEUTRINO,
+      double weight = 1., int particle_id = marley_utils::ELECTRON_NEUTRINO,
       double Emin = 0., double Emax = 100.)
-      : TMarleyNeutrinoSource(particle_id)
+      : TMarleyNeutrinoSource(particle_id, weight)
     {
       E_min = Emin;
       E_max = Emax;
@@ -199,154 +205,31 @@ class TMarleyFunctionNeutrinoSource : public TMarleyNeutrinoSource {
     std::function<double(double)> probability_density;
 };
 
-//// Represents a histogram probability density function (values are sampled
-//// uniformly over a chosen bin)
-//class TMarleyHistogram
-//{
-//  public:
-//    inline TMarleyHistogram() {}
-//    inline TMarleyHistogram(const std::vector<double>& lows,
-//      const std::vector<double>& ws, double xmax)
-//    {
-//      size_t lows_size = lows.size();
-//      size_t ws_size = ws.size();
-//      if (lows_size == 0) throw std::runtime_error(std::string("Empty")
-//        + " vector of lower bounds passed to the constructor of"
-//        + " TMarleyHistogram.");
-//      if (ws_size == 0) throw std::runtime_error(std::string("Empty")
-//        + " vector of weights passed to the constructor of TMarleyHistogram.");
-//      if (lows_size != ws_size) throw std::runtime_error(std::string("The")
-//        + " vectors of lower bounds and weights passed to the constructor"
-//        + " of TMarleyHistogram have unequal sizes.");
-//
-//      double last_lower_bound = marley_utils::minus_infinity;
-//      for (size_t j = 0; j < lows_size; ++j) {
-//        if (ws.at(j) < 0.) throw std::runtime_error(std::string("Negative")
-//          + " bin weight passed to the constructor of TMarleyHistogram.");
-//        double current_lower_bound = lower_bounds.at(j);
-//        if (current_lower_bound <= last_lower_bound) throw std::runtime_error(
-//          std::string("Bin lower bounds passed to the constructor of")
-//          + " TMarleyHistogram must be monotonically increasing.");
-//        last_lower_bound = current_lower_bound;
-//      }
-//
-//      if (last_lower_bound >= x_max) throw std::runtime_error(
-//        std::string("The upper bound for the last bin passed")
-//        + " to the constructor of TMarleyHistogram must be"
-//        + " greater than the lower bound of the last bin.");
-//
-//      // The parameters passed to the constructor have passed all of our error
-//      // checks, so create the histogram object.
-//      lower_bounds = lows;
-//      weights = ws;
-//      x_max = xmax;
-//      last_bin_index = weights.size() - 1;
-//
-//      std::discrete_distribution<size_t>::param_type
-//        new_params(weights.begin(), weights.end());
-//      bin_dist.param(new_params);
-//    }
-//
-//    inline double get_xmin() const { return lower_bounds.front(); }
-//    inline double get_xmax() const { return x_max; }
-//
-//    // Samples a bin (using the member bin_dist) and then a value
-//    // from that bin (assuming a uniform distribution within the
-//    // bin, i.e., on the closed interval [x_bin_min, x_bin_max])
-//    double sample_value(TMarleyGenerator& gen);
-//
-//  private:
-//    // Discrete distribution used for sampling bins from the histogram
-//    std::discrete_distribution<size_t> bin_dist;
-//    // Lower bounds for each bin
-//    std::vector<double> lower_bounds;
-//    // Weights for each bin
-//    std::vector<double> weights;
-//    // Upper bound for the last bin
-//    double x_max;
-//    // Index of last bin (stored during construction for speed)
-//    size_t last_bin_index;
-//};
-
-//// Histogram-based neutrino source (energies are distributed uniformly within
-//// each bin)
-//class TMarleyHistogramNeutrinoSource : public TMarleyNeutrinoSource {
-//  public:
-//    inline TMarleyHistogramNeutrinoSource(int particle_id,
-//      const std::vector<double>& bin_lows,
-//      const std::vector<double>& bin_weights)
-//      : TMarleyNeutrinoSource(particle_id),
-//      energy_dist(bin_lows.begin(), bin_lows.end(), bin_weights.begin())
-//    {
-//      // TODO: Add checks that the bin boundaries and weights make sense
-//    }
-//
-//    // Returns the maximum neutrino energy that can be sampled by this source
-//    // object
-//    virtual inline double get_Emax() const { return energy_dist.max(); }
-//
-//    // Returns the minimum neutrino energy that can be sampled by this source
-//    // object
-//    virtual inline double get_Emin() const { return energy_dist.min(); }
-//
-//    virtual double sample_energy(TMarleyGenerator& gen);
-//
-//  private:
-//    std::piecewise_constant_distribution<double> energy_dist;
-//};
-//
-//// Neutrino source that uses a tabulated continuous probability density
-//// function to sample neutrino energies
-//class TMarleyGridNeutrinoSource : public TMarleyNeutrinoSource {
-//  public:
-//    inline TMarleyGridNeutrinoSource(int particle_id,
-//      const std::vector<double>& energies,
-//      const std::vector<double>& prob_densities)
-//      : TMarleyNeutrinoSource(particle_id),
-//      energy_dist(energies.begin(), energies.end(), prob_densities.begin())
-//    {
-//      // TODO: Add checks that the energies and probability densities make sense
-//    }
-//
-//    // Returns the maximum neutrino energy that can be sampled by this source
-//    // object
-//    virtual inline double get_Emax() const { return energy_dist.max(); }
-//
-//    // Returns the minimum neutrino energy that can be sampled by this source
-//    // object
-//    virtual inline double get_Emin() const { return energy_dist.min(); }
-//
-//    virtual double sample_energy(TMarleyGenerator& gen);
-//
-//  private:
-//    std::piecewise_linear_distribution<double> energy_dist;
-//};
-
 class TMarleyGridNeutrinoSource : public TMarleyNeutrinoSource {
   public:
     using Grid = InterpolationGrid<double>;
     using InterpolationMethod = Grid::InterpolationMethod;
 
     inline TMarleyGridNeutrinoSource(int particle_id
-      = marley_utils::ELECTRON_NEUTRINO, InterpolationMethod interp_method
-      = InterpolationMethod::LinearLinear)
-      : TMarleyNeutrinoSource(particle_id), grid(interp_method)
+      = marley_utils::ELECTRON_NEUTRINO, double weight = 1.,
+      InterpolationMethod interp_method = InterpolationMethod::LinearLinear)
+      : TMarleyNeutrinoSource(particle_id, weight), grid(interp_method)
     {
       //check_for_errors();
     }
 
     inline TMarleyGridNeutrinoSource(const Grid& g,
-      int particle_id = marley_utils::ELECTRON_NEUTRINO)
-      : TMarleyNeutrinoSource(particle_id), grid(g)
+      int particle_id = marley_utils::ELECTRON_NEUTRINO, double weight = 1.)
+      : TMarleyNeutrinoSource(particle_id, weight), grid(g)
     {
       check_for_errors();
     }
 
     inline TMarleyGridNeutrinoSource(const std::vector<double>& Es,
       const std::vector<double>& prob_densities, int particle_id
-      = marley_utils::ELECTRON_NEUTRINO, InterpolationMethod
+      = marley_utils::ELECTRON_NEUTRINO, double weight = 1., InterpolationMethod
       interp_method = InterpolationMethod::LinearLinear)
-      : TMarleyNeutrinoSource(particle_id), grid(Es, prob_densities,
+      : TMarleyNeutrinoSource(particle_id, weight), grid(Es, prob_densities,
       interp_method)
     {
       check_for_errors();
