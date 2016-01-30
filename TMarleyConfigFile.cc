@@ -2,16 +2,28 @@
 
 #include "marley_utils.hh"
 #include "TMarleyConfigFile.hh"
+#include "InterpolationGrid.hh"
 
-// Matches comment lines and empty lines
-const std::regex TMarleyConfigFile::rx_comment_or_empty = std::regex("#.*|\\s*");
-// Matches non-negative integers
-const std::regex TMarleyConfigFile::rx_nonneg_int = std::regex("[0-9]+");
-// Matches all numbers, including floats (see
-// http://www.regular-expressions.info/floatingpoint.html)
-const std::regex TMarleyConfigFile::rx_num = std::regex("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?");
-// Matches trimmed ENSDF-style nucids
-const std::regex TMarleyConfigFile::rx_nucid = std::regex("[1-9][0-9]{0,2}[A-Za-z]{1,2}");
+// Define type abbreviations and constant regular expressions that are only
+// visible within this file
+namespace {
+
+  using InterpMethod = InterpolationGrid<double>::InterpolationMethod;
+  
+  // Matches comment lines and empty lines
+  const std::regex rx_comment_or_empty = std::regex("#.*|\\s*");
+  // Matches non-negative integers
+  const std::regex rx_nonneg_int = std::regex("[0-9]+");
+  // Matches integers
+  const std::regex rx_int = std::regex("[-+]?[0-9]+");
+  // Matches all numbers, including floats (see
+  // http://www.regular-expressions.info/floatingpoint.html, but note that
+  // we've modified the version given there to allow for a trailing decimal
+  // point [e.g., '1.' matches])
+  const std::regex rx_num = std::regex("[-+]?[0-9]*\\.?[0-9]*([eE][-+]?[0-9]+)?");
+  // Matches trimmed ENSDF-style nucids
+  const std::regex rx_nucid = std::regex("[1-9][0-9]{0,2}[A-Za-z]{1,2}");
+}
 
 // The default constructor assigns default values to all
 // configuration file parameters
@@ -51,11 +63,16 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
 
   std::istringstream iss; // Stream used to help parse each line
 
+  // Stores the number of lines checked by each call to
+  // marley_utils::get_next_line
+  int lines_checked;
+
   // Loop through each line in the file. Search for keywords,
   // and react appropriately whenever they are encountered. 
-  for (int line_num = 1;
-    line = marley_utils::get_next_line(file_in, rx_comment_or_empty, false),
-    line != ""; ++line_num)
+  for (int line_num = 0;
+    line = marley_utils::get_next_line(file_in, rx_comment_or_empty, false,
+      lines_checked), line_num += lines_checked,
+    line != ""; /*++line_num*/)
   {
     // Load the stream with the new line
     iss.clear();
@@ -196,6 +213,336 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
       structure_records.push_back(sr);
 
     }
+    else if (keyword == "source") {
+
+      // Weight and PDG particle ID for this source
+      double weight;
+      int neutrino_pid;
+
+      // Get the particle ID for the neutrino type produced by this source
+      next_word_from_line(iss, arg, keyword, line_num, true, false);
+      if (std::regex_match(arg, rx_int)) {
+        neutrino_pid = stoi(arg);
+        if (!TMarleyNeutrinoSource::pid_is_allowed(neutrino_pid)) {
+          throw std::runtime_error(std::string("Unallowed")
+            + " neutrino source particle ID '" + arg
+            + "' given on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        }
+      }
+      // Anything other than an integer entry here is not allowed
+      else throw std::runtime_error(std::string("Invalid")
+        + " neutrino source particle ID '" + arg
+        + "' given on line " + std::to_string(line_num)
+        + " of the configuration file " + filename);
+
+      // Get the weight for this source if it is specified. Otherwise,
+      // set the weight to 1.
+      next_word_from_line(iss, arg, keyword, line_num, true, true);
+      bool weight_specified = false;
+      if (std::regex_match(arg, rx_num)) {
+        weight = std::stod(arg);
+        weight_specified = true;
+        // Only positive weights are allowed
+        if (weight <= 0.) {
+          throw std::runtime_error(std::string("Non-positive")
+          + " neutrino source weight '" + arg
+          + "' given on line " + std::to_string(line_num)
+          + " of the configuration file " + filename);
+        }
+      }
+      else weight = 1.;
+
+      // Advance to the next argument if the weight was given
+      if (weight_specified) next_word_from_line(iss, arg, keyword, line_num,
+        true, true);
+
+      // Determine which source style was requested, process the remaining
+      // arguments appropriately, and construct the new TMarleyNeutrinoSource
+      if (arg == "mono" || arg == "monoenergetic") {
+        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        if (std::regex_match(arg, rx_num)) {
+          double nu_energy = std::stod(arg);
+          if (nu_energy <= 0.) throw std::runtime_error(
+            std::string("Non-positive") + " energy '" + arg
+            + "' given for a monoenergetic neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+          // Create the monoenergetic neutrino source
+          else sources.push_back(std::make_unique<TMarleyMonoNeutrinoSource>(
+            neutrino_pid, weight, nu_energy));
+        }
+        else throw std::runtime_error(std::string("Invalid")
+          + " energy '" + arg
+          + "' given for a monoenergetic neutrino source specification on line "
+          + std::to_string(line_num) + " of the configuration file "
+          + filename);
+      }
+
+      else if (arg == "fd" || arg == "fermi-dirac" || arg == "fermi_dirac") {
+        double Emin, Emax, temperature, eta;
+        // Process the minimum energy for this source
+        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        if (std::regex_match(arg, rx_num)) {
+          Emin = std::stod(arg);
+          if (Emin < 0.) throw std::runtime_error(
+            std::string("Negative") + " minimum energy " + std::to_string(Emin)
+            + " given for a Fermi-Dirac neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        }
+        else throw std::runtime_error(
+            std::string("Invalid") + " minimum energy '" + arg
+            + "' given for a Fermi-Dirac neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        // Process the maximum energy for this source
+        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        if (std::regex_match(arg, rx_num)) {
+          Emax = std::stod(arg);
+          if (Emax < Emin) throw std::runtime_error(
+            std::string("Maximum") + " energy " + std::to_string(Emax)
+            + " given for a Fermi-Dirac neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename
+            + " is less than the minimum energy " + std::to_string(Emin));
+        }
+        else throw std::runtime_error(
+            std::string("Invalid") + " maximum energy '" + arg
+            + "' given for a Fermi-Dirac neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        // Process the temperature (in MeV) for this source
+        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        if (std::regex_match(arg, rx_num)) {
+          temperature = std::stod(arg);
+          if (temperature <= 0.) throw std::runtime_error(
+            std::string("Non-positive") + " temperature "
+            + std::to_string(temperature)
+            + " given for a Fermi-Dirac neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        }
+        else throw std::runtime_error(
+            std::string("Invalid") + " temperature '" + arg
+            + "' given for a Fermi-Dirac neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        // Process the dimensionless pinching parameter eta for this source, or
+        // set it to zero if one is not given. Any real number is allowed for
+        // this parameter.
+        if (next_word_from_line(iss, arg, keyword, line_num, false, false)) {
+          if (std::regex_match(arg, rx_num)) eta = std::stod(arg);
+          else throw std::runtime_error(
+              std::string("Invalid") + " pinching parameter '" + arg
+              + "' given for a Fermi-Dirac neutrino source"
+              + " specification on line " + std::to_string(line_num)
+              + " of the configuration file " + filename);
+        }
+        else eta = 0.;
+
+        // Now that we have all of the necessary parameters, create the new
+        // Fermi-Dirac neutrino source
+        sources.push_back(std::make_unique<TMarleyFermiDiracNeutrinoSource>(
+          neutrino_pid, weight, Emin, Emax, temperature, eta));
+      }
+
+
+      // The histogram and grid source types are both implemented using an
+      // interpolation grid object and share many similarities, so use
+      // the same parsing code for both
+      else if (arg == "hist" || arg == "histogram" || arg == "grid") {
+
+        bool source_is_histogram = (arg == "hist" || arg == "histogram");
+        std::string description;
+        if (source_is_histogram) description = "histogram";
+        else description = "grid";
+
+        InterpMethod method;
+
+        // If this is a histogram, the interpolation method is already known.
+        if (source_is_histogram) method = InterpMethod::Constant;
+
+        // If this is a grid, then parse the interpolation method to use;
+        else {
+          next_word_from_line(iss, arg, keyword, line_num, true, true);
+          // Specifying an interpolation method using the standard ENDF codes
+          // is allowed.
+          if (std::regex_match(arg, rx_nonneg_int)) {
+            int endf_interp_code = std::stoi(arg);
+            if (endf_interp_code == 1) method = InterpMethod::Constant;
+            else if (endf_interp_code == 2) method = InterpMethod::LinearLinear;
+            else if (endf_interp_code == 3) method = InterpMethod::LinearLog;
+            else if (endf_interp_code == 4) method = InterpMethod::LogLinear;
+            else if (endf_interp_code == 5) method = InterpMethod::LogLog;
+            else throw std::runtime_error(
+              std::string("Invalid") + " interpolation method '" + arg
+              + "' given for a grid neutrino source "
+              + " specification on line " + std::to_string(line_num)
+              + " of the configuration file " + filename);
+          }
+          // Specifying it using a string is also allowed.
+          // Note that "hist" should probably be used to enter grids with a
+          // constant interpolation rule, but we can include this option for
+          // flexibility.
+          else if (arg == "const" || arg == "constant")
+            method = InterpMethod::Constant;
+          else if (arg == "lin" || arg == "linlin")
+            method = InterpMethod::LinearLinear;
+          else if (arg == "log" || arg == "loglog")
+            method = InterpMethod::LogLog;
+          // linear in energy, logarithmic in probability density
+          else if (arg == "linlog")
+            method = InterpMethod::LinearLog;
+          // logarithmic in energy, linear in probability density
+          else if (arg == "loglin")
+            method = InterpMethod::LogLinear;
+          else throw std::runtime_error(
+            std::string("Invalid") + " interpolation method '" + arg
+            + "' given for a grid neutrino source "
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        }
+
+        // Store the grid point energies and probability densities
+        // in these vectors for now.
+        std::vector<double> energies, prob_densities;
+
+        // Counter to keep track of the number of bins or grid points parsed so
+        // far
+        int points_parsed = 0;
+
+        // Flag to tell us when we're done reading in bin or grid point entries
+        bool not_finished = true;
+
+        // Get the bin or grid point specifications using these strings
+        std::string E_str, PD_str;
+
+	// Previous energy value (used to ensure that all energy values given
+	// are strictly increasing). It's set to negative infinity to ensure
+	// that the first energy value always passes the strictly increasing
+	// test.
+        double previous_E = marley_utils::minus_infinity;
+
+        // Parse the bin or grid point specifications for this source
+        while(not_finished) {
+
+          // Get the first energy
+          bool found_E = next_word_from_line(iss, E_str, keyword, line_num,
+            false, false);
+          if (found_E) {
+            if (std::regex_match(E_str, rx_num)) {
+              double E = std::stod(E_str);
+              if (E < 0.) throw std::runtime_error(
+                std::string("Negative") + " energy "
+                + std::to_string(E) + " given in a "
+                + description + " neutrino source specification on line "
+                + std::to_string(line_num) + " of the configuration file "
+                + filename);
+              if (E <= previous_E) throw std::runtime_error(
+                std::string("Energy") + " values "
+                + " given in a " + description
+                + " neutrino source specification on line "
+                + std::to_string(line_num) + " of the configuration file "
+                + filename + " are not strictly increasing");
+              energies.push_back(E);
+              previous_E = E;
+            }
+            else throw std::runtime_error(std::string("Invalid") + " energy '"
+              + E_str + "' given in a " + description
+              + " neutrino source specification on line "
+              + std::to_string(line_num) + " of the configuration file "
+              + filename);
+          }
+          // Get the first probability density
+          bool found_PD = next_word_from_line(iss, PD_str, keyword, line_num,
+            false, false);
+          if (found_PD) {
+            if (std::regex_match(PD_str, rx_num)) {
+              double pd = std::stod(PD_str);
+              if (pd < 0.) throw std::runtime_error(
+                std::string("Negative") + " probability density "
+                + std::to_string(pd) + " given in a "
+                + description + " neutrino source specification on line "
+                + std::to_string(line_num) + " of the configuration file "
+                + filename);
+              prob_densities.push_back(pd);
+            }
+            else throw std::runtime_error(std::string("Invalid")
+              + " probability density '"
+              + PD_str + "' given in a " + description
+              + " neutrino source specification on line "
+              + std::to_string(line_num) + " of the configuration file "
+              + filename);
+          }
+
+          // Stop the loop for a histogram if we read an energy without
+          // a matching probability density and at least one point has
+          // already been parsed.
+          if (found_E && !found_PD && points_parsed >= 1
+            && source_is_histogram)
+          {
+            not_finished = false;
+          }
+          // Stop the loop for a grid if we have run out of entries
+          // to read and at least two points have already been parsed.
+          else if (!found_E && !found_PD && points_parsed >= 2
+            && !source_is_histogram)
+          {
+            not_finished = false;
+          }
+          else if (found_E && !found_PD) {
+            std::string weight_desc;
+            if (source_is_histogram) weight_desc = "bin weight";
+            else weight_desc = "probability density";
+            throw std::runtime_error(std::string("Missing ")
+              + weight_desc + " entry in a " + description
+              + " neutrino source specification on line "
+              + std::to_string(line_num) + " of the configuration file "
+              + filename);
+          }
+          else if (!found_E) {
+            throw std::runtime_error(std::string("Missing ")
+              + "energy entry in a " + description
+              + " neutrino source specification on line "
+              + std::to_string(line_num) + " of the configuration file "
+              + filename);
+          }
+
+          // Increment the entry counter now that we've successfully parsed
+          // another point
+          ++points_parsed;
+        }
+
+        // If this is a histogram, we still need to convert the bin weights
+        // into probability density values, so we'll divide each weight by its
+        // bin width.
+        if (source_is_histogram) {
+          int jmax = energies.size() - 1;
+          for (int j = 0; j < jmax; ++j) {
+            // TODO: The earlier check for monotonically increasing energies
+            // should ensure that we don't divide by zero here, but this might
+            // be worth looking at more carefully in the future.
+            prob_densities.at(j) /= (energies.at(j + 1) - energies.at(j));
+          }
+          // Set the probability density at E = Emax to be zero (this ensures
+          // that no energies outside of the histogram will be sampled and makes
+          // the energy and probability densities vector lengths equal).
+          prob_densities.push_back(0.);
+        }
+
+        // Now that we've processed grid points, create the grid neutrino
+        // source
+        sources.push_back(std::make_unique<TMarleyGridNeutrinoSource>(
+          energies, prob_densities, neutrino_pid, weight, method));
+      }
+
+      else throw std::runtime_error(std::string("Unrecognized")
+      + " neutrino source type '" + arg
+      + "' given on line " + std::to_string(line_num)
+      + " of the configuration file " + filename);
+    }
+
     else if (keyword == "contbin") {
       next_word_from_line(iss, arg, keyword, line_num, true, false);
       if (!std::regex_match(arg, rx_num))
@@ -282,6 +629,9 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
   if (reaction_filenames.empty())
     throw std::runtime_error(std::string("Configuration file")
     + " must contain at least one use of the reaction keyword.");
+  if (sources.empty())
+    throw std::runtime_error(std::string("Configuration file")
+    + " must contain at least one use of the source keyword.");
 }
 
 // Get the next word from a parsed line. If errors occur, complain.
