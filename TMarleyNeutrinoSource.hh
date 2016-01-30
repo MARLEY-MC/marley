@@ -103,7 +103,7 @@ class TMarleyMonoNeutrinoSource : public TMarleyNeutrinoSource {
 };
 
 // Supernova cooling neutrino source approximated using a Fermi-Dirac
-// distribution
+// distribution (see, for example, Giunti & Kim equation 15.18)
 class TMarleyFermiDiracNeutrinoSource : public TMarleyNeutrinoSource {
   public:
     inline TMarleyFermiDiracNeutrinoSource(int particle_id
@@ -117,16 +117,19 @@ class TMarleyFermiDiracNeutrinoSource : public TMarleyNeutrinoSource {
       temperature = temp;
       eta = e_t_a;
       C = 1.;
-      // Create a call wrapper for the Fermi-Dirac distribution function that
-      // allows our numerical integration and rejection sampling routines to
-      // manipulate it easily.
-      fd_dist = std::bind(&TMarleyFermiDiracNeutrinoSource::fermi_dirac_distribution,
-        this, std::placeholders::_1);
+
+      // Create a call wrapper to allow us to numerically integrate the
+      // PDF for this source.
+      std::function<double(double)> fd_dist = std::bind(
+        &TMarleyFermiDiracNeutrinoSource::pdf, this, std::placeholders::_1);
       // Normalize the source spectrum (not strictly necessary, but having the
       // spectrum approximately normalized makes the default rejection sampling
       // tolerance of 1e-8 reliable for finding the maximum of the spectrum)
       // TODO: consider removing the hard-coded value here
       double integral = marley_utils::num_integrate(fd_dist, E_min, E_max, 1e4);
+
+      // Update the normalization constant, thereby normalizing this object's
+      // pdf in the process.
       C /= integral;
     }
 
@@ -140,28 +143,83 @@ class TMarleyFermiDiracNeutrinoSource : public TMarleyNeutrinoSource {
 
     //virtual double sample_energy(TMarleyGenerator& gen);
 
-    inline double fermi_dirac_distribution(double nu_energy)
-    {
-      return (C / std::pow(temperature, 3)) * (std::pow(nu_energy, 2)
-        / (1 + std::exp(nu_energy / (temperature - eta))));
-    }
-
     virtual inline double pdf(double E_nu) {
       if (E_nu < E_min || E_nu > E_max) return 0.;
-      else return fermi_dirac_distribution(E_nu);
+      else return (C / std::pow(temperature, 4)) * (std::pow(E_nu, 2)
+        / (1 + std::exp((E_nu / temperature) - eta)));
     }
 
   private:
     // Temperature for Fermi-Dirac distribution (in MeV)
     double temperature;
-    // Temperature offset for Fermi-Dirac distribution
+    // Dimensionless pinching parameter for Fermi-Dirac distribution
     double eta;
     // Minimum and maximum neutrino energies produced by this source
     double E_min, E_max;
     // Normalization constant (determined during construction)
     double C;
-    // Call wrapper for this object's Fermi Dirac distribution function
-    std::function<double(double)> fd_dist;
+};
+
+// Neutrino source with a "beta fit" spectrum (see, for example, equation 7 in
+// arXiv:1511.00806v4). Equation 15.19 in Giunti & Kim also describes
+// this spectrum, but note that our definition of beta is theirs plus
+// one.
+class TMarleyBetaFitNeutrinoSource : public TMarleyNeutrinoSource {
+  public:
+    inline TMarleyBetaFitNeutrinoSource(int particle_id
+      = marley_utils::ELECTRON_NEUTRINO, double weight = 1.,
+      double Emin = 0., double Emax = 100., double Emean = 13.,
+      double b_e_t_a = 4.5)
+      : TMarleyNeutrinoSource(particle_id, weight)
+    {
+      E_min = Emin;
+      E_max = Emax;
+      E_mean = Emean;
+      beta = b_e_t_a;
+      C = 1.; // Normalization constant (will be updated momentarily)
+
+      // Create a call wrapper to allow us to numerically integrate the
+      // PDF for this source.
+      std::function<double(double)> spect = std::bind(
+        &TMarleyBetaFitNeutrinoSource::pdf, this, std::placeholders::_1);
+      // Normalize the source spectrum (not strictly necessary, but having the
+      // spectrum approximately normalized makes the default rejection sampling
+      // tolerance of 1e-8 reliable for finding the maximum of the spectrum)
+      // TODO: consider removing the hard-coded value here
+      double integral = marley_utils::num_integrate(spect, E_min, E_max, 1e4);
+
+      // Update the normalization constant, thereby normalizing this object's
+      // pdf in the process.
+      C /= integral;
+    }
+
+    // Returns the maximum neutrino energy that can be sampled by this source
+    // object
+    virtual inline double get_Emax() const { return E_max; }
+
+    // Returns the minimum neutrino energy that can be sampled by this source
+    // object
+    virtual inline double get_Emin() const { return E_min; }
+
+    //virtual double sample_energy(TMarleyGenerator& gen);
+
+    virtual inline double pdf(double E_nu) {
+      if (E_nu < E_min || E_nu > E_max) return 0.;
+      else return C * std::pow(E_nu / E_mean, beta - 1)
+        * std::exp(-beta * E_nu / E_mean);
+    }
+
+  private:
+    // Mean energy for beta fit distribution (assuming E_min = 0.
+    // and E_max = infinity. Truncating the distribution may alter
+    // the mean value appreciably)
+    double E_mean;
+    // Pinching parameter beta
+    double beta;
+    // Minimum and maximum neutrino energies produced by this source
+    double E_min, E_max;
+    // Normalization constant (determined during construction)
+    double C;
 };
 
 // Neutrino source with an arbitrary energy spectrum supplied during
