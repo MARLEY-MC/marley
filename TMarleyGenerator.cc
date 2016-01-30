@@ -38,18 +38,12 @@ void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
 
   // Create the neutrino source.
   // TODO: Implement configuration file keywords to adjust neutrino source
-  // settings and remove hard-coded stuff here.
+  // settings
   //std::vector<double> Es = { 0., 10., 20. };
   //std::vector<double> densities = { 1., 3., 1. };
   //nu_source = TMarleyGridNeutrinoSource(Es, densities,
   //  marley_utils::ELECTRON_NEUTRINO);
-  double m_mu = TMarleyMassTable::get_particle_mass(marley_utils::MUON);
-  double m_mu_to_the_minus_four = std::pow(m_mu, -4);
-
-  nu_source = TMarleyFunctionNeutrinoSource(
-    [m_mu, m_mu_to_the_minus_four](double E) -> double {
-      return 96.*std::pow(E,2)*m_mu_to_the_minus_four*(m_mu - 2*E);
-    }, 1., marley_utils::ELECTRON_NEUTRINO, 0., m_mu/2.);
+  nu_source = std::make_unique<TMarleyDecayAtRestNeutrinoSource>();
 
   // Initialize the vector of total cross section values to be all zeros and
   // have as many entries as there are reactions available to this generator.
@@ -59,8 +53,8 @@ void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
   // Compute the normalization factor for use with the reacting neutrino energy PDF
   std::function<double(double)> unnorm_pdf = std::bind(
     &TMarleyGenerator::unnormalized_Ea_pdf, this, std::placeholders::_1);
-  double norm = marley_utils::num_integrate(unnorm_pdf, nu_source.get_Emin(),
-    nu_source.get_Emax(), 1e3); // TODO: remove hard-coded value here
+  double norm = marley_utils::num_integrate(unnorm_pdf, nu_source->get_Emin(),
+    nu_source->get_Emax(), 1e3); // TODO: remove hard-coded value here
   // Create the normalized PDF using the normalization factor
   Ea_pdf = [unnorm_pdf, norm](double Ea)
     -> double { return unnorm_pdf(Ea) / norm; };
@@ -151,7 +145,7 @@ double TMarleyGenerator::unnormalized_Ea_pdf(double Ea) {
   // Multiply the total cross section by the neutrino spectrum
   // from the source object to get the (unnormalized) PDF
   // for sampling reacting neutrino energies.
-  pdf *= nu_source.pdf(Ea);
+  pdf *= nu_source->pdf(Ea);
   return pdf;
 }
 
@@ -165,7 +159,7 @@ void TMarleyGenerator::sample_reaction(double& Ea, size_t& r_index) {
 
   // TODO: protect against nu_source changing E_min or E_max after you compute
   // the normalization factor for Ea_pdf in the TMarleyGenerator constructor
-  Ea = rejection_sample(Ea_pdf, nu_source.get_Emin(), nu_source.get_Emax());
+  Ea = rejection_sample(Ea_pdf, nu_source->get_Emin(), nu_source->get_Emax());
   // The total cross section values have already been updated by the final
   // call to unnormalized_Ea_PDF during rejection sampling, so we can
   // now sample a reaction type using our discrete distribution object.
