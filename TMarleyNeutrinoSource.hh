@@ -4,6 +4,7 @@
 
 #include "marley_utils.hh"
 #include "InterpolationGrid.hh"
+#include "TMarleyMassTable.hh"
 
 class TMarleyGenerator;
 
@@ -203,6 +204,55 @@ class TMarleyFunctionNeutrinoSource : public TMarleyNeutrinoSource {
     double E_min, E_max;
     // Call wrapper for this object's probability density function
     std::function<double(double)> probability_density;
+};
+
+// Neutrino source with an energy spectrum given by approximate pion-muon
+// decay at rest spectra (see, for example, equation 2 in
+// http://iopscience.iop.org/1742-6596/574/1/012167)
+class TMarleyDecayAtRestNeutrinoSource : public TMarleyNeutrinoSource {
+  public:
+    inline TMarleyDecayAtRestNeutrinoSource(double weight = 1.,
+      int particle_id = marley_utils::ELECTRON_NEUTRINO)
+      : TMarleyNeutrinoSource(particle_id, weight)
+    {
+
+      if (particle_id != marley_utils::ELECTRON_NEUTRINO &&
+        particle_id != marley_utils::MUON_ANTINEUTRINO)
+      {
+        throw std::runtime_error(std::string("Decay at rest")
+          + " neutrino source objects may only produce electron neutrinos"
+          + " or muon antineutrinos. PDG ID number "
+          + std::to_string(particle_id) + " is therefore not allowed.");
+      }
+    }
+
+    // Returns the maximum neutrino energy that can be sampled by this source
+    // object
+    virtual inline double get_Emax() const { return E_max; }
+
+    // Returns the minimum neutrino energy that can be sampled by this source
+    // object
+    virtual inline double get_Emin() const { return E_min; }
+
+    virtual inline double pdf(double E_nu) {
+      if (E_nu < E_min || E_nu > E_max) return 0.;
+      // Note that both of these source spectra are normalized to 1
+      // on the energy interval [0., m_mu / 2.]
+      else if (pid == marley_utils::ELECTRON_NEUTRINO)
+        return 96. * std::pow(E_nu, 2) * m_mu_to_the_minus_four
+          * (m_mu - 2*E_nu);
+      // Spectrum for muon antineutrinos
+      else return 16. * std::pow(E_nu, 2) * m_mu_to_the_minus_four
+        * (3*m_mu - 4*E_nu);
+    }
+
+  private:
+    // Muon mass stuff (m_mu^(-4) pre-computed for speed)
+    static const double m_mu;
+    static const double m_mu_to_the_minus_four;
+    // Minimum and maximum neutrino energies produced by this source
+    static constexpr double E_min = 0.;
+    static const double E_max;
 };
 
 class TMarleyGridNeutrinoSource : public TMarleyNeutrinoSource {

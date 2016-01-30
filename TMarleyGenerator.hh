@@ -26,7 +26,7 @@ class TMarleyGenerator {
       size_t r_index;
       sample_reaction(E_nu, r_index);
       return reactions.at(r_index)->create_event(
-        nu_source.get_pid(), E_nu, *this);
+        nu_source->get_pid(), E_nu, *this);
     }
 
     inline uint_fast64_t get_seed() const {
@@ -123,13 +123,13 @@ class TMarleyGenerator {
     void sample_reaction(double& Ea, size_t& r_index);
 
     // Returns the PDF that reacting neutrino energies obey. It is normalized
-    // between nu_source.E_min and nu_source.E_max.
+    // between nu_source->E_min and nu_source->E_max.
     inline double normalized_Ea_pdf(double Ea) {
       return Ea_pdf(Ea);
     }
 
     inline TMarleyNeutrinoSource* get_nu_source() {
-      return &nu_source;
+      return nu_source.get();
     }
 
   private:
@@ -142,7 +142,7 @@ class TMarleyGenerator {
     // Initialization code shared by multiple constructors
     void init(const TMarleyConfigFile& cf);
 
-    TMarleyFunctionNeutrinoSource nu_source;
+    std::unique_ptr<TMarleyNeutrinoSource> nu_source;
     TMarleyStructureDatabase structure_db;
     std::vector<std::unique_ptr<TMarleyReaction> > reactions;
 
