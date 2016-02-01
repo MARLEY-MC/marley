@@ -40,9 +40,20 @@ class TMarleyEvent {
     friend std::ostream& operator<< (std::ostream& out,
       const TMarleyEvent& e);
 
+    // Writes a HEPEvt record for this event, using the spacetime origin (t = 0
+    // mm/c, x = 0 mm, y = 0 mm, z = 0 mm) as the initial position 4-vector for
+    // all particles.
+    // TODO: alter this so that the user can specify a vertex position 4-vector
+    // to use.
+    void write_hepevt(size_t event_num, std::ostream& out);
+
   private:
     void assign_particle_pointer(TMarleyParticle* p,
       TMarleyEvent::ParticleRole r);
+
+    // Helper function for write_hepevt()
+    void dump_hepevt_particle(const TMarleyParticle& p, std::ostream& os,
+      bool track = true);
 
     std::list<TMarleyParticle> initial_particles;
     std::list<TMarleyParticle> final_particles;

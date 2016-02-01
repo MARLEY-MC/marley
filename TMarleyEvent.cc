@@ -1,4 +1,6 @@
+#include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <stdexcept>
 
 #include "TMarleyEvent.hh"
@@ -122,4 +124,30 @@ std::ostream& operator<< (std::ostream& out, const TMarleyEvent& e) {
     out << p << std::endl;
   }
   return out;
+}
+
+// Function that dumps a TMarleyParticle to an output stream in HEPEVT format. This
+// is a private helper function for the publically-accessible write_hepevt.
+void TMarleyEvent::dump_hepevt_particle(const TMarleyParticle& p, std::ostream& os,
+  bool track)
+{
+  if (track) os << "1 ";
+  else os << "0 ";
+
+  // TODO: improve this entry to give the user more control over the vertex
+  // location and to reflect the parent-daughter relationships between
+  // particles.
+  // Factors of 1000. are used to convert MeV to GeV for the HEPEvt format
+  os << p.get_id() << " 0 0 0 0 " << p.get_px() / 1000. << " " << p.get_py() / 1000. << " "
+    << p.get_pz() / 1000. << " " << p.get_total_energy() / 1000. << " " << p.get_mass() / 1000.
+    // Spacetime origin is currently used as the initial position 4-vector for
+    // all particles
+    << " 0. 0. 0. 0." << std::endl;
+}
+
+void TMarleyEvent::write_hepevt(size_t event_num, std::ostream& out) {
+  out << std::setprecision(16) << std::scientific;
+  out << event_num  << " " << final_particles.size() + 1 << std::endl;
+  dump_hepevt_particle(*projectile, out, false);
+  for (const auto& fp : final_particles) dump_hepevt_particle(fp, out, true);
 }

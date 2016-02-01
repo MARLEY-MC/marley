@@ -57,7 +57,8 @@ inline void print_help(std::string executable_name) {
 }
 
 inline void print_version() {
-  std::cout << "react (MARLEY) v0.1" << std::endl;
+  std::cout << "MARLEY (Model of Argon Reaction Low Energy Yields) v0.9"
+    << std::endl;
   exit(0);
 }
 
@@ -123,6 +124,26 @@ int main(int argc, char* argv[]){
   #endif
 
   int num_old_events = 0;
+  // Desired number of events to be generated in this run. This
+  // will be read back from the ROOT file and overwritten
+  // if we're doing a continuation run.
+  int num_events = cf.get_num_events();
+
+  // Whether to write the events to a HEPEvt file
+  bool write_hepevt = cf.check_write_hepevt();
+  std::ofstream hepevt_stream;
+  // If writing a HEPEvt file is enabled, then prepare one
+  if (write_hepevt) {
+    // Always overwrite for now.
+    // TODO: Implement option from configuration file to allow appending more
+    // events soon.
+    std::string hepevt_file_name = cf.get_hepevt_filename();
+    hepevt_stream.open(hepevt_file_name, std::ofstream::out
+      | std::ofstream::trunc);
+    std::cout << "Events for this run will be written to the HEPEvt format file "
+      << hepevt_file_name << std::endl;
+  }
+
   #ifdef USE_ROOT
   // Create a pointer to an event object. This will
   // be used to fill the event tree with the
@@ -130,7 +151,7 @@ int main(int argc, char* argv[]){
   TMarleyEvent* p_event = nullptr;
 
   // Check if the ROOT file used to store the event tree already exists
-  std::string tree_file_name("event_tree.root");
+  std::string tree_file_name = cf.get_root_filename();
   std::ifstream test_stream(tree_file_name.c_str());
   bool root_file_existed = false;
   if (test_stream.good()) {
@@ -175,6 +196,14 @@ int main(int argc, char* argv[]){
     std::string dummy_str = std::to_string(gen.get_seed());
     treeFile.WriteObject(&dummy_str, "MARLEY RNG Seed");
 
+    // Write the desired number of events in this run to the ROOT file.
+    // Use a string so that we can write a single int without much trouble.
+    std::string str_num_events = std::to_string(num_events);
+    treeFile.WriteObject(&str_num_events, "number of MARLEY events to generate");
+
+    std::cout << "Events for this run will be written to the ROOT file "
+      << tree_file_name << std::endl;
+
     // Notify the user of the seed that will be used for this run
     std::cout << "Seed for random number generator: "
     << gen.get_seed() << std::endl;
@@ -183,6 +212,12 @@ int main(int argc, char* argv[]){
   // If we were able to read in the event tree from the file, get
   // ready to add new events to it, and notify the user
   else {
+
+    // Get previous number of events to generate from the ROOT file
+    std::string* str_num_events;
+    treeFile.GetObject("number of MARLEY events to generate", str_num_events);
+    num_events = std::stoi(*str_num_events);
+
     //TODO: add check to handle cases where we can read an event
     //tree with the correct name from the ROOT file, but we can't find
     //a branch that matches the one we expect
@@ -191,6 +226,8 @@ int main(int argc, char* argv[]){
     std::cout << "Continuing previous run from ROOT file " << tree_file_name
       << std::endl << "which contains " << num_old_events
       << " events." << std::endl;
+    std::cout << "A total of " << num_events << " events will be generated."
+      << std::endl;
 
     // Get previous random number generator state string from the ROOT file
     std::string* p_rng_state_string = nullptr;
@@ -220,9 +257,6 @@ int main(int argc, char* argv[]){
   // TODO: debug numerical errors that arise when
   // Ea = E_threshold
 
-  // Simulate a charged current reaction
-  int n_events = 1e6;
-
   // Display all floating-point numbers without
   // using scientific notation and using
   // one decimal digit
@@ -236,7 +270,7 @@ int main(int argc, char* argv[]){
 
   // Generate all of the requested events. End the loop early
   // if the user interrupts execution (e.g., via ctrl+C)
-  for (int i = 1 + num_old_events; i <= n_events && !interrupted; ++i) {
+  for (int i = 1 + num_old_events; i <= num_events && !interrupted; ++i) {
 
     // Create an event using the generator object
     TMarleyEvent e = gen.create_event();
@@ -250,12 +284,16 @@ int main(int argc, char* argv[]){
     event_tree->Fill();
     #endif
 
+    if (write_hepevt && hepevt_stream.good()) {
+      e.write_hepevt(i, hepevt_stream);
+    }
+
     // Print status messages about simulation progress after every 100
     // events have been generated
-    if ((i - num_old_events) % 100 == 1 || i == n_events) {
+    if ((i - num_old_events) % 100 == 1 || i == num_events) {
       // Print a status message showing the current number of events
-      std::cout << "Event Count = " << i << "/" << n_events
-        << " (" << i*100/static_cast<double>(n_events)
+      std::cout << "Event Count = " << i << "/" << num_events
+        << " (" << i*100/static_cast<double>(num_events)
         << "% complete)" << std::endl;
 
       // Print timing information
@@ -266,7 +304,7 @@ int main(int argc, char* argv[]){
         current_time_point) << " (Estimated total run time: ";
 
       marley_utils::seconds<float> estimated_total_time =
-        (current_time_point - start_time_point)*(static_cast<float>(n_events
+        (current_time_point - start_time_point)*(static_cast<float>(num_events
         - num_old_events)/(i - num_old_events));
 
       std::cout << marley_utils::duration_to_string
@@ -275,8 +313,16 @@ int main(int argc, char* argv[]){
 
       #ifdef USE_ROOT
       data_written = marley_utils::num_bytes_to_string(treeFile.GetBytesWritten(),2);
-      std::cout << "Data written = " << data_written << "\033[K" << std::endl;
+      std::cout << "Data written to ROOT file = " << data_written << "\033[K" << std::endl;
       #endif
+
+      if (write_hepevt) {
+        hepevt_stream.flush();
+        double num_bytes_to_hepevt_file = hepevt_stream.tellp();
+        std::cout << "Data written to HEPEvt file = "
+          << marley_utils::num_bytes_to_string(num_bytes_to_hepevt_file)
+          << "\033[K" << std::endl;
+      }
 
       std::time_t estimated_end_time = std::chrono::system_clock::to_time_t(
         start_time_point + std::chrono::duration_cast
@@ -292,6 +338,12 @@ int main(int argc, char* argv[]){
       // amount of data written to disk
       std::cout << "\033[F";
       #endif
+
+      // Move up an extra line if we're writing data to a HEPEvt format file
+      // and therefore displaying the amount of data written to it.
+      if (write_hepevt) {
+        std::cout << "\033[F";
+      }
 
       // Move up three lines in std::cout
       std::cout << "\033[F\033[F\033[F";
@@ -317,8 +369,16 @@ int main(int argc, char* argv[]){
   // the amount of data written to disk
   treeFile.Close();
   data_written = marley_utils::num_bytes_to_string(treeFile.GetBytesWritten());
-  std::cout << "Data written = " << data_written << "\033[K" << std::endl;
+  std::cout << "Data written to ROOT file = " << data_written << "\033[K" << std::endl;
   #endif
+
+  if (write_hepevt) {
+    hepevt_stream.flush();
+    double num_bytes_to_hepevt_file = hepevt_stream.tellp();
+    std::cout << "Data written to HEPEvt file = "
+      << marley_utils::num_bytes_to_string(num_bytes_to_hepevt_file)
+      << "\033[K" << std::endl;
+  }
 
   // Display the time that the program terminated
   std::chrono::system_clock::time_point end_time_point
