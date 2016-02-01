@@ -12,7 +12,7 @@
 
 class TMarleyGenerator {
   public:
-    inline TMarleyGenerator(const TMarleyConfigFile& cf) {
+    inline TMarleyGenerator(TMarleyConfigFile& cf) {
       init(cf);
     }
 
@@ -140,7 +140,7 @@ class TMarleyGenerator {
     // Default tolerance for rejection sampling
     static constexpr double DEFAULT_REJECTION_SAMPLING_TOLERANCE = 1e-8;
     // Initialization code shared by multiple constructors
-    void init(const TMarleyConfigFile& cf);
+    void init(TMarleyConfigFile& cf);
 
     std::unique_ptr<TMarleyNeutrinoSource> nu_source;
     TMarleyStructureDatabase structure_db;

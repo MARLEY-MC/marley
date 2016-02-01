@@ -236,6 +236,10 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
         + "' given on line " + std::to_string(line_num)
         + " of the configuration file " + filename);
 
+/***  Do not allow the user to specify a source weight for now, since
+ * only one neutrino source is currently allowed. Re-enable this code
+ * if and when you add the capability for TMarleyGenerator to handle
+ * multiple sources concurrently.
       // Get the weight for this source if it is specified. Otherwise,
       // set the weight to 1.
       next_word_from_line(iss, arg, keyword, line_num, true, true);
@@ -256,6 +260,13 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
       // Advance to the next argument if the weight was given
       if (weight_specified) next_word_from_line(iss, arg, keyword, line_num,
         true, true);
+*/
+
+/* Replacement code (delete when you re-enable the block above) */
+
+      weight = 1.;
+      next_word_from_line(iss, arg, keyword, line_num, true, true);
+/* End of replacement code */
 
       // Determine which source style was requested, process the remaining
       // arguments appropriately, and construct the new TMarleyNeutrinoSource
