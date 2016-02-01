@@ -1772,6 +1772,7 @@ void TMarleyNuclearPhysics::hf_test3(int Zi, int Ai,
 
 }
 
+/***
 TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
   const TMarleyParticle& initial_particle,
   double Ex, int twoJ, TMarleyParity Pi, TMarleyStructureDatabase& db,
@@ -1795,7 +1796,8 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
     int Zf = Zi - f.get_Z();
     int Af = Ai - f.get_A();
 
-    /*const*/ TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
+    //const
+    TMarleySphericalOpticalModel& om = db.get_optical_model(Zf, Af);
     TMarleyDecayScheme* ds = db.get_decay_scheme(Zf, Af);
 
     // Get information about the current fragment
@@ -1907,7 +1909,7 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
       // function that takes a single argument.
       std::function<double(double)> cpw = std::bind(
         &fragment_continuum_partial_width, Mconst, Mfgs_ion, Mi, twoJ, Pi,
-        fragment_pid, two_s, Pa, om, std::placeholders::_1 /*Exf*/);
+        fragment_pid, two_s, Pa, om, std::placeholders::_1); //Exf
 
       double Emin = E_c_min;
       double Emax = E_c_min + continuum_bin_resolution;
@@ -1995,7 +1997,7 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
     // Create a forwarding call wrapper for the continuum partial width member
     // function that takes a single argument.
     std::function<double(double)> gpw = std::bind(&gamma_continuum_partial_width,
-      Zi, Ai, twoJ, Ex, std::placeholders::_1 /*Exf*/);
+      Zi, Ai, twoJ, Ex, std::placeholders::_1); //Exf
 
     double Emin = E_c_min;
     double Emax = E_c_min + continuum_bin_resolution;
@@ -2035,3 +2037,4 @@ TMarleyHFTable TMarleyNuclearPhysics::create_hf_table(int Zi, int Ai,
 
   return hftable;
 }
+***/

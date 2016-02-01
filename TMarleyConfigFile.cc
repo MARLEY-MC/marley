@@ -34,9 +34,15 @@ TMarleyConfigFile::TMarleyConfigFile() {
   check_before_root_file_overwrite = true;
   root_filename = "events.root";
   #endif
+  writehepevt = false;
+  check_before_hepevt_file_overwrite = true;
+  hepevt_filename = "events.hepevt";
+/***
   contbin_width = DEFAULT_CONTINUUM_BIN_RESOLUTION;
   contbin_num_subs = DEFAULT_CONTINUUM_BIN_SUBINTERVALS;
   num_threads = 1;
+***/
+  num_events = DEFAULT_NUM_EVENTS;
 }
 
 // Call the default constructor first to set all configuration
@@ -121,9 +127,13 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
         + " with ROOT support.");
       #endif
     }
+    else if (keyword == "hepevtfile") {
+      next_word_from_line(iss, arg, keyword, line_num, true, false);
+      hepevt_filename = arg;
+    }
     else if (keyword == "writeroot") {
       #ifdef USE_ROOT
-      next_word_from_line(iss, arg, keyword, line_num);
+      next_word_from_line(iss, arg, keyword, line_num, true, true);
       if (arg == "yes") writeroot = true;
       else if (arg == "no") writeroot = false;
       else if (arg == "overwrite") {
@@ -141,6 +151,21 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
         + " keyword may only be used when MARLEY is compiled"
         + " with ROOT support.");
       #endif
+    }
+    else if (keyword == "writehepevt") {
+      next_word_from_line(iss, arg, keyword, line_num, true, true);
+      if (arg == "yes") writehepevt = true;
+      else if (arg == "no") writehepevt = false;
+      else if (arg == "overwrite") {
+        writehepevt = true;
+        check_before_hepevt_file_overwrite = false;
+      }
+      else {
+        throw std::runtime_error(std::string("Invalid")
+          + " HEPEvt file write flag '" + arg
+          + "' encountered on line" + std::to_string(line_num)
+          + " of the configuration file " + filename);
+      }
     }
     else if (keyword == "structure") {
       StructureRecord sr;
@@ -554,6 +579,28 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
       + " of the configuration file " + filename);
     }
 
+    else if (keyword == "events") {
+      next_word_from_line(iss, arg, keyword, line_num, true, false);
+      if (!std::regex_match(arg, rx_num))
+        throw std::runtime_error(std::string("Invalid")
+        + " number of events '" + arg
+        + "' given on line " + std::to_string(line_num)
+        + " of the configuration file " + filename);
+      double d_n_events = std::stod(arg);
+      int n_events = static_cast<int>(d_n_events);
+      // Allow n_events == 0 for testing purposes
+      if (n_events < 0)
+        throw std::runtime_error(std::string("Number")
+        + " of events '" + arg + "' given on line "
+        + std::to_string(line_num) + " of the configuration file "
+        + filename + " must be non-negative.");
+
+      num_events = static_cast<size_t>(n_events);
+    }
+
+/*** Continuum binning and multiple thread options removed 02/01/2016.
+ * Neither of these features is fully implemented yet, so they're not
+ * necessary to have as part of the configuration file format.
     else if (keyword == "contbin") {
       next_word_from_line(iss, arg, keyword, line_num, true, false);
       if (!std::regex_match(arg, rx_num))
@@ -628,6 +675,7 @@ TMarleyConfigFile::TMarleyConfigFile(std::string file_name)
           + std::to_string(line_num) + " of the configuration file "
           + filename);
     }
+*******/
     else {
       std::cerr << "Warning: Ignoring unrecognized keyword '"
         << keyword << "' on line " << line_num

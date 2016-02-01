@@ -52,13 +52,17 @@ class TMarleyConfigFile {
     #endif
     void print_summary(std::ostream& os = std::cout);
 
+/***
     inline double get_contbin_width() const { return contbin_width; }
     inline size_t get_contbin_num_subs() const { return contbin_num_subs; }
     inline size_t get_num_threads() const { return num_threads; }
+***/
+
     inline std::vector<std::unique_ptr<TMarleyNeutrinoSource> >& get_sources() {
       return sources;
     }
 
+/***
     // Default number of subintervals to use when integrating Hauser-Feshbach
     // fragment and gamma decay widths over a bin in the energy continuum.
     // By default, We'll approximate the decay width using a single trapezoid
@@ -69,6 +73,15 @@ class TMarleyConfigFile {
     // Default energy resolution to use when binning the continuum of final
     // nuclear excitation energies for Hauser-Feshbach model calculations.
     static constexpr double DEFAULT_CONTINUUM_BIN_RESOLUTION = 0.1; // MeV
+***/
+
+    inline size_t get_num_events() { return num_events; } 
+
+    inline std::string get_hepevt_filename() const { return hepevt_filename; }
+    inline bool check_write_hepevt() const { return writehepevt; }
+    inline bool check_overwrite_hepevt() const {
+      return check_before_hepevt_file_overwrite;
+    }
 
   private:
 
@@ -78,10 +91,17 @@ class TMarleyConfigFile {
 
     std::vector<StructureRecord> structure_records;
 
+/** These members deleted 02/01/2016. Add them back in if these
+ * features are fully implemented in the future.
     size_t num_threads; // Number of threads to use to generate events in parallel
 
     double contbin_width;
     size_t contbin_num_subs;
+***/
+
+    // The number of events to generate in a run
+    size_t num_events;
+    static constexpr size_t DEFAULT_NUM_EVENTS = 1000;
 
     // Neutrino sources will be created based on the specifications given in
     // this file. When a TMarleyGenerator object is constructed using this
@@ -93,6 +113,10 @@ class TMarleyConfigFile {
     bool writeroot;
     bool check_before_root_file_overwrite;
     #endif
+
+    std::string hepevt_filename;
+    bool writehepevt;
+    bool check_before_hepevt_file_overwrite;
 
     // Convert a lowercase, trimmed string file format
     // description for the structure data to a
