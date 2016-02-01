@@ -5,7 +5,7 @@
 #include "TMarleyGenerator.hh"
 #include "TMarleyNuclearReaction.hh"
 
-void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
+void TMarleyGenerator::init(TMarleyConfigFile& cf) {
   // Use the seed from the config file object to prepare the random number
   // generator.  This is an attempt to do a decent job of seeding the random
   // number generator, but optimally accomplishing this can be tricky (see, for
@@ -36,14 +36,18 @@ void TMarleyGenerator::init(const TMarleyConfigFile& cf) {
     ++react_count;
   }
 
-  // Create the neutrino source.
-  // TODO: Implement configuration file keywords to adjust neutrino source
-  // settings
-  //std::vector<double> Es = { 0., 10., 20. };
-  //std::vector<double> densities = { 1., 3., 1. };
-  //nu_source = TMarleyGridNeutrinoSource(Es, densities,
-  //  marley_utils::ELECTRON_NEUTRINO);
-  nu_source = std::make_unique<TMarleyDecayAtRestNeutrinoSource>();
+  // Transfer ownership of the neutrino source from the configuration file object to the
+  // generator object. If there are multiple neutrino sources in the configuration
+  // file, only use the one that was defined last.
+  // TODO: consider adding the capability to use multiple sources. The weight member
+  // of the TMarleyNeutrinoSource class already provides for this, but you haven't implemented
+  // it due to some subtleties in managing multiple sources and multiple reactions in
+  // the generator.
+  auto& sources = cf.get_sources();
+  if (sources.size() > 0) nu_source = std::move(sources.back());
+  else throw std::runtime_error(std::string("Cannot finish creating")
+    + " the TMarleyGenerator object. The configuration file is"
+    + " missing a neutrino source definition.");
 
   // Initialize the vector of total cross section values to be all zeros and
   // have as many entries as there are reactions available to this generator.
