@@ -85,8 +85,12 @@ namespace marley_utils {
   // Square of the elementary charge
   constexpr double e2 = hbar_c * alpha; // MeV*fm
   // Constant to use when approximating nuclear radii via
-  // r = r0 * A^(1/3), where A is the nucleus's mass number
+  // r = r0 * A^(1/3), where A is the nucleus's mass number.
+  // See, for example, Introductory Nuclear Physics by Kenneth S. Krane.
   constexpr double r0 = 1.2; // fm
+  // Handy constants for the fractions 1/2 and 1/3
+  constexpr double ONE_HALF = 1.0/2.0;
+  constexpr double ONE_THIRD = 1.0/3.0;
 
   // Strings to use for latex table output of ENSDF data
   extern std::string latex_table_1, latex_table_2, latex_table_3, latex_table_4;

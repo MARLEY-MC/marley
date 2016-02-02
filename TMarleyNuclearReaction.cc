@@ -201,39 +201,45 @@ void TMarleyNuclearReaction::set_decay_scheme(TMarleyDecayScheme* ds) {
   }
 }
 
-// Fermi function used in calculating cross-sections
-// The equation was taken from http://en.wikipedia.org/wiki/Beta_decay
-// Input: atomic number Z, mass number A, electron total energy E (MeV), positron or electron?
-double TMarleyNuclearReaction::fermi_function(int Z, int A, double E, bool electron){
-  
-  double m = marley_utils::m_e; // electron mass (MeV)
-  
-  double p = marley_utils::real_sqrt(E*E - m*m); // Electron momentum
-  double s = std::sqrt(1 - marley_utils::alpha*marley_utils::alpha*Z*Z);
+// Fermi function used to calculate cross-sections
+// The form used here is based on http://en.wikipedia.org/wiki/Beta_decay
+// but rewritten for convenient use inside this class.
+// Input: beta_c (3-momentum magnitude of particle c / total energy of particle c),
+// where we assume that the ejectile (particle c) is the light product from
+// 2-2 scattering.
+double TMarleyNuclearReaction::fermi_function(double beta_c) {
 
-  // Fitting coefficient for estimating the nuclear radius
-  // (taken from Introductory Nuclear Physics by Kenneth S. Krane)
-  const double r_0 = 1.2; // fm
+  // Don't bother to calculate anything if the light product from
+  // this reaction (particle c) is not an electron nor a positron.
+  // This situation occurs for neutral current reactions, for example.
+  bool electron = (pid_c == marley_utils::ELECTRON);
+  if (!electron && pid_c != marley_utils::POSITRON) return 1.;
+
+  // Lorentz factor gamma for particle c
+  double gamma_c = std::pow(1 - beta_c*beta_c, -marley_utils::ONE_HALF);
+  
+  double s = std::sqrt(1 - std::pow(marley_utils::alpha * Zf, 2));
 
   // Estimate the nuclear radius using r_n = r_0*A^(1/3)
-  double r_n = r_0*std::pow(A, 1./3);
+  double r_n = marley_utils::r0 * std::pow(Af, marley_utils::ONE_THIRD);
 
   // Convert the estimated nuclear radius to natural units (MeV^(-1))
-  double rho = r_n/marley_utils::hbar_c;
+  double rho = r_n / marley_utils::hbar_c;
 
-  double eta = marley_utils::alpha*Z*E/p;
+  double eta = marley_utils::alpha * Zf / beta_c;
+
+  // Adjust the value of eta if the light product from this reaction is a
+  // positron.
   if (!electron) eta *= -1;
 
-  // Complex variables for the gamma function
+  // Complex variable for the gamma function
   std::complex<double> a(s, eta);
-  //std::complex<double> b(1+2*s, 0);
   double b = std::tgamma(1+2*s);
 
-  return 2*(1 + s)*std::pow(2*p*rho, 2*s-2)*std::exp(marley_utils::pi*eta)*std::norm(marley_utils::gamma(a))
-    / (b*b);
-    // /std::pow(std::abs(marley_utils::gamma(b)), 2);
+  return 2 * (1 + s) * std::pow(2*beta_c*gamma_c*rho*mc, 2*s-2)
+    * std::exp(marley_utils::pi*eta) * std::norm(marley_utils::gamma(a))
+    / std::pow(b, 2);
 }
-
 
 // Input: atomic number Z, electron total energy E (MeV), positron or electron?
 double TMarleyNuclearReaction::fermi_approx(int Z, double E, bool electron){
@@ -539,13 +545,22 @@ double TMarleyNuclearReaction::total_xs(int particle_id_a, double Ea) {
       double Eb_cm = (s + mb2 - ma2) / (2 * sqrt_s);
       double Ec_cm = (s + mc2 - md2) / (2 * sqrt_s);
       double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2);
+      double beta_c_cm = pc_cm / Ec_cm;
 
-      xs += fermi_function(Zf, Af, Ec_cm, true) * matrix_el * pc_cm * Ec_cm
+      xs += fermi_function(beta_c_cm) * matrix_el * pc_cm * Ec_cm
         * Eb_cm * (sqrt_s - Ec_cm) / s;
     }
   }
-  return std::pow(marley_utils::GF * marley_utils::Vud, 2) * xs
-    / marley_utils::pi;
+
+  // Include the quark mixing matrix element Vud if this is a charged-current
+  // reaction. For now, we determine that by asking whether the light product
+  // (particle c) is an electron or a positron. If it is neither, we don't
+  // multiply by marley_utils::Vud^2.
+  if (pid_c == marley_utils::ELECTRON || pid_c == marley_utils::POSITRON) {
+    xs *= std::pow(marley_utils::Vud, 2);
+  }
+
+  return std::pow(marley_utils::GF, 2) * xs / marley_utils::pi;
 }
 
 // Compute the total reaction cross section for a given level (ignoring some
@@ -568,8 +583,9 @@ double TMarleyNuclearReaction::total_xs(double E_level, double Ea,
     double Eb_cm = (s + mb2 - ma2) / (2 * sqrt_s);
     double Ec_cm = (s + mc2 - md2) / (2 * sqrt_s);
     double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2);
+    double beta_c_cm = pc_cm / Ec_cm;
 
-    return fermi_function(Zf, Af, Ec_cm, true) * matrix_element * pc_cm * Ec_cm
+    return fermi_function(beta_c_cm) * matrix_element * pc_cm * Ec_cm
       * Eb_cm * (sqrt_s - Ec_cm) / s;
   }
 }

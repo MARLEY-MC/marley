@@ -1,0 +1,51 @@
+# MARLEY reaction data for neutral-current nu_e on 40Ar
+# (could be used for any flavor [anti]neutrino)
+# Prepared on 1 February 2016 by S. J. Gardiner
+#
+# Particle IDs conform to the 2013 revision of the Particle
+# Data Group Monte Carlo Particle Numbering Scheme
+# (see http://pdg.lbl.gov/2014/reviews/rpp2014-rev-monte-carlo-numbering.pdf)
+#
+# The B(F) value for the ground state to ground state
+# transition (coherent neutrino scattering) is the
+# theoretical value B(F) = T*(T+1) - T3i*T3f
+# where T is the total isospin of the nucleus
+# and T3i, T3f are the initial and final 3rd components
+# of isospin, respectively. In practice, CAPTAIN,
+# DUNE, and similar detectors are very unlikely to see
+# coherent neutrino scattering, so feel free to comment
+# out the Fermi transition matrix element line from
+# this reaction file to exclude it as a possible transition.
+#
+# The B(GT) value for the transition to the 1+ excited state
+# at Ex = 9.757 MeV above the 40Ar ground state is based
+# on a measurement of M1 strength in 40Ar reported in
+# Phys. Rev. C 73, 054306 (2006). Shell model
+# calculations described in that paper suggest that the measured
+# matrix element B(M1) = 0.148(59) * mu_N^2 (where mu_N^2
+# is the square of the nuclear magneton) represents a
+# spin-flip transition. This value may be converted to a neutral
+# Gamow-Teller matrix element B(GT0) via the formula (see
+# Phys. Rev. Lett. 93, 202501 for more details)
+# B(GT0) = 16 * pi * gA^2 * B(M1, spin-flip)
+# / (3 * (gsP - gsN)^2 * mu_N^2)
+# where gA is the weak axial coupling constant, and gsP and gsN
+# are the spin gyromagnetic ratios for the proton and neutron,
+# respectively. The bare-nucleon (unquenched) value for the weak
+# axial coupling constant, gA = 1.26, was used in computing the
+# final numerical value for this transition.
+#
+# ENSDF gives two 1+ states in 40Ar (Ex = 889.5 keV and
+# Ex = 2307.2 keV) for which there are no
+# measured B(GT0) matrix elements. This dataset should therefore
+# not be regarded as complete, even for bound states in 40Ar.
+#
+# Reaction description
+νₑ + ⁴⁰Ar ⟶ ⁴⁰Ar* + νₑ
+# Particle IDs and final atomic charge
+12 1000180400 12 1000180400 0
+# B(F) value for g.s. -> g.s. transition
+0.00000 2.0000      0
+# Measured spin-flip M1 strength (B(GT0)) from
+# Phys. Rev. C 73, 054306 (2006).
+9.757   0.0444      1

@@ -16,7 +16,7 @@ class TMarleyGenerator;
 class TMarleyNuclearReaction : public TMarleyReaction {
   public:
     TMarleyNuclearReaction(std::string filename, TMarleyStructureDatabase& db);
-    double fermi_function(int Z, int A, double E, bool electron);
+    double fermi_function(double beta_c);
     double fermi_approx(int Z, double E, bool electron);
     double max_level_energy(double Ea);
     double get_threshold_energy();
