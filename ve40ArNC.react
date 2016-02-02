@@ -35,10 +35,9 @@
 # axial coupling constant, gA = 1.26, was used in computing the
 # final numerical value for this transition.
 #
-# ENSDF gives two 1+ states in 40Ar (Ex = 889.5 keV and
-# Ex = 2307.2 keV) for which there are no
-# measured B(GT0) matrix elements. This dataset should therefore
-# not be regarded as complete, even for bound states in 40Ar.
+# This dataset should therefore not be regarded as complete,
+# even for bound states in 40Ar, as there could be additional
+# unmeasured B(GT0) strength.
 #
 # Reaction description
 νₑ + ⁴⁰Ar ⟶ ⁴⁰Ar* + νₑ
