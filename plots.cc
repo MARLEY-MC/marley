@@ -11,11 +11,11 @@
 #include <vector>
 
 #include "marley_utils.hh"
-#include "TMarleyDecayScheme.hh"
-#include "TMarleyEvent.hh"
-#include "TMarleyGenerator.hh"
-#include "TMarleyNeutrinoSource.hh"
-#include "TMarleyNuclearReaction.hh"
+#include "DecayScheme.hh"
+#include "Event.hh"
+#include "Generator.hh"
+#include "NeutrinoSource.hh"
+#include "NuclearReaction.hh"
 
 #include "TFile.h"
 #include "TGraph.h"
@@ -45,7 +45,7 @@ void prepare_integrated_bgts(const std::vector<double>& Es,
 
 int main(){
 
-  TMarleyGenerator gen("config.txt");
+  marley::Generator gen("config.txt");
 
   // Create plot of total reaction cross section
   std::vector<double> Eas;
@@ -53,9 +53,9 @@ int main(){
   std::vector<double> tot_xs_2009;
   //std::vector<double> tot_xs_diffs;
   std::cout << std::setprecision(16) << std::scientific;
-  TMarleyDecayScheme ds(19, 40, "ensdf.040");
-  TMarleyNuclearReaction r1998("ve40ArCC_1998.react", gen.get_structure_db());
-  TMarleyNuclearReaction r2009("ve40ArCC_2009.react", gen.get_structure_db());
+  marley::DecayScheme ds(19, 40, "ensdf.040");
+  marley::NuclearReaction r1998("ve40ArCC_1998.react", gen.get_structure_db());
+  marley::NuclearReaction r2009("ve40ArCC_2009.react", gen.get_structure_db());
   for (double Ea = 0.; Ea < 100; Ea += 0.1) {
     Eas.push_back(Ea);
     tot_xs_1998.push_back(1e15 * r1998.total_xs(marley_utils::ELECTRON_NEUTRINO, Ea)
@@ -227,11 +227,11 @@ int main(){
   canvas.Clear();
 
   // Open a file containing a ROOT tree filled with MARLEY events.
-  // Associate the tree with a TMarleyEvent pointer.
+  // Associate the tree with a marley::Event pointer.
   TFile* file = new TFile("event_tree.root", "READ");
   TTree* t = nullptr;
   file->GetObject("MARLEY Event Tree", t);
-  TMarleyEvent* e = new TMarleyEvent;
+  marley::Event* e = new marley::Event;
   t->GetBranch("events")->SetAddress(&e);
 
   // Particle energies from all events
@@ -264,7 +264,7 @@ int main(){
 
     // Loop over the initial particles. For each neutrino, store
     // its energy.
-    std::list<TMarleyParticle>& iparts = e->get_initial_particles();
+    std::list<marley::Particle>& iparts = e->get_initial_particles();
     for(const auto& particle : iparts) {
       int pid = particle.get_id();
       if (pid == marley_utils::ELECTRON_NEUTRINO) {
@@ -277,7 +277,7 @@ int main(){
     }
 
     // Loop over the final particles.
-    std::list<TMarleyParticle>& fparts = e->get_final_particles();
+    std::list<marley::Particle>& fparts = e->get_final_particles();
     for(const auto& particle : fparts) {
 
       int pid = particle.get_id();
@@ -408,8 +408,8 @@ int main(){
     int pid = pair.first;
     std::string symbol;
     if (pid > marley_utils::ALPHA) {
-      int Z = TMarleyMassTable::get_particle_Z(pid);
-      int A = TMarleyMassTable::get_particle_A(pid);
+      int Z = marley::MassTable::get_particle_Z(pid);
+      int A = marley::MassTable::get_particle_A(pid);
       symbol = std::to_string(A) + marley_utils::element_symbols.at(Z);
     }
     else symbol = marley_utils::particle_symbols.at(pid);
@@ -452,7 +452,7 @@ int main(){
 
   // Plot the total neutron cross section predicted by the MARLEY optical
   // model for a 39K target
-  TMarleySphericalOpticalModel om
+  marley::SphericalOpticalModel om
     = gen.get_structure_db().get_optical_model(19, 39);
   std::vector<double> om_Es, om_xs;
   // Evaluate the cross section at num logarithmic gridpoints

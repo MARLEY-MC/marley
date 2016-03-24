@@ -7,9 +7,9 @@
 #include <vector>
 
 #include "marley_utils.hh"
-#include "TMarleyGenerator.hh"
-#include "TMarleyKinematics.hh"
-#include "TMarleyNuclearPhysics.hh"
+#include "Generator.hh"
+#include "Kinematics.hh"
+#include "NuclearPhysics.hh"
 
 #include "TAxis.h"
 #include "TCanvas.h"
@@ -31,15 +31,15 @@ int main() {
   int Zi = 19;
   int Ai = 40;
   int twoJi = 2;
-  TMarleyParity Pi = 1;
+  marley::Parity Pi = 1;
 
   double strength_threshold = 0.2;
 
   //std::cout << std::setprecision(16) << std::scientific;
 
-  TMarleyGenerator gen("config.txt");
+  marley::Generator gen("config.txt");
 
-  TMarleyReaction r = gen.get_reactions().back();
+  marley::Reaction r = gen.get_reactions().back();
 
   for (size_t j = 0; j < r.get_num_levels(); ++j) {
 
@@ -53,17 +53,17 @@ int main() {
     std::cout << "Level " << j << " at Ex = " << Exi << " MeV has strength "
       << strength << std::endl;
 
-    TMarleyParticle initial(marley_utils::get_nucleus_pid(Zi, Ai),
-      TMarleyMassTable::get_atomic_mass(Zi, Ai) + Exi);
+    marley::Particle initial(marley_utils::get_nucleus_pid(Zi, Ai),
+      marley::MassTable::get_atomic_mass(Zi, Ai) + Exi);
 
-    TMarleyHFTable hftable = TMarleyNuclearPhysics::create_hf_table(Zi, Ai,
+    marley::HFTable hftable = marley::NuclearPhysics::create_hf_table(Zi, Ai,
       initial, Exi, twoJi, Pi, gen.get_structure_db(), gen);
 
     // Prepare spectrum plots
     TCanvas canvas;
 
     std::vector<int> pids(1, marley_utils::PHOTON);
-    for (const auto& f : TMarleyNuclearPhysics::get_fragments())
+    for (const auto& f : marley::NuclearPhysics::get_fragments())
       pids.push_back(f.get_pid());
 
     // Set up bin boundaries for the branching ratio plot
@@ -128,7 +128,7 @@ int main() {
 
           width += dc_width;
  
-          TMarleyParticle first_product = TMarleyParticle(pid,
+          marley::Particle first_product = marley::Particle(pid,
             dc_vec.at(k)->get_fragment_mass());
 
           double KE = dc_vec.at(k)->get_max_KE(Zi, Ai, Exi);

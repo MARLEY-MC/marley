@@ -9,9 +9,9 @@
 #include <vector>
 
 #include "marley_utils.hh"
-#include "TMarleyConfigFile.hh"
-#include "TMarleyGenerator.hh"
-#include "TMarleyEvent.hh"
+#include "ConfigFile.hh"
+#include "Generator.hh"
+#include "Event.hh"
 
 #ifdef USE_ROOT
 #include "TFile.h"
@@ -100,8 +100,8 @@ int main(int argc, char* argv[]){
     }
   }
 
-  TMarleyConfigFile cf(config_file_name);
-  TMarleyGenerator gen(cf);
+  marley::ConfigFile cf(config_file_name);
+  marley::Generator gen(cf);
 
   std::cout << marley_utils::marley_logo << std::endl;
   std::cout << "\"Don't worry about a thing," << std::endl;
@@ -148,7 +148,7 @@ int main(int argc, char* argv[]){
   // Create a pointer to an event object. This will
   // be used to fill the event tree with the
   // events generated in the loop below
-  TMarleyEvent* p_event = nullptr;
+  marley::Event* p_event = nullptr;
 
   // Check if the ROOT file used to store the event tree already exists
   std::string tree_file_name = cf.get_root_filename();
@@ -182,7 +182,7 @@ int main(int argc, char* argv[]){
   // retrieving the old event tree, then make a new event tree
   if (!event_tree) {
     // Create a ROOT tree to store the events
-    event_tree = new TTree("MARLEY Event Tree", "A tree of TMarleyEvent objects");
+    event_tree = new TTree("MARLEY Event Tree", "A tree of marley::Event objects");
 
     // Create a branch in this ROOT tree, and associate
     // it with the event pointer we made before
@@ -273,11 +273,11 @@ int main(int argc, char* argv[]){
   for (int i = 1 + num_old_events; i <= num_events && !interrupted; ++i) {
 
     // Create an event using the generator object
-    TMarleyEvent e = gen.create_event();
+    marley::Event e = gen.create_event();
 
     #ifdef USE_ROOT
     // Get the address of this event object
-    p_event = new TMarleyEvent;
+    p_event = new marley::Event;
     *p_event = e;
 
     // Store this event in the ROOT tree

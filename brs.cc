@@ -9,10 +9,10 @@
 #include <vector>
 
 #include "marley_utils.hh"
-#include "TMarleyConfigFile.hh"
-#include "TMarleyGenerator.hh"
-#include "TMarleyEvent.hh"
-#include "TMarleyNuclearPhysics.hh"
+#include "ConfigFile.hh"
+#include "Generator.hh"
+#include "Event.hh"
+#include "NuclearPhysics.hh"
 
 #ifdef USE_ROOT
 #include "TFile.h"
@@ -100,8 +100,8 @@ int main(int argc, char* argv[]){
     }
   }
 
-  TMarleyConfigFile cf(config_file_name);
-  TMarleyGenerator gen(cf);
+  marley::ConfigFile cf(config_file_name);
+  marley::Generator gen(cf);
 
   std::cout << marley_utils::marley_logo << std::endl;
   std::cout << "\"Don't worry about a thing," << std::endl;
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]){
   // Create a pointer to an event object. This will
   // be used to fill the event tree with the
   // events generated in the loop below
-  TMarleyEvent* p_event = nullptr;
+  marley::Event* p_event = nullptr;
 
   // Check if the ROOT file used to store the event tree already exists
   std::string tree_file_name("event_tree.root");
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]){
   // retrieving the old event tree, then make a new event tree
   if (!event_tree) {
     // Create a ROOT tree to store the events
-    event_tree = new TTree("MARLEY Event Tree", "A tree of TMarleyEvent objects");
+    event_tree = new TTree("MARLEY Event Tree", "A tree of marley::Event objects");
 
     // Create a branch in this ROOT tree, and associate
     // it with the event pointer we made before
@@ -227,11 +227,11 @@ int main(int argc, char* argv[]){
   int Zi = 19;
   int Ai = 40;
   int twoJi = 2;
-  TMarleyParity Pi = 1;
+  marley::Parity Pi = 1;
 
-  TMarleyStructureDatabase& db = gen.get_structure_db();
+  marley::StructureDatabase& db = gen.get_structure_db();
 
-  TMarleyParticle initial, first, second;
+  marley::Particle initial, first, second;
 
   // Display all floating-point numbers without
   // using scientific notation and using
@@ -253,41 +253,41 @@ int main(int argc, char* argv[]){
     int Z = Zi;
     int A = Ai;
     int twoJ = twoJi;
-    TMarleyParity P = Pi;
-    initial = TMarleyParticle(marley_utils::get_nucleus_pid(Z, A),
-      TMarleyMassTable::get_atomic_mass(Z, A) + Ex);
+    marley::Parity P = Pi;
+    initial = marley::Particle(marley_utils::get_nucleus_pid(Z, A),
+      marley::MassTable::get_atomic_mass(Z, A) + Ex);
 
-    TMarleyEvent e(Ex);
-    e.add_initial_particle(initial, TMarleyEvent::ParticleRole::pr_target);
-    e.add_final_particle(initial, TMarleyEvent::ParticleRole::pr_residue);
+    marley::Event e(Ex);
+    e.add_initial_particle(initial, marley::Event::ParticleRole::pr_target);
+    e.add_final_particle(initial, marley::Event::ParticleRole::pr_residue);
 
     //std::cout << "Decay #" << i << std::endl;
     //std::cout << "Beginning with " << initial.get_id() << " at Ex = " << Ex
     //  << " MeV" << std::endl;
 
     while (Ex > 0.01 && good) {
-      good = TMarleyNuclearPhysics::hauser_feshbach_decay(Z, A, initial, first, second,
+      good = marley::NuclearPhysics::hauser_feshbach_decay(Z, A, initial, first, second,
         Ex, twoJ, P, db, gen);
       //std::cout << "Decay to " << first.get_id() << " and " << second.get_id()
       //  << std::endl;
       //std::cout << second.get_id() << " is at Ex = " << Ex << " MeV."
       //  << std::endl;
       initial = second;
-      Z = TMarleyMassTable::get_particle_Z(initial.get_id());
-      A = TMarleyMassTable::get_particle_A(initial.get_id());
+      Z = marley::MassTable::get_particle_Z(initial.get_id());
+      A = marley::MassTable::get_particle_A(initial.get_id());
 
       e.add_final_particle(first);
       *(e.get_residue()) = second;
     }
 
     if (Ex > 0.01) {
-      TMarleyDecayScheme* ds = db.get_decay_scheme(second.get_id());
+      marley::DecayScheme* ds = db.get_decay_scheme(second.get_id());
       ds->do_cascade(ds->get_pointer_to_closest_level(Ex), &e, gen);
     }
 
     #ifdef USE_ROOT
     // Get the address of this event object
-    p_event = new TMarleyEvent;
+    p_event = new marley::Event;
     *p_event = e;
 
     // Store this event in the ROOT tree

@@ -6,33 +6,33 @@
 #include <vector>
 
 #include "marley_utils.hh"
-#include "TMarleyGenerator.hh"
-#include "TMarleyNuclearPhysics.hh"
+#include "Generator.hh"
+#include "NuclearPhysics.hh"
 
 int main() {
 
   int Zi = 19;
   int Ai = 40;
   int twoJi = 2;
-  TMarleyParity Pi = 1;
+  marley::Parity Pi = 1;
   double Exi = 12;
   size_t num_trials = 1e5;
 
   //std::cout << std::setprecision(16) << std::scientific;
 
-  TMarleyGenerator gen("config.txt");
+  marley::Generator gen("config.txt");
 
-  TMarleyParticle initial(marley_utils::get_nucleus_pid(Zi, Ai),
-    TMarleyMassTable::get_atomic_mass(Zi, Ai) + Exi);
+  marley::Particle initial(marley_utils::get_nucleus_pid(Zi, Ai),
+    marley::MassTable::get_atomic_mass(Zi, Ai) + Exi);
 
-  TMarleyHFTable hftable = TMarleyNuclearPhysics::create_hf_table(Zi, Ai,
+  marley::HFTable hftable = marley::NuclearPhysics::create_hf_table(Zi, Ai,
     initial, Exi, twoJi, Pi, gen.get_structure_db(), gen);
 
   std::cout << "Num channels = " << hftable.get_num_channels() << std::endl;
 
   double Ex;
   int twoJ;
-  TMarleyParity P;
+  marley::Parity P;
   for (size_t j = 0; j < num_trials; ++j) {
     Ex = Exi;
     twoJ = twoJi;

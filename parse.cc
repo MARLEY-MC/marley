@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "TMarleyDecayScheme.hh"
+#include "DecayScheme.hh"
 #include "marley_utils.hh"
 
 int main() {
@@ -10,7 +10,7 @@ int main() {
   std::string filename = "ensdf.040";
 
   for (auto &id : nuc_ids) {
-    TMarleyDecayScheme ds = TMarleyDecayScheme(id, filename);
+    marley::DecayScheme ds = marley::DecayScheme(id, filename);
     //ofs.open(marley_utils::trim_copy(id) + ".txt", std::ofstream::trunc);
     std::cout << ds; 
     //ds.print_report();//(ofs);

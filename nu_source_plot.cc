@@ -4,8 +4,8 @@
 
 #include <vector>
 
-#include "TMarleyGenerator.hh"
-#include "TMarleyNeutrinoSource.hh"
+#include "Generator.hh"
+#include "NeutrinoSource.hh"
 
 #include "TH1D.h"
 #include "TCanvas.h"
@@ -16,9 +16,9 @@ int main() {
 
   size_t num_trials = 1e6;
 
-  TMarleyGenerator gen("config.txt");
+  marley::Generator gen("config.txt");
 
-  TMarleyNeutrinoSource& source = gen.get_nu_source();
+  marley::NeutrinoSource& source = gen.get_nu_source();
 
   // Sample a bunch of neutrino energies for the histogram plot
   std::vector<double> nu_Es;

@@ -6,7 +6,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include "TMarleyEvent.hh"
+#include "Event.hh"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -16,11 +16,11 @@
 int main(){
 
   // Open a file containing a ROOT tree filled with MARLEY events.
-  // Associate the tree with a TMarleyEvent pointer.
+  // Associate the tree with a marley::Event pointer.
   TFile* file = new TFile("events.root", "READ");
   TTree* t = nullptr;
   file->GetObject("MARLEY Event Tree", t);
-  TMarleyEvent* e = new TMarleyEvent;
+  marley::Event* e = new marley::Event;
   t->GetBranch("events")->SetAddress(&e);
 
   // Use 16-digit precision for floating point numbers
