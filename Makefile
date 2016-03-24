@@ -24,58 +24,16 @@ ifdef USE_ROOT
 # that uses TTrees containing Events
 # or Particles
 CXXFLAGS += `root-config --cflags` -DUSE_ROOT
-OBJ_DICT = root_dict.o
+OBJ_DICT = marley_root_dict.o
 LDFLAGS=`root-config --libs`
 endif
 
-all: parse react validate check sharedlib
+all: marley sharedlib
 
 %.o: %.c
 	$(CXX) -c -o $@
 
-parse: $(OBJ) parse.o
-	$(CXX) -o $@ $^
-
-react: $(OBJ) $(OBJ_DICT) react.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-validate: $(OBJ) $(OBJ_DICT) validate.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-check: $(OBJ) $(OBJ_DICT) check.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-brs: $(OBJ) $(OBJ_DICT) brs.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-brs2: $(OBJ) $(OBJ_DICT) brs2.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-brs3: $(OBJ) $(OBJ_DICT) brs3.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-brs4: $(OBJ) $(OBJ_DICT) brs4.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-hf: $(OBJ) $(OBJ_DICT) hf.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-plots: $(OBJ) $(OBJ_DICT) plots.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-dump: $(OBJ) $(OBJ_DICT) dump.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-hepevt: $(OBJ) $(OBJ_DICT) hepevt.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-nu_source_plot: $(OBJ) nu_source_plot.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-exs: $(OBJ) $(OBJ_DICT) exs.o
-	$(CXX) -o $@ $^ $(LDFLAGS)
-
-test: $(OBJ) test.o
+marley: $(OBJ) $(OBJ_DICT) marley.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 sharedlib: $(OBJ) $(OBJ_DICT)
@@ -94,13 +52,12 @@ sharedlib: $(OBJ) $(OBJ_DICT)
 #    i/o by adding the '+' suffix to each prerequisite
 #    header file (.hh extension)
 # 3. Compile the dictionary source file
-root_dict.o: Particle.hh Event.hh marley_linkdef.hh
-	rm -f root_dict.cc root_dict.h
-	rootcint root_dict.cc -c $^
-	$(CXX) $(CXXFLAGS) -c -o root_dict.o root_dict.cc
+marley_root_dict.o: Particle.hh Event.hh marley_linkdef.hh
+	rm -f marley_root_dict.cc marley_root_dict.h
+	rootcint marley_root_dict.cc -c $^
+	$(CXX) $(CXXFLAGS) -c -o marley_root_dict.o marley_root_dict.cc
 
 .PHONY: clean
 
 clean:
-	rm -f *.o parse react validate brs brs2 brs3 brs4 root_dict.cc
-	rm -f *.o root_dict.h nu_source_plot dump
+	rm -f *.o *.so marley marley_root_dict.*
