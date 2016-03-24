@@ -4,7 +4,6 @@
 
 #include "BackshiftedFermiGasModel.hh"
 #include "Fragment.hh"
-#include "HFTable.hh"
 #include "Level.hh"
 #include "MassTable.hh"
 #include "Parity.hh"
@@ -114,26 +113,6 @@ namespace marley {
         marley::Particle& second_product, double& Ex, int& twoJ, marley::Parity& Pi,
         marley::StructureDatabase& db, marley::Generator& gen);
   
-      static void hf_test(int Zi, int Ai,
-        const marley::Particle& initial_particle, double Ex,
-        int twoJ, marley::Parity Pi,
-        marley::StructureDatabase& db, marley::Generator& gen);
-  
-      static void hf_test2(int Zi, int Ai,
-        const marley::Particle& initial_particle, double Ex,
-        int twoJ, marley::Parity Pi,
-        marley::StructureDatabase& db, marley::Generator& gen,
-        size_t num_trials, std::vector<double>& KEs,
-        std::vector<int>& f_pids);
-  
-      static void hf_test3(int Zi, int Ai, const marley::Particle& initial_particle,
-          double Ex, int twoJ, marley::Parity Pi, marley::StructureDatabase& db,
-          std::unordered_map<const marley::Fragment*,
-            std::function<double(double)> >& funcs,
-          std::unordered_map<const marley::Fragment*, double>& total_c_widths,
-          std::unordered_map<const marley::Fragment*, double>& E_c_mins,
-          std::unordered_map<const marley::Fragment*, double>& Exf_maxes);
-  
       // Based on some initial parameters (including the nuclear 2J and parity)
       // determine the final nuclear spin and parity after a Hauser-Feshbach
       // decay and store them in twoJ and Pi
@@ -142,12 +121,6 @@ namespace marley {
       static void sample_fragment_spin_parity(int& twoJ, marley::Parity& Pi,
         const marley::Fragment& f, /*const*/ marley::SphericalOpticalModel& om,
         marley::Generator& gen, double Exf, double Ea);
-  
-      // Create a table that can be used to sample Hauser-Feshbach decay events
-      static marley::HFTable create_hf_table(int Zi, int Ai,
-        const marley::Particle& initial_particle,
-        double Ex, int twoJ, marley::Parity Pi, marley::StructureDatabase& db,
-        marley::Generator& gen);
   
       static double get_fragment_emission_threshold(const int Zi, const int Ai,
         const marley::Fragment& f);
