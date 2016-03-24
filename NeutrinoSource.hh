@@ -308,11 +308,11 @@ namespace marley {
   
     private:
       // Muon mass stuff (m_mu^(-4) pre-computed for speed)
-      static const double m_mu;
-      static const double m_mu_to_the_minus_four;
+      static constexpr double m_mu = marley::MassTable::get_particle_mass(marley_utils::MUON);
+      static constexpr double m_mu_to_the_minus_four = std::pow(m_mu, -4);
       // Minimum and maximum neutrino energies produced by this source
       static constexpr double E_min = 0.;
-      static const double E_max;
+      static constexpr double E_max = m_mu / 2.;
   };
   
   class GridNeutrinoSource : public NeutrinoSource {
