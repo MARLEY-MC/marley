@@ -1,7 +1,6 @@
 #include <stdexcept>
 #include <string>
 
-#include "ElectronReaction.hh"
 #include "Generator.hh"
 #include "NuclearReaction.hh"
 
@@ -21,19 +20,9 @@ void marley::Generator::init(marley::ConfigFile& cf) {
   // Create the reactions. Count them for later reference.
   size_t react_count = 0;
   for (const std::string& filename : cf.get_reaction_filenames()) {
-/*** The neutrino + electron scattering reaction was disabled on 02/01/2016.
- * GENIE and similar programs can already produce these events well.
-    // TODO: add weighting of the ES reaction by atom fraction
-    // TODO: allow the user to specify the atomic target for e- ES reactions
-    // TODO: Think about a less crude way of implementing this
-    if (filename == std::string("e-ES"))
-      reactions.push_back(std::make_unique<marley::ElectronReaction>(19));
-    else {
-***/
     std::cout << "Loading reaction data from file " << filename << std::endl;
     reactions.push_back(std::make_unique<marley::NuclearReaction>(filename,
       structure_db));
-/***    } ***/
     std::cout << "Added reaction " << reactions.back()->get_description()
       << std::endl;
     ++react_count;

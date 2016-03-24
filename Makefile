@@ -4,7 +4,7 @@ USE_ROOT=yes
 
 OBJ = marley_utils.o meta_numerics.o Particle.o Event.o
 OBJ += Generator.o Reaction.o NuclearReaction.o
-OBJ += ElectronReaction.o Gamma.o Level.o
+OBJ += Gamma.o Level.o
 OBJ += DecayScheme.o MassTable.o StructureDatabase.o
 OBJ += ConfigFile.o NuclearPhysics.o
 OBJ += BackshiftedFermiGasModel.o SphericalOpticalModel.o
