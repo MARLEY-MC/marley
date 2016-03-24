@@ -54,8 +54,11 @@ if(ROOT AND ROOTCINT AND ROOTCONFIG)
 endif()
 
 add_executable(marley "src/marley.cc")
-  #${CMAKE_CURRENT_BINARY_DIR}/marley_root_dict.cc)
-target_link_libraries(marley MARLEY)#_static)
+# Guarantee that the ROOT dictionary is linked from the static library
+# to our executable by requesting that all symbols from the static
+# library are included by the linker.
+set(MARLEY_STATIC_LINK -Wl,--whole-archive MARLEY_static -Wl,--no-whole-archive)
+target_link_libraries(marley ${MARLEY_STATIC_LINK})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 \
   -std=c++14 -Wall -Wextra -Wpedantic -Werror \
