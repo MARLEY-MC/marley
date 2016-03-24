@@ -11,10 +11,3 @@ const std::set<int> marley::NeutrinoSource::pids = {
   marley_utils::TAU_NEUTRINO,
   marley_utils::TAU_ANTINEUTRINO
 };
-
-// Constants used for a decay at rest source
-const double marley::DecayAtRestNeutrinoSource::m_mu =
-  marley::MassTable::get_particle_mass(marley_utils::MUON);
-const double marley::DecayAtRestNeutrinoSource::m_mu_to_the_minus_four
-  = std::pow(m_mu, -4);
-const double marley::DecayAtRestNeutrinoSource::E_max = m_mu / 2.;
