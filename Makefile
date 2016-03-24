@@ -8,8 +8,7 @@ OBJ += ElectronReaction.o Gamma.o Level.o
 OBJ += DecayScheme.o MassTable.o StructureDatabase.o
 OBJ += ConfigFile.o NuclearPhysics.o
 OBJ += BackshiftedFermiGasModel.o SphericalOpticalModel.o
-OBJ += NeutrinoSource.o Kinematics.o DecayChannel.o
-OBJ += Integrator.o
+OBJ += NeutrinoSource.o Kinematics.o Integrator.o
 
 ifdef USE_ROOT
 # Adding the g++ compiler option -DUSE_ROOT to the CXXFLAGS
