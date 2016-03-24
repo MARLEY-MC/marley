@@ -5,12 +5,12 @@
 #include <vector>
 
 #include "marley_utils.hh"
-//#include "TMarleyDecayScheme.hh"
-//#include "TMarleyEvent.hh"
-//#include "TMarleyGenerator.hh"
-#include "TMarleyMassTable.hh"
-#include "TMarleyNeutrinoSource.hh"
-//#include "TMarleyReaction.hh"
+//#include "DecayScheme.hh"
+//#include "Event.hh"
+//#include "Generator.hh"
+#include "MassTable.hh"
+#include "NeutrinoSource.hh"
+//#include "Reaction.hh"
 
 #include "TAxis.h"
 //#include "TFile.h"
@@ -21,24 +21,24 @@
 #include "TColor.h"
 #include "TLegend.h"
 
-std::string nu_type_string(TMarleyNeutrinoSource::NeutrinoType type) {
-  if (type == TMarleyNeutrinoSource::NeutrinoType::ElectronNeutrino)
+std::string nu_type_string(marley::NeutrinoSource::NeutrinoType type) {
+  if (type == marley::NeutrinoSource::NeutrinoType::ElectronNeutrino)
     return std::string("#nu_{e}");
-  else if (type == TMarleyNeutrinoSource::NeutrinoType::ElectronAntineutrino)
+  else if (type == marley::NeutrinoSource::NeutrinoType::ElectronAntineutrino)
     return std::string("#bar{#nu}_{e}");
-  else if (type == TMarleyNeutrinoSource::NeutrinoType::MuonNeutrino)
+  else if (type == marley::NeutrinoSource::NeutrinoType::MuonNeutrino)
     return std::string("#nu_{#mu}");
-  else if (type ==   TMarleyNeutrinoSource::NeutrinoType::MuonAntineutrino)
+  else if (type ==   marley::NeutrinoSource::NeutrinoType::MuonAntineutrino)
     return std::string("#bar{#nu}_{#mu}");
-  else if (type ==  TMarleyNeutrinoSource::NeutrinoType::TauonNeutrino)
+  else if (type ==  marley::NeutrinoSource::NeutrinoType::TauonNeutrino)
     return std::string("#nu_{#tau}");
-  else if (type ==  TMarleyNeutrinoSource::NeutrinoType::TauonAntineutrino)
+  else if (type ==  marley::NeutrinoSource::NeutrinoType::TauonAntineutrino)
     return std::string("#bar{#nu}_{#tau}");
   // TODO: add exception here
   else return std::string("");
 }
 
-double nu_e_xs(double E_nu_lab, TMarleyNeutrinoSource::NeutrinoType type) {
+double nu_e_xs(double E_nu_lab, marley::NeutrinoSource::NeutrinoType type) {
   // Fermi coupling constant (MeV^(-2)) 
   static constexpr double GF = 1.16637e-11;
 
@@ -48,30 +48,30 @@ double nu_e_xs(double E_nu_lab, TMarleyNeutrinoSource::NeutrinoType type) {
   static constexpr double sin2thetaw = 0.23155;
 
   // Mandelstam s (square of the total center of mass energy)
-  double me = TMarleyMassTable::get_particle_mass(marley_utils::ELECTRON);
+  double me = marley::MassTable::get_particle_mass(marley_utils::ELECTRON);
   double me2 = std::pow(me, 2);
   double s = me2 + 2 * me * E_nu_lab;
   // CM frame neutrino energy
   double E_nu_cm = (s - me2) / (2 * std::sqrt(s));
   // Coupling constants
   double g1, g2;
-  if (type == TMarleyNeutrinoSource::NeutrinoType::ElectronNeutrino) {
+  if (type == marley::NeutrinoSource::NeutrinoType::ElectronNeutrino) {
     g1 = 0.5 + sin2thetaw;
     g2 = sin2thetaw;
   }
-  else if (type == TMarleyNeutrinoSource::NeutrinoType::ElectronAntineutrino) {
+  else if (type == marley::NeutrinoSource::NeutrinoType::ElectronAntineutrino) {
     g1 = sin2thetaw;
     g2 = 0.5 + sin2thetaw;
   }
-  else if (type == TMarleyNeutrinoSource::NeutrinoType::MuonNeutrino
-    || type == TMarleyNeutrinoSource::NeutrinoType::TauonNeutrino)
+  else if (type == marley::NeutrinoSource::NeutrinoType::MuonNeutrino
+    || type == marley::NeutrinoSource::NeutrinoType::TauonNeutrino)
   {
     g1 = -0.5 + sin2thetaw;
     g2 = sin2thetaw;
   }
   else {
-    // type == TMarleyAntineutrinoSource::AntineutrinoType::MuonAntineutrino
-    // || type == TMarleyAntineutrinoSource::AntineutrinoType::TauonAntineutrino
+    // type == marley::AntineutrinoSource::AntineutrinoType::MuonAntineutrino
+    // || type == marley::AntineutrinoSource::AntineutrinoType::TauonAntineutrino
     g1 = sin2thetaw;
     g2 = -0.5 + sin2thetaw;
   }
@@ -94,13 +94,13 @@ int main(){
 
   std::vector<TGraph*> graphs;
 
-  std::vector<TMarleyNeutrinoSource::NeutrinoType>
-    nu_types = { TMarleyNeutrinoSource::NeutrinoType::ElectronNeutrino,
-    TMarleyNeutrinoSource::NeutrinoType::ElectronAntineutrino,
-    TMarleyNeutrinoSource::NeutrinoType::MuonNeutrino,
-    TMarleyNeutrinoSource::NeutrinoType::MuonAntineutrino,
-    TMarleyNeutrinoSource::NeutrinoType::TauonNeutrino,
-    TMarleyNeutrinoSource::NeutrinoType::TauonAntineutrino,
+  std::vector<marley::NeutrinoSource::NeutrinoType>
+    nu_types = { marley::NeutrinoSource::NeutrinoType::ElectronNeutrino,
+    marley::NeutrinoSource::NeutrinoType::ElectronAntineutrino,
+    marley::NeutrinoSource::NeutrinoType::MuonNeutrino,
+    marley::NeutrinoSource::NeutrinoType::MuonAntineutrino,
+    marley::NeutrinoSource::NeutrinoType::TauonNeutrino,
+    marley::NeutrinoSource::NeutrinoType::TauonAntineutrino,
   };
 
   TLegend xs_legend(0.8, 0.15, 0.9, 0.6);
@@ -110,7 +110,7 @@ int main(){
   for (size_t j = 0; j < nu_types.size(); ++j) {
     std::vector<double> Es;
     std::vector<double> xs;
-    TMarleyNeutrinoSource::NeutrinoType type = nu_types.at(j);
+    marley::NeutrinoSource::NeutrinoType type = nu_types.at(j);
     for (double Enu = 0.1; Enu <= 100; Enu += 0.01) {
       Es.push_back(Enu);
       xs.push_back(nu_e_xs(Enu, type));

@@ -14,7 +14,7 @@
 #include "TH1D.h"
 
 #include "marley_utils.hh"
-#include "TMarleyEvent.hh"
+#include "Event.hh"
 
 double fermi_dirac_distribution(double C, bool e_flavor, bool anti, double nu_energy){
   double eta = 0;
@@ -205,7 +205,7 @@ int main() {
     TFile f1("sn_1e6_events.root", "read");
     TTree* t = nullptr;
     f1.GetObject("event_tree", t);
-    TMarleyEvent* e = new TMarleyEvent;
+    marley::Event* e = new marley::Event;
     t->GetBranch("events")->SetAddress(&e);
     int num_events = t->GetEntries();
     for (int i = 0; i < num_events; ++i) {

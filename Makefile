@@ -1,15 +1,15 @@
 CXX=g++
-CXXFLAGS=-g -O3 -std=c++14 -I. -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter
+CXXFLAGS=-g -O3 -std=c++14 -I. -fPIC -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter
 USE_ROOT=yes
 
-OBJ = marley_utils.o meta_numerics.o TMarleyParticle.o TMarleyEvent.o
-OBJ += TMarleyGenerator.o TMarleyReaction.o TMarleyNuclearReaction.o
-OBJ += TMarleyElectronReaction.o TMarleyGamma.o TMarleyLevel.o
-OBJ += TMarleyDecayScheme.o TMarleyMassTable.o TMarleyStructureDatabase.o
-OBJ += TMarleyConfigFile.o TMarleyNuclearPhysics.o
-OBJ += TMarleyBackshiftedFermiGasModel.o TMarleySphericalOpticalModel.o
-OBJ += TMarleyNeutrinoSource.o TMarleyKinematics.o TMarleyDecayChannel.o
-OBJ += TMarleyIntegrator.o
+OBJ = marley_utils.o meta_numerics.o Particle.o Event.o
+OBJ += Generator.o Reaction.o NuclearReaction.o
+OBJ += ElectronReaction.o Gamma.o Level.o
+OBJ += DecayScheme.o MassTable.o StructureDatabase.o
+OBJ += ConfigFile.o NuclearPhysics.o
+OBJ += BackshiftedFermiGasModel.o SphericalOpticalModel.o
+OBJ += NeutrinoSource.o Kinematics.o DecayChannel.o
+OBJ += Integrator.o
 
 ifdef USE_ROOT
 # Adding the g++ compiler option -DUSE_ROOT to the CXXFLAGS
@@ -21,14 +21,14 @@ ifdef USE_ROOT
 #
 # The root_dict.o object file should be added
 # to the list of prerequisites for any executable
-# that uses TTrees containing TMarleyEvents
-# or TMarleyParticles
+# that uses TTrees containing Events
+# or Particles
 CXXFLAGS += `root-config --cflags` -DUSE_ROOT
 OBJ_DICT = root_dict.o
 LDFLAGS=`root-config --libs`
 endif
 
-all: parse react validate check
+all: parse react validate check sharedlib
 
 %.o: %.c
 	$(CXX) -c -o $@
@@ -78,6 +78,9 @@ exs: $(OBJ) $(OBJ_DICT) exs.o
 test: $(OBJ) test.o
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
+sharedlib: $(OBJ) $(OBJ_DICT)
+	$(CXX) -shared -o libMARLEY.so $^ $(LDFLAGS)
+
 # Add more header files to the prerequisites for
 # root_dict.o if you would like to store other
 # MARLEY classes in ROOT trees. All such classes
@@ -91,9 +94,9 @@ test: $(OBJ) test.o
 #    i/o by adding the '+' suffix to each prerequisite
 #    header file (.hh extension)
 # 3. Compile the dictionary source file
-root_dict.o: TMarleyParticle.hh TMarleyEvent.hh
+root_dict.o: Particle.hh Event.hh marley_linkdef.hh
 	rm -f root_dict.cc root_dict.h
-	rootcint root_dict.cc -c $(subst .hh,.hh+,$^)
+	rootcint root_dict.cc -c $^
 	$(CXX) $(CXXFLAGS) -c -o root_dict.o root_dict.cc
 
 .PHONY: clean

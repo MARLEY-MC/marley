@@ -7,8 +7,8 @@
 #include <vector>
 
 #include "marley_utils.hh"
-#include "TMarleyGenerator.hh"
-#include "TMarleyNuclearPhysics.hh"
+#include "Generator.hh"
+#include "NuclearPhysics.hh"
 
 #include "TAxis.h"
 #include "TCanvas.h"
@@ -19,22 +19,22 @@ int main() {
   int Zi = 19;
   int Ai = 40;
   int twoJi = 2;
-  TMarleyParity Pi = 1;
+  marley::Parity Pi = 1;
 
   double strength_threshold = 0.2;
 
   //std::cout << std::setprecision(16) << std::scientific;
 
-  TMarleyGenerator gen("config.txt");
+  marley::Generator gen("config.txt");
 
-  TMarleyReaction r = gen.get_reactions().back();
+  marley::Reaction r = gen.get_reactions().back();
 
-  std::unordered_map<const TMarleyFragment*,
+  std::unordered_map<const marley::Fragment*,
     std::function<double(double)> > funcs;
 
-  std::unordered_map<const TMarleyFragment*, double> total_c_widths;
-  std::unordered_map<const TMarleyFragment*, double> E_c_mins;
-  std::unordered_map<const TMarleyFragment*, double> Exf_maxes;
+  std::unordered_map<const marley::Fragment*, double> total_c_widths;
+  std::unordered_map<const marley::Fragment*, double> E_c_mins;
+  std::unordered_map<const marley::Fragment*, double> Exf_maxes;
 
   TCanvas canvas;
 
@@ -50,18 +50,18 @@ int main() {
     std::cout << "Level " << j << " at Ex = " << Exi << " MeV has strength "
       << strength << std::endl;
 
-    TMarleyParticle initial(marley_utils::get_nucleus_pid(Zi, Ai),
-      TMarleyMassTable::get_atomic_mass(Zi, Ai) + Exi);
+    marley::Particle initial(marley_utils::get_nucleus_pid(Zi, Ai),
+      marley::MassTable::get_atomic_mass(Zi, Ai) + Exi);
 
-    TMarleyNuclearPhysics::hf_test3(Zi, Ai, initial, Exi, twoJi, Pi,
+    marley::NuclearPhysics::hf_test3(Zi, Ai, initial, Exi, twoJi, Pi,
         gen.get_structure_db(), funcs, total_c_widths, E_c_mins, Exf_maxes);
 
-    int s = TMarleyNuclearPhysics::get_fragments().size();
+    int s = marley::NuclearPhysics::get_fragments().size();
     // Prepare plots of the distributions
     for (int i = -1; i < s; ++i) {
 
       std::string pname_string;
-      const TMarleyFragment* f;
+      const marley::Fragment* f;
 
       if (i == -1) {
         f = nullptr;
@@ -69,7 +69,7 @@ int main() {
       }
 
       else {
-        f = &TMarleyNuclearPhysics::get_fragments().at(i);
+        f = &marley::NuclearPhysics::get_fragments().at(i);
         pname_string = marley_utils::particle_symbols.at(f->get_pid());
       }
 
