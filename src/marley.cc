@@ -186,7 +186,7 @@ int main(int argc, char* argv[]){
 
     // Create a branch in this ROOT tree, and associate
     // it with the event pointer we made before
-    event_tree->Branch("events", &p_event, 32000, 99);
+    event_tree->Branch("events", "marley::Event", &p_event);
 
     // Write the seed for the random number generator to the ROOT file
     // Since ROOT does not allow us to write a single integer to the file,
