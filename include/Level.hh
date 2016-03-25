@@ -36,8 +36,22 @@ namespace marley {
       bool gammas_known; // Determining whether or not the gammas are known
   
       std::vector<marley::Gamma> gammas;
-      std::vector<double> gamma_intensities;
       std::discrete_distribution<int> gamma_dist;
+
+      // Updates the distribution used for sampling gammas based on the
+      // current vector of gammas stored in this level object
+      inline void update_gamma_distribution();
   };
 
+}
+
+inline void marley::Level::update_gamma_distribution() {
+  // Get iterators to the relative intensities of the gammas owned by this
+  // level.
+  auto ri_begin = marley::Gamma::make_intensity_iterator(gammas.begin());
+  auto ri_end = marley::Gamma::make_intensity_iterator(gammas.end());
+
+  // Update the discrete distribution used to sample gammas
+  std::discrete_distribution<int>::param_type params(ri_begin, ri_end);
+  gamma_dist.param(params);
 }

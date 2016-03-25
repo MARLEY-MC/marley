@@ -37,14 +37,8 @@ marley::Gamma* marley::Level::add_gamma(const marley::Gamma& gamma) {
   // Update the vector of gamma objects
   gammas.push_back(gamma);
 
-  // Update the vector of gamma intensities
-  gamma_intensities.push_back(gamma.get_ri());
-
-  // Update the discrete distribution used to sample gammas
-  // when simulating a gamma cascade
-  std::discrete_distribution<int>::param_type
-    params(gamma_intensities.begin(), gamma_intensities.end());
-  gamma_dist.param(params);
+  // Update the distribution for sampling gammas
+  update_gamma_distribution();
 
   // Update the gamma status to known
   gammas_known = true;
@@ -80,12 +74,11 @@ void marley::Level::set_parity(marley::Parity pi) {
 
 void marley::Level::clear_gammas() {
   gammas.clear();
-  gamma_intensities.clear();
-  // The discrete distribution will be cleared by these
-  // commands because gamma_intensities is now empty
-  std::discrete_distribution<int>::param_type
-    params(gamma_intensities.begin(), gamma_intensities.end());
-  gamma_dist.param(params);
+
+  // The discrete distribution will be cleared by this command because the
+  // vector of gammas is now empty.
+  update_gamma_distribution();
+
   // Update the gamma status to unknown
   gammas_known = false;
 }
