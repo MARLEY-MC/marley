@@ -166,7 +166,7 @@ int main(int argc, char* argv[]){
   // (e.g., pre-existing file that has the wrong
   // format, etc.). If so, complain and quit.
   if (treeFile.IsZombie()) {
-    throw std::runtime_error(std::string("Invalid format or other error ")
+    throw marley::Error(std::string("Invalid format or other error ")
       + "encountered while opening the ROOT file " + tree_file_name);
   }
 

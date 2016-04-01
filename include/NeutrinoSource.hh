@@ -3,6 +3,7 @@
 #include <set>
 
 #include "marley_utils.hh"
+#include "Error.hh"
 #include "InterpolationGrid.hh"
 #include "MassTable.hh"
 
@@ -14,12 +15,12 @@ namespace marley {
     public:
   
       inline NeutrinoSource(int particle_id, double w = 1.0) {
-        if (!pid_is_allowed(particle_id)) throw std::runtime_error(
+        if (!pid_is_allowed(particle_id)) throw marley::Error(
           std::string("Creating a neutrino source object that produces")
           + " particles with PDG ID number " + std::to_string(particle_id)
           + " is not allowed.");
         else pid = particle_id;
-        if (w < 0.) throw std::runtime_error(
+        if (w < 0.) throw marley::Error(
           std::string("Cannot create a neutrino source object with a negative")
           + " weight.");
         else weight = w;
@@ -279,7 +280,7 @@ namespace marley {
         if (particle_id != marley_utils::ELECTRON_NEUTRINO &&
           particle_id != marley_utils::MUON_ANTINEUTRINO)
         {
-          throw std::runtime_error(std::string("Decay at rest")
+          throw marley::Error(std::string("Decay at rest")
             + " neutrino source objects may only produce electron neutrinos"
             + " or muon antineutrinos. PDG ID number "
             + std::to_string(particle_id) + " is therefore not allowed.");
@@ -351,19 +352,19 @@ namespace marley {
         // TODO: Check that energy grid values are nondecreasing
         // TODO: Check for at least one nonzero pair.second value
         size_t grid_size = grid.size();
-        if (grid_size < 2) throw std::runtime_error(std::string("Grid with")
+        if (grid_size < 2) throw marley::Error(std::string("Grid with")
           + " less than 2 gridpoints passed to the constructor of"
           + " marley::GridNeutrinoSource.");
         for (size_t j = 0; j < grid_size; ++j) {
           auto& pair = grid.at(j);
-          if (pair.first < 0.) throw std::runtime_error(std::string("All energy")
+          if (pair.first < 0.) throw marley::Error(std::string("All energy")
             + " values used in a marley::GridNeutrinoSource"
             + " object must be nonnegative");
           // Prevent actually sampling an energy value of zero by advancing to
           // the next representable double value.
           else if (pair.first == 0.) pair.first = std::nextafter(0.,
             marley_utils::infinity);
-          if (pair.second < 0.) throw std::runtime_error(std::string("All PDF")
+          if (pair.second < 0.) throw marley::Error(std::string("All PDF")
             + " values used in a marley::GridNeutrinoSource"
             + " object must be nonnegative");
         }

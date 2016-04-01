@@ -49,7 +49,7 @@ void marley::StructureDatabase::add_decay_scheme(const std::string nucid,
   std::unordered_map<std::string, int>::const_iterator it
     = marley_utils::atomic_numbers.find(element_symbol);
   if (it != marley_utils::atomic_numbers.end()) Z = it->second;
-  else throw std::runtime_error(std::string("Unrecognized")
+  else throw marley::Error(std::string("Unrecognized")
     + " element symbol '" + element_symbol + "' encountered in"
     + " marley::StructureDatabase::add_decay_scheme()");
 

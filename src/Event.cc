@@ -1,8 +1,8 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
-#include <stdexcept>
 
+#include "Error.hh"
 #include "Event.hh"
 
 //#ifdef USE_ROOT
@@ -66,10 +66,10 @@ void marley::Event::add_initial_particle(const marley::Particle& p,
   initial_particles.push_back(p);
 
   if (r == marley::Event::ParticleRole::pr_ejectile)
-    throw std::runtime_error(std::string("The ejectile")
+    throw marley::Error(std::string("The ejectile")
     + " is not an initial state particle role.");
   if (r == marley::Event::ParticleRole::pr_residue)
-    throw std::runtime_error(std::string("The residue")
+    throw marley::Error(std::string("The residue")
     + " is not an initial state particle role.");
 
   assign_particle_pointer(&(initial_particles.back()), r);
@@ -81,10 +81,10 @@ void marley::Event::add_final_particle(const marley::Particle& p,
   final_particles.push_back(p);
 
   if (r == marley::Event::ParticleRole::pr_projectile)
-    throw std::runtime_error(std::string("The projectile")
+    throw marley::Error(std::string("The projectile")
     + " is not an final state particle role.");
   if (r == marley::Event::ParticleRole::pr_target)
-    throw std::runtime_error(std::string("The target")
+    throw marley::Error(std::string("The target")
     + " is not an final state particle role.");
 
   assign_particle_pointer(&(final_particles.back()), r);

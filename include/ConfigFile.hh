@@ -4,11 +4,11 @@
 #include <memory>
 #include <regex>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <unordered_set>
 
 #include "DecayScheme.hh"
+#include "Error.hh"
 #include "NeutrinoSource.hh"
 
 namespace marley {

@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "marley_utils.hh"
+#include "Error.hh"
 
 namespace marley {
 
@@ -120,8 +121,8 @@ namespace marley {
       static constexpr double find_particle_mass(int pid,
         size_t range = particle_masses_size)
       {
-        return (range == 0) ? throw "Unknown particle in marley::"
-          "MassTable::find_particle_mass()" :
+        return (range == 0) ? throw marley::Error(std::string("Unknown particle in marley::")
+          + "MassTable::find_particle_mass()") :
           (particle_masses[range - 1].first == pid) ? particle_masses[range - 1].second :
           find_particle_mass(pid, range - 1);
       }
