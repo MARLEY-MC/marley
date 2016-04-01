@@ -2,6 +2,7 @@
 #include <string>
 
 #include "Generator.hh"
+#include "Logger.hh"
 #include "NuclearReaction.hh"
 
 void marley::Generator::init(marley::ConfigFile& cf) {
@@ -20,11 +21,10 @@ void marley::Generator::init(marley::ConfigFile& cf) {
   // Create the reactions. Count them for later reference.
   size_t react_count = 0;
   for (const std::string& filename : cf.get_reaction_filenames()) {
-    std::cout << "Loading reaction data from file " << filename << std::endl;
+    LOG_INFO << "Loading reaction data from file " << filename;
     reactions.push_back(std::make_unique<marley::NuclearReaction>(filename,
       structure_db));
-    std::cout << "Added reaction " << reactions.back()->get_description()
-      << std::endl;
+    LOG_INFO << "Added reaction " << reactions.back()->get_description();
     ++react_count;
   }
 

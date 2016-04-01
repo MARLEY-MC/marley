@@ -1,4 +1,5 @@
 #include "marley_utils.hh"
+#include "Logger.hh"
 #include "StructureDatabase.hh"
 
 marley::StructureDatabase::StructureDatabase() {
@@ -87,9 +88,9 @@ void marley::StructureDatabase::add_from_record(
   // Add a decay scheme for each nucid listed in the structure
   // record to the database
   for (const auto& id : sr.nucids) {
-    std::cout << "Loading nuclear structure data for "
+    LOG_INFO << "Loading nuclear structure data for "
       << marley_utils::trim_copy(id)
-      << " from file " << sr.filename << std::endl;
+      << " from file " << sr.filename;
     add_decay_scheme(id,
       marley::DecayScheme(id, sr.filename, sr.format));
   }

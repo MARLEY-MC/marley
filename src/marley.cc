@@ -12,6 +12,7 @@
 #include "ConfigFile.hh"
 #include "Generator.hh"
 #include "Event.hh"
+#include "Logger.hh"
 
 #ifdef USE_ROOT
 #include "TFile.h"
@@ -26,20 +27,14 @@
 // of the static keyword in its declaration.
 volatile static std::sig_atomic_t interrupted = false;
 
-// Macro that we can use to suppress unused parameter warnings for our signal
-// handler function. We don't need the signal code s, but we have to include it
-// in the function declraration to keep std::signal happy. This trick was taken
-// from the accepted answer at
-// http://stackoverflow.com/questions/3599160/unused-parameter-warnings-in-c-code
-#define UNUSED(x) (void)(x)
-
 // Function that will be used to handle a SIGINT signal
 // in our event generation loop. The method used here is
 // taken from the second answer at
 // http://stackoverflow.com/questions/19366503/in-c-when-interrupted-with-ctrl-c-call-a-function-with-arguments-other-than-s
-void signal_handler(int s)
+// Note that, since we don't use the signal code, we leave the integer argument of the function nameless. This prevents
+// "unused parameter" warnings from the compiler.
+void signal_handler(int)
 {
-  UNUSED(s);
   interrupted = true;
 }
 
@@ -100,10 +95,13 @@ int main(int argc, char* argv[]){
     }
   }
 
+  //std::ofstream log_file("marley.log", std::ofstream::out | std::ofstream::trunc);
+  //marley::Logger::Instance().add_stream(log_file, marley::Logger::LogLevel::INFO);
+  marley::Logger::Instance().add_stream(std::cout, marley::Logger::LogLevel::INFO);
   marley::ConfigFile cf(config_file_name);
   marley::Generator gen(cf);
 
-  std::cout << marley_utils::marley_logo << std::endl;
+  std::cout << std::endl << marley_utils::marley_logo << std::endl;
   std::cout << "\"Don't worry about a thing," << std::endl;
   std::cout << "'Cause every little thing gonna be all right.\"" << std::endl;
   std::cout << "-- Bob, \"Three Little Birds\"" << std::endl << std::endl;

@@ -1,4 +1,5 @@
 #include "meta_numerics.hh"
+#include "Logger.hh"
 #include "SphericalOpticalModel.hh"
 
 std::complex<double> marley::SphericalOpticalModel::optical_model_potential(
@@ -342,7 +343,7 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
   double r_match_2 = r;
   u2 = u_n;
 
-  //std::cout << "DEBUG: r1 = " << r_match_1 << ", r2 = " << r_match_2 << std::endl;
+  LOG_DEBUG << "r1 = " << r_match_1 << ", r2 = " << r_match_2 << std::endl;
 
   // Coulomb parameter
   double mu = get_fragment_reduced_mass(fragment_pid);
