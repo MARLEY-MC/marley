@@ -10,3 +10,4 @@ E_lev*.pdf
 E_neutrino.pdf
 E_residue.pdf
 KE_*.pdf
+build/*
