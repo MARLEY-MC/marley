@@ -116,17 +116,13 @@ double marley::Event::get_E_level() {
 
 std::ostream& operator<< (std::ostream& out, const marley::Event& e) {
   out << *(e.projectile) << std::endl;
-  //for (const marley::Particle& p : e.initial_particles) {
-  //  out << p << std::endl;
-  //}
-  //out << std::endl << std::endl;
-  for (auto& p : e.final_particles) {
+  for (const auto& p : e.final_particles) {
     out << p << std::endl;
   }
   return out;
 }
 
-// Function that dumps a marley::Particle to an output stream in HEPEVT format. This
+// Function that dumps a marley::Particle to an output stream in HEPEvt format. This
 // is a private helper function for the publically-accessible write_hepevt.
 void marley::Event::dump_hepevt_particle(const marley::Particle& p, std::ostream& os,
   bool track)

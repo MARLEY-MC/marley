@@ -1,5 +1,6 @@
 #include <cmath>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -9,6 +10,7 @@
 #include "DecayScheme.hh"
 #include "Generator.hh"
 #include "Kinematics.hh"
+#include "Logger.hh"
 #include "NuclearPhysics.hh"
 
 // Default level parity is +
@@ -64,8 +66,8 @@ marley::Level* marley::DecayScheme::get_pointer_to_closest_level(double E_level)
 void marley::DecayScheme::do_cascade(marley::Level* initial_level,
   marley::Event* p_event, marley::Generator& gen, int qIon)
 {
-  //std::cout << "Beginning gamma cascade at level with energy "
-  //  << initial_level->get_energy() << " MeV" << std::endl;
+  LOG_DEBUG << "Beginning gamma cascade at level with energy "
+    << initial_level->get_energy() << " MeV";
 
   bool cascade_finished = false;
 
@@ -75,7 +77,7 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
     // Randomly select a gamma to produce
     const marley::Gamma* p_gamma = p_current_level->sample_gamma(gen);
     if (p_gamma == nullptr) {
-      //std::cout << "  this level does not have any gammas" << std::endl;
+      LOG_DEBUG << "  this level does not have any gammas";
       cascade_finished = true;
     }
     else {
@@ -84,12 +86,11 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
         throw std::runtime_error(std::string("This gamma does not have an end level. ")
           + "Cannot continue cascade.");
       }
-      //std::cout << "  emitted gamma with energy " << p_gamma->get_energy()
-      //  << " MeV." New level has energy " << p_current_level->get_energy()
-      //  << " MeV." << std::endl;
-      //std::cout.precision(15);
-      //std::cout << std::scientific;
-      //std::cout << "gamma energy = " << p_gamma->get_energy() << std::endl;
+      LOG_DEBUG << std::setprecision(15) << std::scientific
+        << "  emitted gamma with energy "
+        << p_gamma->get_energy() << " MeV. New level has energy "
+        << p_current_level->get_energy() << " MeV.";
+      LOG_DEBUG << "gamma energy = " << p_gamma->get_energy();
 
       // Get the excitation energy of the end level. This will be added to
       // the ground state mass of the nucleus to determine its
@@ -129,8 +130,8 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
     }
   }
 
-  //std::cout << "Finished gamma cascade at level with energy "
-  //  << p_current_level->get_energy() << std::endl;
+  LOG_DEBUG << "Finished gamma cascade at level with energy "
+    << p_current_level->get_energy();
 }
 
 marley::DecayScheme::DecayScheme(int z, int a, std::string filename,
@@ -232,12 +233,12 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
                                    // gamma decay scheme data were found for the
                                    // current nuc_id.
 
-  //std::cout << "DEBUG: Searching for nucid '" << nuc_id << "'" << std::endl;
+  LOG_DEBUG << "Searching for nucid '" << nuc_id << "'";
   while (!file_in.eof()) {
     std::getline(file_in, line);
     if (std::regex_match(line, rx_primary_identification_record)) {
       found_decay_scheme = true;
-      //std::cout << "DEBUG: Found nucid '" << nuc_id << "'" << std::endl;
+      LOG_DEBUG << "Found nucid '" << nuc_id << "'";
       break;
     }
   }
@@ -247,10 +248,9 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
       + "(adopted levels, gammas) for " + marley_utils::nucid_to_symbol(nuc_id)
       + " could not be found in the ENSDF data file " + filename);
   }
-  //else {
-  //  std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using ENSDF dataset" << std::endl;
-  //  std::cout << line << std::endl;
-  //}
+
+  LOG_DEBUG << "Gamma decay scheme data for " + nuc_id << " found. Using ENSDF dataset";
+  LOG_DEBUG << line;
 
   bool no_advance = false; // Flag that prevents advancing through
                            // the ENSDF file when a continuation record
@@ -259,7 +259,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
   marley::Level* p_current_level = nullptr; // Pointer to the current level object
                                           // being filled with gamma ray data 
 
-  //std::cout << "DEBUG: Parsing data for nucid '" << nuc_id << "'" << std::endl;
+  LOG_DEBUG << "Parsing data for nucid '" << nuc_id << "'";
   while (!file_in.eof()) {
     // Get the next line of the file
     // unless we already did
@@ -268,7 +268,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
 
     // Level Record
     if (std::regex_match(line, rx_primary_level_record)) {
-      //std::cout << "DEBUG:   Parsing level" << std::endl;
+      LOG_DEBUG << "  Parsing level";
       record = line;
       line = process_continuation_records(file_in, record, rx_continuation_level_record);
       no_advance = true;
@@ -341,7 +341,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
 
     // Gamma Record
     else if (std::regex_match(line, rx_primary_gamma_record)) {
-      //std::cout << "DEBUG:   Parsing gamma" << std::endl;
+      LOG_DEBUG << "  Parsing gamma";
       record = line;
       line = process_continuation_records(file_in,
         record, rx_continuation_gamma_record);
@@ -364,7 +364,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
     }
 
     else if (std::regex_match(line, rx_ensdf_end_record)) {
-      //std::cout << "DEBUG:   Found end of data" << std::endl;
+      LOG_DEBUG << "  Found end of data";
       break;
     }
 
@@ -479,10 +479,8 @@ void marley::DecayScheme::parse_talys(std::string filename) {
       + "(adopted levels, gammas) for " + marley_utils::nucid_to_symbol(nuc_id)
       + " could not be found in the TALYS data file " + filename);
   }
-  //else {
-  //  std::cout << "Gamma decay scheme data for " + nuc_id << " found. Using TALYS dataset" << std::endl;
-  //  std::cout << line << std::endl;
-  //}
+  LOG_DEBUG << "Gamma decay scheme data for " + nuc_id << " found. Using TALYS dataset";
+  LOG_DEBUG << line;
 
   // Dummy integer and number of excited levels for this nuclide
   int dummy, num_excited_levels; 

@@ -9,6 +9,7 @@
 #include "Event.hh"
 #include "Generator.hh"
 #include "Level.hh"
+#include "Logger.hh"
 #include "NuclearPhysics.hh"
 #include "Reaction.hh"
 
@@ -154,13 +155,13 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
   // levels. Before looking them up, start by setting the unbound threshold to
   // infinity.
   double unbound_threshold = std::numeric_limits<double>::max();
-  //std::cout << "DEBUG: unbound_threshold = " << unbound_threshold << std::endl;
+  LOG_DEBUG << "unbound_threshold = " << unbound_threshold << std::endl;
   for (const auto& f : marley::NuclearPhysics::get_fragments()) {
     double thresh = marley::NuclearPhysics::get_fragment_emission_threshold(Zf,
       Af, f);
-    //std::cout << "DEBUG: " << f.get_pid() << " emission threshold = " << thresh << std::endl;
+    LOG_DEBUG << f.get_pid() << " emission threshold = " << thresh << std::endl;
     if (thresh < unbound_threshold) unbound_threshold = thresh;
-    //std::cout << "DEBUG: unbound_threshold = " << unbound_threshold << std::endl;
+    LOG_DEBUG << "unbound_threshold = " << unbound_threshold << std::endl;
   }
 
   // Cycle through each of the level energies given in the reaction dataset. 
@@ -179,8 +180,8 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
     // For each energy, find a pointer to the level with the closest energy
     // owned by the decay scheme object.
     marley::Level* plevel = ds->get_pointer_to_closest_level(en);
-    //std::cout << "DEBUG: I matched E = " << en << " MeV to the ENSDF level "
-    //  << "with energy " << plevel->get_energy() << " MeV" << std::endl;
+    LOG_DEBUG << "reaction level at " << en << " MeV was matched to the decay scheme"
+      << "level at " << plevel->get_energy() << " MeV";
 
     // Complain if there are duplicates (if there are duplicates, we'll have
     // two different B(F) + B(GT) values for the same level object)
@@ -352,9 +353,11 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
       // to the total reaction cross section. Note that std::discrete_distribution
       // automatically normalizes the weights, so we don't have to do that ourselves.
       xs = total_xs(level_energy, Ea, matrix_el);
-      //DEBUG
       if (std::isnan(xs)) {
-        std::cout << "DEBUG: this level gave a weight of nan, so I made it zero." << std::endl;
+        LOG_WARNING << "Partial cross section for reaction " << description << " gave NaN result.";
+        LOG_DEBUG << "Parameters were level energy = " << level_energy << " MeV, projectile energy = " << Ea
+          << " MeV, and matrix element = " << matrix_el;
+        LOG_DEBUG << "The partial cross section to this level will be set to zero for this event.";
         xs = 0;
       }
       if (!at_least_one_nonzero_matrix_el && xs != 0)
@@ -463,10 +466,8 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
     while (continuum && Ex > cutoff) {
       continuum = marley::NuclearPhysics::hauser_feshbach_decay(Z, A, residue,
         first, second, Ex, twoJ, P, db, gen);
-      //std::cout << "DEBUG: Decay to " << first.get_id() << " and " << second.get_id()
-      //  << std::endl;
-      //std::cout << second.get_id() << " is at Ex = " << Ex << " MeV."
-      //  << std::endl;
+      LOG_DEBUG << "Hauser-Feshbach decay to " << first.get_id() << " and " << second.get_id();
+      LOG_DEBUG << second.get_id() << " is at Ex = " << Ex << " MeV.";
 
       residue = second;
       Z = marley::MassTable::get_particle_Z(residue.get_id());
@@ -486,8 +487,6 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
     dec_scheme->do_cascade(dec_scheme->get_pointer_to_closest_level(Ex),
       &event, gen, residue.get_charge());
   }
-
-  //std::cout << std::endl; //DEBUG
 
   // Return the completed event object
   return event;
