@@ -1,6 +1,6 @@
-#include <stdexcept>
 #include <string>
 
+#include "Error.hh"
 #include "Generator.hh"
 #include "Logger.hh"
 #include "NuclearReaction.hh"
@@ -37,7 +37,7 @@ void marley::Generator::init(marley::ConfigFile& cf) {
   // the generator.
   auto& sources = cf.get_sources();
   if (sources.size() > 0) nu_source = std::move(sources.back());
-  else throw std::runtime_error(std::string("Cannot finish creating")
+  else throw marley::Error(std::string("Cannot finish creating")
     + " the marley::Generator object. The configuration file is"
     + " missing a neutrino source definition.");
 
@@ -149,7 +149,7 @@ double marley::Generator::unnormalized_Ea_pdf(double Ea) {
 // r_index with the index of the reaction it undergoes. Input
 // values for Ea and r_index are ignored.
 void marley::Generator::sample_reaction(double& Ea, size_t& r_index) {
-  if (reactions.empty()) throw std::runtime_error(std::string("Cannot sample")
+  if (reactions.empty()) throw marley::Error(std::string("Cannot sample")
     + " a reaction in marley::Generator::sample_reaction. The vector of"
     + " marley::Reaction objects owned by this generator is empty.");
 

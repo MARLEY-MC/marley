@@ -319,7 +319,7 @@ std::complex<double> meta_numerics::LogGamma_Stirling (std::complex<double> z) {
     if (f == f_old) return f;
     zp *= zz;
   }
-  throw std::runtime_error(std::string("LogGamma_Stirling failed to converge."));
+  throw marley::Error(std::string("LogGamma_Stirling failed to converge."));
 }
 
 
@@ -332,7 +332,7 @@ std::complex<double> meta_numerics::LogGamma_Stirling (std::complex<double> z) {
 /// <seealso cref="AdvancedMath.LogGamma" />
 std::complex<double> meta_numerics::LogGamma (std::complex<double> z) {
   if (z.real() < 0.0) {
-    throw std::runtime_error(std::string("Argument z = (") + std::to_string(z.real())
+    throw marley::Error(std::string("Argument z = (") + std::to_string(z.real())
       + ", " + std::to_string(z.imag()) + ") out of range in LogGamma");
   } else if (std::abs(z) < 16.0) {
     return (meta_numerics::Lanczos::LogGamma(z));
@@ -493,7 +493,7 @@ void meta_numerics::CoulombF_Series (int L, double eta, double rho, double& F,
 
   }
 
-  throw std::runtime_error(std::string("CoulombF_series failed to converge."));
+  throw marley::Error(std::string("CoulombF_series failed to converge."));
 
 }
 
@@ -543,7 +543,7 @@ void meta_numerics::Coulomb_Zero_Series (double eta, double rho, double& F,
 
   }
 
-  throw std::runtime_error(std::string("Coulomb_Zero_Series failed to converge."));
+  throw marley::Error(std::string("Coulomb_Zero_Series failed to converge."));
 
 }
 
@@ -596,7 +596,7 @@ double meta_numerics::Coulomb_CF1 (double L, double eta, double rho, int& sign)
     B1 = 1.0;
   }
 
-  throw std::runtime_error(std::string("Coulomb_CF1 failed to converge."));
+  throw marley::Error(std::string("Coulomb_CF1 failed to converge."));
 
 }
 
@@ -634,7 +634,7 @@ std::complex<double> meta_numerics::Coulomb_CF2 (double L, double eta,
 
   }
 
-  throw std::runtime_error(std::string("Coulomb_CF2 failed to converge."));
+  throw marley::Error(std::string("Coulomb_CF2 failed to converge."));
 
   // don't use Wallis algorithm for this continued fraction! it appears that sometimes noise in what
   // should be the last few iterations prevents convergence; Steed's method appears to do better
@@ -709,7 +709,7 @@ void meta_numerics::Coulomb_Asymptotic (double L, double eta, double rho,
 
     // check for non-convergence
     if (k > meta_numerics::SeriesMax) throw
-      std::runtime_error(std::string("Coulomb_Asymptotic failed to converge."));
+      marley::Error(std::string("Coulomb_Asymptotic failed to converge."));
 
     // prepare for the next iteration
     f0 = f1;
@@ -726,7 +726,7 @@ void meta_numerics::Coulomb_Recurse_Upward (int L1, int L2, double eta,
   double rho, double& U, double& UP)
 {
 
-  if (L2 < L1) throw std::runtime_error(std::string("L2 < L1 in Coulomb_Recurse_Upward"));
+  if (L2 < L1) throw marley::Error(std::string("L2 < L1 in Coulomb_Recurse_Upward"));
 
   for (int K = L1 + 1; K <= L2; K++) {
     
@@ -775,8 +775,8 @@ double meta_numerics::CoulombF_Integrate(int L, double eta, double rho) {
 
 double meta_numerics::CoulombF (int L, double eta, double rho) {
 
-  if (L < 0) throw std::runtime_error(std::string("L < 0 in CoulombF"));
-  if (rho < 0) throw std::runtime_error(std::string("rho < 0 in CoulombF"));
+  if (L < 0) throw marley::Error(std::string("L < 0 in CoulombF"));
+  if (rho < 0) throw marley::Error(std::string("rho < 0 in CoulombF"));
 
   if ((rho < 4.0 + 2.0 * std::sqrt(L)) && (std::abs(rho * eta) < 8.0  + 4.0 * L)) {
     // if rho and rho * eta are small enough, use the series expansion at the origin
@@ -804,8 +804,8 @@ double meta_numerics::CoulombF (int L, double eta, double rho) {
 
 double meta_numerics::CoulombG (int L, double eta, double rho) {
 
-  if (L < 0) throw std::runtime_error(std::string("L < 0 in CoulombG"));
-  if (rho < 0) throw std::runtime_error(std::string("rho < 0 in CoulombG"));
+  if (L < 0) throw marley::Error(std::string("L < 0 in CoulombG"));
+  if (rho < 0) throw marley::Error(std::string("rho < 0 in CoulombG"));
 
   if ((rho < 4.0) && std::abs(rho * eta) < 8.0) {
     // for small enough rho, use the power series for L=0, then recurse upward to desired L
@@ -885,14 +885,14 @@ double meta_numerics::CoulombG (int L, double eta, double rho) {
 }
 
 double meta_numerics::LegendrePe(int l, int m, double x) {
-  if (l < 0) throw std::runtime_error(std::string("Cannot compute")
+  if (l < 0) throw marley::Error(std::string("Cannot compute")
     + " the associated Legendre polynomial Pe{l = " + std::to_string(l)
     + ", m = " + std::to_string(m) + "} because l must be nonnegative.");
-  if (m > l || m < 0) throw std::runtime_error(std::string("Cannot compute")
+  if (m > l || m < 0) throw marley::Error(std::string("Cannot compute")
     + " the associated Legendre polynomial Pe{l = " + std::to_string(l)
     + ", m = " + std::to_string(m) + "} because l and m must"
     + " satisfy the relation 0 <= m <= l");
-  if (std::abs(x) > 1.0) throw std::runtime_error(std::string("Cannot compute")
+  if (std::abs(x) > 1.0) throw marley::Error(std::string("Cannot compute")
     + " the associated Legendre polynomial Pe{l = " + std::to_string(l)
     + ", m = " + std::to_string(m) + "}(x = " + std::to_string(x)
     + "because x must satisfy the relation abs(x) <= 1.");
@@ -922,10 +922,10 @@ double meta_numerics::LegendrePe(int l, int m, double x) {
 }
 
 std::complex<double> meta_numerics::SphericalHarmonic (int l, int m, double theta, double phi) {
-  if (l < 0) throw std::runtime_error(std::string("Cannot compute")
+  if (l < 0) throw marley::Error(std::string("Cannot compute")
     + " the spherical harmonic with l = " + std::to_string(l) + ", m = "
     + std::to_string(m) + ". The order l must be nonnegative.");
-  if (std::abs(m) > l) throw std::runtime_error(std::string("Cannot compute")
+  if (std::abs(m) > l) throw marley::Error(std::string("Cannot compute")
     + " the spherical harmonic with l = " + std::to_string(l) + ", m = "
     + std::to_string(m) + ". The sub-order m must satisfy -l <= m <= l.");
 
@@ -1016,7 +1016,7 @@ double meta_numerics::SphericalBesselJ_SeriesOne(double x) {
     j = j_old + dj;
     if (j == j_old) return j;
   }
-  throw std::runtime_error(std::string("meta_numerics::")
+  throw marley::Error(std::string("meta_numerics::")
     + "SphericalBesselJ_SeriesOne failed to converge.");
 }
 
@@ -1028,14 +1028,14 @@ double meta_numerics::SphericalBesselJ_One(double x) {
 }
 
 double meta_numerics::DoubleFactorial(int n) {
-  if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+  if (n < 0) throw marley::Error(std::string("Cannot compute")
     + " n!! for n = " + std::to_string(n));
   else if (n < 32) return static_cast<double>(DoubleFactorial_Multiply(n));
   else return std::round(std::exp(LogDoubleFactorial_Gamma(n)));
 }
 
 double meta_numerics::LogDoubleFactorial(int n) {
-  if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+  if (n < 0) throw marley::Error(std::string("Cannot compute")
     + " log(n!!) for n = " + std::to_string(n));
   else if (n < 32)
     return std::log(static_cast<double>(DoubleFactorial_Multiply(n)));
@@ -1072,7 +1072,7 @@ double meta_numerics::SphericalBesselJ_Series(int n, double x) {
     f += df;
     if (f == f_old) return f;
   }
-  throw std::runtime_error(std::string("meta_numerics::")
+  throw marley::Error(std::string("meta_numerics::")
     + "SphericalBesselJ_Series failed to converge.");
 }
 
@@ -1087,7 +1087,7 @@ double meta_numerics::SphericalBesselY_Series(int n, double x) {
     f += df;
     if (f == f_old) return f;
   }
-  throw std::runtime_error(std::string("meta_numerics::")
+  throw marley::Error(std::string("meta_numerics::")
     + "SphericalBesselY_Series failed to converge.");
 }
 
@@ -1107,7 +1107,7 @@ double meta_numerics::SphericalBesselY_SeriesOne(double x) {
     y = y_old + dy;
     if (y == y_old) return y;
   }
-  throw std::runtime_error(std::string("meta_numerics::")
+  throw marley::Error(std::string("meta_numerics::")
     + "SphericalBesselY_SeriesOne failed to converge.");
 }
 
@@ -1185,7 +1185,7 @@ meta_numerics::SolutionPair meta_numerics::Bessel_Asymptotic(double nu, double x
     if ((P == P_old) && (Q == Q_old) && (R == R_old) && (S == S_old))
       break;
 
-    if (k > SeriesMax) throw std::runtime_error(std::string("meta_numerics::")
+    if (k > SeriesMax) throw marley::Error(std::string("meta_numerics::")
       + "Bessel_Asymptotic failed to converge.");
   }
 
@@ -1256,7 +1256,7 @@ meta_numerics::SolutionPair meta_numerics::Bessel_Asymptotic(double nu, double x
 /// <exception cref="ArgumentOutOfRangeException"><paramref name="x"/> is negative or zero.</exception>
 /// <seealso cref="Gamma(double)" />
 double meta_numerics::LogGamma(double x) {
-  if (x <= 0.0) throw std::runtime_error(std::string("Cannot compute")
+  if (x <= 0.0) throw marley::Error(std::string("Cannot compute")
     + " LogGamma(x) for x = " + std::to_string(x));
   // For small arguments, use the Lanczos approximation.
   else if (x < 16.0) return meta_numerics::Lanczos::LogGamma(x);
@@ -1282,14 +1282,14 @@ double meta_numerics::Sum_Stirling(double x) {
     if (f == f_old) return f;
   }
 
-  throw std::runtime_error(std::string("meta_numerics::")
+  throw marley::Error(std::string("meta_numerics::")
     + "Sum_Stirling failed to converge.");
 }
 
 double meta_numerics::LaguerreL(int n, double x) {
-  if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+  if (n < 0) throw marley::Error(std::string("Cannot compute")
     + " LaguerreL for order n = " + std::to_string(n) + ".");
-  if (x < 0.) throw std::runtime_error(std::string("Cannot compute")
+  if (x < 0.) throw marley::Error(std::string("Cannot compute")
     + " LaguerreL for argument x = " + std::to_string(x) + ".");
 
   if (n==0) return(1.0);
@@ -1305,11 +1305,11 @@ double meta_numerics::LaguerreL(int n, double x) {
 }
 
 double meta_numerics::LaguerreL(int n, double a, double x) {
-  if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+  if (n < 0) throw marley::Error(std::string("Cannot compute")
     + " LaguerreL for order n = " + std::to_string(n) + ".");
-  if (x < 0.) throw std::runtime_error(std::string("Cannot compute")
+  if (x < 0.) throw marley::Error(std::string("Cannot compute")
     + " LaguerreL for argument x = " + std::to_string(x) + ".");
-  if (a <= -1) throw std::runtime_error(std::string("Cannot compute")
+  if (a <= -1) throw marley::Error(std::string("Cannot compute")
     + " LaguerreL for associated order a = " + std::to_string(a) + ".");
 
   // standard recurrence on n is claimed stable

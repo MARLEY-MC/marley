@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -83,7 +82,7 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
     else {
       p_current_level = p_gamma->get_end_level();
       if (p_current_level == nullptr) {
-        throw std::runtime_error(std::string("This gamma does not have an end level. ")
+        throw marley::Error(std::string("This gamma does not have an end level. ")
           + "Cannot continue cascade.");
       }
       LOG_DEBUG << std::setprecision(15) << std::scientific
@@ -219,7 +218,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
   // If the file doesn't exist or some other error
   // occurred, complain and give up.
   if (!file_in.good()) {
-    throw std::runtime_error(std::string("Could not read from the ") +
+    throw marley::Error(std::string("Could not read from the ") +
       "ENSDF data file " + filename);
   }
 
@@ -244,7 +243,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
   }
 
   if (!found_decay_scheme) {
-    throw std::runtime_error(std::string("Gamma decay scheme data ")
+    throw marley::Error(std::string("Gamma decay scheme data ")
       + "(adopted levels, gammas) for " + marley_utils::nucid_to_symbol(nuc_id)
       + " could not be found in the ENSDF data file " + filename);
   }
@@ -311,7 +310,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
           else if (match[2] == "-") parity = marley::Parity(-1);
           else if (marley_utils::trim_copy(match[2]) == "")
             parity = DEFAULT_PARITY;
-          else throw std::runtime_error(std::string("Invalid parity ")
+          else throw marley::Error(std::string("Invalid parity ")
             + match[2].str() + " encountered while setting a marley::Level "
             + "parity value.");
         }
@@ -457,7 +456,7 @@ void marley::DecayScheme::parse_talys(std::string filename) {
   // If the file doesn't exist or some other error
   // occurred, complain and give up.
   if (!file_in.good()) {
-    throw std::runtime_error(std::string("Could not read from the ") +
+    throw marley::Error(std::string("Could not read from the ") +
       "TALYS data file " + filename);
   }
 
@@ -475,7 +474,7 @@ void marley::DecayScheme::parse_talys(std::string filename) {
   }
 
   if (!found_decay_scheme) {
-    throw std::runtime_error(std::string("Gamma decay scheme data ")
+    throw marley::Error(std::string("Gamma decay scheme data ")
       + "(adopted levels, gammas) for " + marley_utils::nucid_to_symbol(nuc_id)
       + " could not be found in the TALYS data file " + filename);
   }

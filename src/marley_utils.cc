@@ -8,10 +8,11 @@
 #include <map>
 #include <random>
 #include <regex>
-#include <stdexcept>
 #include <string>
 #include <vector>
+
 #include "marley_utils.hh"
+#include "Error.hh"
 
 // Strings to use for latex table output of ENSDF data
 std::string marley_utils::latex_table_1 = "\\documentclass[12pt]{article}\n"
@@ -295,7 +296,7 @@ double marley_utils::real_sqrt(double num) {
 // For a given atomic number Z and mass number A, return a matching ENSDF nucid
 std::string marley_utils::nuc_id(int Z, int A) {
   // Check to make sure Z and A have acceptable values
-  if (Z < 0 || A < 1 || A > 999) throw std::runtime_error(
+  if (Z < 0 || A < 1 || A > 999) throw marley::Error(
     std::string("The atomic number Z = ") + std::to_string(Z)
     + " and the mass number A = " + std::to_string(A)
     + " do not correspond to a valid ENSDF nucid.");
@@ -400,7 +401,7 @@ std::string marley_utils::get_file_contents(std::string filename) {
     in.close();
     return contents;
   }
-  throw std::runtime_error("Could not read from file " + filename);
+  throw marley::Error("Could not read from file " + filename);
 }
 
 // Advance to the next line of an ifstream that either matches (match == true)

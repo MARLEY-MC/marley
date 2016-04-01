@@ -3,6 +3,7 @@
 #include <list>
 #include <regex>
 
+#include "Error.hh"
 #include "Event.hh"
 #include "Level.hh"
 #include "Parity.hh"
@@ -84,7 +85,7 @@ namespace marley {
             break;
   
           default:
-            throw std::runtime_error(std::string("Invalid file format ")
+            throw marley::Error(std::string("Invalid file format ")
               + " supplied to marley::DecayScheme constructor.");
         }
       }

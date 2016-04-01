@@ -2,9 +2,10 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
-#include <stdexcept>
 #include <utility>
 #include <vector>
+
+#include "Error.hh"
 
 namespace marley {
 
@@ -66,7 +67,7 @@ namespace marley {
       // that rely on the grid making sense.
       inline void check_grid() const {
         // TODO: improve this error message
-        if (ordered_pairs.size() < 2) throw std::runtime_error(std::string("A")
+        if (ordered_pairs.size() < 2) throw marley::Error(std::string("A")
           + " class method was called for an InterpolationGrid object"
           + " that contains less than two grid points.");
       }
@@ -177,7 +178,7 @@ namespace marley {
         else return upper_point->second;
       }
       else if (extrapolation_method == ExtrapolationMethod::Throw) {
-        throw std::runtime_error(std::string("x = ") + std::to_string(x)
+        throw marley::Error(std::string("x = ") + std::to_string(x)
           + " lies outside of the current interpolation grid object" 
           + " (which extends from x_min = "
           + std::to_string(ordered_pairs.front().first)

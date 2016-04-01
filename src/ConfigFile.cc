@@ -57,7 +57,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
   // If the file doesn't exist or some other error
   // occurred, complain and give up.
   if (!file_in.good()) {
-    throw std::runtime_error(std::string("Could not read from the ") +
+    throw marley::Error(std::string("Could not read from the ") +
       "file " + filename);
   }
 
@@ -104,7 +104,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       // TODO: implement this
       //else if (arg == "device");
       else if (!std::regex_match(arg, rx_nonneg_int))
-        throw std::runtime_error(std::string("Invalid random number seed")
+        throw marley::Error(std::string("Invalid random number seed")
           + "encountered on line " + std::to_string(line_num)
           + " of the configuration file " + filename);
       else {
@@ -122,7 +122,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       root_filename = arg;
       #else
       // TODO: change this to a warning that this will be ignored
-      throw std::runtime_error(std::string("Cannot set")
+      throw marley::Error(std::string("Cannot set")
         + " ROOT filename. MARLEY must be compiled"
         + " with ROOT support.");
       #endif
@@ -141,13 +141,13 @@ marley::ConfigFile::ConfigFile(std::string file_name)
         check_before_root_file_overwrite = false;
       }
       else {
-        throw std::runtime_error(std::string("Invalid")
+        throw marley::Error(std::string("Invalid")
           + " ROOT file write flag '" + arg
           + "' encountered on line" + std::to_string(line_num)
           + " of the configuration file " + filename);
       }
       #else
-      throw std::runtime_error(std::string("The writeroot")
+      throw marley::Error(std::string("The writeroot")
         + " keyword may only be used when MARLEY is compiled"
         + " with ROOT support.");
       #endif
@@ -161,7 +161,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
         check_before_hepevt_file_overwrite = false;
       }
       else {
-        throw std::runtime_error(std::string("Invalid")
+        throw marley::Error(std::string("Invalid")
           + " HEPEvt file write flag '" + arg
           + "' encountered on line" + std::to_string(line_num)
           + " of the configuration file " + filename);
@@ -178,8 +178,8 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       // If the format is invalid, catch the exception thrown
       // by the converter and throw a different one so that
       // the error message is more easily understood
-      catch (const std::runtime_error& e) {
-         throw std::runtime_error(std::string("Unknown")
+      catch (const marley::Error& e) {
+         throw marley::Error(std::string("Unknown")
           + " nuclear structure format '" + format_string
           + "' specified on line " + std::to_string(line_num)
           + " of the configuration file " + filename);
@@ -226,7 +226,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
           sr.nucids.insert(arg);
         }
         // Other nuclide specifiers are not allowed
-        else throw std::runtime_error(std::string("Invalid")
+        else throw marley::Error(std::string("Invalid")
           + " nuclide specifier '" + arg
           + "' given on line " + std::to_string(line_num)
           + " of the configuration file " + filename);
@@ -249,14 +249,14 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       if (std::regex_match(arg, rx_int)) {
         neutrino_pid = stoi(arg);
         if (!marley::NeutrinoSource::pid_is_allowed(neutrino_pid)) {
-          throw std::runtime_error(std::string("Unallowed")
+          throw marley::Error(std::string("Unallowed")
             + " neutrino source particle ID '" + arg
             + "' given on line " + std::to_string(line_num)
             + " of the configuration file " + filename);
         }
       }
       // Anything other than an integer entry here is not allowed
-      else throw std::runtime_error(std::string("Invalid")
+      else throw marley::Error(std::string("Invalid")
         + " neutrino source particle ID '" + arg
         + "' given on line " + std::to_string(line_num)
         + " of the configuration file " + filename);
@@ -274,7 +274,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
         weight_specified = true;
         // Only positive weights are allowed
         if (weight <= 0.) {
-          throw std::runtime_error(std::string("Non-positive")
+          throw marley::Error(std::string("Non-positive")
           + " neutrino source weight '" + arg
           + "' given on line " + std::to_string(line_num)
           + " of the configuration file " + filename);
@@ -299,7 +299,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
         next_word_from_line(iss, arg, keyword, line_num, true, false);
         if (std::regex_match(arg, rx_num)) {
           double nu_energy = std::stod(arg);
-          if (nu_energy <= 0.) throw std::runtime_error(
+          if (nu_energy <= 0.) throw marley::Error(
             std::string("Non-positive") + " energy '" + arg
             + "' given for a monoenergetic neutrino source"
             + " specification on line " + std::to_string(line_num)
@@ -308,7 +308,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
           else sources.push_back(std::make_unique<marley::MonoNeutrinoSource>(
             neutrino_pid, weight, nu_energy));
         }
-        else throw std::runtime_error(std::string("Invalid")
+        else throw marley::Error(std::string("Invalid")
           + " energy '" + arg
           + "' given for a monoenergetic neutrino source specification on line "
           + std::to_string(line_num) + " of the configuration file "
@@ -321,13 +321,13 @@ marley::ConfigFile::ConfigFile(std::string file_name)
         next_word_from_line(iss, arg, keyword, line_num, true, false);
         if (std::regex_match(arg, rx_num)) {
           Emin = std::stod(arg);
-          if (Emin < 0.) throw std::runtime_error(
+          if (Emin < 0.) throw marley::Error(
             std::string("Negative") + " minimum energy " + std::to_string(Emin)
             + " given for a Fermi-Dirac neutrino source"
             + " specification on line " + std::to_string(line_num)
             + " of the configuration file " + filename);
         }
-        else throw std::runtime_error(
+        else throw marley::Error(
             std::string("Invalid") + " minimum energy '" + arg
             + "' given for a Fermi-Dirac neutrino source"
             + " specification on line " + std::to_string(line_num)
@@ -336,14 +336,14 @@ marley::ConfigFile::ConfigFile(std::string file_name)
         next_word_from_line(iss, arg, keyword, line_num, true, false);
         if (std::regex_match(arg, rx_num)) {
           Emax = std::stod(arg);
-          if (Emax < Emin) throw std::runtime_error(
+          if (Emax < Emin) throw marley::Error(
             std::string("Maximum") + " energy " + std::to_string(Emax)
             + " given for a Fermi-Dirac neutrino source"
             + " specification on line " + std::to_string(line_num)
             + " of the configuration file " + filename
             + " is less than the minimum energy " + std::to_string(Emin));
         }
-        else throw std::runtime_error(
+        else throw marley::Error(
             std::string("Invalid") + " maximum energy '" + arg
             + "' given for a Fermi-Dirac neutrino source"
             + " specification on line " + std::to_string(line_num)
@@ -352,14 +352,14 @@ marley::ConfigFile::ConfigFile(std::string file_name)
         next_word_from_line(iss, arg, keyword, line_num, true, false);
         if (std::regex_match(arg, rx_num)) {
           temperature = std::stod(arg);
-          if (temperature <= 0.) throw std::runtime_error(
+          if (temperature <= 0.) throw marley::Error(
             std::string("Non-positive") + " temperature "
             + std::to_string(temperature)
             + " given for a Fermi-Dirac neutrino source"
             + " specification on line " + std::to_string(line_num)
             + " of the configuration file " + filename);
         }
-        else throw std::runtime_error(
+        else throw marley::Error(
             std::string("Invalid") + " temperature '" + arg
             + "' given for a Fermi-Dirac neutrino source"
             + " specification on line " + std::to_string(line_num)
@@ -369,7 +369,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
         // this parameter.
         if (next_word_from_line(iss, arg, keyword, line_num, false, false)) {
           if (std::regex_match(arg, rx_num)) eta = std::stod(arg);
-          else throw std::runtime_error(
+          else throw marley::Error(
               std::string("Invalid") + " pinching parameter '" + arg
               + "' given for a Fermi-Dirac neutrino source"
               + " specification on line " + std::to_string(line_num)
@@ -411,7 +411,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
             else if (endf_interp_code == 3) method = InterpMethod::LinearLog;
             else if (endf_interp_code == 4) method = InterpMethod::LogLinear;
             else if (endf_interp_code == 5) method = InterpMethod::LogLog;
-            else throw std::runtime_error(
+            else throw marley::Error(
               std::string("Invalid") + " interpolation method '" + arg
               + "' given for a grid neutrino source "
               + " specification on line " + std::to_string(line_num)
@@ -433,7 +433,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
           // logarithmic in energy, linear in probability density
           else if (arg == "loglin")
             method = InterpMethod::LogLinear;
-          else throw std::runtime_error(
+          else throw marley::Error(
             std::string("Invalid") + " interpolation method '" + arg
             + "' given for a grid neutrino source "
             + " specification on line " + std::to_string(line_num)
@@ -469,13 +469,13 @@ marley::ConfigFile::ConfigFile(std::string file_name)
           if (found_E) {
             if (std::regex_match(E_str, rx_num)) {
               double E = std::stod(E_str);
-              if (E < 0.) throw std::runtime_error(
+              if (E < 0.) throw marley::Error(
                 std::string("Negative") + " energy "
                 + std::to_string(E) + " given in a "
                 + description + " neutrino source specification on line "
                 + std::to_string(line_num) + " of the configuration file "
                 + filename);
-              if (E <= previous_E) throw std::runtime_error(
+              if (E <= previous_E) throw marley::Error(
                 std::string("Energy") + " values "
                 + " given in a " + description
                 + " neutrino source specification on line "
@@ -484,7 +484,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
               energies.push_back(E);
               previous_E = E;
             }
-            else throw std::runtime_error(std::string("Invalid") + " energy '"
+            else throw marley::Error(std::string("Invalid") + " energy '"
               + E_str + "' given in a " + description
               + " neutrino source specification on line "
               + std::to_string(line_num) + " of the configuration file "
@@ -496,7 +496,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
           if (found_PD) {
             if (std::regex_match(PD_str, rx_num)) {
               double pd = std::stod(PD_str);
-              if (pd < 0.) throw std::runtime_error(
+              if (pd < 0.) throw marley::Error(
                 std::string("Negative") + " probability density "
                 + std::to_string(pd) + " given in a "
                 + description + " neutrino source specification on line "
@@ -504,7 +504,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
                 + filename);
               prob_densities.push_back(pd);
             }
-            else throw std::runtime_error(std::string("Invalid")
+            else throw marley::Error(std::string("Invalid")
               + " probability density '"
               + PD_str + "' given in a " + description
               + " neutrino source specification on line "
@@ -531,14 +531,14 @@ marley::ConfigFile::ConfigFile(std::string file_name)
             std::string weight_desc;
             if (source_is_histogram) weight_desc = "bin weight";
             else weight_desc = "probability density";
-            throw std::runtime_error(std::string("Missing ")
+            throw marley::Error(std::string("Missing ")
               + weight_desc + " entry in a " + description
               + " neutrino source specification on line "
               + std::to_string(line_num) + " of the configuration file "
               + filename);
           }
           else if (!found_E) {
-            throw std::runtime_error(std::string("Missing ")
+            throw marley::Error(std::string("Missing ")
               + "energy entry in a " + description
               + " neutrino source specification on line "
               + std::to_string(line_num) + " of the configuration file "
@@ -573,7 +573,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
           energies, prob_densities, neutrino_pid, weight, method));
       }
 
-      else throw std::runtime_error(std::string("Unrecognized")
+      else throw marley::Error(std::string("Unrecognized")
       + " neutrino source type '" + arg
       + "' given on line " + std::to_string(line_num)
       + " of the configuration file " + filename);
@@ -582,7 +582,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
     else if (keyword == "events") {
       next_word_from_line(iss, arg, keyword, line_num, true, false);
       if (!std::regex_match(arg, rx_num))
-        throw std::runtime_error(std::string("Invalid")
+        throw marley::Error(std::string("Invalid")
         + " number of events '" + arg
         + "' given on line " + std::to_string(line_num)
         + " of the configuration file " + filename);
@@ -590,7 +590,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       int n_events = static_cast<int>(d_n_events);
       // Allow n_events == 0 for testing purposes
       if (n_events < 0)
-        throw std::runtime_error(std::string("Number")
+        throw marley::Error(std::string("Number")
         + " of events '" + arg + "' given on line "
         + std::to_string(line_num) + " of the configuration file "
         + filename + " must be non-negative.");
@@ -604,13 +604,13 @@ marley::ConfigFile::ConfigFile(std::string file_name)
     else if (keyword == "contbin") {
       next_word_from_line(iss, arg, keyword, line_num, true, false);
       if (!std::regex_match(arg, rx_num))
-        throw std::runtime_error(std::string("Non-numeric")
+        throw marley::Error(std::string("Non-numeric")
         + " continuum bin width '" + arg
         + "' given on line " + std::to_string(line_num)
         + " of the configuration file " + filename);
       double width = std::stod(arg);
       if (width <= 0.)
-        throw std::runtime_error(std::string("Continuum")
+        throw marley::Error(std::string("Continuum")
         + " bin width '" + arg
         + "' given on line " + std::to_string(line_num)
         + " of the configuration file " + filename
@@ -620,13 +620,13 @@ marley::ConfigFile::ConfigFile(std::string file_name)
     else if (keyword == "contbinsubs") {
       next_word_from_line(iss, arg, keyword, line_num, true, false);
       if (!std::regex_match(arg, rx_nonneg_int))
-        throw std::runtime_error(std::string("Invalid")
+        throw marley::Error(std::string("Invalid")
         + " number of continuum bin subintervals '" + arg
         + "' given on line " + std::to_string(line_num)
         + " of the configuration file " + filename);
       int subs = std::stoi(arg);
       if (subs <= 0)
-        throw std::runtime_error(std::string("Number")
+        throw marley::Error(std::string("Number")
         + " of continuum bin subintervals '" + arg
         + "' given on line " + std::to_string(line_num)
         + " of the configuration file " + filename
@@ -636,13 +636,13 @@ marley::ConfigFile::ConfigFile(std::string file_name)
     else if (keyword == "threads") {
       next_word_from_line(iss, arg, keyword, line_num, true, false);
       if (!std::regex_match(arg, rx_nonneg_int))
-        throw std::runtime_error(std::string("Invalid")
+        throw marley::Error(std::string("Invalid")
         + " number of parallel threads '" + arg
         + "' given on line " + std::to_string(line_num)
         + " of the configuration file " + filename);
       int threads = std::stoi(arg);
       if (threads <= 0)
-        throw std::runtime_error(std::string("Number")
+        throw marley::Error(std::string("Number")
         + " of threads '" + arg + "' given on line "
         + std::to_string(line_num) + " of the configuration file "
         + filename + " must be positive.");
@@ -652,7 +652,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       std::string force;
       bool forced = next_word_from_line(iss, force, keyword, line_num, false,
         true);
-      if (forced && force != "force") throw std::runtime_error(
+      if (forced && force != "force") throw marley::Error(
         std::string("Trailing") + " argument that is not 'force'"
         + " given for keyword " + keyword + " on line "
         + std::to_string(line_num) + " of the configuration file "
@@ -664,7 +664,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       // machine, then complain. Allow the user to override this precautionary
       // message using the word "force" on this line of the input file.
       if (num_threads > 1 && num_threads > num_allowed_threads && !forced)
-        throw std::runtime_error(std::string("Number")
+        throw marley::Error(std::string("Number")
           + " of threads '" + arg + "' given on line "
           + std::to_string(line_num) + " of the configuration file "
           + filename + " exceeds the number of concurrent threads supported"
@@ -686,10 +686,10 @@ marley::ConfigFile::ConfigFile(std::string file_name)
 
   // Check that required keywords were found
   if (reaction_filenames.empty())
-    throw std::runtime_error(std::string("Configuration file")
+    throw marley::Error(std::string("Configuration file")
     + " must contain at least one use of the reaction keyword.");
   if (sources.empty())
-    throw std::runtime_error(std::string("Configuration file")
+    throw marley::Error(std::string("Configuration file")
     + " must contain at least one use of the source keyword.");
 }
 
@@ -702,7 +702,7 @@ bool marley::ConfigFile::next_word_from_line(std::istringstream& iss,
 {
   if (iss.eof()) {
     if (!enable_exceptions) return false;
-    throw std::runtime_error(std::string("Missing argument ")
+    throw marley::Error(std::string("Missing argument ")
       + "for keyword '" + keyword + "' encountered while"
       + " parsing line " + std::to_string(line_number)
       + " of the configuration file " + filename);
@@ -711,7 +711,7 @@ bool marley::ConfigFile::next_word_from_line(std::istringstream& iss,
   if (iss.fail()) {
     if (!enable_exceptions) return false;
     std::string snum = std::to_string(line_number);
-    throw std::runtime_error(std::string("Error")
+    throw marley::Error(std::string("Error")
       + " occurred while parsing arguments for keyword '"
       + keyword + "' on line "
       + std::to_string(line_number)
@@ -767,7 +767,7 @@ marley::DecayScheme::FileFormat
     return marley::DecayScheme::FileFormat::ensdf;
   else if (string == "talys")
     return marley::DecayScheme::FileFormat::talys;
-  else throw std::runtime_error(std::string("Unrecognized file")
+  else throw marley::Error(std::string("Unrecognized file")
     + " format '" + string + "' passed to"
     + " marley::ConfigFile::string_to_format()");
 }
@@ -779,7 +779,7 @@ std::string marley::ConfigFile::format_to_string(
     return std::string("ensdf");
   else if (ff == marley::DecayScheme::FileFormat::talys)
     return std::string("talys");
-  else throw std::runtime_error(std::string("Unrecognized")
+  else throw marley::Error(std::string("Unrecognized")
     + " marley::DecayScheme::FileFormat value passed to"
     + " marley::ConfigFile::format_to_string()");
 }

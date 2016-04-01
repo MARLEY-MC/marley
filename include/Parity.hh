@@ -2,6 +2,8 @@
 #include <iostream>
 #include <string>
 
+#include "Error.hh"
+
 // Forward-declare the class and friend operators so that we can use the
 // operators in the global scope
 namespace marley { class Parity; }
@@ -31,7 +33,7 @@ namespace marley {
       inline Parity(int i) {
         if (i == 1) is_positive = true;
         else if (i == -1) is_positive = false;
-        else throw std::runtime_error(std::string("Invalid parity ")
+        else throw marley::Error(std::string("Invalid parity ")
           + std::to_string(i) + " passed to constructor of marley::Parity");
       }
   
@@ -64,7 +66,7 @@ namespace marley {
         // Do the assignment
         if (i == 1) is_positive = true;
         else if (i == -1) is_positive = false;
-        else throw std::runtime_error(std::string("Invalid parity ")
+        else throw marley::Error(std::string("Invalid parity ")
           + std::to_string(i) + " assigned to variable of type marley::Parity");
   
         // Return the existing object
@@ -113,7 +115,7 @@ namespace marley {
   
         if (c == '+') p.is_positive = true;
         else if (c == '-') p.is_positive = false;
-        else throw std::runtime_error(std::string("Invalid parity ")
+        else throw marley::Error(std::string("Invalid parity ")
           + c + " assigned via the >> operator to"
           + " a variable of type marley::Parity");
   

@@ -41,7 +41,7 @@ double marley::MassTable::lookup_atomic_mass(int nucleus_pid, bool& exp,
     if (theory_ok) {
       return liquid_drop_model_atomic_mass(Z, A);
     }
-    else throw std::runtime_error(std::string("Entry for Z = ")
+    else throw marley::Error(std::string("Entry for Z = ")
       + std::to_string(Z) + " and A = " + std::to_string(A)
       + " not found in the MARLEY atomic mass table.");
   }
@@ -70,7 +70,7 @@ double marley::MassTable::lookup_atomic_mass(int Z, int A, bool& exp,
     if (theory_ok) {
       return liquid_drop_model_atomic_mass(Z, A);
     }
-    else throw std::runtime_error(std::string("Entry for Z = ")
+    else throw marley::Error(std::string("Entry for Z = ")
       + std::to_string(Z) + " and A = " + std::to_string(A)
       + " not found in the MARLEY atomic mass table.");
   }

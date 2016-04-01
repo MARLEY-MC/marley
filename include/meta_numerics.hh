@@ -13,11 +13,11 @@
 #include <cmath>
 #include <complex>
 #include <functional>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "marley_utils.hh"
+#include "Error.hh"
 
 // -- Begin Ms-PL licensed code
 namespace meta_numerics {
@@ -84,7 +84,7 @@ namespace meta_numerics {
 
       inline void set_accuracy(double value) {
         if ((value < MaxAccuracy) || (value >= 1.0))
-        throw std::runtime_error(std::string("Invalid accuracy value ") + std::to_string(value)
+        throw marley::Error(std::string("Invalid accuracy value ") + std::to_string(value)
           + " encountered in OdeStepper::Accuracy");
         accuracy = value;
       }
@@ -494,7 +494,7 @@ namespace meta_numerics {
   /// <seealso cref="AdvancedMath.Gamma(double)"/>
   /// <seealso href="http://en.wikipedia.org/wiki/Factorial"/>
   inline double Factorial (int n) {
-    if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+    if (n < 0) throw marley::Error(std::string("Cannot compute")
       + " n! for n = " + std::to_string(n));
     return std::round(std::tgamma(n + 1));
   }
@@ -582,7 +582,7 @@ namespace meta_numerics {
   /// <exception cref="ArgumentOutOfRangeException"><paramref name="n"/> is negative.</exception>
   /// <seealso cref="Factorial"/>
   inline double LogFactorial (int n) {
-    if (n < 0) throw std::runtime_error(std::string("Cannot compute")
+    if (n < 0) throw marley::Error(std::string("Cannot compute")
       + " ln(n!) for n = " + std::to_string(n));
     return LogGamma(n + 1);
   }

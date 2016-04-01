@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
-#include <stdexcept>
+
+#include "Error.hh"
 
 namespace marley {
 
@@ -38,10 +39,10 @@ namespace marley {
       {
         double beta2 = std::pow(beta_x, 2) + std::pow(beta_y, 2)
           + std::pow(beta_z, 2);
-        if (beta2 == 1) throw std::runtime_error(std::string("Cannot perform")
+        if (beta2 == 1) throw marley::Error(std::string("Cannot perform")
           + " Lorentz boost because \u03B2^2 = 1 and therefore the Lorentz factor"
           + "\u03B3 is infinite.");
-        else if (beta2 > 1) throw std::runtime_error(std::string("Cannot perform")
+        else if (beta2 > 1) throw marley::Error(std::string("Cannot perform")
           + " Lorentz boost because \u03B2^2 = " + std::to_string(beta2) + " > 1,"
           + " which is unphysical.");
         return beta2;

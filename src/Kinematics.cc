@@ -1,5 +1,3 @@
-#include <stdexcept>
-
 #include "marley_utils.hh"
 #include "Particle.hh"
 #include "Kinematics.hh"
@@ -86,7 +84,7 @@ void marley::Kinematics::two_body_decay(const marley::Particle& initial_particle
   double msecond = second_product.get_mass();
 
   // Check to make sure the decay is kinematically allowed
-  if (M < mfirst + msecond) throw std::runtime_error(std::string("A two-body")
+  if (M < mfirst + msecond) throw marley::Error(std::string("A two-body")
     + " decay was requested that is not kinematically allowed.");
 
   double M2 = std::pow(M, 2);

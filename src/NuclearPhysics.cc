@@ -45,14 +45,14 @@ TrType marley::NuclearPhysics::determine_gamma_transition_type(int twoJi,
   marley::Parity Pi, int twoJf, marley::Parity Pf, int& l)
 {
   // TODO: reconsider how to handle this situation
-  if (twoJi == 0 && twoJf == 0) throw std::runtime_error(
+  if (twoJi == 0 && twoJf == 0) throw marley::Error(
     std::string("0 -> 0 EM transitions are not allowed."));
 
   int two_delta_J = std::abs(twoJf - twoJi);
   // Odd values of two_delta_J are unphysical because they represent EM
   // transitions where the total angular momentum changes by half (photons are
   // spin 1)
-  if (two_delta_J % 2) throw std::runtime_error(std::string("Unphysical ")
+  if (two_delta_J % 2) throw marley::Error(std::string("Unphysical ")
     + "EM transition encountered between nuclear levels with spins 2*Ji = "
     + std::to_string(twoJi) + " and 2*Jf = " + std::to_string(twoJf));
 
@@ -81,7 +81,7 @@ double marley::NuclearPhysics::gamma_strength_function_coefficient(int Z, int A,
   TransitionType type, int l, double e_gamma)
 {
   // TODO: improve this error message
-  if (l < 1) throw std::runtime_error(std::string("Invalid multipolarity")
+  if (l < 1) throw marley::Error(std::string("Invalid multipolarity")
     + std::to_string(l) + " given for gamma ray strength"
     + " function calculation");
 
@@ -131,7 +131,7 @@ double marley::NuclearPhysics::gamma_strength_function_coefficient(int Z, int A,
     }
   }
   // TODO: improve this error message
-  else throw std::runtime_error(std::string("Invalid transition type")
+  else throw marley::Error(std::string("Invalid transition type")
     + " given for gamma ray strength function calculation");
 
   // Now that we have the appropriate giant resonance parameters,
@@ -174,7 +174,7 @@ double marley::NuclearPhysics::weisskopf_partial_decay_width(int A,
   }
 
   // TODO: improve this error message
-  else throw std::runtime_error(std::string("Invalid transition type")
+  else throw marley::Error(std::string("Invalid transition type")
     + " given for Weisskopf gamma-ray partial width calculation");
 }
 
@@ -725,7 +725,7 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
   }
 
   // Throw an error if all decays are impossible
-  if (total_width <= 0.) throw std::runtime_error(std::string("Cannot ")
+  if (total_width <= 0.) throw marley::Error(std::string("Cannot ")
     + "continue Hauser-Feshbach decay. All partial decay widths are zero.");
 
   // Sample an exit channel
@@ -861,7 +861,7 @@ void marley::NuclearPhysics::sample_gamma_spin_parity(int Z, int A,
     }
   }
   // Throw an error if all decays are impossible
-  if (continuum_width <= 0.) throw std::runtime_error(std::string("Cannot ")
+  if (continuum_width <= 0.) throw marley::Error(std::string("Cannot ")
     + "continue Hauser-Feshbach decay. All partial gamma decay widths are "
     + "zero.");
 
@@ -923,7 +923,7 @@ void marley::NuclearPhysics::sample_fragment_spin_parity(int& twoJ,
     }
   }
   // Throw an error if all decays are impossible
-  if (continuum_width <= 0.) throw std::runtime_error(std::string("Cannot ")
+  if (continuum_width <= 0.) throw marley::Error(std::string("Cannot ")
     + "continue Hauser-Feshbach decay. All partial fragment decay widths are "
     + "zero. cw = " + std::to_string(continuum_width));
 

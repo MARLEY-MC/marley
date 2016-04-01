@@ -3,9 +3,9 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <stdexcept>
 
 #include "marley_utils.hh"
+#include "Error.hh"
 #include "Event.hh"
 #include "Generator.hh"
 #include "Level.hh"
@@ -25,7 +25,7 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
   // If the file doesn't exist or some other error
   // occurred, complain and give up.
   if (!file_in.good()) {
-    throw std::runtime_error(std::string("Could not read from the ") +
+    throw marley::Error(std::string("Could not read from the ") +
       "file " + filename);
   }
 
@@ -105,7 +105,7 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
     // order of ascending energy.
     double energy, strength, strength_id;
     iss >> energy >> strength >> strength_id;
-    if (old_energy >= energy) throw std::runtime_error(std::string("Invalid reaction dataset. ")
+    if (old_energy >= energy) throw marley::Error(std::string("Invalid reaction dataset. ")
       + "Level energies must be unique and must be given in ascending order.");
     residue_level_energies.push_back(energy);
     residue_level_strengths.push_back(strength);
@@ -135,7 +135,7 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
 // nuclear structure data for sampling final residue energy levels.
 void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
 
-  if (ds == nullptr) throw std::runtime_error(std::string("Null pointer")
+  if (ds == nullptr) throw marley::Error(std::string("Null pointer")
     + " passed to marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds)");
 
   // Check to see if the decay scheme being associated with this
@@ -145,7 +145,7 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
   std::string reaction_nuc_id = marley_utils::nuc_id(Zf, Af);
   std::string scheme_nuc_id = ds->get_nuc_id();
   if (reaction_nuc_id != scheme_nuc_id) throw
-    std::runtime_error(std::string("Nuclear data mismatch: attempted ")
+    marley::Error(std::string("Nuclear data mismatch: attempted ")
     + "to associate a decay scheme object that has ENSDF nucid "
     + marley_utils::trim_copy(scheme_nuc_id)
     + " with a reaction object that has nucid "
@@ -188,7 +188,7 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
     if (std::find(residue_level_pointers.begin(), residue_level_pointers.end(),
       plevel) != residue_level_pointers.end()) {
       // residue_level_pointers already contains plevel
-      throw std::runtime_error(std::string("Reaction dataset gives two level energies ")
+      throw marley::Error(std::string("Reaction dataset gives two level energies ")
         + "that refer to the same ENSDF level at "
         + std::to_string(plevel->get_energy()) + " MeV");
     }
@@ -286,7 +286,7 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
 {
   // Check that the projectile supplied to this event is correct. If not, alert
   // the user that this event does not use the requested projectile.
-  if (particle_id_a != pid_a) throw std::runtime_error(std::string("Could")
+  if (particle_id_a != pid_a) throw marley::Error(std::string("Could")
     + " not create this event. The requested projectile particle ID, "
     + std::to_string(particle_id_a) + ", does not match the projectile"
     + " particle ID, " + std::to_string(pid_a) + ", in the reaction dataset.");
@@ -368,7 +368,7 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
 
   // Complain if none of the levels we have data for are kinematically allowed
   if (level_weights.empty()) {
-    throw std::runtime_error(std::string("Could not create this event. The ")
+    throw marley::Error(std::string("Could not create this event. The ")
       + "DecayScheme object associated with this reaction "
       + "does not contain data for any kinematically accessible levels "
       + "for a projectile energy of " + std::to_string(Ea)
@@ -379,7 +379,7 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
   // Complain if none of the levels have nonzero weight (this means that
   // all kinematically allowed levels have a vanishing matrix element)
   if (!at_least_one_nonzero_matrix_el) {
-    throw std::runtime_error(std::string("Could not create this event. All ")
+    throw marley::Error(std::string("Could not create this event. All ")
       + "kinematically accessible levels for a projectile energy of "
       + std::to_string(Ea) + " MeV (max E_level = " + std::to_string(max_E_level)
       + " MeV) have vanishing matrix elements.");
@@ -609,7 +609,7 @@ double marley::NuclearReaction::sample_cos_theta_c_cm(/*double matrix_el,*/
     form_factor = [&beta_c_cm](double cos_theta_c_cm)
       -> double { return (3. - beta_c_cm * cos_theta_c_cm) / 3.; };
   }
-  else throw std::runtime_error(std::string("Unrecognized matrix element")
+  else throw marley::Error(std::string("Unrecognized matrix element")
     + " type " + std::to_string(m_type) + " encountered while sampling a"
     + " CM frame scattering angle");
 
