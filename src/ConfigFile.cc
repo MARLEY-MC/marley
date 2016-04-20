@@ -315,6 +315,11 @@ marley::ConfigFile::ConfigFile(std::string file_name)
           + filename);
       }
 
+      else if (arg == "dar" || arg == "decay-at-rest") {
+        sources.push_back(std::make_unique<marley::DecayAtRestNeutrinoSource>(
+          weight, neutrino_pid));
+      }
+
       else if (arg == "fd" || arg == "fermi-dirac" || arg == "fermi_dirac") {
         double Emin, Emax, temperature, eta;
         // Process the minimum energy for this source
