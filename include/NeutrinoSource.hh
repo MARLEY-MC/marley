@@ -71,8 +71,8 @@ namespace marley {
   class MonoNeutrinoSource : public NeutrinoSource {
     public:
       inline MonoNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, double weight = 1.0,
-        double E = 10./* MeV*/) : NeutrinoSource(particle_id, weight)
+        = marley_utils::ELECTRON_NEUTRINO, double w = 1.0,
+        double E = 10./* MeV*/) : NeutrinoSource(particle_id, w)
       { 
         energy = E;
       }
@@ -110,10 +110,10 @@ namespace marley {
   class FermiDiracNeutrinoSource : public NeutrinoSource {
     public:
       inline FermiDiracNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, double weight = 1.,
+        = marley_utils::ELECTRON_NEUTRINO, double w = 1.,
         double Emin = 0., double Emax = 100., double temp = 3.5,
         double e_t_a = 0.)
-        : NeutrinoSource(particle_id, weight)
+        : NeutrinoSource(particle_id, w)
       {
         E_min = Emin;
         E_max = Emax;
@@ -170,10 +170,10 @@ namespace marley {
   class BetaFitNeutrinoSource : public NeutrinoSource {
     public:
       inline BetaFitNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, double weight = 1.,
+        = marley_utils::ELECTRON_NEUTRINO, double w = 1.,
         double Emin = 0., double Emax = 100., double Emean = 13.,
         double b_e_t_a = 4.5)
-        : NeutrinoSource(particle_id, weight)
+        : NeutrinoSource(particle_id, w)
       {
         E_min = Emin;
         E_max = Emax;
@@ -231,9 +231,9 @@ namespace marley {
     public:
       inline FunctionNeutrinoSource(const std::function<double(double)>&
         prob_dens_func = [](double E) -> double { (void)(E); return 1; },
-        double weight = 1., int particle_id = marley_utils::ELECTRON_NEUTRINO,
+        double w = 1., int particle_id = marley_utils::ELECTRON_NEUTRINO,
         double Emin = 0., double Emax = 100.)
-        : NeutrinoSource(particle_id, weight)
+        : NeutrinoSource(particle_id, w)
       {
         E_min = Emin;
         E_max = Emax;
@@ -272,9 +272,9 @@ namespace marley {
   // http://iopscience.iop.org/1742-6596/574/1/012167)
   class DecayAtRestNeutrinoSource : public NeutrinoSource {
     public:
-      inline DecayAtRestNeutrinoSource(double weight = 1.,
+      inline DecayAtRestNeutrinoSource(double w = 1.,
         int particle_id = marley_utils::ELECTRON_NEUTRINO)
-        : NeutrinoSource(particle_id, weight)
+        : NeutrinoSource(particle_id, w)
       {
   
         if (particle_id != marley_utils::ELECTRON_NEUTRINO &&
@@ -322,25 +322,25 @@ namespace marley {
       using InterpolationMethod = Grid::InterpolationMethod;
   
       inline GridNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, double weight = 1.,
+        = marley_utils::ELECTRON_NEUTRINO, double w = 1.,
         InterpolationMethod interp_method = InterpolationMethod::LinearLinear)
-        : NeutrinoSource(particle_id, weight), grid(interp_method)
+        : NeutrinoSource(particle_id, w), grid(interp_method)
       {
         //check_for_errors();
       }
   
       inline GridNeutrinoSource(const Grid& g,
-        int particle_id = marley_utils::ELECTRON_NEUTRINO, double weight = 1.)
-        : NeutrinoSource(particle_id, weight), grid(g)
+        int particle_id = marley_utils::ELECTRON_NEUTRINO, double w = 1.)
+        : NeutrinoSource(particle_id, w), grid(g)
       {
         check_for_errors();
       }
   
       inline GridNeutrinoSource(const std::vector<double>& Es,
         const std::vector<double>& prob_densities, int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, double weight = 1., InterpolationMethod
+        = marley_utils::ELECTRON_NEUTRINO, double w = 1., InterpolationMethod
         interp_method = InterpolationMethod::LinearLinear)
-        : NeutrinoSource(particle_id, weight), grid(Es, prob_densities,
+        : NeutrinoSource(particle_id, w), grid(Es, prob_densities,
         interp_method)
       {
         check_for_errors();
