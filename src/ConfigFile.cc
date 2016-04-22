@@ -29,11 +29,9 @@ namespace {
 // configuration file parameters
 marley::ConfigFile::ConfigFile() {
   seed = std::chrono::system_clock::now().time_since_epoch().count();
-  #ifdef USE_ROOT
   writeroot = false;
   check_before_root_file_overwrite = true;
   root_filename = "events.root";
-  #endif
   writehepevt = false;
   check_before_hepevt_file_overwrite = true;
   hepevt_filename = "events.hepevt";
