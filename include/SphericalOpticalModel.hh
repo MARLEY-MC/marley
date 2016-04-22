@@ -70,13 +70,13 @@ namespace marley {
         return -temp / (a * std::pow(1 + temp, 2));
       }
   
-      // Coulomb potential for a point particle with charge z*e interacting with a
-      // uniformly charged sphere with radius R and charge Z*e
-      inline double Vc(double r, double R, int Z, int z) const {
-        if (Z == 0 || z == 0) return 0;
-        else if (r < R) return Z * z * marley_utils::e2
+      // Coulomb potential for a point particle with charge q*e interacting with a
+      // uniformly charged sphere with radius R and charge Q*e
+      inline double Vc(double r, double R, int Q, int q) const {
+        if (Q == 0 || q == 0) return 0;
+        else if (r < R) return Q * q * marley_utils::e2
           * (3 - std::pow(r / R, 2)) / (2 * R);
-        else return Z * z * marley_utils::e2 / r;
+        else return Q * q * marley_utils::e2 / r;
       }
   
       // Non-derivative radial Schrödinger equation terms to use for computing
