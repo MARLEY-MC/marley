@@ -110,11 +110,9 @@ namespace marley {
       // configuration file, ownership will be transferred to the generator.
       std::vector<std::unique_ptr<marley::NeutrinoSource> > sources;
   
-      #ifdef USE_ROOT
       std::string root_filename;
       bool writeroot;
       bool check_before_root_file_overwrite;
-      #endif
   
       std::string hepevt_filename;
       bool writehepevt;
