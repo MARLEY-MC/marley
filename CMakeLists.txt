@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 set(CMAKE_DISABLE_SOURCE_CHANGES on)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED on)
 
 project(marley)
 
@@ -29,9 +31,6 @@ if(ROOT AND ROOTCINT AND ROOTCONFIG)
                       COMMAND ${ROOTCINT} marley_root_dict.cc -c ${ROOT_DICT_INCLUDES})
   add_custom_target(root_dictionaries DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/marley_root_dict.cc)
 
-  # Add the dictionary to the source file list
-  set(SOURCES ${SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/marley_root_dict.cc)
-
   # Tell the MARLEY sources to use optional ROOT-dependent features
   add_definitions(-DUSE_ROOT)
 else()
@@ -46,21 +45,20 @@ if (NOT WIN32)
   set_target_properties(MARLEY_static PROPERTIES OUTPUT_NAME MARLEY)
 endif()
 
+add_executable(marley "src/marley.cc")
+
 if(ROOT AND ROOTCINT AND ROOTCONFIG)
-  # Now that we've created the library targets, add the dictionary to their
-  # dependencies
-  add_dependencies(MARLEY root_dictionaries)
-  add_dependencies(MARLEY_static root_dictionaries)
+  # Create a shared library to allow the ROOT dictionary to be easily loaded on demand
+  add_library(MARLEY_ROOT SHARED ${CMAKE_CURRENT_BINARY_DIR}/marley_root_dict.cc)
+  target_link_libraries(MARLEY_ROOT MARLEY)
+
+  # Create the example executable using ROOT
+  target_link_libraries(marley MARLEY_ROOT)
+  set_target_properties(marley PROPERTIES LINK_FLAGS ${ROOT_LDFLAGS})
+else()
+  # Create the example executable without using ROOT
+  target_link_libraries(marley MARLEY)
 endif()
 
-add_executable(marley "src/marley.cc")
-# Guarantee that the ROOT dictionary is linked from the static library
-# to our executable by requesting that all symbols from the static
-# library are included by the linker.
-set(MARLEY_STATIC_LINK -Wl,--whole-archive MARLEY_static -Wl,--no-whole-archive)
-target_link_libraries(marley ${MARLEY_STATIC_LINK})
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 \
-  -std=c++14 -Wall -Wextra -Wpedantic -Werror \
-  ${ROOT_CFLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ROOT_LDFLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} -O3 \
+  -Wall -Wextra -Wpedantic -Werror")
