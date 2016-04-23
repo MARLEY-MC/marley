@@ -50,15 +50,18 @@ namespace marley_utils {
 
   // Conversion factor to use when expressing ENSDF energies (keV) in
   // standard MARLEY energy units (MeV)
-  const double MeV = 1e-3;
+  constexpr double MeV = 1e-3;
 
   // Conversion factor to use when expressing atomic masses (micro-amu)
   // in standard MARLEY energy units (MeV)
-  const double micro_amu = 0.000931494061;
+  constexpr double micro_amu = 0.000931494061;
 
   // Infinities
   constexpr double infinity = std::numeric_limits<double>::max();
   constexpr double minus_infinity = -infinity;
+
+  // Muon mass
+  constexpr double m_mu = 113428.9267; // micro-amu
 
   // Consistent value of pi to use throughout all of MARLEY
   constexpr double pi = std::acos(-1);

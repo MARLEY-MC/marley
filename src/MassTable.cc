@@ -1,9 +1,19 @@
 #include <iostream>
 #include <functional>
-#include <utility>
 
 #include "marley_utils.hh"
 #include "MassTable.hh"
+
+double marley::MassTable::get_particle_mass(int particle_id) {
+  int id = particle_id;
+  // The lookup table only includes entries for particles (as opposed to
+  // antiparticles), so flip the sign of the input particle id for the
+  // lookup if it represents an antiparticle.
+  if (id < 0) id *= -1;
+  // Find the particle's mass in the lookup table, and convert its
+  // value from micro-amu to MeV
+  return micro_amu * particle_masses.at(id);
+}
 
 double marley::MassTable::get_atomic_mass(int nucleus_pid, bool theory_ok) {
   bool exp;
@@ -79,7 +89,7 @@ double marley::MassTable::lookup_atomic_mass(int Z, int A, bool& exp,
 double marley::MassTable::get_binding_energy(int Z, int A, bool theory_ok) {
   int N = A - Z;
   double m_hydrogen_1 = atomic_masses.at(1000010010);
-  double mn = find_particle_mass(marley_utils::NEUTRON);
+  double mn = particle_masses.at(marley_utils::NEUTRON); 
 
   bool exp;
   double mN = lookup_atomic_mass(Z, A, exp, theory_ok);
@@ -112,8 +122,8 @@ double marley::MassTable::get_fragment_separation_energy(int Z, int A, int pid,
   int Zf = Z - Zx;
   int Af = A - get_particle_A(pid);
 
-  double extra_mass = Zx*find_particle_mass(marley_utils::ELECTRON)
-    + find_particle_mass(pid);
+  double extra_mass = Zx*particle_masses.at(marley_utils::ELECTRON)
+    + particle_masses.at(pid);
 
   bool exp_i, exp_f;
   double m_atom_initial = lookup_atomic_mass(Z, A, exp_i, theory_ok);
@@ -185,17 +195,24 @@ const std::vector<int> marley::MassTable::fragment_pids = {
 // 1 micro-amu = 0.000931494061 MeV.
 ////////////////////////////////////////////////////////////////////////////////
 
-// Particle mass data moved to header file as a constexpr array.
-constexpr std::pair<int, double> marley::MassTable::particle_masses[];
+// Lookup table for particle masses. Keys are PDG particle
+// ID numbers, values are masses in micro-amu.
+const std::unordered_map<int, double> marley::MassTable::particle_masses = {
+  {11, 548.57990946}, // e-
+  {12, 0.0}, // nu_e
+  {13, marley_utils::m_mu}, // mu-
+  {14, 0.0}, // nu_mu
+  {15, 1907490}, // tau-
+  {16, 0.0}, // nu_tau
+  {22, 0.0}, // photon
+  {2112, 1008664.91585}, // neutron
+  {2212, 1007276.466812}, // proton
+  {1000010020, 2013553.212712}, // deuteron
+  {1000010030, 3015500.7134}, // triton
+  {1000020030, 3014932.2468}, // helion
+  {1000020040, 4001506.179125}, // alpha
+};
 
-// TODO: consider changing this map to a constexpr array as well. Note that you
-// might want to do some profiling before committing the change, though (the
-// constexpr entries may be evaluated at compile-time, but your current
-// constexpr lookup function is linear in the size of the map). For the
-// particle masses, the map is small enough (and often the particles looked up
-// are known at compile time) that this doesn't matter as much as for the
-// atomic masses.
-//
 // Lookup table for atomic masses. Keys are PDG particle
 // ID numbers for the nuclei, values are masses in micro-amu.
 const std::unordered_map<int, double> marley::MassTable::atomic_masses = {
