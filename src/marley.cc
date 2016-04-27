@@ -53,7 +53,7 @@ inline void print_help(std::string executable_name) {
 
 inline void print_version() {
   std::cout << "MARLEY (Model of Argon Reaction Low Energy Yields) v"
-    << marley_utils::VERSION << std::endl;
+    << marley_utils::MARLEY_VERSION << std::endl;
   exit(0);
 }
 

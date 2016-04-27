@@ -15,7 +15,7 @@
 namespace marley_utils {
 
   // MARLEY version string
-  static constexpr const char* VERSION = "0.9.0";
+  static constexpr const char* MARLEY_VERSION = "0.9.0";
 
   // Frequently used particle IDs
   static constexpr int PHOTON = 22;
