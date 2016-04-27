@@ -57,6 +57,23 @@ inline void print_version() {
   exit(0);
 }
 
+// Use this instead of std::put_time to allow this executable to be built
+// with g++ 4.9 (issue fixed in 5.0). See discussion here:
+// http://stackoverflow.com/a/14137287
+inline std::string put_time(std::tm* time, const char* format)
+{
+  static constexpr size_t TIME_STR_SIZE = 100;
+  std::string time_str(TIME_STR_SIZE, ' ');
+  // Pass a pointer to the first character in the time string as the char*
+  // argument of std::strftime(). This is well-defined behavior because the
+  // storage of std::string is guaranteed by the C++11 standard to be
+  // contiguous, and we have pre-allocated storage inside the string of the
+  // necessary size using the constructor above.
+  std::strftime(&time_str.front(), TIME_STR_SIZE, format, time);
+  marley_utils::trim_right_inplace(time_str);
+  return time_str;
+}
+
 int main(int argc, char* argv[]){
 
   // TODO: if you need command line parsing beyond the
@@ -114,7 +131,7 @@ int main(int argc, char* argv[]){
 
 
   std::cout << "MARLEY started on "
-    << std::put_time(std::localtime(&start_time), "%c %Z")
+    << put_time(std::localtime(&start_time), "%c %Z")
     << std::endl;
   #ifndef USE_ROOT
   std::cout << "Seed for random number generator: "
@@ -327,7 +344,7 @@ int main(int argc, char* argv[]){
         <std::chrono::system_clock::duration>(estimated_total_time));
 
       std::cout << "MARLEY is estimated to terminate on "
-        << std::put_time(std::localtime(&estimated_end_time), "%c %Z")
+        << put_time(std::localtime(&estimated_end_time), "%c %Z")
         << std::endl;
 
       #ifdef USE_ROOT
@@ -389,7 +406,7 @@ int main(int argc, char* argv[]){
   else {
     std::cout << "MARLEY was interrupted by the user on ";
   }
-  std::cout << std::put_time(std::localtime(&end_time), "%c %Z")
+  std::cout << put_time(std::localtime(&end_time), "%c %Z")
     << "\033[K\033[E\033[K";
 
   return 0;
