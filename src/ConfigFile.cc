@@ -386,6 +386,73 @@ marley::ConfigFile::ConfigFile(std::string file_name)
           neutrino_pid, weight, Emin, Emax, temperature, eta));
       }
 
+      else if (arg == "bf" || arg == "beta" || arg == "beta-fit") {
+        double Emin, Emax, Eavg, beta;
+        // Process the minimum energy for this source
+        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        if (std::regex_match(arg, rx_num)) {
+          Emin = std::stod(arg);
+          if (Emin < 0.) throw marley::Error(
+            std::string("Negative") + " minimum energy " + std::to_string(Emin)
+            + " given for a beta-fit neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        }
+        else throw marley::Error(
+            std::string("Invalid") + " minimum energy '" + arg
+            + "' given for a beta-fit neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        // Process the maximum energy for this source
+        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        if (std::regex_match(arg, rx_num)) {
+          Emax = std::stod(arg);
+          if (Emax < Emin) throw marley::Error(
+            std::string("Maximum") + " energy " + std::to_string(Emax)
+            + " given for a beta-fit neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename
+            + " is less than the minimum energy " + std::to_string(Emin));
+        }
+        else throw marley::Error(
+            std::string("Invalid") + " maximum energy '" + arg
+            + "' given for a beta-fit neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        // Process the temperature (in MeV) for this source
+        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        if (std::regex_match(arg, rx_num)) {
+          Eavg = std::stod(arg);
+          if (Eavg <= 0.) throw marley::Error(
+            std::string("Non-positive") + " average energy "
+            + std::to_string(Eavg)
+            + " given for a beta-fit neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        }
+        else throw marley::Error(
+            std::string("Invalid") + " average energy '" + arg
+            + "' given for a beta-fit neutrino source"
+            + " specification on line " + std::to_string(line_num)
+            + " of the configuration file " + filename);
+        // Process the fit parameter beta for this source, or
+        // set it to 4.5 if it is not given. Any real number is allowed for
+        // this parameter.
+        if (next_word_from_line(iss, arg, keyword, line_num, false, false)) {
+          if (std::regex_match(arg, rx_num)) beta = std::stod(arg);
+          else throw marley::Error(
+              std::string("Invalid") + " fit parameter '" + arg
+              + "' given for a beta-fit neutrino source"
+              + " specification on line " + std::to_string(line_num)
+              + " of the configuration file " + filename);
+        }
+        else beta = 4.5;
+
+        // Now that we have all of the necessary parameters, create the new
+        // Fermi-Dirac neutrino source
+        sources.push_back(std::make_unique<marley::BetaFitNeutrinoSource>(
+          neutrino_pid, weight, Emin, Emax, Eavg, beta));
+      }
 
       // The histogram and grid source types are both implemented using an
       // interpolation grid object and share many similarities, so use
