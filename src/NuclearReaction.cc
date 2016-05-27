@@ -397,8 +397,7 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
   // Get a pointer to the selected level
   marley::Level* plevel = residue_level_pointers.at(l_index);
 
-  // Get the energy of the selected level. This will be
-  // needed for sampling a scattering cosine.
+  // Get the energy of the selected level.
   double E_level;
   if (plevel != nullptr) {
     E_level = plevel->get_energy();
