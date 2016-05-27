@@ -1,5 +1,3 @@
-#include <thread>
-
 #include "marley_utils.hh"
 #include "ConfigFile.hh"
 #include "InterpolationGrid.hh"
@@ -35,11 +33,6 @@ marley::ConfigFile::ConfigFile() {
   writehepevt = false;
   check_before_hepevt_file_overwrite = true;
   hepevt_filename = "events.hepevt";
-/***
-  contbin_width = DEFAULT_CONTINUUM_BIN_RESOLUTION;
-  contbin_num_subs = DEFAULT_CONTINUUM_BIN_SUBINTERVALS;
-  num_threads = 1;
-***/
   num_events = DEFAULT_NUM_EVENTS;
 }
 
@@ -50,7 +43,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
 {
 
   filename = file_name;
-  std::ifstream file_in(filename);
+  file_in.open(filename);
 
   // If the file doesn't exist or some other error
   // occurred, complain and give up.
@@ -59,24 +52,16 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       "file " + filename);
   }
 
-  std::string line; // String to store the current line
-                    // of the configuration file during parsing
-
-  std::string keyword; // String to store the current keyword read in
-                       // from the configuration file
-
-  std::istringstream iss; // Stream used to help parse each line
-
   // Stores the number of lines checked by each call to
   // marley_utils::get_next_line
   int lines_checked;
 
   // Loop through each line in the file. Search for keywords,
   // and react appropriately whenever they are encountered. 
-  for (int line_num = 0;
+  for (line_num = 0;
     line = marley_utils::get_next_line(file_in, rx_comment_or_empty, false,
       lines_checked), line_num += lines_checked,
-    line != ""; /*++line_num*/)
+    line != "";)
   {
     // Load the stream with the new line
     iss.clear();
@@ -95,7 +80,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
 
     // Respond accordingly depending on which keyword it is
     if (keyword == "seed") {
-      next_word_from_line(iss, arg, keyword, line_num);
+      next_word_from_line(arg);
       // If "time" is used as the seed argument, use the system time as the seed
       if (arg == "time") ; // default value, so do nothing
       // If "device" is used, seed the random number generator using random_device 
@@ -111,12 +96,12 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       }
     }
     else if (keyword == "reaction") {
-      next_word_from_line(iss, arg, keyword, line_num, true, false);
+      next_word_from_line(arg, true, false);
       reaction_filenames.insert(arg);
     }
     else if (keyword == "rootfile") {
       #ifdef USE_ROOT
-      next_word_from_line(iss, arg, keyword, line_num, true, false);
+      next_word_from_line(arg, true, false);
       root_filename = arg;
       #else
       // TODO: change this to a warning that this will be ignored
@@ -126,12 +111,12 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       #endif
     }
     else if (keyword == "hepevtfile") {
-      next_word_from_line(iss, arg, keyword, line_num, true, false);
+      next_word_from_line(arg, true, false);
       hepevt_filename = arg;
     }
     else if (keyword == "writeroot") {
       #ifdef USE_ROOT
-      next_word_from_line(iss, arg, keyword, line_num, true, true);
+      next_word_from_line(arg, true, true);
       if (arg == "yes") writeroot = true;
       else if (arg == "no") writeroot = false;
       else if (arg == "overwrite") {
@@ -151,7 +136,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       #endif
     }
     else if (keyword == "writehepevt") {
-      next_word_from_line(iss, arg, keyword, line_num, true, true);
+      next_word_from_line(arg, true, true);
       if (arg == "yes") writehepevt = true;
       else if (arg == "no") writehepevt = false;
       else if (arg == "overwrite") {
@@ -167,9 +152,9 @@ marley::ConfigFile::ConfigFile(std::string file_name)
     }
     else if (keyword == "structure") {
       StructureRecord sr;
-      next_word_from_line(iss, sr.filename, keyword, line_num, true, false);
+      next_word_from_line(sr.filename, true, false);
       std::string format_string;
-      next_word_from_line(iss, format_string, keyword, line_num);
+      next_word_from_line(format_string);
       try {
         sr.format = string_to_format(format_string);
       }
@@ -185,7 +170,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       // Require at least one nuclide specifier on this line
       // by using next_word_from_line here with exceptions enabled
       // and then using it with exceptions disabled in the loop
-      next_word_from_line(iss, arg, keyword, line_num);
+      next_word_from_line(arg);
       do {
         // If a numeric specifier is given for the nuclide,
         // assume that it has the format Z*1000 + A, and
@@ -229,8 +214,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
           + "' given on line " + std::to_string(line_num)
           + " of the configuration file " + filename);
 
-      } while (next_word_from_line(iss, arg,
-        keyword, line_num, false));
+      } while (next_word_from_line(arg, false));
 
       // Add this structure record to the master vector
       structure_records.push_back(sr);
@@ -243,7 +227,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       int neutrino_pid;
 
       // Get the particle ID for the neutrino type produced by this source
-      next_word_from_line(iss, arg, keyword, line_num, true, false);
+      next_word_from_line(arg, true, false);
       if (std::regex_match(arg, rx_int)) {
         neutrino_pid = stoi(arg);
         if (!marley::NeutrinoSource::pid_is_allowed(neutrino_pid)) {
@@ -265,7 +249,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
  * multiple sources concurrently.
       // Get the weight for this source if it is specified. Otherwise,
       // set the weight to 1.
-      next_word_from_line(iss, arg, keyword, line_num, true, true);
+      next_word_from_line(arg, true, true);
       bool weight_specified = false;
       if (std::regex_match(arg, rx_num)) {
         weight = std::stod(arg);
@@ -281,20 +265,20 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       else weight = 1.;
 
       // Advance to the next argument if the weight was given
-      if (weight_specified) next_word_from_line(iss, arg, keyword, line_num,
+      if (weight_specified) next_word_from_line(arg,
         true, true);
 */
 
 /* Replacement code (delete when you re-enable the block above) */
 
       weight = 1.;
-      next_word_from_line(iss, arg, keyword, line_num, true, true);
+      next_word_from_line(arg, true, true);
 /* End of replacement code */
 
       // Determine which source style was requested, process the remaining
       // arguments appropriately, and construct the new marley::NeutrinoSource
       if (arg == "mono" || arg == "monoenergetic") {
-        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        next_word_from_line(arg, true, false);
         if (std::regex_match(arg, rx_num)) {
           double nu_energy = std::stod(arg);
           if (nu_energy <= 0.) throw marley::Error(
@@ -321,7 +305,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       else if (arg == "fd" || arg == "fermi-dirac" || arg == "fermi_dirac") {
         double Emin, Emax, temperature, eta;
         // Process the minimum energy for this source
-        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        next_word_from_line(arg, true, false);
         if (std::regex_match(arg, rx_num)) {
           Emin = std::stod(arg);
           if (Emin < 0.) throw marley::Error(
@@ -336,7 +320,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
             + " specification on line " + std::to_string(line_num)
             + " of the configuration file " + filename);
         // Process the maximum energy for this source
-        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        next_word_from_line(arg, true, false);
         if (std::regex_match(arg, rx_num)) {
           Emax = std::stod(arg);
           if (Emax < Emin) throw marley::Error(
@@ -352,7 +336,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
             + " specification on line " + std::to_string(line_num)
             + " of the configuration file " + filename);
         // Process the temperature (in MeV) for this source
-        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        next_word_from_line(arg, true, false);
         if (std::regex_match(arg, rx_num)) {
           temperature = std::stod(arg);
           if (temperature <= 0.) throw marley::Error(
@@ -370,7 +354,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
         // Process the dimensionless pinching parameter eta for this source, or
         // set it to zero if one is not given. Any real number is allowed for
         // this parameter.
-        if (next_word_from_line(iss, arg, keyword, line_num, false, false)) {
+        if (next_word_from_line(arg, false, false)) {
           if (std::regex_match(arg, rx_num)) eta = std::stod(arg);
           else throw marley::Error(
               std::string("Invalid") + " pinching parameter '" + arg
@@ -389,7 +373,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       else if (arg == "bf" || arg == "beta" || arg == "beta-fit") {
         double Emin, Emax, Eavg, beta;
         // Process the minimum energy for this source
-        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        next_word_from_line(arg, true, false);
         if (std::regex_match(arg, rx_num)) {
           Emin = std::stod(arg);
           if (Emin < 0.) throw marley::Error(
@@ -404,7 +388,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
             + " specification on line " + std::to_string(line_num)
             + " of the configuration file " + filename);
         // Process the maximum energy for this source
-        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        next_word_from_line(arg, true, false);
         if (std::regex_match(arg, rx_num)) {
           Emax = std::stod(arg);
           if (Emax < Emin) throw marley::Error(
@@ -420,7 +404,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
             + " specification on line " + std::to_string(line_num)
             + " of the configuration file " + filename);
         // Process the temperature (in MeV) for this source
-        next_word_from_line(iss, arg, keyword, line_num, true, false);
+        next_word_from_line(arg, true, false);
         if (std::regex_match(arg, rx_num)) {
           Eavg = std::stod(arg);
           if (Eavg <= 0.) throw marley::Error(
@@ -438,7 +422,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
         // Process the fit parameter beta for this source, or
         // set it to 4.5 if it is not given. Any real number is allowed for
         // this parameter.
-        if (next_word_from_line(iss, arg, keyword, line_num, false, false)) {
+        if (next_word_from_line(arg, false, false)) {
           if (std::regex_match(arg, rx_num)) beta = std::stod(arg);
           else throw marley::Error(
               std::string("Invalid") + " fit parameter '" + arg
@@ -471,7 +455,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
 
         // If this is a grid, then parse the interpolation method to use;
         else {
-          next_word_from_line(iss, arg, keyword, line_num, true, true);
+          next_word_from_line(arg, true, true);
           // Specifying an interpolation method using the standard ENDF codes
           // is allowed.
           if (std::regex_match(arg, rx_nonneg_int)) {
@@ -534,8 +518,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
         while(not_finished) {
 
           // Get the first energy
-          bool found_E = next_word_from_line(iss, E_str, keyword, line_num,
-            false, false);
+          bool found_E = next_word_from_line(E_str, false, false);
           if (found_E) {
             if (std::regex_match(E_str, rx_num)) {
               double E = std::stod(E_str);
@@ -561,8 +544,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
               + filename);
           }
           // Get the first probability density
-          bool found_PD = next_word_from_line(iss, PD_str, keyword, line_num,
-            false, false);
+          bool found_PD = next_word_from_line(PD_str, false, false);
           if (found_PD) {
             if (std::regex_match(PD_str, rx_num)) {
               double pd = std::stod(PD_str);
@@ -650,7 +632,7 @@ marley::ConfigFile::ConfigFile(std::string file_name)
     }
 
     else if (keyword == "events") {
-      next_word_from_line(iss, arg, keyword, line_num, true, false);
+      next_word_from_line(arg, true, false);
       if (!std::regex_match(arg, rx_num))
         throw marley::Error(std::string("Invalid")
         + " number of events '" + arg
@@ -668,84 +650,6 @@ marley::ConfigFile::ConfigFile(std::string file_name)
       num_events = static_cast<size_t>(n_events);
     }
 
-/*** Continuum binning and multiple thread options removed 02/01/2016.
- * Neither of these features is fully implemented yet, so they're not
- * necessary to have as part of the configuration file format.
-    else if (keyword == "contbin") {
-      next_word_from_line(iss, arg, keyword, line_num, true, false);
-      if (!std::regex_match(arg, rx_num))
-        throw marley::Error(std::string("Non-numeric")
-        + " continuum bin width '" + arg
-        + "' given on line " + std::to_string(line_num)
-        + " of the configuration file " + filename);
-      double width = std::stod(arg);
-      if (width <= 0.)
-        throw marley::Error(std::string("Continuum")
-        + " bin width '" + arg
-        + "' given on line " + std::to_string(line_num)
-        + " of the configuration file " + filename
-        + " must be positive.");
-      contbin_width = width;
-    }
-    else if (keyword == "contbinsubs") {
-      next_word_from_line(iss, arg, keyword, line_num, true, false);
-      if (!std::regex_match(arg, rx_nonneg_int))
-        throw marley::Error(std::string("Invalid")
-        + " number of continuum bin subintervals '" + arg
-        + "' given on line " + std::to_string(line_num)
-        + " of the configuration file " + filename);
-      int subs = std::stoi(arg);
-      if (subs <= 0)
-        throw marley::Error(std::string("Number")
-        + " of continuum bin subintervals '" + arg
-        + "' given on line " + std::to_string(line_num)
-        + " of the configuration file " + filename
-        + " must be positive.");
-      contbin_num_subs = subs;
-    }
-    else if (keyword == "threads") {
-      next_word_from_line(iss, arg, keyword, line_num, true, false);
-      if (!std::regex_match(arg, rx_nonneg_int))
-        throw marley::Error(std::string("Invalid")
-        + " number of parallel threads '" + arg
-        + "' given on line " + std::to_string(line_num)
-        + " of the configuration file " + filename);
-      int threads = std::stoi(arg);
-      if (threads <= 0)
-        throw marley::Error(std::string("Number")
-        + " of threads '" + arg + "' given on line "
-        + std::to_string(line_num) + " of the configuration file "
-        + filename + " must be positive.");
-
-      num_threads = static_cast<size_t>(threads);
-
-      std::string force;
-      bool forced = next_word_from_line(iss, force, keyword, line_num, false,
-        true);
-      if (forced && force != "force") throw marley::Error(
-        std::string("Trailing") + " argument that is not 'force'"
-        + " given for keyword " + keyword + " on line "
-        + std::to_string(line_num) + " of the configuration file "
-        + filename);
-
-      size_t num_allowed_threads = std::thread::hardware_concurrency();
-
-      // If the requested number of threads exceeds the recommendation for this
-      // machine, then complain. Allow the user to override this precautionary
-      // message using the word "force" on this line of the input file.
-      if (num_threads > 1 && num_threads > num_allowed_threads && !forced)
-        throw marley::Error(std::string("Number")
-          + " of threads '" + arg + "' given on line "
-          + std::to_string(line_num) + " of the configuration file "
-          + filename + " exceeds the number of concurrent threads supported"
-          + " by this machine (" + std::to_string(num_allowed_threads)
-          + ") according to std::thread::hardware_concurrency()."
-          + " To force usage of " + arg + " threads, add the word "
-          + "'force' (without quotes) at the end of line "
-          + std::to_string(line_num) + " of the configuration file "
-          + filename);
-    }
-*******/
     else {
       std::cerr << "Warning: Ignoring unrecognized keyword '"
         << keyword << "' on line " << line_num
@@ -766,28 +670,39 @@ marley::ConfigFile::ConfigFile(std::string file_name)
 // Get the next word from a parsed line. If errors occur, complain.
 // The last argument determines whether the next word should be
 // converted to all lowercase or left as is.
-bool marley::ConfigFile::next_word_from_line(std::istringstream& iss,
-  std::string& word, const std::string& keyword, const int line_number,
+bool marley::ConfigFile::next_word_from_line(std::string& word,
   bool enable_exceptions, bool make_lowercase)
 {
   if (iss.eof()) {
     if (!enable_exceptions) return false;
     throw marley::Error(std::string("Missing argument ")
       + "for keyword '" + keyword + "' encountered while"
-      + " parsing line " + std::to_string(line_number)
+      + " parsing line " + std::to_string(line_num)
       + " of the configuration file " + filename);
   }
   iss >> word;
   if (iss.fail()) {
     if (!enable_exceptions) return false;
-    std::string snum = std::to_string(line_number);
+    std::string snum = std::to_string(line_num);
     throw marley::Error(std::string("Error")
       + " occurred while parsing arguments for keyword '"
       + keyword + "' on line "
-      + std::to_string(line_number)
+      + std::to_string(line_num)
       + " of the configuration file " + filename);
   }
-  if (make_lowercase) marley_utils::to_lowercase_inplace(word);
+  else if (word == "&") {
+    // A single "&" by itself is the line continuation flag. Anything after it
+    // on the current line is ignored, and the next line is treated as a
+    // continuation of the previous line
+    int lines_checked = 0;
+    line = marley_utils::get_next_line(file_in, rx_comment_or_empty, false,
+      lines_checked);
+    line_num += lines_checked,
+    iss.clear();
+    iss.str(line);
+    return next_word_from_line(word, enable_exceptions, make_lowercase);
+  }
+  else if (make_lowercase) marley_utils::to_lowercase_inplace(word);
   return true;
 }
 

@@ -54,28 +54,9 @@ namespace marley {
       #endif
       void print_summary(std::ostream& os = std::cout);
   
-  /***
-      inline double get_contbin_width() const { return contbin_width; }
-      inline size_t get_contbin_num_subs() const { return contbin_num_subs; }
-      inline size_t get_num_threads() const { return num_threads; }
-  ***/
-  
       inline std::vector<std::unique_ptr<marley::NeutrinoSource> >& get_sources() {
         return sources;
       }
-  
-  /***
-      // Default number of subintervals to use when integrating Hauser-Feshbach
-      // fragment and gamma decay widths over a bin in the energy continuum.
-      // By default, We'll approximate the decay width using a single trapezoid
-      // since the underlying approximation of using continuum bins is that the
-      // decay width varies slowly over a bin.
-      static constexpr int DEFAULT_CONTINUUM_BIN_SUBINTERVALS = 1;
-  
-      // Default energy resolution to use when binning the continuum of final
-      // nuclear excitation energies for Hauser-Feshbach model calculations.
-      static constexpr double DEFAULT_CONTINUUM_BIN_RESOLUTION = 0.1; // MeV
-  ***/
   
       inline size_t get_num_events() { return num_events; } 
   
@@ -92,14 +73,6 @@ namespace marley {
       std::unordered_set<std::string> reaction_filenames;
   
       std::vector<StructureRecord> structure_records;
-  
-  /** These members deleted 02/01/2016. Add them back in if these
-   * features are fully implemented in the future.
-      size_t num_threads; // Number of threads to use to generate events in parallel
-  
-      double contbin_width;
-      size_t contbin_num_subs;
-  ***/
   
       // The number of events to generate in a run
       size_t num_events;
@@ -131,9 +104,19 @@ namespace marley {
       // Get the next word from a parsed line. If errors occur, complain.
       // The last argument determines whether the next word should be
       // converted to all lowercase or left as is.
-      bool next_word_from_line(std::istringstream& iss, std::string& word,
-        const std::string& keyword, const int line_number,
+      bool next_word_from_line(std::string& word,
         bool enable_exceptions = true, bool make_lowercase = true);
+
+      // Helper variables used when parsing the file
+      std::ifstream file_in;
+      std::string line; // String to store the current line
+                        // of the configuration file during parsing 
+
+      std::string keyword; // String to store the current keyword read in
+                           // from the configuration file
+
+      std::istringstream iss; // Stream used to parse each line
+      int line_num;  // Keeps track of the current line of the file
   };
 
 }
