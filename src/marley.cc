@@ -9,7 +9,13 @@
 #include <vector>
 
 #include "marley_utils.hh"
+
+#ifdef USE_ROOT
+#include "RootConfigFile.hh"
+#else
 #include "ConfigFile.hh"
+#endif
+
 #include "Generator.hh"
 #include "Event.hh"
 #include "Logger.hh"
@@ -123,7 +129,11 @@ int main(int argc, char* argv[]){
   //std::ofstream log_file("marley.log", std::ofstream::out | std::ofstream::trunc);
   //marley::Logger::Instance().add_stream(log_file, marley::Logger::LogLevel::INFO);
   marley::Logger::Instance().add_stream(std::cout, marley::Logger::LogLevel::INFO);
+  #ifdef USE_ROOT
+  marley::RootConfigFile cf(config_file_name);
+  #else
   marley::ConfigFile cf(config_file_name);
+  #endif
   marley::Generator gen(cf);
 
   std::cout << std::endl << marley_utils::marley_logo << std::endl;
