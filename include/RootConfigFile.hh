@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 
 #include "ConfigFile.hh"
 
@@ -20,6 +21,11 @@ namespace marley {
       // Helper function for loading objects from a ROOT TFile
       template<typename T> T* get_root_object(const std::string& tfile_name,
         const std::string& namecycle);
+
+      // Helper function to check that (E, PDF) pairs represent a valid
+      // probability density function
+      void check_pdf_pairs(const std::vector<double>& Es,
+        const std::vector<double>& PDFs);
   };
 
 }
