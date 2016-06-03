@@ -12,7 +12,9 @@ std::ostream& operator<< (std::ostream& out, const marley::Particle& p);
 namespace marley {
 
   class Particle {
+
     public:
+      // Constructors
       Particle();
       Particle(int id, double m);
       Particle(int id, double m, int q);
@@ -25,31 +27,18 @@ namespace marley {
         double m, int q);
   
       double get_total_energy() const;
-  
-      inline void set_total_energy(double Etot) {
-        total_energy = Etot;
-      }
+      inline void set_total_energy(double Etot) { total_energy = Etot; }
   
       double get_mass() const;
-      void add_child(marley::Particle* child);
-  
+
       double get_px() const;
-  
-      inline void set_px(double p_x) {
-        px = p_x;
-      }
+      inline void set_px(double p_x) { px = p_x; }
   
       double get_py() const;
-  
-      inline void set_py(double p_y) {
-        py = p_y;
-      }
+      inline void set_py(double p_y) { py = p_y; }
   
       double get_pz() const;
-  
-      inline void set_pz(double p_z) {
-        pz = p_z;
-      }
+      inline void set_pz(double p_z) { pz = p_z; }
   
       int get_id() const;
   
@@ -61,31 +50,29 @@ namespace marley {
         return std::max(total_energy - mass, 0.);
       }
   
-      inline double get_charge() const {
-        return charge;
-      }
+      inline double get_charge() const { return charge; }
+      inline void set_charge(int q) { charge = q; }
   
-      inline void set_charge(int q) {
-        charge = q;
-      }
-  
-      inline std::vector<marley::Particle*>& get_children() {
-        return children;
-      }
+      inline std::vector<marley::Particle*>& get_children() { return children; }
+      void add_child(marley::Particle* child);
   
       friend std::ostream& ::operator<< (std::ostream& out, const Particle& p);
   
-    private:
+    protected:
+
       // Helper function for the constructors
       void init(int id, double E, double p_x, double p_y, double p_z, double m,
         int q);
   
       double total_energy; // MeV
-      double px, py, pz; // 3-momentum components
+      double px, py, pz; // 3-momentum components (MeV)
+
       int particle_id; // Uses the particle numbering convention given
                        // by the Particle Data Group
                        // (see http://pdg.lbl.gov/2014/reviews/rpp2014-rev-monte-carlo-numbering.pdf)
+
       double mass; // MeV 
+
       // This class member allows a marley::Particle to represent an atom or ion. 
       // The charge data member was added because the 2014 PDG particle ID codes do not
       // include a prescription for representing ionization states of atoms
