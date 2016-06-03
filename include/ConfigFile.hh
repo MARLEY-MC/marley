@@ -66,7 +66,23 @@ namespace marley {
         return check_before_hepevt_file_overwrite;
       }
   
-    private:
+    protected:
+
+      // This will be overridden by the derived class marley::RootConfigFile to
+      // allow sources that require ROOT libraries to load. The function will
+      // return true if a source was successfully created from one of the extra
+      // types, or false otherwise. The input values (unused in the base class)
+      // are the string from the file indicating what type of source is being
+      // requested, the neutrino type particle ID, and the source weight.
+      inline virtual bool process_extra_source_types(const std::string&,
+        int, double)
+      {
+        return false;
+      }
+
+      // Helper function for the constructor. We avoid polymorphism in the
+      // constructor by delegating the parsing to this method.
+      void parse();
   
       std::string filename;
       uint_fast64_t seed;
