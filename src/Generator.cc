@@ -1,3 +1,4 @@
+#include <cmath>
 #include <string>
 
 #include "Error.hh"
@@ -51,6 +52,19 @@ void marley::Generator::init(marley::ConfigFile& cf) {
     &marley::Generator::unnormalized_Ea_pdf, this, std::placeholders::_1);
   double norm = marley_utils::num_integrate(unnorm_pdf, nu_source->get_Emin(),
     nu_source->get_Emax(), 1e3); // TODO: remove hard-coded value here
+
+  // If norm is too small, this likely means that we have a bad source
+  // specification (e.g., source only produces neutrinos that are below
+  // threshold for all of the defined reactions). Complain if this is
+  // the case.
+  //double norm_without_GF = norm / std::pow(marley_utils::GF, 2);
+  if (norm <= 0. || std::isnan(norm)) {
+    throw marley::Error(std::string("The integral of the")
+      + " cross-section-weighted neutrino flux is <= 0 or NaN. Please verify"
+      + " that your neutrino source spectrum produces significant flux"
+      + " above the reaction threshold(s).");
+  }
+
   // Create the normalized PDF using the normalization factor
   Ea_pdf = [unnorm_pdf, norm](double Ea)
     -> double { return unnorm_pdf(Ea) / norm; };
