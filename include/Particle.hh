@@ -57,6 +57,19 @@ namespace marley {
       void add_child(marley::Particle* child);
   
       friend std::ostream& ::operator<< (std::ostream& out, const Particle& p);
+
+      // Define the == and < operators for comparing marley::Particle objects
+      // so that rootcint will understand how to create a dictionary for
+      // std::list<marley::Particle> and its associated types.
+      inline bool operator==(const marley::Particle& p2) {
+       return (particle_id == p2.particle_id && total_energy == p2.total_energy
+         && px == p2.px && py == p2.py && pz == p2.pz && mass == p2.mass
+         && charge == p2.charge && children == p2.children);
+      }
+
+      inline bool operator<(const marley::Particle& p2) {
+        return (total_energy < p2.total_energy);
+      }
   
     protected:
 
