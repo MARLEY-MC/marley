@@ -10,7 +10,7 @@
 double marley::Integrator::num_integrate(const std::function<double(double)> &f,
   double a, double b) const
 {
-  int two_N = 2*N;
+  size_t two_N = 2*N;
   double A = (b - a)/2;
   double B = (b + a)/2;
   double C = (f(b) + f(a))/(two_N);

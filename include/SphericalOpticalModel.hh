@@ -22,11 +22,11 @@ namespace marley {
         size_t l_max, double h);
   
       inline int get_Z() const {
-        return Z;
+        return Z_;
       }
   
       inline int get_A() const {
-        return A;
+        return A_;
       }
   
     private:
@@ -41,7 +41,7 @@ namespace marley {
         int l, int two_s);
   
       inline std::complex<double> omp(double r) const {
-        return omp_minus_Vc(r) + Vc(r, Rc, z, Z);
+        return omp_minus_Vc(r) + Vc(r, Rc, z, Z_);
       }
   
       // Computes the optical model potential minus the Coulomb potential at
@@ -98,7 +98,7 @@ namespace marley {
       }
   
       // Nuclear atomic and mass numbers
-      int Z, A;
+      int Z_, A_;
       // Neutron parameters
       double v1n, v2n, v3n, v4n, w1n, w2n, d1n, d2n, d3n, vso1n, vso2n;
       double wso1n, wso2n, Efn, Rvn, avn, Rdn, adn, Rso_n, aso_n;

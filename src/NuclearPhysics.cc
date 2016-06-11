@@ -179,9 +179,10 @@ double marley::NuclearPhysics::weisskopf_partial_decay_width(int A,
 }
 
 double marley::NuclearPhysics::gamma_continuum_partial_width(int Z, int A,
-  int twoJi, double Exi, double Exf)
+  int twoJi, marley::Parity Pi, double Exi, marley::LevelDensityModel& ldm,
+  double Exf)
 {
-  double continuum_width = 0;
+  double continuum_width = 0.;
   // Approximate the gamma energy by the energy difference between the two levels
   // TODO: consider adding a nuclear recoil correction here
   double e_gamma = Exi - Exf;
@@ -196,15 +197,15 @@ double marley::NuclearPhysics::gamma_continuum_partial_width(int Z, int A,
     // for Ji = 0 to Jf = 0 transitions, which are not allowed by angular
     // momentum conservation.
     if (!initial_spin_is_zero) {
-      continuum_width += gamma_cpw(Z, A, mpol, twoJf, e_gamma, Exf);
+      continuum_width += gamma_cpw(Z, A, mpol, twoJf, e_gamma, Pi, ldm, Exf);
       // Consider the other possible final spin value for this multipolarity if
       // it is allowed (Jf = Ji - l is positive)
       twoJf = twoJi - two_l;
       if (twoJf >= 0) continuum_width += gamma_cpw(Z, A, mpol, twoJf, e_gamma,
-        Exf);
+        Pi, ldm, Exf);
     }
     else if (twoJf > 0) continuum_width += gamma_cpw(Z, A, mpol, twoJf, e_gamma,
-      Exf);
+      Pi, ldm, Exf);
   }
   return continuum_width;
 }
@@ -213,7 +214,8 @@ double marley::NuclearPhysics::gamma_continuum_partial_width(int Z, int A,
 // density) predicted by the Hauser-Feshbach statistical model for decay of a
 // given nuclear level via gamma-ray emission.
 double marley::NuclearPhysics::hf_gamma_partial_width(double Ex, int twoJi,
-  marley::Parity Pi, const marley::DecayScheme& ds)
+  marley::Parity Pi, const marley::DecayScheme& ds,
+  marley::LevelDensityModel& ldm)
 {
   int Z = ds.get_Z();
   int A = ds.get_A();
@@ -262,8 +264,9 @@ double marley::NuclearPhysics::hf_gamma_partial_width(double Ex, int twoJi,
 
     // Create a forwarding call wrapper for the continuum partial width member
     // function that takes a single argument.
-    std::function<double(double)> gpw = std::bind(&gamma_continuum_partial_width,
-      Z, A, twoJi, Ex, std::placeholders::_1 /*Exf*/);
+    std::function<double(double)> gpw = [=, &ldm](double Exf) -> double {
+      return gamma_continuum_partial_width(Z, A, twoJi, Pi, Ex, ldm, Exf);
+    };
 
     // Numerically integrate using the call wrapper, the integration bounds, and
     // the number of subintervals
@@ -279,7 +282,8 @@ double marley::NuclearPhysics::hf_gamma_partial_width(double Ex, int twoJi,
 // given nuclear level via emission of the fragment f.
 double marley::NuclearPhysics::hf_fragment_partial_width(int Zi, int Ai,
   double Ex, int twoJi, marley::Parity Pi, const marley::Fragment& f,
-  /*const*/ marley::SphericalOpticalModel& om, const marley::DecayScheme& ds)
+  marley::SphericalOpticalModel& om, const marley::DecayScheme& ds,
+  marley::LevelDensityModel& ldm)
 {
   // Get information about the current fragment
   int two_s = f.get_two_s();
@@ -315,8 +319,6 @@ double marley::NuclearPhysics::hf_fragment_partial_width(int Zi, int Ai,
     Exf_max = Ex - Sa;
   }
   else {
-    int Zf = om.get_Z();
-    int Af = om.get_A();
     Vc = coulomb_barrier(Zf, Af, Za, f.get_A()); // Ea_min = Vc
     Exf_max = std::sqrt(std::pow(Mi - Ma, 2) - 2*Vc*Mi) - Mfgs_ion;
   }
@@ -354,9 +356,11 @@ double marley::NuclearPhysics::hf_fragment_partial_width(int Zi, int Ai,
 
     // Create a forwarding call wrapper for the continuum partial width member
     // function that takes a single argument.
-    std::function<double(double)> cpw = std::bind(
-      &fragment_continuum_partial_width, Mconst, Mfgs_ion, Mi, twoJi, Pi,
-      fragment_pid, two_s, Pa, om, std::placeholders::_1 /*Exf*/);
+    std::function<double(double)> cpw = [=, &om, &ldm](double Exf) -> double {
+      double Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
+      return fragment_continuum_partial_width(fragment_pid, Ea, two_s, Pa,
+        twoJi, Pi, om, ldm, Exf);
+    };
 
     // Numerically integrate using the call wrapper, the integration bounds, and
     // the number of subintervals
@@ -367,15 +371,12 @@ double marley::NuclearPhysics::hf_fragment_partial_width(int Zi, int Ai,
   return discrete_width + continuum_width;
 }
 
-double marley::NuclearPhysics::fragment_continuum_partial_width(double Mconst,
-  double Mfgs_ion, double Mi, int twoJi, marley::Parity Pi, int fragment_pid,
-  int two_s, marley::Parity Pa, /*const*/ marley::SphericalOpticalModel& om,
-  double Exf)
+double marley::NuclearPhysics::fragment_continuum_partial_width(
+  int fragment_pid, double Ea, int two_s, marley::Parity Pa, int twoJi,
+  marley::Parity Pi, marley::SphericalOpticalModel& om,
+  marley::LevelDensityModel& ldm, double Exf)
 {
-  double Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
-  double continuum_width = 0;
-  int Zf = om.get_Z();
-  int Af = om.get_A();
+  double continuum_width = 0.;
   // Final nuclear state parity
   marley::Parity Pf;
   // The orbital parity starts as (-1)^0 = 1. Rather than applying parity
@@ -395,7 +396,7 @@ double marley::NuclearPhysics::fragment_continuum_partial_width(double Mconst,
       {
         continuum_width += om.transmission_coefficient(Ea, fragment_pid, two_j, l,
           two_s, DEFAULT_NUMEROV_STEP_SIZE)
-          * marley::BackshiftedFermiGasModel::level_density(Zf, Af, Exf, twoJf);
+          * ldm.level_density(Exf, twoJf);
           // TODO: since only the spin distribution changes in the twoJf loop,
           // you can optimize this by precomputing most of the level density
           // and the multiplying here by the appropriate spin distribution
@@ -408,7 +409,7 @@ double marley::NuclearPhysics::fragment_continuum_partial_width(double Mconst,
 double marley::NuclearPhysics::fragment_discrete_partial_width(double Exf_max,
   double Mconst, double Mfgs_ion, double Mi, int twoJi, marley::Parity Pi,
   int fragment_pid, int two_s, marley::Parity Pa,
-  /*const*/ marley::SphericalOpticalModel& om,
+  marley::SphericalOpticalModel& om,
   const std::vector<marley::Level*>* sorted_lps)
 {
   double discrete_width = 0;
@@ -506,11 +507,11 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
   std::unordered_map<const marley::Fragment*, double> E_c_mins;
   std::unordered_map<const marley::Fragment*, double> Exf_maxes;
 
-  for (const auto& f : marley::NuclearPhysics::get_fragments()) {
+  for (const auto& f : fragments) {
     int Zf = Zi - f.get_Z();
     int Af = Ai - f.get_A();
 
-    /*const*/ marley::SphericalOpticalModel& om = db.get_optical_model(Zf, Af);
+    marley::SphericalOpticalModel& om = db.get_optical_model(Zf, Af);
     marley::DecayScheme* ds = db.get_decay_scheme(Zf, Af);
 
     // Get information about the current fragment
@@ -555,7 +556,7 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
     // the fragment emission threshold, the partial decay width is zero, so we can
     // skip this fragment rather than slogging through the calculation.
     // We'll also skip it if we're exactly at threshold to avoid numerical problems.
-    if (Mconst / (2 * Mi) - Vc <= 0) continue;
+    if (Mconst / (2 * Mi) - Vc <= 0.) continue;
 
     // Let the continuum go down to 0 MeV unless there is a decay scheme object
     // available for the final nuclide (we'll check this in a second).
@@ -563,11 +564,12 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
   
     // If discrete level data is available for the final nuclide, get decay
     // widths for each accessible level
-    if (ds != nullptr) {
+    if (ds) {
 
       // Get a pointer to the vector of sorted pointers to levels in the decay
       // scheme
-      const std::vector<marley::Level*>* sorted_lps = ds->get_sorted_level_pointers();
+      const std::vector<marley::Level*>* sorted_lps =
+        ds->get_sorted_level_pointers();
 
       // Use the maximum discrete level energy from the decay scheme object as the
       // lower bound for the continuum
@@ -582,7 +584,7 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
       for (const auto& level : *sorted_lps) {
         double Exf = level->get_energy();
         if (Exf < Exf_max) {
-          double discrete_width = 0;
+          double discrete_width = 0.;
           double Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
           int twoJf = level->get_two_J();
           marley::Parity Pf = level->get_parity();
@@ -620,12 +622,16 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
     // If transitions to the energy continuum are possible, include the
     // continuum in the decay channels
     if (Exf_max > E_c_min) {
+
+      marley::LevelDensityModel& ldm = db.get_level_density_model(Zf, Af);
   
       // Create a forwarding call wrapper for the continuum partial width member
       // function that takes a single argument.
-      std::function<double(double)> cpw = std::bind(
-        &fragment_continuum_partial_width, Mconst, Mfgs_ion, Mi, twoJ, Pi,
-        fragment_pid, two_s, Pa, om, std::placeholders::_1 /*Exf*/);
+      std::function<double(double)> cpw = [=, &om, &ldm](double Exf) -> double {
+        double Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
+        return fragment_continuum_partial_width(fragment_pid, Ea, two_s, Pa,
+          twoJ, Pi, om, ldm, Exf);
+      };
   
       // Numerically integrate using the call wrapper, the integration bounds, and
       // the number of subintervals
@@ -653,7 +659,7 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
 
   // If discrete level data is available for this nuclide, get gamma decay
   // widths for each accessible level
-  if (ds != nullptr) {
+  if (ds) {
 
     bool initial_spin_is_zero = twoJ == 0;
     // Loop over the final discrete nuclear levels in order of increasing energy
@@ -702,10 +708,13 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
   // in the possible decay channels
   if (Ex > E_c_min) {
 
+    marley::LevelDensityModel& ldm = db.get_level_density_model(Zi, Ai);
+
     // Create a forwarding call wrapper for the continuum partial width member
     // function that takes a single argument.
-    std::function<double(double)> gpw = std::bind(&gamma_continuum_partial_width,
-      Zi, Ai, twoJ, Ex, std::placeholders::_1 /*Exf*/);
+    std::function<double(double)> gpw = [=, &ldm](double Exf) -> double {
+      return gamma_continuum_partial_width(Zi, Ai, twoJ, Pi, Ex, ldm, Exf);
+    };
 
     // Numerically integrate using the call wrapper, the integration bounds, and
     // the number of subintervals
@@ -771,7 +780,7 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
       double Ea = (Mconst - Exf*(2*mfgs + Exf)) / (2 * Mi);
       int Zf = Zi - fr->get_Z();
       int Af = Ai - fr->get_A();
-      /*const*/ marley::SphericalOpticalModel& om = db.get_optical_model(Zf, Af);
+      marley::SphericalOpticalModel& om = db.get_optical_model(Zf, Af);
       sample_fragment_spin_parity(twoJ, Pi, *fr, om, gen, Exf, Ea);
     }
     else sample_gamma_spin_parity(Zi, Ai, twoJ, Pi, Ex, Exf, gen);
@@ -824,6 +833,9 @@ void marley::NuclearPhysics::sample_gamma_spin_parity(int Z, int A,
 
   double continuum_width = 0;
   marley::Parity Pf;
+
+  marley::LevelDensityModel& ldm
+    = gen.get_structure_db().get_level_density_model(Z, A);
   // Approximate the gamma energy by the energy difference between the two levels
   // TODO: consider adding a nuclear recoil correction here
   double e_gamma = Exi - Exf;
@@ -846,18 +858,18 @@ void marley::NuclearPhysics::sample_gamma_spin_parity(int Z, int A,
 
       if (!initial_spin_is_zero) {
 
-        continuum_width += store_gamma_pws(Z, A, Exf, twoJf, Pi, widths, twoJfs,
-          Pfs, tcE, tcM, mpol);
+        continuum_width += store_gamma_pws(Exf, twoJf, Pi, widths, twoJfs,
+          Pfs, tcE, tcM, mpol, ldm);
 
 	// Consider the other possible final spin value for this multipolarity
 	// if it is allowed (Jf = Ji - l is positive)
         twoJf = twoJ - two_l;
-        if (twoJf >= 0) continuum_width += store_gamma_pws(Z, A, Exf, twoJf,
-          Pi, widths, twoJfs, Pfs, tcE, tcM, mpol);
+        if (twoJf >= 0) continuum_width += store_gamma_pws(Exf, twoJf,
+          Pi, widths, twoJfs, Pfs, tcE, tcM, mpol, ldm);
       }
       // twoJf > 0 but twoJi == 0
-      else continuum_width += store_gamma_pws(Z, A, Exf, twoJf, Pi, widths,
-        twoJfs, Pfs, tcE, tcM, mpol);
+      else continuum_width += store_gamma_pws(Exf, twoJf, Pi, widths,
+        twoJfs, Pfs, tcE, tcM, mpol, ldm);
     }
   }
   // Throw an error if all decays are impossible
@@ -876,7 +888,7 @@ void marley::NuclearPhysics::sample_gamma_spin_parity(int Z, int A,
 
 void marley::NuclearPhysics::sample_fragment_spin_parity(int& twoJ,
   marley::Parity& Pi, const marley::Fragment& f,
-  /*const*/ marley::SphericalOpticalModel& om, marley::Generator& gen,
+  marley::SphericalOpticalModel& om, marley::Generator& gen,
   double Exf, double Ea)
 {
   int fragment_pid = f.get_pid();
@@ -890,6 +902,10 @@ void marley::NuclearPhysics::sample_fragment_spin_parity(int& twoJ,
   double continuum_width = 0;
   int Zf = om.get_Z();
   int Af = om.get_A();
+
+  marley::LevelDensityModel& ldm
+    = gen.get_structure_db().get_level_density_model(Zf, Af);
+
   // Final nuclear state parity
   marley::Parity Pf;
   // The orbital parity starts as (-1)^0 = 1. Rather than applying parity
@@ -909,10 +925,9 @@ void marley::NuclearPhysics::sample_fragment_spin_parity(int& twoJ,
       {
         // TODO: since only the spin distribution changes in the twoJf loop,
         // you can optimize this by precomputing most of the level density
-        // and the multiplying here by the appropriate spin distribution
+        // and the multiplying here by the appropriate spin distribution.
         double width = om.transmission_coefficient(Ea, fragment_pid, two_j, l,
-          two_s, DEFAULT_NUMEROV_STEP_SIZE)
-          * marley::BackshiftedFermiGasModel::level_density(Zf, Af, Exf, twoJf);
+          two_s, DEFAULT_NUMEROV_STEP_SIZE) * ldm.level_density(Exf, twoJf, Pf);
 
         // Store the computed decay width for sampling
         continuum_width += width;
@@ -936,3 +951,89 @@ void marley::NuclearPhysics::sample_fragment_spin_parity(int& twoJ,
   Pi = Pfs.at(jpi_index);
 
 }
+
+// Helper function used when sampling continuum spin-parities for gamma-ray
+// transitions
+double marley::NuclearPhysics::store_gamma_pws(double Exf, int twoJf,
+  marley::Parity Pi, std::vector<double>& widths, std::vector<int>& twoJfs,
+  std::vector<marley::Parity>& Pfs, double tcE, double tcM, int mpol,
+  marley::LevelDensityModel& ldm)
+{
+  marley::Parity Pf;
+  double combined_width = 0.;
+
+  // Electric transitions represent a parity flip for odd multipolarities
+  if (mpol % 2) Pf = -Pi;
+  else Pf = Pi;
+  double rho = ldm.level_density(Exf, twoJf, Pf);
+
+  // Compute and store information for the electric transition
+  double width = tcE * rho;
+  combined_width += width;
+
+  twoJfs.push_back(twoJf);
+  Pfs.push_back(Pf);
+  widths.push_back(width);
+
+  // Magnetic transitions have opposite final parity from electric
+  // transitions of the same multipolarity
+  !Pf;
+  // Compute and store information for the magnetic transition
+  rho = ldm.level_density(Exf, twoJf, Pf);
+  width = tcM * rho;
+  combined_width += width;
+
+  twoJfs.push_back(twoJf);
+  Pfs.push_back(Pf);
+  widths.push_back(width);
+
+  return combined_width;
+}
+
+double marley::NuclearPhysics::gamma_cpw(int Z, int A, int mpol, int twoJf,
+  double e_gamma, marley::Parity Pi, marley::LevelDensityModel& ldm,
+  double Exf)
+{
+  double tcE = gamma_transmission_coefficient(Z, A,
+    TransitionType::electric, mpol, e_gamma);
+  double tcM = gamma_transmission_coefficient(Z, A,
+    TransitionType::magnetic, mpol, e_gamma);
+
+  // Final parity for the electric transition will match
+  // the initial parity for even multipolarities
+  auto PfE = Pi;
+  bool mpol_is_odd = mpol % 2;
+  if (mpol_is_odd) !PfE;
+
+  double rhoE = ldm.level_density(Exf, twoJf, PfE);
+  // The magnetic transition corresponds to the opposite parity
+  double rhoM = ldm.level_density(Exf, twoJf, -PfE);
+  return (tcE * rhoE) + (tcM * rhoM);
+}
+
+// Computes the recoil kinetic energy (in MeV and in the initial nucleus's
+// rest frame) of a residual negative ion with atomic number Zf, mass
+// number Af, and excitation energy Exf that was created when an initial
+// atom (Zi, Ai, Exi) emitted a nuclear fragment (z = Zi - Zf, a = Ai - Af)
+// which is assumed to have been emitted in its ground state.
+double marley::NuclearPhysics::recoil_ke(int Zi, int Ai, double Exi, int Zf,
+  int Af, double Exf)
+{
+  int z = Zi - Zf;
+  int a = Ai - Af;
+  double Mi = marley::MassTable::get_atomic_mass(Zi, Ai) + Exi;
+  double Mf = marley::MassTable::get_atomic_mass(Zf, Af) + Exf
+    + z*marley::MassTable::get_particle_mass(marley_utils::ELECTRON);
+  double m = 0;
+  // If there is no change in the nuclear mass number, assume that
+  // a photon is being emitted (and therefore the fragment mass
+  // m = 0)
+  if (a != 0) {
+    int fragment_pid;
+    if (a == 1 && z == 1) fragment_pid = marley_utils::PROTON;
+    else fragment_pid = marley_utils::get_nucleus_pid(z, a);
+    m = marley::MassTable::get_particle_mass(fragment_pid);
+  }
+  return recoil_ke(Mi, Mf, m);
+}
+

@@ -11,14 +11,14 @@ void marley::Reaction::two_two_scatter(double Ea, double& s, double& Ec_cm,
   double sqrt_s = std::sqrt(s);
 
   // Determine the CM frame energy and momentum of the ejectile
-  Ec_cm = (s + mc2 - md2) / (2 * sqrt_s);
+  Ec_cm = (s + mc2 - md2_) / (2 * sqrt_s);
   pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2);
 
   // Determine the residue's CM frame energy. Roundoff errors may cause Ed_cm to
   // dip below md, which is unphysical. Prevent this from occurring by allowing
   // md to be the minimum value of Ed_cm. Also note that, in the CM frame, the
   // residue and ejectile have equal and opposite momenta.
-  Ed_cm = std::max(sqrt_s - Ec_cm, md);
+  Ed_cm = std::max(sqrt_s - Ec_cm, md_);
 }
 
 marley::Event marley::Reaction::make_event_object(double Ea,
@@ -43,7 +43,7 @@ marley::Event marley::Reaction::make_event_object(double Ea,
 
   // Create particle objects representing the ejectile and residue in the CM frame.
   marley::Particle ejectile(pid_c, Ec_cm, pc_cm_x, pc_cm_y, pc_cm_z, mc);
-  marley::Particle residue(pid_d, Ed_cm, -pc_cm_x, -pc_cm_y, -pc_cm_z, md);
+  marley::Particle residue(pid_d, Ed_cm, -pc_cm_x, -pc_cm_y, -pc_cm_z, md_);
 
   // Boost the ejectile and residue into the lab frame.
   // TODO: edit this to allow for projectile directions other than along the z-axis

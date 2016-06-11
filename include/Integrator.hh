@@ -13,9 +13,9 @@ namespace marley {
         // TODO: add error check for when n is ridiculously large
         N = n;
         // Precompute the 2N - 1 weights for speed
-        int two_N = 2*N;
+        size_t two_N = 2*N;
         double npi_over_two = -marley_utils::half_pi;
-        for (int n = 0; n < two_N; ++n) {
+        for (size_t k = 0; k < two_N; ++k) {
           npi_over_two += marley_utils::half_pi;
           weights.push_back(std::cos(npi_over_two / N));
         }
