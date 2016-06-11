@@ -155,13 +155,13 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
   // levels. Before looking them up, start by setting the unbound threshold to
   // infinity.
   double unbound_threshold = std::numeric_limits<double>::max();
-  LOG_DEBUG << "unbound_threshold = " << unbound_threshold << std::endl;
+  LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << std::endl;
   for (const auto& f : marley::NuclearPhysics::get_fragments()) {
     double thresh = marley::NuclearPhysics::get_fragment_emission_threshold(Zf,
       Af, f);
-    LOG_DEBUG << f.get_pid() << " emission threshold = " << thresh << std::endl;
+    LOG_DEBUG() << f.get_pid() << " emission threshold = " << thresh << std::endl;
     if (thresh < unbound_threshold) unbound_threshold = thresh;
-    LOG_DEBUG << "unbound_threshold = " << unbound_threshold << std::endl;
+    LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << std::endl;
   }
 
   // Cycle through each of the level energies given in the reaction dataset. 
@@ -180,7 +180,7 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
     // For each energy, find a pointer to the level with the closest energy
     // owned by the decay scheme object.
     marley::Level* plevel = ds->get_pointer_to_closest_level(en);
-    LOG_DEBUG << "reaction level at " << en << " MeV was matched to the decay scheme"
+    LOG_DEBUG() << "reaction level at " << en << " MeV was matched to the decay scheme"
       << "level at " << plevel->get_energy() << " MeV";
 
     // Complain if there are duplicates (if there are duplicates, we'll have
@@ -354,10 +354,10 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
       // automatically normalizes the weights, so we don't have to do that ourselves.
       xs = total_xs(level_energy, Ea, matrix_el);
       if (std::isnan(xs)) {
-        LOG_WARNING << "Partial cross section for reaction " << description << " gave NaN result.";
-        LOG_DEBUG << "Parameters were level energy = " << level_energy << " MeV, projectile energy = " << Ea
+        LOG_WARNING() << "Partial cross section for reaction " << description << " gave NaN result.";
+        LOG_DEBUG() << "Parameters were level energy = " << level_energy << " MeV, projectile energy = " << Ea
           << " MeV, and matrix element = " << matrix_el;
-        LOG_DEBUG << "The partial cross section to this level will be set to zero for this event.";
+        LOG_DEBUG() << "The partial cross section to this level will be set to zero for this event.";
         xs = 0;
       }
       if (!at_least_one_nonzero_matrix_el && xs != 0)
@@ -465,8 +465,8 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
     while (continuum && Ex > cutoff) {
       continuum = marley::NuclearPhysics::hauser_feshbach_decay(Z, A, residue,
         first, second, Ex, twoJ, P, db, gen);
-      LOG_DEBUG << "Hauser-Feshbach decay to " << first.get_id() << " and " << second.get_id();
-      LOG_DEBUG << second.get_id() << " is at Ex = " << Ex << " MeV.";
+      LOG_DEBUG() << "Hauser-Feshbach decay to " << first.get_id() << " and " << second.get_id();
+      LOG_DEBUG() << second.get_id() << " is at Ex = " << Ex << " MeV.";
 
       residue = second;
       Z = marley::MassTable::get_particle_Z(residue.get_id());

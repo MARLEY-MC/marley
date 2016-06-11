@@ -65,7 +65,7 @@ marley::Level* marley::DecayScheme::get_pointer_to_closest_level(double E_level)
 void marley::DecayScheme::do_cascade(marley::Level* initial_level,
   marley::Event* p_event, marley::Generator& gen, int qIon)
 {
-  LOG_DEBUG << "Beginning gamma cascade at level with energy "
+  LOG_DEBUG() << "Beginning gamma cascade at level with energy "
     << initial_level->get_energy() << " MeV";
 
   bool cascade_finished = false;
@@ -76,7 +76,7 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
     // Randomly select a gamma to produce
     const marley::Gamma* p_gamma = p_current_level->sample_gamma(gen);
     if (p_gamma == nullptr) {
-      LOG_DEBUG << "  this level does not have any gammas";
+      LOG_DEBUG() << "  this level does not have any gammas";
       cascade_finished = true;
     }
     else {
@@ -85,11 +85,11 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
         throw marley::Error(std::string("This gamma does not have an end level. ")
           + "Cannot continue cascade.");
       }
-      LOG_DEBUG << std::setprecision(15) << std::scientific
+      LOG_DEBUG() << std::setprecision(15) << std::scientific
         << "  emitted gamma with energy "
         << p_gamma->get_energy() << " MeV. New level has energy "
         << p_current_level->get_energy() << " MeV.";
-      LOG_DEBUG << "gamma energy = " << p_gamma->get_energy();
+      LOG_DEBUG() << "gamma energy = " << p_gamma->get_energy();
 
       // Get the excitation energy of the end level. This will be added to
       // the ground state mass of the nucleus to determine its
@@ -129,7 +129,7 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
     }
   }
 
-  LOG_DEBUG << "Finished gamma cascade at level with energy "
+  LOG_DEBUG() << "Finished gamma cascade at level with energy "
     << p_current_level->get_energy();
 }
 
@@ -232,12 +232,12 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
                                    // gamma decay scheme data were found for the
                                    // current nuc_id.
 
-  LOG_DEBUG << "Searching for nucid '" << nuc_id << "'";
+  LOG_DEBUG() << "Searching for nucid '" << nuc_id << "'";
   while (!file_in.eof()) {
     std::getline(file_in, line);
     if (std::regex_match(line, rx_primary_identification_record)) {
       found_decay_scheme = true;
-      LOG_DEBUG << "Found nucid '" << nuc_id << "'";
+      LOG_DEBUG() << "Found nucid '" << nuc_id << "'";
       break;
     }
   }
@@ -248,8 +248,8 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
       + " could not be found in the ENSDF data file " + filename);
   }
 
-  LOG_DEBUG << "Gamma decay scheme data for " + nuc_id << " found. Using ENSDF dataset";
-  LOG_DEBUG << line;
+  LOG_DEBUG() << "Gamma decay scheme data for " + nuc_id << " found. Using ENSDF dataset";
+  LOG_DEBUG() << line;
 
   bool no_advance = false; // Flag that prevents advancing through
                            // the ENSDF file when a continuation record
@@ -258,7 +258,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
   marley::Level* p_current_level = nullptr; // Pointer to the current level object
                                           // being filled with gamma ray data 
 
-  LOG_DEBUG << "Parsing data for nucid '" << nuc_id << "'";
+  LOG_DEBUG() << "Parsing data for nucid '" << nuc_id << "'";
   while (!file_in.eof()) {
     // Get the next line of the file
     // unless we already did
@@ -267,7 +267,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
 
     // Level Record
     if (std::regex_match(line, rx_primary_level_record)) {
-      LOG_DEBUG << "  Parsing level";
+      LOG_DEBUG() << "  Parsing level";
       record = line;
       line = process_continuation_records(file_in, record, rx_continuation_level_record);
       no_advance = true;
@@ -340,7 +340,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
 
     // Gamma Record
     else if (std::regex_match(line, rx_primary_gamma_record)) {
-      LOG_DEBUG << "  Parsing gamma";
+      LOG_DEBUG() << "  Parsing gamma";
       record = line;
       line = process_continuation_records(file_in,
         record, rx_continuation_gamma_record);
@@ -363,7 +363,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
     }
 
     else if (std::regex_match(line, rx_ensdf_end_record)) {
-      LOG_DEBUG << "  Found end of data";
+      LOG_DEBUG() << "  Found end of data";
       break;
     }
 
@@ -478,8 +478,8 @@ void marley::DecayScheme::parse_talys(std::string filename) {
       + "(adopted levels, gammas) for " + marley_utils::nucid_to_symbol(nuc_id)
       + " could not be found in the TALYS data file " + filename);
   }
-  LOG_DEBUG << "Gamma decay scheme data for " + nuc_id << " found. Using TALYS dataset";
-  LOG_DEBUG << line;
+  LOG_DEBUG() << "Gamma decay scheme data for " + nuc_id << " found. Using TALYS dataset";
+  LOG_DEBUG() << line;
 
   // Dummy integer and number of excited levels for this nuclide
   int dummy, num_excited_levels; 

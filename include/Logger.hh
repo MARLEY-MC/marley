@@ -151,7 +151,18 @@ namespace marley {
 
 }
 
-#define LOG_ERROR marley::Logger::Instance().log(marley::Logger::LogLevel::ERROR)
-#define LOG_WARNING marley::Logger::Instance().log(marley::Logger::LogLevel::WARNING)
-#define LOG_INFO marley::Logger::Instance().log(marley::Logger::LogLevel::INFO)
-#define LOG_DEBUG marley::Logger::Instance().log(marley::Logger::LogLevel::DEBUG)
+inline auto LOG_ERROR() {
+  return marley::Logger::Instance().log(marley::Logger::LogLevel::ERROR);
+}
+
+inline auto LOG_WARNING() {
+  return marley::Logger::Instance().log(marley::Logger::LogLevel::WARNING);
+}
+
+inline auto LOG_INFO() {
+  return marley::Logger::Instance().log(marley::Logger::LogLevel::INFO);
+}
+
+inline auto LOG_DEBUG() {
+  return marley::Logger::Instance().log(marley::Logger::LogLevel::DEBUG);
+}
