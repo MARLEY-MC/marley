@@ -407,8 +407,8 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
     E_level = residue_level_energies.at(l_index);
   }
 
-  md = md_gs + E_level;
-  md2 = std::pow(md, 2);
+  md_ = md_gs + E_level;
+  md2_ = std::pow(md_, 2);
 
   // Compute Mandelstam s, the ejectile's CM frame total energy, the magnitude
   // of the ejectile's CM frame 3-momentum, and the residue's CM frame total

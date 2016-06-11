@@ -28,8 +28,8 @@ namespace marley {
       // Particle ID numbers (PDG convention)
       int pid_a, pid_b, pid_c, pid_d;
       // Particle masses and squared masses (pre-computed for speed)
-      double ma, mb, mc, md;
-      double ma2, mb2, mc2, md2;
+      double ma, mb, mc, md_;
+      double ma2, mb2, mc2, md2_;
   
       // String describing the reaction
       std::string description;

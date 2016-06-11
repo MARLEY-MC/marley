@@ -2,9 +2,9 @@
 #include <cmath>
 #include <unordered_map>
 
-#include "BackshiftedFermiGasModel.hh"
 #include "Fragment.hh"
 #include "Level.hh"
+#include "LevelDensityModel.hh"
 #include "MassTable.hh"
 #include "Parity.hh"
 #include "SphericalOpticalModel.hh"
@@ -71,36 +71,20 @@ namespace marley {
       // number Af, and excitation energy Exf that was created when an initial
       // atom (Zi, Ai, Exi) emitted a nuclear fragment (z = Zi - Zf, a = Ai - Af)
       // which is assumed to have been emitted in its ground state.
-      static inline double recoil_ke(int Zi, int Ai, double Exi, int Zf, int Af,
-        double Exf)
-      {
-        int z = Zi - Zf;
-        int a = Ai - Af;
-        double Mi = marley::MassTable::get_atomic_mass(Zi, Ai) + Exi;
-        double Mf = marley::MassTable::get_atomic_mass(Zf, Af) + Exf
-          + z*marley::MassTable::get_particle_mass(marley_utils::ELECTRON);
-        double m = 0;
-        // If there is no change in the nuclear mass number, assume that
-        // a photon is being emitted (and therefore the fragment mass
-        // m = 0)
-        if (a != 0) {
-          int fragment_pid;
-          if (a == 1 && z == 1) fragment_pid = marley_utils::PROTON;
-          else fragment_pid = marley_utils::get_nucleus_pid(z, a);
-          m = marley::MassTable::get_particle_mass(fragment_pid);
-        }
-        return recoil_ke(Mi, Mf, m);
-      }
+      static double recoil_ke(int Zi, int Ai, double Exi, int Zf, int Af,
+        double Exf);
   
       // Computes the partial width (multiplied by 2*pi and the initial nuclear level
       // density) predicted by the Hauser-Feshbach statistical model for decay of a
       // given nuclear level via emission of the fragment f.
       static double hf_fragment_partial_width(int Zi, int Ai, double Ex,
         int twoJi, marley::Parity Pi, const marley::Fragment& f,
-        /*const*/ marley::SphericalOpticalModel& om, const marley::DecayScheme& ds);
-  
+        marley::SphericalOpticalModel& om, const marley::DecayScheme& ds,
+        marley::LevelDensityModel& ldm);
+
       static double hf_gamma_partial_width(double Ex, int twoJi,
-        marley::Parity Pi, const marley::DecayScheme& ds);
+        marley::Parity Pi, const marley::DecayScheme& ds,
+        marley::LevelDensityModel& ldm);
   
       // Table of nuclear fragments that will be considered when computing
       // branching ratios for nuclear de-excitations.
@@ -119,13 +103,14 @@ namespace marley {
       static void sample_gamma_spin_parity(int Z, int A, int& twoJ,
         marley::Parity& Pi, double Exi, double Exf, marley::Generator& gen);
       static void sample_fragment_spin_parity(int& twoJ, marley::Parity& Pi,
-        const marley::Fragment& f, /*const*/ marley::SphericalOpticalModel& om,
+        const marley::Fragment& f, marley::SphericalOpticalModel& om,
         marley::Generator& gen, double Exf, double Ea);
   
       static double get_fragment_emission_threshold(const int Zi, const int Ai,
         const marley::Fragment& f);
   
     private:
+
       // Mass of a charged pion
       static constexpr double mpiplus = 139.57018; // MeV
       // Squared pion Compton wavelength
@@ -135,11 +120,6 @@ namespace marley {
       // Table of nuclear fragments that will be considered when computing
       // branching ratios for nuclear de-excitations.
       static const std::vector<marley::Fragment> fragments;
-  
-      // Table for looking up optical model objects (used for Hauser-Feshbach
-      // fragment evaporation calculations) by PDG particle ID
-      static std::unordered_map<int, marley::SphericalOpticalModel>
-        pid_optical_model_table;
   
       // Maximum value of the orbital angular momentum to use in Hauser-Feshbach
       // calculations
@@ -158,69 +138,31 @@ namespace marley {
   
       // Helper functions used internally while computing decay widths using
       // the Hauser-Feshbach statistical model
-      static double fragment_continuum_partial_width(double Mconst,
-        double Mfgs_ion, double Mi, int twoJi, marley::Parity Pi, int fragment_pid,
-        int two_s, marley::Parity Pa, /*const*/ marley::SphericalOpticalModel& om,
+      static double fragment_continuum_partial_width(int fragment_pid, double Ea,
+        int two_s, marley::Parity Pa, int twoJi, marley::Parity Pi,
+        marley::SphericalOpticalModel& om, marley::LevelDensityModel& ldm,
         double Exf);
   
       static double fragment_discrete_partial_width(double Exf_max, double Mconst,
         double Mfgs_ion, double Mi, int twoJi, marley::Parity Pi, int fragment_pid,
-        int two_s, marley::Parity Pa, /*const*/ marley::SphericalOpticalModel& om,
+        int two_s, marley::Parity Pa, marley::SphericalOpticalModel& om,
         const std::vector<marley::Level*>* sorted_lps);
   
       static double gamma_continuum_partial_width(int Z, int A, int twoJi,
-        double Exi, double Exf);
+        marley::Parity Pi, double Exi, marley::LevelDensityModel& ldm,
+        double Exf);
+
   
-      static inline double gamma_cpw(int Z, int A, int mpol, int twoJf,
-        double e_gamma, double Exf)
-      {
-        double tcE = gamma_transmission_coefficient(Z, A,
-          TransitionType::electric, mpol, e_gamma);
-        double tcM = gamma_transmission_coefficient(Z, A,
-          TransitionType::magnetic, mpol, e_gamma);
-        // Note that since our level density model assumes equipartition of parity,
-        // we can multiply both transition types by the same level density function.
-        double rho = marley::BackshiftedFermiGasModel::level_density(Z, A, Exf,
-          twoJf);
-        return (tcE + tcM) * rho;
-      }
+      static double gamma_cpw(int Z, int A, int mpol, int twoJf,
+        double e_gamma, marley::Parity Pi, marley::LevelDensityModel& ldm,
+        double Exf);
   
       // Helper function used when sampling continuum spin-parities for gamma-ray
       // transitions
-      static inline double store_gamma_pws(int Z, int A, double Exf, int twoJf,
+      static double store_gamma_pws(double Exf, int twoJf,
         marley::Parity Pi, std::vector<double>& widths, std::vector<int>& twoJfs,
-        std::vector<marley::Parity>& Pfs, double tcE, double tcM, int mpol)
-      {
-        // Note that since our level density model assumes equipartition of parity,
-        // we can multiply both transition types by the same level density function.
-        double rho = marley::BackshiftedFermiGasModel::level_density(Z, A, Exf,
-          twoJf);
-  
-        marley::Parity Pf;
-        double combined_width = 0.;
-  
-        // Compute and store information for the electric transition
-        double width = tcE * rho;
-        combined_width += width;
-        twoJfs.push_back(twoJf);
-        // Electric transitions represent a parity flip for odd multipolarities
-        if (mpol % 2) Pf = -Pi;
-        else Pf = Pi;
-        Pfs.push_back(Pf);
-        widths.push_back(width);
-  
-        // Compute and store information for the magnetic transition
-        width = tcM * rho;
-        combined_width += width;
-        twoJfs.push_back(twoJf);
-        // Magnetic transitions have opposite final parity from electric
-        // transitions of the same multipolarity
-        !Pf;
-        Pfs.push_back(Pf);
-        widths.push_back(width);
-  
-        return combined_width;
-      }
+        std::vector<marley::Parity>& Pfs, double tcE, double tcM, int mpol,
+        marley::LevelDensityModel& ldm);
   };
 
 }

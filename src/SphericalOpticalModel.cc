@@ -151,65 +151,65 @@ void marley::SphericalOpticalModel::calculate_om_parameters(double E,
   }
 }
 
-marley::SphericalOpticalModel::SphericalOpticalModel(int z, int a) {
-  Z = z;
-  A = a;
+marley::SphericalOpticalModel::SphericalOpticalModel(int Z, int a) {
+  Z_ = Z;
+  A_ = a;
 
-  int N = A - Z; // Neutron number
+  int N = A_ - Z_; // Neutron number
 
-  double A_to_the_one_third = std::pow(A, 1.0/3.0);
+  double A_to_the_one_third = std::pow(A_, 1.0/3.0);
 
   // Initialize the spherical optical model parameters (see TALYS 1.6 manual)
 
   // Neutrons
-  v1n = 59.30 - 21.0*(N - Z)/A - 0.024*A; // MeV
-  v2n = 0.007228 - 1.48e-6*A; // MeV^(-1)
-  v3n = 1.994e-5 - 2.0e-8*A; // MeV^(-2)
+  v1n = 59.30 - 21.0*(N - Z_)/A_ - 0.024*A_; // MeV
+  v2n = 0.007228 - 1.48e-6*A_; // MeV^(-1)
+  v3n = 1.994e-5 - 2.0e-8*A_; // MeV^(-2)
   v4n = 7e-9; // MeV^(-3)
-  w1n = 12.195 + 0.0167*A; // MeV
-  w2n = 73.55 + 0.0795*A; // MeV
-  d1n = 16.0 - 16.0*(N - Z)/A; // MeV
-  d2n = 0.0180 + 0.003802/(1 + std::exp((A - 156.)/8.0)); // MeV^(-1)
+  w1n = 12.195 + 0.0167*A_; // MeV
+  w2n = 73.55 + 0.0795*A_; // MeV
+  d1n = 16.0 - 16.0*(N - Z_)/A_; // MeV
+  d2n = 0.0180 + 0.003802/(1 + std::exp((A_ - 156.)/8.0)); // MeV^(-1)
   d3n = 11.5; // MeV
-  vso1n = 5.922 + 0.0030*A; // MeV
+  vso1n = 5.922 + 0.0030*A_; // MeV
   vso2n = 0.0040; // MeV^(-1)
   wso1n = -3.1; // MeV
   wso2n = 160.; // MeV
-  Efn = -11.2814 + 0.02646*A; // MeV
+  Efn = -11.2814 + 0.02646*A_; // MeV
   Rvn = 1.3039*A_to_the_one_third - 0.4054; // fm
-  avn = 0.6778 - 1.487e-4*A; // fm
+  avn = 0.6778 - 1.487e-4*A_; // fm
   Rdn = 1.3424*A_to_the_one_third - 0.01585*std::pow(A_to_the_one_third, 2); // fm
-  adn = 0.5446 - 1.656e-4*A; // fm
+  adn = 0.5446 - 1.656e-4*A_; // fm
   Rso_n = 1.1854*A_to_the_one_third - 0.647; // fm
   aso_n = 0.59; // fm
 
   // Protons
-  v1p = 59.30 + 21.0*(N - Z)/A - 0.024*A; // MeV
-  v2p = 0.007067 + 4.23e-6*A; // MeV^(-1)
-  v3p = 1.729e-5 + 1.136e-8*A; // MeV^(-2)
+  v1p = 59.30 + 21.0*(N - Z_)/A_ - 0.024*A_; // MeV
+  v2p = 0.007067 + 4.23e-6*A_; // MeV^(-1)
+  v3p = 1.729e-5 + 1.136e-8*A_; // MeV^(-2)
   v4p = v4n; // MeV^(-3)
-  w1p = 14.667 + 0.009629*A; // MeV
+  w1p = 14.667 + 0.009629*A_; // MeV
   w2p = w2n; // MeV
-  d1p = 16.0 + 16.0*(N - Z)/A; // MeV
+  d1p = 16.0 + 16.0*(N - Z_)/A_; // MeV
   d2p = d2n; // MeV^(-1)
   d3p = d3n; // MeV
   vso1p = vso1n; // MeV
   vso2p = vso2n; // MeV^(-1)
   wso1p = wso1n; // MeV
   wso2p = wso2n; // MeV
-  Efp = -8.4075 + 0.01378*A; // MeV
+  Efp = -8.4075 + 0.01378*A_; // MeV
   Rvp = Rvn;
   avp = avn;
   Rdp = Rdn;
-  adp = 0.5187 + 5.205e-4*A; // fm
+  adp = 0.5187 + 5.205e-4*A_; // fm
   Rso_p = Rso_n;
   aso_p = aso_n;
   Rc = 1.198*A_to_the_one_third + 0.697/A_to_the_one_third
     + 12.994*std::pow(A_to_the_one_third, -4); // fm
-  Vcbar_p = 1.73 * Z / Rc; // MeV
+  Vcbar_p = 1.73 * Z_ / Rc; // MeV
 
   // Compute and store reduced masses for all of the fragments of interest
-  double m_nucleus = marley::MassTable::get_atomic_mass(Z, A);
+  double m_nucleus = marley::MassTable::get_atomic_mass(Z_, A_);
   for (auto pid : marley::MassTable::get_fragment_pids()) {
     double m_fragment = marley::MassTable::get_particle_mass(pid);
     reduced_masses[pid] = (m_fragment * m_nucleus) / (m_fragment + m_nucleus);
@@ -303,7 +303,7 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
     a_n_minus_one = a_n;
 
     U_minus_Vc = omp_minus_Vc(r),
-    U = U_minus_Vc + Vc(r, Rc, z, Z);
+    U = U_minus_Vc + Vc(r, Rc, z, Z_);
     a_n = a(r, E, fragment_pid, l, U);
 
     u_n_minus_two = u_n_minus_one;
@@ -351,7 +351,7 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
   // If k == 0, then eta blows up, so use a really small k instead of zero
   // (or a negative k due to roundoff error)
   if (k <= 0) k = 1e-8; //DEBUG!
-  double eta = mu * Z * z * marley_utils::e2 / (marley_utils::hbar_c2 * k);
+  double eta = mu * Z_ * z * marley_utils::e2 / (marley_utils::hbar_c2 * k);
 
   // Compute the Coulomb wavefunctions at the matching radii
   double F, G;

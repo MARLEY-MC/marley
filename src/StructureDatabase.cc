@@ -2,21 +2,12 @@
 #include "Logger.hh"
 #include "StructureDatabase.hh"
 
-marley::StructureDatabase::StructureDatabase() {
-/***
-  contbin_width = marley::ConfigFile::DEFAULT_CONTINUUM_BIN_RESOLUTION;
-  contbin_num_subs = marley::ConfigFile::DEFAULT_CONTINUUM_BIN_SUBINTERVALS;
-***/
-}
+marley::StructureDatabase::StructureDatabase() {}
 
 marley::StructureDatabase::StructureDatabase(
   const marley::ConfigFile& cf)
 {
   add_all_from_config_file(cf);
-/***
-  contbin_width = cf.get_contbin_width();
-  contbin_num_subs = cf.get_contbin_num_subs();
-***/
 }
 
 void marley::StructureDatabase::add_decay_scheme(const std::string nucid,

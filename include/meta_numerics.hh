@@ -241,7 +241,7 @@ namespace meta_numerics {
 
     private:
 
-      double j, jPrime, y, yPrime;
+      double j_, jPrime_, y_, yPrime_;
 
       public:
 
@@ -249,44 +249,44 @@ namespace meta_numerics {
       /// Gets the value of the first solution.
       /// </summary>
       inline double FirstSolutionValue() {
-        return j;
+        return j_;
       }
 
       inline void FirstSolutionValue(double value) {
-        j = value;
+        j_ = value;
       }
 
       /// <summary>
       /// Gets the derivative of the first solution.
       /// </summary>
       inline double FirstSolutionDerivative() {
-        return jPrime;
+        return jPrime_;
       }
 
       inline void FirstSolutionDerivative(double value) {
-        jPrime = value;
+        jPrime_ = value;
       }
 
       /// <summary>
       /// Gets the value of the second solution.
       /// </summary>
       inline double SecondSolutionValue() {
-        return y;
+        return y_;
       }
 
       inline void SecondSolutionValue(double value) {
-        y = value;
+        y_ = value;
       }
 
       /// <summary>
       /// Gets the derivative of the second solution.
       /// </summary>
       inline double SecondSolutionDerivative() {
-        return (yPrime);
+        return yPrime_;
       }
 
       inline void SecondSolutionDerivative(double value) {
-        yPrime = value;
+        yPrime_ = value;
       }
 
       // Leaving out the Wronskian for now because it can be subject to extreme cancelation error.
@@ -309,10 +309,10 @@ namespace meta_numerics {
       }
 
       SolutionPair (double j, double jPrime, double y, double yPrime) {
-        this->j = j;
-        this->jPrime = jPrime;
-        this->y = y;
-        this->yPrime = yPrime;
+        j_ = j;
+        jPrime_ = jPrime;
+        y_ = y;
+        yPrime_ = yPrime;
       }
   };
 

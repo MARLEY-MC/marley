@@ -65,4 +65,6 @@ else()
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} -O3 \
-  -Wall -Wextra -Wpedantic -Werror")
+  -Wall -Wextra -Wshadow -pedantic \
+  -Wcast-align -Wunused -Woverloaded-virtual \
+  -Werror")
