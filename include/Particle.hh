@@ -30,6 +30,7 @@ namespace marley {
       inline void set_total_energy(double Etot) { total_energy = Etot; }
   
       double get_mass() const;
+      inline void set_mass(double m) { mass = m; }
 
       double get_px() const;
       inline void set_px(double p_x) { px = p_x; }
