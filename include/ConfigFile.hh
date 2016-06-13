@@ -15,7 +15,7 @@ namespace marley {
 
   class ConfigFile {
     public:
-  
+
       // Type used to organize nuclear structure file
       // load requests within this configuration file
       struct StructureRecord {
@@ -23,7 +23,7 @@ namespace marley {
         marley::DecayScheme::FileFormat format;
         std::unordered_set<std::string> nucids;
       };
-  
+
       ConfigFile();
       ConfigFile(const std::string file_name);
       inline uint_fast64_t get_seed() const { return seed; }
@@ -53,19 +53,19 @@ namespace marley {
       }
       #endif
       void print_summary(std::ostream& os = std::cout);
-  
+
       inline std::vector<std::unique_ptr<marley::NeutrinoSource> >& get_sources() {
         return sources;
       }
-  
-      inline size_t get_num_events() { return num_events; } 
-  
+
+      inline size_t get_num_events() { return num_events; }
+
       inline std::string get_hepevt_filename() const { return hepevt_filename; }
       inline bool check_write_hepevt() const { return writehepevt; }
       inline bool check_overwrite_hepevt() const {
         return check_before_hepevt_file_overwrite;
       }
-  
+
     protected:
 
       // This will be overridden by the derived class marley::RootConfigFile to
@@ -83,40 +83,40 @@ namespace marley {
       // Helper function for the constructor. We avoid polymorphism in the
       // constructor by delegating the parsing to this method.
       void parse();
-  
+
       std::string filename;
       uint_fast64_t seed;
       std::unordered_set<std::string> reaction_filenames;
-  
+
       std::vector<StructureRecord> structure_records;
-  
+
       // The number of events to generate in a run
       size_t num_events;
       static constexpr size_t DEFAULT_NUM_EVENTS = 1000;
-  
+
       // Neutrino sources will be created based on the specifications given in
       // this file. When a marley::Generator object is constructed using this
       // configuration file, ownership will be transferred to the generator.
       std::vector<std::unique_ptr<marley::NeutrinoSource> > sources;
-  
+
       std::string root_filename;
       bool writeroot;
       bool check_before_root_file_overwrite;
-  
+
       std::string hepevt_filename;
       bool writehepevt;
       bool check_before_hepevt_file_overwrite;
-  
+
       // Convert a lowercase, trimmed string file format
       // description for the structure data to a
       // marley::DecayScheme::FileFormat
       marley::DecayScheme::FileFormat string_to_format(
         const std::string& string);
-  
+
       // Convert a marley::DecayScheme::FileFormat value
       // to a std::string
       std::string format_to_string(const marley::DecayScheme::FileFormat ff);
-  
+
       // Get the next word from a parsed line. If errors occur, complain.
       // The last argument determines whether the next word should be
       // converted to all lowercase or left as is.
@@ -126,7 +126,7 @@ namespace marley {
       // Helper variables used when parsing the file
       std::ifstream file_in;
       std::string line; // String to store the current line
-                        // of the configuration file during parsing 
+                        // of the configuration file during parsing
 
       std::string keyword; // String to store the current keyword read in
                            // from the configuration file

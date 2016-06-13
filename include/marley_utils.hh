@@ -36,7 +36,7 @@ namespace marley_utils {
   static constexpr int HELION = 1000020030;
   static constexpr int ALPHA = 1000020040;
 
-  // Fermi coupling constant (MeV^(-2)) 
+  // Fermi coupling constant (MeV^(-2))
   static constexpr double GF = 1.16637e-11;
 
   // Absolute value of the CKM matrix element for mixing between the up and
@@ -78,8 +78,8 @@ namespace marley_utils {
   // The physical constants given here were all taken from
   // the 2014 edition of the Review of Particle Physics
   // published by the Particle Data Group.
-  
-  // Fine structure constant 
+
+  // Fine structure constant
   constexpr double alpha = 7.2973525698e-3;
   // Conversion factor used to switch to natural units (hbar = c = 1)
   constexpr double hbar_c = 197.3269718; // MeV*fm
@@ -149,8 +149,8 @@ namespace marley_utils {
 
   // String containing all of the characters that will be
   // considered whitespace by default in the string
-  // manipulation functions below 
-  const std::string whitespace = " \f\n\r\t\v"; 
+  // manipulation functions below
+  const std::string whitespace = " \f\n\r\t\v";
 
   // This version of std::stod will return 0 if it encounters
   // an empty string or an all-whitespace string.
@@ -218,20 +218,20 @@ namespace marley_utils {
     size_t endpos = s.find_last_not_of(delimiters);
     return (endpos == std::string::npos) ? "" : s.substr(0, endpos + 1);
   }
-  
+
   inline std::string trim_left_copy(const std::string& s,
     const std::string& delimiters = whitespace)
   {
     size_t startpos = s.find_first_not_of(delimiters);
     return (startpos == std::string::npos) ? "" : s.substr(startpos);
   }
-  
+
   inline std::string trim_copy(const std::string& s,
     const std::string& delimiters = whitespace)
   {
     return trim_left_copy(trim_right_copy(s, delimiters), delimiters);
   }
-  
+
   // The second three alter the original string, returning a
   // reference to it after it has been trimmed.
   inline std::string& trim_right_inplace(std::string& s,
@@ -244,9 +244,9 @@ namespace marley_utils {
     else {
       s.erase(endpos + 1);
     }
-    return s; 
+    return s;
   }
-  
+
   inline std::string& trim_left_inplace(std::string& s,
     const std::string& delimiters = whitespace)
   {
@@ -257,9 +257,9 @@ namespace marley_utils {
     else {
       s.erase(0, startpos);
     }
-    return s; 
+    return s;
   }
-  
+
   inline std::string& trim_inplace(std::string& s,
     const std::string& delimiters = whitespace)
   {

@@ -23,7 +23,7 @@ namespace marley {
       // which format to assume when parsing the file supplied to
       // the constructor
       enum class FileFormat { ensdf, talys };
-  
+
       DecayScheme(std::string nucid, std::string filename,
         FileFormat ff = FileFormat::ensdf);
       DecayScheme(int z, int a, std::string filename,
@@ -39,21 +39,21 @@ namespace marley {
         marley::Generator& gen, int qIon);
       void print_latex_table(std::ostream& ostr = std::cout);
       void assign_theoretical_RIs(marley::Level* level_i);
-  
+
       friend std::ostream& ::operator<< (std::ostream& out,
         const marley::DecayScheme& ds);
-  
+
       friend std::istream& ::operator>> (std::istream& in,
         marley::DecayScheme& ds);
-  
+
       inline int get_Z() const {
         return Z;
       }
-  
+
       inline int get_A() const {
         return A;
       }
-  
+
     private:
       int Z; // atomic number
       int A; // mass number
@@ -62,43 +62,43 @@ namespace marley {
       std::list<marley::Level> levels;
       std::vector<marley::Level*> pv_sorted_levels;
       std::vector<double> sorted_level_energies;
-  
+
       // Helper function for processing ENSDF file continuation records
       std::string process_continuation_records(std::ifstream &file_in,
         std::string &record, const std::regex &rx_cont_record) const;
-  
+
       // Functions called by the constructor to parse the
       // different nuclear data formats accepted by this class
       void parse_ensdf(std::string filename);
       void parse_talys(std::string filename);
-  
+
       inline void parse(std::string filename, FileFormat ff = FileFormat::ensdf) {
         // Parse the data file using the appropriate format
         switch (ff) {
-  
+
           case FileFormat::ensdf:
-            parse_ensdf(filename); 
+            parse_ensdf(filename);
             break;
-  
+
           case FileFormat::talys:
             parse_talys(filename);
             break;
-  
+
           default:
             throw marley::Error(std::string("Invalid file format ")
               + " supplied to marley::DecayScheme constructor.");
         }
       }
-  
+
       // Default level parity
       static const marley::Parity DEFAULT_PARITY;
       // Fermionic nuclei have default level spin 1/2
       static constexpr int DEFAULT_FERMION_TWOJ = 1;
       // Bosonic nuclei have default level spin 0
       static constexpr int DEFAULT_BOSON_TWOJ = 0;
-  
+
       // ***** Constants used for ENSDF file parsing *****
-      static const std::string ensdf_primary_record; 
+      static const std::string ensdf_primary_record;
       static const std::string ensdf_continuation_record;
       static const std::string ensdf_record_data;
       static const std::regex rx_ensdf_end_record;

@@ -25,7 +25,7 @@ if(ROOT AND ROOTCINT AND ROOTCONFIG)
 
   set(ROOT_DICT_INCLUDES ${INCLUDE_DIR}/Particle.hh
     ${INCLUDE_DIR}/Event.hh ${INCLUDE_DIR}/marley_linkdef.hh)
-  
+
   # Create a ROOT dictionary target for our analysis classes based on their latest header files
   add_custom_command(OUTPUT marley_root_dict.cc marley_root_dict.h
                       COMMAND rm -f marley_root_dict.*

@@ -164,7 +164,7 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
     LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << std::endl;
   }
 
-  // Cycle through each of the level energies given in the reaction dataset. 
+  // Cycle through each of the level energies given in the reaction dataset.
   for(size_t j = 0, s = residue_level_energies.size(); j < s; ++j)
   {
     double en = residue_level_energies.at(j);
@@ -218,7 +218,7 @@ double marley::NuclearReaction::fermi_function(double beta_c) {
 
   // Lorentz factor gamma for particle c
   double gamma_c = std::pow(1 - beta_c*beta_c, -marley_utils::ONE_HALF);
-  
+
   double s = std::sqrt(1 - std::pow(marley_utils::alpha * Zf, 2));
 
   // Estimate the nuclear radius using r_n = r_0*A^(1/3)
@@ -247,11 +247,11 @@ double marley::NuclearReaction::fermi_approx(int Z, double E, bool electron){
 
   // This is a test for comparison with the "exact" calculation, which involves
   // complex gamma functions. This holds true for Q << mc^2
-  
+
   const double m = marley_utils::m_e; // electron mass (MeV)
 
   double p = std::sqrt(E*E - m*m);
-  
+
   double eta = marley_utils::alpha*Z*E/p;
   if (!electron) eta *= -1;
 
@@ -499,7 +499,7 @@ double marley::NuclearReaction::total_xs(int particle_id_a, double Ea) {
   // return a total cross section of zero since this reaction is not available
   // for the given projectile.
   // TODO: consider whether you should use an exception here instead.
-  if (particle_id_a != pid_a) return 0.; 
+  if (particle_id_a != pid_a) return 0.;
 
   double max_E_level = max_level_energy(Ea);
   double xs = 0;

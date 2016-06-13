@@ -14,7 +14,7 @@
 namespace marley {
 
   class Generator;
-  
+
   class NuclearReaction : public marley::Reaction {
     public:
       NuclearReaction(std::string filename, marley::StructureDatabase& db);
@@ -30,16 +30,16 @@ namespace marley {
         marley::Generator& gen);
       double sample_cos_theta_c_cm(/*double matrix_el,*/ int m_type,
         double beta_c_cm, marley::Generator& gen);
-  
+
       inline size_t get_num_levels() const {
         return residue_level_energies.size();
       }
-  
+
       inline double get_level_energy(size_t index, bool& bound,
         double& strength)
       {
         strength = residue_level_strengths[index];
-  
+
         // Get the excitation energy for the current level
         if (residue_level_pointers[index] != nullptr) {
           bound = true;
@@ -52,7 +52,7 @@ namespace marley {
           return residue_level_energies[index];
         }
       }
-  
+
       inline virtual marley::Event make_event_object(double Ea, double pc_cm,
         double cos_theta_c_cm, double phi_c_cm, double Ec_cm, double Ed_cm,
         double E_level = 0.)
@@ -66,7 +66,7 @@ namespace marley {
         // Return the completed event object
         return event;
       }
-  
+
     private:
       // Residue ground state mass
       double md_gs;
@@ -74,15 +74,15 @@ namespace marley {
       int Zi, Ai, Zf, Af;
       // Net charge of particle d (in units of the proton charge) following this reaction
       int q_d;
-  
+
       // Total cross section for a given final nuclear level energy, in units
       // convenient for sampling
       virtual double total_xs(double E_level, double Ea, double matrix_element);
-  
+
       // Lab-frame total energy of the projectile at threshold for this reaction
       // (all final-state particles at rest in the CM frame)
       double Ea_threshold;
-  
+
       std::vector<double> residue_level_energies; // Energy values from reaction dataset
       std::vector<double> residue_level_strengths; // B(F) and B(GT) values from reaction dataset
       // TODO: come up with a more general way of representing what kind of matrix element

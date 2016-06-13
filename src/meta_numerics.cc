@@ -24,17 +24,17 @@ void meta_numerics::BulrischStoerStoermerStepper::TrialStep (int n, double& Y1,
 
   // this is Stoermer's rule for 2nd order conservative equations
   double h = DeltaX / n;
-  
+
   Y1 = Y;
   double D1 = h * (YPrime + h * Evaluate(X, Y) / 2.0);
-  
+
   for (int k = 1; k < n; k++) {
       Y1 += D1;
       D1 += h * h * Evaluate(X + k * h, Y1);
   }
-  
+
   Y1 += D1;
-  
+
   Y1P = D1 / h + h * Evaluate(X + DeltaX, Y1) / 2.0;
 
 }
@@ -658,7 +658,7 @@ meta_numerics::SolutionPair meta_numerics::Coulomb_Steed (double L, double eta,
   double p = z.real();
   double q = z.imag();
 
-  // use CF1, CF2, and Wronskian (FG' - GF' = 1) to solve for F, F', G, G' 
+  // use CF1, CF2, and Wronskian (FG' - GF' = 1) to solve for F, F', G, G'
   double g = (f - p) / q;
 
   meta_numerics::SolutionPair result;
@@ -729,7 +729,7 @@ void meta_numerics::Coulomb_Recurse_Upward (int L1, int L2, double eta,
   if (L2 < L1) throw marley::Error(std::string("L2 < L1 in Coulomb_Recurse_Upward"));
 
   for (int K = L1 + 1; K <= L2; K++) {
-    
+
     // compute some factors
     double S = std::sqrt(K * K + eta * eta);
     double T = K * K / rho + eta;
@@ -756,7 +756,7 @@ double meta_numerics::CoulombF_Integrate(int L, double eta, double rho) {
 
   // TODO: switch so we integrate w/o the C factor, then apply it afterward
   if ((F == 0.0) && (FP == 0.0)) return (0.0);
-  
+
   // integrate out to rho
   BulrischStoerStoermerStepper s = BulrischStoerStoermerStepper();
   s.RightHandSide = [eta, L] (double x, double U) -> double {
@@ -826,7 +826,7 @@ double meta_numerics::CoulombG (int L, double eta, double rho) {
         = meta_numerics::Coulomb_Steed(L, eta, rho);
       return result.SecondSolutionValue();
     } else {
-      
+
       // we will start at L=0 (which has a smaller turning point radius) and recurse up to the desired L
       // this is okay because G increasees with increasing L
 
@@ -896,7 +896,7 @@ double meta_numerics::LegendrePe(int l, int m, double x) {
     + " the associated Legendre polynomial Pe{l = " + std::to_string(l)
     + ", m = " + std::to_string(m) + "}(x = " + std::to_string(x)
     + "because x must satisfy the relation abs(x) <= 1.");
-  
+
   double xx = (1.0 + x) * (1.0 - x);
   // determine P{m,m}
   double P0 = 1.0;
@@ -951,7 +951,7 @@ double meta_numerics::SphericalBesselJ(int n, double x) {
   if (n < 0) {
     if ((n % 2) == 0) return SphericalBesselY(-n - 1, x);
     else return(-SphericalBesselY(-n - 1, x));
-  } 
+  }
   else if (n == 0) return SphericalBesselJ_Zero(x);
   else if (n == 1) return SphericalBesselJ_One(x);
   else {
@@ -1272,7 +1272,7 @@ double meta_numerics::LogGamma_Stirling(double x) {
 
 double meta_numerics::Sum_Stirling(double x) {
 
-  double xx = x * x; // x^2 
+  double xx = x * x; // x^2
   double xk = x; // tracks x^{2k - 1}
   double f = meta_numerics::Bernoulli[1] / 2.0 / xk; // k = 1 term
   for (size_t k = 2; k < meta_numerics::Bernoulli.size(); k++) {

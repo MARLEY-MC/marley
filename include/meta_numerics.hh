@@ -402,19 +402,19 @@ namespace meta_numerics {
 
   // renormalized associated legendre polynomials Pe{l,m} = sqrt( (l-m)! / (l+m)! ) P{l,m}
   // unlike the unrenormalized P{l,m}, the renormalized Pe{l,m} do not get too big
-  
+
   // this is not quite the same renormalization used by NR; it omits a factor sqrt((2l+1)/4Pi)
   // by omitting this factor, we avoid some unnecessary factors and divisions by 4Pi
-  
+
   // the l-recurrsion (l-m) P{l,m} = x (2l-1) P{l-1,m} - (l+m-1) P{l-2,m} becomes
   // sqrt((l-m)(l+m)) P{l,m} = x (2l-1) P{l-1,m} - sqrt((l-1-m)(l-1+m)) P{l-2,m}
   // this is stable for increasing l
-  
+
   // the initial value P{m,m} = (-1)^m (2m-1)!! (1-x^2)^(m/2) becomes
   // Pe{m,m} = (-1)^m (2m-1)!! sqrt( (1-x^2)^m / (2m)! ) = (-1)^m sqrt( prod_{k=1}^{m} (2k-1) (1-x^2) / (2k) )
-  
+
   double LegendrePe(int l, int m, double x);
-  
+
   /// <summary>
   /// Computes the value of a spherical harmonic function.
   /// </summary>
@@ -436,7 +436,7 @@ namespace meta_numerics {
   // spherical harmonics are used in spherically symmetric wave functions
   // in QM, multipole expansions in EM, expansion of any function on a
   // sphere
-  
+
   // Y{l,m} = sqrt( (2l+1)/(4Pi) (l-m)!/(l+m)! ) P{l,m}; in terms of the
   // renormalized Pe{l,m}, this is Y{l,m] = sqrt( (2l+1)/(4Pi) ) Pe{l,m}
 
@@ -458,7 +458,7 @@ namespace meta_numerics {
   /// <seealso cref="BesselJ(double,double)"/>
   /// <seealso href="http://mathworld.wolfram.com/SphericalBesselFunctionoftheFirstKind.html" />
   double SphericalBesselJ(int n, double x);
-  
+
   /// <summary>
   /// Computes the irregular spherical Bessel function of integer order.
   /// </summary>
@@ -522,16 +522,16 @@ namespace meta_numerics {
   double LogDoubleFactorial(int n);
 
   long DoubleFactorial_Multiply(int n);
-  
+
   double LogDoubleFactorial_Gamma(int n);
- 
+
   double SphericalBesselJ_Series(int n, double x);
   double SphericalBesselY_Series(int n, double x);
- 
+
   double SphericalBesselY_Zero(double x);
   double SphericalBesselY_SeriesOne(double x);
   double SphericalBesselY_One(double x);
- 
+
   // Miller's method assumes a value at some high N and recurs downward
   // the result is then normalized using a sum relation or a known value
   double SphericalBesselJ_Miller(int n, double x);
@@ -548,7 +548,7 @@ namespace meta_numerics {
   // where
   //   R = 1 - \frac{(\mu-1)(\mu+15)}{2! (8x)^2} + \cdots
   //   S = \frac{(\mu+3)}{8x} - \frac{(\mu-1)(\mu - 9)(\mu+35)}{3! (8x)^3} + \cdots
-  
+
   // For nu=0, this series converges to full precision in about 10 terms at x~100, and in about 25 terms even as low as x~25
   // It fails to converge at all for lower x <~ 25
   // Since the first correction term is ~ (4 \nu^2)^2 / (8 x)^2 ~ (\nu^2 / 2 x)^2, the minimum x should grow like \nu^2 / 2
