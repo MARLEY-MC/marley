@@ -89,7 +89,7 @@ double marley::MassTable::lookup_atomic_mass(int Z, int A, bool& exp,
 double marley::MassTable::get_binding_energy(int Z, int A, bool theory_ok) {
   int N = A - Z;
   double m_hydrogen_1 = atomic_masses.at(1000010010);
-  double mn = particle_masses.at(marley_utils::NEUTRON); 
+  double mn = particle_masses.at(marley_utils::NEUTRON);
 
   bool exp;
   double mN = lookup_atomic_mass(Z, A, exp, theory_ok);

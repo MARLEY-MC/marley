@@ -11,7 +11,7 @@
 namespace marley {
 
   class StructureDatabase {
-  
+
     public:
 
       StructureDatabase();
@@ -19,34 +19,34 @@ namespace marley {
 
       void add_decay_scheme(const std::string nucid,
         marley::DecayScheme ds);
-  
+
       inline void clear() {
         decay_scheme_table.clear();
       }
-  
+
       inline void remove_decay_scheme(const std::string nucid) {
         // Remove the decay scheme with this nucid if it
         // exists in the database. If it doesn't, do nothing.
         decay_scheme_table.erase(nucid);
       }
-  
+
       inline marley::DecayScheme* get_decay_scheme(const int particle_id) {
         auto iter = pid_decay_scheme_table.find(particle_id);
         if (iter == pid_decay_scheme_table.end()) return nullptr;
         else return iter->second;
       }
-  
+
       marley::DecayScheme* get_decay_scheme(const std::string nucid);
-  
+
       inline marley::DecayScheme* get_decay_scheme(const int Z, const int A)
       {
         int particle_id = marley_utils::get_nucleus_pid(Z, A);
         return get_decay_scheme(particle_id);
       }
-  
+
       void add_from_record(const marley::ConfigFile::StructureRecord& sr);
       void add_all_from_config_file(const marley::ConfigFile& cf);
-  
+
       // If the requested optical model object already exists in the lookup table,
       // return it. If not, create it, add it to the table, and then return it.
       inline marley::SphericalOpticalModel& get_optical_model(int nucleus_pid)
@@ -74,7 +74,7 @@ namespace marley {
       {
         int nucleus_pid = marley_utils::get_nucleus_pid(Z, A);
         auto iter = optical_model_table.find(nucleus_pid);
-  
+
         if (iter == optical_model_table.end()) {
 	// The requested level density model wasn't found, so create it and add
 	// it to the table, returning a reference to the stored level density
@@ -93,9 +93,9 @@ namespace marley {
         const int A)
       {
         int pid = marley_utils::get_nucleus_pid(Z, A);
-  
+
         auto iter = level_density_table.find(pid);
-  
+
         if (iter == level_density_table.end()) {
 	// The requested level density model wasn't found, so create it and add
 	// it to the table, returning a reference to the stored level density
@@ -107,14 +107,14 @@ namespace marley {
         else return *(iter->second.get());
       }
 
-  
+
     private:
       // Lookup table for marley::DecayScheme objects.
       // Keys are ENSDF-style nucIDs, values are decay schemes.
       std::unordered_map<std::string, marley::DecayScheme> decay_scheme_table;
       // Table for looking up decay schemes by PDG particle ID
       std::unordered_map<int, marley::DecayScheme*> pid_decay_scheme_table;
-  
+
       // Lookup table for marley::SphericalOpticalModel objects.
       // Keys are PDG particle IDs, values are optical models.
       std::unordered_map<int, std::unique_ptr<marley::SphericalOpticalModel> >

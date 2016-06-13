@@ -75,7 +75,7 @@ void marley::StructureDatabase::add_from_record(
   const marley::ConfigFile::StructureRecord& sr)
 {
   // TODO: consider altering the parsing process used here so
-  // that all nuclides are loaded from the file in one pass. 
+  // that all nuclides are loaded from the file in one pass.
   // Add a decay scheme for each nucid listed in the structure
   // record to the database
   for (const auto& id : sr.nucids) {

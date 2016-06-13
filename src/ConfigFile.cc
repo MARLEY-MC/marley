@@ -7,7 +7,7 @@
 namespace {
 
   using InterpMethod = marley::InterpolationGrid<double>::InterpolationMethod;
-  
+
   // Matches comment lines and empty lines
   const std::regex rx_comment_or_empty = std::regex("#.*|\\s*");
   // Matches non-negative integers
@@ -61,7 +61,7 @@ void marley::ConfigFile::parse() {
   int lines_checked;
 
   // Loop through each line in the file. Search for keywords,
-  // and react appropriately whenever they are encountered. 
+  // and react appropriately whenever they are encountered.
   for (line_num = 0;
     line = marley_utils::get_next_line(file_in, rx_comment_or_empty, false,
       lines_checked), line_num += lines_checked,
@@ -87,7 +87,7 @@ void marley::ConfigFile::parse() {
       next_word_from_line(arg);
       // If "time" is used as the seed argument, use the system time as the seed
       if (arg == "time") ; // default value, so do nothing
-      // If "device" is used, seed the random number generator using random_device 
+      // If "device" is used, seed the random number generator using random_device
       // TODO: implement this
       //else if (arg == "device");
       else if (!std::regex_match(arg, rx_nonneg_int))
@@ -204,7 +204,7 @@ void marley::ConfigFile::parse() {
 
             // Pad each piece so that it has the proper length based
             // on ENSDF conventions
-            if (z_str.size() < 3) marley_utils::pad_left_inplace(z_str, 3); 
+            if (z_str.size() < 3) marley_utils::pad_left_inplace(z_str, 3);
             if (e_str.size() < 2) marley_utils::pad_right_inplace(e_str, 2);
             arg = z_str + e_str;
           }

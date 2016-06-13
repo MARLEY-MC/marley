@@ -82,7 +82,7 @@ double marley::Generator::uniform_random_double(double min, double max,
   // explicitly supply the upper and lower bounds to
   // this distribution, so we won't worry about the
   // default setting.
-  static std::uniform_real_distribution<double> udist;  
+  static std::uniform_real_distribution<double> udist;
 
   double max_to_use;
 
@@ -135,7 +135,7 @@ double marley::Generator::rejection_sample(std::function<double(double)> f,
     // Sample y uniformly from [0, fmax]
     y = uniform_random_double(0, fmax, true);
   }
-  // Keep sampling until you get a y value less than f(x) 
+  // Keep sampling until you get a y value less than f(x)
   // (the probability density function evaluated at the sampled value of x)
   while (y > f(x));
 
@@ -148,7 +148,7 @@ double marley::Generator::unnormalized_Ea_pdf(double Ea) {
   // each individual value along the way.
   for (size_t j = 0, s = reactions.size(); j < s; ++j) {
     double tot_xs = reactions.at(j)->total_xs(marley_utils::ELECTRON_NEUTRINO,
-      Ea); 
+      Ea);
     total_xs_values.at(j) = tot_xs;
     pdf += tot_xs;
   }

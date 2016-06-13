@@ -66,7 +66,7 @@ namespace marley {
 
           // Allows the logger to use the << operator on output manipulators like
           // std::endl. Based on a trick discussed here:
-          // http://www.cplusplus.com/forum/general/54588/#msg294798 
+          // http://www.cplusplus.com/forum/general/54588/#msg294798
           inline OutStreamVector& operator<<(std::ostream& (*manip)(std::ostream&))
           {
             for (auto s : *this) if (s.enabled && s.stream) manip(*s.stream);
@@ -139,9 +139,9 @@ namespace marley {
       // Make the logger uncopyable
       Logger(const Logger&) = delete;
       Logger& operator=(const Logger&) = delete;
-  
+
     private:
-  
+
       OutStreamVector streams;
 
       bool enabled;

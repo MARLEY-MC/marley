@@ -28,7 +28,7 @@ double marley::Integrator::num_integrate(const std::function<double(double)> &f,
       size_t nk_mod = n*k % two_N;
       if (nk_mod >= N) nk_weight = -weights[2*(nk_mod % N)];
       else nk_weight = weights[2*nk_mod];
-      
+
       term += (f(B + epoint) + f(B - epoint)) * nk_weight/N;
     }
 

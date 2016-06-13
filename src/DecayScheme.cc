@@ -102,7 +102,7 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
       marley::Particle nucleus(pid, marley::MassTable::get_atomic_mass(pid)
         + Exf - qIon*marley::MassTable::get_particle_mass(
         marley_utils::ELECTRON), qIon);
-      
+
       //double gamma_energy = p_gamma->get_energy();
 
       // Sample a direction assuming that the gammas are emitted
@@ -190,7 +190,7 @@ void marley::DecayScheme::assign_theoretical_RIs(marley::Level* level_i) {
     // TODO: consider adding a nuclear recoil correction here
     double e_gamma = level_i->get_energy() - level_f->get_energy();
 
-    // TODO: allow the user to choose which gamma-ray transition model to use 
+    // TODO: allow the user to choose which gamma-ray transition model to use
     // (Weisskopf single-particle estimates, Brink-Axel strength functions, etc.)
     // Note that we don't need to normalize the relative intensities since the
     // std::discrete_distribution already takes care of that for us
@@ -211,7 +211,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
   const std::regex rx_continuation_level_record(nuc_id + ensdf_continuation_record + " L " + ensdf_record_data);
   const std::regex rx_primary_gamma_record(nuc_id + ensdf_primary_record + " G " + ensdf_record_data);
   const std::regex rx_continuation_gamma_record(nuc_id + ensdf_continuation_record + " G " + ensdf_record_data);
- 
+
   // Open the ENSDF file for parsing
   std::ifstream file_in(filename);
 
@@ -256,7 +256,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
                            // is found
 
   marley::Level* p_current_level = nullptr; // Pointer to the current level object
-                                          // being filled with gamma ray data 
+                                          // being filled with gamma ray data
 
   LOG_DEBUG() << "Parsing data for nucid '" << nuc_id << "'";
   while (!file_in.eof()) {
@@ -271,9 +271,9 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
       record = line;
       line = process_continuation_records(file_in, record, rx_continuation_level_record);
       no_advance = true;
-        
+
       // Extract the level energy (in keV) as a trimmed string from the ENSDF level record
-      std::string level_energy_str = marley_utils::trim_copy(record.substr(9,10)); 
+      std::string level_energy_str = marley_utils::trim_copy(record.substr(9,10));
 
       // Convert the energy to MeV and double-precision
       double level_energy = std::stod(level_energy_str) * marley_utils::MeV;
@@ -290,7 +290,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
       // If one is found, use it to determine the level spin-parity. If not,
       // use the default values.
       std::smatch match;
-    
+
       // If a parity is applied to a parenthesized group in the ENSDF file, remove
       // the parentheses and apply that parity to every spin in the group
       if (std::regex_match(jpi, match, rx_paren_group)) {
@@ -298,10 +298,10 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
         std::string parity = match[2];
         jpi = std::regex_replace(spins, rx_spin, "$1" + parity);
       }
-    
+
       int two_J;
       marley::Parity parity;
-    
+
       // Search for a spin-parity entry like "3" or "1/2-"
       if (std::regex_search(jpi, match, rx_jpi)) {
         // Determine the level parity
@@ -316,9 +316,9 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
         }
         // Use the default parity value if the parity could not be determined
         else parity = DEFAULT_PARITY;
-    
-        std::string spin = match[1]; 
-    
+
+        std::string spin = match[1];
+
         // Check for half-integer spin and compute 2J appropriately
         // based on the result of the check
         size_t spin_size = spin.size();
@@ -357,7 +357,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
       // have no assigned level appear before any level records,
       // so p_current_level will be a null pointer for them.
       if (p_current_level != nullptr) {
-        p_current_level->add_gamma(marley::Gamma(gamma_energy, gamma_ri, p_current_level)); 
+        p_current_level->add_gamma(marley::Gamma(gamma_energy, gamma_ri, p_current_level));
       }
 
     }
@@ -392,17 +392,17 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
     double initial_level_energy = (*j)->get_energy();
 
     for(std::vector<marley::Gamma>::iterator k = p_gammas->begin();
-      k != p_gammas->end(); ++k) 
+      k != p_gammas->end(); ++k)
     {
       double gamma_energy = k->get_energy();
 
       // Approximate the final level energy so we can search for the final level
-      double final_level_energy = initial_level_energy - gamma_energy; 
+      double final_level_energy = initial_level_energy - gamma_energy;
 
       // Search for the corresponding energy using the vector of level energies
       std::vector<double>::iterator p_final_level_energy = std::lower_bound(
         sorted_level_energies.begin(), sorted_level_energies.end(),
-        final_level_energy); 
+        final_level_energy);
 
       // Determine the index of the final level energy appropriately
       unsigned int e_index = std::distance(sorted_level_energies.begin(),
@@ -447,7 +447,7 @@ void marley::DecayScheme::parse_talys(std::string filename) {
   std::string nuc_id_copy = nuc_id;
   // Make the last character of the nuc_id lowercase to follow the TALYS convention
   nuc_id_copy.back() = tolower(nuc_id_copy.back());
-  
+
   const std::regex nuclide_line("[0-9 ]{18} {57}" + nuc_id_copy);
 
   // Open the TALYs level data file for parsing
@@ -468,7 +468,7 @@ void marley::DecayScheme::parse_talys(std::string filename) {
   while (!file_in.eof()) {
     std::getline(file_in, line);
     if (std::regex_match(line, nuclide_line)) {
-      found_decay_scheme = true; 
+      found_decay_scheme = true;
       break;
     }
   }
@@ -482,14 +482,14 @@ void marley::DecayScheme::parse_talys(std::string filename) {
   LOG_DEBUG() << line;
 
   // Dummy integer and number of excited levels for this nuclide
-  int dummy, num_excited_levels; 
+  int dummy, num_excited_levels;
 
   // Read in the number of excited levels from the first line of data
   std::istringstream iss(line);
   iss >> dummy >> dummy >> dummy >> num_excited_levels;
 
   // Pointer to the current level object being filled with gamma ray data
-  marley::Level* p_current_level = nullptr; 
+  marley::Level* p_current_level = nullptr;
 
   // Temporary vectors to store level energies and pointers to newly
   // created level objects. These are used to calculate gamma ray energies
@@ -564,7 +564,7 @@ void marley::DecayScheme::parse_talys(std::string filename) {
         p_current_gamma->set_end_level(level_ps.at(gamma_final_level_num));
       }
     }
-  } 
+  }
 
   file_in.close();
 }
@@ -576,8 +576,8 @@ std::string marley::DecayScheme::process_continuation_records(std::ifstream &fil
   while (!file_in.eof()) {
     // Get the next line of the file
     std::getline(file_in, line);
- 
-    // Check to see if the next line is a continuation record 
+
+    // Check to see if the next line is a continuation record
     if (std::regex_match(line, rx_cont_record)) {
       // If it is, add the next line to the current
       // record text.
@@ -586,8 +586,8 @@ std::string marley::DecayScheme::process_continuation_records(std::ifstream &fil
 
     // If a non-continuation-record line is found,
     // stop reading from the file.
-    else return line; 
-  
+    else return line;
+
   }
 
   // If the end of the file is encountered while processing
@@ -606,9 +606,9 @@ void marley::DecayScheme::print_report(std::ostream& ostr) const {
     // If 2*J is odd, then the level has half-integer spin
     if (twoj % 2) spin += "/2";
     marley::Parity parity = j->get_parity();
-    
+
     //if (sp.empty()) sp = "UNKNOWN";
-    
+
     ostr << "Level at " << j->get_energy()
 	 << " MeV has spin-parity " << spin << parity << std::endl;
     std::vector<marley::Gamma>* p_gammas = j->get_gammas();
@@ -621,7 +621,7 @@ void marley::DecayScheme::print_report(std::ostream& ostr) const {
       ostr << "  has a gamma with energy " << k.get_energy() << " MeV";
       ostr << " (transition to level at "
         << k.get_end_level()->get_energy() << " MeV)" << std::endl;
-      ostr << "    and relative photon intensity " << k.get_ri() << std::endl; 
+      ostr << "    and relative photon intensity " << k.get_ri() << std::endl;
     }
 
   }
@@ -637,7 +637,7 @@ void marley::DecayScheme::print_latex_table(std::ostream& ostr) {
     marley_utils::trim_copy(nuc_id.substr(0,3)) +
     "}]{\\textbf{" + nuc_id.substr(3,1) +
     marley_utils::trim_copy(
-      marley_utils::to_lowercase(nuc_id.substr(4,1))) + 
+      marley_utils::to_lowercase(nuc_id.substr(4,1))) +
     "}} \n";// from file " + filename + " ";
 
   ostr << marley_utils::latex_table_1;
@@ -646,7 +646,7 @@ void marley::DecayScheme::print_latex_table(std::ostream& ostr) {
 
   ostr << marley_utils::latex_table_2;
 
-  ostr << caption_beginning + " -- \\textit{continued}}} \\\\\n";  
+  ostr << caption_beginning + " -- \\textit{continued}}} \\\\\n";
 
   ostr << marley_utils::latex_table_3;
   // Cycle through each of the levels owned by this decay scheme
@@ -682,7 +682,7 @@ void marley::DecayScheme::print_latex_table(std::ostream& ostr) {
     // (according to the ENSDF specification, these will already be
     // sorted in order of increasing energy)
     for(std::vector<marley::Gamma>::iterator k = p_gammas->begin();
-      k != p_gammas->end(); ++k) 
+      k != p_gammas->end(); ++k)
     {
       // If this is not the first gamma, add empty columns
       // for the level energy and spin-parity
@@ -735,7 +735,7 @@ marley::Level* marley::DecayScheme::add_level(marley::Level level) {
   double l_energy = p_level->get_energy();
 
   // Figure out where this level should go in the
-  // vector of sorted level energies 
+  // vector of sorted level energies
   std::vector<double>::iterator
     insert_point = std::lower_bound(sorted_level_energies.begin(),
     sorted_level_energies.end(), l_energy);

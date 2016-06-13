@@ -142,7 +142,7 @@ double marley_utils::minimize(const std::function<double(double)> f, // [in] obj
     double d, e, m, p, q, r, tol, t2, u, v, w, fu, fv, fw, fx;
     static const double c = 0.5*(3.0 - std::sqrt(5.0));
     static const double SQRT_DBL_EPSILON = std::sqrt(DBL_EPSILON);
-    
+
     double& a = leftEnd;
     double& b = rightEnd;
     double& x = minLoc;
@@ -196,8 +196,8 @@ double marley_utils::minimize(const std::function<double(double)> f, // [in] obj
         if (fu <= fx)
         {
             (u < x) ? b = x : a = x;
-            v = w; fv = fw; 
-            w = x; fw = fx; 
+            v = w; fv = fw;
+            w = x; fw = fx;
             x = u; fx = fu;
         }
         else
@@ -205,7 +205,7 @@ double marley_utils::minimize(const std::function<double(double)> f, // [in] obj
             (u < x) ? a = u : b = u;
             if (fu <= fw || w == x)
             {
-                v = w; fv = fw; 
+                v = w; fv = fw;
                 w = u; fw = fu;
             }
             else if (fu <= fv || v == x || v == w)

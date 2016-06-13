@@ -27,7 +27,7 @@ namespace marley {
       // (see http://en.wikipedia.org/wiki/Clenshaw-Curtis_quadrature)
       double num_integrate(const std::function<double(double)> &f,
         double a, double b) const;
-  
+
     private:
       // Use 2*N sampling points to perform numerical integration
       size_t N;

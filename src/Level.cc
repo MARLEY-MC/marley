@@ -48,7 +48,7 @@ marley::Gamma* marley::Level::add_gamma(const marley::Gamma& gamma) {
 }
 
 double marley::Level::get_energy() const {
-  return energy; 
+  return energy;
 }
 
 void marley::Level::set_energy(double E) {

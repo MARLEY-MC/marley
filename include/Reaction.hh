@@ -7,7 +7,7 @@
 namespace marley {
 
   class Generator;
-  
+
   // Abstract base class that represents a 2-2 scattering reaction
   // between  a projectile (particle a) with lab-frame total energy Ea,
   // and a target (particle b) that is taken to be at rest in the lab frame.
@@ -21,25 +21,25 @@ namespace marley {
       // Creates an event object for this reaction using the generator gen
       virtual marley::Event create_event(int particle_id_a, double Ea,
         marley::Generator& gen) = 0;
-  
+
       inline std::string get_description() { return description; }
-  
+
     protected:
       // Particle ID numbers (PDG convention)
       int pid_a, pid_b, pid_c, pid_d;
       // Particle masses and squared masses (pre-computed for speed)
       double ma, mb, mc, md_;
       double ma2, mb2, mc2, md2_;
-  
+
       // String describing the reaction
       std::string description;
-  
+
       // Handles kinematics for the reaction, loading variables with the value of
       // Mandelstam s, the CM frame ejectile total energy, the CM frame ejectile
       // 3-momentum magnitude, and the CM frame residue total energy
       void two_two_scatter(double Ea, double& s, double& Ec_cm,
         double& pc_cm, double& Ed_cm);
-  
+
       // Helper function that makes an event object. This should be called
       // by create_event after CM frame scattering angles have been sampled
       // for the ejectile. For reactions where the residue may be left in an
