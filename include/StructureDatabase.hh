@@ -49,18 +49,37 @@ namespace marley {
   
       // If the requested optical model object already exists in the lookup table,
       // return it. If not, create it, add it to the table, and then return it.
+      inline marley::SphericalOpticalModel& get_optical_model(int nucleus_pid)
+      {
+        // TODO: add check for invalid nucleus particle ID value
+        auto iter = optical_model_table.find(nucleus_pid);
+
+        if (iter == optical_model_table.end()) {
+	  // The requested level density model wasn't found, so create it and add
+	  // it to the table, returning a reference to the stored level density
+	  // model afterwards.
+	  int Z = marley::MassTable::get_particle_Z(nucleus_pid);
+	  int A = marley::MassTable::get_particle_A(nucleus_pid);
+          return *(optical_model_table.emplace(nucleus_pid,
+            std::make_unique<marley::SphericalOpticalModel>(Z, A)).first
+            ->second.get());
+        }
+        else return *(iter->second.get());
+      }
+
+      // If the requested optical model object already exists in the lookup table,
+      // return it. If not, create it, add it to the table, and then return it.
       inline marley::SphericalOpticalModel& get_optical_model(const int Z,
         const int A)
       {
-        int pid = marley_utils::get_nucleus_pid(Z, A);
-
-        auto iter = optical_model_table.find(pid);
+        int nucleus_pid = marley_utils::get_nucleus_pid(Z, A);
+        auto iter = optical_model_table.find(nucleus_pid);
   
         if (iter == optical_model_table.end()) {
 	// The requested level density model wasn't found, so create it and add
 	// it to the table, returning a reference to the stored level density
 	// model afterwards.
-          return *(optical_model_table.emplace(pid,
+          return *(optical_model_table.emplace(nucleus_pid,
             std::make_unique<marley::SphericalOpticalModel>(Z, A)).first
             ->second.get());
         }

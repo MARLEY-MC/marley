@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 
-#include "iterator_to_member.hh"
+#include "IteratorToMember.hh"
 
 namespace marley {
 
@@ -24,13 +24,13 @@ namespace marley {
       // with the intensities of the gammas that it owns without redundant
       // storage.
       template<typename It> static inline
-        itm::iterator_to_member<It, marley::Gamma, double>
+        marley::IteratorToMember<It, marley::Gamma, double>
         make_intensity_iterator(It it)
       {
-        return itm::iterator_to_member<It, marley::Gamma, double>(it,
+        return marley::IteratorToMember<It, marley::Gamma, double>(it,
           &marley::Gamma::fRI);
       }
-  
+
     private:
       double fEnergy;
       double fRI;
