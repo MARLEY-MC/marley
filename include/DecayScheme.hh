@@ -31,8 +31,8 @@ namespace marley {
       std::string get_nuc_id() const;
       void set_nuc_id(std::string id);
       marley::Level* add_level(const marley::Level level);
-      std::list<marley::Level>* get_levels();
-      const std::vector<marley::Level*>* get_sorted_level_pointers() const;
+      std::list<marley::Level>& get_levels();
+      const std::vector<marley::Level*>& get_sorted_level_pointers() const;
       void print_report(std::ostream& ostr = std::cout) const;
       marley::Level* get_pointer_to_closest_level(double E_level);
       void do_cascade(marley::Level* initial_level, marley::Event* p_event,

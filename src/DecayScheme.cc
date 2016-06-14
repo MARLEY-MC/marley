@@ -10,7 +10,7 @@
 #include "Generator.hh"
 #include "Kinematics.hh"
 #include "Logger.hh"
-#include "NuclearPhysics.hh"
+#include "HauserFeshbachDecay.hh"
 
 // Default level parity is +
 const marley::Parity marley::DecayScheme::DEFAULT_PARITY = 1;
@@ -183,8 +183,8 @@ void marley::DecayScheme::assign_theoretical_RIs(marley::Level* level_i) {
 
     // Determine the type (electric or magnetic) and multipolarity of the gamma
     // transition between these two levels
-    auto type = marley::NuclearPhysics::determine_gamma_transition_type(level_i,
-      level_f, l);
+    auto type = marley::HauserFeshbachDecay::determine_gamma_transition_type(
+      level_i, level_f, l);
 
     // Approximate the gamma energy by the energy difference between the two levels
     // TODO: consider adding a nuclear recoil correction here
@@ -194,8 +194,8 @@ void marley::DecayScheme::assign_theoretical_RIs(marley::Level* level_i) {
     // (Weisskopf single-particle estimates, Brink-Axel strength functions, etc.)
     // Note that we don't need to normalize the relative intensities since the
     // std::discrete_distribution already takes care of that for us
-    double ri = marley::NuclearPhysics::weisskopf_partial_decay_width(A, type,
-      l, e_gamma);
+    double ri = marley::HauserFeshbachDecay::weisskopf_partial_decay_width(A,
+      type, l, e_gamma);
 
     // Add a new gamma object representing this transition to the initial level
     level_i->add_gamma(marley::Gamma(e_gamma, ri, level_i));
@@ -756,12 +756,12 @@ marley::Level* marley::DecayScheme::add_level(marley::Level level) {
   return p_level;
 }
 
-const std::vector<marley::Level*>* marley::DecayScheme::get_sorted_level_pointers() const {
-  return &pv_sorted_levels;
+const std::vector<marley::Level*>& marley::DecayScheme::get_sorted_level_pointers() const {
+  return pv_sorted_levels;
 }
 
-std::list<marley::Level>* marley::DecayScheme::get_levels() {
-  return &levels;
+std::list<marley::Level>& marley::DecayScheme::get_levels() {
+  return levels;
 }
 
 std::ostream& operator<< (std::ostream& out,
