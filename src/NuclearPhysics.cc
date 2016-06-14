@@ -636,8 +636,9 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
       double continuum_width = marley_utils::num_integrate(cpw, E_c_min,
         Exf_max, DEFAULT_CONTINUUM_SUBINTERVALS);
 
-      std::function<double(double)> cpdf = [=, &om, &ldm](double Exf) -> double {
-        double Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
+      std::function<double(double&, double)> cpdf
+        = [=, &om, &ldm](double& Ea, double Exf) -> double {
+        Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
         return fragment_continuum_partial_width(fragment_pid, Ea, two_s, Pa,
           twoJ, Pi, om, ldm, Exf) / continuum_width;
       };
@@ -654,7 +655,7 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
 
   // Let the continuum go down to 0 MeV unless there is a decay scheme object
   // available for the final nuclide (we'll check this in a second).
-  double E_c_min = 0;
+  double E_c_min = 0.;
 
   // If discrete level data is available for this nuclide, get gamma decay
   // widths for each accessible level
@@ -746,50 +747,19 @@ bool marley::NuclearPhysics::hauser_feshbach_decay(int Zi, int Ai,
 
   marley::ExitChannel* ec = ecs.at(exit_channel_index).get();
 
-  double Exf = Ex;
-  ec->do_decay(Exf, twoJ, Pi, first_product, second_product, gen);
+  ec->do_decay(Ex, twoJ, Pi, first_product, second_product, gen);
 
   // TODO: consider changing this to a more realistic model
   // instead of isotropic emissions
   double cos_theta_first = gen.uniform_random_double(-1, 1, true);
   double phi_first = gen.uniform_random_double(0, marley_utils::two_pi, false);
 
-  // Handle the kinematics calculations for this decay
+  // Handle the kinematics calculations for this decay and update the
+  // final-state particle objects
   marley::Kinematics::two_body_decay(initial_particle, first_product,
     second_product, cos_theta_first, phi_first);
 
-  // Update the spin-parity of the residual nucleus, if needed
   bool discrete_level = !ec->is_continuum();
-
-  // TODO: refactor spin-parity sampling too!
-  if (!discrete_level) {
-    // Determine final spin-parity here
-    if (ec->emits_fragment()) {
-// Determine final spin-parity here
-//     if (evaporation) {
-//       double Ma = fr->get_mass();
-//       double Sa = mfgs + Ma - Migs;
-//       double Mconst = (Ex - Sa) * (Mi + mfgs - Ma);
-//       double Ea = (Mconst - Exf*(2*mfgs + Exf)) / (2 * Mi);
-//       int Zf = Zi - fr->get_Z();
-//       int Af = Ai - fr->get_A();
-//       marley::SphericalOpticalModel& om = db.get_optical_model(Zf, Af);
-//       sample_fragment_spin_parity(twoJ, Pi, *fr, om, gen, Exf, Ea);
-//     }
-//     else sample_gamma_spin_parity(Zi, Ai, twoJ, Pi, Ex, Exf, gen);
-      auto fec = dynamic_cast<marley::FragmentContinuumExitChannel*>(ec);
-      const marley::Fragment& fr = fec->get_fragment();
-      double Ea = first_product.get_kinetic_energy();
-      marley::SphericalOpticalModel& om
-        = db.get_optical_model(second_product.get_id());
-      sample_fragment_spin_parity(twoJ, Pi, fr, om, gen, Exf, Ea);
-    }
-    else sample_gamma_spin_parity(Zi, Ai, twoJ, Pi, Ex, Exf, gen);
-  }
-
-  // Update the excitation energy
-  Ex = Exf;
-
   return !discrete_level;
 }
 
