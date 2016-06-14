@@ -226,8 +226,7 @@ void marley::ConfigFile::parse() {
     }
     else if (keyword == "source") {
 
-      // Weight and PDG particle ID for this source
-      double weight;
+      // PDG particle ID for this source
       int neutrino_pid;
 
       // Get the particle ID for the neutrino type produced by this source
@@ -247,37 +246,7 @@ void marley::ConfigFile::parse() {
         + "' given on line " + std::to_string(line_num)
         + " of the configuration file " + filename);
 
-/***  Do not allow the user to specify a source weight for now, since
- * only one neutrino source is currently allowed. Re-enable this code
- * if and when you add the capability for marley::Generator to handle
- * multiple sources concurrently.
-      // Get the weight for this source if it is specified. Otherwise,
-      // set the weight to 1.
       next_word_from_line(arg, true, true);
-      bool weight_specified = false;
-      if (std::regex_match(arg, rx_num)) {
-        weight = std::stod(arg);
-        weight_specified = true;
-        // Only positive weights are allowed
-        if (weight <= 0.) {
-          throw marley::Error(std::string("Non-positive")
-          + " neutrino source weight '" + arg
-          + "' given on line " + std::to_string(line_num)
-          + " of the configuration file " + filename);
-        }
-      }
-      else weight = 1.;
-
-      // Advance to the next argument if the weight was given
-      if (weight_specified) next_word_from_line(arg,
-        true, true);
-*/
-
-/* Replacement code (delete when you re-enable the block above) */
-
-      weight = 1.;
-      next_word_from_line(arg, true, true);
-/* End of replacement code */
 
       // Determine which source style was requested, process the remaining
       // arguments appropriately, and construct the new marley::NeutrinoSource
@@ -292,7 +261,7 @@ void marley::ConfigFile::parse() {
             + " of the configuration file " + filename);
           // Create the monoenergetic neutrino source
           else sources.push_back(std::make_unique<marley::MonoNeutrinoSource>(
-            neutrino_pid, weight, nu_energy));
+            neutrino_pid, nu_energy));
         }
         else throw marley::Error(std::string("Invalid")
           + " energy '" + arg
@@ -303,7 +272,7 @@ void marley::ConfigFile::parse() {
 
       else if (arg == "dar" || arg == "decay-at-rest") {
         sources.push_back(std::make_unique<marley::DecayAtRestNeutrinoSource>(
-          weight, neutrino_pid));
+          neutrino_pid));
       }
 
       else if (arg == "fd" || arg == "fermi-dirac" || arg == "fermi_dirac") {
@@ -371,7 +340,7 @@ void marley::ConfigFile::parse() {
         // Now that we have all of the necessary parameters, create the new
         // Fermi-Dirac neutrino source
         sources.push_back(std::make_unique<marley::FermiDiracNeutrinoSource>(
-          neutrino_pid, weight, Emin, Emax, temperature, eta));
+          neutrino_pid, Emin, Emax, temperature, eta));
       }
 
       else if (arg == "bf" || arg == "beta" || arg == "beta-fit") {
@@ -439,7 +408,7 @@ void marley::ConfigFile::parse() {
         // Now that we have all of the necessary parameters, create the new
         // Fermi-Dirac neutrino source
         sources.push_back(std::make_unique<marley::BetaFitNeutrinoSource>(
-          neutrino_pid, weight, Emin, Emax, Eavg, beta));
+          neutrino_pid, Emin, Emax, Eavg, beta));
       }
 
       // The histogram and grid source types are both implemented using an
@@ -626,10 +595,10 @@ void marley::ConfigFile::parse() {
         // Now that we've processed grid points, create the grid neutrino
         // source
         sources.push_back(std::make_unique<marley::GridNeutrinoSource>(
-          energies, prob_densities, neutrino_pid, weight, method));
+          energies, prob_densities, neutrino_pid, method));
       }
 
-      else if (!process_extra_source_types(arg, neutrino_pid, weight))
+      else if (!process_extra_source_types(arg, neutrino_pid))
         throw marley::Error(std::string("Unrecognized")
         + " neutrino source type '" + arg
         + "' given on line " + std::to_string(line_num)

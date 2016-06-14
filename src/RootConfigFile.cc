@@ -81,7 +81,7 @@ template<typename T> T*
 }
 
 bool marley::RootConfigFile::process_extra_source_types(
-  const std::string& type, int neutrino_pid, double weight)
+  const std::string& type, int neutrino_pid)
 {
   if (type == "th1" || type == "tgraph") {
 
@@ -141,7 +141,7 @@ bool marley::RootConfigFile::process_extra_source_types(
         // Now that we've processed grid points, create the grid neutrino
         // source
         sources.push_back(std::make_unique<marley::GridNeutrinoSource>(
-          Es, PDFs, neutrino_pid, weight, InterpMethod::Constant));
+          Es, PDFs, neutrino_pid, InterpMethod::Constant));
 
         // We created the source successfully, so indicate that via the return
         // value
@@ -178,7 +178,7 @@ bool marley::RootConfigFile::process_extra_source_types(
 
         // Create a neutrino source based on the grid
         sources.push_back(std::make_unique<marley::GridNeutrinoSource>(Es,
-          PDFs, neutrino_pid, weight, InterpMethod::LinearLinear));
+          PDFs, neutrino_pid, InterpMethod::LinearLinear));
 
         return true;
       }
