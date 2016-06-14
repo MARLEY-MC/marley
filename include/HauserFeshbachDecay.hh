@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <ostream>
 #include <unordered_map>
 
 #include "ExitChannel.hh"
@@ -85,6 +86,8 @@ namespace marley {
       // TODO: make this a user-controlled value specified in the configuration file
       static constexpr double DEFAULT_NUMEROV_STEP_SIZE = 0.1; // fm
 
+      void print(std::ostream& out) const;
+
     protected:
 
       // Mass of a charged pion
@@ -132,4 +135,12 @@ namespace marley {
       std::vector<std::unique_ptr<marley::ExitChannel> > exit_channels_;
   };
 
+}
+
+// Operator for printing HauserFeshbachDecay objects to a std::ostream
+inline std::ostream& operator<<(std::ostream& out,
+  const marley::HauserFeshbachDecay& hfd)
+{
+  hfd.print(out);
+  return out;
 }
