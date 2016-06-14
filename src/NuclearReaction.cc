@@ -10,7 +10,7 @@
 #include "Generator.hh"
 #include "Level.hh"
 #include "Logger.hh"
-#include "NuclearPhysics.hh"
+#include "HauserFeshbachDecay.hh"
 #include "Reaction.hh"
 
 marley::NuclearReaction::NuclearReaction(std::string filename,
@@ -156,8 +156,8 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
   // infinity.
   double unbound_threshold = std::numeric_limits<double>::max();
   LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << std::endl;
-  for (const auto& f : marley::NuclearPhysics::get_fragments()) {
-    double thresh = marley::NuclearPhysics::get_fragment_emission_threshold(Zf,
+  for (const auto& f : marley::HauserFeshbachDecay::get_fragments()) {
+    double thresh = marley::HauserFeshbachDecay::get_fragment_emission_threshold(Zf,
       Af, f);
     LOG_DEBUG() << f.get_pid() << " emission threshold = " << thresh << std::endl;
     if (thresh < unbound_threshold) unbound_threshold = thresh;
@@ -458,20 +458,20 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
     // Fermi transition gives 0+ -> 0+, GT transition gives 0+ -> 1+
     // TODO: include possibility of negative parity here.
     marley::Parity P(true); // positive parity
-    marley::StructureDatabase& db = gen.get_structure_db();
     marley::Particle first, second;
     // The selected level is unbound, so handle its de-excitation using
     // the Hauser-Feshbach statistical model.
     while (continuum && Ex > cutoff) {
-      continuum = marley::NuclearPhysics::hauser_feshbach_decay(Z, A, residue,
-        first, second, Ex, twoJ, P, db, gen);
-      LOG_DEBUG() << "Hauser-Feshbach decay to " << first.get_id() << " and " << second.get_id();
+      marley::HauserFeshbachDecay hfd(residue, Ex, twoJ, P, gen);
+      continuum = hfd.do_decay(Ex, twoJ, P, first, second);
+
+      LOG_DEBUG() << "Hauser-Feshbach decay to " << first.get_id()
+        << " and " << second.get_id();
       LOG_DEBUG() << second.get_id() << " is at Ex = " << Ex << " MeV.";
 
       residue = second;
       Z = marley::MassTable::get_particle_Z(residue.get_id());
       A = marley::MassTable::get_particle_A(residue.get_id());
-
       event.add_final_particle(first);
     }
   }
@@ -482,7 +482,8 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
     // bound level in the residual nucleus. In either case, use gamma-ray decay
     // scheme data to sample the de-excitation gammas and add them to this
     // event's final particle list.
-    marley::DecayScheme* dec_scheme = gen.get_structure_db().get_decay_scheme(Z, A);
+    marley::DecayScheme* dec_scheme
+      = gen.get_structure_db().get_decay_scheme(Z, A);
     dec_scheme->do_cascade(dec_scheme->get_pointer_to_closest_level(Ex),
       &event, gen, residue.get_charge());
   }

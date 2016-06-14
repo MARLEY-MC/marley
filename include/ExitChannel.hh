@@ -5,7 +5,6 @@
 #include "IteratorToPointerMember.hh"
 #include "Level.hh"
 #include "MassTable.hh"
-#include "NuclearPhysics.hh"
 #include "Parity.hh"
 
 namespace marley {
@@ -166,6 +165,10 @@ namespace marley {
 
       inline const marley::Fragment& get_fragment() const { return fragment_; }
 
+      void sample_spin_parity(int& twoJ, marley::Parity& Pi, const
+        marley::Fragment& f, marley::SphericalOpticalModel& om,
+        marley::Generator& gen, double Exf, double Ea);
+
       inline virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
         marley::Particle& residual_nucleus, marley::Generator& gen)
@@ -175,7 +178,7 @@ namespace marley {
         Ex = gen.rejection_sample([&Ea, this](double ex)
           -> double { return this->Epdf_(Ea, ex); }, Emin_, Emax_);
 
-        marley::NuclearPhysics::sample_fragment_spin_parity(two_J, Pi,
+        sample_spin_parity(two_J, Pi,
           fragment_, gen.get_structure_db().get_optical_model(
           gs_residue_.get_id()), gen, Ex, Ea);
 
@@ -204,6 +207,9 @@ namespace marley {
 
       inline virtual bool emits_fragment() const override { return false; }
 
+      void sample_spin_parity(int Z, int A, int& twoJ, marley::Parity& Pi,
+        double Exi, double Exf, marley::Generator& gen);
+
       inline virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
         marley::Particle& residual_nucleus, marley::Generator& gen)
@@ -216,8 +222,7 @@ namespace marley {
         int Z = marley::MassTable::get_particle_Z(nuc_pid);
         int A = marley::MassTable::get_particle_A(nuc_pid);
 
-        marley::NuclearPhysics::sample_gamma_spin_parity(Z, A, two_J, Pi, Exi,
-          Ex, gen);
+        sample_spin_parity(Z, A, two_J, Pi, Exi, Ex, gen);
 
         emitted_particle = marley::Particle(marley_utils::PHOTON, 0.);
         residual_nucleus = gs_residue_;
@@ -227,5 +232,10 @@ namespace marley {
 
     protected:
       std::function<double(double)> Epdf_;
+
+      double store_gamma_pws(double Exf, int twoJf, marley::Parity Pi,
+        std::vector<double>& widths, std::vector<int>& twoJfs,
+        std::vector<marley::Parity>& Pfs, double tcE, double tcM, int mpol,
+        marley::LevelDensityModel& ldm);
   };
 }
