@@ -2,9 +2,11 @@
 
 #include "Fragment.hh"
 #include "Generator.hh"
-#include "Level.hh"
-#include "Parity.hh"
 #include "IteratorToPointerMember.hh"
+#include "Level.hh"
+#include "MassTable.hh"
+#include "NuclearPhysics.hh"
+#include "Parity.hh"
 
 namespace marley {
 
@@ -79,7 +81,7 @@ namespace marley {
 
       inline virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
-        marley::Particle& residual_nucleus, marley::Generator& /*gen unused*/)
+        marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
         override
       {
         Ex = final_level_.get_energy();
@@ -105,7 +107,7 @@ namespace marley {
 
       inline virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
-        marley::Particle& residual_nucleus, marley::Generator& /*gen unused*/)
+        marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
         override
       {
         Ex = final_level_.get_energy();
@@ -121,32 +123,32 @@ namespace marley {
   class ContinuumExitChannel : public ExitChannel
   {
     public:
+
       // Constructor takes a marley::Particle representing the residual
       // nucleus in its ground state. Its mass will be changed to match
       // the sampled final excitation energy each time.
       ContinuumExitChannel(double width, double Emin, double Emax,
-        std::function<double(double)> Epdf, marley::Particle gs_residue)
-        : marley::ExitChannel(width), Emin_(Emin), Emax_(Emax),
-        Epdf_(Epdf), gs_residue_(gs_residue) {}
+        marley::Particle gs_residue) : marley::ExitChannel(width),
+        Emin_(Emin), Emax_(Emax), gs_residue_(gs_residue) {}
 
       inline virtual bool is_continuum() const override { return true; }
 
-      //virtual void get_post_decay_parameters(double& Ex, int& two_J,
-      //  marley::Parity& Pi, marley::Generator& gen) = 0;
-
-      // Create and return a marley::Particle object representing the
-      // emitted fragment or gamma ray from this exit channel
-      //virtual marley::Particle emitted_particle() = 0;
-
-      // Create and return a marley::Particle object representing the
-      // residual nucleus after particle emission
-      //virtual marley::Particle residual_particle() = 0;
-
     protected:
+
+      // member struct used for sampling final-state spins and parities
+      //struct SpinParityWidth {
+      //  int twoJf; // final nuclear spin
+      //  marley::Parity Pf; // final nuclear parity
+      //  double width; // partial width for this spin-parity combination
+      //};
+
+      //virtual void sample_spin_parity(double Ea, int& twoJ,
+      //  marley::Parity& P) = 0;
+
       double Emin_;
       double Emax_;
-      std::function<double(double)> Epdf_;
       marley::Particle gs_residue_;
+      //std::vector<SpinParityWidth> jpi_widths_table_;
   };
 
   // Fragment emission exit channel that leads to the unbound continuum in the
@@ -155,25 +157,28 @@ namespace marley {
   {
     public:
       FragmentContinuumExitChannel(double width, double Emin, double Emax,
-        std::function<double(double)> Epdf, const marley::Fragment& frag,
-        marley::Particle gs_residue)
-        : marley::ContinuumExitChannel(width, Emin, Emax, Epdf, gs_residue),
-        fragment_(frag) {}
+        std::function<double(double&, double)> Epdf,
+        const marley::Fragment& frag, marley::Particle gs_residue)
+        : marley::ContinuumExitChannel(width, Emin, Emax, gs_residue),
+        Epdf_(Epdf), fragment_(frag) {}
 
       inline virtual bool emits_fragment() const override { return true; }
 
       inline const marley::Fragment& get_fragment() const { return fragment_; }
 
-      inline virtual void do_decay(double& Ex, int& /*two_J*/,
-        marley::Parity& /*Pi*/, marley::Particle& emitted_particle,
+      inline virtual void do_decay(double& Ex, int& two_J,
+        marley::Parity& Pi, marley::Particle& emitted_particle,
         marley::Particle& residual_nucleus, marley::Generator& gen)
         override
       {
-        Ex = gen.rejection_sample(Epdf_, Emin_, Emax_);
+        double Ea;
+        Ex = gen.rejection_sample([&Ea, this](double ex)
+          -> double { return this->Epdf_(Ea, ex); }, Emin_, Emax_);
 
-        // TODO: fix these
-        //two_J = final_level_.get_two_J();
-        //Pi = final_level_.get_parity();
+        marley::NuclearPhysics::sample_fragment_spin_parity(two_J, Pi,
+          fragment_, gen.get_structure_db().get_optical_model(
+          gs_residue_.get_id()), gen, Ex, Ea);
+
         emitted_particle = marley::Particle(fragment_.get_pid(),
           fragment_.get_mass());
 
@@ -183,6 +188,7 @@ namespace marley {
       }
 
     protected:
+      std::function<double(double&, double)> Epdf_;
       const marley::Fragment& fragment_; // fragment emitted in this exit channel
   };
 
@@ -193,23 +199,33 @@ namespace marley {
     public:
       GammaContinuumExitChannel(double width, double Emin, double Emax,
         std::function<double(double)> Epdf, marley::Particle gs_residue)
-        : marley::ContinuumExitChannel(width, Emin, Emax, Epdf, gs_residue) {}
+        : marley::ContinuumExitChannel(width, Emin, Emax, gs_residue),
+        Epdf_(Epdf) {}
 
       inline virtual bool emits_fragment() const override { return false; }
 
-      inline virtual void do_decay(double& Ex, int& /*two_J*/,
-        marley::Parity& /*Pi*/, marley::Particle& emitted_particle,
+      inline virtual void do_decay(double& Ex, int& two_J,
+        marley::Parity& Pi, marley::Particle& emitted_particle,
         marley::Particle& residual_nucleus, marley::Generator& gen)
         override
       {
+        double Exi = Ex;
         Ex = gen.rejection_sample(Epdf_, Emin_, Emax_);
-        // TODO: fix these
-        //two_J = final_level_.get_two_J();
-        //Pi = final_level_.get_parity();
+
+        int nuc_pid = residual_nucleus.get_id();
+        int Z = marley::MassTable::get_particle_Z(nuc_pid);
+        int A = marley::MassTable::get_particle_A(nuc_pid);
+
+        marley::NuclearPhysics::sample_gamma_spin_parity(Z, A, two_J, Pi, Exi,
+          Ex, gen);
+
         emitted_particle = marley::Particle(marley_utils::PHOTON, 0.);
         residual_nucleus = gs_residue_;
         double rn_mass = gs_residue_.get_mass() + Ex;
         residual_nucleus.set_mass(rn_mass);
       }
+
+    protected:
+      std::function<double(double)> Epdf_;
   };
 }
