@@ -589,3 +589,53 @@ double marley::HauserFeshbachDecay::gamma_cpw(int Z, int A, int mpol, int twoJf,
   double rhoM = ldm.level_density(Exf, twoJf, -PfE);
   return (tcE * rhoE) + (tcM * rhoM);
 }
+
+void marley::HauserFeshbachDecay::print(std::ostream& out) const {
+
+  static constexpr double hbar = 6.58211951e-22; // MeV * s
+  int pid_initial = compound_nucleus_.get_id();
+  int Zi = marley::MassTable::get_particle_Z(pid_initial);
+  int Ai = marley::MassTable::get_particle_A(pid_initial);
+  marley::LevelDensityModel& ldm
+    = gen_.get_structure_db().get_level_density_model(Zi, Ai);
+  double two_pi_rho = marley_utils::two_pi
+    * ldm.level_density(Exi_, twoJi_, Pi_);
+
+  out << "Compound nucleus " << compound_nucleus_.get_id()
+    << " with Ex = " << Exi_ << ", spin = " << twoJi_ / 2;
+  if (twoJi_ % 2) out << ".5";
+  out << ", and parity = " << Pi_ << '\n';
+  out << "Total width = " << total_width_ / two_pi_rho << " MeV\n";
+  out << "Mean lifetime = " << hbar / (total_width_ / two_pi_rho) << " s\n";
+  for (const auto& ec : exit_channels_) {
+    double width = ec->get_width() / two_pi_rho;
+    bool continuum = ec->is_continuum();
+    bool frag = ec->emits_fragment();
+    if (continuum) {
+      if (frag) {
+        const auto* fcec
+          = dynamic_cast<marley::FragmentContinuumExitChannel*>(ec.get());
+        if (fcec) out << "  "
+          << marley_utils::particle_symbols.at(fcec->get_fragment().get_pid())
+          << " emission to the continuum width = " << width << " MeV\n";
+      }
+      else out << "  gamma-ray emission to the continuum width = "
+        << width << " MeV\n";
+    }
+    else if (frag) {
+      const auto* fdec
+        = dynamic_cast<marley::FragmentDiscreteExitChannel*>(ec.get());
+      if (fdec) out << "  "
+        << marley_utils::particle_symbols.at(fdec->get_fragment().get_pid())
+        << " emission to level at " << fdec->get_final_level().get_energy()
+        << " MeV width = " << width << " MeV\n";
+    }
+    else {
+      const auto* gdec
+        = dynamic_cast<marley::GammaDiscreteExitChannel*>(ec.get());
+      if (gdec) out << "  gamma-ray emission to level at "
+        << gdec->get_final_level().get_energy() << " MeV width = "
+        << width << " MeV\n";
+    }
+  }
+}

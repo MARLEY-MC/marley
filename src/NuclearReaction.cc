@@ -181,7 +181,7 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
     // owned by the decay scheme object.
     marley::Level* plevel = ds->get_pointer_to_closest_level(en);
     LOG_DEBUG() << "reaction level at " << en << " MeV was matched to the decay scheme"
-      << "level at " << plevel->get_energy() << " MeV";
+      << " level at " << plevel->get_energy() << " MeV";
 
     // Complain if there are duplicates (if there are duplicates, we'll have
     // two different B(F) + B(GT) values for the same level object)
@@ -463,6 +463,7 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
     // the Hauser-Feshbach statistical model.
     while (continuum && Ex > cutoff) {
       marley::HauserFeshbachDecay hfd(residue, Ex, twoJ, P, gen);
+      LOG_DEBUG() << hfd;
       continuum = hfd.do_decay(Ex, twoJ, P, first, second);
 
       LOG_DEBUG() << "Hauser-Feshbach decay to " << first.get_id()

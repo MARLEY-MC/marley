@@ -47,6 +47,8 @@ namespace marley {
           double>(it, &marley::ExitChannel::width_);
       }
 
+      inline double get_width() const { return width_; }
+
     protected:
       // Decay width to this exit channel
       double width_;
@@ -62,6 +64,7 @@ namespace marley {
       inline virtual bool is_continuum() const final override { return false; }
 
       inline marley::Level& get_final_level() { return final_level_; }
+      inline const marley::Level& get_final_level() const { return final_level_; }
 
     protected:
       marley::Level& final_level_; // Pointer to final level in a nuclear decay scheme
@@ -78,6 +81,8 @@ namespace marley {
         : DiscreteExitChannel(width, flev, residue), fragment_(frag) {}
 
       inline virtual bool emits_fragment() const final override { return true; }
+
+      inline const marley::Fragment& get_fragment() const { return fragment_; }
 
       virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
