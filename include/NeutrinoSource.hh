@@ -14,16 +14,12 @@ namespace marley {
   class NeutrinoSource {
     public:
 
-      inline NeutrinoSource(int particle_id, double w = 1.0) {
+      inline NeutrinoSource(int particle_id) {
         if (!pid_is_allowed(particle_id)) throw marley::Error(
           std::string("Creating a neutrino source object that produces")
           + " particles with PDG ID number " + std::to_string(particle_id)
           + " is not allowed.");
         else pid = particle_id;
-        if (w < 0.) throw marley::Error(
-          std::string("Cannot create a neutrino source object with a negative")
-          + " weight.");
-        else weight = w;
       }
 
       // Returns true if the particle ID passed to the function is allowed to be
@@ -47,10 +43,6 @@ namespace marley {
       // by this source
       virtual inline int get_pid() const { return pid; }
 
-      // Returns the weight of this source (relevant for simulations in which
-      // multiple sources are used)
-      virtual inline int get_weight() const { return weight; }
-
       // Probability density function (not necessarily normalized) used by
       // marley::Generator for folding the neutrino spectrum produced by this
       // source with the relevant cross sections.
@@ -59,7 +51,6 @@ namespace marley {
     protected:
       // Particle ID for the neutrino type produced by this source
       int pid;
-      double weight;
 
     private:
       // Particle IDs of each neutrino that could possibly be produced by a
@@ -71,21 +62,11 @@ namespace marley {
   class MonoNeutrinoSource : public NeutrinoSource {
     public:
       inline MonoNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, double w = 1.0,
-        double E = 10./* MeV*/) : NeutrinoSource(particle_id, w)
+        = marley_utils::ELECTRON_NEUTRINO, double E = 10./* MeV*/)
+      : NeutrinoSource(particle_id)
       {
         energy = E;
       }
-
-      //virtual inline double sample_energy(marley::Generator& gen) {
-      //  // This line will suppress unused parameter warnings for this function.
-      //  // We don't need the generator here, but we have to include it in the
-      //  // function declraration to be consistent with the other members of the
-      //  // class hierarchy. This trick was taken from the accepted answer at
-      //  // http://stackoverflow.com/questions/3599160/unused-parameter-warnings-in-c-code
-      //  (void)(gen);
-      //  return energy;
-      //}
 
       // Returns the maximum neutrino energy that can be sampled by this source
       // object
@@ -110,10 +91,9 @@ namespace marley {
   class FermiDiracNeutrinoSource : public NeutrinoSource {
     public:
       inline FermiDiracNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, double w = 1.,
-        double Emin = 0., double Emax = 100., double temp = 3.5,
-        double e_t_a = 0.)
-        : NeutrinoSource(particle_id, w)
+        = marley_utils::ELECTRON_NEUTRINO, double Emin = 0.,
+        double Emax = 100., double temp = 3.5, double e_t_a = 0.)
+        : NeutrinoSource(particle_id)
       {
         E_min = Emin;
         E_max = Emax;
@@ -170,10 +150,10 @@ namespace marley {
   class BetaFitNeutrinoSource : public NeutrinoSource {
     public:
       inline BetaFitNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, double w = 1.,
+        = marley_utils::ELECTRON_NEUTRINO,
         double Emin = 0., double Emax = 100., double Emean = 13.,
         double b_e_t_a = 4.5)
-        : NeutrinoSource(particle_id, w)
+        : NeutrinoSource(particle_id)
       {
         E_min = Emin;
         E_max = Emax;
@@ -231,9 +211,9 @@ namespace marley {
     public:
       inline FunctionNeutrinoSource(const std::function<double(double)>&
         prob_dens_func = [](double E) -> double { (void)(E); return 1; },
-        double w = 1., int particle_id = marley_utils::ELECTRON_NEUTRINO,
+        int particle_id = marley_utils::ELECTRON_NEUTRINO,
         double Emin = 0., double Emax = 100.)
-        : NeutrinoSource(particle_id, w)
+        : NeutrinoSource(particle_id)
       {
         E_min = Emin;
         E_max = Emax;
@@ -272,9 +252,8 @@ namespace marley {
   // http://iopscience.iop.org/1742-6596/574/1/012167)
   class DecayAtRestNeutrinoSource : public NeutrinoSource {
     public:
-      inline DecayAtRestNeutrinoSource(double w = 1.,
-        int particle_id = marley_utils::ELECTRON_NEUTRINO)
-        : NeutrinoSource(particle_id, w)
+      inline DecayAtRestNeutrinoSource(int particle_id
+        = marley_utils::ELECTRON_NEUTRINO) : NeutrinoSource(particle_id)
       {
 
         if (particle_id != marley_utils::ELECTRON_NEUTRINO &&
@@ -297,6 +276,8 @@ namespace marley {
 
       virtual inline double pdf(double E_nu) {
         if (E_nu < E_min || E_nu > E_max) return 0.;
+        /// @todo Refine the decay-at-rest Michel spectra to use
+        /// more exact expressions.
         // Note that both of these source spectra are normalized to 1
         // on the energy interval [0., m_mu / 2.]
         else if (pid == marley_utils::ELECTRON_NEUTRINO)
@@ -322,25 +303,25 @@ namespace marley {
       using InterpolationMethod = Grid::InterpolationMethod;
 
       inline GridNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, double w = 1.,
+        = marley_utils::ELECTRON_NEUTRINO,
         InterpolationMethod interp_method = InterpolationMethod::LinearLinear)
-        : NeutrinoSource(particle_id, w), grid(interp_method)
+        : NeutrinoSource(particle_id), grid(interp_method)
       {
         //check_for_errors();
       }
 
       inline GridNeutrinoSource(const Grid& g,
-        int particle_id = marley_utils::ELECTRON_NEUTRINO, double w = 1.)
-        : NeutrinoSource(particle_id, w), grid(g)
+        int particle_id = marley_utils::ELECTRON_NEUTRINO)
+        : NeutrinoSource(particle_id), grid(g)
       {
         check_for_errors();
       }
 
       inline GridNeutrinoSource(const std::vector<double>& Es,
         const std::vector<double>& prob_densities, int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, double w = 1., InterpolationMethod
+        = marley_utils::ELECTRON_NEUTRINO, InterpolationMethod
         interp_method = InterpolationMethod::LinearLinear)
-        : NeutrinoSource(particle_id, w), grid(Es, prob_densities,
+        : NeutrinoSource(particle_id), grid(Es, prob_densities,
         interp_method)
       {
         check_for_errors();
