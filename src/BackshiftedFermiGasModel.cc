@@ -82,7 +82,7 @@ double marley::BackshiftedFermiGasModel::level_density(double Ex) {
   // To avoid numerical problems, we will always use the discrete spin cutoff parameter for U <= Ed.
   // The TALYS manual suggests using this for Ex <= Ed, but this isn't a huge change. The actual TALYS
   // code may make this same choice.
-  /// @todo: Reconsider method used for handling spin cut-off parameter calculation for U <= Ed.
+  /// @todo Reconsider method used for handling spin cut-off parameter calculation for U <= Ed.
   if (U <= Ed) sigma_ = sigma_d_global_;
   else {
     sigma_F2 = 0.01389 * std::pow(A_, 5.0/3.0)
