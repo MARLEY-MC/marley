@@ -25,6 +25,7 @@ namespace marley {
       bool do_decay(double& Exf, int& twoJf, marley::Parity& Pf,
         marley::Particle& emitted_particle, marley::Particle& residual_nucleus);
 
+      // Gamma-ray strength functions
       enum class TransitionType { electric, magnetic };
 
       static TransitionType determine_gamma_transition_type(int twoJi,
@@ -74,7 +75,17 @@ namespace marley {
       static double get_fragment_emission_threshold(const int Zi, const int Ai,
         const marley::Fragment& f);
 
-    private:
+      // Maximum value of the orbital angular momentum to use in Hauser-Feshbach
+      // calculations
+      // TODO: make this a user-controlled value specified in the configuration file
+      static constexpr int l_max = 2;
+
+      // Default step size for computing optical model transmission coefficients via
+      // the Numerov method
+      // TODO: make this a user-controlled value specified in the configuration file
+      static constexpr double DEFAULT_NUMEROV_STEP_SIZE = 0.1; // fm
+
+    protected:
 
       // Mass of a charged pion
       static constexpr double mpiplus = 139.57018; // MeV
@@ -85,16 +96,6 @@ namespace marley {
       // Table of nuclear fragments that will be considered when computing
       // branching ratios for nuclear de-excitations.
       static const std::vector<marley::Fragment> fragments;
-
-      // Maximum value of the orbital angular momentum to use in Hauser-Feshbach
-      // calculations
-      // TODO: make this a user-controlled value specified in the configuration file
-      static constexpr int l_max = 2;
-
-      // Default step size for computing optical model transmission coefficients via
-      // the Numerov method
-      // TODO: make this a user-controlled value specified in the configuration file
-      static constexpr double DEFAULT_NUMEROV_STEP_SIZE = 0.1; // fm
 
       // Default number of subintervals to use when integrating fragment and gamma
       // decay widths over the energy continuum.
@@ -112,8 +113,6 @@ namespace marley {
 
       double gamma_cpw(int Z, int A, int mpol, int twoJf, double e_gamma,
         marley::LevelDensityModel& ldm, double Exf);
-
-    protected:
 
       // Particle object representing the compound nucleus before it decays
       const marley::Particle& compound_nucleus_;
