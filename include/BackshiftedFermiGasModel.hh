@@ -3,37 +3,65 @@
 
 namespace marley {
 
+  /// @brief Implementation of the back-shifted Fermi gas nuclear level
+  /// density model
+  /// @details %Level density parameters used in this class are based on the
+  /// global fits originally performed in <a
+  /// href="http://dx.doi.org/10.1016/j.nuclphysa.2008.06.005">A. J. Koning, et
+  /// al., Nucl. Phys. A810 (2008) pp. 13-76</a>. In addition to being used in
+  /// MARLEY, this model has been adopted as one of the available options in the
+  /// <a href="http://www-nds.iaea.org/RIPL-3/">RIPL-3</a> data library
+  /// and the <a href="http://talys.eu">TALYS</a> nuclear code.
   class BackshiftedFermiGasModel : public LevelDensityModel {
 
     public:
 
-      // constructor
+      /// Create a back-shifted Fermi gas model object for a specific nuclide.
+      /// This constructor will use global fits to initialize all level density
+      /// parameters.
+      /// @param Z atomic number of the desired nuclide
+      /// @param A mass number of the desired nuclide
+      /// @todo Add other constructors to the BackshiftedFermiGasModel class to
+      /// allow the user to set the level density parameters based on local
+      /// fits
       BackshiftedFermiGasModel(int Z, int A);
-      // TODO: add other constructors to allow setting the parameters based on
-      // local fits
 
-      // rho(Ex)
+      /// Nuclear level density @f$ \rho(E_x) @f$ including all spins and
+      /// parities.
+      /// @param Ex Excitation energy in MeV
+      /// @return %Level density in MeV<sup> -1</sup>
       virtual double level_density(double Ex) override;
 
-      // rho(Ex, J)
+      /// %Level density @f$ \rho(E_x, J) @f$ for a specific nuclear spin.
+      /// @param Ex Excitation energy in MeV
+      /// @param two_J Two times the nuclear spin
+      /// @return %Level density in MeV<sup> -1</sup>
       virtual double level_density(double Ex, int two_J) override;
 
-      // rho(Ex, J, Pi) with the assumption of parity equipartition
+      /// %Level density @f$ \rho(E_x, J, \Pi) @f$ for a specific nuclear spin
+      /// and parity.
+      /// @details The current implementation assumes parity equipartition.
+      /// @param Ex Excitation energy in MeV
+      /// @param two_J Two times the nuclear spin
+      /// @param Pi The nuclear parity
+      /// @return %Level density in MeV<sup> -1</sup>
       virtual double level_density(double Ex, int two_J, marley::Parity Pi)
         override;
 
     protected:
 
-      int Z_; // atomic number for this nuclide
-      int A_; // mass number for this nuclide
+      int Z_; ///< atomic number for this nuclide
+      int A_; ///< mass number for this nuclide
 
-      double sigma_; // spin cut-off parameter
+      double sigma_; ///< spin cut-off parameter
 
-      double a_tilde_; // asymptotic level density parameter
-      double gamma_; // damping parameter
-      double delta_W_; // shell correction energy
-      double Delta_BFM_; // energy shift
-      double sigma_d_global_; // global fit for discrete-region spin cut-off parameter
-      double Sn_; // neutron separation energy
+      double a_tilde_; ///< asymptotic level density parameter (MeV<sup> -1</sup>)
+      double gamma_; ///< damping parameter (MeV<sup> -1</sup>)
+      double delta_W_; ///< shell correction energy (MeV)
+      double Delta_BFM_; ///< excitation energy shift (MeV)
+
+      /// @brief global fit for discrete-region spin cut-off parameter
+      double sigma_d_global_;
+      double Sn_; ///< neutron separation energy (MeV)
   };
 }

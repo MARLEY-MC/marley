@@ -10,12 +10,11 @@ marley::BackshiftedFermiGasModel::BackshiftedFermiGasModel(int Z, int A)
   int N = A_ - Z_;
   double A_third = std::pow(A_, 1.0/3.0);
 
-  // Parameters from global level density fit performed in A. J. Koning,
-  // et al., Nucl. Phys. A810 (2008) pp. 13-76.
-  static constexpr double alpha = 0.0722396;
-  static constexpr double beta = 0.195267;
-  static constexpr double gamma_1 = 0.410289;
-  static constexpr double delta_global = 0.173015;
+  // Parameters from global level density fit
+  static constexpr double alpha = 0.0722396; // MeV^(-1)
+  static constexpr double beta = 0.195267; // MeV^(-1)
+  static constexpr double gamma_1 = 0.410289; // MeV(-1)
+  static constexpr double delta_global = 0.173015; // MeV
 
   // Asymptotic level density parameter
   a_tilde_ = alpha*A_ + beta*std::pow(A_third, 2);
@@ -57,7 +56,7 @@ double marley::BackshiftedFermiGasModel::level_density(double Ex, int two_J) {
     / two_sigma2) * rho;
 }
 
-// Returns the total level density rho(Ex) and store the spin cut-off parameter in sigma
+/// @note Calls to this function update the spin cut-off parameter sigma_
 double marley::BackshiftedFermiGasModel::level_density(double Ex) {
 
   // Effective excitation energy
@@ -73,16 +72,17 @@ double marley::BackshiftedFermiGasModel::level_density(double Ex) {
     a = a_tilde_ * (1 + (delta_W_ / U) * (1 - std::exp(-gamma_ * U)));
   }
 
-  // TODO: Replace Ed here with database of local fits taken from RIPL-3 or TALYS
+  /// @todo Replace Ed here with database of local fits taken from RIPL-3 or
+  /// TALYS
   const double Ed = 0.;
 
-  // Spin cut-off parameter
+  // Compute the spin cut-off parameter
   double sigma_F2 = 0.;
 
   // To avoid numerical problems, we will always use the discrete spin cutoff parameter for U <= Ed.
   // The TALYS manual suggests using this for Ex <= Ed, but this isn't a huge change. The actual TALYS
   // code may make this same choice.
-  // TODO: Look into this more.
+  /// @todo: Reconsider method used for handling spin cut-off parameter calculation for U <= Ed.
   if (U <= Ed) sigma_ = sigma_d_global_;
   else {
     sigma_F2 = 0.01389 * std::pow(A_, 5.0/3.0)
