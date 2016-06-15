@@ -11,360 +11,289 @@ namespace marley {
 
   class Generator;
 
+  /// @brief Abstract base class for all objects that describe the incident
+  /// neutrino energy distribution
+  /// @details Classes derived from NeutrinoSource implement a probability
+  /// density function used to sample neutrino energies for each event. Because
+  /// MARLEY will weight this probability density by the reaction cross
+  /// section(s) during event generation, all NeutrinoSource objects should use
+  /// <i>unweighted</i> energy spectra. While normalizing the probability densities
+  /// to unity is not strictly required (the cross section weighted spectra are
+  /// normalized automatically before sampling), it is encouraged, and all
+  /// classes derived from NeutrinoSource currently do so.
   class NeutrinoSource {
     public:
 
-      inline NeutrinoSource(int particle_id) {
-        if (!pid_is_allowed(particle_id)) throw marley::Error(
-          std::string("Creating a neutrino source object that produces")
-          + " particles with PDG ID number " + std::to_string(particle_id)
-          + " is not allowed.");
-        else pid = particle_id;
-      }
+      /// @param particle_id PDG particle ID for the neutrinos produced by this
+      /// source
+      NeutrinoSource(int particle_id);
 
-      // Returns true if the particle ID passed to the function is allowed to be
-      // used by a neutrino source object, and returns false otherwise.
-      static inline bool pid_is_allowed(const int particle_id) {
-        return (pids.count(particle_id) > 0);
-      }
-
-      // Samples a neutrino energy in MeV
-      //virtual double sample_energy(marley::Generator& gen) = 0;
-
-      // Returns the maximum neutrino energy that can be sampled by this source
-      // object
+      /// @brief Get the maximum neutrino energy (MeV) that can be sampled by
+      /// this source
       virtual double get_Emax() const = 0;
 
-      // Returns the minimum neutrino energy that can be sampled by this source
-      // object
+      /// @brief Get the minimum neutrino energy (MeV) that can be sampled by
+      /// this source
       virtual double get_Emin() const = 0;
 
-      // Returns the PDG particle ID for the neutrino type produced
-      // by this source
-      virtual inline int get_pid() const { return pid; }
+      /// @brief Get the PDG particle ID for the neutrino type produced by this
+      /// source
+      inline virtual int get_pid() const;
 
-      // Probability density function (not necessarily normalized) used by
-      // marley::Generator for folding the neutrino spectrum produced by this
-      // source with the relevant cross sections.
-      virtual double pdf(double E_nu) = 0;
+      /// @brief Probability density function describing the incident neutrino
+      /// energy distribution
+      /// @details The neutrino spectrum produced by this source will be folded
+      /// with the relevant cross sections by a Generator object during event
+      /// creation
+      /// @param E neutrino energy (MeV)
+      virtual double pdf(double E) = 0;
+
+      /// Returns true if the particle ID passed to the function is
+      /// allowed to be used by a neutrino source object, and returns false
+      /// otherwise.
+      static inline bool pid_is_allowed(const int particle_id);
 
     protected:
-      // Particle ID for the neutrino type produced by this source
-      int pid;
+
+      int pid_; ///< PDG particle ID for the neutrinos produced by this source
 
     private:
-      // Particle IDs of each neutrino that could possibly be produced by a
-      // source object
-      static const std::set<int> pids;
+      /// PDG particle IDs for each neutrino that could possibly be produced by
+      /// a NeutrinoSource object. Attempting to create a NeutrinoSource object
+      /// that produces a particle that does not appear in this set will throw
+      /// an exception.
+      static const std::set<int> pids_;
   };
 
-  // Monoenergetic neutrino source
+  /// Monoenergetic neutrino source
   class MonoNeutrinoSource : public NeutrinoSource {
     public:
-      inline MonoNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, double E = 10./* MeV*/)
-      : NeutrinoSource(particle_id)
-      {
-        energy = E;
-      }
+      /// @param particle_id neutrino PDG particle ID
+      /// @param E neutrino energy (MeV)
+      inline MonoNeutrinoSource(int particle_id =
+        marley_utils::ELECTRON_NEUTRINO, double E = 10.);
 
-      // Returns the maximum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emax() const { return energy; }
+      inline virtual double get_Emax() const override;
 
-      // Returns the minimum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emin() const { return energy; }
+      inline virtual double get_Emin() const override;
 
-      // Monoenergetic spectrum
-      virtual inline double pdf(double E_nu) {
-        if (energy == E_nu) return 1.;
-        else return 0.;
-      }
+      inline virtual double pdf(double E) override;
 
-    private:
-      double energy;
+    protected:
+      double energy_; ///< neutrino energy (MeV)
   };
 
-  // Supernova cooling neutrino source approximated using a Fermi-Dirac
-  // distribution (see, for example, Giunti & Kim equation 15.18)
+  /// @brief Supernova cooling neutrino source approximated using a Fermi-Dirac
+  /// distribution
+  /// @details Neutrino energies from this source are sampled from a
+  /// Fermi-Dirac distribution with temperature @f$T@f$ (MeV) and pinching
+  /// parameter @f$\eta@f$. The probability density function is given by
+  /// @f{align*}{ P(E) &= \frac{C\,E^2} {T^4\left[1+\exp\left(\frac{E}{T} -
+  /// \eta\right)\right]} & \text{E}_\text{min} \leq E \leq
+  /// \text{E}_\text{max} @f} where @f$C@f$ is a normalization constant.
   class FermiDiracNeutrinoSource : public NeutrinoSource {
     public:
-      inline FermiDiracNeutrinoSource(int particle_id
+
+      /// @param particle_id PDG particle ID for the neutrinos produced by this
+      /// source
+      /// @param Emin minimum allowed neutrino energy (MeV)
+      /// @param Emax maximum allowed neutrino energy (MeV)
+      /// @param temp temperature (MeV)
+      /// @param eta pinching parameter
+      FermiDiracNeutrinoSource(int particle_id
         = marley_utils::ELECTRON_NEUTRINO, double Emin = 0.,
-        double Emax = 100., double temp = 3.5, double e_t_a = 0.)
-        : NeutrinoSource(particle_id)
-      {
-        E_min = Emin;
-        E_max = Emax;
-        temperature = temp;
-        eta = e_t_a;
-        C = 1.;
+        double Emax = 50., double temp = 3.5, double eta = 0.);
 
-        // Create a call wrapper to allow us to numerically integrate the
-        // PDF for this source.
-        std::function<double(double)> fd_dist = std::bind(
-          &FermiDiracNeutrinoSource::pdf, this, std::placeholders::_1);
-        // Normalize the source spectrum (not strictly necessary, but having the
-        // spectrum approximately normalized makes the default rejection sampling
-        // tolerance of 1e-8 reliable for finding the maximum of the spectrum)
-        // TODO: consider removing the hard-coded value here
-        double integral = marley_utils::num_integrate(fd_dist, E_min, E_max, 1e4);
+      inline virtual double get_Emin() const override;
 
-        // Update the normalization constant, thereby normalizing this object's
-        // pdf in the process.
-        C /= integral;
-      }
+      inline virtual double get_Emax() const override;
 
-      // Returns the maximum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emax() const { return E_max; }
+      virtual double pdf(double E) override;
 
-      // Returns the minimum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emin() const { return E_min; }
+    protected:
 
-      //virtual double sample_energy(marley::Generator& gen);
-
-      virtual inline double pdf(double E_nu) {
-        if (E_nu < E_min || E_nu > E_max) return 0.;
-        else return (C / std::pow(temperature, 4)) * (std::pow(E_nu, 2)
-          / (1 + std::exp((E_nu / temperature) - eta)));
-      }
-
-    private:
-      // Temperature for Fermi-Dirac distribution (in MeV)
-      double temperature;
-      // Dimensionless pinching parameter for Fermi-Dirac distribution
-      double eta;
-      // Minimum and maximum neutrino energies produced by this source
-      double E_min, E_max;
-      // Normalization constant (determined during construction)
-      double C;
+      double Emin_; ///< minimum neutrino energy (MeV)
+      double Emax_; ///< maximum neutrino energy (MeV)
+      double temperature_;  ///< temperature (MeV)
+      double eta_; ///< dimensionless pinching parameter
+      double C_; ///< normalization constant (MeV<sup>2</sup>)
   };
 
-  // Neutrino source with a "beta fit" spectrum (see, for example, equation 7 in
-  // arXiv:1511.00806v4). Equation 15.19 in Giunti & Kim also describes
-  // this spectrum, but note that our definition of beta is theirs plus
-  // one.
+  /// @brief "Beta-fit" neutrino source
+  /// @details Neutrino energies from this source are sampled from a "beta-fit"
+  /// spectrum (see, for example, equation 7 in this <a
+  /// href="http://arxiv.org/abs/1511.00806">preprint</a>) with mean
+  /// neutrino energy @f$E_\text{mean}@f$ and fit parameter
+  /// @f$\beta@f$.  The probability density function is given by @f{align*}{
+  /// P(E) &= C\left(E/\,E_\text{mean}\right)^{\beta - 1}
+  /// \exp\left(-\beta\,E/\,E_\text{mean}\right) & \text{E}_\text{min} \leq E
+  /// \leq \text{E}_\text{max} @f} where @f$C@f$ is a normalization constant.
   class BetaFitNeutrinoSource : public NeutrinoSource {
     public:
-      inline BetaFitNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO,
-        double Emin = 0., double Emax = 100., double Emean = 13.,
-        double b_e_t_a = 4.5)
-        : NeutrinoSource(particle_id)
-      {
-        E_min = Emin;
-        E_max = Emax;
-        E_mean = Emean;
-        beta = b_e_t_a;
-        C = 1.; // Normalization constant (will be updated momentarily)
+      /// @param particle_id PDG particle ID for the neutrinos produced by this
+      /// source
+      /// @param Emin minimum allowed neutrino energy (MeV)
+      /// @param Emax maximum allowed neutrino energy (MeV)
+      /// @param Emean mean neutrino energy (MeV)
+      /// @param beta dimensionless fit parameter
+      BetaFitNeutrinoSource(int particle_id
+        = marley_utils::ELECTRON_NEUTRINO, double Emin = 0.,
+        double Emax = 50., double Emean = 13., double beta = 4.5);
 
-        // Create a call wrapper to allow us to numerically integrate the
-        // PDF for this source.
-        std::function<double(double)> spect = std::bind(
-          &BetaFitNeutrinoSource::pdf, this, std::placeholders::_1);
-        // Normalize the source spectrum (not strictly necessary, but having the
-        // spectrum approximately normalized makes the default rejection sampling
-        // tolerance of 1e-8 reliable for finding the maximum of the spectrum)
-        // TODO: consider removing the hard-coded value here
-        double integral = marley_utils::num_integrate(spect, E_min, E_max, 1e4);
+      inline virtual double get_Emin() const override;
+      inline virtual double get_Emax() const override;
 
-        // Update the normalization constant, thereby normalizing this object's
-        // pdf in the process.
-        C /= integral;
-      }
+      virtual double pdf(double E) override;
 
-      // Returns the maximum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emax() const { return E_max; }
-
-      // Returns the minimum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emin() const { return E_min; }
-
-      //virtual double sample_energy(marley::Generator& gen);
-
-      virtual inline double pdf(double E_nu) {
-        if (E_nu < E_min || E_nu > E_max) return 0.;
-        else return C * std::pow(E_nu / E_mean, beta - 1)
-          * std::exp(-beta * E_nu / E_mean);
-      }
-
-    private:
-      // Mean energy for beta fit distribution (assuming E_min = 0.
-      // and E_max = infinity. Truncating the distribution may alter
-      // the mean value appreciably)
-      double E_mean;
-      // Pinching parameter beta
-      double beta;
-      // Minimum and maximum neutrino energies produced by this source
-      double E_min, E_max;
-      // Normalization constant (determined during construction)
-      double C;
+    protected:
+      double Emin_; ///< minimum neutrino energy (MeV)
+      double Emax_; ///< maximum neutrino energy (MeV)
+      /// @brief mean neutrino energy
+      /// @note This is exactly the mean neutrino energy only if @f$
+      /// E_\text{min} = 0 @f$ and @f$ Emax = \infty @f$. Truncating the
+      /// distribution may alter the mean value appreciably.
+      double Emean_;
+      double beta_; ///< pinching parameter
+      double C_; ///< dimensionless normalization constant
   };
 
-  // Neutrino source with an arbitrary energy spectrum supplied during
-  // construction as a std::function<double(double)> object
+  /// Neutrino source with an arbitrary energy spectrum described by a
+  /// std::function<double(double)> object
   class FunctionNeutrinoSource : public NeutrinoSource {
     public:
-      inline FunctionNeutrinoSource(const std::function<double(double)>&
-        prob_dens_func = [](double E) -> double { (void)(E); return 1; },
-        int particle_id = marley_utils::ELECTRON_NEUTRINO,
-        double Emin = 0., double Emax = 100.)
-        : NeutrinoSource(particle_id)
-      {
-        E_min = Emin;
-        E_max = Emax;
-        // Normalize the supplied spectrum (not strictly necessary, but having the
-        // spectrum approximately normalized makes the default rejection sampling
-        // tolerance of 1e-8 reliable for finding the maximum of the spectrum)
-        // TODO: consider removing the hard-coded value here
-        double integral = marley_utils::num_integrate(prob_dens_func, E_min,
-          E_max, 1e4);
-        probability_density = [prob_dens_func, integral](double E)
-          -> double { return prob_dens_func(E) / integral; };
-      }
+      /// @param particle_id PDG particle ID for the neutrinos produced by this
+      /// source
+      /// @param Emin minimum allowed neutrino energy (MeV)
+      /// @param Emax maximum allowed neutrino energy (MeV)
+      /// @param prob_dens_func a std::function<double(double)> object to be
+      /// used as a probability density function
+      FunctionNeutrinoSource(int particle_id
+        = marley_utils::ELECTRON_NEUTRINO, double Emin = 0., double Emax = 50.,
+        std::function<double(double)> prob_dens_func
+        = [](double) -> double { return 1.; });
 
-      // Returns the maximum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emax() const { return E_max; }
+      inline virtual double get_Emax() const override;
 
-      // Returns the minimum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emin() const { return E_min; }
+      inline virtual double get_Emin() const override;
 
-      virtual inline double pdf(double E_nu) {
-        if (E_nu < E_min || E_nu > E_max) return 0.;
-        else return probability_density(E_nu);
-      }
+      inline virtual double pdf(double E) override;
 
     private:
-      // Minimum and maximum neutrino energies produced by this source
-      double E_min, E_max;
-      // Call wrapper for this object's probability density function
-      std::function<double(double)> probability_density;
+      double Emin_; ///< minimum neutrino energy (MeV)
+      double Emax_; ///< maximum neutrino energy (MeV)
+      /// @brief user-supplied probability density function
+      std::function<double(double)> probability_density_;
   };
 
-  // Neutrino source with an energy spectrum given by approximate pion-muon
-  // decay at rest spectra (see, for example, equation 2 in
-  // http://iopscience.iop.org/1742-6596/574/1/012167)
+  /// @brief Muon decay-at-rest neutrino source
+  /// @details Neutrino energies from this source are sampled from the
+  /// appropriate Michel spectrum for muon decay-at-rest.  For a @f$\nu_e@f$
+  /// source, the probability density function is given by @f{align*}{ P(E) &=
+  /// 96E^2m_\mu^{-4}(m_\mu - 2E) & 0 < E < m_\mu/2 @f} where @f$m_\mu@f$ is
+  /// the muon mass. For a @f$\bar{\nu}_\mu@f$ source, the probability density
+  /// function is given by @f{align*}{ P(E) &= 16E^2m_\mu^{-4}(3m_\mu - 4E) & 0
+  /// < E < m_\mu/2. @f} Other neutrino species are not allowed.
   class DecayAtRestNeutrinoSource : public NeutrinoSource {
     public:
-      inline DecayAtRestNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO) : NeutrinoSource(particle_id)
-      {
+      /// @param particle_id PDG particle ID for the neutrinos produced by this
+      /// source
+      DecayAtRestNeutrinoSource(int particle_id
+        = marley_utils::ELECTRON_NEUTRINO);
 
-        if (particle_id != marley_utils::ELECTRON_NEUTRINO &&
-          particle_id != marley_utils::MUON_ANTINEUTRINO)
-        {
-          throw marley::Error(std::string("Decay at rest")
-            + " neutrino source objects may only produce electron neutrinos"
-            + " or muon antineutrinos. PDG ID number "
-            + std::to_string(particle_id) + " is therefore not allowed.");
-        }
-      }
+      inline virtual double get_Emax() const override;
 
-      // Returns the maximum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emax() const { return E_max; }
+      inline virtual double get_Emin() const override;
 
-      // Returns the minimum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emin() const { return E_min; }
-
-      virtual inline double pdf(double E_nu) {
-        if (E_nu < E_min || E_nu > E_max) return 0.;
-        /// @todo Refine the decay-at-rest Michel spectra to use
-        /// more exact expressions.
-        // Note that both of these source spectra are normalized to 1
-        // on the energy interval [0., m_mu / 2.]
-        else if (pid == marley_utils::ELECTRON_NEUTRINO)
-          return 96. * std::pow(E_nu, 2) * m_mu_to_the_minus_four
-            * (m_mu - 2*E_nu);
-        // Spectrum for muon antineutrinos
-        else return 16. * std::pow(E_nu, 2) * m_mu_to_the_minus_four
-          * (3*m_mu - 4*E_nu);
-      }
+      inline virtual double pdf(double E) override;
 
     private:
       // Muon mass stuff (m_mu^(-4) pre-computed for speed)
-      static constexpr double m_mu = marley_utils::m_mu * marley_utils::micro_amu; // MeV
-      static constexpr double m_mu_to_the_minus_four = std::pow(m_mu, -4); // MeV^(-4)
-      // Minimum and maximum neutrino energies produced by this source
-      static constexpr double E_min = 0.; // MeV
-      static constexpr double E_max = m_mu / 2.; // MeV
+      static constexpr double m_mu_ = marley_utils::m_mu
+        * marley_utils::micro_amu; // MeV
+      static constexpr double m_mu_to_the_minus_four_ = std::pow(m_mu_, -4);
+      static constexpr double Emin_ = 0.; // MeV
+      static constexpr double Emax_ = m_mu_ / 2.; // MeV
   };
 
+  /// Neutrino source that uses a tabulated energy spectrum
   class GridNeutrinoSource : public NeutrinoSource {
     public:
       using Grid = InterpolationGrid<double>;
-      using InterpolationMethod = Grid::InterpolationMethod;
+      using Method = Grid::InterpolationMethod;
 
-      inline GridNeutrinoSource(int particle_id
-        = marley_utils::ELECTRON_NEUTRINO,
-        InterpolationMethod interp_method = InterpolationMethod::LinearLinear)
-        : NeutrinoSource(particle_id), grid(interp_method)
-      {
-        //check_for_errors();
-      }
+      /// @param g InterpolationGrid<double> object that
+      /// describes this source's probability density function
+      /// @param particle_id PDG particle ID for the neutrinos produced by this
+      /// source
+      inline GridNeutrinoSource(const Grid& g, int particle_id
+        = marley_utils::ELECTRON_NEUTRINO);
 
-      inline GridNeutrinoSource(const Grid& g,
-        int particle_id = marley_utils::ELECTRON_NEUTRINO)
-        : NeutrinoSource(particle_id), grid(g)
-      {
-        check_for_errors();
-      }
-
+      /// @param Es vector of neutrino energy gridpoints (MeV)
+      /// @param PDs vector of probability densities (MeV<sup> -1</sup>)
+      /// @param particle_id PDG particle ID for the neutrinos produced by this
+      /// source
+      /// @param method specifier indicating which interpolation rule should be
+      /// used between grid points
       inline GridNeutrinoSource(const std::vector<double>& Es,
-        const std::vector<double>& prob_densities, int particle_id
-        = marley_utils::ELECTRON_NEUTRINO, InterpolationMethod
-        interp_method = InterpolationMethod::LinearLinear)
-        : NeutrinoSource(particle_id), grid(Es, prob_densities,
-        interp_method)
-      {
-        check_for_errors();
-      }
+        const std::vector<double>& PDs, int particle_id
+        = marley_utils::ELECTRON_NEUTRINO, Method method
+        = Method::LinearLinear);
 
-      // Method called near the end of construction to verify that the
-      // newly-created grid source object is valid.
-      inline void check_for_errors() {
-        // TODO: Check that energy grid values are nondecreasing
-        // TODO: Check for at least one nonzero pair.second value
-        size_t grid_size = grid.size();
-        if (grid_size < 2) throw marley::Error(std::string("Grid with")
-          + " less than 2 gridpoints passed to the constructor of"
-          + " marley::GridNeutrinoSource.");
-        for (size_t j = 0; j < grid_size; ++j) {
-          auto& pair = grid.at(j);
-          if (pair.first < 0.) throw marley::Error(std::string("All energy")
-            + " values used in a marley::GridNeutrinoSource"
-            + " object must be nonnegative");
-          // Prevent actually sampling an energy value of zero by advancing to
-          // the next representable double value.
-          else if (pair.first == 0.) pair.first = std::nextafter(0.,
-            marley_utils::infinity);
-          if (pair.second < 0.) throw marley::Error(std::string("All PDF")
-            + " values used in a marley::GridNeutrinoSource"
-            + " object must be nonnegative");
-        }
-      }
+      inline virtual double get_Emax() const override;
 
-      // Returns the maximum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emax() const { return grid.back().first; }
+      inline virtual double get_Emin() const override;
 
-      // Returns the minimum neutrino energy that can be sampled by this source
-      // object
-      virtual inline double get_Emin() const { return grid.front().first; }
+      inline virtual double pdf(double E) override;
 
-      virtual inline double pdf(double E_nu) {
-        return grid.interpolate(E_nu);
-      }
+    protected:
+      Grid grid_;
 
     private:
-      Grid grid;
+      /// Method called near the end of construction to verify that the
+      /// newly-created grid source object is valid.
+      void check_for_errors();
   };
 
+  // Inline function definitions
+  inline int NeutrinoSource::get_pid() const { return pid_; }
+  inline bool NeutrinoSource::pid_is_allowed(const int particle_id)
+    { return (pids_.count(particle_id) > 0); }
+
+  inline MonoNeutrinoSource::MonoNeutrinoSource(int particle_id, double E)
+    : NeutrinoSource(particle_id), energy_(E) {}
+  inline double MonoNeutrinoSource::get_Emax() const { return energy_; }
+  inline double MonoNeutrinoSource::get_Emin() const { return energy_; }
+  inline double MonoNeutrinoSource::pdf(double E)
+    { if (energy_ == E) return 1.; else return 0.; }
+
+  inline double FermiDiracNeutrinoSource::get_Emax() const { return Emax_; }
+  inline double FermiDiracNeutrinoSource::get_Emin() const { return Emin_; }
+
+  inline double BetaFitNeutrinoSource::get_Emax() const { return Emax_; }
+  inline double BetaFitNeutrinoSource::get_Emin() const { return Emin_; }
+
+  inline double FunctionNeutrinoSource::get_Emax() const { return Emax_; }
+  inline double FunctionNeutrinoSource::get_Emin() const { return Emin_; }
+  inline double FunctionNeutrinoSource::pdf(double E) {
+    if (E < Emin_ || E > Emax_) return 0.;
+    else return probability_density_(E);
+  }
+
+  inline double DecayAtRestNeutrinoSource::get_Emax() const { return Emax_; }
+  inline double DecayAtRestNeutrinoSource::get_Emin() const { return Emin_; }
+
+  inline double GridNeutrinoSource::get_Emax() const
+    { return grid_.back().first; }
+  inline double GridNeutrinoSource::get_Emin() const
+    { return grid_.front().first; }
+  inline double GridNeutrinoSource::pdf(double E)
+    { return grid_.interpolate(E); }
+
+  inline GridNeutrinoSource::GridNeutrinoSource(const Grid& g, int particle_id)
+    : NeutrinoSource(particle_id), grid_(g) { check_for_errors(); }
+
+  inline GridNeutrinoSource::GridNeutrinoSource(const std::vector<double>& Es,
+    const std::vector<double>& prob_densities, int particle_id, Method method)
+    : NeutrinoSource(particle_id), grid_(Es, prob_densities, method)
+    { check_for_errors(); }
 }
