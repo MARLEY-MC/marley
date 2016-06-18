@@ -3,6 +3,8 @@
 #include <fstream>
 #include <vector>
 
+#include "HauserFeshbachDecay.hh"
+
 namespace marley {
 
   // Simple logging class based on code found here:

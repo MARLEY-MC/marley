@@ -42,7 +42,7 @@ namespace meta_numerics {
 
   // double dedicates 52 bits to the magnitude of the mantissa, so 2^-52 is the smallest fraction difference
   // it can detect; in order to avoid any funny effects at the margin, we try for one byte less, 2^-49
-  constexpr double MaxAccuracy = std::pow(2.0, -49);
+  const double MaxAccuracy = std::pow(2.0, -49);
 
   /// <summary>
   /// The Euler constant.
@@ -201,8 +201,8 @@ namespace meta_numerics {
       // From LanczosG, we derive several values that we need only compute once.
 
       static constexpr double LanczosGP = LanczosG - 0.5;
-      static constexpr double LanczosExpG = std::exp(-LanczosG);
-      static constexpr double LanczosExpGP = std::exp(-LanczosGP);
+      static const double LanczosExpG;
+      static const double LanczosExpGP;
 
     public:
 

@@ -64,7 +64,9 @@ else()
   target_link_libraries(marley MARLEY)
 endif()
 
+# ROOT dictionaries generated with rootcint trigger clang++'s keyword-macro
+# warning
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} -O3 \
   -Wall -Wextra -Wshadow -pedantic \
   -Wcast-align -Wunused -Woverloaded-virtual \
-  -Werror")
+  -Werror -Wno-keyword-macro")

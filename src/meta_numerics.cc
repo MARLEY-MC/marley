@@ -279,6 +279,12 @@ double meta_numerics::Lanczos::LogBeta (double x, double y) {
     std::log(LanczosExpGP * Sum(x) * Sum(y) / Sum(x + y));
 }
 
+const double meta_numerics::Lanczos::LanczosExpG
+  = std::exp(-meta_numerics::Lanczos::LanczosG);
+
+const double meta_numerics::Lanczos::LanczosExpGP
+  = std::exp(-meta_numerics::Lanczos::LanczosGP);
+
 const std::vector<double> meta_numerics::Lanczos::LanczosC = {
   0.99999999999999709182,
   57.156235665862923517,

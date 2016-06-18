@@ -13,7 +13,7 @@
 #include "HauserFeshbachDecay.hh"
 
 // Default level parity is +
-const marley::Parity marley::DecayScheme::DEFAULT_PARITY = 1;
+const marley::Parity marley::DecayScheme::DEFAULT_PARITY = marley::Parity(1);
 
 // ***** Constants used for ENSDF file parsing *****
 const std::string marley::DecayScheme::ensdf_primary_record = "[ 1]";
@@ -517,7 +517,7 @@ void marley::DecayScheme::parse_talys(std::string filename) {
     int twoJ = std::round(2 * spin);
 
     // Create a parity object to use when constructing the level
-    marley::Parity parity = pi;
+    marley::Parity parity = marley::Parity(pi);
 
     // Construct a new level object and add it to the decay scheme. Get
     // a pointer to the newly-added level

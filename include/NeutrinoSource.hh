@@ -210,7 +210,8 @@ namespace marley {
       // Muon mass stuff (m_mu^(-4) pre-computed for speed)
       static constexpr double m_mu_ = marley_utils::m_mu
         * marley_utils::micro_amu; // MeV
-      static constexpr double m_mu_to_the_minus_four_ = std::pow(m_mu_, -4);
+      static constexpr double m_mu_to_the_minus_four_
+        = 1. / (m_mu_ * m_mu_ * m_mu_ * m_mu_);
       static constexpr double Emin_ = 0.; // MeV
       static constexpr double Emax_ = m_mu_ / 2.; // MeV
   };

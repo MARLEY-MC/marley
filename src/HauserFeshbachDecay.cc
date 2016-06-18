@@ -12,12 +12,12 @@ using TrType = marley::HauserFeshbachDecay::TransitionType;
 // branching ratios for nuclear de-excitations. Spin-parity values are taken
 // from nuclear ground states listed in the 10/2014 release of ENSDF.
 const std::vector<marley::Fragment> marley::HauserFeshbachDecay::fragments = {
-  marley::Fragment(marley_utils::NEUTRON, 1, 1),
-  marley::Fragment(marley_utils::PROTON, 1, 1),
-  marley::Fragment(marley_utils::DEUTERON, 2, 1),
-  marley::Fragment(marley_utils::TRITON, 1, 1),
-  marley::Fragment(marley_utils::HELION, 1, 1),
-  marley::Fragment(marley_utils::ALPHA, 0, 1),
+  marley::Fragment(marley_utils::NEUTRON, 1, marley::Parity(1)),
+  marley::Fragment(marley_utils::PROTON, 1, marley::Parity(1)),
+  marley::Fragment(marley_utils::DEUTERON, 2, marley::Parity(1)),
+  marley::Fragment(marley_utils::TRITON, 1, marley::Parity(1)),
+  marley::Fragment(marley_utils::HELION, 1, marley::Parity(1)),
+  marley::Fragment(marley_utils::ALPHA, 0, marley::Parity(1)),
 };
 
 marley::HauserFeshbachDecay::HauserFeshbachDecay(const marley::Particle&

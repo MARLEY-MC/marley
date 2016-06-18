@@ -64,16 +64,16 @@ namespace marley_utils {
   constexpr double m_mu = 113428.9267; // micro-amu
 
   // Consistent value of pi to use throughout all of MARLEY
-  constexpr double pi = std::acos(-1);
+  constexpr double pi = 3.14159265358979323846;
   constexpr double two_pi = 2*pi;
-  constexpr double sqrt_two_pi = std::sqrt(two_pi);
+  const double sqrt_two_pi = std::sqrt(pi);
   constexpr double half_pi = pi/2.0;
 
   // Imaginary unit
   constexpr std::complex<double> i(0, 1);
 
   // Natural logarithm of 2
-  constexpr double log_2 = std::log(2);
+  const double log_2 = std::log(2);
 
   // The physical constants given here were all taken from
   // the 2014 edition of the Review of Particle Physics
@@ -83,7 +83,7 @@ namespace marley_utils {
   constexpr double alpha = 7.2973525698e-3;
   // Conversion factor used to switch to natural units (hbar = c = 1)
   constexpr double hbar_c = 197.3269718; // MeV*fm
-  constexpr double hbar_c2 = std::pow(hbar_c, 2); // MeV^2 * fm^2
+  constexpr double hbar_c2 = hbar_c * hbar_c; // MeV^2 * fm^2
   // Electron mass
   constexpr double m_e = 0.510998928; // MeV
   // Constant to use when converting from mb to MeV^(-2)

@@ -116,8 +116,8 @@ std::complex<double> marley_utils::gamma(std::complex<double> z)
 
   std::complex<double> x = p[0];
 
-  for (int i = 1; i < g + 2; i++) {
-    x += p[i]/(z+std::complex<double>(i,0));
+  for (int j = 1; j < g + 2; ++j) {
+    x += p[j]/(z+std::complex<double>(j,0));
   }
 
   std::complex<double> t = z + (g + 0.5);
