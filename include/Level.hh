@@ -7,12 +7,10 @@ namespace marley {
 
   class Generator;
 
-  /// A class that represents an ENSDF nuclear energy level
-
+  /// A discrete nuclear energy level
   class Level {
     public:
-      /// @param jpi a string containing the spin
-      /// and parity of the level (e.g., 0+)
+      /// @param E excitation energy of this level (MeV)
       Level(double E, int twoJ, marley::Parity pi);
       marley::Gamma* add_gamma(const marley::Gamma& gamma);
       void clear_gammas();
