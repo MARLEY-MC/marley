@@ -96,5 +96,5 @@ std::string marley::Level::get_spin_parity_string() const {
   std::string str = std::to_string(two_J / 2);
   // If 2*J is odd, then the level has half-integer spin
   if (two_J % 2) str += "/2";
-  return str + parity.str();
+  return str + parity.to_char();
 }

@@ -40,7 +40,7 @@
 # unmeasured B(GT0) strength.
 #
 # Reaction description
-νₑ + ⁴⁰Ar ⟶ ⁴⁰Ar* + νₑ
+ve + 40Ar --> 40Ar* + ve
 # Particle IDs and final atomic charge
 12 1000180400 12 1000180400 0
 # B(F) value for g.s. -> g.s. transition

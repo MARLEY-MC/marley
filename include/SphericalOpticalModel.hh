@@ -113,8 +113,8 @@ namespace marley {
       // Mass of a charged pion
       static constexpr double mpiplus = 139.57018; // MeV
       // Squared pion Compton wavelength
-      static constexpr double lambda_piplus2 = std::pow(marley_utils::hbar_c
-        / mpiplus, 2); // fm
+      static constexpr double lambda_piplus2 = (marley_utils::hbar_c
+        / mpiplus) * (marley_utils::hbar_c / mpiplus); // fm
 
       // Temporary storage for optical model calculations
       double Rv, av, Rd, ad, Rso, aso; // Geometrical parameters

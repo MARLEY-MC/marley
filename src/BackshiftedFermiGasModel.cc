@@ -99,7 +99,7 @@ double marley::BackshiftedFermiGasModel::level_density(double Ex) {
   // For very small excitation energies, take the limit of the total
   // level density as U -> 0 to prevent numerical issues.
   if (U <= 0) {
-    constexpr double exp1 = std::exp(1);
+    static const double exp1 = std::exp(1);
     return exp1 * a / (12 * sigma_);
   }
 
