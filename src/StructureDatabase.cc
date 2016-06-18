@@ -94,3 +94,84 @@ void marley::StructureDatabase::add_all_from_config_file(
     add_from_record(record);
   }
 }
+
+marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(
+  const int particle_id)
+{
+  auto iter = pid_decay_scheme_table.find(particle_id);
+  if (iter == pid_decay_scheme_table.end()) return nullptr;
+  else return iter->second;
+}
+
+marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(const int Z,
+  const int A)
+{
+  int particle_id = marley_utils::get_nucleus_pid(Z, A);
+  return get_decay_scheme(particle_id);
+}
+
+marley::SphericalOpticalModel& marley::StructureDatabase::get_optical_model(
+  int nucleus_pid)
+{
+  /// @todo add check for invalid nucleus particle ID value
+  auto iter = optical_model_table.find(nucleus_pid);
+
+  if (iter == optical_model_table.end()) {
+    // The requested level density model wasn't found, so create it and add
+    // it to the table, returning a reference to the stored level density
+    // model afterwards.
+    int Z = marley::MassTable::get_particle_Z(nucleus_pid);
+    int A = marley::MassTable::get_particle_A(nucleus_pid);
+    return *(optical_model_table.emplace(nucleus_pid,
+      std::make_unique<marley::SphericalOpticalModel>(Z, A)).first
+      ->second.get());
+  }
+  else return *(iter->second.get());
+}
+
+marley::SphericalOpticalModel& marley::StructureDatabase::get_optical_model(
+  const int Z, const int A)
+{
+  int nucleus_pid = marley_utils::get_nucleus_pid(Z, A);
+  auto iter = optical_model_table.find(nucleus_pid);
+
+  if (iter == optical_model_table.end()) {
+  // The requested level density model wasn't found, so create it and add
+  // it to the table, returning a reference to the stored level density
+  // model afterwards.
+    return *(optical_model_table.emplace(nucleus_pid,
+      std::make_unique<marley::SphericalOpticalModel>(Z, A)).first
+      ->second.get());
+  }
+  else return *(iter->second.get());
+}
+
+marley::LevelDensityModel& marley::StructureDatabase::get_level_density_model(
+  const int Z, const int A)
+{
+  int pid = marley_utils::get_nucleus_pid(Z, A);
+
+  auto iter = level_density_table.find(pid);
+
+  if (iter == level_density_table.end()) {
+  // The requested level density model wasn't found, so create it and add
+  // it to the table, returning a reference to the stored level density
+  // model afterwards.
+    return *(level_density_table.emplace(pid,
+      std::make_unique<marley::BackshiftedFermiGasModel>(Z, A)).first
+      ->second.get());
+  }
+  else return *(iter->second.get());
+}
+
+void marley::StructureDatabase::remove_decay_scheme(const std::string nucid)
+{
+  // Remove the decay scheme with this nucid if it
+  // exists in the database. If it doesn't, do nothing.
+  decay_scheme_table.erase(nucid);
+}
+
+void marley::StructureDatabase::clear() {
+  decay_scheme_table.clear();
+}
+
