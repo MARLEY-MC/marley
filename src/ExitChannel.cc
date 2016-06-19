@@ -6,7 +6,7 @@ void marley::FragmentDiscreteExitChannel::do_decay(double& Ex, int& two_J,
   marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
 {
   Ex = final_level_.get_energy();
-  two_J = final_level_.get_two_J();
+  two_J = final_level_.get_twoJ();
   Pi = final_level_.get_parity();
   emitted_particle = marley::Particle(fragment_.get_pid(),
     fragment_.get_mass());
@@ -18,7 +18,7 @@ void marley::GammaDiscreteExitChannel::do_decay(double& Ex, int& two_J,
   marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
 {
   Ex = final_level_.get_energy();
-  two_J = final_level_.get_two_J();
+  two_J = final_level_.get_twoJ();
   Pi = final_level_.get_parity();
   emitted_particle = marley::Particle(marley_utils::PHOTON, 0.);
   residual_nucleus = residue_;

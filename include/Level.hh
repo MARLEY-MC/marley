@@ -1,5 +1,6 @@
 #pragma once
 #include <random>
+
 #include "Gamma.hh"
 #include "Parity.hh"
 
@@ -7,49 +8,92 @@ namespace marley {
 
   class Generator;
 
-  /// A discrete nuclear energy level
+  /// @brief A discrete nuclear energy level
   class Level {
     public:
+
       /// @param E excitation energy of this level (MeV)
+      /// @param twoJ two times the level spin
+      /// @param pi level parity
       Level(double E, int twoJ, marley::Parity pi);
-      marley::Gamma* add_gamma(const marley::Gamma& gamma);
+
+      /// @brief Retrieve a const reference to the vector of gamma rays owned
+      /// by this level
+      inline const std::vector<marley::Gamma>& get_gammas() const;
+
+      /// Retrieve a reference to the vector of gamma rays owned by this level
+      inline std::vector<marley::Gamma>& get_gammas();
+
+      /// Get the excitation energy of this level (MeV)
+      inline double get_energy() const;
+      /// Set the excitation energy of this level (MeV)
+      inline void set_energy(double E);
+
+      /// Get two times the level spin
+      inline int get_twoJ() const;
+      /// Set two times the level spin
+      inline void set_twoJ(int twoJ);
+
+      /// Get the level parity
+      inline marley::Parity get_parity() const;
+      /// Set the level parity
+      inline void set_parity(marley::Parity pi);
+
+      /// @return true if the level owns at least one Gamma object
+      inline bool has_gammas() const;
+
+      /// @brief Add a new gamma-ray transition to this level
+      /// @return a reference to the newly added gamma
+      marley::Gamma& add_gamma(const marley::Gamma& gamma);
+
+      /// Remove all gamma ray information from this level
       void clear_gammas();
-      std::vector<marley::Gamma>* get_gammas();
-      bool get_gamma_status() const;
-      double get_energy() const;
-      int get_two_J() const;
-      marley::Parity get_parity() const;
-      void set_energy(double E);
-      void set_two_J(int twoJ);
-      void set_parity(marley::Parity pi);
+
+      /// @brief Choose a gamma owned by this level randomly based on the
+      /// relative intensities of all of the gammas.
+      /// @return a pointer to the selected Gamma object, or nullptr
+      /// if the level doesn't have any gammas
       const marley::Gamma* sample_gamma(marley::Generator& gen);
+
+      /// Returns the level spin-parity as a string
       std::string get_spin_parity_string() const;
 
     private:
-      double energy; // MeV
-      int two_J; // Two times the level spin (allows us to represent half-integer
-                 // spins as integers)
-      marley::Parity parity;
 
-      bool gammas_known; // Determining whether or not the gammas are known
+      double energy_; ///< excitation energy (MeV)
 
-      std::vector<marley::Gamma> gammas;
-      std::discrete_distribution<int> gamma_dist;
+      /// @brief two times the level spin
+      /// @note the factor of two allows us to represent half-integer spins as
+      /// integers
+      int twoJ_;
 
-      // Updates the distribution used for sampling gammas based on the
-      // current vector of gammas stored in this level object
-      inline void update_gamma_distribution();
+      marley::Parity parity_; ///< level parity
+
+      /// @brief gamma-ray transitions owned by this level
+      std::vector<marley::Gamma> gammas_;
+
+      /// @brief discrete distribution object used to sample gamma-ray
+      /// de-excitations
+      std::discrete_distribution<size_t> gamma_dist_;
+
+      /// @brief helper function that updates gamma-ray distribution when Gamma
+      /// objects are added or removed from the level
+      void update_gamma_distribution();
   };
 
-}
+  // Inline function definitions
+  inline double Level::get_energy() const { return energy_; }
+  inline void Level::set_energy(double E) { energy_ = E; }
 
-inline void marley::Level::update_gamma_distribution() {
-  // Get iterators to the relative intensities of the gammas owned by this
-  // level.
-  auto ri_begin = marley::Gamma::make_intensity_iterator(gammas.begin());
-  auto ri_end = marley::Gamma::make_intensity_iterator(gammas.end());
+  inline int Level::get_twoJ() const { return twoJ_; }
+  inline void Level::set_twoJ(int twoJ) { twoJ_ = twoJ; }
 
-  // Update the discrete distribution used to sample gammas
-  std::discrete_distribution<int>::param_type params(ri_begin, ri_end);
-  gamma_dist.param(params);
+  inline marley::Parity Level::get_parity() const { return parity_; }
+  inline void Level::set_parity(marley::Parity pi) { parity_ = pi; }
+
+  inline const std::vector<marley::Gamma>& Level::get_gammas() const
+    { return gammas_; }
+  inline std::vector<marley::Gamma>& Level::get_gammas() { return gammas_; }
+
+  inline bool Level::has_gammas() const { return gammas_.empty(); }
 }

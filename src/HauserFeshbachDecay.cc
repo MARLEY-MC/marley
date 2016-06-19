@@ -127,7 +127,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
         if (Exf < Exf_max) {
           double discrete_width = 0.;
           double Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
-          int twoJf = level->get_two_J();
+          int twoJf = level->get_twoJ();
           marley::Parity Pf = level->get_parity();
           for (int two_j = std::abs(twoJi_ - twoJf); two_j <= twoJi_ + twoJf;
             two_j += 2)
@@ -218,7 +218,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     if (sorted_lps.size() > 0) E_c_min = sorted_lps.back()->get_energy();
 
     for (const auto& level_f : sorted_lps) {
-      int twoJf = level_f->get_two_J();
+      int twoJf = level_f->get_twoJ();
       // 0->0 EM transitions aren't allowed due to angular momentum conservation
       // (photons are spin 1), so if the initial and final spins are zero, skip
       // ahead to the next final level.
@@ -314,7 +314,7 @@ bool marley::HauserFeshbachDecay::do_decay(double& Exf, int& twoJf,
 TrType marley::HauserFeshbachDecay::determine_gamma_transition_type(int twoJi,
   marley::Parity Pi, marley::Level* level_f, int& l)
 {
-  int twoJf = level_f->get_two_J();
+  int twoJf = level_f->get_twoJ();
   marley::Parity Pf = level_f->get_parity();
 
   return determine_gamma_transition_type(twoJi, Pi, twoJf, Pf, l);
@@ -323,10 +323,10 @@ TrType marley::HauserFeshbachDecay::determine_gamma_transition_type(int twoJi,
 TrType marley::HauserFeshbachDecay::determine_gamma_transition_type(
   marley::Level* level_i, marley::Level* level_f, int& l)
 {
-  int twoJi = level_i->get_two_J();
+  int twoJi = level_i->get_twoJ();
   marley::Parity Pi = level_i->get_parity();
 
-  int twoJf = level_f->get_two_J();
+  int twoJf = level_f->get_twoJ();
   marley::Parity Pf = level_f->get_parity();
 
   return determine_gamma_transition_type(twoJi, Pi, twoJf, Pf, l);
