@@ -65,7 +65,7 @@ namespace marley {
       static const std::set<int> pids_;
   };
 
-  /// Monoenergetic neutrino source
+  /// @brief Monoenergetic neutrino source
   class MonoNeutrinoSource : public NeutrinoSource {
     public:
       /// @param particle_id neutrino PDG particle ID
@@ -157,7 +157,7 @@ namespace marley {
       double C_; ///< dimensionless normalization constant
   };
 
-  /// Neutrino source with an arbitrary energy spectrum described by a
+  /// @brief Neutrino source with an arbitrary energy spectrum described by a
   /// std::function<double(double)> object
   class FunctionNeutrinoSource : public NeutrinoSource {
     public:
@@ -216,7 +216,7 @@ namespace marley {
       static constexpr double Emax_ = m_mu_ / 2.; // MeV
   };
 
-  /// Neutrino source that uses a tabulated energy spectrum
+  /// @brief Neutrino source that uses a tabulated energy spectrum
   class GridNeutrinoSource : public NeutrinoSource {
     public:
       using Grid = InterpolationGrid<double>;

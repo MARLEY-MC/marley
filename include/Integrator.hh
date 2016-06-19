@@ -6,36 +6,34 @@
 
 namespace marley {
 
+  /// @brief Numerical integrator that uses <a
+  /// href="http://en.wikipedia.org/wiki/Clenshaw-Curtis_quadrature">Clenshaw-Curtis
+  /// quadrature</a>
   class Integrator {
     public:
-      inline Integrator(size_t n = N_DEFAULT) {
-        // TODO: add error check for when n == 0
-        // TODO: add error check for when n is ridiculously large
-        N = n;
-        // Precompute the 2N - 1 weights for speed
-        size_t two_N = 2*N;
-        double npi_over_two = -marley_utils::half_pi;
-        for (size_t k = 0; k < two_N; ++k) {
-          npi_over_two += marley_utils::half_pi;
-          weights.push_back(std::cos(npi_over_two / N));
-        }
-      }
-      // Numerically integrate a given function f (that takes a
-      // double argument to integrate over and returns a double)
-      // over the interval [a,b] using Clenshaw-Curtis quadrature
-      // at 2N sampling points.
-      // (see http://en.wikipedia.org/wiki/Clenshaw-Curtis_quadrature)
+
+      /// @brief Create a Clenshaw-Curtis quadrature integrator that uses
+      /// 2n sampling points
+      /// @param n half the number of sampling points to use
+      Integrator(size_t n = N_DEFAULT_);
+
+      /// @brief Numerically integrate an arbitrary 1D function
+      /// @details Numerically integrate a std::function<double(double)> over the
+      /// interval [a,b] using <a
+      /// href="http://en.wikipedia.org/wiki/Clenshaw-Curtis_quadrature">
+      /// Clenshaw-Curtis quadrature</a> at 2N_ sampling points.
       double num_integrate(const std::function<double(double)> &f,
         double a, double b) const;
 
     private:
-      // Use 2*N sampling points to perform numerical integration
-      size_t N;
-      // Vector of precomputed weights to use to speed up integration
-      std::vector<double> weights;
-      // If the user doesn't specify a number of sampling points to use for an
-      // integration, then use this value
-      static constexpr size_t N_DEFAULT = 20;
+
+      /// @brief use 2N_ sampling points to perform numerical integration
+      size_t N_;
+
+      // @brief precomputed weights to use to speed up integration
+      std::vector<double> weights_;
+
+      static constexpr size_t N_DEFAULT_ = 20; ///< default value of N_
   };
 
 }
