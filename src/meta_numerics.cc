@@ -1,21 +1,12 @@
-// This file contains a C++ translation of code for computing the Coulomb wavefunctions
-// (see, e.g, http://dlmf.nist.gov/33.2 and
-// http://mathworld.wolfram.com/CoulombWaveFunction.html) excerpted from the Meta Numerics
-// library (http://metanumerics.codeplex.com/), which was originally written in C#. The
-// contents of this file and its accompanying header file (meta_numerics.hh), but *not*
-// the rest of MARLEY, are distributed under the terms of the Microsoft Public License
-// (Ms-PL). The full text of the license is reproduced at the end of this file, and it may
-// also be viewed at https://metanumerics.codeplex.com/license.
-//
-// Original Meta Numerics Library Copyright (c) 2008-2015 David Wright
-// C++ Translation and Adaptation for MARLEY Copyright (c) 2015 Steven Gardiner
+// This code was adapted with permission from the Meta.Numerics
+// (http://www.meta-numerics.net) project, by David Wright. The adapted
+// code is licensed under the terms of the BSD 2-Clause License
+// (see the LICENSE file included in this distribution of MARLEY or
+// https://opensource.org/licenses/BSD-2-Clause for the full license text).
 
-// -- Begin Ms-PL licensed code
 #include "meta_numerics.hh"
 
-const std::vector<int> meta_numerics::BulrischStoerStoermerStepper::N = { 1,
-  2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-};
+constexpr std::array<int, 12> meta_numerics::BulrischStoerStoermerStepper::N;
 
 // do a step consisting of n mini-steps
 void meta_numerics::BulrischStoerStoermerStepper::TrialStep (int n, double& Y1,
@@ -41,12 +32,14 @@ void meta_numerics::BulrischStoerStoermerStepper::TrialStep (int n, double& Y1,
 
 void meta_numerics::BulrischStoerStoermerStepper::Step() {
 
-    // a step consists of trial steps with different numbers of intermediate points (substep sizes)
-    // the values obtained using different points are recorded and extrapolated to an infinite number
-    // of points (zero substep size)
+    // a step consists of trial steps with different numbers of intermediate
+    // points (substep sizes)
+    // the values obtained using different points are recorded and extrapolated
+    // to an infinite number of points (zero substep size)
 
-    // we store the values in a tableau whoose first row contains the measured values and
-    // whoose lower rows contain values extrapolated using different degree polynomials
+    // we store the values in a tableau whoose first row contains the measured
+    // values and whoose lower rows contain values extrapolated using different
+    // degree polynomials
 
     // y_1    y_2    y_3    y_4
     // y_12   y_23   y_34
@@ -56,17 +49,18 @@ void meta_numerics::BulrischStoerStoermerStepper::Step() {
     // Neville's algorithm is used to fill out this tableau
 
     // initialize the tableau (for both variable and derivative)
-    double** T = new double* [N.size()];
-    double** U = new double* [N.size()];
     //double[][] T = double[N.size()][];
     //double[][] U = double[N.size()][];
+    // TODO: change this to use more modern syntax (std::array?
+    // std::unique_ptr?)
+    double** T = new double* [N.size()];
+    double** U = new double* [N.size()];
 
     T[0] = new double[N.size()]; U[0] = new double[N.size()];
     TrialStep(N[0], T[0][0], U[0][0]);
 
     // keep track of total number of evaluations
     int A = N[0];
-
 
     // set the window
     size_t kMin, kMax;
@@ -95,8 +89,10 @@ void meta_numerics::BulrischStoerStoermerStepper::Step() {
         // fill out entries in the tableau
         for (size_t j = 1; j <= k; j++) {
             double x = 1.0 * N[k] / N[k - j];
-            T[j][k - j] = T[j - 1][k - j + 1] + (T[j - 1][k - j + 1] - T[j - 1][k - j]) / ((x + 1.0) * (x - 1.0));
-            U[j][k - j] = U[j - 1][k - j + 1] + (U[j - 1][k - j + 1] - U[j - 1][k - j]) / ((x + 1.0) * (x - 1.0));
+            T[j][k - j] = T[j - 1][k - j + 1] + (T[j - 1][k - j + 1]
+              - T[j - 1][k - j]) / ((x + 1.0) * (x - 1.0));
+            U[j][k - j] = U[j - 1][k - j + 1] + (U[j - 1][k - j + 1]
+              - U[j - 1][k - j]) / ((x + 1.0) * (x - 1.0));
         }
 
         // check for convergence and predict work in target window
@@ -104,7 +100,8 @@ void meta_numerics::BulrischStoerStoermerStepper::Step() {
 
             double absolute_error = std::abs(T[k][0] - T[k - 1][0]);
             double relative_error = std::abs(absolute_error / T[k][0]);
-            double expansion_factor = std::pow(accuracy / relative_error, 1.0 / (2 * N[k]));
+            double expansion_factor = std::pow(accuracy / relative_error,
+              1.0 / (2 * N[k]));
             double work_per_step = A / expansion_factor;
 
             if (work_per_step < target_work_per_step) {
@@ -117,14 +114,17 @@ void meta_numerics::BulrischStoerStoermerStepper::Step() {
 
     }
 
-    if (std::abs(T[kMax][0] - T[kMax - 1][0]) <= accuracy * std::abs(T[kMax][0])) {
+    if (std::abs(T[kMax][0] - T[kMax - 1][0]) <= accuracy
+      * std::abs(T[kMax][0]))
+    {
         // converged
         X = X + DeltaX;
         Y = T[kMax][0];
         YPrime = U[kMax][0];
         if (target_expansion_factor > 2.0) target_expansion_factor = 2.0;
         if (target_expansion_factor < 0.25) target_expansion_factor = 0.25;
-    } else {
+    }
+    else {
         // didn't converge
         if (target_expansion_factor > 0.5) target_expansion_factor = 0.5;
         if (target_expansion_factor < 0.0625) target_expansion_factor = 0.0625;
@@ -159,15 +159,15 @@ double meta_numerics::Reduce(double x, double y) {
 
   double t = x + marley_utils::two_pi * y;
   return t;
-  // This technique was used in the original MetaNumerics library. However, it relies
-  // on a decimal type which might be hard to get in standard C++. For now, skip the
-  // reduction. If needed, add this in later.
-  //
+  // This technique was used in the original MetaNumerics library. However, it
+  // relies on a decimal type which might be hard to get in standard C++. For
+  // now, skip the reduction. If needed, add this in later.
   //
   // reduces an argument to its corresponding argument between -2 Pi < x < 2 Pi
   //if ((Math.Abs(t) < 64.0) || (Math.Abs(t) > dmax)) {
   //  // if the argument is small we don't need the high accurary reduction
-  //  // if the argument is too big, we can't do the high accuracy reduction because it would overflow a decimal vairable
+  //  // if the argument is too big, we can't do the high accuracy reduction
+  //  // because it would overflow a decimal vairable
   //  return (t);
   //} else {
   //  // otherwise, convert to decimal, subtract a multiple of 2 Pi, and return
@@ -189,7 +189,7 @@ double meta_numerics::Reduce(double x, double y) {
   //}
 }
 
-double meta_numerics::Lanczos::Sum (double x) {
+double meta_numerics::Lanczos::Sum(double x) {
   double s = LanczosC[0] + LanczosC[1] / x;
   for (size_t i = 2; i < LanczosC.size(); ++i) {
     x += 1.0;
@@ -198,7 +198,7 @@ double meta_numerics::Lanczos::Sum (double x) {
   return s;
 }
 
-std::complex<double> meta_numerics::Lanczos::Sum (std::complex<double> z) {
+std::complex<double> meta_numerics::Lanczos::Sum(std::complex<double> z) {
   std::complex<double> s = LanczosC[0] + LanczosC[1] / z;
   for (size_t i = 2; i < LanczosC.size(); i++) {
     z += 1.0;
@@ -207,7 +207,7 @@ std::complex<double> meta_numerics::Lanczos::Sum (std::complex<double> z) {
   return s;
 }
 
-double meta_numerics::Lanczos::LogSumPrime (double x) {
+double meta_numerics::Lanczos::LogSumPrime(double x) {
   double q = LanczosC[0] + LanczosC[1] / x;
   double p = LanczosC[1] / (x * x);
   for (size_t i = 2; i < LanczosC.size(); i++) {
@@ -218,7 +218,9 @@ double meta_numerics::Lanczos::LogSumPrime (double x) {
   return (-p / q);
 }
 
-std::complex<double> meta_numerics::Lanczos::LogSumPrime (std::complex<double> z) {
+std::complex<double> meta_numerics::Lanczos::LogSumPrime(
+  std::complex<double> z)
+{
   std::complex<double> q = LanczosC[0] + LanczosC[1] / z;
   std::complex<double> p = LanczosC[1] / (z * z);
   for (size_t i = 2; i < LanczosC.size(); i++) {
@@ -242,7 +244,8 @@ double meta_numerics::Lanczos::LogGamma (double x) {
     (x - 0.5) * std::log(t) - t;
 }
 
-std::complex<double> meta_numerics::Lanczos::LogGamma (std::complex<double> z) {
+std::complex<double> meta_numerics::Lanczos::LogGamma (std::complex<double> z)
+{
   std::complex<double> t = z + std::complex<double>(LanczosGP, 0);
   return std::log(marley_utils::sqrt_two_pi) +
     (z - 0.5) * std::log(t) - t +
@@ -254,30 +257,35 @@ double meta_numerics::Lanczos::Psi (double x) {
   return (std::log(t) - LanczosG / t + LogSumPrime(x));
 }
 
-std::complex<double> meta_numerics::Lanczos::Psi (std::complex<double> z) {
+std::complex<double> meta_numerics::Lanczos::Psi(std::complex<double> z) {
   std::complex<double> t = z + std::complex<double>(LanczosGP, 0);
-  return (std::log(t) - std::complex<double>(LanczosG, 0) / t + LogSumPrime(z));
+  return (std::log(t) - std::complex<double>(LanczosG, 0) / t
+    + LogSumPrime(z));
 }
 
-// If we just compute Exp( LogGamma(x) + LogGamma(y) - LogGamma(x+y) ) then several leading terms in the sum cancel,
-// potentially introducing cancelation error. So we write out the ratios explicitly and take the opportunity
-// to write the result in terms of some naturally occuring ratios.
-double meta_numerics::Lanczos::Beta (double x, double y) {
+// If we just compute Exp( LogGamma(x) + LogGamma(y) - LogGamma(x+y) ) then
+// several leading terms in the sum cancel, potentially introducing cancelation
+// error. So we write out the ratios explicitly and take the opportunity to
+// write the result in terms of some naturally occuring ratios.
+double meta_numerics::Lanczos::Beta(double x, double y) {
   double tx = x + LanczosGP;
   double ty = y + LanczosGP;
   double txy = x + y + LanczosGP;
   return marley_utils::sqrt_two_pi * LanczosExpGP *
-    std::pow(tx / txy, x) * std::pow(ty / txy, y) * std::sqrt(txy / tx / ty) *
-    Sum(x) * Sum(y) / Sum(x + y);
+    std::pow(tx / txy, x) * std::pow(ty / txy, y) * std::sqrt(txy / tx / ty)
+    * Sum(x) * Sum(y) / Sum(x + y);
 }
 
-double meta_numerics::Lanczos::LogBeta (double x, double y) {
+double meta_numerics::Lanczos::LogBeta(double x, double y) {
   double tx = x + LanczosGP;
   double ty = y + LanczosGP;
   double txy = x + y + LanczosGP;
-  return std::log(marley_utils::two_pi / txy) / 2.0 + (x - 0.5) * std::log( tx / txy) + (y - 0.5) * std::log(ty / txy) +
-    std::log(LanczosExpGP * Sum(x) * Sum(y) / Sum(x + y));
+  return std::log(marley_utils::two_pi / txy) / 2.0 + (x - 0.5)
+    * std::log( tx / txy) + (y - 0.5) * std::log(ty / txy)
+    + std::log(LanczosExpGP * Sum(x) * Sum(y) / Sum(x + y));
 }
+
+constexpr std::array<double, 15> meta_numerics::Lanczos::LanczosC;
 
 const double meta_numerics::Lanczos::LanczosExpG
   = std::exp(-meta_numerics::Lanczos::LanczosG);
@@ -285,26 +293,8 @@ const double meta_numerics::Lanczos::LanczosExpG
 const double meta_numerics::Lanczos::LanczosExpGP
   = std::exp(-meta_numerics::Lanczos::LanczosGP);
 
-const std::vector<double> meta_numerics::Lanczos::LanczosC = {
-  0.99999999999999709182,
-  57.156235665862923517,
-  -59.597960355475491248,
-  14.136097974741747174,
-  -0.49191381609762019978,
-  3.3994649984811888699e-5,
-  4.6523628927048575665e-5,
-  -9.8374475304879564677e-5,
-  1.5808870322491248884e-4,
-  -2.1026444172410488319e-4,
-  2.1743961811521264320e-4,
-  -1.6431810653676389022e-4,
-  8.4418223983852743293e-5,
-  -2.6190838401581408670e-5,
-  3.6899182659531622704e-6
-};
-
-std::complex<double> meta_numerics::LogGamma_Stirling (std::complex<double> z) {
-
+std::complex<double> meta_numerics::LogGamma_Stirling(std::complex<double> z)
+{
   // work in the upper complex plane; I think this isn't actually necessary
   if (z.imag() < 0.) return std::conj(
     meta_numerics::LogGamma_Stirling(std::conj(z)));
@@ -313,8 +303,9 @@ std::complex<double> meta_numerics::LogGamma_Stirling (std::complex<double> z) {
     + std::log(marley_utils::two_pi) / 2.0;
 
   // reduce f.Im modulo 2*PI
-  // result is cyclic in f.Im modulo 2*PI, but if f.Im starts off too big, the corrections
-  // applied below will be lost because they are being added to a big number
+  // result is cyclic in f.Im modulo 2*PI, but if f.Im starts off too big, the
+  // corrections applied below will be lost because they are being added to a
+  // big number
   f = std::complex<double>(f.real(), meta_numerics::Reduce(f.imag(), 0.0));
 
   std::complex<double> zz = z * z;
@@ -328,23 +319,21 @@ std::complex<double> meta_numerics::LogGamma_Stirling (std::complex<double> z) {
   throw marley::Error(std::string("LogGamma_Stirling failed to converge."));
 }
 
-
 /// <summary>
 /// Compute the complex log Gamma function.
 /// </summary>
-/// <param name="z">The complex argument, which must have a non-negative real part.</param>
+/// <param name="z">The complex argument, which must have a non-negative real
+/// part.</param>
 /// <returns>The complex value ln(&#x393;(z)).</returns>
-/// <exception cref="ArgumentOutOfRangeException">The real part of <paramref name="z"/> is negative.</exception>
+/// <exception cref="ArgumentOutOfRangeException">The real part of <paramref
+/// name="z"/> is negative.</exception>
 /// <seealso cref="AdvancedMath.LogGamma" />
 std::complex<double> meta_numerics::LogGamma (std::complex<double> z) {
-  if (z.real() < 0.0) {
-    throw marley::Error(std::string("Argument z = (") + std::to_string(z.real())
-      + ", " + std::to_string(z.imag()) + ") out of range in LogGamma");
-  } else if (std::abs(z) < 16.0) {
-    return (meta_numerics::Lanczos::LogGamma(z));
-  } else {
-    return (meta_numerics::LogGamma_Stirling(z));
-  }
+  if (z.real() < 0.0) throw marley::Error(std::string("Argument z = (")
+    + std::to_string(z.real()) + ", " + std::to_string(z.imag())
+    + ") out of range in LogGamma");
+  else if (std::abs(z) < 16.0) return (meta_numerics::Lanczos::LogGamma(z));
+  else return (meta_numerics::LogGamma_Stirling(z));
 }
 
 /// <summary>
@@ -353,7 +342,8 @@ std::complex<double> meta_numerics::LogGamma (std::complex<double> z) {
 /// <param name="z">The complex argument.</param>
 /// <returns>The value of &#x3C8;(z).</returns>
 /// <remarks>
-/// <para>The image below shows the complex &#x3C8; function near the origin using domain coloring.</para>
+/// <para>The image below shows the complex &#x3C8; function near the origin
+/// using domain coloring.</para>
 /// <img src="../images/ComplexPsiPlot.png" />
 /// </remarks>
 /// <seealso cref="AdvancedMath.Psi(double)" />
@@ -361,7 +351,8 @@ std::complex<double> meta_numerics::Psi (std::complex<double> z) {
   if (z.real() < 0.5) {
     // reduce Re(z) in order to handle large real values!
     return (Psi(1.0 - z) - marley_utils::pi / std::tan(marley_utils::pi * z));
-  } else {
+  }
+  else {
     // add Stirling for large z
     return (meta_numerics::Lanczos::Psi(z));
   }
@@ -372,101 +363,84 @@ std::complex<double> meta_numerics::Psi (std::complex<double> z) {
 /// </summary>
 /// <param name="x">The length of one side.</param>
 /// <param name="y">The length of another side.</param>
-/// <returns>The length of the hypotenuse, sqrt(x<sup>2</sup> + y<sup>2</sup>).</returns>
+/// <returns>The length of the hypotenuse, sqrt(x<sup>2</sup> +
+/// y<sup>2</sup>).</returns>
 /// <remarks>
-/// <para>The length is computed accurately, even in cases where
-/// x<sup>2</sup> or y<sup>2</sup> would overflow.</para>
+/// <para>The length is computed accurately, even in cases where x<sup>2</sup>
+/// or y<sup>2</sup> would overflow.</para>
 /// </remarks>
 double meta_numerics::Hypot (double x, double y) {
-  if ((x == 0.0) && (y == 0.0)) {
-    return (0.0);
-  } else {
+  if ((x == 0.0) && (y == 0.0)) return 0.0;
+  else {
     double ax = std::abs(x);
     double ay = std::abs(y);
     if (ax > ay) {
       double r = y / x;
-      return (ax * std::sqrt(1.0 + r * r));
-    } else {
+      return ax * std::sqrt(1.0 + r * r);
+    }
+    else {
       double r = x / y;
-      return (ay * std::sqrt(1.0 + r * r));
+      return ay * std::sqrt(1.0 + r * r);
     }
   }
 }
 
-// for rho < turning point, CWF are exponential; for rho > turning point, CWF are oscilatory
+// for rho < turning point, CWF are exponential; for rho > turning point, CWF
+// are oscilatory
 // we use this in several branching calculations
-double meta_numerics::CoulombTurningPoint (double L, double eta) {
+double meta_numerics::CoulombTurningPoint(double L, double eta) {
 
   double p = L * (L + 1);
   double q = std::sqrt(p + eta * eta);
 
-  if (eta >= 0.0) {
-    return (q + eta);
-  } else {
-    return (p / (q - eta));
-  }
-
+  if (eta >= 0.0) return q + eta;
+  else return p / (q - eta);
 }
 
-// The Gammow factor is the coefficient of the leading power of rho in the expansion of
-// the CWF near the origin It sets the order of magnitude of the function near the origin.
-// Basically F ~ C, G ~ 1/C
-double meta_numerics::CoulombFactorZero (double eta) {
+// The Gammow factor is the coefficient of the leading power of rho in the
+// expansion of the CWF near the origin It sets the order of magnitude of the
+// function near the origin. Basically F ~ C, G ~ 1/C
+double meta_numerics::CoulombFactorZero(double eta) {
 
   double x = marley_utils::two_pi * eta;
 
   if (std::abs(x) < 0.1) {
 
     // series for x / (e^x - 1)
-
     double x2 = x * x;
     double x4 = x2 * x2;
     double x6 = x4 * x2;
     double x8 = x6 * x2;
 
-    return (std::sqrt(1.0 - x / 2.0 + x2 / 12.0 - x4 / 720.0 + x6 / 30240.0 - x8 / 1209600.0));
+    return std::sqrt(1.0 - x / 2.0 + x2 / 12.0 - x4 / 720.0 + x6 / 30240.0
+      - x8 / 1209600.0);
 
-    // can we do this in some extensible way? not easily; the coefficients involve Bernoulli numbers, which
-    // can be generated by a fromula, but it involves binomial coefficients and all previous Bernoulli numbers
-
-  } else {
-
-    return (std::sqrt(x / (std::exp(x) - 1.0)));
-
+    // can we do this in some extensible way? not easily; the coefficients
+    // involve Bernoulli numbers, which can be generated by a formula, but it
+    // involves binomial coefficients and all previous Bernoulli numbers
   }
-
+  else return std::sqrt(x / (std::exp(x) - 1.0));
 }
 
-double meta_numerics::CoulombFactor (int L, double eta) {
+double meta_numerics::CoulombFactor(int L, double eta) {
 
   // factor for L=0
   double C = CoulombFactorZero(eta);
 
-  // use the recurrsion
-  //   C_{L+1} = \frac{\sqrt{ L^2 + eta^2 }}{ L (2L + 1)} C_L
-  // it would be better not to use this for really high L; is there another approximation we can use?
-  //double abseta = std::abs(eta);
+  // use the recursion relation
+  // C_{L+1} = \frac{\sqrt{ L^2 + eta^2 }}{ L (2L + 1)} C_L
+  // it would be better not to use this for really high L; is there another
+  // approximation we can use?
   for (int k = 1; k <= L; k++) {
     C *= Hypot(k, eta) / k / (2 * k + 1);
-    /*
-    if (k > abseta) {
-      double x = abseta / k;
-      C = std::sqrt(1.0 + x * x) / (2 * k + 1) * C;
-    } else {
-      double x = k / abseta;
-      C = std::sqrt(1.0 + x * x) / x / (2 * k + 1) * C;
-    }
-    */
-    //C = std::sqrt(k * k + eta_squared) / (k * (2 * k + 1)) * C;
   }
 
   return C;
 }
 
-// each term introduces factors of rho^2 / (L+1) and 2 eta rho / (L+1), so for this to
-// converge we need rho < sqrt(X) (1 + sqrt(L)) and 2 eta rho < X (1 + L); X ~ 16 gets
-// convergence within 30 terms
-
+// each term introduces factors of rho^2 / (L+1) and 2 eta rho / (L+1), so for
+// this to converge we need rho < sqrt(X) (1 + sqrt(L))
+// and 2 eta rho < X (1 + L); X ~ 16 gets convergence within 30 terms
 void meta_numerics::CoulombF_Series (int L, double eta, double rho, double& F,
   double& FP)
 {
@@ -479,7 +453,7 @@ void meta_numerics::CoulombF_Series (int L, double eta, double rho, double& F,
   double u = u0 + u1;
   double v = (L + 1) * u0 + (L + 2) * u1;
 
-  for (int k = 2; k < meta_numerics::SeriesMax; k++) {
+  for (int k = 2; k < meta_numerics::SeriesMax; ++k) {
 
     double u2 = (2.0 * eta_rho * u1 - rho_2 * u0) / k / (2 * L + k + 1);
     double v2 = (L + 1 + k) * u2;
@@ -505,7 +479,6 @@ void meta_numerics::CoulombF_Series (int L, double eta, double rho, double& F,
 
 // series for L=0 for both F and G
 // this has the same convergence properties as the L != 0 series for F above
-
 void meta_numerics::Coulomb_Zero_Series (double eta, double rho, double& F,
   double& FP, double& G, double& GP)
 {
@@ -525,7 +498,8 @@ void meta_numerics::Coulomb_Zero_Series (double eta, double rho, double& F,
   for (int n = 2; n <= meta_numerics::SeriesMax; n++) {
 
     double u2 = (2.0 * eta_rho * u1 - rho_2 * u0) / n / (n - 1);
-    double v2 = (2.0 * eta_rho * v1 - rho_2 * v0 - 2.0 * eta * (2 * n - 1) * u2) / n / (n - 1);
+    double v2 = (2.0 * eta_rho * v1 - rho_2 * v0 - 2.0 * eta * (2 * n - 1)
+      * u2) / n / (n - 1);
 
     double u_old = u; u += u2; up += n * u2;
     double v_old = v; v += v2;
@@ -537,7 +511,8 @@ void meta_numerics::Coulomb_Zero_Series (double eta, double rho, double& F,
 
       FP = C * up / rho;
 
-      double r = Psi(std::complex<double>(1.0, eta)).real() + 2.0 * EulerGamma - 1;
+      double r = Psi(std::complex<double>(1.0, eta)).real() + 2.0 * EulerGamma
+        - 1.;
       G = (v + 2.0 * eta * u * (std::log(2.0 * rho) + r)) / C;
 
       GP = (FP * G - 1.0) / F;
@@ -550,11 +525,11 @@ void meta_numerics::Coulomb_Zero_Series (double eta, double rho, double& F,
   }
 
   throw marley::Error(std::string("Coulomb_Zero_Series failed to converge."));
-
 }
 
 // gives F'/F and sgn(F)
-// converges rapidly for rho < turning point; slowly for rho > turning point, but still converges
+// converges rapidly for rho < turning point; slowly for rho > turning point,
+// but still converges
 double meta_numerics::Coulomb_CF1 (double L, double eta, double rho, int& sign)
 {
 
@@ -564,7 +539,6 @@ double meta_numerics::Coulomb_CF1 (double L, double eta, double rho, int& sign)
   if (rho > rho0) nmax += static_cast<int>(std::floor(2.0 * (rho - rho0)));
 
   // use Wallis method of continued fraction evalution
-
   double f = (L + 1.0) / rho + eta / (L + 1.0);
   sign = 1;
 
@@ -628,29 +602,33 @@ std::complex<double> meta_numerics::Coulomb_CF2 (double L, double eta,
 
     std::complex<double> N(n, 0);
     std::complex<double> p = (a + N) * (c + N);
-    std::complex<double> q = std::complex<double>(2.0 * (rho - eta), 2.0 * (n + 1));
+    std::complex<double> q = std::complex<double>(2.0 * (rho - eta),
+      2.0 * (n + 1));
 
     D = 1.0 / (q + p * D);
     Df = (q * D - 1.0) * Df;
     f += Df;
 
     if (f == f_old) {
-      return (marley_utils::i * f / rho + std::complex<double>(0.0, 1.0 - eta / rho));
+      return (marley_utils::i * f / rho + std::complex<double>(0.0,
+        1.0 - eta / rho));
     }
 
   }
 
   throw marley::Error(std::string("Coulomb_CF2 failed to converge."));
 
-  // don't use Wallis algorithm for this continued fraction! it appears that sometimes noise in what
-  // should be the last few iterations prevents convergence; Steed's method appears to do better
-  // an example is L=0, eta=0.1, rho=14.0
+  // don't use Wallis algorithm for this continued fraction! it appears that
+  // sometimes noise in what should be the last few iterations prevents
+  // convergence; Steed's method appears to do better an example is L=0,
+  // eta=0.1, rho=14.0
 }
 
 // use Steed's method to compute F and G for a given L
-// the method uses a real continued fraction (1 constraint), an imaginary continued fraction (2 constraints)
-// and the Wronskian (4 constraints) to compute the 4 quantities F, F', G, G'
-// it is reliable past the turning point, but becomes slow if used far past the turning point
+// the method uses a real continued fraction (1 constraint), an imaginary
+// continued fraction (2 constraints) and the Wronskian (4 constraints) to
+// compute the 4 quantities F, F', G, G' it is reliable past the turning point,
+// but becomes slow if used far past the turning point
 meta_numerics::SolutionPair meta_numerics::Coulomb_Steed (double L, double eta,
   double rho)
 {
@@ -673,9 +651,7 @@ meta_numerics::SolutionPair meta_numerics::Coulomb_Steed (double L, double eta,
   result.SecondSolutionValue(g * result.FirstSolutionValue());
   result.SecondSolutionDerivative((p * g - q) * result.FirstSolutionValue());
   return result;
-
 }
-
 
 // asymptotic region
 void meta_numerics::Coulomb_Asymptotic (double L, double eta, double rho,
@@ -683,7 +659,8 @@ void meta_numerics::Coulomb_Asymptotic (double L, double eta, double rho,
 {
 
   // compute phase
-  // reducing the eta = 0 and eta != 0 parts seperately preserves accuracy for large rho and small eta
+  // reducing the eta = 0 and eta != 0 parts seperately preserves accuracy for
+  // large rho and small eta
   double t0 = Reduce(rho, -L / 4.0);
   double t1 = Reduce(LogGamma(std::complex<double>(L + 1.0, eta)).imag()
     - eta * std::log(2.0 * rho), 0.0);
@@ -732,7 +709,8 @@ void meta_numerics::Coulomb_Recurse_Upward (int L1, int L2, double eta,
   double rho, double& U, double& UP)
 {
 
-  if (L2 < L1) throw marley::Error(std::string("L2 < L1 in Coulomb_Recurse_Upward"));
+  if (L2 < L1) throw marley::Error(std::string("L2 < L1 in")
+    + "Coulomb_Recurse_Upward");
 
   for (int K = L1 + 1; K <= L2; K++) {
 
@@ -756,17 +734,18 @@ double meta_numerics::CoulombF_Integrate(int L, double eta, double rho) {
 
   // start at the series limit
   double rho0 = 4.0 + 2.0 * std::sqrt(L);
-  if (std::abs(rho0 * eta) > 8.0 + 4.0 * L) rho0 = (8.0 + 4.0 * L) / std::abs(eta);
+  if (std::abs(rho0 * eta) > 8.0 + 4.0 * L) rho0 = (8.0 + 4.0 * L)
+    / std::abs(eta);
   double F, FP;
   CoulombF_Series(L, eta, rho0, F, FP);
 
   // TODO: switch so we integrate w/o the C factor, then apply it afterward
-  if ((F == 0.0) && (FP == 0.0)) return (0.0);
+  if ((F == 0.0) && (FP == 0.0)) return 0.0;
 
   // integrate out to rho
   BulrischStoerStoermerStepper s = BulrischStoerStoermerStepper();
   s.RightHandSide = [eta, L] (double x, double U) -> double {
-    return ((L * (L + 1) / x / x + 2.0 * eta / x - 1.0) * U);
+    return (L * (L + 1) / x / x + 2.0 * eta / x - 1.0) * U;
   };
   s.X = rho0;
   s.Y = F;
@@ -776,7 +755,7 @@ double meta_numerics::CoulombF_Integrate(int L, double eta, double rho) {
   s.Integrate(rho);
 
   // return the result
-  return (s.Y);
+  return s.Y;
 }
 
 double meta_numerics::CoulombF (int L, double eta, double rho) {
@@ -784,28 +763,33 @@ double meta_numerics::CoulombF (int L, double eta, double rho) {
   if (L < 0) throw marley::Error(std::string("L < 0 in CoulombF"));
   if (rho < 0) throw marley::Error(std::string("rho < 0 in CoulombF"));
 
-  if ((rho < 4.0 + 2.0 * std::sqrt(L)) && (std::abs(rho * eta) < 8.0  + 4.0 * L)) {
-    // if rho and rho * eta are small enough, use the series expansion at the origin
+  if ((rho < 4.0 + 2.0 * std::sqrt(L)) && (std::abs(rho * eta) < 8.0
+    + 4.0 * L))
+  {
+    // if rho and rho * eta are small enough, use the series expansion at the
+    // origin
     double F, FP;
     meta_numerics::CoulombF_Series(L, eta, rho, F, FP);
     return F;
-  } else if (rho > 32.0 + (L * L + eta * eta) / 2.0) {
+  }
+  else if (rho > 32.0 + (L * L + eta * eta) / 2.0) {
     // if rho is large enrough, use the asymptotic expansion
     double F, G;
     meta_numerics::Coulomb_Asymptotic(L, eta, rho, F, G);
     return F;
-  } else {
+  }
+  else {
     // transition region
     if (rho >= meta_numerics::CoulombTurningPoint(L, eta)) {
       // beyond the turning point, use Steed's method
       SolutionPair result = meta_numerics::Coulomb_Steed(L, eta, rho);
       return result.FirstSolutionValue();
-    } else {
+    }
+    else {
       // inside the turning point, integrate out from the series limit
       return meta_numerics::CoulombF_Integrate(L, eta, rho);
     }
   }
-
 }
 
 double meta_numerics::CoulombG (int L, double eta, double rho) {
@@ -814,38 +798,44 @@ double meta_numerics::CoulombG (int L, double eta, double rho) {
   if (rho < 0) throw marley::Error(std::string("rho < 0 in CoulombG"));
 
   if ((rho < 4.0) && std::abs(rho * eta) < 8.0) {
-    // for small enough rho, use the power series for L=0, then recurse upward to desired L
+    // for small enough rho, use the power series for L=0, then recurse upward
+    // to desired L
     double F, FP, G, GP;
     meta_numerics::Coulomb_Zero_Series(eta, rho, F, FP, G, GP);
     meta_numerics::Coulomb_Recurse_Upward(0, L, eta, rho, G, GP);
     return G;
-  } else if (rho > 32.0 + (L * L + eta * eta) / 2.0) {
+  }
+  else if (rho > 32.0 + (L * L + eta * eta) / 2.0) {
     // for large enough rho, use the asymptotic series
     double F, G;
     meta_numerics::Coulomb_Asymptotic(L, eta, rho, F, G);
     return G;
-  } else {
+  }
+  else {
     // transition region
     if (rho >= meta_numerics::CoulombTurningPoint(L, eta)) {
       // beyond the turning point, use Steed's method
       meta_numerics::SolutionPair result
         = meta_numerics::Coulomb_Steed(L, eta, rho);
       return result.SecondSolutionValue();
-    } else {
+    }
+    else {
 
-      // we will start at L=0 (which has a smaller turning point radius) and recurse up to the desired L
-      // this is okay because G increasees with increasing L
-
+      // we will start at L=0 (which has a smaller turning point radius) and
+      // recurse up to the desired L
+      // this is okay because G increases with increasing L
       double G, GP;
 
       if (rho < 2.0 * eta) {
 
-        // if inside the turning point even for L=0, start at the turning point and integrate in
-        // this is okay becaue G increases with decraseing rho
+        // if inside the turning point even for L=0, start at the turning point
+        // and integrate in
+        // this is okay becaue G increases with decreasing rho
 
         // use Steed's method at the turning point
-        // for large enough eta, we could use the turning point expansion at L=0, but it contributes
-        // a lot of code for little overall performance increase so we have chosen not to
+        // for large enough eta, we could use the turning point expansion at
+        // L=0, but it contributes a lot of code for little overall performance
+        // increase so we have chosen not to
         meta_numerics::SolutionPair result;
         //if (eta > 12.0) {
         //  result = Coulomb_Zero_Turning_Expansion(eta);
@@ -859,7 +849,7 @@ double meta_numerics::CoulombG (int L, double eta, double rho) {
         meta_numerics::BulrischStoerStoermerStepper s
           = meta_numerics::BulrischStoerStoermerStepper();
         s.RightHandSide = [eta] (double x, double U) -> double {
-          return ((2.0 * eta / x - 1.0) * U);
+          return (2.0 * eta / x - 1.0) * U;
         };
         s.X = 2.0 * eta;
         s.Y = G;
@@ -871,10 +861,10 @@ double meta_numerics::CoulombG (int L, double eta, double rho) {
         G = s.Y;
         GP = s.YPrime;
 
-      } else {
+      }
+      else {
 
         // if beyond the turning point for L=0, just use Steeds method
-
         meta_numerics::SolutionPair result
           = meta_numerics::Coulomb_Steed(0, eta, rho);
         G = result.SecondSolutionValue();
@@ -887,23 +877,26 @@ double meta_numerics::CoulombG (int L, double eta, double rho) {
       return G;
     }
   }
-
 }
 
 double meta_numerics::LegendrePe(int l, int m, double x) {
+
   if (l < 0) throw marley::Error(std::string("Cannot compute")
     + " the associated Legendre polynomial Pe{l = " + std::to_string(l)
     + ", m = " + std::to_string(m) + "} because l must be nonnegative.");
+
   if (m > l || m < 0) throw marley::Error(std::string("Cannot compute")
     + " the associated Legendre polynomial Pe{l = " + std::to_string(l)
     + ", m = " + std::to_string(m) + "} because l and m must"
     + " satisfy the relation 0 <= m <= l");
+
   if (std::abs(x) > 1.0) throw marley::Error(std::string("Cannot compute")
     + " the associated Legendre polynomial Pe{l = " + std::to_string(l)
     + ", m = " + std::to_string(m) + "}(x = " + std::to_string(x)
     + "because x must satisfy the relation abs(x) <= 1.");
 
   double xx = (1.0 + x) * (1.0 - x);
+
   // determine P{m,m}
   double P0 = 1.0;
   for (int k = 1; k <= m; k++) {
@@ -911,7 +904,7 @@ double meta_numerics::LegendrePe(int l, int m, double x) {
   }
   P0 = std::sqrt(P0);
   if (m % 2 != 0) P0 = -P0;
-  if (l == m) return (P0);
+  if (l == m) return P0;
   // determine P{m+1,m}
   double s0 = std::sqrt(2*m + 1);
   double P1 = x * s0 * P0;
@@ -927,10 +920,14 @@ double meta_numerics::LegendrePe(int l, int m, double x) {
   return P1;
 }
 
-std::complex<double> meta_numerics::SphericalHarmonic (int l, int m, double theta, double phi) {
+std::complex<double> meta_numerics::SphericalHarmonic(int l, int m,
+  double theta, double phi)
+{
+
   if (l < 0) throw marley::Error(std::string("Cannot compute")
     + " the spherical harmonic with l = " + std::to_string(l) + ", m = "
     + std::to_string(m) + ". The order l must be nonnegative.");
+
   if (std::abs(m) > l) throw marley::Error(std::string("Cannot compute")
     + " the spherical harmonic with l = " + std::to_string(l) + ", m = "
     + std::to_string(m) + ". The sub-order m must satisfy -l <= m <= l.");
@@ -986,11 +983,14 @@ double meta_numerics::SphericalBesselY(int n, double x) {
   else if (n == 0) return SphericalBesselY_Zero(x);
   else if (n == 1) return SphericalBesselY_One(x);
   else {
+
     if (x < (2.0 + std::sqrt(n))) return SphericalBesselY_Series(n, x);
+
     // if x is large enough, use asymptotic expansion
     else if (x > (30.0 + 0.5 * n * n))
       return std::sqrt(marley_utils::half_pi / x)
       * Bessel_Asymptotic(n + 0.5, x).SecondSolutionValue();
+
     else {
       // move up using the recursion relation
       double ym1 = SphericalBesselY_Zero(x);
@@ -1132,13 +1132,17 @@ double meta_numerics::SphericalBesselJ_Miller(int n, double x) {
   // takes us well into the x < nu regime, where J_nu decreases with nu
   int kmax = n;
   if (x > n) kmax = static_cast<int>(std::ceil(x));
-  kmax += 50; // since J_(nu+1)/J_(nu) ~ 1/2 for x~v, taking N steps supresses by 2^(N) = 10^(16) at N ~ 50
+
+  // since J_(nu+1)/J_(nu) ~ 1/2 for x~v, taking N steps supresses
+  // by 2^(N) = 10^(16) at N ~ 50
+  kmax += 50;
 
   double jp1 = 0.0;
   double j = 1.0 / (static_cast<double>(kmax)); // look for a better guess
 
   // recur downward to order zero
-  // the recurrence j_{k-1} = (2k+1)/x * j_k - j_{k+1} is stable in this direction
+  // the recurrence j_{k-1} = (2k+1)/x * j_k - j_{k+1} is stable in this
+  // direction
   for (int k = kmax; k > n; k--) {
     double jm1 = (2 * k + 1) / x * j - jp1;
     jp1 = j;
@@ -1156,7 +1160,9 @@ double meta_numerics::SphericalBesselJ_Miller(int n, double x) {
   return (j0 / j) * jn;
 }
 
-meta_numerics::SolutionPair meta_numerics::Bessel_Asymptotic(double nu, double x) {
+meta_numerics::SolutionPair meta_numerics::Bessel_Asymptotic(double nu,
+  double x)
+{
 
   // pre-compute factors of nu and x as they appear in the series
   double mu = 4.0 * nu * nu;
@@ -1166,7 +1172,8 @@ meta_numerics::SolutionPair meta_numerics::Bessel_Asymptotic(double nu, double x
   double P = 1.0; double R = 1.0;
   double Q = 0.0; double S = 0.0;
 
-  // k is the current term number, k2 is (2k - 1), and t is the value of the current term
+  // k is the current term number, k2 is (2k - 1), and t is the value of the
+  // current term
   int k = 0;
   int k2 = -1;
   double t = 1.0;
@@ -1195,8 +1202,9 @@ meta_numerics::SolutionPair meta_numerics::Bessel_Asymptotic(double nu, double x
       + "Bessel_Asymptotic failed to converge.");
   }
 
-  // We attempted to move to a single trig evaluation so as to avoid errors when the two terms nearly cancel,
-  // but this seemed to cause problems, perhaps because the arctan angle cannot be determined with sufficient
+  // We attempted to move to a single trig evaluation so as to avoid errors
+  // when the two terms nearly cancel, but this seemed to cause problems,
+  // perhaps because the arctan angle cannot be determined with sufficient
   // resolution. Investigate further.
   /*
   double M = N * MoreMath.Hypot(Q, P);
@@ -1209,24 +1217,28 @@ meta_numerics::SolutionPair meta_numerics::Bessel_Asymptotic(double nu, double x
   );
    */
 
-  // This technique was used in the original Meta Numerics library. To avoid having to use
-  // the complicated techniques in the RangeReduction class, skip the reductions. Add them
-  // back in if you experience problems.
+  // This technique was used in the original Meta Numerics library. To avoid
+  // having to use the complicated techniques in the RangeReduction class, skip
+  // the reductions. Add them back in if you experience problems.
   //
   //// Compute sin and cosine of x - (\nu + 1/2)(\pi / 2)
-  //// Then we compute sine and cosine of (x1 - u1) with shift appropriate to (x0 - u0).
+  //// Then we compute sine and cosine of (x1 - u1) with shift appropriate to
+  //// (x0 - u0).
   //
-  //// For maximum accuracy, we first reduce x = (x_0 + x_1) (\pi / 2), where x_0 is an integer and -0.5 < x1 < 0.5
+  //// For maximum accuracy, we first reduce x = (x_0 + x_1) (\pi / 2), where
+  //// x_0 is an integer and -0.5 < x1 < 0.5
   //long x0; double x1;
   //RangeReduction.ReduceByPiHalves(x, x0, x1);
   //
-  //// Then we reduce (\nu + 1/2) = u_0 + u_1 where u_0 is an integer and -0.5 < u1 < 0.5
+  //// Then we reduce (\nu + 1/2) = u_0 + u_1 where u_0 is an integer
+  //// and -0.5 < u1 < 0.5
   //double u = nu + 0.5;
   //double ur = std::round(u);
   //long u0 = static_cast<long>(ur);
   //double u1 = u - ur;
   //
-  //// Finally, we compute sine and cosine, having reduced the evaluation interval to -0.5 < \theta < 0.5
+  //// Finally, we compute sine and cosine, having reduced the evaluation
+  //// interval to -0.5 < \theta < 0.5
   //double s1 = RangeReduction.Sin(x0 - u0, x1 - u1);
   //double c1 = RangeReduction.Cos(x0 - u0, x1 - u1);
   // Assemble the solution
@@ -1255,23 +1267,29 @@ meta_numerics::SolutionPair meta_numerics::Bessel_Asymptotic(double nu, double x
 /// <param name="x">The argument, which must be positive.</param>
 /// <returns>The log Gamma function ln(&#x393;(x)).</returns>
 /// <remarks>
-/// <para>Because &#x393;(x) grows rapidly for increasing positive x, it is often necessary to
-/// work with its logarithm in order to avoid overflow. This function returns accurate
-/// values of ln(&#x393;(x)) even for values of x which would cause &#x393;(x) to overflow.</para>
+/// <para>Because &#x393;(x) grows rapidly for increasing positive x, it is
+/// often necessary to work with its logarithm in order to avoid overflow. This
+/// function returns accurate values of ln(&#x393;(x)) even for values of x
+/// which would cause &#x393;(x) to overflow.</para>
 /// </remarks>
-/// <exception cref="ArgumentOutOfRangeException"><paramref name="x"/> is negative or zero.</exception>
+/// <exception cref="ArgumentOutOfRangeException"><paramref name="x"/> is
+/// negative or zero.</exception>
 /// <seealso cref="Gamma(double)" />
 double meta_numerics::LogGamma(double x) {
+
   if (x <= 0.0) throw marley::Error(std::string("Cannot compute")
     + " LogGamma(x) for x = " + std::to_string(x));
+
   // For small arguments, use the Lanczos approximation.
   else if (x < 16.0) return meta_numerics::Lanczos::LogGamma(x);
-  // For large arguments, the asymptotic series is even faster than the Lanczos approximation.
+
+  // For large arguments, the asymptotic series is even faster than the Lanczos
+  // approximation.
   else return meta_numerics::LogGamma_Stirling(x);
 }
 
 double meta_numerics::LogGamma_Stirling(double x) {
-  // re-write to use (x-0.5) form to eliminate one one by storing log(2\pi)?
+  // re-write to use (x - 0.5) form to eliminate one one by storing log(2\pi)?
   return (x * std::log(x) - x
     - std::log(x / (2.0 * marley_utils::pi)) / 2.0 + Sum_Stirling(x));
 }
@@ -1293,12 +1311,15 @@ double meta_numerics::Sum_Stirling(double x) {
 }
 
 double meta_numerics::LaguerreL(int n, double x) {
+
   if (n < 0) throw marley::Error(std::string("Cannot compute")
     + " LaguerreL for order n = " + std::to_string(n) + ".");
+
   if (x < 0.) throw marley::Error(std::string("Cannot compute")
     + " LaguerreL for argument x = " + std::to_string(x) + ".");
 
-  if (n==0) return(1.0);
+  if (n==0) return 1.0;
+
   // use recurrence (n+1)L_{n+1} = (2n+1-x)L_{n} - nL_{n-1}
   double L0 = 1.0;
   double L1 = 1.0 - x;
@@ -1311,10 +1332,13 @@ double meta_numerics::LaguerreL(int n, double x) {
 }
 
 double meta_numerics::LaguerreL(int n, double a, double x) {
+
   if (n < 0) throw marley::Error(std::string("Cannot compute")
     + " LaguerreL for order n = " + std::to_string(n) + ".");
+
   if (x < 0.) throw marley::Error(std::string("Cannot compute")
     + " LaguerreL for argument x = " + std::to_string(x) + ".");
+
   if (a <= -1) throw marley::Error(std::string("Cannot compute")
     + " LaguerreL for associated order a = " + std::to_string(a) + ".");
 
@@ -1328,58 +1352,3 @@ double meta_numerics::LaguerreL(int n, double a, double x) {
   }
   return L1;
 }
-// -- End Ms-PL licensed code
-
-//Microsoft Public License (Ms-PL)
-//
-//This license governs use of the accompanying software. If you use the software, you accept
-//this license. If you do not accept the license, do not use the software.
-//
-//1. Definitions
-//
-//The terms "reproduce," "reproduction," "derivative works," and "distribution" have the
-//same meaning here as under U.S. copyright law.
-//
-//A "contribution" is the original software, or any additions or changes to the software.
-//
-//A "contributor" is any person that distributes its contribution under this license.
-//
-//"Licensed patents" are a contributor's patent claims that read directly on its
-//contribution.
-//
-//2. Grant of Rights
-//
-//(A) Copyright Grant- Subject to the terms of this license, including the license
-//conditions and limitations in section 3, each contributor grants you a non-exclusive,
-//worldwide, royalty-free copyright license to reproduce its contribution, prepare
-//derivative works of its contribution, and distribute its contribution or any derivative
-//works that you create.
-//
-//(B) Patent Grant- Subject to the terms of this license, including the license conditions
-//and limitations in section 3, each contributor grants you a non-exclusive, worldwide,
-//royalty-free license under its licensed patents to make, have made, use, sell, offer for
-//sale, import, and/or otherwise dispose of its contribution in the software or derivative
-//works of the contribution in the software.
-//
-//3. Conditions and Limitations
-//
-//(A) No Trademark License- This license does not grant you rights to use any contributors'
-//name, logo, or trademarks.
-//
-//(B) If you bring a patent claim against any contributor over patents that you claim are
-//infringed by the software, your patent license from such contributor to the software ends
-//automatically.
-//
-//(C) If you distribute any portion of the software, you must retain all copyright, patent,
-//trademark, and attribution notices that are present in the software.
-//
-//(D) If you distribute any portion of the software in source code form, you may do so only
-//under this license by including a complete copy of this license with your distribution. If
-//you distribute any portion of the software in compiled or object code form, you may only
-//do so under a license that complies with this license.
-//
-//(E) The software is licensed "as-is." You bear the risk of using it. The contributors give
-//no express warranties, guarantees or conditions. You may have additional consumer rights
-//under your local laws which this license cannot change. To the extent permitted under your
-//local laws, the contributors exclude the implied warranties of merchantability, fitness
-//for a particular purpose and non-infringement.
