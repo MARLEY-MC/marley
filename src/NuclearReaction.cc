@@ -435,7 +435,7 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
     Ec_cm, Ed_cm, E_level);
 
   // Get a reference to the residue so that we can handle its de-excitation
-  marley::Particle& residue = *event.get_residue();
+  marley::Particle& residue = event.residue();
 
   bool continuum = (plevel == nullptr);
   int Z = Zf;
@@ -466,13 +466,13 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
       LOG_DEBUG() << hfd;
       continuum = hfd.do_decay(Ex, twoJ, P, first, second);
 
-      LOG_DEBUG() << "Hauser-Feshbach decay to " << first.get_id()
-        << " and " << second.get_id();
-      LOG_DEBUG() << second.get_id() << " is at Ex = " << Ex << " MeV.";
+      LOG_DEBUG() << "Hauser-Feshbach decay to " << first.pdg_code()
+        << " and " << second.pdg_code();
+      LOG_DEBUG() << second.pdg_code() << " is at Ex = " << Ex << " MeV.";
 
       residue = second;
-      Z = marley::MassTable::get_particle_Z(residue.get_id());
-      A = marley::MassTable::get_particle_A(residue.get_id());
+      Z = marley::MassTable::get_particle_Z(residue.pdg_code());
+      A = marley::MassTable::get_particle_A(residue.pdg_code());
       event.add_final_particle(first);
     }
   }
@@ -486,7 +486,7 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
     marley::DecayScheme* dec_scheme
       = gen.get_structure_db().get_decay_scheme(Z, A);
     dec_scheme->do_cascade(dec_scheme->get_pointer_to_closest_level(Ex),
-      &event, gen, residue.get_charge());
+      &event, gen, residue.charge());
   }
 
   // Return the completed event object

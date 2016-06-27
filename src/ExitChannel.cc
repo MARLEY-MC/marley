@@ -38,7 +38,7 @@ void marley::FragmentContinuumExitChannel::do_decay(double& Ex,
     fragment_.get_mass());
 
   residual_nucleus = gs_residue_;
-  double rn_mass = gs_residue_.get_mass() + Ex;
+  double rn_mass = gs_residue_.mass() + Ex;
   residual_nucleus.set_mass(rn_mass);
 }
 
@@ -52,7 +52,7 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
   marley::Parity Pa = fragment_.get_parity();
 
   marley::SphericalOpticalModel& om
-    = gen.get_structure_db().get_optical_model(gs_residue_.get_id());
+    = gen.get_structure_db().get_optical_model(gs_residue_.pdg_code());
   int Zf = om.get_Z();
   int Af = om.get_A();
 
@@ -122,7 +122,7 @@ void marley::GammaContinuumExitChannel::do_decay(double& Ex, int& two_J,
   double Exi = Ex;
   Ex = gen.rejection_sample(Epdf_, Emin_, Emax_);
 
-  int nuc_pid = residual_nucleus.get_id();
+  int nuc_pid = residual_nucleus.pdg_code();
   int Z = marley::MassTable::get_particle_Z(nuc_pid);
   int A = marley::MassTable::get_particle_A(nuc_pid);
 
@@ -130,7 +130,7 @@ void marley::GammaContinuumExitChannel::do_decay(double& Ex, int& two_J,
 
   emitted_particle = marley::Particle(marley_utils::PHOTON, 0.);
   residual_nucleus = gs_residue_;
-  double rn_mass = gs_residue_.get_mass() + Ex;
+  double rn_mass = gs_residue_.mass() + Ex;
   residual_nucleus.set_mass(rn_mass);
 }
 

@@ -33,11 +33,11 @@ void marley::HauserFeshbachDecay::build_exit_channels()
   static const double me
     = marley::MassTable::get_particle_mass(marley_utils::ELECTRON);
 
-  int pid_initial = compound_nucleus_.get_id();
+  int pid_initial = compound_nucleus_.pdg_code();
   int Zi = marley::MassTable::get_particle_Z(pid_initial);
   int Ai = marley::MassTable::get_particle_A(pid_initial);
-  int qi = compound_nucleus_.get_charge(); // Get net charge of initial ion
-  double Mi = compound_nucleus_.get_mass(); // initial mass
+  int qi = compound_nucleus_.charge(); // Get net charge of initial ion
+  double Mi = compound_nucleus_.mass(); // initial mass
   double Migs = Mi - Exi_; // initial ground-state mass
 
   total_width_ = 0.; // total compound nucleus decay width
@@ -480,7 +480,7 @@ double marley::HauserFeshbachDecay::gamma_continuum_partial_width(
   // TODO: consider adding a nuclear recoil correction here
   double e_gamma = Exi_ - Exf;
   bool initial_spin_is_zero = twoJi_ == 0;
-  int cn_pid = compound_nucleus_.get_id();
+  int cn_pid = compound_nucleus_.pdg_code();
   int Z = marley::MassTable::get_particle_Z(cn_pid);
   int A = marley::MassTable::get_particle_A(cn_pid);
   for (int l = 0; l <= l_max; ++l) {
@@ -593,7 +593,7 @@ double marley::HauserFeshbachDecay::gamma_cpw(int Z, int A, int mpol, int twoJf,
 void marley::HauserFeshbachDecay::print(std::ostream& out) const {
 
   static constexpr double hbar = 6.58211951e-22; // MeV * s
-  int pid_initial = compound_nucleus_.get_id();
+  int pid_initial = compound_nucleus_.pdg_code();
   int Zi = marley::MassTable::get_particle_Z(pid_initial);
   int Ai = marley::MassTable::get_particle_A(pid_initial);
   marley::LevelDensityModel& ldm
@@ -601,7 +601,7 @@ void marley::HauserFeshbachDecay::print(std::ostream& out) const {
   double two_pi_rho = marley_utils::two_pi
     * ldm.level_density(Exi_, twoJi_, Pi_);
 
-  out << "Compound nucleus " << compound_nucleus_.get_id()
+  out << "Compound nucleus " << compound_nucleus_.pdg_code()
     << " with Ex = " << Exi_ << ", spin = " << twoJi_ / 2;
   if (twoJi_ % 2) out << ".5";
   out << ", and parity = " << Pi_ << '\n';

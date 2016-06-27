@@ -60,9 +60,9 @@ namespace marley {
         marley::Event event = marley::Reaction::make_event_object(Ea, pc_cm,
           cos_theta_c_cm, phi_c_cm, Ec_cm, Ed_cm, E_level);
         // Assume that the target is a neutral atom (q_b = 0)
-        event.get_target()->set_charge(0);
+        event.target().set_charge(0);
         // Assign the correct charge to the residue
-        event.get_residue()->set_charge(q_d);
+        event.residue().set_charge(q_d);
         // Return the completed event object
         return event;
       }

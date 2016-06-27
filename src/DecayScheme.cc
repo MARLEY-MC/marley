@@ -110,22 +110,19 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
       double gamma_cos_theta = gen.uniform_random_double(-1, 1, true); // sample from [-1,1]
       double gamma_phi = gen.uniform_random_double(0, 2*marley_utils::pi, false); // sample from [0,2*pi)
 
-      marley::Particle* p_residue = p_event->get_residue();
+      marley::Particle& residue = p_event->residue();
 
       // Determine the final energies and momenta for the recoiling nucleus and
       // emitted gamma ray. Store them in the final state particle objects.
-      marley::Kinematics::two_body_decay(*p_residue, gamma, nucleus,
+      marley::Kinematics::two_body_decay(residue, gamma, nucleus,
         gamma_cos_theta, gamma_phi);
 
       // Update the residue for this event to take into account changes from
       // gamma ray emission
-      *p_residue = nucleus;
+      residue = nucleus;
 
       // Add the new gamma to the event
       p_event->add_final_particle(gamma);
-
-      // Add this gamma to the residue's children
-      p_residue->add_child(&(p_event->get_final_particles().back()));
     }
   }
 

@@ -52,18 +52,6 @@ marley::Event marley::Reaction::make_event_object(double Ea,
   marley::Kinematics::lorentz_boost(0, 0, -beta_z, residue);
 
   // Create the event object and load it with the appropriate information
-  marley::Event event(E_level);
-  event.set_reaction(this);
-
-  // Add the projectile to this event's initial particle list
-  event.add_initial_particle(projectile,
-    marley::Event::ParticleRole::pr_projectile);
-  // Add the target to this event's initial particle list
-  event.add_initial_particle(target, marley::Event::ParticleRole::pr_target);
-  // Add the ejectile to this event's final particle list
-  event.add_final_particle(ejectile, marley::Event::ParticleRole::pr_ejectile);
-  // Add the residue to this event's final particle list.
-  event.add_final_particle(residue, marley::Event::ParticleRole::pr_residue);
-  // Return the completed event object
+  marley::Event event(projectile, target, ejectile, residue, E_level);
   return event;
 }
