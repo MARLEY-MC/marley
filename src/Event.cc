@@ -5,127 +5,177 @@
 #include "Error.hh"
 #include "Event.hh"
 
-//#ifdef USE_ROOT
-//#ifndef __CINT__
-//ClassImp(marley::Event);
-//#endif
-//#endif
+// Local constants used only within this file
+namespace {
 
-marley::Event::Event(double E_level) {
-  E_residue_level = E_level;
-  reaction = nullptr;
-  projectile = nullptr;
-  target = nullptr;
-  ejectile = nullptr;
-  residue = nullptr;
+  // Indices of the projectile and target in the vector of initial particles
+  constexpr size_t PROJECTILE_INDEX = 0;
+  constexpr size_t TARGET_INDEX = 1;
+
+  // Indices of the ejectile and residue in the vector of final particles
+  constexpr size_t EJECTILE_INDEX = 0;
+  constexpr size_t RESIDUE_INDEX = 1;
 }
 
-// Sets one of the special particle pointers
-// (e.g., marley::Particle::projectile) according
-// to the supplied ParticleRole
-void marley::Event::assign_particle_pointer(marley::Particle* p,
-  marley::Event::ParticleRole r)
+// Creates an empty 2->2 scattering event with dummy initial and final
+// particles and residue (particle d) excitation energy Ex.
+marley::Event::Event(double Ex)
+  : initial_particles_{new marley::Particle(), new marley::Particle()},
+  final_particles_{new marley::Particle(), new marley::Particle()},
+  Ex_(Ex) {}
+
+// Creates an 2->2 scattering event with given initial (a & b) and final
+// (c & d) particles. The residue (particle d) has excitation energy Ex
+// immediately following the 2->2 reaction.
+marley::Event::Event(const marley::Particle& a, const marley::Particle& b,
+  const marley::Particle& c, const marley::Particle& d, double Ex)
+  : initial_particles_{new marley::Particle(a), new marley::Particle(b)},
+  final_particles_{new marley::Particle(c), new marley::Particle(d)},
+  Ex_(Ex) {}
+
+// Destructor
+marley::Event::~Event() {
+  for (auto& p : initial_particles_) delete p;
+  for (auto& p : final_particles_) delete p;
+  initial_particles_.clear();
+  final_particles_.clear();
+}
+
+// Copy constructor
+marley::Event::Event(const marley::Event& other_event)
+  : initial_particles_(other_event.initial_particles_.size()),
+  final_particles_(other_event.final_particles_.size()),
+  Ex_(other_event.Ex_)
 {
-  switch(r) {
-    case marley::Event::ParticleRole::pr_projectile:
-      projectile = p;
-      break;
-    case marley::Event::ParticleRole::pr_target:
-      target = p;
-      break;
-    case marley::Event::ParticleRole::pr_ejectile:
-      ejectile = p;
-      break;
-    case marley::Event::ParticleRole::pr_residue:
-      residue = p;
-      break;
-    default: // Do nothing if the particle does not have a
-      break; // special role in this event
+  for (size_t i = 0; i < other_event.initial_particles_.size(); ++i) {
+    initial_particles_[i] = new marley::Particle(
+      *other_event.initial_particles_[i]);
+  }
+  for (size_t i = 0; i < other_event.final_particles_.size(); ++i) {
+    final_particles_[i] = new marley::Particle(
+      *other_event.final_particles_[i]);
   }
 }
 
-marley::Particle* marley::Event::get_residue() {
-  return residue;
-}
 
-marley::Particle* marley::Event::get_ejectile() {
-  return ejectile;
-}
-
-marley::Particle* marley::Event::get_projectile() {
-  return projectile;
-}
-
-marley::Particle* marley::Event::get_target() {
-  return target;
-}
-
-void marley::Event::add_initial_particle(const marley::Particle& p,
-  marley::Event::ParticleRole r)
+// Move constructor
+marley::Event::Event(marley::Event&& other_event)
+  : initial_particles_(other_event.initial_particles_.size()),
+  final_particles_(other_event.final_particles_.size()),
+  Ex_(other_event.Ex_)
 {
-  initial_particles.push_back(p);
-
-  if (r == marley::Event::ParticleRole::pr_ejectile)
-    throw marley::Error(std::string("The ejectile")
-    + " is not an initial state particle role.");
-  if (r == marley::Event::ParticleRole::pr_residue)
-    throw marley::Error(std::string("The residue")
-    + " is not an initial state particle role.");
-
-  assign_particle_pointer(&(initial_particles.back()), r);
+  other_event.Ex_ = 0.;
+  for (size_t i = 0; i < other_event.initial_particles_.size(); ++i) {
+    initial_particles_[i] = other_event.initial_particles_[i];
+  }
+  for (size_t i = 0; i < other_event.final_particles_.size(); ++i) {
+    final_particles_[i] = other_event.final_particles_[i];
+  }
+  other_event.initial_particles_.clear();
+  other_event.final_particles_.clear();
 }
 
-void marley::Event::add_final_particle(const marley::Particle& p,
-  marley::Event::ParticleRole r)
+// Copy assignment operator
+marley::Event& marley::Event::operator=(const marley::Event& other_event) {
+  Ex_ = other_event.Ex_;
+
+  // Delete the old particle objects owned by this event
+  for (auto& p : initial_particles_) delete p;
+  for (auto& p : final_particles_) delete p;
+
+  initial_particles_.resize(other_event.initial_particles_.size());
+  final_particles_.resize(other_event.final_particles_.size());
+
+  for (size_t i = 0; i < other_event.initial_particles_.size(); ++i) {
+    initial_particles_[i] = new marley::Particle(
+      *other_event.initial_particles_[i]);
+  }
+  for (size_t i = 0; i < other_event.final_particles_.size(); ++i) {
+    final_particles_[i] = new marley::Particle(
+      *other_event.final_particles_[i]);
+  }
+
+  return *this;
+}
+
+// Move assignment operator
+marley::Event& marley::Event::operator=(marley::Event&& other_event) {
+
+  Ex_ = other_event.Ex_;
+  other_event.Ex_ = 0.;
+
+  // Delete the old particle objects owned by this event
+  for (auto& p : initial_particles_) delete p;
+  for (auto& p : final_particles_) delete p;
+
+  initial_particles_.resize(other_event.initial_particles_.size());
+  final_particles_.resize(other_event.final_particles_.size());
+
+  for (size_t i = 0; i < other_event.initial_particles_.size(); ++i) {
+    initial_particles_[i] = other_event.initial_particles_[i];
+  }
+  for (size_t i = 0; i < other_event.final_particles_.size(); ++i) {
+    final_particles_[i] = other_event.final_particles_[i];
+  }
+
+  other_event.initial_particles_.clear();
+  other_event.final_particles_.clear();
+
+  return *this;
+}
+
+marley::Particle& marley::Event::projectile() {
+  return *initial_particles_.at(PROJECTILE_INDEX);
+}
+
+marley::Particle& marley::Event::target() {
+  return *initial_particles_.at(TARGET_INDEX);
+}
+
+marley::Particle& marley::Event::ejectile() {
+  return *final_particles_.at(EJECTILE_INDEX);
+}
+
+marley::Particle& marley::Event::residue() {
+  return *final_particles_.at(RESIDUE_INDEX);
+}
+
+const marley::Particle& marley::Event::projectile() const {
+  return *initial_particles_.at(PROJECTILE_INDEX);
+}
+
+const marley::Particle& marley::Event::target() const {
+  return *initial_particles_.at(TARGET_INDEX);
+}
+
+const marley::Particle& marley::Event::ejectile() const {
+  return *final_particles_.at(EJECTILE_INDEX);
+}
+
+const marley::Particle& marley::Event::residue() const {
+  return *final_particles_.at(RESIDUE_INDEX);
+}
+
+void marley::Event::add_initial_particle(const marley::Particle& p)
 {
-  final_particles.push_back(p);
-
-  if (r == marley::Event::ParticleRole::pr_projectile)
-    throw marley::Error(std::string("The projectile")
-    + " is not an final state particle role.");
-  if (r == marley::Event::ParticleRole::pr_target)
-    throw marley::Error(std::string("The target")
-    + " is not an final state particle role.");
-
-  assign_particle_pointer(&(final_particles.back()), r);
+  initial_particles_.push_back(new marley::Particle(p));
 }
 
-void marley::Event::set_reaction(marley::Reaction* r) {
-  reaction = r;
+void marley::Event::add_final_particle(const marley::Particle& p)
+{
+  final_particles_.push_back(new marley::Particle(p));
 }
 
-// Prints information about this event to stdout
-void marley::Event::print_event() {
-  std::cout << "*** Initial particles ***" << std::endl;
-  for (const auto& i : initial_particles)
-  {
-    std::cout << "id: " << i.get_id() << "   energy: " << i.get_total_energy()
-      << " MeV" << std::endl;
-  }
-  std::cout << std::endl << std::endl << "*** Final particles ***" << std::endl;
-  for (const auto& f : final_particles)
-  {
-    std::cout << "id: " << f.get_id() << "   energy: " << f.get_total_energy()
-      << " MeV" << std::endl;
-  }
+void marley::Event::print(std::ostream& out) const {
+  if (initial_particles_.empty()) return;
+  out << *initial_particles_.at(PROJECTILE_INDEX) << '\n';
+  for (const auto p : final_particles_) out << *p << '\n';
 }
 
-double marley::Event::get_E_level() {
-  return E_residue_level;
-}
-
-std::ostream& operator<< (std::ostream& out, const marley::Event& e) {
-  out << *(e.projectile) << std::endl;
-  for (const auto& p : e.final_particles) {
-    out << p << std::endl;
-  }
-  return out;
-}
-
-// Function that dumps a marley::Particle to an output stream in HEPEvt format. This
-// is a private helper function for the publically-accessible write_hepevt.
-void marley::Event::dump_hepevt_particle(const marley::Particle& p, std::ostream& os,
-  bool track)
+// Function that dumps a marley::Particle to an output stream in HEPEvt format.
+// This is a private helper function for the publicly-accessible write_hepevt.
+void marley::Event::dump_hepevt_particle(const marley::Particle& p,
+  std::ostream& os, bool track)
 {
   if (track) os << "1 ";
   else os << "0 ";
@@ -134,16 +184,17 @@ void marley::Event::dump_hepevt_particle(const marley::Particle& p, std::ostream
   // location and to reflect the parent-daughter relationships between
   // particles.
   // Factors of 1000. are used to convert MeV to GeV for the HEPEvt format
-  os << p.get_id() << " 0 0 0 0 " << p.get_px() / 1000. << " " << p.get_py() / 1000. << " "
-    << p.get_pz() / 1000. << " " << p.get_total_energy() / 1000. << " " << p.get_mass() / 1000.
+  os << p.pdg_code() << " 0 0 0 0 " << p.px() / 1000.
+    << ' ' << p.py() / 1000. << ' ' << p.pz() / 1000.
+    << ' ' << p.total_energy() / 1000. << ' ' << p.mass() / 1000.
     // Spacetime origin is currently used as the initial position 4-vector for
     // all particles
-    << " 0. 0. 0. 0." << std::endl;
+    << " 0. 0. 0. 0." << '\n';
 }
 
 void marley::Event::write_hepevt(size_t event_num, std::ostream& out) {
   out << std::setprecision(16) << std::scientific;
-  out << event_num  << " " << final_particles.size() + 1 << std::endl;
-  dump_hepevt_particle(*projectile, out, false);
-  for (const auto& fp : final_particles) dump_hepevt_particle(fp, out, true);
+  out << event_num  << ' ' << final_particles_.size() + 1 << '\n';
+  dump_hepevt_particle(*initial_particles_.at(PROJECTILE_INDEX), out, false);
+  for (const auto fp : final_particles_) dump_hepevt_particle(*fp, out, true);
 }

@@ -5,9 +5,9 @@
 #pragma link C++ nestedtypedefs;
 #pragma link C++ defined_in "./Event.hh";
 #pragma link C++ defined_in "./Particle.hh";
-#pragma link C++ class std::list<marley::Particle>+;
-#pragma link C++ class std::list<marley::Particle>::*+;
-#pragma link C++ operators std::list<marley::Particle>::iterator;
-#pragma link C++ operators std::list<marley::Particle>::const_iterator;
-#pragma link C++ operators std::list<marley::Particle>::reverse_iterator;
+#pragma link C++ class std::vector<marley::Particle*>+;
+#pragma link C++ class std::vector<marley::Particle>::*+;
+#pragma link C++ operators std::vector<marley::Particle>::iterator;
+#pragma link C++ operators std::vector<marley::Particle>::const_iterator;
+#pragma link C++ operators std::vector<marley::Particle>::reverse_iterator;
 #endif

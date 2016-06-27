@@ -10,7 +10,7 @@ void marley::Kinematics::rotate_momentum_vector(double x, double y, double z,
   double r = std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2));
 
   // Get magnitude of the particle's momentum
-  double rp = particle_to_rotate.get_momentum_magnitude();
+  double rp = particle_to_rotate.momentum_magnitude();
 
   // Rotate the particle's momentum vector into the desired direction
   double ratio = rp / r;
@@ -37,11 +37,11 @@ void marley::Kinematics::lorentz_boost(double beta_x, double beta_y,
   // Calculate the Lorentz factor based on the boost velocity
   double gamma = 1 / std::sqrt(1 - beta2);
 
-  double E = particle_to_boost.get_total_energy();
-  double px = particle_to_boost.get_px();
-  double py = particle_to_boost.get_py();
-  double pz = particle_to_boost.get_pz();
-  double m = particle_to_boost.get_mass();
+  double E = particle_to_boost.total_energy();
+  double px = particle_to_boost.px();
+  double py = particle_to_boost.py();
+  double pz = particle_to_boost.pz();
+  double m = particle_to_boost.mass();
 
   // Compute the boosted energy and 3-momentum for the particle (the expressions
   // we use here are based on
@@ -79,9 +79,9 @@ void marley::Kinematics::two_body_decay(const marley::Particle& initial_particle
   double cos_theta_first, double phi_first)
 {
   // Get the masses of all three particles
-  double M = initial_particle.get_mass();
-  double mfirst = first_product.get_mass();
-  double msecond = second_product.get_mass();
+  double M = initial_particle.mass();
+  double mfirst = first_product.mass();
+  double msecond = second_product.mass();
 
   // Check to make sure the decay is kinematically allowed
   if (M < mfirst + msecond) throw marley::Error(std::string("A two-body")
@@ -130,10 +130,10 @@ void marley::Kinematics::two_body_decay(const marley::Particle& initial_particle
 
   // Compute the parameters needed to boost these particles
   // from the initial particle's rest frame into the lab frame
-  double E_i = initial_particle.get_total_energy();
-  double px_i = initial_particle.get_px();
-  double py_i = initial_particle.get_py();
-  double pz_i = initial_particle.get_pz();
+  double E_i = initial_particle.total_energy();
+  double px_i = initial_particle.px();
+  double py_i = initial_particle.py();
+  double pz_i = initial_particle.pz();
 
   // Boost in the opposite direction (this gives us the minus signs below) from
   // the 3-momentum of rest_frame_particle. This takes the null 3-vector to the
@@ -153,10 +153,10 @@ void marley::Kinematics::two_body_decay(const marley::Particle& initial_particle
 double marley::Kinematics::get_mandelstam_s(const marley::Particle& p1,
   const marley::Particle& p2)
 {
-  double E1 = p1.get_total_energy();
-  double m1 = p1.get_mass();
-  double E2 = p2.get_total_energy();
-  double m2 = p2.get_mass();
+  double E1 = p1.total_energy();
+  double m1 = p1.mass();
+  double E2 = p2.total_energy();
+  double m2 = p2.mass();
 
   // If one of the particles is at rest, use a shortcut. Otherwise,
   // Lorentz transform to the center of momentum frame to determine
@@ -166,9 +166,9 @@ double marley::Kinematics::get_mandelstam_s(const marley::Particle& p1,
   else {
     // Get total energy, momentum, and mass values for the two particles
     double E_tot = E1 + E2;
-    double px_tot = p1.get_px() + p2.get_px();
-    double py_tot = p1.get_py() + p2.get_py();
-    double pz_tot = p1.get_pz() + p2.get_pz();
+    double px_tot = p1.px() + p2.px();
+    double py_tot = p1.py() + p2.py();
+    double pz_tot = p1.pz() + p2.pz();
     double m_tot = m1 + m2;
 
     // Get boost parameters for a Lorentz transform to the center of momentum
