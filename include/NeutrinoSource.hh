@@ -17,10 +17,10 @@ namespace marley {
   /// density function used to sample neutrino energies for each event. Because
   /// MARLEY will weight this probability density by the reaction cross
   /// section(s) during event generation, all NeutrinoSource objects should use
-  /// <i>unweighted</i> energy spectra. While normalizing the probability densities
-  /// to unity is not strictly required (the cross section weighted spectra are
-  /// normalized automatically before sampling), it is encouraged, and all
-  /// classes derived from NeutrinoSource currently do so.
+  /// <i>unweighted</i> energy spectra. While normalizing the probability
+  /// densities to unity is not strictly required (the cross section weighted
+  /// spectra are normalized automatically before sampling), it is encouraged,
+  /// and all classes derived from NeutrinoSource currently do so.
   class NeutrinoSource {
     public:
 
