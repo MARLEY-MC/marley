@@ -1,55 +1,55 @@
 #pragma once
-#include <iostream>
 #include <string>
 
 #include "Error.hh"
 
 namespace marley {
 
-  // Class that represents a parity value (either +1 or -1) in a type-safe way
+  /// @brief Type-safe representation of a parity value (either +1 or -1)
   class Parity {
+
     public:
-      // Default constructor chooses positive parity
-      inline Parity() : is_positive(true) {}
 
-      inline explicit Parity(bool is_pos) { is_positive = is_pos; }
+      /// @brief Default constructor chooses positive parity
+      inline Parity() : is_positive_(true) {}
 
+      /// @brief Create a Parity object from a boolean value
+      /// @param is_positive Boolean parameter that is true for +1,
+      /// or false for -1.
+      inline explicit Parity(bool is_positive)
+        : is_positive_(is_positive) {}
+
+      /// @brief Create a Parity object from an integer
+      /// @details If an int value other than +1 or -1 is passed to this
+      /// constructor, a marley::Error will be thrown.
       inline explicit Parity(int i) {
-        if (i == 1) is_positive = true;
-        else if (i == -1) is_positive = false;
+        if (i == 1) is_positive_ = true;
+        else if (i == -1) is_positive_ = false;
         else throw marley::Error(std::string("Invalid parity ")
           + std::to_string(i) + " passed to constructor of marley::Parity");
       }
 
-      // Copy constructor
-      inline Parity(const marley::Parity& p) { is_positive = p.is_positive; }
+      /// @brief Convert the Parity object to a bool (true for +1, false for -1)
+      inline explicit operator bool() const { return is_positive_; }
 
-      inline explicit operator bool() const { return is_positive; }
-
-      // The minus unary operator creates a copy of a parity
-      // object with a flipped value
+      /// @brief Creates a copy of the Parity object with a flipped value
       inline marley::Parity operator-() const {
-        return marley::Parity(!is_positive);
+        return marley::Parity(!is_positive_);
       }
 
-      // The not unary operator flips a parity value in place
+      /// @brief Unary operator that flips a Parity value in place
       inline Parity& operator!() {
-        is_positive = !is_positive;
+        is_positive_ = !is_positive_;
         return *this;
       }
 
-      inline marley::Parity& operator=(const marley::Parity& p) {
-        // Do the copy
-        is_positive = p.is_positive;
-
-        // Return the existing object
-        return *this;
-      }
-
+      /// @brief Assigns a parity value using an integer
+      /// @details If an int value other than +1 or -1 is used, a marley::Error
+      /// will be thrown.
       inline marley::Parity& operator=(const int& i) {
         // Do the assignment
-        if (i == 1) is_positive = true;
-        else if (i == -1) is_positive = false;
+        if (i == 1) is_positive_ = true;
+        else if (i == -1) is_positive_ = false;
         else throw marley::Error(std::string("Invalid parity ")
           + std::to_string(i) + " assigned to variable of type marley::Parity");
 
@@ -59,40 +59,42 @@ namespace marley {
 
       inline bool operator==(const marley::Parity& p) const
       {
-        return is_positive == p.is_positive;
+        return is_positive_ == p.is_positive_;
       }
 
       inline bool operator!=(const marley::Parity& p) const
       {
-        return is_positive != p.is_positive;
+        return is_positive_ != p.is_positive_;
       }
 
       inline marley::Parity operator*(const marley::Parity& p) const
       {
-        return marley::Parity(is_positive == p.is_positive);
+        return marley::Parity(is_positive_ == p.is_positive_);
       }
 
       inline int operator*(const int& i) const
       {
-        if (is_positive) return i;
+        if (is_positive_) return i;
         else return -i;
       }
 
       // Allows explicit casts of marley::Parity to int
       inline explicit operator int() const {
-        if (is_positive) return 1;
+        if (is_positive_) return 1;
         else return -1;
       }
 
-      // Converts the parity to a char
+      /// @brief Convert the Parity object to a char
       inline char to_char() const {
-        if (is_positive) return '+';
+        if (is_positive_) return '+';
         else return '-';
       }
 
-    private:
-      // Boolean value that is true when the parity is +1 and false when it is -1
-      bool is_positive;
+    protected:
+
+      /// @brief Boolean representation of the parity value that is true when
+      /// the parity is +1 and false when it is -1.
+      bool is_positive_;
   };
 
 }

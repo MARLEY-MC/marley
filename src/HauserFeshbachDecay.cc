@@ -608,7 +608,7 @@ void marley::HauserFeshbachDecay::print(std::ostream& out) const {
   out << "Total width = " << total_width_ / two_pi_rho << " MeV\n";
   out << "Mean lifetime = " << hbar / (total_width_ / two_pi_rho) << " s\n";
   for (const auto& ec : exit_channels_) {
-    double width = ec->get_width() / two_pi_rho;
+    double width = ec->width() / two_pi_rho;
     bool continuum = ec->is_continuum();
     bool frag = ec->emits_fragment();
     if (continuum) {
