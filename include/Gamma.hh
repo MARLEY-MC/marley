@@ -1,41 +1,78 @@
 #pragma once
-#include <iostream>
-
 #include "IteratorToMember.hh"
 
 namespace marley {
 
   class Level;
 
+  /// @brief A gamma-ray transition between two nuclear levels
   class Gamma {
+
     public:
-      Gamma(double energy = 0, double ri = 0,
-        marley::Level* start_level = nullptr);
-      void set_start_level(marley::Level* start_level);
-      void set_end_level(marley::Level* end_level);
-      marley::Level* get_end_level() const;
-      marley::Level* get_start_level() const;
-      double get_energy() const;
-      double get_ri() const;
 
-      // Convert an iterator that points to this marley::Gamma object into an
-      // iterator to the gamma's relative intensity member variable. This is
-      // used to load the discrete distribution in the marley::Level object
-      // with the intensities of the gammas that it owns without redundant
-      // storage.
-      template<typename It> static inline
-        marley::IteratorToMember<It, marley::Gamma, double>
-        make_intensity_iterator(It it)
-      {
-        return marley::IteratorToMember<It, marley::Gamma, double>(it,
-          &marley::Gamma::fRI);
-      }
+      /// @param energy Energy of the emitted &gamma;-ray (MeV)
+      /// @param rel_intensity Relative intensity of this transition
+      /// @param start_lev Pointer to the Level that de-excites
+      /// by emitting this &gamma;-ray
+      Gamma(double energy = 0., double rel_intensity = 0.,
+        marley::Level* start_lev = nullptr, marley::Level* end_lev = nullptr);
 
-    private:
-      double fEnergy;
-      double fRI;
-      marley::Level* pStartLevel;
-      marley::Level* pEndLevel;
+      /// @brief Get a pointer to the Level that emits this &gamma;-ray
+      inline marley::Level* start_level() const;
+
+      /// @brief Set the Level that emits this &gamma;-ray
+      inline void set_start_level(marley::Level* start_lev);
+
+      /// @brief Get a pointer to the Level that absorbs this &gamma;-ray
+      inline marley::Level* end_level() const;
+
+      /// @brief Set the Level that abosrbs this &gamma;-ray
+      inline void set_end_level(marley::Level* end_lev);
+
+      /// @brief Get the energy of the emitted &gamma;-ray (MeV)
+      inline double energy() const;
+
+      /// @brief Get the relative intensity for this transition
+      inline double relative_intensity() const;
+
+      /// @brief Convert an iterator that points to a Gamma object into an
+      /// iterator that points to the Gamma's relative_intensity_ member
+      /// variable.
+      /// @details This function is used to load the std::discrete_distribution
+      /// in the starting Level object with the intensities of the gammas that
+      /// it owns without redundant storage.
+      template<typename It> inline static marley::IteratorToMember<It,
+        marley::Gamma, double> make_intensity_iterator(It it);
+
+    protected:
+
+      double energy_; ///< Energy of the emitted gamma (MeV)
+      double relative_intensity_; ///< Relative intensity of the transition
+
+      /// @brief Pointer to the Level that emits this &gamma;-ray
+      marley::Level* start_level_;
+
+      /// @brief Pointer to the Level that absorbs this &gamma;-ray
+      marley::Level* end_level_;
   };
 
+  // Inline function definitions
+  inline marley::Level* Gamma::start_level() const { return start_level_; }
+  inline void Gamma::set_start_level(marley::Level* start_lev)
+    { start_level_ = start_lev; }
+
+  inline marley::Level* Gamma::end_level() const { return end_level_; }
+  inline void Gamma::set_end_level(marley::Level* end_lev)
+    { end_level_ = end_lev; }
+
+  inline double Gamma::energy() const { return energy_; }
+  inline double Gamma::relative_intensity() const
+    { return relative_intensity_; }
+
+  template<typename It> inline marley::IteratorToMember<It,
+    marley::Gamma, double> Gamma::make_intensity_iterator(It it)
+  {
+    return marley::IteratorToMember<It, marley::Gamma, double>(it,
+      &marley::Gamma::relative_intensity_);
+  }
 }

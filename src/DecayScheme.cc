@@ -80,16 +80,16 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
       cascade_finished = true;
     }
     else {
-      p_current_level = p_gamma->get_end_level();
+      p_current_level = p_gamma->end_level();
       if (p_current_level == nullptr) {
         throw marley::Error(std::string("This gamma does not have an end level. ")
           + "Cannot continue cascade.");
       }
       LOG_DEBUG() << std::setprecision(15) << std::scientific
         << "  emitted gamma with energy "
-        << p_gamma->get_energy() << " MeV. New level has energy "
+        << p_gamma->energy() << " MeV. New level has energy "
         << p_current_level->get_energy() << " MeV.";
-      LOG_DEBUG() << "gamma energy = " << p_gamma->get_energy();
+      LOG_DEBUG() << "gamma energy = " << p_gamma->energy();
 
       // Get the excitation energy of the end level. This will be added to
       // the ground state mass of the nucleus to determine its
@@ -389,7 +389,7 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
 
     for(marley::Gamma& g : gammas) {
 
-      double gamma_energy = g.get_energy();
+      double gamma_energy = g.energy();
 
       // Approximate the final level energy so we can search for the final level
       double final_level_energy = initial_level_energy - gamma_energy;
@@ -613,10 +613,11 @@ void marley::DecayScheme::print_report(std::ostream& ostr) const {
     // sorted in order of increasing energy)
     for(auto& k : gammas)
     {
-      ostr << "  has a gamma with energy " << k.get_energy() << " MeV";
+      ostr << "  has a gamma with energy " << k.energy() << " MeV";
       ostr << " (transition to level at "
-        << k.get_end_level()->get_energy() << " MeV)" << std::endl;
-      ostr << "    and relative photon intensity " << k.get_ri() << std::endl;
+        << k.end_level()->get_energy() << " MeV)" << std::endl;
+      ostr << "    and relative photon intensity " << k.relative_intensity()
+        << std::endl;
     }
 
   }
@@ -683,9 +684,9 @@ void marley::DecayScheme::print_latex_table(std::ostream& ostr) {
       // for the level energy and spin-parity
       if (k != gammas.begin()) ostr << " & & ";
       // Output information about the current gamma
-      ostr << k->get_energy() << " & "
-        << k->get_ri() << " & "
-        << k->get_end_level()->get_energy();
+      ostr << k->energy() << " & "
+        << k->relative_intensity() << " & "
+        << k->end_level()->get_energy();
       // Add vertical space after the final gamma row. Also prevent page breaks
       // in the middle of a list of gammas by outputting a star at the end of
       // each row except the final gamma row.
@@ -770,11 +771,11 @@ std::ostream& operator<< (std::ostream& out,
       << l->get_parity() << " " << l->has_gammas()
       << " " << l->get_gammas().size() << std::endl;
     for (auto& g : l->get_gammas()) {
-      out << "    " << g.get_energy() << " " << g.get_ri();
+      out << "    " << g.energy() << " " << g.relative_intensity();
       std::vector<marley::Level*>::const_iterator pv_end
         = ds.pv_sorted_levels.cbegin() + i;
       std::vector<marley::Level*>::const_iterator cit
-        = std::find(ds.pv_sorted_levels.cbegin(), pv_end, g.get_end_level());
+        = std::find(ds.pv_sorted_levels.cbegin(), pv_end, g.end_level());
       int level_f_idx = -1;
       if (cit != pv_end) {
         level_f_idx = std::distance(ds.pv_sorted_levels.cbegin(), cit);
