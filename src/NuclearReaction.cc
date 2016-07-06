@@ -40,49 +40,49 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
   // TODO: consider changing this so that the description is automatically
   // generated from the particle IDs rather than entered into the reaction
   // data file by hand.
-  description = line;
+  description_ = line;
 
   // Move on to the next non-comment line
   line = marley_utils::get_next_line(file_in, rx_comment, false);
 
   // Read in the particle IDs
   std::istringstream iss(line);
-  iss >> pid_a >> pid_b >> pid_c >> pid_d >> q_d;
+  iss >> pdg_a_ >> pdg_b_ >> pdg_c_ >> pdg_d_ >> q_d;
 
   // Get initial and final values of the nuclear
   // charge and mass number from the pids
-  Zi = (pid_b % 10000000)/10000;
-  Ai = (pid_b % 10000)/10;
-  Zf = (pid_d % 10000000)/10000;
-  Af = (pid_d % 10000)/10;
+  Zi = (pdg_b_ % 10000000)/10000;
+  Ai = (pdg_b_ % 10000)/10;
+  Zf = (pdg_d_ % 10000000)/10000;
+  Af = (pdg_d_ % 10000)/10;
 
   // Get the particle masses from the mass table
-  ma = marley::MassTable::get_particle_mass(pid_a);
-  mc = marley::MassTable::get_particle_mass(pid_c);
+  ma_ = marley::MassTable::get_particle_mass(pdg_a_);
+  mc_ = marley::MassTable::get_particle_mass(pdg_c_);
 
   // If the target (particle b) or residue (particle d)
   // has a particle ID greater than 10^9, assume that it
   // is an atom rather than a bare nucleus
-  if (pid_b > 1000000000) {
-    mb = marley::MassTable::get_atomic_mass(pid_b);
+  if (pdg_b_ > 1000000000) {
+    mb_ = marley::MassTable::get_atomic_mass(pdg_b_);
   }
   else {
-    mb = marley::MassTable::get_particle_mass(pid_b);
+    mb_ = marley::MassTable::get_particle_mass(pdg_b_);
   }
 
-  if (pid_d > 1000000000) {
+  if (pdg_d_ > 1000000000) {
     // If particle d is an atom and is ionized as a result of this reaction
     // (e.g., q_d != 0), then approximate its ground-state ionized mass by
     // subtracting the appropriate number of electron masses from its atomic
     // (i.e., neutral) ground state mass.
-    md_gs = marley::MassTable::get_atomic_mass(pid_d)
+    md_gs = marley::MassTable::get_atomic_mass(pdg_d_)
       - (q_d * marley::MassTable::get_particle_mass(marley_utils::ELECTRON));
   }
   else {
-    md_gs = marley::MassTable::get_particle_mass(pid_d);
+    md_gs = marley::MassTable::get_particle_mass(pdg_d_);
   }
 
-  Ea_threshold = ((mc + md_gs)*(mc + md_gs) - ma*ma - mb*mb)/(2*mb);
+  Ea_threshold = ((mc_ + md_gs)*(mc_ + md_gs) - ma_*ma_ - mb_*mb_)/(2*mb_);
 
   // Read in all of the level energy (MeV), squared matrix element (B(F) or
   // B(GT) strength), and matrix element type identifier (0 represents
@@ -126,9 +126,9 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
   if (scheme != nullptr) set_decay_scheme(scheme);
 
   // Precompute these squared masses for speed
-  ma2 = std::pow(ma, 2);
-  mb2 = std::pow(mb, 2);
-  mc2 = std::pow(mc, 2);
+  ma2_ = std::pow(ma_, 2);
+  mb2_ = std::pow(mb_, 2);
+  mc2_ = std::pow(mc_, 2);
 }
 
 // Associate a decay scheme object with this reaction. This will provide
@@ -213,8 +213,8 @@ double marley::NuclearReaction::fermi_function(double beta_c) {
   // Don't bother to calculate anything if the light product from
   // this reaction (particle c) is not an electron nor a positron.
   // This situation occurs for neutral current reactions, for example.
-  bool electron = (pid_c == marley_utils::ELECTRON);
-  if (!electron && pid_c != marley_utils::POSITRON) return 1.;
+  bool electron = (pdg_c_ == marley_utils::ELECTRON);
+  if (!electron && pdg_c_ != marley_utils::POSITRON) return 1.;
 
   // Lorentz factor gamma for particle c
   double gamma_c = std::pow(1 - beta_c*beta_c, -marley_utils::ONE_HALF);
@@ -237,7 +237,7 @@ double marley::NuclearReaction::fermi_function(double beta_c) {
   std::complex<double> a(s, eta);
   double b = std::tgamma(1+2*s);
 
-  return 2 * (1 + s) * std::pow(2*beta_c*gamma_c*rho*mc, 2*s-2)
+  return 2 * (1 + s) * std::pow(2*beta_c*gamma_c*rho*mc_, 2*s-2)
     * std::exp(marley_utils::pi*eta) * std::norm(marley_utils::gamma(a))
     / std::pow(b, 2);
 }
@@ -266,13 +266,13 @@ double marley::NuclearReaction::fermi_approx(int Z, double E, bool electron){
 double marley::NuclearReaction::max_level_energy(double Ea) {
   // Calculate the total CM frame energy using known quantities
   // from the lab frame
-  double E_CM = std::sqrt(ma*ma + mb*mb + 2*mb*Ea);
+  double E_CM = std::sqrt(ma_*ma_ + mb_*mb_ + 2*mb_*Ea);
   // The maximum level energy is achieved when the final state
   // particles are produced at rest in the CM frame. Subtracting
   // the ground-state rest masses of particles c and d from the
   // total CM energy leaves us with the energy available to create
   // an excited level in the residue (particle d).
-  return E_CM - mc - md_gs;
+  return E_CM - mc_ - md_gs;
 }
 
 double marley::NuclearReaction::get_threshold_energy() {
@@ -281,15 +281,15 @@ double marley::NuclearReaction::get_threshold_energy() {
 
 // Creates an event object by sampling the appropriate
 // quantities and performing kinematic calculations
-marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea,
+marley::Event marley::NuclearReaction::create_event(int pdg_a, double Ea,
   marley::Generator& gen)
 {
   // Check that the projectile supplied to this event is correct. If not, alert
   // the user that this event does not use the requested projectile.
-  if (particle_id_a != pid_a) throw marley::Error(std::string("Could")
+  if (pdg_a != pdg_a_) throw marley::Error(std::string("Could")
     + " not create this event. The requested projectile particle ID, "
-    + std::to_string(particle_id_a) + ", does not match the projectile"
-    + " particle ID, " + std::to_string(pid_a) + ", in the reaction dataset.");
+    + std::to_string(pdg_a) + ", does not match the projectile"
+    + " particle ID, " + std::to_string(pdg_a_) + ", in the reaction dataset.");
 
   // Sample a final residue energy level. First, check to make sure the given
   // projectile energy is above threshold for this reaction.
@@ -354,7 +354,8 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
       // automatically normalizes the weights, so we don't have to do that ourselves.
       xs = total_xs(level_energy, Ea, matrix_el);
       if (std::isnan(xs)) {
-        LOG_WARNING() << "Partial cross section for reaction " << description << " gave NaN result.";
+        LOG_WARNING() << "Partial cross section for reaction " << description_
+          << " gave NaN result.";
         LOG_DEBUG() << "Parameters were level energy = " << level_energy << " MeV, projectile energy = " << Ea
           << " MeV, and matrix element = " << matrix_el;
         LOG_DEBUG() << "The partial cross section to this level will be set to zero for this event.";
@@ -495,13 +496,13 @@ marley::Event marley::NuclearReaction::create_event(int particle_id_a, double Ea
 
 // Compute the total reaction cross section (including all final nuclear levels)
 // in units of MeV^(-2) using the center of mass frame.
-double marley::NuclearReaction::total_xs(int particle_id_a, double Ea) {
+double marley::NuclearReaction::total_xs(int pdg_a, double Ea) {
 
   // Check that the projectile supplied to this event is correct. If not,
   // return a total cross section of zero since this reaction is not available
   // for the given projectile.
   // TODO: consider whether you should use an exception here instead.
-  if (particle_id_a != pid_a) return 0.;
+  if (pdg_a != pdg_a_) return 0.;
 
   double max_E_level = max_level_energy(Ea);
   double xs = 0;
@@ -527,24 +528,21 @@ double marley::NuclearReaction::total_xs(int particle_id_a, double Ea) {
     // computing the total xs.
     double matrix_el = residue_level_strengths[i];
 
-    if (matrix_el == 0) {
-      xs += 0;
-    }
-    else {
+    if (matrix_el != 0.) {
       // If the matrix element is nonzero, assign a weight to this level equal
       // to the total reaction cross section. Note that std::discrete_distribution
       // automatically normalizes the weights, so we don't have to do that ourselves.
       double md2 = std::pow(md_gs + level_energy, 2);
 
       // Compute Mandelstam s (the square of the total CM frame energy)
-      double s = ma2 + mb2 + 2 * mb * Ea;
+      double s = ma2_ + mb2_ + 2 * mb_ * Ea;
       double sqrt_s = std::sqrt(s);
 
       // Compute CM frame energies for two of the particles. Also
       // compute the ejectile CM frame momentum.
-      double Eb_cm = (s + mb2 - ma2) / (2 * sqrt_s);
-      double Ec_cm = (s + mc2 - md2) / (2 * sqrt_s);
-      double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2);
+      double Eb_cm = (s + mb2_ - ma2_) / (2 * sqrt_s);
+      double Ec_cm = (s + mc2_ - md2) / (2 * sqrt_s);
+      double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2_);
       double beta_c_cm = pc_cm / Ec_cm;
 
       xs += fermi_function(beta_c_cm) * matrix_el * pc_cm * Ec_cm
@@ -556,7 +554,7 @@ double marley::NuclearReaction::total_xs(int particle_id_a, double Ea) {
   // reaction. For now, we determine that by asking whether the light product
   // (particle c) is an electron or a positron. If it is neither, we don't
   // multiply by marley_utils::Vud^2.
-  if (pid_c == marley_utils::ELECTRON || pid_c == marley_utils::POSITRON) {
+  if (pdg_c_ == marley_utils::ELECTRON || pdg_c_ == marley_utils::POSITRON) {
     xs *= std::pow(marley_utils::Vud, 2);
   }
 
@@ -570,19 +568,19 @@ double marley::NuclearReaction::total_xs(double E_level, double Ea,
   double matrix_element)
 {
   // Don't bother to compute anything if the matrix element vanishes for this level
-  if (matrix_element == 0) return 0;
+  if (matrix_element == 0.) return 0.;
   else {
     double md2 = std::pow(md_gs + E_level, 2);
 
     // Compute Mandelstam s (the square of the total CM frame energy)
-    double s = ma2 + mb2 + 2 * mb * Ea;
+    double s = ma2_ + mb2_ + 2 * mb_ * Ea;
     double sqrt_s = std::sqrt(s);
 
     // Compute CM frame energies for two of the particles. Also
     // compute the ejectile CM frame momentum.
-    double Eb_cm = (s + mb2 - ma2) / (2 * sqrt_s);
-    double Ec_cm = (s + mc2 - md2) / (2 * sqrt_s);
-    double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2);
+    double Eb_cm = (s + mb2_ - ma2_) / (2 * sqrt_s);
+    double Ec_cm = (s + mc2_ - md2) / (2 * sqrt_s);
+    double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2_);
     double beta_c_cm = pc_cm / Ec_cm;
 
     return fermi_function(beta_c_cm) * matrix_element * pc_cm * Ec_cm

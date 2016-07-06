@@ -24,7 +24,7 @@ namespace marley {
       double get_threshold_energy();
       // Total reaction cross section (in MeV^(-2)), including all final nuclear
       // levels, for an incident projectile with lab-frame total energy Ea
-      virtual double total_xs(int particle_id_a, double Ea);
+      virtual double total_xs(int pdg_a, double Ea);
       void set_decay_scheme(marley::DecayScheme* scheme);
       marley::Event create_event(int particle_id_a, double Ea,
         marley::Generator& gen);
