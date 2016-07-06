@@ -3,9 +3,12 @@
 
 // Performs kinematics calculations for a two-two scattering reaction
 // (a + b -> c + d)
-void marley::Reaction::two_two_scatter(double Ea, double& s, double& Ec_cm,
+void marley::Reaction::two_two_scatter(double KEa, double& s, double& Ec_cm,
   double& pc_cm, double& Ed_cm)
 {
+  // Get the lab-frame total energy of the projectile
+  double Ea = KEa + ma_;
+
   // Compute Mandelstam s (the square of the total CM frame energy)
   s = ma2_ + mb2_ + 2 * mb_ * Ea;
   double sqrt_s = std::sqrt(s);
@@ -21,7 +24,7 @@ void marley::Reaction::two_two_scatter(double Ea, double& s, double& Ec_cm,
   Ed_cm = std::max(sqrt_s - Ec_cm, md_);
 }
 
-marley::Event marley::Reaction::make_event_object(double Ea,
+marley::Event marley::Reaction::make_event_object(double KEa,
   double pc_cm, double cos_theta_c_cm, double phi_c_cm,
   double Ec_cm, double Ed_cm, double E_level)
 {
@@ -33,20 +36,24 @@ marley::Event marley::Reaction::make_event_object(double Ea,
   double pc_cm_y = sin_theta_c_cm * std::sin(phi_c_cm) * pc_cm;
   double pc_cm_z = cos_theta_c_cm * pc_cm;
 
-  // Determine the magnitude of the lab-frame 3-momentum of the projectile
-  double pa = marley_utils::real_sqrt(std::pow(Ea, 2) - ma2_);
+  // Get the lab-frame total energy of the projectile
+  double Ea = KEa + ma_;
 
-  // Create particle objects representing the projectile and target in the lab frame
-  // TODO: edit this to allow for projectile directions other than along the z-axis
+  // Determine the magnitude of the lab-frame 3-momentum of the projectile
+  double pa = marley_utils::real_sqrt(KEa*(KEa + 2*ma_));
+
+  // Create particle objects representing the projectile and target in the lab
+  // frame
+  // @todo Allow for projectile directions other than along the z-axis
   marley::Particle projectile(pdg_a_, Ea, 0, 0, pa, ma_);
   marley::Particle target(pdg_b_, mb_, 0, 0, 0, mb_);
 
-  // Create particle objects representing the ejectile and residue in the CM frame.
+  // Create particle objects representing the ejectile and residue in the CM
+  // frame.
   marley::Particle ejectile(pdg_c_, Ec_cm, pc_cm_x, pc_cm_y, pc_cm_z, mc_);
   marley::Particle residue(pdg_d_, Ed_cm, -pc_cm_x, -pc_cm_y, -pc_cm_z, md_);
 
   // Boost the ejectile and residue into the lab frame.
-  // TODO: edit this to allow for projectile directions other than along the z-axis
   double beta_z = pa / (Ea + mb_);
   marley::Kinematics::lorentz_boost(0, 0, -beta_z, ejectile);
   marley::Kinematics::lorentz_boost(0, 0, -beta_z, residue);
