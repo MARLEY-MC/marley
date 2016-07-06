@@ -42,7 +42,7 @@ void marley::Level::clear_gammas() {
   update_gamma_distribution();
 }
 
-std::string marley::Level::get_spin_parity_string() const {
+std::string marley::Level::spin_parity_string() const {
   std::string str = std::to_string(twoJ_ / 2);
   // If 2*J is odd, then the level has half-integer spin
   if (twoJ_ % 2) str += "/2";

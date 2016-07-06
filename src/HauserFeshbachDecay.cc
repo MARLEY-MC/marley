@@ -115,7 +115,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
       // Use the maximum discrete level energy from the decay scheme object as the
       // lower bound for the continuum
       // TODO: consider whether this is the best approach
-      if (sorted_lps.size() > 0) E_c_min = sorted_lps.back()->get_energy();
+      if (sorted_lps.size() > 0) E_c_min = sorted_lps.back()->energy();
 
       // Loop over the final discrete nuclear levels in order of increasing energy
       // until the new level energy exceeds the maximum value. For each
@@ -123,12 +123,12 @@ void marley::HauserFeshbachDecay::build_exit_channels()
       // orbital angular momentum l and total angular momentum j conserves parity,
       // then compute an optical model transmission coefficient and add it to the total.
       for (const auto& level : sorted_lps) {
-        double Exf = level->get_energy();
+        double Exf = level->energy();
         if (Exf < Exf_max) {
           double discrete_width = 0.;
           double Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
-          int twoJf = level->get_twoJ();
-          marley::Parity Pf = level->get_parity();
+          int twoJf = level->twoJ();
+          marley::Parity Pf = level->parity();
           for (int two_j = std::abs(twoJi_ - twoJf); two_j <= twoJi_ + twoJf;
             two_j += 2)
           {
@@ -215,15 +215,15 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     // Use the maximum discrete level energy from the decay scheme object as the
     // lower bound for the continuum.
     // TODO: consider whether this is the best approach
-    if (sorted_lps.size() > 0) E_c_min = sorted_lps.back()->get_energy();
+    if (sorted_lps.size() > 0) E_c_min = sorted_lps.back()->energy();
 
     for (const auto& level_f : sorted_lps) {
-      int twoJf = level_f->get_twoJ();
+      int twoJf = level_f->twoJ();
       // 0->0 EM transitions aren't allowed due to angular momentum conservation
       // (photons are spin 1), so if the initial and final spins are zero, skip
       // ahead to the next final level.
       if (initial_spin_is_zero && twoJf == 0) continue;
-      double Exf = level_f->get_energy();
+      double Exf = level_f->energy();
       if (Exf < Exi_) {
         // Approximate the gamma energy by the energy difference between the two levels
         // TODO: consider adding a nuclear recoil correction here
@@ -314,8 +314,8 @@ bool marley::HauserFeshbachDecay::do_decay(double& Exf, int& twoJf,
 TrType marley::HauserFeshbachDecay::determine_gamma_transition_type(int twoJi,
   marley::Parity Pi, marley::Level* level_f, int& l)
 {
-  int twoJf = level_f->get_twoJ();
-  marley::Parity Pf = level_f->get_parity();
+  int twoJf = level_f->twoJ();
+  marley::Parity Pf = level_f->parity();
 
   return determine_gamma_transition_type(twoJi, Pi, twoJf, Pf, l);
 }
@@ -323,11 +323,11 @@ TrType marley::HauserFeshbachDecay::determine_gamma_transition_type(int twoJi,
 TrType marley::HauserFeshbachDecay::determine_gamma_transition_type(
   marley::Level* level_i, marley::Level* level_f, int& l)
 {
-  int twoJi = level_i->get_twoJ();
-  marley::Parity Pi = level_i->get_parity();
+  int twoJi = level_i->twoJ();
+  marley::Parity Pi = level_i->parity();
 
-  int twoJf = level_f->get_twoJ();
-  marley::Parity Pf = level_f->get_parity();
+  int twoJf = level_f->twoJ();
+  marley::Parity Pf = level_f->parity();
 
   return determine_gamma_transition_type(twoJi, Pi, twoJf, Pf, l);
 }
@@ -627,14 +627,14 @@ void marley::HauserFeshbachDecay::print(std::ostream& out) const {
         = dynamic_cast<marley::FragmentDiscreteExitChannel*>(ec.get());
       if (fdec) out << "  "
         << marley_utils::particle_symbols.at(fdec->get_fragment().get_pid())
-        << " emission to level at " << fdec->get_final_level().get_energy()
+        << " emission to level at " << fdec->get_final_level().energy()
         << " MeV width = " << width << " MeV\n";
     }
     else {
       const auto* gdec
         = dynamic_cast<marley::GammaDiscreteExitChannel*>(ec.get());
       if (gdec) out << "  gamma-ray emission to level at "
-        << gdec->get_final_level().get_energy() << " MeV width = "
+        << gdec->get_final_level().energy() << " MeV width = "
         << width << " MeV\n";
     }
   }

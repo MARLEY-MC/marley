@@ -183,7 +183,7 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
     marley::Level* plevel = ds->get_pointer_to_closest_level(en);
     LOG_DEBUG() << "reaction level at " << en
       << " MeV was matched to the decay scheme level at "
-      << plevel->get_energy() << " MeV";
+      << plevel->energy() << " MeV";
 
     // Complain if there are duplicates (if there are duplicates, we'll have
     // two different B(F) + B(GT) values for the same level object)
@@ -193,7 +193,7 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
       // residue_level_pointers already contains plevel
       throw marley::Error(std::string("Reaction dataset gives two")
         + " level energies that refer to the same DecayScheme level at "
-        + std::to_string(plevel->get_energy()) + " MeV");
+        + std::to_string(plevel->energy()) + " MeV");
     }
 
     /// @todo Add check to see if the energy of the chosen level is very
@@ -315,7 +315,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 
     // Get the excitation energy for the current level
     if (residue_level_pointers_[i] != nullptr) {
-      level_energy = residue_level_pointers_[i]->get_energy();
+      level_energy = residue_level_pointers_[i]->energy();
     }
     else {
       // Level is unbound, so just use the energy given in the reaction dataset
@@ -392,7 +392,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   // Get the energy of the selected level.
   double E_level;
   if (plevel != nullptr) {
-    E_level = plevel->get_energy();
+    E_level = plevel->energy();
   }
   else {
     // Level is unbound, so use the level energy found in the reaction dataset
@@ -503,7 +503,7 @@ double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
 
     // Get the excitation energy for the current level
     if (residue_level_pointers_[i] != nullptr) {
-      level_energy = residue_level_pointers_[i]->get_energy();
+      level_energy = residue_level_pointers_[i]->energy();
     }
     else {
       // Level is unbound, so just use the energy given in the reaction dataset

@@ -66,7 +66,7 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
   marley::Event* p_event, marley::Generator& gen, int qIon)
 {
   LOG_DEBUG() << "Beginning gamma cascade at level with energy "
-    << initial_level->get_energy() << " MeV";
+    << initial_level->energy() << " MeV";
 
   bool cascade_finished = false;
 
@@ -88,13 +88,13 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
       LOG_DEBUG() << std::setprecision(15) << std::scientific
         << "  emitted gamma with energy "
         << p_gamma->energy() << " MeV. New level has energy "
-        << p_current_level->get_energy() << " MeV.";
+        << p_current_level->energy() << " MeV.";
       LOG_DEBUG() << "gamma energy = " << p_gamma->energy();
 
       // Get the excitation energy of the end level. This will be added to
       // the ground state mass of the nucleus to determine its
       // post-gamma-emission mass.
-      double Exf = p_current_level->get_energy();
+      double Exf = p_current_level->energy();
 
       // Create new particle objects to represent the emitted gamma and
       // recoiling nucleus
@@ -127,7 +127,7 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
   }
 
   LOG_DEBUG() << "Finished gamma cascade at level with energy "
-    << p_current_level->get_energy();
+    << p_current_level->energy();
 }
 
 marley::DecayScheme::DecayScheme(int z, int a, std::string filename,
@@ -167,7 +167,7 @@ void marley::DecayScheme::assign_theoretical_RIs(marley::Level* level_i) {
   // Loop over the decay scheme's levels in ascending order of energy until you
   // reach the initial level.
   int l;
-  bool initial_spin_is_zero = level_i->get_twoJ() == 0;
+  bool initial_spin_is_zero = level_i->twoJ() == 0;
   for (auto level_f : pv_sorted_levels) {
 
     // If we've reached the initial level, end the loop
@@ -176,7 +176,7 @@ void marley::DecayScheme::assign_theoretical_RIs(marley::Level* level_i) {
     // 0->0 EM transitions aren't allowed due to angular momentum conservation
     // (photons are spin 1), so if the initial and final spins are zero, skip
     // ahead to the next final level.
-    if (initial_spin_is_zero && level_f->get_twoJ() == 0) continue;
+    if (initial_spin_is_zero && level_f->twoJ() == 0) continue;
 
     // Determine the type (electric or magnetic) and multipolarity of the gamma
     // transition between these two levels
@@ -185,7 +185,7 @@ void marley::DecayScheme::assign_theoretical_RIs(marley::Level* level_i) {
 
     // Approximate the gamma energy by the energy difference between the two levels
     // TODO: consider adding a nuclear recoil correction here
-    double e_gamma = level_i->get_energy() - level_f->get_energy();
+    double e_gamma = level_i->energy() - level_f->energy();
 
     // TODO: allow the user to choose which gamma-ray transition model to use
     // (Weisskopf single-particle estimates, Brink-Axel strength functions, etc.)
@@ -384,8 +384,8 @@ void marley::DecayScheme::parse_ensdf(std::string filename) {
       assign_theoretical_RIs(lev);
     }
 
-    std::vector<marley::Gamma>& gammas = lev->get_gammas();
-    double initial_level_energy = lev->get_energy();
+    std::vector<marley::Gamma>& gammas = lev->gammas();
+    double initial_level_energy = lev->energy();
 
     for(marley::Gamma& g : gammas) {
 
@@ -552,7 +552,7 @@ void marley::DecayScheme::parse_talys(std::string filename) {
         p_current_level->add_gamma(marley::Gamma(gamma_energy, br, p_current_level));
 
         // Get a pointer to the newly-created gamma ray object
-        marley::Gamma* p_current_gamma = &(p_current_level->get_gammas().back());
+        marley::Gamma* p_current_gamma = &(p_current_level->gammas().back());
 
         // Set the gamma ray's final level pointer to point to
         // the appropriate level object
@@ -596,17 +596,17 @@ void marley::DecayScheme::print_report(std::ostream& ostr) const {
   for(auto j : pv_sorted_levels)
   {
 
-    int twoj = j->get_twoJ();
+    int twoj = j->twoJ();
     std::string spin = std::to_string(twoj / 2);
     // If 2*J is odd, then the level has half-integer spin
     if (twoj % 2) spin += "/2";
-    marley::Parity parity = j->get_parity();
+    marley::Parity parity = j->parity();
 
     //if (sp.empty()) sp = "UNKNOWN";
 
-    ostr << "Level at " << j->get_energy()
+    ostr << "Level at " << j->energy()
 	 << " MeV has spin-parity " << spin << parity << std::endl;
-    std::vector<marley::Gamma>& gammas = j->get_gammas();
+    std::vector<marley::Gamma>& gammas = j->gammas();
 
     // Cycle through each of the gammas owned by the current level
     // (according to the ENSDF specification, these will already be
@@ -615,7 +615,7 @@ void marley::DecayScheme::print_report(std::ostream& ostr) const {
     {
       ostr << "  has a gamma with energy " << k.energy() << " MeV";
       ostr << " (transition to level at "
-        << k.end_level()->get_energy() << " MeV)" << std::endl;
+        << k.end_level()->energy() << " MeV)" << std::endl;
       ostr << "    and relative photon intensity " << k.relative_intensity()
         << std::endl;
     }
@@ -651,14 +651,14 @@ void marley::DecayScheme::print_latex_table(std::ostream& ostr) {
     j != pv_sorted_levels.end(); ++j)
   {
 
-    std::string sp = (*j)->get_spin_parity_string();
+    std::string sp = (*j)->spin_parity_string();
     //if (sp.empty()) sp = "?";
     //if (sp == "UNNATURAL") sp = "unnat.";
 
-    ostr << (*j)->get_energy() << " & "
+    ostr << (*j)->energy() << " & "
       << sp  << " & ";
 
-    std::vector<marley::Gamma>& gammas = (*j)->get_gammas();
+    std::vector<marley::Gamma>& gammas = (*j)->gammas();
 
     // If there aren't any gammas for this level, finish writing
     // the current row of the table. Add extra space between this
@@ -686,7 +686,7 @@ void marley::DecayScheme::print_latex_table(std::ostream& ostr) {
       // Output information about the current gamma
       ostr << k->energy() << " & "
         << k->relative_intensity() << " & "
-        << k->end_level()->get_energy();
+        << k->end_level()->energy();
       // Add vertical space after the final gamma row. Also prevent page breaks
       // in the middle of a list of gammas by outputting a star at the end of
       // each row except the final gamma row.
@@ -728,7 +728,7 @@ marley::Level* marley::DecayScheme::add_level(marley::Level level) {
   marley::Level* p_level = &levels.back();
 
   // Get this level's energy
-  double l_energy = p_level->get_energy();
+  double l_energy = p_level->energy();
 
   // Figure out where this level should go in the
   // vector of sorted level energies
@@ -767,10 +767,10 @@ std::ostream& operator<< (std::ostream& out,
   out << ds.Z << " " << ds.A << " " << num_levels << std::endl;
   for (size_t i = 0; i < num_levels; ++i) {
     marley::Level* l = ds.pv_sorted_levels.at(i);
-    out << "  " << l->get_energy() << " " << l->get_twoJ() << " "
-      << l->get_parity() << " " << l->has_gammas()
-      << " " << l->get_gammas().size() << std::endl;
-    for (auto& g : l->get_gammas()) {
+    out << "  " << l->energy() << " " << l->twoJ() << " "
+      << l->parity() << " " << l->has_gammas()
+      << " " << l->gammas().size() << std::endl;
+    for (auto& g : l->gammas()) {
       out << "    " << g.energy() << " " << g.relative_intensity();
       std::vector<marley::Level*>::const_iterator pv_end
         = ds.pv_sorted_levels.cbegin() + i;

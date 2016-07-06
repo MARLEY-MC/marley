@@ -19,23 +19,23 @@ namespace marley {
 
       /// @brief Retrieve a const reference to the vector of gamma rays owned
       /// by this level
-      inline const std::vector<marley::Gamma>& get_gammas() const;
+      inline const std::vector<marley::Gamma>& gammas() const;
 
       /// Retrieve a reference to the vector of gamma rays owned by this level
-      inline std::vector<marley::Gamma>& get_gammas();
+      inline std::vector<marley::Gamma>& gammas();
 
       /// Get the excitation energy of this level (MeV)
-      inline double get_energy() const;
+      inline double energy() const;
       /// Set the excitation energy of this level (MeV)
       inline void set_energy(double E);
 
       /// Get two times the level spin
-      inline int get_twoJ() const;
+      inline int twoJ() const;
       /// Set two times the level spin
       inline void set_twoJ(int twoJ);
 
       /// Get the level parity
-      inline marley::Parity get_parity() const;
+      inline marley::Parity parity() const;
       /// Set the level parity
       inline void set_parity(marley::Parity pi);
 
@@ -56,7 +56,7 @@ namespace marley {
       const marley::Gamma* sample_gamma(marley::Generator& gen);
 
       /// Returns the level spin-parity as a string
-      std::string get_spin_parity_string() const;
+      std::string spin_parity_string() const;
 
     private:
 
@@ -82,18 +82,18 @@ namespace marley {
   };
 
   // Inline function definitions
-  inline double Level::get_energy() const { return energy_; }
+  inline double Level::energy() const { return energy_; }
   inline void Level::set_energy(double E) { energy_ = E; }
 
-  inline int Level::get_twoJ() const { return twoJ_; }
+  inline int Level::twoJ() const { return twoJ_; }
   inline void Level::set_twoJ(int twoJ) { twoJ_ = twoJ; }
 
-  inline marley::Parity Level::get_parity() const { return parity_; }
+  inline marley::Parity Level::parity() const { return parity_; }
   inline void Level::set_parity(marley::Parity pi) { parity_ = pi; }
 
-  inline const std::vector<marley::Gamma>& Level::get_gammas() const
+  inline const std::vector<marley::Gamma>& Level::gammas() const
     { return gammas_; }
-  inline std::vector<marley::Gamma>& Level::get_gammas() { return gammas_; }
+  inline std::vector<marley::Gamma>& Level::gammas() { return gammas_; }
 
   inline bool Level::has_gammas() const { return gammas_.empty(); }
 }
