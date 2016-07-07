@@ -138,9 +138,11 @@ namespace marley {
         return streams;
       }
 
-      // Make the logger uncopyable
+      // Make the logger uncopyable and unmovable
       Logger(const Logger&) = delete;
       Logger& operator=(const Logger&) = delete;
+      Logger(Logger&&) = delete;
+      Logger& operator=(Logger&&) = delete;
 
     private:
 
@@ -153,18 +155,18 @@ namespace marley {
 
 }
 
-inline auto LOG_ERROR() {
+inline auto MARLEY_LOG_ERROR() {
   return marley::Logger::Instance().log(marley::Logger::LogLevel::ERROR);
 }
 
-inline auto LOG_WARNING() {
+inline auto MARLEY_LOG_WARNING() {
   return marley::Logger::Instance().log(marley::Logger::LogLevel::WARNING);
 }
 
-inline auto LOG_INFO() {
+inline auto MARLEY_LOG_INFO() {
   return marley::Logger::Instance().log(marley::Logger::LogLevel::INFO);
 }
 
-inline auto LOG_DEBUG() {
+inline auto MARLEY_LOG_DEBUG() {
   return marley::Logger::Instance().log(marley::Logger::LogLevel::DEBUG);
 }

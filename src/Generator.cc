@@ -22,10 +22,10 @@ void marley::Generator::init(marley::ConfigFile& cf) {
   // Create the reactions. Count them for later reference.
   size_t react_count = 0;
   for (const std::string& filename : cf.get_reaction_filenames()) {
-    LOG_INFO() << "Loading reaction data from file " << filename;
+    MARLEY_LOG_INFO() << "Loading reaction data from file " << filename;
     reactions.push_back(std::make_unique<marley::NuclearReaction>(filename,
       structure_db));
-    LOG_INFO() << "Added reaction " << reactions.back()->get_description();
+    MARLEY_LOG_INFO() << "Added reaction " << reactions.back()->get_description();
     ++react_count;
   }
 
