@@ -156,14 +156,13 @@ double marley::MassTable::get_fragment_separation_energy(int Z, int A, int pid,
   else return micro_amu_*extra_mass + m_atom_final - m_atom_initial;
 }
 
-// Implements the liquid drop model for computing nuclear mass excesses. Based
-// on the parameterization given in A. J. Koning, et al., Nucl. Phys. A 810
-// (2008) pp. 13-76 for use with the back-shifted Fermi gas nuclear level
-// density model. Returns a value in MeV.
+/// @details The liquid drop model parameters used here are based on those
+/// given in <a href="http://dx.doi.org/10.1016/j.nuclphysa.2008.06.005">A. J.
+/// Koning, et al., Nucl. Phys. A 810 (2008) pp. 13-76</a> for use with the
+/// back-shifted Fermi gas nuclear level density model.
 double marley::MassTable::liquid_drop_model_mass_excess(int Z, int A) const {
 
-  // Liquid drop model parameters (taken from A. J. Koning, et al., Nucl.
-  // Phys. A 810 (2008) pp. 13-76)
+  // Liquid drop model parameters (taken from paper by A. J. Koning, et al.)
   static constexpr double Mn = 8.07144; // MeV
   static constexpr double MH = 7.28899; // MeV
   static constexpr double a1 = 15.677; // MeV
