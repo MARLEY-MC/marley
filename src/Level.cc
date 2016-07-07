@@ -30,7 +30,20 @@ marley::Gamma& marley::Level::add_gamma(const marley::Gamma& gamma) {
   // Update the distribution for sampling gammas
   update_gamma_distribution();
 
-  // Return a pointer to the newly added gamma
+  // Return a reference to the newly added gamma
+  return gammas_.back();
+}
+
+marley::Gamma& marley::Level::add_gamma(double energy, double branching_ratio,
+  marley::Level* end_lev)
+{
+  // Update the vector of gamma objects
+  gammas_.emplace_back(energy, branching_ratio, this, end_lev);
+
+  // Update the distribution for sampling gammas
+  update_gamma_distribution();
+
+  // Return a reference to the newly added gamma
   return gammas_.back();
 }
 

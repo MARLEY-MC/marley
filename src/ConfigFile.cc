@@ -177,13 +177,12 @@ void marley::ConfigFile::parse() {
       next_word_from_line(arg);
       do {
         // If a numeric specifier is given for the nuclide,
-        // assume that it has the format Z*1000 + A, and
-        // create an ENSDF nucid accordingly
+        // assume that it has the format Z*1000 + A.
         if (std::regex_match(arg, rx_nonneg_int)) {
           int dummy = std::stoi(arg);
           int Z = dummy / 1000;
           int A = dummy % 1000;
-          sr.nucids.insert(marley_utils::nuc_id(Z, A));
+          sr.nucleus_pdg_codes.insert(marley_utils::get_nucleus_pid(Z, A));
         }
         // If the nuclide specifier matches the ENSDF-style
         // nucid format (A + element symbol without a
@@ -199,18 +198,21 @@ void marley::ConfigFile::parse() {
             // Split the string into "A" and "element name" pieces
             std::smatch m;
             std::regex_search(arg, m, rx_nonneg_int);
-            std::string z_str = m.str();
+            std::string a_str = m.str();
             std::string e_str = m.suffix().str();
 
             // Pad each piece so that it has the proper length based
             // on ENSDF conventions
-            if (z_str.size() < 3) marley_utils::pad_left_inplace(z_str, 3);
+            if (a_str.size() < 3) marley_utils::pad_left_inplace(a_str, 3);
             if (e_str.size() < 2) marley_utils::pad_right_inplace(e_str, 2);
-            arg = z_str + e_str;
+            arg = a_str + e_str;
           }
+          int Znuc = marley_utils::nucid_to_Z(arg);
+          int Anuc = std::stoi(arg.substr(0,3));
           // Add the nucid to the set of requested nucids
           // for this structure file
-          sr.nucids.insert(arg);
+          sr.nucleus_pdg_codes.insert(marley_utils::get_nucleus_pid(Znuc,
+            Anuc));
         }
         // Other nuclide specifiers are not allowed
         else throw marley::Error(std::string("Invalid")
@@ -699,8 +701,11 @@ void marley::ConfigFile::print_summary(std::ostream& os) {
     // TODO: consider using an ordered set that keeps the
     // nucids in periodic table order. This will make the
     // output here look nicer
-    for (const auto& id: sr.nucids) {
-      std::string trimmed_id = marley_utils::trim_copy(id);
+    for (const auto& pdg: sr.nucleus_pdg_codes) {
+      int Z = (pdg % 10000000)/10000;
+      int A = (pdg % 10000)/10;
+      std::string trimmed_id = marley_utils::trim_copy(
+        marley_utils::nuc_id(Z, A));
       // If the element symbol is not a single character,
       // then make its second letter lowercase. Also change
       // the ENSDF code for a neutron ("NN") to "n"
@@ -722,9 +727,7 @@ marley::DecayScheme::FileFormat
   marley::ConfigFile::string_to_format(
   const std::string& string)
 {
-  if (string == "ensdf")
-    return marley::DecayScheme::FileFormat::ensdf;
-  else if (string == "talys")
+  if (string == "talys")
     return marley::DecayScheme::FileFormat::talys;
   else throw marley::Error(std::string("Unrecognized file")
     + " format '" + string + "' passed to"
@@ -734,9 +737,7 @@ marley::DecayScheme::FileFormat
 std::string marley::ConfigFile::format_to_string(
   const marley::DecayScheme::FileFormat ff)
 {
-  if (ff == marley::DecayScheme::FileFormat::ensdf)
-    return std::string("ensdf");
-  else if (ff == marley::DecayScheme::FileFormat::talys)
+  if (ff == marley::DecayScheme::FileFormat::talys)
     return std::string("talys");
   else throw marley::Error(std::string("Unrecognized")
     + " marley::DecayScheme::FileFormat value passed to"

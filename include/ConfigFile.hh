@@ -21,7 +21,7 @@ namespace marley {
       struct StructureRecord {
         std::string filename;
         marley::DecayScheme::FileFormat format;
-        std::unordered_set<std::string> nucids;
+        std::unordered_set<int> nucleus_pdg_codes;
       };
 
       ConfigFile();

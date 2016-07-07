@@ -26,15 +26,16 @@ namespace marley {
       /// ConfigFile object
       StructureDatabase(const marley::ConfigFile& cf);
 
-      /// @brief Add discrete level data for a specific nuclide to the database
-      /// @param nucid ENSDF-style nuclide indentifier (e.g., "40K") for the
-      /// desired nuclide
-      /// @param ds DecayScheme object containing the discrete level data to be
-      /// added
-      void add_decay_scheme(const std::string nucid,
-        marley::DecayScheme ds);
+      /// @brief Construct and add a DecayScheme object to the database that
+      /// contains discrete level data for a specific nuclide
+      /// @param pdg PDG code for the desired nuclide
+      /// @param filename Name of the file that contains the discrete level data
+      /// @param format DecayScheme::FileFormat specifier that indicates
+      /// which nuclear data format is used in the file
+      void emplace_decay_scheme(int pdg, const std::string& filename,
+        DecayScheme::FileFormat format = DecayScheme::FileFormat::talys);
 
-      /// Removes all previously stored data from the database.
+      /// @brief Removes all previously stored data from the database.
       void clear();
 
       /// @brief Deletes the discrete level data in the database associated
@@ -42,20 +43,14 @@ namespace marley {
       /// @details If a decay scheme does not exist in the database for the
       /// requested nuclide, then this function will return without making any
       /// changes.
-      /// @param nucid ENSDF-style nuclide indentifier (e.g., "40Ar")
-      void remove_decay_scheme(const std::string nucid);
+      /// @param pdg PDG code for the nuclide to remove
+      void remove_decay_scheme(int pdg);
 
       /// @brief Retrieves discrete level data from the database
-      /// @param particle_id PDG particle ID for the desired nuclide
+      /// @param particle_id PDG code for the desired nuclide
       /// @return pointer to the requested nuclide's DecayScheme object,
       /// or nullptr if one could not be found
       marley::DecayScheme* get_decay_scheme(const int particle_id);
-
-      /// @brief Retrieves discrete level data from the database
-      /// @param nucid ENSDF-style nuclide identifier (e.g., "39Ar")
-      /// @return pointer to the requested nuclide's DecayScheme object,
-      /// or nullptr if one could not be found
-      marley::DecayScheme* get_decay_scheme(const std::string nucid);
 
       /// @brief Retrieves discrete level data from the database
       /// @param Z atomic number
@@ -85,20 +80,19 @@ namespace marley {
 
     private:
 
-      /// @brief Lookup table for marley::DecayScheme objects.
-      /// @details Keys are ENSDF-style nucIDs, values are decay schemes.
-      std::unordered_map<std::string, marley::DecayScheme> decay_scheme_table;
 
-      /// @brief Table for looking up decay schemes by PDG particle ID
-      std::unordered_map<int, marley::DecayScheme*> pid_decay_scheme_table;
+      /// @brief Lookup table for marley::DecayScheme objects.
+      /// @details Keys are PDG codes, values are unique_ptrs to decay schemes.
+      std::unordered_map<int, std::unique_ptr<marley::DecayScheme> >
+        decay_scheme_table;
 
       /// @brief Lookup table for marley::SphericalOpticalModel objects.
-      /// @details Keys are PDG particle IDs, values are optical models.
+      /// @details Keys are PDG codes, values are unique_ptrs to optical models.
       std::unordered_map<int, std::unique_ptr<marley::SphericalOpticalModel> >
         optical_model_table;
 
       /// @brief Lookup table for marley::LevelDensityModel objects.
-      /// @details Keys are PDG particle IDs, values are unique_ptrs to level
+      /// @details Keys are PDG codes, values are unique_ptrs to level
       /// density models.
       std::unordered_map<int, std::unique_ptr<marley::LevelDensityModel> >
         level_density_table;
