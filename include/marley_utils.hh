@@ -112,6 +112,24 @@ namespace marley_utils {
     else return 10000*Z + 10*A + 1000000000;
   }
 
+  inline int get_particle_Z(int pid) {
+    if (pid == marley_utils::PROTON) return 1;
+    else if (pid == marley_utils::NEUTRON) return 0;
+    // nuclear fragment
+    else if (pid > 1000000000) return (pid % 10000000)/10000;
+    // other particle
+    else return 0;
+  }
+
+  inline int get_particle_A(int pid) {
+    if (pid == marley_utils::PROTON) return 1;
+    else if (pid == marley_utils::NEUTRON) return 1;
+    // nuclear fragment
+    else if (pid > 1000000000) return (pid % 10000)/10;
+    // other particle
+    else return 0;
+  }
+
   // Take the square root of a number. Assume that a negative argument is
   // due to roundoff error and return zero in such cases rather than NaN.
   double real_sqrt(double num);

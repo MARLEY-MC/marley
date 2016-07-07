@@ -1,4 +1,5 @@
 #pragma once
+#include "marley_utils.hh"
 #include "MassTable.hh"
 #include "Parity.hh"
 
@@ -49,8 +50,8 @@ namespace marley {
 inline Fragment::Fragment(int pid, int twoS, marley::Parity pi)
   : pid_(pid), two_s_(twoS), parity_(pi)
 {
-  Z_ = marley::MassTable::get_particle_Z(pid);
-  A_ = marley::MassTable::get_particle_A(pid);
+  Z_ = marley_utils::get_particle_Z(pid);
+  A_ = marley_utils::get_particle_A(pid);
 }
 
 inline int Fragment::get_pid() const
@@ -69,6 +70,6 @@ inline int Fragment::get_A() const
   { return A_; }
 
 inline double Fragment::get_mass() const
-  { return marley::MassTable::get_particle_mass(pid_); }
+  { return marley::MassTable::Instance().get_particle_mass(pid_); }
 
 }

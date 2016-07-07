@@ -56,30 +56,28 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
   Zf_ = (pdg_d_ % 10000000)/10000;
   Af_ = (pdg_d_ % 10000)/10;
 
+  const marley::MassTable& mt = marley::MassTable::Instance();
+
   // Get the particle masses from the mass table
-  ma_ = marley::MassTable::get_particle_mass(pdg_a_);
-  mc_ = marley::MassTable::get_particle_mass(pdg_c_);
+  ma_ = mt.get_particle_mass(pdg_a_);
+  mc_ = mt.get_particle_mass(pdg_c_);
 
   // If the target (particle b) or residue (particle d)
   // has a particle ID greater than 10^9, assume that it
   // is an atom rather than a bare nucleus
-  if (pdg_b_ > 1000000000) {
-    mb_ = marley::MassTable::get_atomic_mass(pdg_b_);
-  }
-  else {
-    mb_ = marley::MassTable::get_particle_mass(pdg_b_);
-  }
+  if (pdg_b_ > 1000000000) mb_ = mt.get_atomic_mass(pdg_b_);
+  else mb_ = mt.get_particle_mass(pdg_b_);
 
   if (pdg_d_ > 1000000000) {
     // If particle d is an atom and is ionized as a result of this reaction
     // (e.g., q_d_ != 0), then approximate its ground-state ionized mass by
     // subtracting the appropriate number of electron masses from its atomic
     // (i.e., neutral) ground state mass.
-    md_gs_ = marley::MassTable::get_atomic_mass(pdg_d_)
-      - (q_d_ * marley::MassTable::get_particle_mass(marley_utils::ELECTRON));
+    md_gs_ = mt.get_atomic_mass(pdg_d_)
+      - (q_d_ * mt.get_particle_mass(marley_utils::ELECTRON));
   }
   else {
-    md_gs_ = marley::MassTable::get_particle_mass(pdg_d_);
+    md_gs_ = mt.get_particle_mass(pdg_d_);
   }
 
   KEa_threshold_ = (std::pow(mc_ + md_gs_, 2)
@@ -462,8 +460,8 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
       LOG_DEBUG() << second.pdg_code() << " is at Ex = " << Ex << " MeV.";
 
       residue = second;
-      Z = marley::MassTable::get_particle_Z(residue.pdg_code());
-      A = marley::MassTable::get_particle_A(residue.pdg_code());
+      Z = marley_utils::get_particle_Z(residue.pdg_code());
+      A = marley_utils::get_particle_A(residue.pdg_code());
       event.add_final_particle(first);
     }
   }

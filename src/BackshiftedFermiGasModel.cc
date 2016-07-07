@@ -22,9 +22,11 @@ marley::BackshiftedFermiGasModel::BackshiftedFermiGasModel(int Z, int A)
   // Damping parameter
   gamma_ = gamma_1 / A_third;
 
+  const marley::MassTable& mt = marley::MassTable::Instance();
+
   // Shell correction energy
-  delta_W_ = marley::MassTable::get_mass_excess(Z_, A_)
-    - marley::MassTable::liquid_drop_model_mass_excess(Z_, A_);
+  delta_W_ = mt.get_mass_excess(Z_, A_)
+    - mt.liquid_drop_model_mass_excess(Z_, A_);
 
   // Energy shift
   Delta_BFM_ = delta_global;
@@ -36,8 +38,7 @@ marley::BackshiftedFermiGasModel::BackshiftedFermiGasModel(int Z, int A)
 
   // Spin cut-off parameter
   sigma_d_global_ = 0.83*std::pow(A_, 0.26);
-  Sn_ = marley::MassTable::get_fragment_separation_energy(Z_, A_,
-    marley_utils::NEUTRON);
+  Sn_ = mt.get_fragment_separation_energy(Z_, A_, marley_utils::NEUTRON);
 }
 
 // rho(Ex, J, Pi) assuming equipartition of parity (the parameter Pi is unused)

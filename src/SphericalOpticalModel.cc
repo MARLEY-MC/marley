@@ -1,3 +1,4 @@
+#include "marley_utils.hh"
 #include "meta_numerics.hh"
 #include "Logger.hh"
 #include "SphericalOpticalModel.hh"
@@ -43,8 +44,8 @@ void marley::SphericalOpticalModel::calculate_om_parameters(double E,
   int fragment_pid, int two_j, int l, int two_s)
 {
   // Fragment atomic, mass, and neutron numbers
-  z = marley::MassTable::get_particle_Z(fragment_pid);
-  int a = marley::MassTable::get_particle_A(fragment_pid);
+  z = marley_utils::get_particle_Z(fragment_pid);
+  int a = marley_utils::get_particle_A(fragment_pid);
   int n = a - z;
 
   // Eigenvalue of the spin-orbit operator
@@ -209,10 +210,12 @@ marley::SphericalOpticalModel::SphericalOpticalModel(int Z, int a) {
   Vcbar_p = 1.73 * Z_ / Rc; // MeV
 
   // Compute and store reduced masses for all of the fragments of interest
-  double m_nucleus = marley::MassTable::get_atomic_mass(Z_, A_);
-  for (auto pid : marley::MassTable::get_fragment_pids()) {
-    double m_fragment = marley::MassTable::get_particle_mass(pid);
-    reduced_masses[pid] = (m_fragment * m_nucleus) / (m_fragment + m_nucleus);
+  const marley::MassTable& mt = marley::MassTable::Instance();
+  double m_nucleus = mt.get_atomic_mass(Z_, A_);
+  for (const auto& f : marley::HauserFeshbachDecay::get_fragments()) {
+    int pdg = f.get_pid();
+    double m_fragment = mt.get_particle_mass(pdg);
+    reduced_masses[pdg] = (m_fragment * m_nucleus) / (m_fragment + m_nucleus);
   }
 }
 

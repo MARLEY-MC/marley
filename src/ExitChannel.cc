@@ -1,3 +1,4 @@
+#include "marley_utils.hh"
 #include "ExitChannel.hh"
 #include "HauserFeshbachDecay.hh"
 
@@ -123,8 +124,8 @@ void marley::GammaContinuumExitChannel::do_decay(double& Ex, int& two_J,
   Ex = gen.rejection_sample(Epdf_, Emin_, Emax_);
 
   int nuc_pid = residual_nucleus.pdg_code();
-  int Z = marley::MassTable::get_particle_Z(nuc_pid);
-  int A = marley::MassTable::get_particle_A(nuc_pid);
+  int Z = marley_utils::get_particle_Z(nuc_pid);
+  int A = marley_utils::get_particle_A(nuc_pid);
 
   sample_spin_parity(Z, A, two_J, Pi, Exi, Ex, gen);
 

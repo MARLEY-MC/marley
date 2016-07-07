@@ -1,5 +1,6 @@
 #include <memory>
 
+#include "marley_utils.hh"
 #include "ExitChannel.hh"
 #include "Generator.hh"
 #include "Kinematics.hh"
@@ -30,12 +31,14 @@ marley::HauserFeshbachDecay::HauserFeshbachDecay(const marley::Particle&
 
 void marley::HauserFeshbachDecay::build_exit_channels()
 {
-  static const double me
-    = marley::MassTable::get_particle_mass(marley_utils::ELECTRON);
+
+  const marley::MassTable& mt = marley::MassTable::Instance();
+
+  static const double me = mt.get_particle_mass(marley_utils::ELECTRON);
 
   int pid_initial = compound_nucleus_.pdg_code();
-  int Zi = marley::MassTable::get_particle_Z(pid_initial);
-  int Ai = marley::MassTable::get_particle_A(pid_initial);
+  int Zi = marley_utils::get_particle_Z(pid_initial);
+  int Ai = marley_utils::get_particle_A(pid_initial);
   int qi = compound_nucleus_.charge(); // Get net charge of initial ion
   double Mi = compound_nucleus_.mass(); // initial mass
   double Migs = Mi - Exi_; // initial ground-state mass
@@ -61,8 +64,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     // Approximate the ground state mass of the ion formed when the fragment f
     // is emitted by adding (Za - qi) electron masses to the atomic mass for
     // the final nucleus.
-    double Mfgs_ion = marley::MassTable::get_atomic_mass(pid_final)
-      + (Za - qi)*me;
+    double Mfgs_ion = mt.get_atomic_mass(pid_final) + (Za - qi)*me;
 
     // Get fragment separation energy without a redundant mass table lookup
     double Sa = Mfgs_ion + Ma - Migs;
@@ -464,7 +466,8 @@ double marley::HauserFeshbachDecay::weisskopf_partial_decay_width(int A,
   }
 
   else if (type == TransitionType::magnetic) {
-    double mp = marley::MassTable::get_particle_mass(marley_utils::PROTON);
+    double mp = marley::MassTable::Instance().get_particle_mass(
+      marley_utils::PROTON);
     return 10 * el_width * std::pow(marley_utils::hbar_c / (mp * R), 2);
   }
 
@@ -482,8 +485,8 @@ double marley::HauserFeshbachDecay::gamma_continuum_partial_width(
   double e_gamma = Exi_ - Exf;
   bool initial_spin_is_zero = twoJi_ == 0;
   int cn_pid = compound_nucleus_.pdg_code();
-  int Z = marley::MassTable::get_particle_Z(cn_pid);
-  int A = marley::MassTable::get_particle_A(cn_pid);
+  int Z = marley_utils::get_particle_Z(cn_pid);
+  int A = marley_utils::get_particle_A(cn_pid);
   for (int l = 0; l <= l_max; ++l) {
     int two_l = 2*l;
     int twoJf = twoJi_ + two_l;
@@ -549,12 +552,14 @@ double marley::HauserFeshbachDecay::get_fragment_emission_threshold(const int Zi
   int Zf = Zi - f.get_Z();
   int Af = Ai - f.get_A();
 
+  const marley::MassTable& mt = marley::MassTable::Instance();
+
   // Get various masses that will be needed for fragment emission kinematics
   // (including nuclear recoil)
-  double Migs = marley::MassTable::get_atomic_mass(Zi, Ai);
+  double Migs = mt.get_atomic_mass(Zi, Ai);
   double Ma = f.get_mass();
-  double Mfgs = marley::MassTable::get_atomic_mass(Zf, Af);
-  double me = marley::MassTable::get_particle_mass(marley_utils::ELECTRON);
+  double Mfgs = mt.get_atomic_mass(Zf, Af);
+  double me = mt.get_particle_mass(marley_utils::ELECTRON);
   // Fragment atomic number
   int Za = f.get_Z();
   // Approximate the ground state rest energy of the negative ion (with
@@ -595,8 +600,8 @@ void marley::HauserFeshbachDecay::print(std::ostream& out) const {
 
   static constexpr double hbar = 6.58211951e-22; // MeV * s
   int pid_initial = compound_nucleus_.pdg_code();
-  int Zi = marley::MassTable::get_particle_Z(pid_initial);
-  int Ai = marley::MassTable::get_particle_A(pid_initial);
+  int Zi = marley_utils::get_particle_Z(pid_initial);
+  int Ai = marley_utils::get_particle_A(pid_initial);
   marley::LevelDensityModel& ldm
     = gen_.get_structure_db().get_level_density_model(Zi, Ai);
   double two_pi_rho = marley_utils::two_pi
