@@ -38,7 +38,7 @@ void marley::StructureDatabase::add_from_record(
     int Anuc = (pdg % 10000)/10;
     std::string trimmed_nucid = marley_utils::trim_copy(
       marley_utils::nuc_id(Znuc, Anuc));
-    LOG_INFO() << "Loading nuclear structure data for "
+    MARLEY_LOG_INFO() << "Loading nuclear structure data for "
       << trimmed_nucid << " from file " << sr.filename;
     emplace_decay_scheme(pdg, sr.filename, sr.format);
   }
