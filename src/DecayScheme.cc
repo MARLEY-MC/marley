@@ -48,31 +48,30 @@ marley::Level* marley::DecayScheme::get_pointer_to_closest_level(
   return levels_.at(e_index).get();
 }
 
-// @todo Refactor do_cascade() to use references rather than pointers
-void marley::DecayScheme::do_cascade(marley::Level* initial_level,
-  marley::Event* p_event, marley::Generator& gen, int qIon)
+void marley::DecayScheme::do_cascade(marley::Level& initial_level,
+  marley::Event& event, marley::Generator& gen, int qIon)
 {
   LOG_DEBUG() << "Beginning gamma cascade at level with energy "
-    << initial_level->energy() << " MeV";
+    << initial_level.energy() << " MeV";
 
   LOG_DEBUG() << "Decay scheme printout:" << '\n';
   LOG_DEBUG() << *this << '\n';
 
   bool cascade_finished = false;
 
-  marley::Level* p_current_level = initial_level;
+  marley::Level* p_current_level = &initial_level;
 
   while (!cascade_finished) {
 
     // Randomly select a gamma to produce
     const marley::Gamma* p_gamma = p_current_level->sample_gamma(gen);
-    if (p_gamma == nullptr) {
+    if (!p_gamma) {
       LOG_DEBUG() << "  this level does not have any gammas";
       cascade_finished = true;
     }
     else {
       p_current_level = p_gamma->end_level();
-      if (p_current_level == nullptr) {
+      if (!p_current_level) {
         throw marley::Error(std::string("This")
           + "gamma does not have an end level. Cannot continue cascade.");
       }
@@ -103,7 +102,7 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
       double gamma_phi = gen.uniform_random_double(0, 2*marley_utils::pi,
         false);
 
-      marley::Particle& residue = p_event->residue();
+      marley::Particle& residue = event.residue();
 
       // Determine the final energies and momenta for the recoiling nucleus and
       // emitted gamma ray. Store them in the final state particle objects.
@@ -115,7 +114,7 @@ void marley::DecayScheme::do_cascade(marley::Level* initial_level,
       residue = nucleus;
 
       // Add the new gamma to the event
-      p_event->add_final_particle(gamma);
+      event.add_final_particle(gamma);
     }
   }
 

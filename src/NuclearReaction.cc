@@ -476,8 +476,8 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
     // event's final particle list.
     marley::DecayScheme* dec_scheme
       = gen.get_structure_db().get_decay_scheme(Z, A);
-    dec_scheme->do_cascade(dec_scheme->get_pointer_to_closest_level(Ex),
-      &event, gen, residue.charge());
+    dec_scheme->do_cascade(*dec_scheme->get_pointer_to_closest_level(Ex),
+      event, gen, residue.charge());
   }
 
   // Return the completed event object
