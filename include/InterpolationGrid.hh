@@ -9,8 +9,13 @@
 
 namespace marley {
 
-  // Class that implements the one-dimensional interpolation rules
-  // described in the ENDF-6 formats manual for a grid of (x,y) pairs.
+  /// @brief One-dimensional function y(x) defined using a grid of ordered
+  /// pairs (x,y) and an interpolation rule
+  /// @details This class implements the one-dimensional interpolation rules
+  /// described in the <a href="https://www.bnl.gov/isd/documents/70393.pdf">
+  /// ENDF-6 formats manual</a> for a grid of (x,y) pairs.
+  /// @tparam FirstNumericType type for the x values
+  /// @tparam SecondNumericType type for the y values
   template <typename FirstNumericType, typename SecondNumericType
     = FirstNumericType> class InterpolationGrid
   {
@@ -18,14 +23,65 @@ namespace marley {
 
       using OrderedPair = std::pair<FirstNumericType, SecondNumericType>;
       using Grid = std::vector<OrderedPair>;
-      using GridConstIterator = typename std::vector<OrderedPair>::const_iterator;
+      using GridConstIterator
+        = typename std::vector<OrderedPair>::const_iterator;
 
+      /// @brief Method to use for interpolating between (x,y) grid points
+      /// @details For @f$x_1 \leq x < x_2@f$, the table below describes
+      /// how the corresponding y value is calculated using each of the allowed
+      /// InterpolationMethod settings.
+      /// <table>
+      /// <caption id="interpolation_methods">Interpolation Methods</caption>
+      /// <tr><th>Method<th>Description
+      /// <tr><td>Constant<td> @f$y = y_1@f$
+      /// <tr><td>LinearLinear<td> @f$y = y_1
+      ///   + \frac{y_2 - y_1}{x_2 - x_1}(x - x_1) @f$
+      /// <tr><td>LinearLog<td> @f$y = \exp\left[\ln(y_1)
+      ///   + \frac{\ln(y_2) - \ln(y_1)}{x_2 - x_1}(x - x_1)\right] @f$
+      /// <tr><td>LogLinear<td> @f$y = y_1
+      ///   + \frac{y_2 - y_1}{\ln[x_2] - \ln[x_1]}[\ln(x) - \ln(x_1)] @f$
+      /// <tr><td>LogLog<td> @f$y = \exp\left[\ln(y_1)
+      ///   + \frac{\ln(y_2) - \ln(y_1)}{\ln(x_2) - \ln(x_1)}(\ln[x]
+      ///   - \ln[x_1])\right] @f$
+      /// </table>
       enum class InterpolationMethod { Constant = 1,
         LinearLinear = 2, LinearLog = 3, LogLinear = 4,
         LogLog = 5 };
+
+      /// @brief Method to use for computing y(x) when the x value lies beyond
+      /// the grid boundaries
+      /// @details The table below describes how y(x) is calculated using each
+      /// of the allowed ExtrapolationMethod settings. In the notation used
+      /// below, the lowest x value is called @f$x_\text{left}@f$, the greatest
+      /// x value is called @f$x_\text{right}@f$, and their corresponding y
+      /// values are called @f$y_\text{left}@f$ and @f$y_\text{right}@f$,
+      /// respectively.  The ExtrapolationMethod is only relevant when @f$x <
+      /// x_\text{left}@f$ or @f$x > x_\text{right}@f$.
+      /// <table>
+      /// <caption id="extrapolation_methods">Extrapolation Methods</caption>
+      /// <tr><th>Method<th>Description
+      /// <tr><td>Zero<td> @f$y = 0@f$
+      /// <tr><td>Endpoint<td> @f$y = \begin{cases} y_\text{left} &
+      /// x < x_\text{left} \\ y_\text{right} & x > x_\text{right}
+      /// \end{cases}@f$
+      /// <tr><td>Continue<td>
+      /// Use the usual InterpolationMethod formula with<br>
+      /// @f$y = \begin{cases}
+      /// y_1 = y_\text{left} \text{ and }
+      /// y_2 = y_{\text{left}+1} &
+      /// x < x_\text{left} \\
+      /// y_1 = y_{\text{right}-1} \text{ and }
+      /// y_2 = y_\text{right} &
+      /// x > x_\text{right}
+      /// \end{cases}@f$<br>where
+      /// @f$y_{\text{left}+1}@f$ is the y value corresponding
+      /// to the second-lowest x value, and @f$y_{\text{right}-1}@f$
+      /// is the y value corresponding to the second-highest x value.
+      /// </table>
       enum class ExtrapolationMethod { Zero, Endpoint,
         Continue, Throw };
 
+      /// @brief Create an InterpolationGrid without any grid points
       inline InterpolationGrid(InterpolationMethod interp_method
         = InterpolationMethod::LinearLinear, ExtrapolationMethod extrap_method
         = ExtrapolationMethod::Zero)
@@ -34,16 +90,18 @@ namespace marley {
         extrapolation_method = extrap_method;
       };
 
-      inline InterpolationGrid(const Grid& grid, InterpolationMethod interp_method
-        = InterpolationMethod::LinearLinear, ExtrapolationMethod extrap_method
-        = ExtrapolationMethod::Zero)
+      /// @brief Create an InterpolationGrid from a vector of ordered pairs
+      inline InterpolationGrid(const Grid& grid,
+        InterpolationMethod interp_method = InterpolationMethod::LinearLinear,
+        ExtrapolationMethod extrap_method = ExtrapolationMethod::Zero)
       {
         interpolation_method = interp_method;
         extrapolation_method = extrap_method;
-        // TODO: add error checks for the supplied grid
+        /// @todo Add error checks for the supplied grid
         ordered_pairs = grid;
       };
 
+      /// @brief Create an InterpolationGrid from vectors of x and y values
       inline InterpolationGrid(const std::vector<FirstNumericType>& xs,
         const std::vector<SecondNumericType>& ys,
         InterpolationMethod interp_method = InterpolationMethod::LinearLinear,
@@ -51,35 +109,39 @@ namespace marley {
       {
         interpolation_method = interp_method;
         extrapolation_method = extrap_method;
-        // TODO: add error checks for the supplied vectors
+        /// @todo Add error checks for the supplied vectors
         for (size_t j = 0; j < xs.size(); ++j)
           ordered_pairs.push_back(OrderedPair(xs.at(j), ys.at(j)));
       };
 
+      /// @brief Compute y(x) using the current InterpolationMethod
       SecondNumericType interpolate(FirstNumericType x) const;
+
+      /// @brief Add a new ordered pair (x, y) to the grid
       void insert(FirstNumericType x, SecondNumericType y);
+
+      /// @brief Get the number of ordered pairs on the grid
       inline size_t size() const { return ordered_pairs.size(); }
+
+      /// @brief Delete all ordered pairs from the grid
       inline void clear() { ordered_pairs.clear(); }
+
+      /// @brief Get a reference to the jth ordered pair from the grid
       inline OrderedPair& at(size_t j) { return ordered_pairs.at(j); }
 
-      // Checks to make sure the grid contains at least two points. If it
-      // doesn't, throw an error. This function is called by all class methods
-      // that rely on the grid making sense.
-      inline void check_grid() const {
-        // TODO: improve this error message
-        if (ordered_pairs.size() < 2) throw marley::Error(std::string("A")
-          + " class method was called for an InterpolationGrid object"
-          + " that contains less than two grid points.");
-      }
-
+      /// @brief Get a std::function object that represents y(x) for this
+      /// InterpolationGrid
       inline std::function<SecondNumericType(FirstNumericType)>
         get_interpolating_function()
       {
-        return std::bind(
-          &InterpolationGrid<FirstNumericType, SecondNumericType>::interpolate,
-          this, std::placeholders::_1);
+        return [this](FirstNumericType x)
+          -> SecondNumericType { return this->interpolate(x); };
+        //return std::bind( &InterpolationGrid<FirstNumericType,
+        //SecondNumericType>::interpolate, this, std::placeholders::_1);
       }
 
+      /// @brief Returns a const_iterator to the first element of the grid for
+      /// which the x value is not less than (i.e. greater than or equal to) x
       inline GridConstIterator lower_bound(const
         GridConstIterator& begin,
         const GridConstIterator& end, FirstNumericType x) const
@@ -89,6 +151,8 @@ namespace marley {
           -> bool { return pair.first < f; });
       }
 
+      /// @brief Returns a const_iterator to the first element of the grid for
+      /// which the x value is greater than x
       inline GridConstIterator upper_bound(const
         GridConstIterator& begin,
         const GridConstIterator& end, FirstNumericType x) const
@@ -98,34 +162,56 @@ namespace marley {
           -> bool { return f < pair.first; });
       }
 
+      /// @brief Returns a reference to the first ordered pair
       inline const OrderedPair& front() const { return ordered_pairs.front(); }
+
+      /// @brief Returns a reference to the last ordered pair
       inline const OrderedPair& back() const { return ordered_pairs.back(); }
 
-      inline InterpolationMethod get_interpolation_method() const {
-        return interpolation_method;
-      }
+      /// @brief Get the InterpolationMethod used by this InterpolationGrid
+      inline InterpolationMethod interpolation_method() const
+        { return interpolation_method_; }
 
-      inline void set_interpolationMethod(InterpolationMethod method) {
-        interpolation_method = method;
-      }
+      /// @brief Set the InterpolationMethod to use
+      inline void set_interpolationMethod(InterpolationMethod method)
+        { interpolation_method_ = method; }
 
-      inline ExtrapolationMethod get_extrapolation_method() const {
-        return extrapolation_method;
-      }
+      /// @brief Get the ExtrapolationMethod used by this InterpolationGrid
+      inline ExtrapolationMethod extrapolation_method() const
+        { return extrapolation_method_; }
 
-      inline void set_interpolationMethod(ExtrapolationMethod method) {
-        extrapolation_method = method;
-      }
+      /// @brief Set the ExtrapolationMethod to use
+      inline void set_interpolationMethod(ExtrapolationMethod method)
+        { extrapolation_method_ = method; }
 
     private:
-      InterpolationMethod interpolation_method;
-      ExtrapolationMethod extrapolation_method;
-      Grid ordered_pairs;
 
-      // Returns true if the requested value of x lies on the grid (linear interpolation)
-      // or false if it is outside (linear extrapolation)
-      inline bool find_bin_limits(FirstNumericType x, GridConstIterator& lower_point,
-        GridConstIterator& upper_point) const
+      /// @brief The method to use for interpolating between grid points
+      InterpolationMethod interpolation_method_;
+
+      /// @brief The method to use when extrapolating function values
+      /// outside of the grid
+      ExtrapolationMethod extrapolation_method_;
+
+      /// @brief The ordered pairs to use as reference points for interpolation
+      Grid ordered_pairs_;
+
+      /// @brief Checks to make sure the grid contains at least two points. If
+      /// it doesn't, throw an error.
+      /// @details This function should be called by all class methods that
+      /// rely on the grid making sense.
+      inline void check_grid() const {
+        /// @todo Improve this error message
+        if (ordered_pairs.size() < 2) throw marley::Error(std::string("A")
+          + " class method was called for an InterpolationGrid object"
+          + " that contains less than two grid points.");
+      }
+
+      /// @brief Returns true if the requested value of x lies on the grid
+      /// (linear interpolation) or false if it is outside (linear
+      /// extrapolation)
+      inline bool find_bin_limits(FirstNumericType x,
+        GridConstIterator& lower_point, GridConstIterator& upper_point) const
       {
         // Check to make sure that the grid contains at least two ordered pairs
         check_grid();
@@ -240,7 +326,8 @@ namespace marley {
   {
     // Figure out where this grid point should go in the grid. Use
     // std::upper_bound so that entries with the same x value (discontinuities)
-    // are inserted in the order that they are passed to InterpolationGrid::insert.
+    // are inserted in the order that they are passed to
+    // InterpolationGrid::insert.
     GridConstIterator insert_point = upper_bound(ordered_pairs.begin(),
       ordered_pairs.end(), x);
 
