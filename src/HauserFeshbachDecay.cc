@@ -110,19 +110,19 @@ void marley::HauserFeshbachDecay::build_exit_channels()
 
       // Get a vector of pointers to levels in the decay scheme. The levels are
       // sorted in order of increasing excitation energy.
-      const auto sorted_lps = ds->get_sorted_level_pointers();
+      const auto& levels = ds->get_levels();
 
       // Use the maximum discrete level energy from the decay scheme object as the
       // lower bound for the continuum
       // TODO: consider whether this is the best approach
-      if (sorted_lps.size() > 0) E_c_min = sorted_lps.back()->energy();
+      if (levels.size() > 0) E_c_min = levels.back()->energy();
 
       // Loop over the final discrete nuclear levels in order of increasing energy
       // until the new level energy exceeds the maximum value. For each
       // energetically allowed level, if a transition to it for a given fragment
       // orbital angular momentum l and total angular momentum j conserves parity,
       // then compute an optical model transmission coefficient and add it to the total.
-      for (const auto& level : sorted_lps) {
+      for (const auto& level : levels) {
         double Exf = level->energy();
         if (Exf < Exf_max) {
           double discrete_width = 0.;
@@ -210,14 +210,14 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     // until the new level energy exceeds the maximum value. For each
     // energetically allowed level, compute a gamma ray transmission coefficient
     // for it
-    const auto sorted_lps = ds->get_sorted_level_pointers();
+    const auto& levels = ds->get_levels();
 
     // Use the maximum discrete level energy from the decay scheme object as the
     // lower bound for the continuum.
     // TODO: consider whether this is the best approach
-    if (sorted_lps.size() > 0) E_c_min = sorted_lps.back()->energy();
+    if (levels.size() > 0) E_c_min = levels.back()->energy();
 
-    for (const auto& level_f : sorted_lps) {
+    for (const auto& level_f : levels) {
       int twoJf = level_f->twoJ();
       // 0->0 EM transitions aren't allowed due to angular momentum conservation
       // (photons are spin 1), so if the initial and final spins are zero, skip
@@ -231,7 +231,8 @@ void marley::HauserFeshbachDecay::build_exit_channels()
         // Determine the type (electric or magnetic) and multipolarity of the gamma
         // transition between these two levels
         int mpol; // Multipolarity
-        auto type = determine_gamma_transition_type(twoJi_, Pi_, level_f, mpol);
+        auto type = determine_gamma_transition_type(twoJi_, Pi_, level_f.get(),
+          mpol);
         // TODO: allow the user to choose which gamma-ray transition model to use
         // (Weisskopf single-particle estimates, Brink-Axel strength functions, etc.)
         double discrete_width = gamma_transmission_coefficient(Zi, Ai, type,

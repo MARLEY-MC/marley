@@ -2,6 +2,7 @@
 #include <random>
 
 #include "Gamma.hh"
+#include "IteratorToPointerMember.hh"
 #include "Parity.hh"
 
 namespace marley {
@@ -46,6 +47,15 @@ namespace marley {
       /// @return a reference to the newly added gamma
       marley::Gamma& add_gamma(const marley::Gamma& gamma);
 
+      /// @brief Add a new gamma-ray transition to this level
+      /// @param energy Gamma-ray energy (MeV)
+      /// @param branching_ratio Branching ratio for the new
+      /// gamma-ray transition
+      /// @param end_lev Pointer to the level that absorbs this gamma
+      /// @return a reference to the newly added gamma
+      marley::Gamma& add_gamma(double energy, double branching_ratio,
+        marley::Level* end_lev = nullptr);
+
       /// Remove all gamma ray information from this level
       void clear_gammas();
 
@@ -57,6 +67,15 @@ namespace marley {
 
       /// Returns the level spin-parity as a string
       std::string spin_parity_string() const;
+
+      /// @brief Convert an iterator that points to a marley::Level* (or a
+      /// smart pointer to a marley::Level) into an iterator that points to the
+      /// Level's energy_ member variable.
+      /// @details This function is used by the DecayScheme class to keep the
+      /// vector of std::unique_ptr<marley::Level> objects that it owns sorted
+      /// in order of increasing excitation energy.
+      template<typename It> inline static marley::IteratorToPointerMember<It,
+        marley::Level, double> make_energy_iterator(It it);
 
     private:
 
@@ -96,4 +115,11 @@ namespace marley {
   inline std::vector<marley::Gamma>& Level::gammas() { return gammas_; }
 
   inline bool Level::has_gammas() const { return gammas_.empty(); }
+
+  template<typename It> inline marley::IteratorToPointerMember<It,
+    marley::Level, double> Level::make_energy_iterator(It it)
+  {
+    return marley::IteratorToPointerMember<It, marley::Level, double>(it,
+      &marley::Level::energy_);
+  }
 }

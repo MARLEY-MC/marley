@@ -10,63 +10,18 @@ marley::StructureDatabase::StructureDatabase(
   add_all_from_config_file(cf);
 }
 
-void marley::StructureDatabase::add_decay_scheme(const std::string nucid,
-  marley::DecayScheme ds)
+void marley::StructureDatabase::emplace_decay_scheme(int pdg,
+  const std::string& filename, DecayScheme::FileFormat format)
 {
-  // Remove the previous entry (if one exists) filed
-  // under the supplied nucid
-  decay_scheme_table.erase(nucid);
+  int Z_ds = (pdg % 10000000)/10000;
+  int A_ds = (pdg % 10000)/10;
 
-  // Create a new entry in the database using this nucid
-  std::pair<std::unordered_map<std::string,
-    marley::DecayScheme>::iterator, bool>
-    p = decay_scheme_table.emplace(nucid, std::move(ds));
+  // Remove the previous entry (if one exists) for the given PDG code
+  decay_scheme_table.erase(pdg);
 
-  // Convert an iterator to the added decay scheme
-  // into a pointer (this avoids problems that occur
-  // when rehashing invalidates iterators to elements
-  // of an unordered_map [pointers are not invalidated]).
-  marley::DecayScheme* ds_p = &(p.first->second);
-
-  // Compute mass number from nucid
-  int Z;
-  int A = std::stoi(nucid.substr(0,3));
-
-  // Get element symbol from nucid
-  std::string element_symbol = nucid.substr(3);
-  element_symbol.back() = tolower(element_symbol.back());
-  marley_utils::trim_right_inplace(element_symbol);
-  // Look up the corresponding atomic number
-  std::unordered_map<std::string, int>::const_iterator it
-    = marley_utils::atomic_numbers.find(element_symbol);
-  if (it != marley_utils::atomic_numbers.end()) Z = it->second;
-  else throw marley::Error(std::string("Unrecognized")
-    + " element symbol '" + element_symbol + "' encountered in"
-    + " marley::StructureDatabase::add_decay_scheme()");
-
-  // Compute the particle ID for the nucleus based on Z and A
-  int pid = marley_utils::get_nucleus_pid(Z, A);
-
-  // Erase the previous entry (if one exists) filed under this
-  // pid in the decay scheme table
-  pid_decay_scheme_table.erase(pid);
-
-  // Add the decay scheme to the particle-ID-based lookup table
-  pid_decay_scheme_table[pid] = ds_p;
-}
-
-// Get a pointer to the decay scheme in the database that was filed under the
-// given nucid. If the requested decay scheme could not be found, return nullptr.
-// Note that the nucid must strictly conform to the ENSDF conventions (3 mass number
-// characters [left-padded] followed by 2 upper-case element symbol
-// characters [right-padded])
-marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(
-  const std::string nucid)
-{
-  std::unordered_map<std::string, marley::DecayScheme>::iterator
-    it = decay_scheme_table.find(nucid);
-  if (it == decay_scheme_table.end()) return nullptr;
-  else return &(it->second);  // Convert the iterator into a pointer to the decay scheme
+  // Add the new entry
+  decay_scheme_table.emplace(pdg, std::make_unique<marley::DecayScheme>(
+    Z_ds, A_ds, filename, format));
 }
 
 // Add decay schemes to the database from a parsed
@@ -78,12 +33,14 @@ void marley::StructureDatabase::add_from_record(
   // that all nuclides are loaded from the file in one pass.
   // Add a decay scheme for each nucid listed in the structure
   // record to the database
-  for (const auto& id : sr.nucids) {
+  for (const auto& pdg : sr.nucleus_pdg_codes) {
+    int Znuc = (pdg % 10000000)/10000;
+    int Anuc = (pdg % 10000)/10;
+    std::string trimmed_nucid = marley_utils::trim_copy(
+      marley_utils::nuc_id(Znuc, Anuc));
     LOG_INFO() << "Loading nuclear structure data for "
-      << marley_utils::trim_copy(id)
-      << " from file " << sr.filename;
-    add_decay_scheme(id,
-      marley::DecayScheme(id, sr.filename, sr.format));
+      << trimmed_nucid << " from file " << sr.filename;
+    emplace_decay_scheme(pdg, sr.filename, sr.format);
   }
 }
 
@@ -98,9 +55,9 @@ void marley::StructureDatabase::add_all_from_config_file(
 marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(
   const int particle_id)
 {
-  auto iter = pid_decay_scheme_table.find(particle_id);
-  if (iter == pid_decay_scheme_table.end()) return nullptr;
-  else return iter->second;
+  auto iter = decay_scheme_table.find(particle_id);
+  if (iter == decay_scheme_table.end()) return nullptr;
+  else return iter->second.get();
 }
 
 marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(const int Z,
@@ -164,14 +121,13 @@ marley::LevelDensityModel& marley::StructureDatabase::get_level_density_model(
   else return *(iter->second.get());
 }
 
-void marley::StructureDatabase::remove_decay_scheme(const std::string nucid)
+void marley::StructureDatabase::remove_decay_scheme(int pdg)
 {
-  // Remove the decay scheme with this nucid if it
-  // exists in the database. If it doesn't, do nothing.
-  decay_scheme_table.erase(nucid);
+  // Remove the decay scheme with this PDG code if it exists in the database.
+  // If it doesn't, do nothing.
+  decay_scheme_table.erase(pdg);
 }
 
 void marley::StructureDatabase::clear() {
   decay_scheme_table.clear();
 }
-

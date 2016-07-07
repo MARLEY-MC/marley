@@ -140,17 +140,16 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
     + " passed to marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds)");
 
   // Check to see if the decay scheme being associated with this
-  // reaction is for the correct nuclide. If the nuc_id in the decay
+  // reaction is for the correct nuclide. If the PDG code in the decay
   // scheme object does not match the one we'd expect for this reaction's
   // final state nucleus, complain
-  std::string reaction_nuc_id = marley_utils::nuc_id(Zf_, Af_);
-  std::string scheme_nuc_id = ds->get_nuc_id();
-  if (reaction_nuc_id != scheme_nuc_id) throw
+  int reaction_pdg = marley_utils::get_nucleus_pid(Zf_, Af_);
+  int scheme_pdg = marley_utils::get_nucleus_pid(ds->Z(), ds->A());
+  if (reaction_pdg != scheme_pdg) throw
     marley::Error(std::string("Nuclear data mismatch: attempted ")
-    + "to associate a decay scheme object that has ENSDF nucid "
-    + marley_utils::trim_copy(scheme_nuc_id)
-    + " with a reaction object that has nucid "
-    + marley_utils::trim_copy(reaction_nuc_id));
+    + "to associate a decay scheme object that has PDG code "
+    + std::to_string(scheme_pdg) + " with a reaction object that has PDG code "
+    + std::to_string(reaction_pdg));
 
   // Use the smallest nuclear fragment emission threshold to check for unbound
   // levels. Before looking them up, start by setting the unbound threshold to
