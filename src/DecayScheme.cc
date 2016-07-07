@@ -61,6 +61,8 @@ void marley::DecayScheme::do_cascade(marley::Level& initial_level,
 
   marley::Level* p_current_level = &initial_level;
 
+  const marley::MassTable& mt = marley::MassTable::Instance();
+
   while (!cascade_finished) {
 
     // Randomly select a gamma to produce
@@ -90,9 +92,8 @@ void marley::DecayScheme::do_cascade(marley::Level& initial_level,
       // recoiling nucleus
       marley::Particle gamma(marley_utils::PHOTON, 0);
       int pdg = marley_utils::get_nucleus_pid(Z_, A_);
-      marley::Particle nucleus(pdg, marley::MassTable::get_atomic_mass(pdg)
-        + Exf - qIon*marley::MassTable::get_particle_mass(
-        marley_utils::ELECTRON), qIon);
+      marley::Particle nucleus(pdg, mt.get_atomic_mass(pdg)
+        + Exf - qIon*mt.get_particle_mass(marley_utils::ELECTRON), qIon);
 
       // Sample a direction assuming that the gammas are emitted
       // isotropically in the nucleus's rest frame.

@@ -77,8 +77,8 @@ marley::SphericalOpticalModel& marley::StructureDatabase::get_optical_model(
     // The requested level density model wasn't found, so create it and add
     // it to the table, returning a reference to the stored level density
     // model afterwards.
-    int Z = marley::MassTable::get_particle_Z(nucleus_pid);
-    int A = marley::MassTable::get_particle_A(nucleus_pid);
+    int Z = marley_utils::get_particle_Z(nucleus_pid);
+    int A = marley_utils::get_particle_A(nucleus_pid);
     return *(optical_model_table.emplace(nucleus_pid,
       std::make_unique<marley::SphericalOpticalModel>(Z, A)).first
       ->second.get());
