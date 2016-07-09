@@ -19,12 +19,8 @@ namespace marley {
 
     public:
 
-      /// Creates an empty database.
+      /// @brief Creates an empty database.
       StructureDatabase();
-
-      /// @brief Initializes the database using structure records from a
-      /// ConfigFile object
-      StructureDatabase(const marley::ConfigFile& cf);
 
       /// @brief Construct and add a DecayScheme object to the database that
       /// contains discrete level data for a specific nuclide
@@ -80,29 +76,20 @@ namespace marley {
 
     private:
 
-
       /// @brief Lookup table for marley::DecayScheme objects.
       /// @details Keys are PDG codes, values are unique_ptrs to decay schemes.
       std::unordered_map<int, std::unique_ptr<marley::DecayScheme> >
-        decay_scheme_table;
+        decay_scheme_table_;
 
       /// @brief Lookup table for marley::SphericalOpticalModel objects.
       /// @details Keys are PDG codes, values are unique_ptrs to optical models.
       std::unordered_map<int, std::unique_ptr<marley::SphericalOpticalModel> >
-        optical_model_table;
+        optical_model_table_;
 
       /// @brief Lookup table for marley::LevelDensityModel objects.
       /// @details Keys are PDG codes, values are unique_ptrs to level
       /// density models.
       std::unordered_map<int, std::unique_ptr<marley::LevelDensityModel> >
-        level_density_table;
-
-      /// @brief Helper function that loads a DecayScheme object from a single
-      /// structure record in a ConfigFile
-      void add_from_record(const marley::ConfigFile::StructureRecord& sr);
-
-      /// @brief Helper function that loads DecayScheme objects from every
-      /// structure record in a ConfigFile
-      void add_all_from_config_file(const marley::ConfigFile& cf);
+        level_density_table_;
   };
 }

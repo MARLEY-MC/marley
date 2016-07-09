@@ -10,19 +10,12 @@
 #include "DecayScheme.hh"
 #include "Error.hh"
 #include "NeutrinoSource.hh"
+#include "StructureDatabase.hh"
 
 namespace marley {
 
   class ConfigFile {
     public:
-
-      // Type used to organize nuclear structure file
-      // load requests within this configuration file
-      struct StructureRecord {
-        std::string filename;
-        marley::DecayScheme::FileFormat format;
-        std::unordered_set<int> nucleus_pdg_codes;
-      };
 
       ConfigFile();
       ConfigFile(const std::string& file_name);
@@ -42,8 +35,9 @@ namespace marley {
       inline void clear_reaction_filenames() {
         reaction_filenames.clear();
       }
-      inline const std::vector<StructureRecord>& get_structure_records() const {
-        return structure_records;
+
+      inline std::unique_ptr<marley::StructureDatabase>& get_structure_db() {
+        return structure_db_;
       }
 
       void print_summary(std::ostream& os = std::cout);
@@ -81,11 +75,11 @@ namespace marley {
       uint_fast64_t seed;
       std::unordered_set<std::string> reaction_filenames;
 
-      std::vector<StructureRecord> structure_records;
-
       // The number of events to generate in a run
       size_t num_events;
       static constexpr size_t DEFAULT_NUM_EVENTS = 1000;
+
+      std::unique_ptr<marley::StructureDatabase> structure_db_;
 
       // Neutrino sources will be created based on the specifications given in
       // this file. When a marley::Generator object is constructed using this
@@ -105,6 +99,11 @@ namespace marley {
       // Convert a marley::DecayScheme::FileFormat value
       // to a std::string
       std::string format_to_string(const marley::DecayScheme::FileFormat ff);
+
+      // Helper function to add DecayScheme objects to the structure database
+      void add_decay_schemes(const std::string& file_name,
+        const marley::DecayScheme::FileFormat format,
+        const std::set<int>& nucleus_pdg_codes);
 
       // Get the next word from a parsed line. If errors occur, complain.
       // The last argument determines whether the next word should be

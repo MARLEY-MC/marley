@@ -63,7 +63,7 @@ namespace marley {
 
       /// @brief Get a reference to the StructureDatabase owned by this
       /// Generator
-      inline marley::StructureDatabase& get_structure_db();
+      marley::StructureDatabase& get_structure_db();
 
       /// @brief Get a const reference to the vector of Reaction objects
       /// owned by this Generator
@@ -136,7 +136,7 @@ namespace marley {
 
       /// @brief StructureDatabase used to simulate nuclear de-excitations
       /// when creating Event objects
-      marley::StructureDatabase structure_db_;
+      std::unique_ptr<marley::StructureDatabase> structure_db_;
 
       /// @brief Reaction(s) used to sample reacting neutrino energies
       std::vector<std::unique_ptr<marley::Reaction> > reactions_;
@@ -153,9 +153,6 @@ namespace marley {
 
   // Inline function definitions
   inline uint_fast64_t Generator::get_seed() const { return seed_; }
-
-  inline marley::StructureDatabase& Generator::get_structure_db()
-    { return structure_db_; }
 
   inline const std::vector<std::unique_ptr<marley::Reaction> >&
     Generator::get_reactions() const { return reactions_; }
