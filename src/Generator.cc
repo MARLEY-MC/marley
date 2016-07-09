@@ -6,6 +6,36 @@
 #include "Logger.hh"
 #include "NuclearReaction.hh"
 
+marley::Generator::Generator(marley::ConfigFile& cf) {
+  init(cf);
+}
+
+marley::Generator::Generator(const std::string& filename) {
+  marley::ConfigFile cf(filename);
+  init(cf);
+}
+
+marley::Event marley::Generator::create_event() {
+  double E_nu;
+  size_t r_index;
+  sample_reaction(E_nu, r_index);
+  return reactions.at(r_index)->create_event(
+    nu_source->get_pid(), E_nu, *this);
+}
+
+void marley::Generator::seed_using_state_string(std::string& state_string) {
+  // TODO: add error handling here (check that state_string is valid)
+  std::stringstream strstr(state_string);
+  strstr >> rand_gen;
+}
+
+std::string marley::Generator::get_state_string() {
+  std::stringstream ss;
+  ss << rand_gen;
+  return ss.str();
+}
+
+
 void marley::Generator::init(marley::ConfigFile& cf) {
   // Use the seed from the config file object to prepare the random number
   // generator.  This is an attempt to do a decent job of seeding the random
@@ -25,17 +55,14 @@ void marley::Generator::init(marley::ConfigFile& cf) {
     MARLEY_LOG_INFO() << "Loading reaction data from file " << filename;
     reactions.push_back(std::make_unique<marley::NuclearReaction>(filename,
       structure_db));
-    MARLEY_LOG_INFO() << "Added reaction " << reactions.back()->get_description();
+    MARLEY_LOG_INFO() << "Added reaction "
+      << reactions.back()->get_description();
     ++react_count;
   }
 
-  // Transfer ownership of the neutrino source from the configuration file object to the
-  // generator object. If there are multiple neutrino sources in the configuration
-  // file, only use the one that was defined last.
-  // TODO: consider adding the capability to use multiple sources. The weight member
-  // of the marley::NeutrinoSource class already provides for this, but you haven't implemented
-  // it due to some subtleties in managing multiple sources and multiple reactions in
-  // the generator.
+  // Transfer ownership of the neutrino source from the configuration file
+  // object to the generator object. If there are multiple neutrino sources in
+  // the configuration file, only use the one that was defined last.
   auto& sources = cf.get_sources();
   if (sources.size() > 0) nu_source = std::move(sources.back());
   else throw marley::Error(std::string("Cannot finish creating")
@@ -47,7 +74,8 @@ void marley::Generator::init(marley::ConfigFile& cf) {
   total_xs_values.clear();
   total_xs_values.resize(react_count, 0.);
 
-  // Compute the normalization factor for use with the reacting neutrino energy PDF
+  // Compute the normalization factor for use with the reacting neutrino energy
+  // PDF
   std::function<double(double)> unnorm_pdf = std::bind(
     &marley::Generator::unnormalized_Ea_pdf, this, std::placeholders::_1);
   double norm = marley_utils::num_integrate(unnorm_pdf, nu_source->get_Emin(),
@@ -55,8 +83,7 @@ void marley::Generator::init(marley::ConfigFile& cf) {
 
   // If norm is too small, this likely means that we have a bad source
   // specification (e.g., source only produces neutrinos that are below
-  // threshold for all of the defined reactions). Complain if this is
-  // the case.
+  // threshold for all of the defined reactions). Complain if this is the case.
   //double norm_without_GF = norm / std::pow(marley_utils::GF, 2);
   if (norm <= 0. || std::isnan(norm)) {
     throw marley::Error(std::string("The integral of the")
@@ -68,6 +95,21 @@ void marley::Generator::init(marley::ConfigFile& cf) {
   // Create the normalized PDF using the normalization factor
   Ea_pdf = [unnorm_pdf, norm](double Ea)
     -> double { return unnorm_pdf(Ea) / norm; };
+
+  // Print the MARLEY logo to the logger stream(s) when the first
+  // Generator instance is initialized. If other instances are created,
+  // don't reprint the logo.
+  static bool printed_logo = false;
+  if (!printed_logo) {
+    MARLEY_LOG_INFO() << '\n' << marley_utils::marley_logo
+      << "\nDon't worry about a thing,\n'Cause every little thing"
+      << " gonna be all right.\n-- Bob, \"Three Little Birds\"\n\n"
+      << "Model of Argon Reaction Low Energy Yields\n"
+      << "version " << marley_utils::MARLEY_VERSION << '\n';
+    printed_logo = true;
+  }
+
+  MARLEY_LOG_INFO() << "Seed for random number generator: " << seed;
 }
 
 // Sample a random double uniformly between min and max using the class
@@ -88,9 +130,9 @@ double marley::Generator::uniform_random_double(double min, double max,
 
   if (inclusive) { // sample from [min, max]
 
-    // Find the double value that comes immediately after max. This allows
-    // us to sample uniformly on [min, max] rather than [min,max). This trick comes from
-    // http://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution/uniform_real_distribution
+    // Find the double value that comes immediately after max. This allows us
+    // to sample uniformly on [min, max] rather than [min,max). This trick
+    // comes from http://tinyurl.com/n3ocg3p.
     max_to_use = std::nextafter(max, std::numeric_limits<double>::max());
   }
   else { // sample from [min, max)
