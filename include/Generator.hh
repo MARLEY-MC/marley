@@ -13,42 +13,23 @@
 namespace marley {
 
   class Generator {
+
     public:
-      inline Generator(marley::ConfigFile& cf) {
-        init(cf);
-      }
 
-      inline Generator(const std::string& filename) {
-        marley::ConfigFile cf(filename);
-        init(cf);
-      }
+      Generator(marley::ConfigFile& cf);
 
-      inline marley::Event create_event() {
-        double E_nu;
-        size_t r_index;
-        sample_reaction(E_nu, r_index);
-        return reactions.at(r_index)->create_event(
-          nu_source->get_pid(), E_nu, *this);
-      }
+      Generator(const std::string& filename);
 
-      inline uint_fast64_t get_seed() const {
-        return seed;
-      }
+      marley::Event create_event();
 
-      // TODO: add error handling here (state_string may be nullptr)
+      inline uint_fast64_t get_seed() const;
+
       // Use a state string to set the MARLEY RNG
-      inline void seed_using_state_string(std::string* state_string) {
-        std::stringstream strstr(*state_string);
-        strstr >> rand_gen;
-      }
+      void seed_using_state_string(std::string& state_string);
 
       // Get a string that represents the current internal state of the random
       // number generator
-      inline std::string get_state_string() {
-        std::stringstream ss;
-        ss << rand_gen;
-        return ss.str();
-      }
+      std::string get_state_string();
 
       // Sample a random number uniformly on either [min, max) or [min, max]
       double uniform_random_double(double min, double max, bool inclusive);
@@ -58,66 +39,10 @@ namespace marley {
         double xmax, double max_search_tolerance
         = DEFAULT_REJECTION_SAMPLING_TOLERANCE);
 
-      // Sample from a discrete distribution object
-      template <typename numType> inline numType
-        discrete_sample(std::discrete_distribution<numType>& disc_dist)
-      {
-        return disc_dist(rand_gen);
-      }
+      inline marley::StructureDatabase& get_structure_db();
 
-      // Sample from a discrete distribution object using the parameters params
-      template <typename numType> inline numType
-        discrete_sample(std::discrete_distribution<numType>& disc_dist,
-        const typename std::discrete_distribution<numType>::param_type& params)
-      {
-        return disc_dist(rand_gen, params);
-      }
-
-      // Sample from a piecewise constant distribution object
-      template <typename numType> inline numType
-        piecewise_constant_sample(std::piecewise_constant_distribution<numType>&
-        pc_dist)
-      {
-        return pc_dist(rand_gen);
-      }
-
-      // Sample from a piecewise constant distribution object using the
-      // parameters params
-      template <typename numType> inline numType
-        piecewise_constant_sample(std::piecewise_constant_distribution<numType>&
-        pc_dist, const typename
-        std::piecewise_constant_distribution<numType>::param_type& params)
-      {
-        return pc_dist(rand_gen, params);
-      }
-
-      // Sample from a piecewise linear distribution object
-      template <typename numType> inline numType
-        piecewise_linear_sample(std::piecewise_linear_distribution<numType>&
-        pl_dist)
-      {
-        return pl_dist(rand_gen);
-      }
-
-      // Sample from a piecewise linear distribution object using the
-      // parameters params
-      template <typename numType> inline numType
-        piecewise_linear_sample(std::piecewise_linear_distribution<numType>&
-        pl_dist, const typename
-        std::piecewise_linear_distribution<numType>::param_type& params)
-      {
-        return pl_dist(rand_gen, params);
-      }
-
-      inline marley::StructureDatabase& get_structure_db() {
-        return structure_db;
-      }
-
-      inline const std::vector<std::unique_ptr<marley::Reaction> >& get_reactions()
-        const
-      {
-        return reactions;
-      }
+      inline const std::vector<std::unique_ptr<marley::Reaction> >&
+        get_reactions() const;
 
       // Loads Ea with the energy of a reacting neutrino, and loads
       // r_index with the index of the reaction it undergoes. Input
@@ -126,15 +51,21 @@ namespace marley {
 
       // Returns the PDF that reacting neutrino energies obey. It is normalized
       // between nu_source->E_min and nu_source->E_max.
-      inline double normalized_Ea_pdf(double Ea) {
-        return Ea_pdf(Ea);
-      }
+      inline double normalized_Ea_pdf(double Ea);
 
-      inline marley::NeutrinoSource* get_nu_source() {
-        return nu_source.get();
-      }
+      inline marley::NeutrinoSource* get_nu_source();
+
+      // Sample from a discrete distribution object
+      template <typename numType> inline numType
+        discrete_sample(std::discrete_distribution<numType>& disc_dist);
+
+      // Sample from a discrete distribution object using the parameters params
+      template <typename numType> inline numType
+        discrete_sample(std::discrete_distribution<numType>& disc_dist,
+        const typename std::discrete_distribution<numType>::param_type& params);
 
     private:
+
       // Seed for the random number generator
       uint_fast64_t seed;
       // 64-bit Mersenne Twister random number generator
@@ -160,4 +91,26 @@ namespace marley {
       double unnormalized_Ea_pdf(double Ea);
   };
 
+  // Inline function definitions
+  inline uint_fast64_t Generator::get_seed() const { return seed; }
+
+  inline marley::StructureDatabase& Generator::get_structure_db()
+    { return structure_db; }
+
+  inline const std::vector<std::unique_ptr<marley::Reaction> >&
+    Generator::get_reactions() const { return reactions; }
+
+  inline double Generator::normalized_Ea_pdf(double Ea) { return Ea_pdf(Ea); }
+
+  inline marley::NeutrinoSource* Generator::get_nu_source()
+    { return nu_source.get(); }
+
+  template <typename numType> inline numType
+    Generator::discrete_sample(std::discrete_distribution<numType>& disc_dist)
+    { return disc_dist(rand_gen); }
+
+  template <typename numType> inline numType
+    Generator::discrete_sample(std::discrete_distribution<numType>& disc_dist,
+    const typename std::discrete_distribution<numType>::param_type& params)
+    { return disc_dist(rand_gen, params); }
 }

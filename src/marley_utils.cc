@@ -505,3 +505,362 @@ int marley_utils::nucid_to_Z(std::string nucid) {
   }
   return atomic_numbers.at(e_str);
 }
+
+  // Lookup table for element symbols (keys are atomic numbers Z,
+  // values are symbols on the periodic table). The symbol "Nn" is
+  // used for a neutron to match the ENSDF convention.
+  const std::unordered_map<int, std::string> marley_utils::element_symbols = {
+    { 0, "Nn"},
+    { 1, "H" },
+    { 2, "He" },
+    { 3, "Li" },
+    { 4, "Be" },
+    { 5, "B" },
+    { 6, "C" },
+    { 7, "N" },
+    { 8, "O" },
+    { 9, "F" },
+    { 10, "Ne" },
+    { 11, "Na" },
+    { 12, "Mg" },
+    { 13, "Al" },
+    { 14, "Si" },
+    { 15, "P" },
+    { 16, "S" },
+    { 17, "Cl" },
+    { 18, "Ar" },
+    { 19, "K" },
+    { 20, "Ca" },
+    { 21, "Sc" },
+    { 22, "Ti" },
+    { 23, "V" },
+    { 24, "Cr" },
+    { 25, "Mn" },
+    { 26, "Fe" },
+    { 27, "Co" },
+    { 28, "Ni" },
+    { 29, "Cu" },
+    { 30, "Zn" },
+    { 31, "Ga" },
+    { 32, "Ge" },
+    { 33, "As" },
+    { 34, "Se" },
+    { 35, "Br" },
+    { 36, "Kr" },
+    { 37, "Rb" },
+    { 38, "Sr" },
+    { 39, "Y" },
+    { 40, "Zr" },
+    { 41, "Nb" },
+    { 42, "Mo" },
+    { 43, "Tc" },
+    { 44, "Ru" },
+    { 45, "Rh" },
+    { 46, "Pd" },
+    { 47, "Ag" },
+    { 48, "Cd" },
+    { 49, "In" },
+    { 50, "Sn" },
+    { 51, "Sb" },
+    { 52, "Te" },
+    { 53, "I" },
+    { 54, "Xe" },
+    { 55, "Cs" },
+    { 56, "Ba" },
+    { 57, "La" },
+    { 58, "Ce" },
+    { 59, "Pr" },
+    { 60, "Nd" },
+    { 61, "Pm" },
+    { 62, "Sm" },
+    { 63, "Eu" },
+    { 64, "Gd" },
+    { 65, "Tb" },
+    { 66, "Dy" },
+    { 67, "Ho" },
+    { 68, "Er" },
+    { 69, "Tm" },
+    { 70, "Yb" },
+    { 71, "Lu" },
+    { 72, "Hf" },
+    { 73, "Ta" },
+    { 74, "W" },
+    { 75, "Re" },
+    { 76, "Os" },
+    { 77, "Ir" },
+    { 78, "Pt" },
+    { 79, "Au" },
+    { 80, "Hg" },
+    { 81, "Tl" },
+    { 82, "Pb" },
+    { 83, "Bi" },
+    { 84, "Po" },
+    { 85, "At" },
+    { 86, "Rn" },
+    { 87, "Fr" },
+    { 88, "Ra" },
+    { 89, "Ac" },
+    { 90, "Th" },
+    { 91, "Pa" },
+    { 92, "U" },
+    { 93, "Np" },
+    { 94, "Pu" },
+    { 95, "Am" },
+    { 96, "Cm" },
+    { 97, "Bk" },
+    { 98, "Cf" },
+    { 99, "Es" },
+    { 100, "Fm" },
+    { 101, "Md" },
+    { 102, "No" },
+    { 103, "Lr" },
+    { 104, "Rf" },
+    { 105, "Db" },
+    { 106, "Sg" },
+    { 107, "Bh" },
+    { 108, "Hs" },
+    { 109, "Mt" },
+    { 110, "Ds" },
+    { 111, "Rg" },
+    { 112, "Cn" },
+    //{ 113, "Uut" },
+    { 114, "Fl" },
+    //{ 115, "Uup" },
+    { 116, "Lv" },
+    //{ 117, "Uus" },
+    //{ 118, "Uuo" },
+  };
+
+  // TODO: consider other ways of adding support for fast reverse lookups
+  // in the element_symbols map rather than reproducing its contents here
+  const std::unordered_map<std::string, int> marley_utils::atomic_numbers = {
+    {"Nn", 0    },
+    {"H" , 1    },
+    {"He", 2    },
+    {"Li", 3    },
+    {"Be", 4    },
+    {"B" , 5    },
+    {"C" , 6    },
+    {"N" , 7    },
+    {"O" , 8    },
+    {"F" , 9    },
+    {"Ne", 10   },
+    {"Na", 11   },
+    {"Mg", 12   },
+    {"Al", 13   },
+    {"Si", 14   },
+    {"P" , 15   },
+    {"S" , 16   },
+    {"Cl", 17   },
+    {"Ar", 18   },
+    {"K" , 19   },
+    {"Ca", 20   },
+    {"Sc", 21   },
+    {"Ti", 22   },
+    {"V" , 23   },
+    {"Cr", 24   },
+    {"Mn", 25   },
+    {"Fe", 26   },
+    {"Co", 27   },
+    {"Ni", 28   },
+    {"Cu", 29   },
+    {"Zn", 30   },
+    {"Ga", 31   },
+    {"Ge", 32   },
+    {"As", 33   },
+    {"Se", 34   },
+    {"Br", 35   },
+    {"Kr", 36   },
+    {"Rb", 37   },
+    {"Sr", 38   },
+    {"Y" , 39   },
+    {"Zr", 40   },
+    {"Nb", 41   },
+    {"Mo", 42   },
+    {"Tc", 43   },
+    {"Ru", 44   },
+    {"Rh", 45   },
+    {"Pd", 46   },
+    {"Ag", 47   },
+    {"Cd", 48   },
+    {"In", 49   },
+    {"Sn", 50   },
+    {"Sb", 51   },
+    {"Te", 52   },
+    {"I" , 53   },
+    {"Xe", 54   },
+    {"Cs", 55   },
+    {"Ba", 56   },
+    {"La", 57   },
+    {"Ce", 58   },
+    {"Pr", 59   },
+    {"Nd", 60   },
+    {"Pm", 61   },
+    {"Sm", 62   },
+    {"Eu", 63   },
+    {"Gd", 64   },
+    {"Tb", 65   },
+    {"Dy", 66   },
+    {"Ho", 67   },
+    {"Er", 68   },
+    {"Tm", 69   },
+    {"Yb", 70   },
+    {"Lu", 71   },
+    {"Hf", 72   },
+    {"Ta", 73   },
+    {"W" , 74   },
+    {"Re", 75   },
+    {"Os", 76   },
+    {"Ir", 77   },
+    {"Pt", 78   },
+    {"Au", 79   },
+    {"Hg", 80   },
+    {"Tl", 81   },
+    {"Pb", 82   },
+    {"Bi", 83   },
+    {"Po", 84   },
+    {"At", 85   },
+    {"Rn", 86   },
+    {"Fr", 87   },
+    {"Ra", 88   },
+    {"Ac", 89   },
+    {"Th", 90   },
+    {"Pa", 91   },
+    {"U" , 92   },
+    {"Np", 93   },
+    {"Pu", 94   },
+    {"Am", 95   },
+    {"Cm", 96   },
+    {"Bk", 97   },
+    {"Cf", 98   },
+    {"Es", 99   },
+    {"Fm", 100  },
+    {"Md", 101  },
+    {"No", 102  },
+    {"Lr", 103  },
+    {"Rf", 104  },
+    {"Db", 105  },
+    {"Sg", 106  },
+    {"Bh", 107  },
+    {"Hs", 108  },
+    {"Mt", 109  },
+    {"Ds", 110  },
+    {"Rg", 111  },
+    {"Cn", 112  },
+    //{ "Uut", 113 },
+    {"Fl", 114  },
+    //{ "Uup", 115 },
+    {"Lv", 116  },
+    //{ "Uus", 117 },
+    //{ "Uuo", 118 },
+  };
+
+  const std::string marley_utils::marley_logo = "╔╦╗╔═╗╦═╗╦  ╔═╗╦ ╦\n"
+                                                "║║║╠═╣╠╦╝║  ║╣ ╚╦╝\n"
+                                                "╩ ╩╩ ╩╩╚═╩═╝╚═╝ ╩\n";
+
+  const std::string marley_utils::marley_pic =
+    "ZZ77I\?I7777\?\?+I\?\?+=====~=~~~:+=+7I$I$Z$$O"
+    "Z77Z$O\?\?=\?\?$Z$Z=$=~=~,:::~~:=~===+=+=II\n"
+    "Z$7IIIIII+I=++=+==+~=~~~~~===\?ZIZ$OOZZOOI8$ZZ"
+    "O8Z8O$ZOO7Z+:,:::,::~:::::~+~:~=~=+\n"
+    "$77I$II\?+I\?+++=+=+====+\?=~=I$7O7$OOZ$8OO8DO"
+    "O8888O8ZOZZ8Z7I~:::::::::::~~:~==~==~\n"
+    "I7I$I7++\?+++=+=++===~~++I\?OO$I$ZOZDO8O888D88"
+    "8OO8888888ZOO$\?I::~,::,::::~:~~=~~==\n"
+    "IIII+\?\?I\?=\?+=+=====~~=$$Z$$Z8IOZOZOD888D$="
+    ":::,,,,,:Z88888ZZ$=\?:,~::::~~:~,:~~~:~\n"
+    "77I$\?\?\?+\?+\?=+=~=~~~=7Z87ZZ$OIZZOO8888DD\?"
+    "::::,,::::,,::O88O8ZZ=:=:::,::::::::=~:=\n"
+    "II+\?+\?\?++++======++7Z8I7OO$$DO$8Z888DZ\?~~:"
+    ",,,,,,,,,:,:~:$O8ZOZ\?=~,:,,:,:::::~~~:\n"
+    "$+I\?+\?+=+===+=+\?+IZ8$DDDIZO8OOD8D88D87+:::="
+    "7ZI7~,,,,:::::~8O8ZZ7+~::,:,::,:,:::~\n"
+    "7+\?+\?+\?+======\?$OO$IOD8OD88O8OD7D8DD8I:~77"
+    "$7ZZ$$O+::,:::~~=8O78OI\?~:,:,::,,,::~:\n"
+    "I\?+++=\?+=~++$$ZZODZ88ZDDOZZDOZD8DDDD7~~Z\?=~"
+    "==~Z88O+~,::::~~=88OO8$+~=:,,::,,,:,:\n"
+    "+++++==++I$$ZO8$$O8DNDNDOZ8O88O8DDD$+\?$$8O$88"
+    "8O8O$7:~~:~,,~~O8888OO$~,:,,:::,:,:\n"
+    "+\?++====\?\?$O88Z88ODD$ZOZ$$OOOOODDD\?~~::~=$"
+    "Z~Z7887I~::$Z$O\?::I888ZO8$\?~:,,::~::,,\n"
+    "\?+++====\?$88DDZ$88OZDDD8$O88O88D8\?:::,:,,:+"
+    "8OO+7$~,,,O8OOOZ==8888888O\?=~::::::,,\n"
+    "++=====+\?OODZ$$DD8DDD8ZZ$$ODO8DD=::~,,:::,,,,"
+    ":,,,,:,,:OI~:ZOZ88D8$8OO7+:,::::~::\n"
+    "+++=+=\?\?8D87DZ8DDDDZ888O88OO88ZD\?\?\?:::~::"
+    ":~=I::,,,:~,,88D:,7Z8D88O88O+=:,,,:~::,\n"
+    "+=+=++78Z7OZZ8DDDD8DDD8$+78$8D8D7I~:~I\?II7$I\?"
+    "ZI$DD8I\?+==~88II8DD8O88OZ~:,,:::,:,\n"
+    "++===+ID$ODDDDNDDDDD7=$O\?$88NDD8I\?++I\?+77\?"
+    "~~~:=\?IOZ$OO7O8787$8D88$88ZO=~::,:::::\n"
+    "=+===+I$8D8=8NDDND=OZZD$\?7ODO8D87=\?++II+Z++\?"
+    "I\?Z7$Z$I$D8~::~Z7DDD87O$OZ++,,,::::,\n"
+    "===~+\?8DZ8N8DNDNNDD+I=77I7D8DDDOZ++==\?I8\?\?"
+    "$8ZO$7=\?$\?Z$==::,:8DDD8888O$$~,,:::::,\n"
+    "====$8OOODN\?DDNDNNDI=+ZIIZD8DDD$7+I+==IZ8Z~~\?"
+    "~O8$7\?=ZI+$:::~DDDD8O88$87~,::::::,\n"
+    "==+8$8O88N8ODNNNDNDND7Z=ZDD8NDNO+7+=\?+\?~Z\?,"
+    ":,,+,+DDZ7Z+7~~,~DDDD888O8$$\?:,,,:::,\n"
+    "+~=+ZO88DD8DNNDNDDND78DI\?O8DDDDZ\?7I=\?==~~ZD"
+    "DDDO,:,=D87+I==~=DDDD8DDOO$I=::,::::,\n"
+    "+=+\?8I8DDNO8NNNNDNNDDD\?IDON8DDD$7$I\?7=~=~~~"
+    ":~8DDD.~888O7I\?\?8DDD88OD8O$~:::,,:,:,\n"
+    "=~\?8$O8DDDZDNDNNDNDNDD78DDNNDDDZI+\?\?7~=+:=="
+    "77~~:ZO,DOOZZ7$ZDDDD8D8D888$::::,::,,\n"
+    "+=\?8IDDNDDODNNNNNNNN$D$DDDNDDDDO$=7=+=~\?+==\?"
+    "+7Z7I7$I\?Z$$ODDDDD88DDDD88I\?,,::,:,:\n"
+    "=\?$OI8NDND8DNNDNNNDD7788DNDD8DDNZ$I+\?~~~==+="
+    "$$$II$I~ZIOO8DDDDD8D8D8DDO7=::,:,,:,\n"
+    "I$8888DDNDDDNN8NNNNN7Z88NNDDNNDDD8ZO7I=~~:~\?="
+    "77II\?\?7O$ZODDDDD8DDD8O88Z\?:,:::,::,\n"
+    "$DDZ8DDNND8DNDNNNNND7$8ODN8DNND888D8$$ZI$$\?I~"
+    "=+I\?+7Z7$ODDDNDD88888OODO:::,,,,:::\n"
+    "8DDOD8DDNN$ND7NNNNND8I88NN8DDNDDDZDD$ZZIZ88ZO7"
+    "\?==78$IZDDDDDDDOD888DD8Z,::,,,,::,\n"
+    "DD8DDDDDDNNNO\?NNNNN\?878NNNZOZDDD8ZDNDD888O8D"
+    "OD87ZOI\?O8DDDDDDDODO$D7OO~:::,:,::::\n"
+    "8NZOO8D8NDNNN7D88NNIOID8ND88$NDD8O$DDDDDN88Z8D"
+    "8DD8Z7D8DDDDDDDOD8\?8OO=::,:::,:,,,\n"
+    "DOZ8ZD8DDDNDDDN$8ONDNI88NNZD7DND$$8DNDNND8DNOO"
+    "$NODODDDNDDDNDDD887IOO=:::::::,,,:\n"
+    "NID8ND8DDNN+DNN$DID8D=ODDNZD\?8DN8ODZDDDN8NDOD"
+    "8DDD8DDDDDDDDNDDD8~IDOO~:::,:,:,:,:\n"
+    "IDODDDNDNDNZNNNI77D8+IZDN888=O8DD8DDNDNNNN8ODD"
+    "DDN8DDDDDDDDDZDZI77+OO$I~:::::,:,:\n"
+    "7NODDDD8NNDDN\?I7$INO++ODDI8D+7O8$88NNNDDNNDDD"
+    "D8D8O$DDDDDND88O$$887$\?OZZ:::,,::,,\n"
+    "NNDODDNDDNDNO$7I\?+NZ\?7DD$88=+\?ZZ$OIDDNNDND8"
+    "DODND8$=DDDNDD8OOI$O87$O8Z8\?+:~::,,::\n"
+    "NNNDZD$DN+DNOZZ\?==D7=IDN$DNI=I$ZZZ7$Z$DDNN8D8"
+    "O$8$::DDNN8D8D8I8O8Z88DD8I\?+:::,,::\n"
+    "NNNZ$DDNNZ7NOII+==D8+ZO=8D\?++I$$Z$88O8OZ8OZOI"
+    "Z8$::NNDNDOD88$$ZIIIZOD88I8O+:::,,,\n"
+    "NNNZ8DDND8ON7ZI==~DOZ88OO7$I\?\?7+I$\?$Z8$$Z$Z"
+    "ZZD+::ODNZOD8=7I$D8Z$~I8DDD888+~~,,,,\n"
+    "NNN$DD8NDDNN+7I==~7\?+7ZZ8I7I\?7\?77I7+ZZZ$$7Z"
+    "NI~::~88O8DD+O$$DODZZZZDDODOO+:$\?:~,,\n"
+    "NNDD8DNN8ZDN8I\?~~=~Z\?$I8D$7I=\?ZZ77\?\?$II$Z"
+    "DZ=~::8D8ODZINZO$ODDI78=8DD8D+\?Z$$Z\?::,\n"
+    "NN\?\?NNNDD8DD$\?7=NN=OZD8ODZ\?I=7ZI$I7O$$OO$="
+    "DDI:~\?7OOIDD8\?$DDDO\?Z\?OZ87I8~OZ888Z+~:\n"
+    "NNIO8NND88NN8IIND87ZDDO8$I\?7$ZIII7\?\?Z8:=\?+"
+    "OZD:IIDIODND7\?O$NDOOI7::O$\?77DZO$D8ZI~\n"
+    "NNI7DDNNDONNO\?O$ONDNI\?DN$+\?ZIZ$7I778=++==++"
+    "ID\?Z$O$ZDD\?\?7$DDO\?$$O~:8+~OO8$\?888OZ=\n"
+    "NNO78NNN78NNDDZ7DN$8DZ78$I7I+$I7\?\?Z~+++=++\?"
+    "II$OOIIZDDD87ODD\?ZO8Z:8Z$7ODDZ78D8O$\?\n"
+    "NN=ZONNDDODD77$ZN7D8D=NOO$$I$7I77$8+\?++\?=+\?"
+    "$7I\?DO7DDDD87ND8Z8$8~:=OO7Z$OI+8DDZZ\?\n"
+    "NDOO8NND$ON87NDD\?7\?$D7N8Z7II8ZI+Z8~\?==+==I\?"
+    "DZID$=ZDD8ZIZNODOZ8D~:~ZD$\?\?\?D7O8DOI\?\n"
+    "NNIODNNNDNNI$NO\?+DDNDD8ZZ$78OO$ID~\?+\?=++=IZ"
+    "$OO8OI$N$$Z8NDZZO$D::~=$OZI+=$$$+O8Z+\n"
+    "NI\?O8NNNDD\?ODD8=$$887DOZZ$I7\?\?\?$~+\?=+~=\?"
+    "\?~O\?ZZN\?I7\?OZ8NDOOIDZI:~==+$OI~~~ZI~78ZI\n"
+    "NZ7DNNNNN8DNNOD\?78N8N8$\?7I\?\?++7==+\?\?~~=+"
+    "+Z~OZD7Z=DO7NND7$78DO=~====O$+:~=OZ=\?$O+\n"
+    "N8OZDNNNNZNMN7$\?8OO\?OZ\?7$7III7$+++=====++=8"
+    "+$ZI7\?$7$8D$D\?ODD8O==~=IO8\?\?+=D$I=7I=\n"
+    "ND88ODN8NNNNN7\?Z7ZN=D8I$\?\?\?I+7~\?\?=++===+"
+    "Z8\?+I$\?O\?DD8+8\?DOO8DN7I+==+=Z8=Z~$Z7+\?7\?\n";

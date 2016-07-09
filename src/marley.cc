@@ -48,9 +48,9 @@ void signal_handler(int)
 // source file via the static keyword
 static const std::string help_message1 = "Usage: ";
 static const std::string help_message2 = " [OPTION...] FILE\n"
-"\n"
-"  -h, --help     Print this help message\n"
-"  -v, --version  Print version and exit\n";
+  "\n"
+  "  -h, --help     Print this help message\n"
+  "  -v, --version  Print version and exit\n";
 
 inline void print_help(std::string executable_name) {
   std::cout << help_message1 + executable_name + help_message2;
@@ -118,6 +118,10 @@ int main(int argc, char* argv[]){
     else if (option == "-v" || option == "--version") {
       print_version();
     }
+    else if (option == "--marley") {
+      std::cout << marley_utils::marley_pic;
+      exit(0);
+    }
     else {
      std::cout << argv[0] << ": unrecognized "
        << "command line option '" <<  option
@@ -136,11 +140,6 @@ int main(int argc, char* argv[]){
   #endif
   marley::Generator gen(cf);
 
-  std::cout << std::endl << marley_utils::marley_logo << std::endl;
-  std::cout << "\"Don't worry about a thing," << std::endl;
-  std::cout << "'Cause every little thing gonna be all right.\"" << std::endl;
-  std::cout << "-- Bob, \"Three Little Birds\"" << std::endl << std::endl;
-
   // Get the time that the program was started
   std::chrono::system_clock::time_point start_time_point
     = std::chrono::system_clock::now();
@@ -148,13 +147,9 @@ int main(int argc, char* argv[]){
   std::time_t start_time = std::chrono::system_clock::to_time_t(start_time_point);
 
 
-  std::cout << "MARLEY started on "
+  std::cout << "\nMARLEY started on "
     << put_time(std::localtime(&start_time), "%c %Z")
     << std::endl;
-  #ifndef USE_ROOT
-  std::cout << "Seed for random number generator: "
-    << gen.get_seed() << std::endl;
-  #endif
 
   int num_old_events = 0;
   // Desired number of events to be generated in this run. This
@@ -264,14 +259,11 @@ int main(int argc, char* argv[]){
       // Write the desired number of events in this run to the ROOT file.
       // Use a string so that we can write a single int without much trouble.
       std::string str_num_events = std::to_string(num_events);
-      treeFile->WriteObject(&str_num_events, "number of MARLEY events to generate");
+      treeFile->WriteObject(&str_num_events,
+        "number of MARLEY events to generate");
 
       std::cout << "Events for this run will be written to the ROOT file "
         << tree_file_name << std::endl;
-
-      // Notify the user of the seed that will be used for this run
-      std::cout << "Seed for random number generator: "
-      << gen.get_seed() << std::endl;
     }
 
     // If we were able to read in the event tree from the file, get
@@ -298,8 +290,9 @@ int main(int argc, char* argv[]){
       std::string* p_rng_state_string = nullptr;
       treeFile->GetObject("MARLEY RNG State String", p_rng_state_string);
 
+      // TODO: add error handling here (p_rng_state_string may be nullptr)
       // Use the state string to reset the MARLEY RNG
-      gen.seed_using_state_string(p_rng_state_string);
+      gen.seed_using_state_string(*p_rng_state_string);
 
       // Get previous RNG seed from the ROOT file
       std::string* p_rng_seed_str = nullptr;
