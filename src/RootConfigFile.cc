@@ -10,6 +10,17 @@
 
 using InterpMethod = marley::InterpolationGrid<double>::InterpolationMethod;
 
+marley::RootConfigFile::RootConfigFile() : marley::ConfigFile(),
+  root_filename("events.root"), writeroot(false),
+  check_before_root_file_overwrite(true) {}
+
+marley::RootConfigFile::RootConfigFile(const std::string& file_name)
+  : marley::RootConfigFile()
+{
+  filename = file_name;
+  parse();
+}
+
 void marley::RootConfigFile::check_pdf_pairs(const std::vector<double>& Es,
   const std::vector<double>& PDFs)
 {
@@ -78,6 +89,36 @@ template<typename T> T*
     + std::to_string(line_num) + " of the configuration file " + filename);
 
   return nullptr;
+}
+
+bool marley::RootConfigFile::process_extra_keywords() {
+
+  std::string arg;
+
+  if (keyword == "writeroot") {
+    next_word_from_line(arg, true, true);
+    if (arg == "yes") writeroot = true;
+    else if (arg == "no") writeroot = false;
+    else if (arg == "overwrite") {
+      writeroot = true;
+      check_before_root_file_overwrite = false;
+    }
+    else {
+      throw marley::Error(std::string("Invalid")
+        + " ROOT file write flag '" + arg
+        + "' encountered on line" + std::to_string(line_num)
+        + " of the configuration file " + filename);
+    }
+    return true;
+  }
+
+  else if (keyword == "rootfile") {
+    next_word_from_line(arg, true, false);
+    root_filename = arg;
+    return true;
+  }
+
+  return false;
 }
 
 bool marley::RootConfigFile::process_extra_source_types(

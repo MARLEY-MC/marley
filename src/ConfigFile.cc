@@ -1,6 +1,7 @@
 #include "marley_utils.hh"
 #include "ConfigFile.hh"
 #include "InterpolationGrid.hh"
+#include "Logger.hh"
 
 // Define type abbreviations and constant regular expressions that are only
 // visible within this file
@@ -25,20 +26,14 @@ namespace {
 
 // The default constructor assigns default values to all
 // configuration file parameters
-marley::ConfigFile::ConfigFile() {
-  seed = std::chrono::system_clock::now().time_since_epoch().count();
-  writeroot = false;
-  check_before_root_file_overwrite = true;
-  root_filename = "events.root";
-  writehepevt = false;
-  check_before_hepevt_file_overwrite = true;
-  hepevt_filename = "events.hepevt";
-  num_events = DEFAULT_NUM_EVENTS;
-}
+marley::ConfigFile::ConfigFile()
+  : seed(std::chrono::system_clock::now().time_since_epoch().count()),
+  num_events(DEFAULT_NUM_EVENTS), hepevt_filename("events.hepevt"),
+  writehepevt(false), check_before_hepevt_file_overwrite(true) {}
 
 // Call the default constructor first to set all configuration
 // file parameters to their default values
-marley::ConfigFile::ConfigFile(std::string file_name)
+marley::ConfigFile::ConfigFile(const std::string& file_name)
   : marley::ConfigFile()
 {
   filename = file_name;
@@ -103,41 +98,9 @@ void marley::ConfigFile::parse() {
       next_word_from_line(arg, true, false);
       reaction_filenames.insert(arg);
     }
-    else if (keyword == "rootfile") {
-      #ifdef USE_ROOT
-      next_word_from_line(arg, true, false);
-      root_filename = arg;
-      #else
-      // TODO: change this to a warning that this will be ignored
-      throw marley::Error(std::string("Cannot set")
-        + " ROOT filename. MARLEY must be compiled"
-        + " with ROOT support.");
-      #endif
-    }
     else if (keyword == "hepevtfile") {
       next_word_from_line(arg, true, false);
       hepevt_filename = arg;
-    }
-    else if (keyword == "writeroot") {
-      #ifdef USE_ROOT
-      next_word_from_line(arg, true, true);
-      if (arg == "yes") writeroot = true;
-      else if (arg == "no") writeroot = false;
-      else if (arg == "overwrite") {
-        writeroot = true;
-        check_before_root_file_overwrite = false;
-      }
-      else {
-        throw marley::Error(std::string("Invalid")
-          + " ROOT file write flag '" + arg
-          + "' encountered on line" + std::to_string(line_num)
-          + " of the configuration file " + filename);
-      }
-      #else
-      throw marley::Error(std::string("The writeroot")
-        + " keyword may only be used when MARLEY is compiled"
-        + " with ROOT support.");
-      #endif
     }
     else if (keyword == "writehepevt") {
       next_word_from_line(arg, true, true);
@@ -626,11 +589,10 @@ void marley::ConfigFile::parse() {
       num_events = static_cast<size_t>(n_events);
     }
 
-    else {
-      std::cerr << "Warning: Ignoring unrecognized keyword '"
-        << keyword << "' on line " << line_num
-        << " of the configuration file "
-        << filename << std::endl;
+    else if (!process_extra_keywords()) {
+      MARLEY_LOG_WARNING() << "Ignoring unrecognized keyword '" << keyword
+        << "' on line " << line_num << " of the configuration file "
+        << filename << '\n';
     }
   }
 
@@ -682,47 +644,6 @@ bool marley::ConfigFile::next_word_from_line(std::string& word,
   return true;
 }
 
-
-void marley::ConfigFile::print_summary(std::ostream& os) {
-  os << "seed: " << seed << std::endl;
-  #ifdef USE_ROOT
-  os << "writeroot: ";
-  if (writeroot && check_before_root_file_overwrite)
-    os << "yes";
-  else if (writeroot) os << "overwrite";
-  else os << "no";
-  os << std::endl;
-  os << "rootfile: " << root_filename << std::endl;
-  #endif
-  for (const auto& rfile: reaction_filenames)
-    os << "reaction: " << rfile << std::endl;
-  for (const auto& sr: structure_records) {
-    os << "structure:";
-    // TODO: consider using an ordered set that keeps the
-    // nucids in periodic table order. This will make the
-    // output here look nicer
-    for (const auto& pdg: sr.nucleus_pdg_codes) {
-      int Z = (pdg % 10000000)/10000;
-      int A = (pdg % 10000)/10;
-      std::string trimmed_id = marley_utils::trim_copy(
-        marley_utils::nuc_id(Z, A));
-      // If the element symbol is not a single character,
-      // then make its second letter lowercase. Also change
-      // the ENSDF code for a neutron ("NN") to "n"
-      std::string element_symbol = trimmed_id.substr(trimmed_id.size() - 2);
-      if (!std::regex_match(element_symbol.substr(0,1), rx_nonneg_int)) {
-        element_symbol.back() = tolower(element_symbol.back());
-        if (element_symbol == "Nn") element_symbol = "n";
-        trimmed_id = trimmed_id.erase(trimmed_id.size() - 2) + element_symbol;
-      }
-      os << " " << trimmed_id;
-    }
-    os << " from " << sr.filename << " ("
-      << marley::ConfigFile::format_to_string(sr.format)
-      << " format)" << std::endl;
-  }
-}
-
 marley::DecayScheme::FileFormat
   marley::ConfigFile::string_to_format(
   const std::string& string)
@@ -742,4 +663,16 @@ std::string marley::ConfigFile::format_to_string(
   else throw marley::Error(std::string("Unrecognized")
     + " marley::DecayScheme::FileFormat value passed to"
     + " marley::ConfigFile::format_to_string()");
+}
+
+bool marley::ConfigFile::process_extra_keywords() {
+  if (keyword == "writeroot" || keyword == "rootfile") {
+    MARLEY_LOG_WARNING() << "Ignoring keyword '" << keyword
+      << "' found on line " << std::to_string(line_num)
+      << " of the configuration file. To enable ROOT"
+      << " TFile output, use a marley::RootConfigFile object instead"
+      << " of a marley::ConfigFile object.\n";
+    return true;
+  }
+  return false;
 }
