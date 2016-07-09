@@ -25,7 +25,7 @@ namespace marley {
       };
 
       ConfigFile();
-      ConfigFile(const std::string file_name);
+      ConfigFile(const std::string& file_name);
       inline uint_fast64_t get_seed() const { return seed; }
       inline void set_seed(uint_fast64_t s) { seed = s; };
       inline const std::unordered_set<std::string>&
@@ -45,13 +45,7 @@ namespace marley {
       inline const std::vector<StructureRecord>& get_structure_records() const {
         return structure_records;
       }
-      #ifdef USE_ROOT
-      inline std::string get_root_filename() const { return root_filename; }
-      inline bool check_write_root() const { return writeroot; }
-      inline bool check_overwrite_root() const {
-        return check_before_root_file_overwrite;
-      }
-      #endif
+
       void print_summary(std::ostream& os = std::cout);
 
       inline std::vector<std::unique_ptr<marley::NeutrinoSource> >& get_sources() {
@@ -77,6 +71,8 @@ namespace marley {
       inline virtual bool process_extra_source_types(const std::string&, int)
         { return false; }
 
+      virtual bool process_extra_keywords();
+
       // Helper function for the constructor. We avoid polymorphism in the
       // constructor by delegating the parsing to this method.
       void parse();
@@ -95,10 +91,6 @@ namespace marley {
       // this file. When a marley::Generator object is constructed using this
       // configuration file, ownership will be transferred to the generator.
       std::vector<std::unique_ptr<marley::NeutrinoSource> > sources;
-
-      std::string root_filename;
-      bool writeroot;
-      bool check_before_root_file_overwrite;
 
       std::string hepevt_filename;
       bool writehepevt;
