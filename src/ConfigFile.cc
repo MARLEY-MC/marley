@@ -28,8 +28,9 @@ namespace {
 // configuration file parameters
 marley::ConfigFile::ConfigFile()
   : seed(std::chrono::system_clock::now().time_since_epoch().count()),
-  num_events(DEFAULT_NUM_EVENTS), hepevt_filename("events.hepevt"),
-  writehepevt(false), check_before_hepevt_file_overwrite(true) {}
+  num_events(DEFAULT_NUM_EVENTS), structure_db_(new marley::StructureDatabase),
+  hepevt_filename("events.hepevt"), writehepevt(false),
+  check_before_hepevt_file_overwrite(true) {}
 
 // Call the default constructor first to set all configuration
 // file parameters to their default values
@@ -118,12 +119,15 @@ void marley::ConfigFile::parse() {
       }
     }
     else if (keyword == "structure") {
-      StructureRecord sr;
-      next_word_from_line(sr.filename, true, false);
+
+      std::string structure_file_name;
+      next_word_from_line(structure_file_name, true, false);
+
       std::string format_string;
+      marley::DecayScheme::FileFormat format;
       next_word_from_line(format_string);
       try {
-        sr.format = string_to_format(format_string);
+        format = string_to_format(format_string);
       }
       // If the format is invalid, catch the exception thrown
       // by the converter and throw a different one so that
@@ -134,6 +138,9 @@ void marley::ConfigFile::parse() {
           + "' specified on line " + std::to_string(line_num)
           + " of the configuration file " + filename);
       }
+
+      std::set<int> nucleus_pdg_codes;
+
       // Require at least one nuclide specifier on this line
       // by using next_word_from_line here with exceptions enabled
       // and then using it with exceptions disabled in the loop
@@ -145,7 +152,7 @@ void marley::ConfigFile::parse() {
           int dummy = std::stoi(arg);
           int Z = dummy / 1000;
           int A = dummy % 1000;
-          sr.nucleus_pdg_codes.insert(marley_utils::get_nucleus_pid(Z, A));
+          nucleus_pdg_codes.insert(marley_utils::get_nucleus_pid(Z, A));
         }
         // If the nuclide specifier matches the ENSDF-style
         // nucid format (A + element symbol without a
@@ -174,8 +181,7 @@ void marley::ConfigFile::parse() {
           int Anuc = std::stoi(arg.substr(0,3));
           // Add the nucid to the set of requested nucids
           // for this structure file
-          sr.nucleus_pdg_codes.insert(marley_utils::get_nucleus_pid(Znuc,
-            Anuc));
+          nucleus_pdg_codes.insert(marley_utils::get_nucleus_pid(Znuc, Anuc));
         }
         // Other nuclide specifiers are not allowed
         else throw marley::Error(std::string("Invalid")
@@ -185,9 +191,9 @@ void marley::ConfigFile::parse() {
 
       } while (next_word_from_line(arg, false));
 
-      // Add this structure record to the master vector
-      structure_records.push_back(sr);
-
+      // Create DecayScheme objects for the requested nuclides and add them to
+      // the database
+      add_decay_schemes(structure_file_name, format, nucleus_pdg_codes);
     }
     else if (keyword == "source") {
 
@@ -675,4 +681,26 @@ bool marley::ConfigFile::process_extra_keywords() {
     return true;
   }
   return false;
+}
+
+void marley::ConfigFile::add_decay_schemes(const std::string& file_name,
+  const marley::DecayScheme::FileFormat format,
+  const std::set<int>& nucleus_pdg_codes)
+{
+  /// @todo Consider altering the parsing process used here so
+  /// that all nuclides are loaded from the file in one pass.
+
+  // Add a decay scheme for each nuclear pdg code to the database
+  for (const auto& pdg : nucleus_pdg_codes) {
+
+    int Z = marley_utils::get_particle_Z(pdg);
+    int A = marley_utils::get_particle_A(pdg);
+
+    std::string trimmed_nucid = marley_utils::trim_copy(
+      marley_utils::nuc_id(Z, A));
+    MARLEY_LOG_INFO() << "Loading nuclear structure data for "
+      << trimmed_nucid << " from file " << file_name;
+
+    structure_db_->emplace_decay_scheme(pdg, file_name, format);
+  }
 }

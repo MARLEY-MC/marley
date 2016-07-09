@@ -50,6 +50,7 @@ void marley::Generator::normalize_E_pdf() {
 }
 
 void marley::Generator::init(marley::ConfigFile& cf) {
+
   // Use the seed from the config file object to prepare the random number
   // generator.  This is an attempt to do a decent job of seeding the random
   // number generator, but optimally accomplishing this can be tricky (see, for
@@ -58,16 +59,16 @@ void marley::Generator::init(marley::ConfigFile& cf) {
   std::seed_seq seed_sequence{seed_};
   rand_gen_.seed(seed_sequence);
 
-  // Load the nuclear structure data specified in the configuration file
-  // into the database.
-  structure_db_ = marley::StructureDatabase(cf);
+  // Transfer ownership of the structure database from the ConfigFile object to
+  // the Generator.
+  structure_db_.reset(cf.get_structure_db().release());
 
   // Create the reactions. Count them for later reference.
   size_t react_count = 0;
   for (const std::string& filename : cf.get_reaction_filenames()) {
     MARLEY_LOG_INFO() << "Loading reaction data from file " << filename;
     reactions_.push_back(std::make_unique<marley::NuclearReaction>(filename,
-      structure_db_));
+      get_structure_db()));
     MARLEY_LOG_INFO() << "Added reaction "
       << reactions_.back()->get_description();
     ++react_count;
@@ -231,4 +232,11 @@ marley::NeutrinoSource& marley::Generator::get_source() {
   else throw marley::Error(std::string("Error")
     + " in marley::Generator::get_source(). The member variable source_ =="
     + " nullptr.");
+}
+
+marley::StructureDatabase& marley::Generator::get_structure_db() {
+  if (structure_db_) return *structure_db_;
+  else throw marley::Error(std::string("Error")
+    + " in marley::Generator::get_structure_db(). The member variable"
+    + " structure_db_ == nullptr.");
 }
