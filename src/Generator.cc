@@ -60,28 +60,35 @@ void marley::Generator::init(marley::ConfigFile& cf) {
   rand_gen_.seed(seed_sequence);
 
   // Transfer ownership of the structure database from the ConfigFile object to
-  // the Generator.
-  structure_db_.reset(cf.get_structure_db().release());
+  // the Generator. If the ConfigFile object does not own a StructureDatabase
+  // object (for some strange reason), then create a default-constructed one.
+  auto& cf_sdb = cf.get_structure_db();
+  if (cf_sdb) structure_db_.reset(cf_sdb.release());
+  else {
+    structure_db_ = std::make_unique<marley::StructureDatabase>();
+    MARLEY_LOG_WARNING() << "A ConfigFile that does not"
+      << " own a StructureDatabase object was passed to"
+      << " marley::Generator::init()";
+  }
 
   // Create the reactions. Count them for later reference.
   size_t react_count = 0;
   for (const std::string& filename : cf.get_reaction_filenames()) {
     MARLEY_LOG_INFO() << "Loading reaction data from file " << filename;
     reactions_.push_back(std::make_unique<marley::NuclearReaction>(filename,
-      get_structure_db()));
+      *structure_db_));
     MARLEY_LOG_INFO() << "Added reaction "
       << reactions_.back()->get_description();
     ++react_count;
   }
 
-  // Transfer ownership of the neutrino source from the configuration file
-  // object to the generator object. If there are multiple neutrino sources in
-  // the configuration file, only use the one that was defined last.
-  auto& sources = cf.get_sources();
-  if (sources.size() > 0) source_ = std::move(sources.back());
+  // Transfer ownership of the neutrino source from the ConfigFile to the
+  // Generator.
+  auto& cf_source = cf.get_source();
+  if (cf_source) source_.reset(cf_source.release());
   else throw marley::Error(std::string("Cannot finish creating")
-    + " the marley::Generator object. The configuration file is"
-    + " missing a neutrino source definition.");
+    + " the marley::Generator object. The ConfigFile passed to"
+    + " marley::Generator::init() does not own a NeutrinoSource object.");
 
   // Initialize the vector of total cross section values to be all zeros and
   // have as many entries as there are reactions available to this generator.

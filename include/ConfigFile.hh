@@ -42,9 +42,12 @@ namespace marley {
 
       void print_summary(std::ostream& os = std::cout);
 
-      inline std::vector<std::unique_ptr<marley::NeutrinoSource> >& get_sources() {
-        return sources;
-      }
+      inline std::unique_ptr<marley::NeutrinoSource>& get_source()
+        { return source_; }
+
+      // Transfers ownership of new_source to this ConfigFile, deleting
+      // any previous source owned by this ConfigFile
+      void set_source(std::unique_ptr<marley::NeutrinoSource>&& new_source);
 
       inline size_t get_num_events() { return num_events; }
 
@@ -81,10 +84,10 @@ namespace marley {
 
       std::unique_ptr<marley::StructureDatabase> structure_db_;
 
-      // Neutrino sources will be created based on the specifications given in
+      // A neutrino source will be created based on the specifications given in
       // this file. When a marley::Generator object is constructed using this
       // configuration file, ownership will be transferred to the generator.
-      std::vector<std::unique_ptr<marley::NeutrinoSource> > sources;
+      std::unique_ptr<marley::NeutrinoSource> source_;
 
       std::string hepevt_filename;
       bool writehepevt;
