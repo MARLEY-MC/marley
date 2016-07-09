@@ -46,6 +46,7 @@ namespace marley {
       /// with the relevant cross sections by a Generator object during event
       /// creation
       /// @param E neutrino energy (MeV)
+      /// @return Probability density (MeV<sup> -1</sup>)
       virtual double pdf(double E) = 0;
 
       /// Returns true if the particle ID passed to the function is

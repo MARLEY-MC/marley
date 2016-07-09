@@ -127,7 +127,7 @@ std::complex<double> marley_utils::gamma(std::complex<double> z)
 
 // This function is a modified version of a public-domain implementation of
 // Brent's algorithm for minimizing a function. You can download the original
-// source code from http://www.codeproject.com/Articles/30201/Optimizing-a-Function-of-One-Variable
+// source code from http://tinyurl.com/hhoy3ky.
 
 // The return value of minimize is the minimum of the function f.
 // The location where f takes its minimum is returned in the variable minLoc.
@@ -217,7 +217,8 @@ double marley_utils::minimize(const std::function<double(double)> f, // [in] obj
     return  fx;
 }
 
-// We can maximize a function using the same technique by minimizing its opposite
+// We can maximize a function using the same technique by minimizing its
+// opposite
 double marley_utils::maximize(const std::function<double(double)> f, // [in] objective function to maximize
   double leftEnd,     // [in] smaller value of bracketing interval
   double rightEnd,    // [in] larger value of bracketing interval
