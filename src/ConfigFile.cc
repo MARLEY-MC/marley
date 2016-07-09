@@ -231,7 +231,7 @@ void marley::ConfigFile::parse() {
             + " specification on line " + std::to_string(line_num)
             + " of the configuration file " + filename);
           // Create the monoenergetic neutrino source
-          else sources.push_back(std::make_unique<marley::MonoNeutrinoSource>(
+          else set_source(std::make_unique<marley::MonoNeutrinoSource>(
             neutrino_pid, nu_energy));
         }
         else throw marley::Error(std::string("Invalid")
@@ -242,7 +242,7 @@ void marley::ConfigFile::parse() {
       }
 
       else if (arg == "dar" || arg == "decay-at-rest") {
-        sources.push_back(std::make_unique<marley::DecayAtRestNeutrinoSource>(
+        set_source(std::make_unique<marley::DecayAtRestNeutrinoSource>(
           neutrino_pid));
       }
 
@@ -310,7 +310,7 @@ void marley::ConfigFile::parse() {
 
         // Now that we have all of the necessary parameters, create the new
         // Fermi-Dirac neutrino source
-        sources.push_back(std::make_unique<marley::FermiDiracNeutrinoSource>(
+        set_source(std::make_unique<marley::FermiDiracNeutrinoSource>(
           neutrino_pid, Emin, Emax, temperature, eta));
       }
 
@@ -378,7 +378,7 @@ void marley::ConfigFile::parse() {
 
         // Now that we have all of the necessary parameters, create the new
         // Fermi-Dirac neutrino source
-        sources.push_back(std::make_unique<marley::BetaFitNeutrinoSource>(
+        set_source(std::make_unique<marley::BetaFitNeutrinoSource>(
           neutrino_pid, Emin, Emax, Eavg, beta));
       }
 
@@ -565,7 +565,7 @@ void marley::ConfigFile::parse() {
 
         // Now that we've processed grid points, create the grid neutrino
         // source
-        sources.push_back(std::make_unique<marley::GridNeutrinoSource>(
+        set_source(std::make_unique<marley::GridNeutrinoSource>(
           energies, prob_densities, neutrino_pid, method));
       }
 
@@ -606,7 +606,7 @@ void marley::ConfigFile::parse() {
   if (reaction_filenames.empty())
     throw marley::Error(std::string("Configuration file")
     + " must contain at least one use of the reaction keyword.");
-  if (sources.empty())
+  if (!source_)
     throw marley::Error(std::string("Configuration file")
     + " must contain at least one use of the source keyword.");
 }
@@ -703,4 +703,12 @@ void marley::ConfigFile::add_decay_schemes(const std::string& file_name,
 
     structure_db_->emplace_decay_scheme(pdg, file_name, format);
   }
+}
+
+void marley::ConfigFile::set_source(std::unique_ptr<marley::NeutrinoSource>&&
+  new_source)
+{
+  if (source_) MARLEY_LOG_WARNING() << "Replacing existing NeutrinoSource"
+    << " in a ConfigFile object.";
+  source_.reset(new_source.release());
 }

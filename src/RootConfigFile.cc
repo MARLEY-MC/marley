@@ -181,7 +181,7 @@ bool marley::RootConfigFile::process_extra_source_types(
 
         // Now that we've processed grid points, create the grid neutrino
         // source
-        sources.push_back(std::make_unique<marley::GridNeutrinoSource>(
+        set_source(std::make_unique<marley::GridNeutrinoSource>(
           Es, PDFs, neutrino_pid, InterpMethod::Constant));
 
         // We created the source successfully, so indicate that via the return
@@ -218,7 +218,7 @@ bool marley::RootConfigFile::process_extra_source_types(
         check_pdf_pairs(Es, PDFs);
 
         // Create a neutrino source based on the grid
-        sources.push_back(std::make_unique<marley::GridNeutrinoSource>(Es,
+        set_source(std::make_unique<marley::GridNeutrinoSource>(Es,
           PDFs, neutrino_pid, InterpMethod::LinearLinear));
 
         return true;
