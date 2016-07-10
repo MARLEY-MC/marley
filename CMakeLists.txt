@@ -9,7 +9,7 @@ set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 include_directories(${INCLUDE_DIR})
 
-file(GLOB SOURCES "src/[A-Z]*.cc" "src/marley_utils.cc" "src/meta_numerics.cc")
+file(GLOB SOURCES "src/[A-Z]*.cc" "src/marley_*.cc" "src/meta_numerics.cc")
 list(REMOVE_ITEM SOURCES "${SOURCE_DIR}/RootConfigFile.cc")
 
 find_program(ROOTCINT rootcint PATHS ENV PATH)

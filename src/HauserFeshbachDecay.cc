@@ -3,7 +3,7 @@
 #include "marley_utils.hh"
 #include "ExitChannel.hh"
 #include "Generator.hh"
-#include "Kinematics.hh"
+#include "marley_kinematics.hh"
 #include "MassTable.hh"
 #include "HauserFeshbachDecay.hh"
 
@@ -307,7 +307,7 @@ bool marley::HauserFeshbachDecay::do_decay(double& Exf, int& twoJf,
 
   // Handle the kinematics calculations for this decay and update the
   // final-state particle objects
-  marley::Kinematics::two_body_decay(compound_nucleus_, emitted_particle,
+  marley_kinematics::two_body_decay(compound_nucleus_, emitted_particle,
     residual_nucleus, cos_theta_emitted_particle, phi_emitted_particle);
 
   bool discrete_level = !ec->is_continuum();

@@ -1,4 +1,4 @@
-#include "Kinematics.hh"
+#include "marley_kinematics.hh"
 #include "Reaction.hh"
 
 // Performs kinematics calculations for a two-two scattering reaction
@@ -55,8 +55,8 @@ marley::Event marley::Reaction::make_event_object(double KEa,
 
   // Boost the ejectile and residue into the lab frame.
   double beta_z = pa / (Ea + mb_);
-  marley::Kinematics::lorentz_boost(0, 0, -beta_z, ejectile);
-  marley::Kinematics::lorentz_boost(0, 0, -beta_z, residue);
+  marley_kinematics::lorentz_boost(0, 0, -beta_z, ejectile);
+  marley_kinematics::lorentz_boost(0, 0, -beta_z, residue);
 
   // Create the event object and load it with the appropriate information
   marley::Event event(projectile, target, ejectile, residue, E_level);

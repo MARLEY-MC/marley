@@ -1,9 +1,26 @@
 #include "marley_utils.hh"
 #include "Particle.hh"
-#include "Kinematics.hh"
+#include "marley_kinematics.hh"
+
+namespace {
+
+  double get_beta2(double beta_x, double beta_y, double beta_z)
+  {
+    double beta2 = std::pow(beta_x, 2) + std::pow(beta_y, 2)
+      + std::pow(beta_z, 2);
+    if (beta2 == 1) throw marley::Error(std::string("Cannot perform")
+      + " Lorentz boost because \u03B2^2 = 1 and therefore the Lorentz factor"
+      + "\u03B3 is infinite.");
+    else if (beta2 > 1) throw marley::Error(std::string("Cannot perform")
+      + " Lorentz boost because \u03B2^2 = " + std::to_string(beta2) + " > 1,"
+      + " which is unphysical.");
+    return beta2;
+  }
+
+}
 
 // Rotates a particle's 3-momentum so that it points in the (x, y, z) direction
-void marley::Kinematics::rotate_momentum_vector(double x, double y, double z,
+void marley_kinematics::rotate_momentum_vector(double x, double y, double z,
   marley::Particle& particle_to_rotate)
 {
   // Get the magnitude of the vector pointing in the desired direction
@@ -26,7 +43,7 @@ void marley::Kinematics::rotate_momentum_vector(double x, double y, double z,
 
 // Lorentz boost a particle, replacing its energy and momentum with the boosted
 // versions
-void marley::Kinematics::lorentz_boost(double beta_x, double beta_y,
+void marley_kinematics::lorentz_boost(double beta_x, double beta_y,
   double beta_z, marley::Particle& particle_to_boost)
 {
   double beta2 = get_beta2(beta_x, beta_y, beta_z);
@@ -74,7 +91,7 @@ void marley::Kinematics::lorentz_boost(double beta_x, double beta_y,
 // traveling in the positive z direction in the lab frame [target nucleus's
 // rest frame]), this is all we need for now.
 // TODO: Expand this to allow the two frames to be rotated with respect to each other.
-void marley::Kinematics::two_body_decay(const marley::Particle& initial_particle,
+void marley_kinematics::two_body_decay(const marley::Particle& initial_particle,
   marley::Particle& first_product, marley::Particle& second_product,
   double cos_theta_first, double phi_first)
 {
@@ -150,7 +167,7 @@ void marley::Kinematics::two_body_decay(const marley::Particle& initial_particle
 
 // Get the square of the total energy of two particles in their center of
 // momentum frame
-double marley::Kinematics::get_mandelstam_s(const marley::Particle& p1,
+double marley_kinematics::get_mandelstam_s(const marley::Particle& p1,
   const marley::Particle& p2)
 {
   double E1 = p1.total_energy();
@@ -193,27 +210,3 @@ double marley::Kinematics::get_mandelstam_s(const marley::Particle& p1,
     return std::pow(E_tot_cm, 2);
   }
 }
-
-//// Compute final particle energies and momenta for the two-two scattering
-//// reaction b(a,c)d and store the results in particles c and d. Note that
-//// particles a and b are passed by value so that we can Lorentz boost
-//// them to the center-of-momentum frame without altering the originals.
-//void marley::Kinematics::two_two_scatter(marley::Particle a, marley::Particle b,
-//  marley::Particle &c, marley::Particle &d, double cos_theta_c, double phi_c)
-//{
-//  // Get total energy and momentum values for the two initial particles
-//  double E_tot = a.get_total_energy() + b.get_total_energy();
-//  double px_tot = a.get_px() + b.get_px();
-//  double py_tot = a.get_py() + b.get_py();
-//  double pz_tot = a.get_pz() + b.get_pz();
-//
-//  // Boost both initial particles into the center of momentum frame
-//  double beta_x = px_tot / E_tot;
-//  double beta_y = py_tot / E_tot;
-//  double beta_z = pz_tot / E_tot;
-//  lorentz_boost(beta_x, beta_y, beta_z, a);
-//  lorentz_boost(beta_x, beta_y, beta_z, b);
-//
-//  // Get the total center of mass energy
-//  double E_tot_cm = a.get_total_energy() + b.get_total_energy();
-//}
