@@ -140,8 +140,7 @@ void marley::GammaContinuumExitChannel::do_decay(double& Ex, int& two_J,
 void marley::GammaContinuumExitChannel::sample_spin_parity(int Z, int A,
   int& twoJ, marley::Parity& Pi, double Exi, double Exf, marley::Generator& gen)
 {
-  using HFD = marley::HauserFeshbachDecay;
-  using TT = HFD::TransitionType;
+  using TrType = marley::GammaStrengthFunctionModel::TransitionType;
 
   // Clear any previous table entries of spin-parities and decay widths
   jpi_widths_table_.clear();
@@ -152,11 +151,15 @@ void marley::GammaContinuumExitChannel::sample_spin_parity(int Z, int A,
   marley::LevelDensityModel& ldm
     = gen.get_structure_db().get_level_density_model(Z, A);
 
-  // Approximate the gamma energy by the energy difference between the two levels
+  marley::GammaStrengthFunctionModel& gsfm
+    = gen.get_structure_db().get_gamma_strength_function_model(Z, A);
+
+  // Approximate the gamma energy by the energy difference between the two
+  // levels
   // TODO: consider adding a nuclear recoil correction here
   double e_gamma = Exi - Exf;
   bool initial_spin_is_zero = twoJ == 0;
-  for (int l = 0; l <= HauserFeshbachDecay::l_max; ++l) {
+  for (int l = 0; l <= marley::HauserFeshbachDecay::l_max; ++l) {
     int two_l = 2*l;
     int twoJf = twoJ + two_l;
     // Determine the multipolarity being considered in this trip through the
@@ -167,10 +170,10 @@ void marley::GammaContinuumExitChannel::sample_spin_parity(int Z, int A,
     // momentum conservation.
     if (!initial_spin_is_zero || (twoJf > 0)) {
 
-      double tcE = HFD::gamma_transmission_coefficient(Z, A, TT::electric,
-        mpol, e_gamma);
-      double tcM = HFD::gamma_transmission_coefficient(Z, A, TT::magnetic,
-        mpol, e_gamma);
+      double tcE = gsfm.transmission_coefficient(TrType::electric, mpol,
+        e_gamma);
+      double tcM = gsfm.transmission_coefficient(TrType::magnetic, mpol,
+        e_gamma);
 
       if (!initial_spin_is_zero) {
 
@@ -188,6 +191,7 @@ void marley::GammaContinuumExitChannel::sample_spin_parity(int Z, int A,
         tcM, mpol, ldm);
     }
   }
+
   // Throw an error if all decays are impossible
   if (continuum_width <= 0.) throw marley::Error(std::string("Cannot ")
     + "continue Hauser-Feshbach decay. All partial gamma decay widths are "

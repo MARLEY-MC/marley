@@ -7,7 +7,33 @@
 #include "MassTable.hh"
 #include "HauserFeshbachDecay.hh"
 
-using TrType = marley::HauserFeshbachDecay::TransitionType;
+using TrType = marley::GammaStrengthFunctionModel::TransitionType;
+
+namespace {
+
+  // Helper function for
+  // marley::HauserFeshbachDecay::gamma_continuum_partial_width(). It doesn't
+  // really need access to any class members to do its job, so we've hidden it
+  // in an anonymous namespace rather than including it as a private member.
+  double gamma_cpw_helper(marley::LevelDensityModel& ldm,
+    marley::GammaStrengthFunctionModel& gsfm, marley::Parity Pi, int mpol,
+    double e_gamma, double Exf, int twoJf)
+  {
+    double tcE = gsfm.transmission_coefficient(TrType::electric, mpol, e_gamma);
+    double tcM = gsfm.transmission_coefficient(TrType::magnetic, mpol, e_gamma);
+
+    // Final parity for the electric transition will match
+    // the initial parity for even multipolarities
+    auto PfE = Pi;
+    bool mpol_is_odd = mpol % 2;
+    if (mpol_is_odd) !PfE;
+
+    double rhoE = ldm.level_density(Exf, twoJf, PfE);
+    // The magnetic transition corresponds to the opposite parity
+    double rhoM = ldm.level_density(Exf, twoJf, -PfE);
+    return (tcE * rhoE) + (tcM * rhoM);
+  }
+}
 
 // Table of nuclear fragments that will be considered when computing
 // branching ratios for nuclear de-excitations. Spin-parity values are taken
@@ -199,6 +225,9 @@ void marley::HauserFeshbachDecay::build_exit_channels()
 
   marley::DecayScheme* ds = db.get_decay_scheme(pid_initial);
 
+  marley::GammaStrengthFunctionModel&
+    gsfm = db.get_gamma_strength_function_model(Zi, Ai);
+
   // Let the continuum go down to 0 MeV unless there is a decay scheme object
   // available for the final nuclide (we'll check this in a second).
   double E_c_min = 0.;
@@ -207,11 +236,10 @@ void marley::HauserFeshbachDecay::build_exit_channels()
   // widths for each accessible level
   if (ds) {
 
-    bool initial_spin_is_zero = twoJi_ == 0;
-    // Loop over the final discrete nuclear levels in order of increasing energy
-    // until the new level energy exceeds the maximum value. For each
-    // energetically allowed level, compute a gamma ray transmission coefficient
-    // for it
+    // Loop over the final discrete nuclear levels in order of increasing
+    // energy until the new level energy exceeds the maximum value. For each
+    // energetically allowed level, compute a gamma ray transmission
+    // coefficient for it
     const auto& levels = ds->get_levels();
 
     // Use the maximum discrete level energy from the decay scheme object as the
@@ -220,31 +248,18 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     if (levels.size() > 0) E_c_min = levels.back()->energy();
 
     for (const auto& level_f : levels) {
-      int twoJf = level_f->twoJ();
-      // 0->0 EM transitions aren't allowed due to angular momentum conservation
-      // (photons are spin 1), so if the initial and final spins are zero, skip
-      // ahead to the next final level.
-      if (initial_spin_is_zero && twoJf == 0) continue;
       double Exf = level_f->energy();
       if (Exf < Exi_) {
-        // Approximate the gamma energy by the energy difference between the two levels
-        // TODO: consider adding a nuclear recoil correction here
-        double e_gamma = Exi_ - Exf;
-        // Determine the type (electric or magnetic) and multipolarity of the gamma
-        // transition between these two levels
-        int mpol; // Multipolarity
-        auto type = determine_gamma_transition_type(twoJi_, Pi_, level_f.get(),
-          mpol);
-        // TODO: allow the user to choose which gamma-ray transition model to use
-        // (Weisskopf single-particle estimates, Brink-Axel strength functions, etc.)
-        double discrete_width = gamma_transmission_coefficient(Zi, Ai, type,
-          mpol, e_gamma);
+        double discrete_width = gsfm.transmission_coefficient(Exi_, twoJi_,
+          Pi_, *level_f.get());
 
-        // Store information for this decay channel
-        exit_channels_.push_back(
-          std::make_unique<marley::GammaDiscreteExitChannel>(discrete_width,
-          *level_f, marley::Particle(pid_initial, Migs + Exf, qi)));
-        total_width_ += discrete_width;
+        // Store information for this decay channel if it is allowed
+        if (discrete_width > 0.) {
+          exit_channels_.push_back(
+            std::make_unique<marley::GammaDiscreteExitChannel>(discrete_width,
+            *level_f, marley::Particle(pid_initial, Migs + Exf, qi)));
+          total_width_ += discrete_width;
+        }
       }
       else break;
     }
@@ -259,15 +274,15 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     // Numerically integrate the continuum width up to the initial excitation
     // energy
     double continuum_width = marley_utils::num_integrate(
-      [&ldm, this](double Exf)
-      -> double { return gamma_continuum_partial_width(ldm, Exf); }, E_c_min,
-      Exi_, DEFAULT_CONTINUUM_SUBINTERVALS);
+      [&ldm, &gsfm, this](double Exf)
+      -> double { return gamma_continuum_partial_width(ldm, gsfm, Exf); },
+      E_c_min, Exi_, DEFAULT_CONTINUUM_SUBINTERVALS);
 
     // Normalized probability density used for sampling a final excitation
     // energy in the continuum
-    std::function<double(double)> pdf = [=, &ldm](double Exf) -> double {
-      return gamma_continuum_partial_width(ldm, Exf) / continuum_width;
-    };
+    std::function<double(double)> pdf = [=, &ldm, &gsfm](double Exf)
+      -> double { return gamma_continuum_partial_width(ldm, gsfm, Exf)
+      / continuum_width; };
 
     // Store information for this decay channel
     exit_channels_.push_back(
@@ -314,198 +329,39 @@ bool marley::HauserFeshbachDecay::do_decay(double& Exf, int& twoJf,
   return !discrete_level;
 }
 
-TrType marley::HauserFeshbachDecay::determine_gamma_transition_type(int twoJi,
-  marley::Parity Pi, marley::Level* level_f, int& l)
-{
-  int twoJf = level_f->twoJ();
-  marley::Parity Pf = level_f->parity();
-
-  return determine_gamma_transition_type(twoJi, Pi, twoJf, Pf, l);
-}
-
-TrType marley::HauserFeshbachDecay::determine_gamma_transition_type(
-  marley::Level* level_i, marley::Level* level_f, int& l)
-{
-  int twoJi = level_i->twoJ();
-  marley::Parity Pi = level_i->parity();
-
-  int twoJf = level_f->twoJ();
-  marley::Parity Pf = level_f->parity();
-
-  return determine_gamma_transition_type(twoJi, Pi, twoJf, Pf, l);
-}
-
-// Returns whether a gamma transition from a nuclear state with spin twoJi / 2 and
-// parity Pi to a state with spin twoJf / 2 and parity Pf is electric or magnetic.
-// Also loads the integer l with the multipolarity of the transition.
-TrType marley::HauserFeshbachDecay::determine_gamma_transition_type(int twoJi,
-  marley::Parity Pi, int twoJf, marley::Parity Pf, int& l)
-{
-  // TODO: reconsider how to handle this situation
-  if (twoJi == 0 && twoJf == 0) throw marley::Error(
-    std::string("0 -> 0 EM transitions are not allowed."));
-
-  int two_delta_J = std::abs(twoJf - twoJi);
-  // Odd values of two_delta_J are unphysical because they represent EM
-  // transitions where the total angular momentum changes by half (photons are
-  // spin 1)
-  if (two_delta_J % 2) throw marley::Error(std::string("Unphysical ")
-    + "EM transition encountered between nuclear levels with spins 2*Ji = "
-    + std::to_string(twoJi) + " and 2*Jf = " + std::to_string(twoJf));
-
-  marley::Parity Pi_times_Pf = Pi * Pf;
-
-  // Determine the multipolarity of this transition. Load l with the result.
-  if (two_delta_J == 0) l = 1;
-  // We already checked for unphysical odd values of two_delta_J above, so
-  // using integer division here will always give the expected result.
-  else l = two_delta_J / 2;
-
-  // Determine whether this transition is electric or magnetic based on its
-  // multipolarity and whether or not there is a change of parity
-
-  // Pi * Pf = -1 gives electric transitions for odd l
-  marley::Parity electric_parity;
-  if (l % 2) electric_parity = -1; // l is odd
-  // Pi * Pf = +1 gives electric transitions for even l
-  else electric_parity = 1; // l is even
-
-  if (Pi_times_Pf == electric_parity) return TransitionType::electric;
-  else return TransitionType::magnetic;
-}
-
-double marley::HauserFeshbachDecay::gamma_strength_function_coefficient(int Z, int A,
-  TransitionType type, int l, double e_gamma)
-{
-  // TODO: improve this error message
-  if (l < 1) throw marley::Error(std::string("Invalid multipolarity")
-    + std::to_string(l) + " given for gamma ray strength"
-    + " function calculation");
-
-  // The strength, energy, and width of the giant resonance for a transition of
-  // type x (E or M) and multipolarity l
-  double sigma_xl, e_xl, gamma_xl;
-
-  if (type == TransitionType::electric) {
-    if (l == 1) {
-      e_xl = 31.2*std::pow(A, -1.0/3.0) + 20.6*std::pow(A, -1.0/6.0);
-      gamma_xl = 0.026 * std::pow(e_xl, 1.91);
-      sigma_xl = 1.2 * 120 * (A - Z) * Z/(A * marley_utils::pi * gamma_xl)
-        * marley_utils::mb;
-    }
-    if (l > 1) {
-      // Values for E2 transitions
-      e_xl = 63*std::pow(A, -1.0/3.0);
-      gamma_xl = 6.11 - 0.012*A;
-      sigma_xl = 0.00014 * std::pow(Z, 2) * e_xl
-        / (std::pow(A, 1.0/3.0) * gamma_xl) * marley_utils::mb;
-      // If this is an E2 transition, we're done. Otherwise,
-      // compute the giant resonance strength iteratively
-      for (int i = 2; i < l; ++i) {
-        sigma_xl *= 8e-4;
-      }
-    }
-  }
-  else if (type == TransitionType::magnetic) {
-    // Values for M1 transitions
-    // The commented-out version is for RIPL-1
-    //double factor_m1 = 1.58e-9*std::pow(A, 0.47);
-    // RIPL-2 factor
-    const double e_gamma_ref = 7.0; // MeV
-    double factor_m1 = gamma_strength_function(Z, A,
-      TransitionType::electric, 1, e_gamma_ref)
-      / (0.0588 * std::pow(A, 0.878));
-    gamma_xl = 4.0;
-    e_xl = 41*std::pow(A, -1.0/3.0);
-    sigma_xl = (std::pow(std::pow(e_gamma_ref, 2) - std::pow(e_xl, 2), 2)
-      + std::pow(e_gamma_ref, 2) * std::pow(gamma_xl, 2))
-      * (3 * std::pow(marley_utils::pi, 2) * factor_m1)
-      / (e_gamma_ref * std::pow(gamma_xl, 2));
-    // If this is an M1 transition, we're done. Otherwise,
-    // compute the giant resonance strength iteratively
-    for (int i = 1; i < l; ++i) {
-      sigma_xl *= 8e-4;
-    }
-  }
-  // TODO: improve this error message
-  else throw marley::Error(std::string("Invalid transition type")
-    + " given for gamma ray strength function calculation");
-
-  // Now that we have the appropriate giant resonance parameters,
-  // calculate the strength function using the Brink-Axel expression.
-  // Note that the strength function has units of MeV^(-3)
-  double coeff = (sigma_xl * std::pow(gamma_xl, 2)) / ((2*l + 1)
-    * std::pow(marley_utils::pi, 2) * (std::pow(std::pow(e_gamma, 2)
-    - std::pow(e_xl, 2), 2) + std::pow(e_gamma, 2) * std::pow(gamma_xl, 2)));
-
-  return coeff;
-}
-
-// Computes the partial decay width for a gamma transition under the Weisskopf
-// single-particle approximation.
-double marley::HauserFeshbachDecay::weisskopf_partial_decay_width(int A,
-  TransitionType type, int l, double e_gamma)
-{
-  // Compute double factorial of 2l + 1
-  int dfact = 1;
-  for (int n = 2*l + 1; n > 0; n -= 2) dfact *= n;
-
-  // Multipolarity factor
-  double lambda = (l + 1) / (l * std::pow(dfact, 2))
-    * std::pow(3.0 / (l + 3), 2);
-
-  // Estimated nuclear radius (fm)
-  double R = marley_utils::r0 * std::pow(A, 1.0/3.0);
-
-  // Electric transition partial decay width
-  double el_width = 2 * marley_utils::alpha * lambda
-    * std::pow(R * e_gamma / marley_utils::hbar_c, 2*l) * e_gamma;
-
-  if (type == TransitionType::electric) {
-    return el_width;
-  }
-
-  else if (type == TransitionType::magnetic) {
-    double mp = marley::MassTable::Instance().get_particle_mass(
-      marley_utils::PROTON);
-    return 10 * el_width * std::pow(marley_utils::hbar_c / (mp * R), 2);
-  }
-
-  // TODO: improve this error message
-  else throw marley::Error(std::string("Invalid transition type")
-    + " given for Weisskopf gamma-ray partial width calculation");
-}
-
 double marley::HauserFeshbachDecay::gamma_continuum_partial_width(
-  marley::LevelDensityModel& ldm, double Exf)
+  marley::LevelDensityModel& ldm, marley::GammaStrengthFunctionModel& gsfm,
+  double Exf)
 {
   double continuum_width = 0.;
-  // Approximate the gamma energy by the energy difference between the two levels
+  // Approximate the gamma energy by the energy difference between the two
+  // levels
   // TODO: consider adding a nuclear recoil correction here
   double e_gamma = Exi_ - Exf;
   bool initial_spin_is_zero = twoJi_ == 0;
-  int cn_pid = compound_nucleus_.pdg_code();
-  int Z = marley_utils::get_particle_Z(cn_pid);
-  int A = marley_utils::get_particle_A(cn_pid);
+
   for (int l = 0; l <= l_max; ++l) {
     int two_l = 2*l;
     int twoJf = twoJi_ + two_l;
+
     // Determine the multipolarity being considered in this trip through the
     // loop based on the value of the orbital angular momentum l.
     int mpol = ((l == 0) ? 1 : l);
+
     // Consider both transition types (equivalently, both final parities). Check
     // for Ji = 0 to Jf = 0 transitions, which are not allowed by angular
     // momentum conservation.
     if (!initial_spin_is_zero) {
-      continuum_width += gamma_cpw(Z, A, mpol, twoJf, e_gamma, ldm, Exf);
+      continuum_width += gamma_cpw_helper(ldm, gsfm, Pi_, mpol, e_gamma,
+        Exf, twoJf);
       // Consider the other possible final spin value for this multipolarity if
       // it is allowed (Jf = Ji - l is positive)
       twoJf = twoJi_ - two_l;
-      if (twoJf >= 0) continuum_width += gamma_cpw(Z, A, mpol, twoJf, e_gamma,
-        ldm, Exf);
+      if (twoJf >= 0) continuum_width += gamma_cpw_helper(ldm, gsfm, Pi_, mpol,
+        e_gamma, Exf, twoJf);
     }
-    else if (twoJf > 0) continuum_width += gamma_cpw(Z, A, mpol, twoJf, e_gamma,
-      ldm, Exf);
+    else if (twoJf > 0) continuum_width += gamma_cpw_helper(ldm, gsfm, Pi_,
+      mpol, e_gamma, Exf, twoJf);
   }
   return continuum_width;
 }
@@ -574,26 +430,6 @@ double marley::HauserFeshbachDecay::get_fragment_emission_threshold(const int Zi
 
   return Ma - Migs + Vc + marley_utils::real_sqrt(Vc * (2*Ma + Vc)
     + std::pow(Mfgs_ion, 2));
-}
-
-double marley::HauserFeshbachDecay::gamma_cpw(int Z, int A, int mpol, int twoJf,
-  double e_gamma, marley::LevelDensityModel& ldm, double Exf)
-{
-  double tcE = gamma_transmission_coefficient(Z, A,
-    TransitionType::electric, mpol, e_gamma);
-  double tcM = gamma_transmission_coefficient(Z, A,
-    TransitionType::magnetic, mpol, e_gamma);
-
-  // Final parity for the electric transition will match
-  // the initial parity for even multipolarities
-  auto PfE = Pi_;
-  bool mpol_is_odd = mpol % 2;
-  if (mpol_is_odd) !PfE;
-
-  double rhoE = ldm.level_density(Exf, twoJf, PfE);
-  // The magnetic transition corresponds to the opposite parity
-  double rhoM = ldm.level_density(Exf, twoJf, -PfE);
-  return (tcE * rhoE) + (tcM * rhoM);
 }
 
 void marley::HauserFeshbachDecay::print(std::ostream& out) const {

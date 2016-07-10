@@ -5,6 +5,7 @@
 
 #include "ExitChannel.hh"
 #include "Fragment.hh"
+#include "GammaStrengthFunctionModel.hh"
 #include "Level.hh"
 #include "LevelDensityModel.hh"
 #include "MassTable.hh"
@@ -26,45 +27,13 @@ namespace marley {
       bool do_decay(double& Exf, int& twoJf, marley::Parity& Pf,
         marley::Particle& emitted_particle, marley::Particle& residual_nucleus);
 
-      // Gamma-ray strength functions
-      enum class TransitionType { electric, magnetic };
-
-      static TransitionType determine_gamma_transition_type(int twoJi,
-        marley::Parity Pi, int twoJf, marley::Parity Pf, int& l);
-
-      static TransitionType determine_gamma_transition_type(int twoJi,
-        marley::Parity Pi, marley::Level* level_f, int& l);
-
-      static TransitionType determine_gamma_transition_type(marley::Level* level_i,
-        marley::Level* level_f, int& l);
-
-      static double weisskopf_partial_decay_width(int A, TransitionType type,
-        int l, double e_gamma);
-
-      static double gamma_strength_function_coefficient(int Z, int A,
-        TransitionType type, int l, double e_gamma);
-
-      static inline double gamma_strength_function(int Z, int A,
-        TransitionType type, int l, double e_gamma)
-      {
-        return std::pow(e_gamma, 3 - 2*l) * gamma_strength_function_coefficient(Z,
-          A, type, l, e_gamma);
-      }
-
-      static inline double gamma_transmission_coefficient(int Z, int A,
-        TransitionType type, int l, double e_gamma)
-      {
-        return 2 * marley_utils::pi * gamma_strength_function_coefficient(Z, A,
-          type, l, e_gamma) * std::pow(e_gamma, 4); // Eg^4 = (Eg^[2l + 1] * Eg^[3 - 2l]
-      }
-
-      // Approximates the electric potential energy (in MeV) of two nuclei (with
-      // atomic numbers Z, z and mass numbers A, a) that are just touching by
-      // modeling them as uniformly charged spheres with radii given by
-      // R = (1.2 fm) * A^(1/3).
+      // Approximates the electric potential energy (in MeV) of two nuclei
+      // (with atomic numbers Z, z and mass numbers A, a) that are just
+      // touching by modeling them as uniformly charged spheres with radii
+      // given by R = (1.2 fm) * A^(1/3).
       static inline double coulomb_barrier(int Z, int A, int z, int a) {
-        return Z * z * marley_utils::e2 / (marley_utils::r0 * (std::pow(A, 1.0/3.0)
-          + std::pow(a, 1.0/3.0)));
+        return Z * z * marley_utils::e2
+          / (marley_utils::r0 * (std::pow(A, 1.0/3.0) + std::pow(a, 1.0/3.0)));
       }
 
       // Table of nuclear fragments that will be considered when computing
@@ -76,14 +45,16 @@ namespace marley {
       static double get_fragment_emission_threshold(const int Zi, const int Ai,
         const marley::Fragment& f);
 
-      // Maximum value of the orbital angular momentum to use in Hauser-Feshbach
-      // calculations
-      // TODO: make this a user-controlled value specified in the configuration file
+      // Maximum value of the orbital angular momentum to use in
+      // Hauser-Feshbach calculations
+      // TODO: make this a user-controlled value specified in the configuration
+      // file
       static constexpr int l_max = 2;
 
-      // Default step size for computing optical model transmission coefficients via
-      // the Numerov method
-      // TODO: make this a user-controlled value specified in the configuration file
+      // Default step size for computing optical model transmission
+      // coefficients via the Numerov method
+      // TODO: make this a user-controlled value specified in the configuration
+      // file
       static constexpr double DEFAULT_NUMEROV_STEP_SIZE = 0.1; // fm
 
       void print(std::ostream& out) const;
@@ -100,9 +71,10 @@ namespace marley {
       // branching ratios for nuclear de-excitations.
       static const std::vector<marley::Fragment> fragments;
 
-      // Default number of subintervals to use when integrating fragment and gamma
-      // decay widths over the energy continuum.
-      // TODO: remove this when you don't need to use it in old testing code anymore
+      // Default number of subintervals to use when integrating fragment and
+      // gamma decay widths over the energy continuum.
+      // TODO: remove this when you don't need to use it in old testing code
+      // anymore
       static constexpr int DEFAULT_CONTINUUM_SUBINTERVALS = 50;
 
       // Helper functions used internally while computing decay widths using
@@ -112,10 +84,7 @@ namespace marley {
         double fragment_KE, double Exf);
 
       double gamma_continuum_partial_width(marley::LevelDensityModel& ldm,
-        double Exf);
-
-      double gamma_cpw(int Z, int A, int mpol, int twoJf, double e_gamma,
-        marley::LevelDensityModel& ldm, double Exf);
+        marley::GammaStrengthFunctionModel& gsfm, double Exf);
 
       // Particle object representing the compound nucleus before it decays
       const marley::Particle& compound_nucleus_;
