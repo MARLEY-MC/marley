@@ -178,9 +178,6 @@ namespace marley {
         double width; ///< Partial decay width (MeV)
       };
 
-      //virtual void sample_spin_parity(double Ea, int& twoJ,
-      //  marley::Parity& P) = 0;
-
       double Emin_; ///< Minimum accessible nuclear excitation energy (MeV)
       double Emax_; ///< Maximum accessible nuclear excitation energy (MeV)
       marley::Particle gs_residue_; ///< Ground-state residual nucleus

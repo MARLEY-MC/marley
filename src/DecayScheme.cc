@@ -9,7 +9,7 @@
 #include "marley_utils.hh"
 #include "DecayScheme.hh"
 #include "Generator.hh"
-#include "Kinematics.hh"
+#include "marley_kinematics.hh"
 #include "Logger.hh"
 #include "HauserFeshbachDecay.hh"
 
@@ -104,7 +104,7 @@ void marley::DecayScheme::do_cascade(marley::Level& initial_level,
 
       // Determine the final energies and momenta for the recoiling nucleus and
       // emitted gamma ray. Store them in the final state particle objects.
-      marley::Kinematics::two_body_decay(residue, gamma, nucleus,
+      marley_kinematics::two_body_decay(residue, gamma, nucleus,
         gamma_cos_theta, gamma_phi);
 
       // Update the residue for this event to take into account changes from
