@@ -6,6 +6,7 @@
 #include "BackshiftedFermiGasModel.hh"
 #include "ConfigFile.hh"
 #include "DecayScheme.hh"
+#include "GammaStrengthFunctionModel.hh"
 #include "SphericalOpticalModel.hh"
 
 namespace marley {
@@ -74,6 +75,13 @@ namespace marley {
       marley::LevelDensityModel& get_level_density_model(const int Z,
         const int A);
 
+      /// @brief Retrieves a gamma-ray strength function model object from the
+      /// database, creating it if one did not already exist
+      /// @param Z atomic number
+      /// @param A mass number
+      marley::GammaStrengthFunctionModel& get_gamma_strength_function_model(
+        const int Z, const int A);
+
     private:
 
       /// @brief Lookup table for marley::DecayScheme objects.
@@ -91,5 +99,11 @@ namespace marley {
       /// density models.
       std::unordered_map<int, std::unique_ptr<marley::LevelDensityModel> >
         level_density_table_;
+
+      /// @brief Lookup table for marley::GammaStrengthFunctionModel objects.
+      /// @details Keys are PDG codes, values are unique_ptrs to gamma-ray
+      /// strength function models.
+      std::unordered_map<int, std::unique_ptr<
+        marley::GammaStrengthFunctionModel> > gamma_strength_function_table_;
   };
 }

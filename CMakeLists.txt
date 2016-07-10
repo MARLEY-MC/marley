@@ -69,4 +69,4 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} -O3 \
   -Wall -Wextra -Wshadow -pedantic \
   -Wcast-align -Wunused -Woverloaded-virtual \
-  -Werror -Wno-keyword-macro")
+  -Werror -Wno-keyword-macro -Wno-missing-braces")
