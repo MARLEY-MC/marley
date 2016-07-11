@@ -13,7 +13,7 @@ namespace marley {
 
       /// @param Z Atomic number
       /// @param A Mass number
-      /// @param D0 Level spacing parameter (MeV)
+      /// @param D0 %Level spacing parameter (MeV)
       WeisskopfSingleParticleModel(int Z, int A, double D0 = 1.);
 
       virtual double strength_function(TransitionType type, int l,
