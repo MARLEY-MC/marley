@@ -33,8 +33,8 @@ namespace marley {
 
       // Helper function for computing optical model transmission coefficients
       // and cross sections
-      std::complex<double> s_matrix_element(double E, int fragment_pid, int two_j,
-        int l, int two_s, double h);
+      std::complex<double> s_matrix_element(double E, int fragment_pid,
+        int two_j, int l, int two_s, double h);
 
       // Helper functions for computing the optical model potential
       void calculate_om_parameters(double E, int fragment_pid, int two_j,
@@ -70,8 +70,8 @@ namespace marley {
         return -temp / (a * std::pow(1 + temp, 2));
       }
 
-      // Coulomb potential for a point particle with charge q*e interacting with a
-      // uniformly charged sphere with radius R and charge Q*e
+      // Coulomb potential for a point particle with charge q*e interacting
+      // with a uniformly charged sphere with radius R and charge Q*e
       inline double Vc(double r, double R, int Q, int q) const {
         if (Q == 0 || q == 0) return 0;
         else if (r < R) return Q * q * marley_utils::e2
@@ -81,15 +81,15 @@ namespace marley {
 
       // Non-derivative radial Schrödinger equation terms to use for computing
       // transmission coefficients via the Numerov method
-      inline std::complex<double> a(double r, double E, int fragment_pid, int l) //const
+      inline std::complex<double> a(double r, double E, int fragment_pid, int l)
       {
         return (-l*(l+1) / std::pow(r, 2)) +
           2 * reduced_masses.at(fragment_pid) * (E - omp(r))
           / marley_utils::hbar_c2;
       }
 
-      // Version of Schrodinger equation terms with the optical model potential U
-      // pre-computed
+      // Version of Schrodinger equation terms with the optical model potential
+      // U pre-computed
       inline std::complex<double> a(double r, double E, int fragment_pid, int l,
         std::complex<double> U) const
       {
@@ -124,13 +124,14 @@ namespace marley {
 
       // Threshold for abs(U - Vc) used to find a suitable matching radius for
       // computing transmission coefficients.
-      // WARNING: This value should be chosen carefully.  Since the Numerov
-      // method used for computing the fragment wavefunctions is only accurate to
-      // order h^4 (where h is the step size used), choosing this threshold to be
-      // comparable to or smaller than h^4 may cause numerical problems.
+      // WARNING: This value should be chosen carefully. Since the Numerov
+      // method used for computing the fragment wavefunctions is only accurate
+      // to order h^4 (where h is the step size used), choosing this threshold
+      // to be comparable to or smaller than h^4 may cause numerical problems.
       // A value of h^3 seems to work pretty well. You may be able to get away
-      // with a higher threshold, but check to make sure the transmission coefficients
-      // aren't significantly affected before adopting a higher value.
+      // with a higher threshold, but check to make sure the transmission
+      // coefficients aren't significantly affected before adopting a higher
+      // value.
       static constexpr double MATCHING_RADIUS_THRESHOLD = 1e-3;
   };
 
