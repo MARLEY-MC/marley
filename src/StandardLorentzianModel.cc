@@ -15,8 +15,9 @@ marley::StandardLorentzianModel::StandardLorentzianModel(int Z, int A)
   // spherical nuclei given in the
   // <a href="https://www-nds.iaea.org/RIPL-2/handbook/ripl2.pdf">
   // RIPL-2 handbook</a>, p. 129
-  // TODO: consider updating to the new SLO fit from RIPL-3 (see equation
-  // 174 in the RIPL-3 Nuclear Data Sheets paper, and compare equation 173)
+  // @todo Consider updating E1 parameters to the new SLO fit from RIPL-3 (see
+  // equation 174 in the RIPL-3 Nuclear Data Sheets paper, and compare equation
+  // 173)
   e_E1_ = 31.2*std::pow(A_, -1.0/3.0) + 20.6*std::pow(A_, -1.0/6.0); // MeV
   gamma_E1_ = 0.026 * std::pow(e_E1_, 1.91); // MeV
   sigma_E1_ = 1.2 * 120 * (A_ - Z_) * Z_/(A_ * marley_utils::pi * gamma_E1_)
