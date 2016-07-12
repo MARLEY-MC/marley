@@ -71,7 +71,7 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
   if (Pi == Pa) Pf = 1;
   else Pf = -1;
   // For each new iteration, increment l and flip the final-state parity
-  for (int l = 0; l <= HauserFeshbachDecay::l_max; ++l, !Pf) {
+  for (int l = 0; l <= HauserFeshbachDecay::l_max_; ++l, !Pf) {
     int two_l = 2*l;
     for (int two_j = std::abs(two_l - two_s);
       two_j <= two_l + two_s; two_j += 2)
@@ -84,7 +84,7 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
         // and the multiplying here by the appropriate spin distribution.
         double width = om.transmission_coefficient(fragment_KE,
           fragment_.get_pid(), two_j, l, two_s,
-          HauserFeshbachDecay::DEFAULT_NUMEROV_STEP_SIZE)
+          HauserFeshbachDecay::DEFAULT_NUMEROV_STEP_SIZE_)
           * ldm.level_density(Exf, twoJf, Pf);
 
         // Store the computed decay width for sampling
@@ -159,7 +159,7 @@ void marley::GammaContinuumExitChannel::sample_spin_parity(int Z, int A,
   // TODO: consider adding a nuclear recoil correction here
   double e_gamma = Exi - Exf;
   bool initial_spin_is_zero = twoJ == 0;
-  for (int l = 0; l <= marley::HauserFeshbachDecay::l_max; ++l) {
+  for (int l = 0; l <= marley::HauserFeshbachDecay::l_max_; ++l) {
     int two_l = 2*l;
     int twoJf = twoJ + two_l;
     // Determine the multipolarity being considered in this trip through the

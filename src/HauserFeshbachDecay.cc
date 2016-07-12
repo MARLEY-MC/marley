@@ -11,6 +11,15 @@ using TrType = marley::GammaStrengthFunctionModel::TransitionType;
 
 namespace {
 
+  // Approximates the electric potential energy (in MeV) of two nuclei
+  // (with atomic numbers Z, z and mass numbers A, a) that are just
+  // touching by modeling them as uniformly charged spheres with radii
+  // given by R = (1.2 fm) * A^(1/3).
+  double coulomb_barrier(int Z, int A, int z, int a) {
+    return Z * z * marley_utils::e2
+      / (marley_utils::r0 * (std::pow(A, 1.0/3.0) + std::pow(a, 1.0/3.0)));
+  }
+
   // Helper function for
   // marley::HauserFeshbachDecay::gamma_continuum_partial_width(). It doesn't
   // really need access to any class members to do its job, so we've hidden it
@@ -38,7 +47,7 @@ namespace {
 // Table of nuclear fragments that will be considered when computing
 // branching ratios for nuclear de-excitations. Spin-parity values are taken
 // from nuclear ground states listed in the 10/2014 release of ENSDF.
-const std::vector<marley::Fragment> marley::HauserFeshbachDecay::fragments = {
+const std::vector<marley::Fragment> marley::HauserFeshbachDecay::fragments_ = {
   marley::Fragment(marley_utils::NEUTRON, 1, marley::Parity(1)),
   marley::Fragment(marley_utils::PROTON, 1, marley::Parity(1)),
   marley::Fragment(marley_utils::DEUTERON, 2, marley::Parity(1)),
@@ -57,6 +66,8 @@ marley::HauserFeshbachDecay::HauserFeshbachDecay(const marley::Particle&
 
 void marley::HauserFeshbachDecay::build_exit_channels()
 {
+  // Remove any pre-existing ExitChannel objects, just in case
+  exit_channels_.clear();
 
   const marley::MassTable& mt = marley::MassTable::Instance();
 
@@ -73,7 +84,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
 
   marley::StructureDatabase& db = gen_.get_structure_db();
 
-  for (const auto& f : fragments) {
+  for (const auto& f : fragments_) {
 
     // Get information about the current fragment
     int two_s = f.get_two_s(); // spin
@@ -99,10 +110,10 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     marley::DecayScheme* ds = db.get_decay_scheme(pid_final);
     marley::SphericalOpticalModel& om = db.get_optical_model(pid_final);
 
-    // Determine the maximum excitation energy available after fragment emission
-    // in the final nucleus. Use a simpler functional form as a shortcut if
-    // the fragment is neutral [and can therefore be emitted with arbitrarily
-    // low kinetic energy due to the absence of a Coulomb barrier])
+    // Determine the maximum excitation energy available after fragment
+    // emission in the final nucleus. Use a simpler functional form as a
+    // shortcut if the fragment is neutral [and can therefore be emitted with
+    // arbitrarily low kinetic energy due to the absence of a Coulomb barrier])
     double Exf_max;
     double Vc; // Coulomb barrier
     if (f.get_Z() == 0) {
@@ -114,9 +125,9 @@ void marley::HauserFeshbachDecay::build_exit_channels()
       Exf_max = std::sqrt(std::pow(Mi - Ma, 2) - 2*Vc*Mi) - Mfgs_ion;
     }
 
-    // The fragment kinetic energy depends on the final level energy. For speed,
-    // we precompute here a portion of the fragment energy that doesn't depend on
-    // the final level energy.
+    // The fragment kinetic energy depends on the final level energy. For
+    // speed, we precompute here a portion of the fragment energy that doesn't
+    // depend on the final level energy.
     double Mconst = (Exi_ - Sa) * (Mi + Mfgs_ion - Ma);
 
     // Check if emission of this fragment is energetically allowed. If we're
@@ -132,7 +143,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     // available for the final nuclide (we'll check this in a second).
     double E_c_min = 0.;
 
-    // If discrete level data is available for the final nuclide, get decay
+    // If discrete level data are available for the final nuclide, get decay
     // widths for each accessible level
     if (ds) {
 
@@ -140,16 +151,17 @@ void marley::HauserFeshbachDecay::build_exit_channels()
       // sorted in order of increasing excitation energy.
       const auto& levels = ds->get_levels();
 
-      // Use the maximum discrete level energy from the decay scheme object as the
-      // lower bound for the continuum
+      // Use the maximum discrete level energy from the decay scheme object as
+      // the lower bound for the continuum
       // TODO: consider whether this is the best approach
       if (levels.size() > 0) E_c_min = levels.back()->energy();
 
-      // Loop over the final discrete nuclear levels in order of increasing energy
-      // until the new level energy exceeds the maximum value. For each
-      // energetically allowed level, if a transition to it for a given fragment
-      // orbital angular momentum l and total angular momentum j conserves parity,
-      // then compute an optical model transmission coefficient and add it to the total.
+      // Loop over the final discrete nuclear levels in order of increasing
+      // energy until the new level energy exceeds the maximum value. For each
+      // energetically allowed level, if a transition to it for a given
+      // fragment orbital angular momentum l and total angular momentum j
+      // conserves parity, then compute an optical model transmission
+      // coefficient and add it to the total.
       for (const auto& level : levels) {
         double Exf = level->energy();
         if (Exf < Exf_max) {
@@ -164,21 +176,24 @@ void marley::HauserFeshbachDecay::build_exit_channels()
             // TODO: consider adding a check that l does not exceed its maximum
             // value l_max that is also used as a cutoff for transmission
             // coefficient calculations in the continuum.
-            // For each new iteration, increment l and flip the overall final state parity
+            // For each new iteration, increment l and flip the overall final
+            // state parity
             int l = std::abs(two_j - two_s) / 2;
             bool l_is_odd = l % 2;
             marley::Parity P_final_state = Pf * Pa * marley::Parity(!l_is_odd);
             for (; l <= j_plus_s; ++l, !P_final_state)
             {
-              // Add to the total transmission coefficient if parity is conserved
+              // Add to the total transmission coefficient if parity is
+              // conserved
               if (Pi_ == P_final_state) discrete_width
-                += om.transmission_coefficient(Ea, fragment_pid, two_j, l, two_s,
-                DEFAULT_NUMEROV_STEP_SIZE);
+                += om.transmission_coefficient(Ea, fragment_pid, two_j, l,
+                two_s, DEFAULT_NUMEROV_STEP_SIZE_);
             }
           }
 
           // Store information for this decay channel
-	  exit_channels_.push_back(std::make_unique<marley::FragmentDiscreteExitChannel>(
+	  exit_channels_.push_back(
+            std::make_unique<marley::FragmentDiscreteExitChannel>(
             discrete_width, *level, marley::Particle(pid_final, Mfgs_ion + Exf,
             qi - f.get_Z()), f));
           total_width_ += discrete_width;
@@ -200,13 +215,13 @@ void marley::HauserFeshbachDecay::build_exit_channels()
         return fragment_continuum_partial_width(om, ldm, f, Ea, Exf);
       };
 
-      // Numerically integrate using the call wrapper, the integration bounds, and
-      // the number of subintervals
+      // Numerically integrate using the call wrapper, the integration bounds,
+      // and the number of subintervals
       double continuum_width = marley_utils::num_integrate(cpw, E_c_min,
-        Exf_max, DEFAULT_CONTINUUM_SUBINTERVALS);
+        Exf_max, DEFAULT_CONTINUUM_SUBINTERVALS_);
 
-      // Create a normalized probability density function to use for sampling
-      // a final excitation energy from the continuum for this exit channel.
+      // Create a normalized probability density function to use for sampling a
+      // final excitation energy from the continuum for this exit channel.
       std::function<double(double&, double)> pdf
         = [=, &f, &om, &ldm](double& Ea, double Exf) -> double {
         Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
@@ -242,8 +257,8 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     // coefficient for it
     const auto& levels = ds->get_levels();
 
-    // Use the maximum discrete level energy from the decay scheme object as the
-    // lower bound for the continuum.
+    // Use the maximum discrete level energy from the decay scheme object as
+    // the lower bound for the continuum.
     // TODO: consider whether this is the best approach
     if (levels.size() > 0) E_c_min = levels.back()->energy();
 
@@ -276,7 +291,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     double continuum_width = marley_utils::num_integrate(
       [&ldm, &gsfm, this](double Exf)
       -> double { return gamma_continuum_partial_width(ldm, gsfm, Exf); },
-      E_c_min, Exi_, DEFAULT_CONTINUUM_SUBINTERVALS);
+      E_c_min, Exi_, DEFAULT_CONTINUUM_SUBINTERVALS_);
 
     // Normalized probability density used for sampling a final excitation
     // energy in the continuum
@@ -340,7 +355,7 @@ double marley::HauserFeshbachDecay::gamma_continuum_partial_width(
   double e_gamma = Exi_ - Exf;
   bool initial_spin_is_zero = twoJi_ == 0;
 
-  for (int l = 0; l <= l_max; ++l) {
+  for (int l = 0; l <= l_max_; ++l) {
     int two_l = 2*l;
     int twoJf = twoJi_ + two_l;
 
@@ -348,8 +363,8 @@ double marley::HauserFeshbachDecay::gamma_continuum_partial_width(
     // loop based on the value of the orbital angular momentum l.
     int mpol = ((l == 0) ? 1 : l);
 
-    // Consider both transition types (equivalently, both final parities). Check
-    // for Ji = 0 to Jf = 0 transitions, which are not allowed by angular
+    // Consider both transition types (equivalently, both final parities).
+    // Check for Ji = 0 to Jf = 0 transitions, which are not allowed by angular
     // momentum conservation.
     if (!initial_spin_is_zero) {
       continuum_width += gamma_cpw_helper(ldm, gsfm, Pi_, mpol, e_gamma,
@@ -382,7 +397,7 @@ double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
   if (Pi_ == Pa) Pf = 1;
   else Pf = -1;
   // For each new iteration, increment l and flip the final-state parity
-  for (int l = 0; l <= l_max; ++l, !Pf) {
+  for (int l = 0; l <= l_max_; ++l, !Pf) {
     int two_l = 2*l;
     for (int two_j = std::abs(two_l - two_s);
       two_j <= two_l + two_s; two_j += 2)
@@ -391,7 +406,7 @@ double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
         twoJf <= twoJi_ + two_j; twoJf += 2)
       {
         continuum_width += om.transmission_coefficient(fragment_KE,
-          frag.get_pid(), two_j, l, two_s, DEFAULT_NUMEROV_STEP_SIZE)
+          frag.get_pid(), two_j, l, two_s, DEFAULT_NUMEROV_STEP_SIZE_)
           * ldm.level_density(Exf, twoJf);
           // TODO: since only the spin distribution changes in the twoJf loop,
           // you can optimize this by precomputing most of the level density
@@ -402,8 +417,8 @@ double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
   return continuum_width;
 }
 
-double marley::HauserFeshbachDecay::get_fragment_emission_threshold(const int Zi,
-  const int Ai, const marley::Fragment& f)
+double marley::HauserFeshbachDecay::get_fragment_emission_threshold(
+  const int Zi, const int Ai, const marley::Fragment& f)
 {
   int Zf = Zi - f.get_Z();
   int Af = Ai - f.get_A();
