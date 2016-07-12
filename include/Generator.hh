@@ -4,7 +4,7 @@
 #include <sstream>
 #include <vector>
 
-#include "ConfigFile.hh"
+#include "ConfigurationFile.hh"
 #include "NeutrinoSource.hh"
 #include "Parity.hh"
 #include "NuclearReaction.hh"
@@ -18,7 +18,7 @@ namespace marley {
     public:
 
       /// @brief Create a Generator using a ConfigFile object
-      Generator(marley::ConfigFile& cf);
+      Generator(marley::ConfigurationFile& cf);
 
       /// @brief Create a Generator using a configuration file
       /// @param filename Name of the configuration file
@@ -113,7 +113,7 @@ namespace marley {
 
       /// @brief Helper function that contains initialization code shared by
       /// multiple constructors
-      void init(marley::ConfigFile& cf);
+      void init(marley::ConfigurationFile& cf);
 
       /// @brief Helper function that updates the normalization factor to
       /// use in E_pdf()

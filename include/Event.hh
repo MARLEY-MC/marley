@@ -18,15 +18,14 @@ namespace marley {
   /// this class will include Particle objects representing the de-excitation
   /// products.
   /// @note This class manually manages memory (using the
-  /// &ldquo;<a href="http://en.cppreference.com/w/cpp/language/rule_of_three">rule of 5</a>&rdquo;)
+  /// &ldquo;<a href="http://tinyurl.com/mohpthc">rule of 5</a>&rdquo;)
   /// for the Particle objects that it owns. A better implementation from a
   /// modern C++ perspective would be to use vectors of
   /// std::unique_ptr<marley::Particle> objects and let those manage the memory
   /// (i.e., use the
-  /// &ldquo;<a href="http://en.cppreference.com/w/cpp/language/rule_of_three">
-  /// rule of zero</a>&rdquo;). This design choice was made to ensure
-  /// compatibility with ROOT 5, which cannot generate dictionaries for C++11
-  /// classes like std::unique_ptr.
+  /// &ldquo;<a href="http://tinyurl.com/mohpthc">rule of zero</a>&rdquo;).
+  /// This design choice was made to ensure compatibility with ROOT 5, which
+  /// cannot generate dictionaries for C++11 classes like std::unique_ptr.
   class Event {
 
     public:
