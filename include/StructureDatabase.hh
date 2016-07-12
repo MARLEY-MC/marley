@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 #include "BackshiftedFermiGasModel.hh"
-#include "ConfigFile.hh"
+#include "ConfigurationFile.hh"
 #include "DecayScheme.hh"
 #include "GammaStrengthFunctionModel.hh"
 #include "SphericalOpticalModel.hh"

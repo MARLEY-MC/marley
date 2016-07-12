@@ -1,5 +1,5 @@
 #include "marley_utils.hh"
-#include "RootConfigFile.hh"
+#include "RootConfigurationFile.hh"
 #include "InterpolationGrid.hh"
 
 // ROOT includes
@@ -10,24 +10,24 @@
 
 using InterpMethod = marley::InterpolationGrid<double>::InterpolationMethod;
 
-marley::RootConfigFile::RootConfigFile() : marley::ConfigFile(),
-  root_filename("events.root"), writeroot(false),
-  check_before_root_file_overwrite(true) {}
+marley::RootConfigurationFile::RootConfigurationFile()
+  : marley::ConfigurationFile(), check_root_overwrite_(true),
+  root_filename_("events.root"), write_root_(false) {}
 
-marley::RootConfigFile::RootConfigFile(const std::string& file_name)
-  : marley::RootConfigFile()
+marley::RootConfigurationFile::RootConfigurationFile(
+  const std::string& file_name) : marley::RootConfigurationFile()
 {
-  filename = file_name;
+  filename_ = file_name;
   parse();
 }
 
-void marley::RootConfigFile::check_pdf_pairs(const std::vector<double>& Es,
-  const std::vector<double>& PDFs)
+void marley::RootConfigurationFile::check_pdf_pairs(
+  const std::vector<double>& Es, const std::vector<double>& PDFs)
 {
   size_t num_points = Es.size();
   if (PDFs.size() != num_points) throw marley::Error(
     std::string("E and PDF vectors with unequal sizes")
-    + " were passed to marley::RootConfigFile::check_pdf_pairs()");
+    + " were passed to marley::RootConfigurationFile::check_pdf_pairs()");
 
   double previous_E = marley_utils::minus_infinity;
   for(size_t i = 0; i < num_points; ++i) {
@@ -38,28 +38,34 @@ void marley::RootConfigFile::check_pdf_pairs(const std::vector<double>& Es,
       std::string("Negative") + " energy "
       + std::to_string(E) + " encountered while importing a"
       + " ROOT-based neutrino source specification on line "
-      + std::to_string(line_num) + " of the configuration file "
-      + filename);
+      + std::to_string(line_num_) + " of the configuration file "
+      + filename_);
 
     if (E <= previous_E) throw marley::Error(
       std::string("Energy") + " values "
       + " from a ROOT-based neutrino source specification on line "
-      + std::to_string(line_num) + " of the configuration file "
-      + filename + " are not strictly increasing");
+      + std::to_string(line_num_) + " of the configuration file "
+      + filename_ + " are not strictly increasing");
 
     if (PDF < 0.) throw marley::Error(
       std::string("Negative") + " probability density "
       + std::to_string(PDF) + " encountered while importing a"
       + " ROOT-based neutrino source specification on line "
-      + std::to_string(line_num) + " of the configuration file "
-      + filename);
+      + std::to_string(line_num_) + " of the configuration file "
+      + filename_);
 
     previous_E = E;
   }
 }
 
+/// @note Since this function template is a private member of the
+/// RootConfigurationFile class, we can get away with placing its definition in
+/// the source file. If you derive any classes from RootConfigurationFile and
+/// want to switch this function to "protected" access, or if you switch this
+/// function to "public" access, you will need to put the template definition
+/// in the header file.
 template<typename T> T*
-  marley::RootConfigFile::get_root_object(const std::string& tfile_name,
+  marley::RootConfigurationFile::get_root_object(const std::string& tfile_name,
   const std::string& namecycle)
 {
   // Attempt to open the TFile and complain if something goes wrong.
@@ -74,9 +80,10 @@ template<typename T> T*
     T* obj = dynamic_cast<T*>(file->Get(namecycle.c_str()));
     // Force the TFile to disown the object if it inherits from TH1 (otherwise,
     // ROOT will auto-delete it when the TFile object is deleted).
-    // TODO: decide what to do if the type is TTree (disown too? throw exception?)
-    // since TTrees also behave this way
-    // TODO: add other checks if you discover more ROOT classes that force ownership
+    // TODO: decide what to do if the type is TTree (disown too? throw
+    // exception?) since TTrees also behave this way
+    // TODO: add other checks if you discover more ROOT classes that force
+    // ownership
     TH1* th1_test = dynamic_cast<TH1*>(obj);
     if (th1_test) th1_test->SetDirectory(nullptr);
     // Return a pointer to the object
@@ -86,42 +93,42 @@ template<typename T> T*
   // couldn't open ROOT file
   else throw marley::Error(std::string("Failed to open")
     + " ROOT file '" + tfile_name + "' given on line "
-    + std::to_string(line_num) + " of the configuration file " + filename);
+    + std::to_string(line_num_) + " of the configuration file " + filename_);
 
   return nullptr;
 }
 
-bool marley::RootConfigFile::process_extra_keywords() {
+bool marley::RootConfigurationFile::process_extra_keywords() {
 
   std::string arg;
 
-  if (keyword == "writeroot") {
+  if (keyword_ == "writeroot") {
     next_word_from_line(arg, true, true);
-    if (arg == "yes") writeroot = true;
-    else if (arg == "no") writeroot = false;
+    if (arg == "yes") write_root_ = true;
+    else if (arg == "no") write_root_ = false;
     else if (arg == "overwrite") {
-      writeroot = true;
-      check_before_root_file_overwrite = false;
+      write_root_ = true;
+      check_root_overwrite_ = false;
     }
     else {
       throw marley::Error(std::string("Invalid")
         + " ROOT file write flag '" + arg
-        + "' encountered on line" + std::to_string(line_num)
-        + " of the configuration file " + filename);
+        + "' encountered on line" + std::to_string(line_num_)
+        + " of the configuration file " + filename_);
     }
     return true;
   }
 
-  else if (keyword == "rootfile") {
+  else if (keyword_ == "rootfile") {
     next_word_from_line(arg, true, false);
-    root_filename = arg;
+    root_filename_ = arg;
     return true;
   }
 
   return false;
 }
 
-bool marley::RootConfigFile::process_extra_source_types(
+bool marley::RootConfigurationFile::process_extra_source_types(
   const std::string& type, int neutrino_pid)
 {
   if (type == "th1" || type == "tgraph") {
@@ -148,8 +155,8 @@ bool marley::RootConfigFile::process_extra_source_types(
         if (!x_axis) throw marley::Error(std::string("Error finding x-axis")
           + " of ROOT histogram (TH1 object) with namecycle '" + namecycle
           + "' from the ROOT file '" + source_tfile_name + "' given on"
-          + " line " + std::to_string(line_num)
-          + " of the configuration file " + filename);
+          + " line " + std::to_string(line_num_)
+          + " of the configuration file " + filename_);
         // include the overflow bin but not the underflow bin
         size_t nbins = x_axis->GetNbins() + 1;
         std::vector<double> Es(nbins);
@@ -192,8 +199,8 @@ bool marley::RootConfigFile::process_extra_source_types(
         throw marley::Error(std::string("Could not recover")
           + " ROOT histogram (TH1 object) with namecycle '" + namecycle
           + "' from the ROOT file '" + source_tfile_name + "' given on"
-          + " line " + std::to_string(line_num)
-          + " of the configuration file " + filename);
+          + " line " + std::to_string(line_num_)
+          + " of the configuration file " + filename_);
       }
     }
     else if (type == "tgraph") {
@@ -226,8 +233,8 @@ bool marley::RootConfigFile::process_extra_source_types(
       else throw marley::Error(std::string("Could not recover")
           + " ROOT graph (TGraph object) with namecycle '" + namecycle
           + "' from the ROOT file '" + source_tfile_name + "' given on"
-          + " line " + std::to_string(line_num)
-          + " of the configuration file " + filename);
+          + " line " + std::to_string(line_num_)
+          + " of the configuration file " + filename_);
     }
 
   }

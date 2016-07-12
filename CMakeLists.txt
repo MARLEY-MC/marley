@@ -10,7 +10,7 @@ set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 include_directories(${INCLUDE_DIR})
 
 file(GLOB SOURCES "src/[A-Z]*.cc" "src/marley_*.cc" "src/meta_numerics.cc")
-list(REMOVE_ITEM SOURCES "${SOURCE_DIR}/RootConfigFile.cc")
+list(REMOVE_ITEM SOURCES "${SOURCE_DIR}/RootConfigurationFile.cc")
 
 find_program(ROOTCINT rootcint PATHS ENV PATH)
 find_program(ROOTCONFIG root-config PATHS ENV PATH)
@@ -52,7 +52,7 @@ add_executable(marley "src/marley.cc")
 if(ROOT AND ROOTCINT AND ROOTCONFIG)
   # Create a shared library to allow the ROOT dictionary to be easily loaded on demand
   add_library(MARLEY_ROOT SHARED ${CMAKE_CURRENT_BINARY_DIR}/marley_root_dict.cc
-    ${SOURCE_DIR}/RootConfigFile.cc)
+    ${SOURCE_DIR}/RootConfigurationFile.cc)
   target_link_libraries(MARLEY_ROOT MARLEY)
   set_target_properties(MARLEY_ROOT PROPERTIES LINK_FLAGS ${ROOT_LDFLAGS})
 

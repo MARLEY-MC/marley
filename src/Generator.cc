@@ -6,12 +6,12 @@
 #include "Logger.hh"
 #include "NuclearReaction.hh"
 
-marley::Generator::Generator(marley::ConfigFile& cf) {
+marley::Generator::Generator(marley::ConfigurationFile& cf) {
   init(cf);
 }
 
 marley::Generator::Generator(const std::string& filename) {
-  marley::ConfigFile cf(filename);
+  marley::ConfigurationFile cf(filename);
   init(cf);
 }
 
@@ -49,7 +49,7 @@ void marley::Generator::normalize_E_pdf() {
   }
 }
 
-void marley::Generator::init(marley::ConfigFile& cf) {
+void marley::Generator::init(marley::ConfigurationFile& cf) {
 
   // Use the seed from the config file object to prepare the random number
   // generator.  This is an attempt to do a decent job of seeding the random
@@ -59,14 +59,15 @@ void marley::Generator::init(marley::ConfigFile& cf) {
   std::seed_seq seed_sequence{seed_};
   rand_gen_.seed(seed_sequence);
 
-  // Transfer ownership of the structure database from the ConfigFile object to
-  // the Generator. If the ConfigFile object does not own a StructureDatabase
-  // object (for some strange reason), then create a default-constructed one.
+  // Transfer ownership of the structure database from the ConfigurationFile
+  // object to the Generator. If the ConfigurationFile object does not own a
+  // StructureDatabase object (for some strange reason), then create a
+  // default-constructed one.
   auto& cf_sdb = cf.get_structure_db();
   if (cf_sdb) structure_db_.reset(cf_sdb.release());
   else {
     structure_db_ = std::make_unique<marley::StructureDatabase>();
-    MARLEY_LOG_WARNING() << "A ConfigFile that does not"
+    MARLEY_LOG_WARNING() << "A ConfigurationFile that does not"
       << " own a StructureDatabase object was passed to"
       << " marley::Generator::init()";
   }
@@ -82,12 +83,12 @@ void marley::Generator::init(marley::ConfigFile& cf) {
     ++react_count;
   }
 
-  // Transfer ownership of the neutrino source from the ConfigFile to the
-  // Generator.
+  // Transfer ownership of the neutrino source from the ConfigurationFile to
+  // the Generator.
   auto& cf_source = cf.get_source();
   if (cf_source) source_.reset(cf_source.release());
   else throw marley::Error(std::string("Cannot finish creating")
-    + " the marley::Generator object. The ConfigFile passed to"
+    + " the marley::Generator object. The ConfigurationFile passed to"
     + " marley::Generator::init() does not own a NeutrinoSource object.");
 
   // Initialize the vector of total cross section values to be all zeros and

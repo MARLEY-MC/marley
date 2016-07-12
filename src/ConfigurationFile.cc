@@ -1,55 +1,71 @@
 #include "marley_utils.hh"
-#include "ConfigFile.hh"
+#include "ConfigurationFile.hh"
 #include "InterpolationGrid.hh"
 #include "Logger.hh"
 
-// Define type abbreviations and constant regular expressions that are only
-// visible within this file
+// Define type abbreviations, constant regular expressions, and helper
+// functions that are only visible within this file
 namespace {
 
   using InterpMethod = marley::InterpolationGrid<double>::InterpolationMethod;
 
   // Matches comment lines and empty lines
   const std::regex rx_comment_or_empty = std::regex("#.*|\\s*");
+
   // Matches non-negative integers
   const std::regex rx_nonneg_int = std::regex("[0-9]+");
+
   // Matches integers
   const std::regex rx_int = std::regex("[-+]?[0-9]+");
+
   // Matches all numbers, including floats (see
   // http://www.regular-expressions.info/floatingpoint.html, but note that
   // we've modified the version given there to allow for a trailing decimal
   // point [e.g., '1.' matches])
-  const std::regex rx_num = std::regex("[-+]?[0-9]*\\.?[0-9]*([eE][-+]?[0-9]+)?");
+  const std::regex rx_num
+    = std::regex("[-+]?[0-9]*\\.?[0-9]*([eE][-+]?[0-9]+)?");
+
   // Matches trimmed ENSDF-style nucids
   const std::regex rx_nucid = std::regex("[1-9][0-9]{0,2}[A-Za-z]{1,2}");
+
+  /// @brief Convert a string to a marley::DecayScheme::FileFormat
+  marley::DecayScheme::FileFormat string_to_format(const std::string& string)
+  {
+    if (string == "talys")
+      return marley::DecayScheme::FileFormat::talys;
+    else throw marley::Error(std::string("Unrecognized file")
+      + " format '" + string + "' passed to"
+      + " string_to_format()");
+  }
+
 }
 
 // The default constructor assigns default values to all
 // configuration file parameters
-marley::ConfigFile::ConfigFile()
-  : seed(std::chrono::system_clock::now().time_since_epoch().count()),
-  num_events(DEFAULT_NUM_EVENTS), structure_db_(new marley::StructureDatabase),
-  hepevt_filename("events.hepevt"), writehepevt(false),
-  check_before_hepevt_file_overwrite(true) {}
+marley::ConfigurationFile::ConfigurationFile()
+  : seed_(std::chrono::system_clock::now().time_since_epoch().count()),
+  structure_db_(new marley::StructureDatabase),
+  check_hepevt_overwrite_(true), hepevt_filename_("events.hepevt"),
+  num_events_(DEFAULT_NUM_EVENTS_), write_hepevt_(false) {}
 
 // Call the default constructor first to set all configuration
 // file parameters to their default values
-marley::ConfigFile::ConfigFile(const std::string& file_name)
-  : marley::ConfigFile()
+marley::ConfigurationFile::ConfigurationFile(const std::string& file_name)
+  : marley::ConfigurationFile()
 {
-  filename = file_name;
+  filename_ = file_name;
   parse();
 }
 
-void marley::ConfigFile::parse() {
+void marley::ConfigurationFile::parse() {
 
-  file_in.open(filename);
+  file_in_.open(filename_);
 
   // If the file doesn't exist or some other error
   // occurred, complain and give up.
-  if (!file_in.good()) {
+  if (!file_in_.good()) {
     throw marley::Error(std::string("Could not read from the ") +
-      "file " + filename);
+      "file " + filename_);
   }
 
   // Stores the number of lines checked by each call to
@@ -58,67 +74,69 @@ void marley::ConfigFile::parse() {
 
   // Loop through each line in the file. Search for keywords,
   // and react appropriately whenever they are encountered.
-  for (line_num = 0;
-    line = marley_utils::get_next_line(file_in, rx_comment_or_empty, false,
-      lines_checked), line_num += lines_checked,
-    line != "";)
+  for (line_num_ = 0;
+    line_ = marley_utils::get_next_line(file_in_, rx_comment_or_empty, false,
+      lines_checked), line_num_ += lines_checked,
+    line_ != "";)
   {
     // Load the stream with the new line
-    iss.clear();
-    iss.str(line);
+    iss_.clear();
+    iss_.str(line_);
 
     // Read the first word (the keyword for that line) from the stream
-    iss >> keyword;
+    iss_ >> keyword_;
     // Convert the keyword to all lowercase (this is an easy way of
     // getting case-insensitivity). We do the case conversion word-by-word
     // rather than as a whole line because case is important for certain
     // items in the input (particularly file names).
-    marley_utils::to_lowercase_inplace(keyword);
+    marley_utils::to_lowercase_inplace(keyword_);
 
     // String to store the keyword argument currently being processed
     std::string arg;
 
     // Respond accordingly depending on which keyword it is
-    if (keyword == "seed") {
+    if (keyword_ == "seed") {
       next_word_from_line(arg);
-      // If "time" is used as the seed argument, use the system time as the seed
+      // If "time" is used as the seed argument, use the system time as the
+      // seed
       if (arg == "time") ; // default value, so do nothing
-      // If "device" is used, seed the random number generator using random_device
+      // If "device" is used, seed the random number generator using
+      // random_device
       // TODO: implement this
       //else if (arg == "device");
       else if (!std::regex_match(arg, rx_nonneg_int))
         throw marley::Error(std::string("Invalid random number seed")
-          + "encountered on line " + std::to_string(line_num)
-          + " of the configuration file " + filename);
+          + "encountered on line " + std::to_string(line_num_)
+          + " of the configuration file " + filename_);
       else {
         // Convert the seed string to a 64-bit unsigned integer
-        seed = static_cast<uint_fast64_t>(std::stoull(arg));
+        seed_ = static_cast<uint_fast64_t>(std::stoull(arg));
       }
     }
-    else if (keyword == "reaction") {
+    else if (keyword_ == "reaction") {
       next_word_from_line(arg, true, false);
-      reaction_filenames.insert(arg);
+      reaction_filenames_.insert(arg);
     }
-    else if (keyword == "hepevtfile") {
+    else if (keyword_ == "hepevtfile") {
       next_word_from_line(arg, true, false);
-      hepevt_filename = arg;
+      hepevt_filename_ = arg;
     }
-    else if (keyword == "writehepevt") {
+    else if (keyword_ == "writehepevt") {
       next_word_from_line(arg, true, true);
-      if (arg == "yes") writehepevt = true;
-      else if (arg == "no") writehepevt = false;
+      if (arg == "yes") write_hepevt_ = true;
+      else if (arg == "no") write_hepevt_ = false;
       else if (arg == "overwrite") {
-        writehepevt = true;
-        check_before_hepevt_file_overwrite = false;
+        write_hepevt_ = true;
+        check_hepevt_overwrite_ = false;
       }
       else {
         throw marley::Error(std::string("Invalid")
           + " HEPEvt file write flag '" + arg
-          + "' encountered on line" + std::to_string(line_num)
-          + " of the configuration file " + filename);
+          + "' encountered on line" + std::to_string(line_num_)
+          + " of the configuration file " + filename_);
       }
     }
-    else if (keyword == "structure") {
+    else if (keyword_ == "structure") {
 
       std::string structure_file_name;
       next_word_from_line(structure_file_name, true, false);
@@ -135,8 +153,8 @@ void marley::ConfigFile::parse() {
       catch (const marley::Error& e) {
          throw marley::Error(std::string("Unknown")
           + " nuclear structure format '" + format_string
-          + "' specified on line " + std::to_string(line_num)
-          + " of the configuration file " + filename);
+          + "' specified on line " + std::to_string(line_num_)
+          + " of the configuration file " + filename_);
       }
 
       std::set<int> nucleus_pdg_codes;
@@ -186,8 +204,8 @@ void marley::ConfigFile::parse() {
         // Other nuclide specifiers are not allowed
         else throw marley::Error(std::string("Invalid")
           + " nuclide specifier '" + arg
-          + "' given on line " + std::to_string(line_num)
-          + " of the configuration file " + filename);
+          + "' given on line " + std::to_string(line_num_)
+          + " of the configuration file " + filename_);
 
       } while (next_word_from_line(arg, false));
 
@@ -195,7 +213,7 @@ void marley::ConfigFile::parse() {
       // the database
       add_decay_schemes(structure_file_name, format, nucleus_pdg_codes);
     }
-    else if (keyword == "source") {
+    else if (keyword_ == "source") {
 
       // PDG particle ID for this source
       int neutrino_pid;
@@ -207,15 +225,15 @@ void marley::ConfigFile::parse() {
         if (!marley::NeutrinoSource::pid_is_allowed(neutrino_pid)) {
           throw marley::Error(std::string("Unallowed")
             + " neutrino source particle ID '" + arg
-            + "' given on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + "' given on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         }
       }
       // Anything other than an integer entry here is not allowed
       else throw marley::Error(std::string("Invalid")
         + " neutrino source particle ID '" + arg
-        + "' given on line " + std::to_string(line_num)
-        + " of the configuration file " + filename);
+        + "' given on line " + std::to_string(line_num_)
+        + " of the configuration file " + filename_);
 
       next_word_from_line(arg, true, true);
 
@@ -228,8 +246,8 @@ void marley::ConfigFile::parse() {
           if (nu_energy <= 0.) throw marley::Error(
             std::string("Non-positive") + " energy '" + arg
             + "' given for a monoenergetic neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
           // Create the monoenergetic neutrino source
           else set_source(std::make_unique<marley::MonoNeutrinoSource>(
             neutrino_pid, nu_energy));
@@ -237,8 +255,8 @@ void marley::ConfigFile::parse() {
         else throw marley::Error(std::string("Invalid")
           + " energy '" + arg
           + "' given for a monoenergetic neutrino source specification on line "
-          + std::to_string(line_num) + " of the configuration file "
-          + filename);
+          + std::to_string(line_num_) + " of the configuration file "
+          + filename_);
       }
 
       else if (arg == "dar" || arg == "decay-at-rest") {
@@ -255,14 +273,14 @@ void marley::ConfigFile::parse() {
           if (Emin < 0.) throw marley::Error(
             std::string("Negative") + " minimum energy " + std::to_string(Emin)
             + " given for a Fermi-Dirac neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         }
         else throw marley::Error(
             std::string("Invalid") + " minimum energy '" + arg
             + "' given for a Fermi-Dirac neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         // Process the maximum energy for this source
         next_word_from_line(arg, true, false);
         if (std::regex_match(arg, rx_num)) {
@@ -270,15 +288,15 @@ void marley::ConfigFile::parse() {
           if (Emax < Emin) throw marley::Error(
             std::string("Maximum") + " energy " + std::to_string(Emax)
             + " given for a Fermi-Dirac neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_
             + " is less than the minimum energy " + std::to_string(Emin));
         }
         else throw marley::Error(
             std::string("Invalid") + " maximum energy '" + arg
             + "' given for a Fermi-Dirac neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         // Process the temperature (in MeV) for this source
         next_word_from_line(arg, true, false);
         if (std::regex_match(arg, rx_num)) {
@@ -287,14 +305,14 @@ void marley::ConfigFile::parse() {
             std::string("Non-positive") + " temperature "
             + std::to_string(temperature)
             + " given for a Fermi-Dirac neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         }
         else throw marley::Error(
             std::string("Invalid") + " temperature '" + arg
             + "' given for a Fermi-Dirac neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         // Process the dimensionless pinching parameter eta for this source, or
         // set it to zero if one is not given. Any real number is allowed for
         // this parameter.
@@ -303,8 +321,8 @@ void marley::ConfigFile::parse() {
           else throw marley::Error(
               std::string("Invalid") + " pinching parameter '" + arg
               + "' given for a Fermi-Dirac neutrino source"
-              + " specification on line " + std::to_string(line_num)
-              + " of the configuration file " + filename);
+              + " specification on line " + std::to_string(line_num_)
+              + " of the configuration file " + filename_);
         }
         else eta = 0.;
 
@@ -323,14 +341,14 @@ void marley::ConfigFile::parse() {
           if (Emin < 0.) throw marley::Error(
             std::string("Negative") + " minimum energy " + std::to_string(Emin)
             + " given for a beta-fit neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         }
         else throw marley::Error(
             std::string("Invalid") + " minimum energy '" + arg
             + "' given for a beta-fit neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         // Process the maximum energy for this source
         next_word_from_line(arg, true, false);
         if (std::regex_match(arg, rx_num)) {
@@ -338,15 +356,15 @@ void marley::ConfigFile::parse() {
           if (Emax < Emin) throw marley::Error(
             std::string("Maximum") + " energy " + std::to_string(Emax)
             + " given for a beta-fit neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_
             + " is less than the minimum energy " + std::to_string(Emin));
         }
         else throw marley::Error(
             std::string("Invalid") + " maximum energy '" + arg
             + "' given for a beta-fit neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         // Process the temperature (in MeV) for this source
         next_word_from_line(arg, true, false);
         if (std::regex_match(arg, rx_num)) {
@@ -355,14 +373,14 @@ void marley::ConfigFile::parse() {
             std::string("Non-positive") + " average energy "
             + std::to_string(Eavg)
             + " given for a beta-fit neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         }
         else throw marley::Error(
             std::string("Invalid") + " average energy '" + arg
             + "' given for a beta-fit neutrino source"
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         // Process the fit parameter beta for this source, or
         // set it to 4.5 if it is not given. Any real number is allowed for
         // this parameter.
@@ -371,8 +389,8 @@ void marley::ConfigFile::parse() {
           else throw marley::Error(
               std::string("Invalid") + " fit parameter '" + arg
               + "' given for a beta-fit neutrino source"
-              + " specification on line " + std::to_string(line_num)
-              + " of the configuration file " + filename);
+              + " specification on line " + std::to_string(line_num_)
+              + " of the configuration file " + filename_);
         }
         else beta = 4.5;
 
@@ -412,8 +430,8 @@ void marley::ConfigFile::parse() {
             else throw marley::Error(
               std::string("Invalid") + " interpolation method '" + arg
               + "' given for a grid neutrino source "
-              + " specification on line " + std::to_string(line_num)
-              + " of the configuration file " + filename);
+              + " specification on line " + std::to_string(line_num_)
+              + " of the configuration file " + filename_);
           }
           // Specifying it using a string is also allowed.
           // Note that "hist" should probably be used to enter grids with a
@@ -434,8 +452,8 @@ void marley::ConfigFile::parse() {
           else throw marley::Error(
             std::string("Invalid") + " interpolation method '" + arg
             + "' given for a grid neutrino source "
-            + " specification on line " + std::to_string(line_num)
-            + " of the configuration file " + filename);
+            + " specification on line " + std::to_string(line_num_)
+            + " of the configuration file " + filename_);
         }
 
         // Store the grid point energies and probability densities
@@ -470,22 +488,22 @@ void marley::ConfigFile::parse() {
                 std::string("Negative") + " energy "
                 + std::to_string(E) + " given in a "
                 + description + " neutrino source specification on line "
-                + std::to_string(line_num) + " of the configuration file "
-                + filename);
+                + std::to_string(line_num_) + " of the configuration file "
+                + filename_);
               if (E <= previous_E) throw marley::Error(
                 std::string("Energy") + " values "
                 + " given in a " + description
                 + " neutrino source specification on line "
-                + std::to_string(line_num) + " of the configuration file "
-                + filename + " are not strictly increasing");
+                + std::to_string(line_num_) + " of the configuration file "
+                + filename_ + " are not strictly increasing");
               energies.push_back(E);
               previous_E = E;
             }
             else throw marley::Error(std::string("Invalid") + " energy '"
               + E_str + "' given in a " + description
               + " neutrino source specification on line "
-              + std::to_string(line_num) + " of the configuration file "
-              + filename);
+              + std::to_string(line_num_) + " of the configuration file "
+              + filename_);
           }
           // Get the first probability density
           bool found_PD = next_word_from_line(PD_str, false, false);
@@ -496,16 +514,16 @@ void marley::ConfigFile::parse() {
                 std::string("Negative") + " probability density "
                 + std::to_string(pd) + " given in a "
                 + description + " neutrino source specification on line "
-                + std::to_string(line_num) + " of the configuration file "
-                + filename);
+                + std::to_string(line_num_) + " of the configuration file "
+                + filename_);
               prob_densities.push_back(pd);
             }
             else throw marley::Error(std::string("Invalid")
               + " probability density '"
               + PD_str + "' given in a " + description
               + " neutrino source specification on line "
-              + std::to_string(line_num) + " of the configuration file "
-              + filename);
+              + std::to_string(line_num_) + " of the configuration file "
+              + filename_);
           }
 
           // Stop the loop for a histogram if we read an energy without
@@ -530,15 +548,15 @@ void marley::ConfigFile::parse() {
             throw marley::Error(std::string("Missing ")
               + weight_desc + " entry in a " + description
               + " neutrino source specification on line "
-              + std::to_string(line_num) + " of the configuration file "
-              + filename);
+              + std::to_string(line_num_) + " of the configuration file "
+              + filename_);
           }
           else if (!found_E) {
             throw marley::Error(std::string("Missing ")
               + "energy entry in a " + description
               + " neutrino source specification on line "
-              + std::to_string(line_num) + " of the configuration file "
-              + filename);
+              + std::to_string(line_num_) + " of the configuration file "
+              + filename_);
           }
 
           // Increment the entry counter now that we've successfully parsed
@@ -558,8 +576,8 @@ void marley::ConfigFile::parse() {
             prob_densities.at(j) /= (energies.at(j + 1) - energies.at(j));
           }
           // Set the probability density at E = Emax to be zero (this ensures
-          // that no energies outside of the histogram will be sampled and makes
-          // the energy and probability densities vector lengths equal).
+          // that no energies outside of the histogram will be sampled and
+          // makes the energy and probability densities vector lengths equal).
           prob_densities.push_back(0.);
         }
 
@@ -572,38 +590,38 @@ void marley::ConfigFile::parse() {
       else if (!process_extra_source_types(arg, neutrino_pid))
         throw marley::Error(std::string("Unrecognized")
         + " neutrino source type '" + arg
-        + "' given on line " + std::to_string(line_num)
-        + " of the configuration file " + filename);
+        + "' given on line " + std::to_string(line_num_)
+        + " of the configuration file " + filename_);
     }
 
-    else if (keyword == "events") {
+    else if (keyword_ == "events") {
       next_word_from_line(arg, true, false);
       if (!std::regex_match(arg, rx_num))
         throw marley::Error(std::string("Invalid")
         + " number of events '" + arg
-        + "' given on line " + std::to_string(line_num)
-        + " of the configuration file " + filename);
+        + "' given on line " + std::to_string(line_num_)
+        + " of the configuration file " + filename_);
       double d_n_events = std::stod(arg);
       int n_events = static_cast<int>(d_n_events);
       // Allow n_events == 0 for testing purposes
       if (n_events < 0)
         throw marley::Error(std::string("Number")
         + " of events '" + arg + "' given on line "
-        + std::to_string(line_num) + " of the configuration file "
-        + filename + " must be non-negative.");
+        + std::to_string(line_num_) + " of the configuration file "
+        + filename_ + " must be non-negative.");
 
-      num_events = static_cast<size_t>(n_events);
+      num_events_ = static_cast<size_t>(n_events);
     }
 
     else if (!process_extra_keywords()) {
-      MARLEY_LOG_WARNING() << "Ignoring unrecognized keyword '" << keyword
-        << "' on line " << line_num << " of the configuration file "
-        << filename << '\n';
+      MARLEY_LOG_WARNING() << "Ignoring unrecognized keyword '" << keyword_
+        << "' on line " << line_num_ << " of the configuration file "
+        << filename_ << '\n';
     }
   }
 
   // Check that required keywords were found
-  if (reaction_filenames.empty())
+  if (reaction_filenames_.empty())
     throw marley::Error(std::string("Configuration file")
     + " must contain at least one use of the reaction keyword.");
   if (!source_)
@@ -614,76 +632,55 @@ void marley::ConfigFile::parse() {
 // Get the next word from a parsed line. If errors occur, complain.
 // The last argument determines whether the next word should be
 // converted to all lowercase or left as is.
-bool marley::ConfigFile::next_word_from_line(std::string& word,
+bool marley::ConfigurationFile::next_word_from_line(std::string& word,
   bool enable_exceptions, bool make_lowercase)
 {
-  if (iss.eof()) {
+  if (iss_.eof()) {
     if (!enable_exceptions) return false;
     throw marley::Error(std::string("Missing argument ")
-      + "for keyword '" + keyword + "' encountered while"
-      + " parsing line " + std::to_string(line_num)
-      + " of the configuration file " + filename);
+      + "for keyword '" + keyword_ + "' encountered while"
+      + " parsing line " + std::to_string(line_num_)
+      + " of the configuration file " + filename_);
   }
-  iss >> word;
-  if (iss.fail()) {
+  iss_ >> word;
+  if (iss_.fail()) {
     if (!enable_exceptions) return false;
-    std::string snum = std::to_string(line_num);
+    std::string snum = std::to_string(line_num_);
     throw marley::Error(std::string("Error")
       + " occurred while parsing arguments for keyword '"
-      + keyword + "' on line "
-      + std::to_string(line_num)
-      + " of the configuration file " + filename);
+      + keyword_ + "' on line "
+      + std::to_string(line_num_)
+      + " of the configuration file " + filename_);
   }
   else if (word == "&") {
     // A single "&" by itself is the line continuation flag. Anything after it
     // on the current line is ignored, and the next line is treated as a
     // continuation of the previous line
     int lines_checked = 0;
-    line = marley_utils::get_next_line(file_in, rx_comment_or_empty, false,
+    line_ = marley_utils::get_next_line(file_in_, rx_comment_or_empty, false,
       lines_checked);
-    line_num += lines_checked,
-    iss.clear();
-    iss.str(line);
+    line_num_ += lines_checked,
+    iss_.clear();
+    iss_.str(line_);
     return next_word_from_line(word, enable_exceptions, make_lowercase);
   }
   else if (make_lowercase) marley_utils::to_lowercase_inplace(word);
   return true;
 }
 
-marley::DecayScheme::FileFormat
-  marley::ConfigFile::string_to_format(
-  const std::string& string)
-{
-  if (string == "talys")
-    return marley::DecayScheme::FileFormat::talys;
-  else throw marley::Error(std::string("Unrecognized file")
-    + " format '" + string + "' passed to"
-    + " marley::ConfigFile::string_to_format()");
-}
-
-std::string marley::ConfigFile::format_to_string(
-  const marley::DecayScheme::FileFormat ff)
-{
-  if (ff == marley::DecayScheme::FileFormat::talys)
-    return std::string("talys");
-  else throw marley::Error(std::string("Unrecognized")
-    + " marley::DecayScheme::FileFormat value passed to"
-    + " marley::ConfigFile::format_to_string()");
-}
-
-bool marley::ConfigFile::process_extra_keywords() {
-  if (keyword == "writeroot" || keyword == "rootfile") {
-    MARLEY_LOG_WARNING() << "Ignoring keyword '" << keyword
-      << "' found on line " << std::to_string(line_num)
+bool marley::ConfigurationFile::process_extra_keywords() {
+  if (keyword_ == "writeroot" || keyword_ == "rootfile") {
+    MARLEY_LOG_WARNING() << "Ignoring keyword '" << keyword_
+      << "' found on line " << std::to_string(line_num_)
       << " of the configuration file. To enable ROOT"
-      << " TFile output, use a marley::RootConfigFile object instead"
-      << " of a marley::ConfigFile object.\n";
+      << " TFile output, use a marley::RootConfigurationFile object instead"
+      << " of a marley::ConfigurationFile object.\n";
     return true;
   }
   return false;
 }
 
-void marley::ConfigFile::add_decay_schemes(const std::string& file_name,
+void marley::ConfigurationFile::add_decay_schemes(const std::string& file_name,
   const marley::DecayScheme::FileFormat format,
   const std::set<int>& nucleus_pdg_codes)
 {
@@ -705,10 +702,10 @@ void marley::ConfigFile::add_decay_schemes(const std::string& file_name,
   }
 }
 
-void marley::ConfigFile::set_source(std::unique_ptr<marley::NeutrinoSource>&&
-  new_source)
+void marley::ConfigurationFile::set_source(
+  std::unique_ptr<marley::NeutrinoSource>&& new_source)
 {
   if (source_) MARLEY_LOG_WARNING() << "Replacing existing NeutrinoSource"
-    << " in a ConfigFile object.";
+    << " in a ConfigurationFile object.";
   source_.reset(new_source.release());
 }

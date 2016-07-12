@@ -11,9 +11,9 @@
 #include "marley_utils.hh"
 
 #ifdef USE_ROOT
-#include "RootConfigFile.hh"
+#include "RootConfigurationFile.hh"
 #else
-#include "ConfigFile.hh"
+#include "ConfigurationFile.hh"
 #endif
 
 #include "Generator.hh"
@@ -134,9 +134,9 @@ int main(int argc, char* argv[]){
   //marley::Logger::Instance().add_stream(log_file, marley::Logger::LogLevel::INFO);
   marley::Logger::Instance().add_stream(std::cout, marley::Logger::LogLevel::INFO);
   #ifdef USE_ROOT
-  marley::RootConfigFile cf(config_file_name);
+  marley::RootConfigurationFile cf(config_file_name);
   #else
-  marley::ConfigFile cf(config_file_name);
+  marley::ConfigurationFile cf(config_file_name);
   #endif
   marley::Generator gen(cf);
 
