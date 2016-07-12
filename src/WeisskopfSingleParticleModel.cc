@@ -18,8 +18,8 @@ marley::WeisskopfSingleParticleModel::WeisskopfSingleParticleModel(int Z,
 double marley::WeisskopfSingleParticleModel::partial_decay_width(TrType type,
   int l, double e_gamma)
 {
-  return std::pow(e_gamma, 2*l + 1) * strength_function(type, l, e_gamma)
-    / D0_;
+  return D0_ * std::pow(e_gamma, 2*l + 1)
+    * strength_function(type, l, e_gamma);
 }
 
 double marley::WeisskopfSingleParticleModel::strength_function(TrType type,
@@ -31,16 +31,16 @@ double marley::WeisskopfSingleParticleModel::strength_function(TrType type,
   int dfact = 1;
   for (int n = 2*l + 1; n > 0; n -= 2) dfact *= n;
 
-  // Multipolarity factor
-  double lambda = (l + 1) / (l * std::pow(dfact, 2))
-    * std::pow(3.0 / (l + 3), 2);
+  // Multipolarity factor (dimensionless)
+  double lambda = (l + 1.) / (l * std::pow(dfact, 2))
+    * std::pow(3.0 / (l + 3.), 2);
 
   // Estimated nuclear radius (fm)
   double R = marley_utils::r0 * std::pow(A_, 1.0/3.0);
 
-  // Electric transition strength function
+  // Electric transition strength function (MeV^[-2l-1])
   double el_sf = 2 * marley_utils::alpha * lambda
-    * std::pow(R / marley_utils::hbar_c, 2*l) * D0_;
+    * std::pow(R / marley_utils::hbar_c, 2*l) / D0_;
 
   if (type == TrType::electric) {
     return el_sf;
