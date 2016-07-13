@@ -187,7 +187,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
               // conserved
               if (Pi_ == P_final_state) discrete_width
                 += om.transmission_coefficient(Ea, fragment_pid, two_j, l,
-                two_s, DEFAULT_NUMEROV_STEP_SIZE_);
+                two_s);
             }
           }
 
@@ -406,7 +406,7 @@ double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
         twoJf <= twoJi_ + two_j; twoJf += 2)
       {
         continuum_width += om.transmission_coefficient(fragment_KE,
-          frag.get_pid(), two_j, l, two_s, DEFAULT_NUMEROV_STEP_SIZE_)
+          frag.get_pid(), two_j, l, two_s)
           * ldm.level_density(Exf, twoJf);
           // TODO: since only the spin distribution changes in the twoJf loop,
           // you can optimize this by precomputing most of the level density
