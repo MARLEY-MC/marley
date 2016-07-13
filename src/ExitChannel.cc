@@ -54,8 +54,8 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
 
   marley::SphericalOpticalModel& om
     = gen.get_structure_db().get_optical_model(gs_residue_.pdg_code());
-  int Zf = om.get_Z();
-  int Af = om.get_A();
+  int Zf = om.Z();
+  int Af = om.A();
 
   marley::LevelDensityModel& ldm
     = gen.get_structure_db().get_level_density_model(Zf, Af);

@@ -21,7 +21,10 @@ if(ROOT AND ROOTCINT AND ROOTCONFIG)
   message("Found ROOT version ${ROOT_VERSION} in ${ROOT}")
   message("MARLEY will be built with ROOT support.")
   exec_program(${ROOTCONFIG} ARGS --cflags OUTPUT_VARIABLE ROOT_CFLAGS)
-  exec_program(${ROOTCONFIG} ARGS --ldflags --libs OUTPUT_VARIABLE ROOT_LDFLAGS)
+  exec_program(${ROOTCONFIG} ARGS --ldflags OUTPUT_VARIABLE ROOT_LDFLAGS)
+  exec_program(${ROOTCONFIG} ARGS --libdir OUTPUT_VARIABLE ROOT_LIBDIR)
+  set(ROOT_LDFLAGS "${ROOT_LDFLAGS} -L${ROOT_LIBDIR} -lCore -lRIO \
+    -lHist -lTree -rdynamic")
 
   set(ROOT_DICT_INCLUDES ${INCLUDE_DIR}/Particle.hh
     ${INCLUDE_DIR}/Event.hh ${INCLUDE_DIR}/marley_linkdef.hh)
@@ -65,8 +68,11 @@ else()
 endif()
 
 # ROOT dictionaries generated with rootcint trigger clang++'s keyword-macro
-# warning
+# warning. Also, linking to ROOT libraries can be problematic on distributions
+# (e.g., Ubuntu) that set -Wl,--as-needed by default (see
+# http://www.bnikolic.co.uk/blog/gnu-ld-as-needed.html for details)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} -O3 \
   -Wall -Wextra -Wshadow -pedantic \
   -Wcast-align -Wunused -Woverloaded-virtual \
-  -Werror -Wno-keyword-macro -Wno-missing-braces")
+  -Werror -Wno-keyword-macro -Wno-missing-braces \
+  -Wl,--no-as-needed")

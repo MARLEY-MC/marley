@@ -9,93 +9,85 @@
 
 namespace marley {
 
+  /// @brief Nuclear optical model for fragment emission calculations
+  /// @details This class implements the global optical model potential
+  /// of A. J. Koning and J. P. Delarouche, <a
+  /// href="http://dx.doi.org/10.1016/S0375-9474(02)01321-0">
+  /// Nucl. Phys. A 713 (2003) 231-310</a>.
+  /// <a href="https://en.wikipedia.org/wiki/Numerov%27s_method">Numerov's
+  /// method</a> is used to integrate the Schr&ouml;dinger equation during
+  /// transmission coefficient and cross section calculations.
   class SphericalOpticalModel {
-    public:
-      SphericalOpticalModel(int z, int a);
-      std::complex<double> optical_model_potential(double r, double E,
-        int fragment_pid, int two_j, int l, int two_s);
 
-      double transmission_coefficient(double E, int fragment_pid, int two_j,
+    public:
+
+      /// @param z Atomic number of the desired nuclide
+      /// @param a Mass number of the desired nuclide
+      SphericalOpticalModel(int z, int a);
+
+      /// @brief Calculate the optical model potential (including the Coulomb
+      /// potential)
+      /// @param r Distance from nuclear center (fm)
+      /// @param E Fragment kinetic energy (MeV)
+      /// @param fragment_pdg PDG code for the nuclear fragment in the
+      /// potential
+      /// @param two_j Two times the total angular momentum of the fragment
+      /// @param l Orbital angular momentum of the fragment
+      /// @param two_s Two times the spin of the fragment
+      /// @returns Complex-valued optical model potential (MeV)
+      std::complex<double> optical_model_potential(double r, double E,
+        int fragment_pdg, int two_j, int l, int two_s);
+
+      double transmission_coefficient(double E, int fragment_pdg, int two_j,
         int l, int two_s, double h);
 
-      double total_cross_section(double E, int fragment_pid, int two_s,
+      double total_cross_section(double E, int fragment_pdg, int two_s,
         size_t l_max, double h);
 
-      inline int get_Z() const {
-        return Z_;
-      }
+      /// @brief Get the atomic number
+      inline int Z() const;
 
-      inline int get_A() const {
-        return A_;
-      }
+      /// @brief Get the mass number
+      inline int A() const;
 
     private:
 
       // Helper function for computing optical model transmission coefficients
       // and cross sections
-      std::complex<double> s_matrix_element(double E, int fragment_pid,
+      std::complex<double> s_matrix_element(double E, int fragment_pdg,
         int two_j, int l, int two_s, double h);
 
       // Helper functions for computing the optical model potential
-      void calculate_om_parameters(double E, int fragment_pid, int two_j,
+      void calculate_om_parameters(double E, int fragment_pdg, int two_j,
         int l, int two_s);
 
-      inline std::complex<double> omp(double r) const {
-        return omp_minus_Vc(r) + Vc(r, Rc, z, Z_);
-      }
+      // Compute the optical model potential at radius r
+      std::complex<double> omp(double r) const;
 
       // Computes the optical model potential minus the Coulomb potential at
       // radius r
       std::complex<double> omp_minus_Vc(double r) const;
 
       // Woods-Saxon shape
-      inline double f(double r, double R, double a) const {
-        return std::pow(1 + std::exp((r - R) / a), -1);
-      }
+      double f(double r, double R, double a) const;
 
-      inline double get_fragment_reduced_mass(int fragment_pid) const {
-        return reduced_masses.at(fragment_pid);
-      }
+      inline double get_fragment_reduced_mass(int fragment_pdg) const;
 
       // Partial derivative with respect to r of the Woods-Saxon shape
-      inline double dfdr(double r, double R, double a) const {
-        // In the limit as r -> +-infinity, this goes to zero.
-        // We pick an upper limit for the exponent to avoid evaluating
-        // the function explicitly when r gets too large (otherwise, C++
-        // returns NaN because the function becomes indeterminate in double
-        // precision (infinity/infinity or 0/0)
-        double exponent = (r - R) / a;
-        if (std::abs(exponent) > 100.) return 0;
-        double temp = std::exp(exponent);
-        return -temp / (a * std::pow(1 + temp, 2));
-      }
+      double dfdr(double r, double R, double a) const;
 
       // Coulomb potential for a point particle with charge q*e interacting
       // with a uniformly charged sphere with radius R and charge Q*e
-      inline double Vc(double r, double R, int Q, int q) const {
-        if (Q == 0 || q == 0) return 0;
-        else if (r < R) return Q * q * marley_utils::e2
-          * (3 - std::pow(r / R, 2)) / (2 * R);
-        else return Q * q * marley_utils::e2 / r;
-      }
+      double Vc(double r, double R, int Q, int q) const;
 
       // Non-derivative radial Schrödinger equation terms to use for computing
       // transmission coefficients via the Numerov method
-      inline std::complex<double> a(double r, double E, int fragment_pid, int l)
-      {
-        return (-l*(l+1) / std::pow(r, 2)) +
-          2 * reduced_masses.at(fragment_pid) * (E - omp(r))
-          / marley_utils::hbar_c2;
-      }
+      std::complex<double> a(double r, double E, int fragment_pdg, int l);
 
       // Version of Schrodinger equation terms with the optical model potential
       // U pre-computed
-      inline std::complex<double> a(double r, double E, int fragment_pid, int l,
-        std::complex<double> U) const
-      {
-        return (-l*(l+1) / std::pow(r, 2)) +
-          2 * reduced_masses.at(fragment_pid) * (E - U) / marley_utils::hbar_c2;
-      }
+      std::complex<double> a(double r, double E, int fragment_pdg, int l,
+        std::complex<double> U) const;
 
       // Nuclear atomic and mass numbers
       int Z_, A_;
@@ -108,7 +100,7 @@ namespace marley {
       // Radius for nuclear Coulomb potential
       double Rc;
       // Reduced mass lookup table
-      std::unordered_map<int, double> reduced_masses;
+      std::unordered_map<int, double> reduced_masses_;
 
       // Mass of a charged pion
       static constexpr double mpiplus = 139.57018; // MeV
@@ -124,7 +116,7 @@ namespace marley {
 
       // Threshold for abs(U - Vc) used to find a suitable matching radius for
       // computing transmission coefficients.
-      // WARNING: This value should be chosen carefully. Since the Numerov
+      // WARNING: This value should be chosen carefully.  Since the Numerov
       // method used for computing the fragment wavefunctions is only accurate
       // to order h^4 (where h is the step size used), choosing this threshold
       // to be comparable to or smaller than h^4 may cause numerical problems.
@@ -135,4 +127,11 @@ namespace marley {
       static constexpr double MATCHING_RADIUS_THRESHOLD = 1e-3;
   };
 
+  // Inline function definitions
+  inline int SphericalOpticalModel::Z() const { return Z_; }
+
+  inline int SphericalOpticalModel::A() const { return A_; }
+
+  inline double SphericalOpticalModel::get_fragment_reduced_mass(
+    int fragment_pdg) const { return reduced_masses_.at(fragment_pdg); }
 }

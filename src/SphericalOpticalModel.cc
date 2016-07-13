@@ -4,9 +4,9 @@
 #include "SphericalOpticalModel.hh"
 
 std::complex<double> marley::SphericalOpticalModel::optical_model_potential(
-  double r, double E, int fragment_pid, int two_j, int l, int two_s)
+  double r, double E, int fragment_pdg, int two_j, int l, int two_s)
 {
-  calculate_om_parameters(E, fragment_pid, two_j, l, two_s);
+  calculate_om_parameters(E, fragment_pdg, two_j, l, two_s);
   return omp(r);
 }
 
@@ -41,11 +41,11 @@ std::complex<double> marley::SphericalOpticalModel::omp_minus_Vc(double r) const
 // fragment's energy E but not on its distance from the origin r.
 // Store them in the appropriate class members.
 void marley::SphericalOpticalModel::calculate_om_parameters(double E,
-  int fragment_pid, int two_j, int l, int two_s)
+  int fragment_pdg, int two_j, int l, int two_s)
 {
   // Fragment atomic, mass, and neutron numbers
-  z = marley_utils::get_particle_Z(fragment_pid);
-  int a = marley_utils::get_particle_A(fragment_pid);
+  z = marley_utils::get_particle_Z(fragment_pdg);
+  int a = marley_utils::get_particle_A(fragment_pdg);
   int n = a - z;
 
   // Eigenvalue of the spin-orbit operator
@@ -179,7 +179,8 @@ marley::SphericalOpticalModel::SphericalOpticalModel(int Z, int a) {
   Efn = -11.2814 + 0.02646*A_; // MeV
   Rvn = 1.3039*A_to_the_one_third - 0.4054; // fm
   avn = 0.6778 - 1.487e-4*A_; // fm
-  Rdn = 1.3424*A_to_the_one_third - 0.01585*std::pow(A_to_the_one_third, 2); // fm
+  Rdn = 1.3424*A_to_the_one_third
+    - 0.01585*std::pow(A_to_the_one_third, 2); // fm
   adn = 0.5446 - 1.656e-4*A_; // fm
   Rso_n = 1.1854*A_to_the_one_third - 0.647; // fm
   aso_n = 0.59; // fm
@@ -215,7 +216,7 @@ marley::SphericalOpticalModel::SphericalOpticalModel(int Z, int a) {
   for (const auto& f : marley::HauserFeshbachDecay::get_fragments()) {
     int pdg = f.get_pid();
     double m_fragment = mt.get_particle_mass(pdg);
-    reduced_masses[pdg] = (m_fragment * m_nucleus) / (m_fragment + m_nucleus);
+    reduced_masses_[pdg] = (m_fragment * m_nucleus) / (m_fragment + m_nucleus);
   }
 }
 
@@ -228,7 +229,7 @@ marley::SphericalOpticalModel::SphericalOpticalModel(int Z, int a) {
 // to the data because the absorption cross section includes the compound
 // elastic channel.
 double marley::SphericalOpticalModel::total_cross_section(double E,
-  int fragment_pid, int two_s, size_t l_max, double h) //const
+  int fragment_pdg, int two_s, size_t l_max, double h)
 {
   double sum = 0.;
   for (size_t l = 0; l <= l_max; ++l) {
@@ -236,13 +237,13 @@ double marley::SphericalOpticalModel::total_cross_section(double E,
     for (int two_j = std::abs(two_l - two_s);
       two_j <= two_l + two_s; two_j += 2)
     {
-      std::complex<double> S = s_matrix_element(E, fragment_pid, two_j, l,
+      std::complex<double> S = s_matrix_element(E, fragment_pdg, two_j, l,
         two_s, h);
       sum += (two_j + 1) * (1 - S.real());
     }
   }
 
-  double mu = get_fragment_reduced_mass(fragment_pid);
+  double mu = get_fragment_reduced_mass(fragment_pdg);
   double k = marley_utils::real_sqrt(2.0 * mu * E) / marley_utils::hbar_c;
   // If k == 0, then eta blows up, so use a really small k instead of zero
   // (or a negative k due to roundoff error)
@@ -260,40 +261,43 @@ double marley::SphericalOpticalModel::total_cross_section(double E,
 }
 
 double marley::SphericalOpticalModel::transmission_coefficient(double E,
-  int fragment_pid, int two_j, int l, int two_s, double h) //const
+  int fragment_pdg, int two_j, int l, int two_s, double h)
 {
-  std::complex<double> S = s_matrix_element(E, fragment_pid, two_j, l,
+  std::complex<double> S = s_matrix_element(E, fragment_pdg, two_j, l,
     two_s, h);
   return 1.0 - std::norm(S);
 }
 
 std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
-  int fragment_pid, int two_j, int l, int two_s, double h) //const
+  int fragment_pdg, int two_j, int l, int two_s, double h)
 {
 
   // Update the optical model parameters stored in this object for the
   // given fragment, energy, and angular momenta
-  calculate_om_parameters(E, fragment_pid, two_j, l, two_s);
+  calculate_om_parameters(E, fragment_pdg, two_j, l, two_s);
 
   double h2_over_twelve = std::pow(h, 2) / 12.0;
 
   std::complex<double> u1 = 0, u2 = 0;
 
   std::complex<double> a_n_minus_two;
-  // a(r) really blows up at the origin for the optical model potential, but we're saved
-  // by the boundary condition that u(0) = 0. We just need something finite here, but we might
-  // as well make it zero.
+
+  // a(r) really blows up at the origin for the optical model potential, but
+  // we're saved by the boundary condition that u(0) = 0. We just need
+  // something finite here, but we might as well make it zero.
   std::complex<double> a_n_minus_one = 0;
-  std::complex<double> a_n = a(h, E, fragment_pid, l);
+  std::complex<double> a_n = a(h, E, fragment_pdg, l);
 
   std::complex<double> u_n_minus_two;
-  // Boundary condition that the wavefunction vanishes at the origin (the optical model
-  // potential blows up at r = 0)
+  // Boundary condition that the wavefunction vanishes at the origin (the
+  // optical model potential blows up at r = 0)
   std::complex<double> u_n_minus_one = 0;
-  // Asymptotic approximation for a regular potential (see J. Thijssen, Computational
-  // Physics, p. 20 for details). We really just need something finite and nonzero here, since
-  // our specific choice only determines the overall normalization, which isn't important for
-  // determining the transmission coefficients.
+
+  // Asymptotic approximation for a regular potential (see J. Thijssen,
+  // Computational Physics, p. 20 for details). We really just need something
+  // finite and nonzero here, since our specific choice only determines the
+  // overall normalization, which isn't important for determining the
+  // transmission coefficients.
   std::complex<double> u_n = std::pow(h, l + 1);
 
   // Optical model potential with and without the Coulomb potential included
@@ -307,7 +311,7 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
 
     U_minus_Vc = omp_minus_Vc(r),
     U = U_minus_Vc + Vc(r, Rc, z, Z_);
-    a_n = a(r, E, fragment_pid, l, U);
+    a_n = a(r, E, fragment_pdg, l, U);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -332,7 +336,7 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
     r += h;
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = a(r, E, fragment_pid, l);
+    a_n = a(r, E, fragment_pdg, l);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -346,14 +350,14 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
   double r_match_2 = r;
   u2 = u_n;
 
-  //MARLEY_LOG_DEBUG() << "r1 = " << r_match_1 << ", r2 = " << r_match_2 << std::endl;
-
   // Coulomb parameter
-  double mu = get_fragment_reduced_mass(fragment_pid);
+  double mu = get_fragment_reduced_mass(fragment_pdg);
   double k = marley_utils::real_sqrt(2.0 * mu * E) / marley_utils::hbar_c;
+
   // If k == 0, then eta blows up, so use a really small k instead of zero
   // (or a negative k due to roundoff error)
   if (k <= 0) k = 1e-8; //DEBUG!
+
   double eta = mu * Z_ * z * marley_utils::e2 / (marley_utils::hbar_c2 * k);
 
   // Compute the Coulomb wavefunctions at the matching radii
@@ -362,6 +366,7 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
   F = meta_numerics::CoulombF(l, eta, k*r_match_1);
   G = meta_numerics::CoulombG(l, eta, k*r_match_1);
   Hplus1 = std::complex<double>(G, F);
+
   // H+ and H- are complex conjugates of each other
   Hminus1 = std::conj(Hplus1);
 
@@ -374,4 +379,60 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
   // evaluated at the two matching radii
   std::complex<double> S = (u1*Hminus2 - u2*Hminus1) / (u1*Hplus2 - u2*Hplus1);
   return S;
+}
+
+// Version of Schrodinger equation terms with the optical model potential
+// U pre-computed
+std::complex<double> marley::SphericalOpticalModel::a(double r, double E,
+  int fragment_pdg, int l, std::complex<double> U) const
+{
+  return (-l*(l+1) / std::pow(r, 2)) +
+    2 * reduced_masses_.at(fragment_pdg) * (E - U) / marley_utils::hbar_c2;
+}
+
+// Non-derivative radial Schrödinger equation terms to use for computing
+// transmission coefficients via the Numerov method
+std::complex<double> marley::SphericalOpticalModel::a(double r, double E,
+  int fragment_pdg, int l)
+{
+  return (-l*(l+1) / std::pow(r, 2)) +
+    2 * reduced_masses_.at(fragment_pdg) * (E - omp(r))
+    / marley_utils::hbar_c2;
+}
+
+// Coulomb potential for a point particle with charge q*e interacting
+// with a uniformly charged sphere with radius R and charge Q*e
+double marley::SphericalOpticalModel::Vc(double r, double R, int Q, int q)
+  const
+{
+  if (Q == 0 || q == 0) return 0.;
+  else if (r < R) return Q * q * marley_utils::e2
+    * (3. - std::pow(r / R, 2)) / (2. * R);
+  else return Q * q * marley_utils::e2 / r;
+}
+
+// Woods-Saxon shape
+double marley::SphericalOpticalModel::f(double r, double R, double a) const
+{
+  return std::pow(1 + std::exp((r - R) / a), -1);
+}
+
+// Compute the optical model potential at radius r
+std::complex<double> marley::SphericalOpticalModel::omp(double r) const
+{
+  return omp_minus_Vc(r) + Vc(r, Rc, z, Z_);
+}
+
+// Partial derivative with respect to r of the Woods-Saxon shape
+double marley::SphericalOpticalModel::dfdr(double r, double R, double a) const
+{
+  // In the limit as r -> +-infinity, this goes to zero.
+  // We pick an upper limit for the exponent to avoid evaluating
+  // the function explicitly when r gets too large (otherwise, C++
+  // returns NaN because the function becomes indeterminate in double
+  // precision (infinity/infinity or 0/0)
+  double exponent = (r - R) / a;
+  if (std::abs(exponent) > 100.) return 0;
+  double temp = std::exp(exponent);
+  return -temp / (a * std::pow(1 + temp, 2));
 }
