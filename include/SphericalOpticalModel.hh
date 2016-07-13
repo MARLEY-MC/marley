@@ -5,6 +5,7 @@
 
 #include "DecayScheme.hh"
 #include "MassTable.hh"
+#include "OpticalModel.hh"
 #include "marley_utils.hh"
 
 namespace marley {
@@ -17,45 +18,32 @@ namespace marley {
   /// <a href="https://en.wikipedia.org/wiki/Numerov%27s_method">Numerov's
   /// method</a> is used to integrate the Schr&ouml;dinger equation during
   /// transmission coefficient and cross section calculations.
-  class SphericalOpticalModel {
+  class SphericalOpticalModel : public OpticalModel {
 
     public:
 
-      /// @param z Atomic number of the desired nuclide
-      /// @param a Mass number of the desired nuclide
-      SphericalOpticalModel(int z, int a);
+      /// @param Z Atomic number of the desired nuclide
+      /// @param A Mass number of the desired nuclide
+      /// @param step_size Step size (fm) to use for numerical integration of
+      /// the Schr&ouml;dinger equation
+      SphericalOpticalModel(int Z, int A, double step_size
+        = DEFAULT_NUMEROV_STEP_SIZE_);
 
-      /// @brief Calculate the optical model potential (including the Coulomb
-      /// potential)
-      /// @param r Distance from nuclear center (fm)
-      /// @param E Fragment kinetic energy (MeV)
-      /// @param fragment_pdg PDG code for the nuclear fragment in the
-      /// potential
-      /// @param two_j Two times the total angular momentum of the fragment
-      /// @param l Orbital angular momentum of the fragment
-      /// @param two_s Two times the spin of the fragment
-      /// @returns Complex-valued optical model potential (MeV)
-      std::complex<double> optical_model_potential(double r, double E,
-        int fragment_pdg, int two_j, int l, int two_s);
+      virtual std::complex<double> optical_model_potential(double r, double E,
+        int fragment_pdg, int two_j, int l, int two_s) override;
 
-      double transmission_coefficient(double E, int fragment_pdg, int two_j,
-        int l, int two_s, double h);
+      virtual double transmission_coefficient(double E, int fragment_pdg,
+        int two_j, int l, int two_s) override;
 
-      double total_cross_section(double E, int fragment_pdg, int two_s,
-        size_t l_max, double h);
-
-      /// @brief Get the atomic number
-      inline int Z() const;
-
-      /// @brief Get the mass number
-      inline int A() const;
+      virtual double total_cross_section(double E, int fragment_pdg, int two_s,
+        size_t l_max) override;
 
     private:
 
       // Helper function for computing optical model transmission coefficients
       // and cross sections
       std::complex<double> s_matrix_element(double E, int fragment_pdg,
-        int two_j, int l, int two_s, double h);
+        int two_j, int l, int two_s);
 
       // Helper functions for computing the optical model potential
       void calculate_om_parameters(double E, int fragment_pdg, int two_j,
@@ -89,8 +77,6 @@ namespace marley {
       std::complex<double> a(double r, double E, int fragment_pdg, int l,
         std::complex<double> U) const;
 
-      // Nuclear atomic and mass numbers
-      int Z_, A_;
       // Neutron parameters
       double v1n, v2n, v3n, v4n, w1n, w2n, d1n, d2n, d3n, vso1n, vso2n;
       double wso1n, wso2n, Efn, Rvn, avn, Rdn, adn, Rso_n, aso_n;
@@ -125,13 +111,21 @@ namespace marley {
       // coefficients aren't significantly affected before adopting a higher
       // value.
       static constexpr double MATCHING_RADIUS_THRESHOLD = 1e-3;
+
+      /// @brief Step size (fm) for integration of the Schr&ouml;dinger
+      /// equation using the Numerov method
+      double step_size_ = DEFAULT_NUMEROV_STEP_SIZE_;
+
+      /// @brief Default step size (fm) for computing transmission coefficients
+      /// via the
+      /// <a href="https://en.wikipedia.org/wiki/Numerov%27s_method">Numerov
+      /// method</a>
+      /// @todo Make this a user-controlled value specified in the
+      /// configuration file
+      static constexpr double DEFAULT_NUMEROV_STEP_SIZE_ = 0.1;
   };
 
   // Inline function definitions
-  inline int SphericalOpticalModel::Z() const { return Z_; }
-
-  inline int SphericalOpticalModel::A() const { return A_; }
-
   inline double SphericalOpticalModel::get_fragment_reduced_mass(
     int fragment_pdg) const { return reduced_masses_.at(fragment_pdg); }
 }

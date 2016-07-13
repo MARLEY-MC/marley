@@ -61,14 +61,6 @@ namespace marley {
       /// file
       static constexpr int l_max_ = 2;
 
-      /// @brief Default step size (fm) for computing optical model
-      /// transmission coefficients via the
-      /// <a href="https://en.wikipedia.org/wiki/Numerov%27s_method">Numerov
-      /// method</a>
-      /// @todo Make this a user-controlled value specified in the
-      /// configuration file
-      static constexpr double DEFAULT_NUMEROV_STEP_SIZE_ = 0.1;
-
       /// @brief Print information about the possible decay channels to a
       /// std::ostream
       void print(std::ostream& out) const;

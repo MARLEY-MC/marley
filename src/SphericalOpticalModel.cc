@@ -152,9 +152,9 @@ void marley::SphericalOpticalModel::calculate_om_parameters(double E,
   }
 }
 
-marley::SphericalOpticalModel::SphericalOpticalModel(int Z, int a) {
-  Z_ = Z;
-  A_ = a;
+marley::SphericalOpticalModel::SphericalOpticalModel(int Z, int A,
+  double step_size) : marley::OpticalModel(Z, A), step_size_(step_size)
+{
 
   int N = A_ - Z_; // Neutron number
 
@@ -229,7 +229,7 @@ marley::SphericalOpticalModel::SphericalOpticalModel(int Z, int a) {
 // to the data because the absorption cross section includes the compound
 // elastic channel.
 double marley::SphericalOpticalModel::total_cross_section(double E,
-  int fragment_pdg, int two_s, size_t l_max, double h)
+  int fragment_pdg, int two_s, size_t l_max)
 {
   double sum = 0.;
   for (size_t l = 0; l <= l_max; ++l) {
@@ -238,7 +238,7 @@ double marley::SphericalOpticalModel::total_cross_section(double E,
       two_j <= two_l + two_s; two_j += 2)
     {
       std::complex<double> S = s_matrix_element(E, fragment_pdg, two_j, l,
-        two_s, h);
+        two_s);
       sum += (two_j + 1) * (1 - S.real());
     }
   }
@@ -261,22 +261,22 @@ double marley::SphericalOpticalModel::total_cross_section(double E,
 }
 
 double marley::SphericalOpticalModel::transmission_coefficient(double E,
-  int fragment_pdg, int two_j, int l, int two_s, double h)
+  int fragment_pdg, int two_j, int l, int two_s)
 {
   std::complex<double> S = s_matrix_element(E, fragment_pdg, two_j, l,
-    two_s, h);
+    two_s);
   return 1.0 - std::norm(S);
 }
 
 std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
-  int fragment_pdg, int two_j, int l, int two_s, double h)
+  int fragment_pdg, int two_j, int l, int two_s)
 {
 
   // Update the optical model parameters stored in this object for the
   // given fragment, energy, and angular momenta
   calculate_om_parameters(E, fragment_pdg, two_j, l, two_s);
 
-  double h2_over_twelve = std::pow(h, 2) / 12.0;
+  double step_size2_over_twelve = std::pow(step_size_, 2) / 12.0;
 
   std::complex<double> u1 = 0, u2 = 0;
 
@@ -286,7 +286,7 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
   // we're saved by the boundary condition that u(0) = 0. We just need
   // something finite here, but we might as well make it zero.
   std::complex<double> a_n_minus_one = 0;
-  std::complex<double> a_n = a(h, E, fragment_pdg, l);
+  std::complex<double> a_n = a(step_size_, E, fragment_pdg, l);
 
   std::complex<double> u_n_minus_two;
   // Boundary condition that the wavefunction vanishes at the origin (the
@@ -298,14 +298,14 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
   // finite and nonzero here, since our specific choice only determines the
   // overall normalization, which isn't important for determining the
   // transmission coefficients.
-  std::complex<double> u_n = std::pow(h, l + 1);
+  std::complex<double> u_n = std::pow(step_size_, l + 1);
 
   // Optical model potential with and without the Coulomb potential included
   std::complex<double> U, U_minus_Vc;
 
-  double r = h;
+  double r = step_size_;
   do {
-    r += h;
+    r += step_size_;
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
 
@@ -316,9 +316,9 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
 
-    u_n = ((2.0 - 10*h2_over_twelve*a_n_minus_one)*u_n_minus_one
-      - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
-      / (1.0 + h2_over_twelve*a_n);
+    u_n = ((2.0 - 10*step_size2_over_twelve*a_n_minus_one)*u_n_minus_one
+      - (1.0 + step_size2_over_twelve*a_n_minus_two)*u_n_minus_two)
+      / (1.0 + step_size2_over_twelve*a_n);
   }
   while (std::abs(U_minus_Vc) > MATCHING_RADIUS_THRESHOLD);
 
@@ -328,12 +328,12 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
   // TODO: consider using a more sophisticated method for choosing the second
   // matching radius
   // Advance at least as far as r_max. The actual maximum value used (which
-  // will be an integer multiple of the step size h) will be assigned to
+  // will be an integer multiple of the step_size_) will be assigned to
   // r_match_2.
   double r_max = 1.2 * r_match_1;
 
   do {
-    r += h;
+    r += step_size_;
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
     a_n = a(r, E, fragment_pdg, l);
@@ -341,9 +341,9 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
 
-    u_n = ((2.0 - 10*h2_over_twelve*a_n_minus_one)*u_n_minus_one
-      - (1.0 + h2_over_twelve*a_n_minus_two)*u_n_minus_two)
-      / (1.0 + h2_over_twelve*a_n);
+    u_n = ((2.0 - 10*step_size2_over_twelve*a_n_minus_one)*u_n_minus_one
+      - (1.0 + step_size2_over_twelve*a_n_minus_two)*u_n_minus_two)
+      / (1.0 + step_size2_over_twelve*a_n);
   }
   while (r < r_max);
 

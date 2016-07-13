@@ -83,8 +83,7 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
         // you can optimize this by precomputing most of the level density
         // and the multiplying here by the appropriate spin distribution.
         double width = om.transmission_coefficient(fragment_KE,
-          fragment_.get_pid(), two_j, l, two_s,
-          HauserFeshbachDecay::DEFAULT_NUMEROV_STEP_SIZE_)
+          fragment_.get_pid(), two_j, l, two_s)
           * ldm.level_density(Exf, twoJf, Pf);
 
         // Store the computed decay width for sampling
