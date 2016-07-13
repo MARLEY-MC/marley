@@ -12,13 +12,13 @@ namespace marley {
 
   /// @brief Nuclear optical model for fragment emission calculations
   /// @details This class implements the global optical model potential
-  /// of A. J. Koning and J. P. Delarouche, <a
+  /// of A. J. Koning and J. P. Delaroche, <a
   /// href="http://dx.doi.org/10.1016/S0375-9474(02)01321-0">
   /// Nucl. Phys. A 713 (2003) 231-310</a>.
   /// <a href="https://en.wikipedia.org/wiki/Numerov%27s_method">Numerov's
   /// method</a> is used to integrate the Schr&ouml;dinger equation during
   /// transmission coefficient and cross section calculations.
-  class SphericalOpticalModel : public OpticalModel {
+  class KoningDelarocheOpticalModel : public OpticalModel {
 
     public:
 
@@ -26,7 +26,7 @@ namespace marley {
       /// @param A Mass number of the desired nuclide
       /// @param step_size Step size (fm) to use for numerical integration of
       /// the Schr&ouml;dinger equation
-      SphericalOpticalModel(int Z, int A, double step_size
+      KoningDelarocheOpticalModel(int Z, int A, double step_size
         = DEFAULT_NUMEROV_STEP_SIZE_);
 
       virtual std::complex<double> optical_model_potential(double r, double E,
@@ -126,6 +126,6 @@ namespace marley {
   };
 
   // Inline function definitions
-  inline double SphericalOpticalModel::get_fragment_reduced_mass(
+  inline double KoningDelarocheOpticalModel::get_fragment_reduced_mass(
     int fragment_pdg) const { return reduced_masses_.at(fragment_pdg); }
 }

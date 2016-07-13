@@ -3,16 +3,16 @@
 #include <ostream>
 #include <unordered_map>
 
+#include "marley_utils.hh"
 #include "ExitChannel.hh"
 #include "Fragment.hh"
 #include "GammaStrengthFunctionModel.hh"
 #include "Level.hh"
 #include "LevelDensityModel.hh"
 #include "MassTable.hh"
+#include "OpticalModel.hh"
 #include "Parity.hh"
-#include "SphericalOpticalModel.hh"
 #include "StructureDatabase.hh"
-#include "marley_utils.hh"
 
 namespace marley {
 
@@ -74,7 +74,7 @@ namespace marley {
 
       /// @brief Helper function used when computing the partial decay width
       /// for emission of a nuclear fragment to the continuum of nuclear levels
-      double fragment_continuum_partial_width(marley::SphericalOpticalModel& om,
+      double fragment_continuum_partial_width(marley::OpticalModel& om,
         marley::LevelDensityModel& ldm, const marley::Fragment& frag,
         double fragment_KE, double Exf);
 

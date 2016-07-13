@@ -3,7 +3,7 @@
 
 namespace marley {
 
-  /// @brief Base class for nuclear optical model implementations
+  /// @brief Abstract base class for nuclear optical model implementations
   class OpticalModel {
 
     public:

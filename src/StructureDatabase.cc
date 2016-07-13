@@ -1,4 +1,6 @@
 #include "marley_utils.hh"
+#include "BackshiftedFermiGasModel.hh"
+#include "KoningDelarocheOpticalModel.hh"
 #include "Logger.hh"
 #include "StandardLorentzianModel.hh"
 #include "StructureDatabase.hh"
@@ -34,7 +36,7 @@ marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(const int Z,
   return get_decay_scheme(particle_id);
 }
 
-marley::SphericalOpticalModel& marley::StructureDatabase::get_optical_model(
+marley::OpticalModel& marley::StructureDatabase::get_optical_model(
   int nucleus_pid)
 {
   /// @todo add check for invalid nucleus particle ID value
@@ -47,13 +49,13 @@ marley::SphericalOpticalModel& marley::StructureDatabase::get_optical_model(
     int Z = marley_utils::get_particle_Z(nucleus_pid);
     int A = marley_utils::get_particle_A(nucleus_pid);
     return *(optical_model_table_.emplace(nucleus_pid,
-      std::make_unique<marley::SphericalOpticalModel>(Z, A)).first
+      std::make_unique<marley::KoningDelarocheOpticalModel>(Z, A)).first
       ->second.get());
   }
   else return *(iter->second.get());
 }
 
-marley::SphericalOpticalModel& marley::StructureDatabase::get_optical_model(
+marley::OpticalModel& marley::StructureDatabase::get_optical_model(
   const int Z, const int A)
 {
   int nucleus_pid = marley_utils::get_nucleus_pid(Z, A);
@@ -64,7 +66,7 @@ marley::SphericalOpticalModel& marley::StructureDatabase::get_optical_model(
     // to the table, returning a reference to the stored level density model
     // afterwards.
     return *(optical_model_table_.emplace(nucleus_pid,
-      std::make_unique<marley::SphericalOpticalModel>(Z, A)).first
+      std::make_unique<marley::KoningDelarocheOpticalModel>(Z, A)).first
       ->second.get());
   }
   else return *(iter->second.get());
