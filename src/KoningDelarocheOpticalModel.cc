@@ -1,10 +1,11 @@
 #include "marley_utils.hh"
 #include "meta_numerics.hh"
 #include "Logger.hh"
-#include "SphericalOpticalModel.hh"
+#include "KoningDelarocheOpticalModel.hh"
 
-std::complex<double> marley::SphericalOpticalModel::optical_model_potential(
-  double r, double E, int fragment_pdg, int two_j, int l, int two_s)
+std::complex<double>
+marley::KoningDelarocheOpticalModel::optical_model_potential(double r,
+  double E, int fragment_pdg, int two_j, int l, int two_s)
 {
   calculate_om_parameters(E, fragment_pdg, two_j, l, two_s);
   return omp(r);
@@ -12,7 +13,8 @@ std::complex<double> marley::SphericalOpticalModel::optical_model_potential(
 
 // Finish an optical model potential calculation by taking the r
 // dependence into account. Don't add in the Coulomb potential.
-std::complex<double> marley::SphericalOpticalModel::omp_minus_Vc(double r) const
+std::complex<double>
+marley::KoningDelarocheOpticalModel::omp_minus_Vc(double r) const
 {
   double f_v = f(r, Rv, av);
   double dfdr_d = dfdr(r, Rd, ad);
@@ -40,7 +42,7 @@ std::complex<double> marley::SphericalOpticalModel::omp_minus_Vc(double r) const
 // Compute all of the pieces of the optical model that depend on the
 // fragment's energy E but not on its distance from the origin r.
 // Store them in the appropriate class members.
-void marley::SphericalOpticalModel::calculate_om_parameters(double E,
+void marley::KoningDelarocheOpticalModel::calculate_om_parameters(double E,
   int fragment_pdg, int two_j, int l, int two_s)
 {
   // Fragment atomic, mass, and neutron numbers
@@ -152,8 +154,8 @@ void marley::SphericalOpticalModel::calculate_om_parameters(double E,
   }
 }
 
-marley::SphericalOpticalModel::SphericalOpticalModel(int Z, int A,
-  double step_size) : marley::OpticalModel(Z, A), step_size_(step_size)
+marley::KoningDelarocheOpticalModel::KoningDelarocheOpticalModel(int Z,
+  int A, double step_size) : marley::OpticalModel(Z, A), step_size_(step_size)
 {
 
   int N = A_ - Z_; // Neutron number
@@ -228,7 +230,7 @@ marley::SphericalOpticalModel::SphericalOpticalModel(int Z, int A,
 // reaction (absorption) cross sections, but these are hard to directly compare
 // to the data because the absorption cross section includes the compound
 // elastic channel.
-double marley::SphericalOpticalModel::total_cross_section(double E,
+double marley::KoningDelarocheOpticalModel::total_cross_section(double E,
   int fragment_pdg, int two_s, size_t l_max)
 {
   double sum = 0.;
@@ -260,7 +262,7 @@ double marley::SphericalOpticalModel::total_cross_section(double E,
   return xs / 100.;
 }
 
-double marley::SphericalOpticalModel::transmission_coefficient(double E,
+double marley::KoningDelarocheOpticalModel::transmission_coefficient(double E,
   int fragment_pdg, int two_j, int l, int two_s)
 {
   std::complex<double> S = s_matrix_element(E, fragment_pdg, two_j, l,
@@ -268,7 +270,8 @@ double marley::SphericalOpticalModel::transmission_coefficient(double E,
   return 1.0 - std::norm(S);
 }
 
-std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
+std::complex<double>
+marley::KoningDelarocheOpticalModel::s_matrix_element(double E,
   int fragment_pdg, int two_j, int l, int two_s)
 {
 
@@ -383,8 +386,8 @@ std::complex<double> marley::SphericalOpticalModel::s_matrix_element(double E,
 
 // Version of Schrodinger equation terms with the optical model potential
 // U pre-computed
-std::complex<double> marley::SphericalOpticalModel::a(double r, double E,
-  int fragment_pdg, int l, std::complex<double> U) const
+std::complex<double> marley::KoningDelarocheOpticalModel::a(double r,
+  double E, int fragment_pdg, int l, std::complex<double> U) const
 {
   return (-l*(l+1) / std::pow(r, 2)) +
     2 * reduced_masses_.at(fragment_pdg) * (E - U) / marley_utils::hbar_c2;
@@ -392,8 +395,8 @@ std::complex<double> marley::SphericalOpticalModel::a(double r, double E,
 
 // Non-derivative radial Schrödinger equation terms to use for computing
 // transmission coefficients via the Numerov method
-std::complex<double> marley::SphericalOpticalModel::a(double r, double E,
-  int fragment_pdg, int l)
+std::complex<double> marley::KoningDelarocheOpticalModel::a(double r,
+  double E, int fragment_pdg, int l)
 {
   return (-l*(l+1) / std::pow(r, 2)) +
     2 * reduced_masses_.at(fragment_pdg) * (E - omp(r))
@@ -402,8 +405,8 @@ std::complex<double> marley::SphericalOpticalModel::a(double r, double E,
 
 // Coulomb potential for a point particle with charge q*e interacting
 // with a uniformly charged sphere with radius R and charge Q*e
-double marley::SphericalOpticalModel::Vc(double r, double R, int Q, int q)
-  const
+double marley::KoningDelarocheOpticalModel::Vc(double r, double R, int Q,
+  int q) const
 {
   if (Q == 0 || q == 0) return 0.;
   else if (r < R) return Q * q * marley_utils::e2
@@ -412,19 +415,20 @@ double marley::SphericalOpticalModel::Vc(double r, double R, int Q, int q)
 }
 
 // Woods-Saxon shape
-double marley::SphericalOpticalModel::f(double r, double R, double a) const
+double marley::KoningDelarocheOpticalModel::f(double r, double R, double a)
+  const
 {
   return std::pow(1 + std::exp((r - R) / a), -1);
 }
 
 // Compute the optical model potential at radius r
-std::complex<double> marley::SphericalOpticalModel::omp(double r) const
+std::complex<double> marley::KoningDelarocheOpticalModel::omp(double r) const
 {
   return omp_minus_Vc(r) + Vc(r, Rc, z, Z_);
 }
 
 // Partial derivative with respect to r of the Woods-Saxon shape
-double marley::SphericalOpticalModel::dfdr(double r, double R, double a) const
+double marley::KoningDelarocheOpticalModel::dfdr(double r, double R, double a) const
 {
   // In the limit as r -> +-infinity, this goes to zero.
   // We pick an upper limit for the exponent to avoid evaluating

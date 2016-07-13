@@ -108,7 +108,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
 
     // Get discrete level data (if any) and models for the final nucleus
     marley::DecayScheme* ds = db.get_decay_scheme(pid_final);
-    marley::SphericalOpticalModel& om = db.get_optical_model(pid_final);
+    marley::OpticalModel& om = db.get_optical_model(pid_final);
 
     // Determine the maximum excitation energy available after fragment
     // emission in the final nucleus. Use a simpler functional form as a
@@ -382,7 +382,7 @@ double marley::HauserFeshbachDecay::gamma_continuum_partial_width(
 }
 
 double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
-  marley::SphericalOpticalModel& om, marley::LevelDensityModel& ldm,
+  marley::OpticalModel& om, marley::LevelDensityModel& ldm,
   const marley::Fragment& frag, double fragment_KE, double Exf)
 {
   int two_s = frag.get_two_s();

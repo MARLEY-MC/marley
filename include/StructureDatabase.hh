@@ -3,19 +3,19 @@
 #include <string>
 #include <unordered_map>
 
-#include "BackshiftedFermiGasModel.hh"
 #include "ConfigurationFile.hh"
 #include "DecayScheme.hh"
 #include "GammaStrengthFunctionModel.hh"
-#include "SphericalOpticalModel.hh"
+#include "LevelDensityModel.hh"
+#include "OpticalModel.hh"
 
 namespace marley {
 
   /// @brief Container for nuclear structure information organized by nuclide
   /// @details Currently, the StructureDatabase object can hold nuclear
   /// discrete level data (DecayScheme objects), optical models
-  /// (SphericalOpticalModel objects), and level density models
-  /// (LevelDensityModel objects)
+  /// (OpticalModel objects), and level density models (LevelDensityModel
+  /// objects)
   class StructureDatabase {
 
     public:
@@ -59,13 +59,13 @@ namespace marley {
       /// @brief Retrieves an optical model object from the database, creating
       /// it if one did not already exist
       /// @param particle_id PDG particle ID for the desired nuclide
-      marley::SphericalOpticalModel& get_optical_model(int nucleus_pid);
+      marley::OpticalModel& get_optical_model(int nucleus_pid);
 
       /// @brief Retrieves an optical model object from the database, creating
       /// it if one did not already exist
       /// @param Z atomic number
       /// @param A mass number
-      marley::SphericalOpticalModel& get_optical_model(const int Z,
+      marley::OpticalModel& get_optical_model(const int Z,
         const int A);
 
       /// @brief Retrieves a level density model object from the database,
@@ -89,9 +89,9 @@ namespace marley {
       std::unordered_map<int, std::unique_ptr<marley::DecayScheme> >
         decay_scheme_table_;
 
-      /// @brief Lookup table for marley::SphericalOpticalModel objects.
+      /// @brief Lookup table for marley::OpticalModel objects.
       /// @details Keys are PDG codes, values are unique_ptrs to optical models.
-      std::unordered_map<int, std::unique_ptr<marley::SphericalOpticalModel> >
+      std::unordered_map<int, std::unique_ptr<marley::OpticalModel> >
         optical_model_table_;
 
       /// @brief Lookup table for marley::LevelDensityModel objects.

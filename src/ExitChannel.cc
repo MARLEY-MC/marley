@@ -1,6 +1,7 @@
 #include "marley_utils.hh"
 #include "ExitChannel.hh"
 #include "HauserFeshbachDecay.hh"
+#include "OpticalModel.hh"
 
 void marley::FragmentDiscreteExitChannel::do_decay(double& Ex, int& two_J,
   marley::Parity& Pi, marley::Particle& emitted_particle,
@@ -52,7 +53,7 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
   int two_s = fragment_.get_two_s();
   marley::Parity Pa = fragment_.get_parity();
 
-  marley::SphericalOpticalModel& om
+  marley::OpticalModel& om
     = gen.get_structure_db().get_optical_model(gs_residue_.pdg_code());
   int Zf = om.Z();
   int Af = om.A();
