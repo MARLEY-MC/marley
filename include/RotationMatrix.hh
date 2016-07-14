@@ -13,9 +13,16 @@ namespace marley {
 
     public:
 
+      /// @brief Creates a 3&times;3 identity matrix
+      RotationMatrix();
+
       /// @brief Create a 3&times;3 rotation matrix that rotates the 3-vector
       /// from_vec into the 3-vector to_vec
       RotationMatrix(const ThreeVector& from_vec, const ThreeVector& to_vec);
+
+      /// @brief Returns a copy of the 3-vector v normalized to have unit
+      /// magnitude
+      static ThreeVector normalize(const ThreeVector& v);
 
       /// @brief Create a rotated copy of the 3-vector v
       ThreeVector rotate_copy(const ThreeVector& v);

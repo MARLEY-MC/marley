@@ -80,11 +80,18 @@ namespace marley {
       /// @brief Get a const reference to the vector of initial particles
       inline const std::vector<marley::Particle*>& get_initial_particles()
         const;
+
+      /// @brief Get a non-const reference to the vector of initial particles
+      inline std::vector<marley::Particle*>& get_initial_particles();
+
       /// @brief Get a const reference to the vector of final particles
       inline const std::vector<marley::Particle*>& get_final_particles() const;
 
-      /// @brief Get the excitation energy of the residue just after the initial
-      /// two-body reaction
+      /// @brief Get a non-const reference to the vector of final particles
+      inline std::vector<marley::Particle*>& get_final_particles();
+
+      /// @brief Get the excitation energy of the residue just after the
+      /// initial two-body reaction
       inline double Ex() const;
 
       /// @brief Add a Particle to the vector of initial particles
@@ -138,8 +145,14 @@ namespace marley {
   inline const std::vector<marley::Particle*>& Event::get_initial_particles()
     const { return initial_particles_; }
 
+  inline std::vector<marley::Particle*>& Event::get_initial_particles()
+    { return initial_particles_; }
+
   inline const std::vector<marley::Particle*>& Event::get_final_particles()
     const { return final_particles_; }
+
+  inline std::vector<marley::Particle*>& Event::get_final_particles()
+    { return final_particles_; }
 }
 
 inline std::ostream& operator<<(std::ostream& out, const marley::Event& e) {

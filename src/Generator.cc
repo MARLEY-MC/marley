@@ -1,6 +1,7 @@
 #include <cmath>
 #include <string>
 
+#include "ConfigurationFile.hh"
 #include "Error.hh"
 #include "Generator.hh"
 #include "Logger.hh"
@@ -18,7 +19,9 @@ marley::Generator::Generator(const std::string& filename) {
 marley::Event marley::Generator::create_event() {
   double E_nu;
   marley::Reaction& r = sample_reaction(E_nu);
-  return r.create_event(source_->get_pid(), E_nu, *this);
+  marley::Event ev = r.create_event(source_->get_pid(), E_nu, *this);
+  if (need_to_rotate_events_) rotate_event(ev);
+  return ev;
 }
 
 void marley::Generator::seed_using_state_string(std::string& state_string) {
@@ -114,6 +117,11 @@ void marley::Generator::init(marley::ConfigurationFile& cf) {
   }
 
   MARLEY_LOG_INFO() << "Seed for random number generator: " << seed_;
+
+  // Initialize the incident neutrino direction settings using the direction
+  // given in the configuration file
+  std::array<double, 3> nu_dir = cf.get_neutrino_direction();
+  set_neutrino_direction(nu_dir);
 }
 
 // Sample a random double uniformly between min and max using the class
@@ -247,4 +255,52 @@ marley::StructureDatabase& marley::Generator::get_structure_db() {
   else throw marley::Error(std::string("Error")
     + " in marley::Generator::get_structure_db(). The member variable"
     + " structure_db_ == nullptr.");
+}
+
+void marley::Generator::rotate_event(marley::Event& ev) {
+
+  // Rotate the initial particles
+  for (auto* p : ev.get_initial_particles())
+    rotation_matrix_.rotate_particle_inplace(*p);
+
+  // Rotate the final particles
+  for (auto* p : ev.get_final_particles())
+    rotation_matrix_.rotate_particle_inplace(*p);
+}
+
+void marley::Generator::set_neutrino_direction(
+  const std::array<double, 3> dir_vec)
+{
+
+  static constexpr std::array<double, 3> null_three_vector = { 0., 0., 0. };
+
+  if (dir_vec == null_three_vector)
+    throw marley::Error(std::string("Null vector")
+      + " passed to marley::Generator::set_neutrino_direction()");
+
+  // Get the new incident neutrino direction vector
+  dir_vec_ = marley::RotationMatrix::normalize(dir_vec);
+
+  // Print a log message announcing the change of direction
+  std::string dir_msg("Incident neutrino direction: (");
+  for (size_t i = 0; i < 3; ++i) {
+    dir_msg += std::to_string(dir_vec_[i]);
+    if (i < 2) dir_msg += ", ";
+  }
+  MARLEY_LOG_INFO() << dir_msg << ')';
+
+  // Get the default incident neutrino direction
+  std::array<double, 3> nu_default_dir = marley::RotationMatrix::normalize(
+    marley::ConfigurationFile::get_default_neutrino_direction());
+
+  // Update the rotation matrix and the event rotation flag as needed
+  if (dir_vec_ != nu_default_dir)
+  {
+    need_to_rotate_events_ = true;
+    rotation_matrix_ = marley::RotationMatrix(nu_default_dir, dir_vec_);
+  }
+  else {
+    need_to_rotate_events_ = false;
+    rotation_matrix_ = marley::RotationMatrix(); // identity matrix
+  }
 }

@@ -8,6 +8,7 @@
 #include "NeutrinoSource.hh"
 #include "Parity.hh"
 #include "NuclearReaction.hh"
+#include "RotationMatrix.hh"
 #include "StructureDatabase.hh"
 
 namespace marley {
@@ -109,6 +110,19 @@ namespace marley {
         discrete_sample(std::discrete_distribution<numType>& disc_dist,
         const typename std::discrete_distribution<numType>::param_type& params);
 
+      /// @brief Sets the direction of the incident neutrinos to use when
+      /// generating events
+      /// @param dir_vec Vector that points in the direction of the incident
+      /// neutrinos
+      /// @note The dir_vec passed to this function does not need to be
+      /// normalized, but it must have at least one nonzero element or a
+      /// marley::Error will be thrown.
+      void set_neutrino_direction(const std::array<double, 3> dir_vec);
+
+      /// @brief Gets the direction of the incident neutrinos that is used when
+      /// generating events
+      inline const std::array<double, 3>& neutrino_direction();
+
     private:
 
       /// @brief Helper function that contains initialization code shared by
@@ -118,6 +132,15 @@ namespace marley {
       /// @brief Helper function that updates the normalization factor to
       /// use in E_pdf()
       void normalize_E_pdf();
+
+      /// @brief Rotates all Particle 3-vectors in a generated Event based
+      /// on the incident neutrino direction
+      /// @details All Reaction objects currently generate events assuming that
+      /// the incident neutrino travels in the +z direction in the lab frame.
+      /// The Generator then adjusts this (if needed) using a rotation matrix
+      /// just before the finished event is returned by create_event().
+      /// @param[in,out] ev Event whose Particle 3-vectors will be rotated
+      void rotate_event(marley::Event& ev);
 
       /// @brief Seed for the random number generator
       uint_fast64_t seed_;
@@ -149,6 +172,18 @@ namespace marley {
 
       /// @brief Discrete distribution used for Reaction sampling
       std::discrete_distribution<size_t> r_index_dist_;
+
+      /// @brief Rotation matrix used to update events based on the current
+      /// incident neutrino direction
+      marley::RotationMatrix rotation_matrix_;
+
+      /// @brief Three-vector that points in the direction of the incident
+      /// neutrinos
+      std::array<double, 3> dir_vec_;
+
+      /// @brief Boolean value that indicates whether Event objects need
+      /// to be rotated (true) or not (false)
+      bool need_to_rotate_events_ = false;
   };
 
   // Inline function definitions
@@ -156,6 +191,9 @@ namespace marley {
 
   inline const std::vector<std::unique_ptr<marley::Reaction> >&
     Generator::get_reactions() const { return reactions_; }
+
+  inline const std::array<double, 3>& Generator::neutrino_direction()
+    { return dir_vec_; }
 
   template <typename numType> inline numType
     Generator::discrete_sample(std::discrete_distribution<numType>& disc_dist)
