@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -52,6 +53,20 @@ namespace marley {
 
       /// @brief Clear the list of reaction data files
       inline void clear_reaction_filenames();
+
+      /// @brief Gets a three-vector pointing in the direction of the incident
+      /// neutrinos
+      inline const std::array<double, 3>& get_neutrino_direction();
+
+      /// @brief Sets the incident neutrino direction
+      /// @param dir_vec Three-vector that points in the direction of the
+      /// incident neutrinos. It does not need to be normalized, but it must be
+      /// nonzero, or a marley::Error will be thrown by this function
+      inline void set_neutrino_direction(const std::array<double, 3>& dir_vec);
+
+      /// @brief Gets a three-vector pointing in the default incident neutrino
+      /// direction
+      static inline std::array<double, 3> get_default_neutrino_direction();
 
       /// @brief Get a unique_ptr reference to the StructureDatabase
       /// that will be used to help create a Generator object
@@ -162,6 +177,14 @@ namespace marley {
       /// in the configuration file
       std::unique_ptr<marley::StructureDatabase> structure_db_;
 
+      /// @brief Default incident neutrino direction to use for generating
+      /// events
+      static const std::array<double, 3> DEFAULT_INCIDENT_NEUTRINO_DIRECTION_;
+
+      /// @brief Three-vector that points in the direction of the incident
+      /// neutrinos
+      std::array<double, 3> dir_vec_ = DEFAULT_INCIDENT_NEUTRINO_DIRECTION_;
+
       /// @brief A NeutrinoSource object that is created based on the
       /// specifications given in the configuration file.
       /// @details When a marley::Generator object is constructed using this
@@ -256,4 +279,11 @@ namespace marley {
 
   inline bool ConfigurationFile::process_extra_source_types(const std::string&,
     int) { return false; }
+
+  inline const std::array<double, 3>&
+    ConfigurationFile::get_neutrino_direction() { return dir_vec_; }
+
+  inline std::array<double, 3>
+    ConfigurationFile::get_default_neutrino_direction()
+    { return DEFAULT_INCIDENT_NEUTRINO_DIRECTION_; }
 }

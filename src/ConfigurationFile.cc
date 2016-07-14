@@ -3,6 +3,11 @@
 #include "InterpolationGrid.hh"
 #include "Logger.hh"
 
+// Static constant definitions
+const std::array<double, 3>
+  marley::ConfigurationFile::DEFAULT_INCIDENT_NEUTRINO_DIRECTION_
+  = { 0., 0., 1.};
+
 // Define type abbreviations, constant regular expressions, and helper
 // functions that are only visible within this file
 namespace {
@@ -612,6 +617,25 @@ void marley::ConfigurationFile::parse() {
 
       num_events_ = static_cast<size_t>(n_events);
     }
+    else if (keyword_ == "direction") {
+      for (size_t i = 0; i < 3; ++i) {
+        next_word_from_line(arg, true, false);
+        if (!std::regex_match(arg, rx_num))
+          throw marley::Error(std::string("Invalid component #")
+          + std::to_string(i + 1) + " of the"
+          + " incident neutrino direction '" + arg
+          + "' given on line " + std::to_string(line_num_)
+          + " of the configuration file " + filename_);
+        dir_vec_[i] = std::stod(arg);
+      }
+      static constexpr std::array<double, 3> null_vec = { 0., 0., 0. };
+      if (dir_vec_ == null_vec) {
+        throw marley::Error(std::string("Null")
+          + " vector used with the 'direction' keyword on line "
+          + std::to_string(line_num_) + " of the configuration file "
+          + filename_);
+      }
+    }
 
     else if (!process_extra_keywords()) {
       MARLEY_LOG_WARNING() << "Ignoring unrecognized keyword '" << keyword_
@@ -708,4 +732,16 @@ void marley::ConfigurationFile::set_source(
   if (source_) MARLEY_LOG_WARNING() << "Replacing existing NeutrinoSource"
     << " in a ConfigurationFile object.";
   source_.reset(new_source.release());
+}
+
+void marley::ConfigurationFile::set_neutrino_direction(
+  const std::array<double, 3>& dir_vec)
+{
+  static constexpr std::array<double, 3> null_vector = { 0., 0., 0. };
+  if (dir_vec == null_vector) {
+    throw marley::Error(std::string("Null")
+      + " three-vector passed to"
+      + " marley::ConfigurationFile::set_neutrino_direction()");
+  }
+  else dir_vec_ = dir_vec;
 }

@@ -35,22 +35,25 @@ namespace {
     dest[2] = v1[2] - v2[2];
   }
 
-  // Returns a copy of the 3-vector v normalized to have unit magnitude
-  ThreeVector normalize(const ThreeVector& v)
-  {
-    static ThreeVector nv({0., 0., 0.});
-    double norm_factor = std::sqrt(std::pow(v[0], 2) + std::pow(v[1], 2)
-      + std::pow(v[2], 2));
-    // TODO: improve error message
-    if (norm_factor <= 0.) throw marley::Error(std::string("rotation matrix")
-      + "error!");
-    else norm_factor = 1. / norm_factor;
-    nv[0] = norm_factor * v[0];
-    nv[1] = norm_factor * v[1];
-    nv[2] = norm_factor * v[2];
-    return nv;
-  }
+}
 
+marley::RotationMatrix::RotationMatrix()
+  : matrix_{{ {{ 1., 0., 0.}}, {{ 0., 1., 0.}}, {{ 0., 0., 1.}} }}
+{}
+
+// Returns a copy of the 3-vector v normalized to have unit magnitude
+ThreeVector marley::RotationMatrix::normalize(const ThreeVector& v)
+{
+  static ThreeVector nv({0., 0., 0.});
+  double norm_factor = std::sqrt(std::pow(v[0], 2) + std::pow(v[1], 2)
+    + std::pow(v[2], 2));
+  if (norm_factor <= 0.) throw marley::Error(std::string("Invalid vector")
+    + " magnitude encountered in marley::RotationMatrix::normalize()");
+  else norm_factor = 1. / norm_factor;
+  nv[0] = norm_factor * v[0];
+  nv[1] = norm_factor * v[1];
+  nv[2] = norm_factor * v[2];
+  return nv;
 }
 
 // Returns a rotated copy of the 3-vector v
