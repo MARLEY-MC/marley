@@ -59,7 +59,7 @@ namespace marley {
       /// levels
       /// @todo Make this a user-controlled value specified in the configuration
       /// file
-      static constexpr int l_max_ = 2;
+      static constexpr int l_max_ = 5;
 
       /// @brief Print information about the possible decay channels to a
       /// std::ostream
