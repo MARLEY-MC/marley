@@ -92,3 +92,29 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # so disable this behavior
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--no-as-needed")
 endif()
+
+# Set installation directories for MARLEY components
+get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
+
+if ("${LIB64}" STREQUAL "TRUE")
+    set(LIBSUFFIX 64)
+else()
+    set(LIBSUFFIX "")
+endif()
+
+set(INSTALL_LIB_DIR lib${LIBSUFFIX} CACHE PATH "Installation
+directory for libraries")
+mark_as_advanced(INSTALL_LIB_DIR)
+
+install(TARGETS marley MARLEY MARLEY_static
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+  ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+
+install(DIRECTORY include/ DESTINATION include/marley
+  FILES_MATCHING PATTERN "*.hh")
+
+install(DIRECTORY react/ DESTINATION share/marley/react
+  FILES_MATCHING PATTERN "*.react")
+
+install(FILES config.txt DESTINATION share/marley)
