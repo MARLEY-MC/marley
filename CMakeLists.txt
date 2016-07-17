@@ -9,10 +9,11 @@ set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 include_directories(${INCLUDE_DIR})
 
-file(GLOB SOURCES "src/[A-Z]*.cc" "src/marley_*.cc" "src/meta_numerics.cc")
+file(GLOB SOURCES "src/*.cc")
 list(REMOVE_ITEM SOURCES "${SOURCE_DIR}/RootConfigurationFile.cc")
+list(REMOVE_ITEM SOURCES "${SOURCE_DIR}/marley.cc")
 
-find_program(ROOTCINT rootcint PATHS ENV PATH)
+find_program(ROOTCINT rootcint rootcling PATHS ENV PATH)
 find_program(ROOTCONFIG root-config PATHS ENV PATH)
 find_program(ROOT root PATHS ENV PATH)
 
@@ -50,7 +51,17 @@ if (NOT WIN32)
   set_target_properties(MARLEY_static PROPERTIES OUTPUT_NAME MARLEY)
 endif()
 
-add_executable(marley "src/marley.cc")
+
+# Create the example executable. Use the name "marley.exe" on OS X
+# to avoid problems with the case-insensitive file system. Also use
+# the name marley.exe on Windows to match the standard convention.
+if (APPLE OR WIN32)
+  set(EXECUTABLE_NAME "marley.exe")
+else()
+  set(EXECUTABLE_NAME "marley")
+endif()
+
+add_executable(${EXECUTABLE_NAME} "src/marley.cc")
 
 if(ROOT AND ROOTCINT AND ROOTCONFIG)
   # Create a shared library to allow the ROOT dictionary to be easily loaded on demand
@@ -59,20 +70,25 @@ if(ROOT AND ROOTCINT AND ROOTCONFIG)
   target_link_libraries(MARLEY_ROOT MARLEY)
   set_target_properties(MARLEY_ROOT PROPERTIES LINK_FLAGS ${ROOT_LDFLAGS})
 
-  # Create the example executable using ROOT
-  target_link_libraries(marley MARLEY_ROOT)
-  set_target_properties(marley PROPERTIES LINK_FLAGS ${ROOT_LDFLAGS})
+  # Create the example executable using ROOT.
+  target_link_libraries(${EXECUTABLE_NAME} MARLEY_ROOT)
+  set_target_properties(${EXECUTABLE_NAME} PROPERTIES LINK_FLAGS ${ROOT_LDFLAGS})
 else()
   # Create the example executable without using ROOT
-  target_link_libraries(marley MARLEY)
+  target_link_libraries(${EXECUTABLE_NAME} MARLEY)
 endif()
 
 # ROOT dictionaries generated with rootcint trigger clang++'s keyword-macro
-# warning. Also, linking to ROOT libraries can be problematic on distributions
-# (e.g., Ubuntu) that set -Wl,--as-needed by default (see
-# http://www.bnikolic.co.uk/blog/gnu-ld-as-needed.html for details)
+# warning, so disable it.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} -O3 \
   -Wall -Wextra -Wshadow -pedantic \
   -Wcast-align -Wunused -Woverloaded-virtual \
-  -Werror -Wno-keyword-macro -Wno-missing-braces \
-  -Wl,--no-as-needed")
+  -Wno-keyword-macro -Wno-missing-braces")
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  # Linking to ROOT libraries can be problematic on distributions (e.g., Ubuntu)
+  # that set the g++ flag -Wl,--as-needed by default (see
+  # http://www.bnikolic.co.uk/blog/gnu-ld-as-needed.html for details),
+  # so disable this behavior
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--no-as-needed")
+endif()
