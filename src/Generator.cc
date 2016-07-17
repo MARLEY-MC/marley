@@ -38,17 +38,31 @@ std::string marley::Generator::get_state_string() const {
 
 void marley::Generator::normalize_E_pdf() {
 
-  // Update the normalization factor for use with the reacting neutrino energy
-  // probability density function
-  norm_ = marley_utils::num_integrate([this](double E)
-    -> double { return this->E_pdf(E); }, source_->get_Emin(),
-    source_->get_Emax(), 1e3); // TODO: remove hard-coded value here
+  // Treat monoenergetic sources differently since they can cause
+  // problems for the standard numerical integration check
+  if (source_->get_Emin() == source_->get_Emax()) {
+    double pdf_test = E_pdf(source_->get_Emin());
+    if (pdf_test <= 0. || std::isnan(pdf_test)) {
+      throw marley::Error(std::string("The total cross section")
+        + " for all defined reactions is <= 0 or NaN for the neutrino"
+        + " energy defined in a monoenergetic source. Please verify that"
+        + " your neutrino source produces particles above threshold for"
+        + " at least one reaction.");
+    }
+  }
+  else {
+    // Update the normalization factor for use with the reacting neutrino
+    // energy probability density function
+    norm_ = marley_utils::num_integrate([this](double E)
+      -> double { return this->E_pdf(E); }, source_->get_Emin(),
+      source_->get_Emax(), 1e3); // TODO: remove hard-coded value here
 
-  if (norm_ <= 0. || std::isnan(norm_)) {
-    throw marley::Error(std::string("The integral of the")
-      + " cross-section-weighted neutrino flux is <= 0 or NaN. Please verify"
-      + " that your neutrino source spectrum produces significant flux"
-      + " above the reaction threshold(s).");
+    if (norm_ <= 0. || std::isnan(norm_)) {
+      throw marley::Error(std::string("The integral of the")
+        + " cross-section-weighted neutrino flux is <= 0 or NaN. Please verify"
+        + " that your neutrino source spectrum produces significant flux"
+        + " above the reaction threshold(s).");
+    }
   }
 }
 
