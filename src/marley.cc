@@ -54,12 +54,19 @@ static const std::string help_message2 = " [OPTION...] FILE\n"
 
 inline void print_help(std::string executable_name) {
   std::cout << help_message1 + executable_name + help_message2;
+  std::cout << "\nMARLEY home page: <http://www.marleygen.org>\n";
+  std::cout << "E-mail bug reports to: <support@marleygen.org>\n";
   exit(0);
 }
 
 inline void print_version() {
-  std::cout << "MARLEY (Model of Argon Reaction Low Energy Yields) v"
-    << marley_utils::MARLEY_VERSION << std::endl;
+  std::cout << "MARLEY (Model of Argon Reaction Low Energy Yields) "
+    << marley_utils::MARLEY_VERSION << '\n';
+  std::cout << "Copyright (C) 2016 Steven Gardiner\n";
+  std::cout << "License BSD2C: BSD 2-Clause "
+    << "<http://opensource.org/licenses/BSD-2-Clause>\n";
+  std::cout << "This is free software: you are free to change and"
+    << " redistribute it.\n";
   exit(0);
 }
 

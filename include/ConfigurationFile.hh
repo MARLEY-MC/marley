@@ -164,6 +164,11 @@ namespace marley {
       bool next_word_from_line(std::string& word,
         bool enable_exceptions = true, bool make_lowercase = true);
 
+      /// @brief Convert a neutrino PDG code to a string
+      /// @param pdg PDG code of the requested neutrino
+      /// @return Converted string (or "?" if unsuccessful)
+      static std::string neutrino_pid_to_string(int pdg);
+
       /// @brief Name of the configuration file to parse
       std::string filename_;
 

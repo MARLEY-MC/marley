@@ -1,4 +1,5 @@
 #include "marley_utils.hh"
+#include "Logger.hh"
 #include "RootConfigurationFile.hh"
 #include "InterpolationGrid.hh"
 
@@ -190,6 +191,8 @@ bool marley::RootConfigurationFile::process_extra_source_types(
         // source
         set_source(std::make_unique<marley::GridNeutrinoSource>(
           Es, PDFs, neutrino_pid, InterpMethod::Constant));
+        MARLEY_LOG_INFO() << "Created a " << type << ' '
+          << neutrino_pid_to_string(neutrino_pid) << " source";
 
         // We created the source successfully, so indicate that via the return
         // value
@@ -227,6 +230,8 @@ bool marley::RootConfigurationFile::process_extra_source_types(
         // Create a neutrino source based on the grid
         set_source(std::make_unique<marley::GridNeutrinoSource>(Es,
           PDFs, neutrino_pid, InterpMethod::LinearLinear));
+        MARLEY_LOG_INFO() << "Created a tgraph "
+          << neutrino_pid_to_string(neutrino_pid) << " source";
 
         return true;
       }
