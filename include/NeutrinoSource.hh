@@ -54,6 +54,19 @@ namespace marley {
       /// otherwise.
       static inline bool pid_is_allowed(const int particle_id);
 
+      /// @brief Samples an incident neutrino energy and loads pdg with
+      /// the PDG code of the appropriate neutrino type
+      /// @details This function uses a probability density function that
+      /// represents the <i>incident</i> neutrino spectrum, i.e., it is
+      /// not weighted by the reaction cross section(s). To sample a
+      /// neutrino from the <i>reacting</i> (i.e., cross section weighted)
+      /// spectrum, use Generator::sample_reaction().
+      /// @param[out] pdg PDG code of the sampled neutrino
+      /// @param[in] gen Generator to use for random sampling
+      /// @return The energy of the sampled neutrino (MeV)
+      virtual double sample_incident_neutrino(int& pdg,
+        marley::Generator& gen);
+
     protected:
 
       int pid_; ///< PDG particle ID for the neutrinos produced by this source
