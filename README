@@ -1,2 +1,29 @@
-This project is an event generator for simulating supernova neutrino
-events in CAPTAIN and other liquid argon-based detectors.
+              MARLEY (Model of Argon Reaction Low Energy Yields)
+
+Introduction
+------------
+
+MARLEY (Model of Argon Reaction Low Energy Yields) is a Monte Carlo event
+generator for tens-of-MeV neutrino-nucleus interactions in liquid argon. While
+the current version only includes matrix element evaluations for the
+charged-current reaction ve + 40Ar --> e- + 40K*, the eventual goal of MARLEY is
+to be a general-purpose event generator for neutrino-nucleus scattering at
+tens-of-MeV energies. Although MARLEY originated as a tool for the CAPTAIN and
+DUNE liquid argon time projection chamber experiments, the nuclear de-excitation
+data and models used by MARLEY are sufficiently general for use with other
+target nuclides. Users interested in creating reaction matrix element
+evaluations for new reactions or nuclear targets are encouraged to contact the
+MARLEY development team (support@marleygen.org).
+
+Licensing
+---------
+
+MARLEY is distributed under the terms of the BSD 2-clause license. Please
+see the LICENSE file for details.
+
+Website
+-------
+
+Information about the latest version of MARLEY, documentation, recent
+presentation slides, and a list of publications may be found on the official
+webpage at http://www.marleygen.org/.

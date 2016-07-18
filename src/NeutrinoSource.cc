@@ -20,6 +20,14 @@ const std::set<int> marley::NeutrinoSource::pids_ = {
   marley_utils::TAU_ANTINEUTRINO
 };
 
+double marley::NeutrinoSource::sample_incident_neutrino(int& pdg,
+  marley::Generator& gen)
+{
+  pdg = pid_;
+  return gen.rejection_sample([this](double E)
+    -> double { return this->pdf(E); }, get_Emin(), get_Emax());
+}
+
 marley::FermiDiracNeutrinoSource::FermiDiracNeutrinoSource(int particle_id,
   double Emin, double Emax, double temp, double eta)
   : NeutrinoSource(particle_id), Emin_(Emin), Emax_(Emax), temperature_(temp),
