@@ -43,6 +43,24 @@ namespace {
       + " string_to_format()");
   }
 
+  /// @brief Convert a string to a neutrino PDG code
+  /// @param str String to attempt to convert
+  /// @param[out] pdg PDG code of the requested neutrino
+  /// @return Whether the conversion was successful (true) or not (false)
+  bool string_to_neutrino_pid(const std::string& str, int& pdg) {
+    if (str == "ve") pdg = marley_utils::ELECTRON_NEUTRINO;
+    else if (str == "vebar") pdg = marley_utils::ELECTRON_ANTINEUTRINO;
+    else if (str == "vu") pdg = marley_utils::MUON_NEUTRINO;
+    else if (str == "vubar") pdg = marley_utils::MUON_ANTINEUTRINO;
+    else if (str == "vt") pdg = marley_utils::TAU_NEUTRINO;
+    else if (str == "vtbar") pdg = marley_utils::TAU_ANTINEUTRINO;
+    else {
+      pdg = 0;
+      return false;
+    }
+    return true;
+  }
+
 }
 
 // The default constructor assigns default values to all
@@ -225,20 +243,26 @@ void marley::ConfigurationFile::parse() {
 
       // Get the particle ID for the neutrino type produced by this source
       next_word_from_line(arg, true, false);
+
       if (std::regex_match(arg, rx_int)) {
         neutrino_pid = stoi(arg);
-        if (!marley::NeutrinoSource::pid_is_allowed(neutrino_pid)) {
-          throw marley::Error(std::string("Unallowed")
-            + " neutrino source particle ID '" + arg
-            + "' given on line " + std::to_string(line_num_)
-            + " of the configuration file " + filename_);
-        }
       }
-      // Anything other than an integer entry here is not allowed
-      else throw marley::Error(std::string("Invalid")
+      // Anything other than an integer entry or one of the
+      // allowed strings (e.g., "ve", "vubar") here is not allowed.
+      // These strings are not case-sensitive.
+      else if (!string_to_neutrino_pid(arg, neutrino_pid)) {
+        throw marley::Error(std::string("Invalid")
         + " neutrino source particle ID '" + arg
         + "' given on line " + std::to_string(line_num_)
         + " of the configuration file " + filename_);
+      }
+
+      if (!marley::NeutrinoSource::pid_is_allowed(neutrino_pid)) {
+        throw marley::Error(std::string("Unallowed")
+          + " neutrino source particle ID '" + arg
+          + "' given on line " + std::to_string(line_num_)
+          + " of the configuration file " + filename_);
+      }
 
       next_word_from_line(arg, true, true);
 
@@ -254,8 +278,13 @@ void marley::ConfigurationFile::parse() {
             + " specification on line " + std::to_string(line_num_)
             + " of the configuration file " + filename_);
           // Create the monoenergetic neutrino source
-          else set_source(std::make_unique<marley::MonoNeutrinoSource>(
-            neutrino_pid, nu_energy));
+          else {
+            set_source(std::make_unique<marley::MonoNeutrinoSource>(
+              neutrino_pid, nu_energy));
+            MARLEY_LOG_INFO() << "Created monoenergetic "
+              << neutrino_pid_to_string(neutrino_pid) << " source with"
+              << " neutrino energy = " << source_->get_Emin() << " MeV";
+          }
         }
         else throw marley::Error(std::string("Invalid")
           + " energy '" + arg
@@ -267,6 +296,8 @@ void marley::ConfigurationFile::parse() {
       else if (arg == "dar" || arg == "decay-at-rest") {
         set_source(std::make_unique<marley::DecayAtRestNeutrinoSource>(
           neutrino_pid));
+        MARLEY_LOG_INFO() << "Created muon decay-at-rest "
+          << neutrino_pid_to_string(neutrino_pid) << " source";
       }
 
       else if (arg == "fd" || arg == "fermi-dirac" || arg == "fermi_dirac") {
@@ -335,6 +366,12 @@ void marley::ConfigurationFile::parse() {
         // Fermi-Dirac neutrino source
         set_source(std::make_unique<marley::FermiDiracNeutrinoSource>(
           neutrino_pid, Emin, Emax, temperature, eta));
+        MARLEY_LOG_INFO() << "Created Fermi-Dirac "
+          << neutrino_pid_to_string(neutrino_pid) << " source with parameters";
+        MARLEY_LOG_INFO() << "  Emin = " << source_->get_Emin() << " MeV";
+        MARLEY_LOG_INFO() << "  Emax = " << source_->get_Emax() << " MeV";
+        MARLEY_LOG_INFO() << "  temperature = " << temperature << " MeV";
+        MARLEY_LOG_INFO() << "  eta = " << eta;
       }
 
       else if (arg == "bf" || arg == "beta" || arg == "beta-fit") {
@@ -400,9 +437,15 @@ void marley::ConfigurationFile::parse() {
         else beta = 4.5;
 
         // Now that we have all of the necessary parameters, create the new
-        // Fermi-Dirac neutrino source
+        // beta-fit neutrino source
         set_source(std::make_unique<marley::BetaFitNeutrinoSource>(
           neutrino_pid, Emin, Emax, Eavg, beta));
+        MARLEY_LOG_INFO() << "Created beta-fit "
+          << neutrino_pid_to_string(neutrino_pid) << " source with parameters";
+        MARLEY_LOG_INFO() << "  Emin = " << source_->get_Emin() << " MeV";
+        MARLEY_LOG_INFO() << "  Emax = " << source_->get_Emax() << " MeV";
+        MARLEY_LOG_INFO() << "  average energy = " << Eavg << " MeV";
+        MARLEY_LOG_INFO() << "  beta = " << beta;
       }
 
       // The histogram and grid source types are both implemented using an
@@ -590,6 +633,8 @@ void marley::ConfigurationFile::parse() {
         // source
         set_source(std::make_unique<marley::GridNeutrinoSource>(
           energies, prob_densities, neutrino_pid, method));
+        MARLEY_LOG_INFO() << "Created " << description << ' '
+          << neutrino_pid_to_string(neutrino_pid) << " source";
       }
 
       else if (!process_extra_source_types(arg, neutrino_pid))
@@ -744,4 +789,20 @@ void marley::ConfigurationFile::set_neutrino_direction(
       + " marley::ConfigurationFile::set_neutrino_direction()");
   }
   else dir_vec_ = dir_vec;
+}
+
+std::string marley::ConfigurationFile::neutrino_pid_to_string(int pdg) {
+  if (pdg == marley_utils::ELECTRON_NEUTRINO)
+    return std::string("ve");
+  else if (pdg == marley_utils::ELECTRON_ANTINEUTRINO)
+    return std::string("vebar");
+  else if (pdg == marley_utils::MUON_NEUTRINO)
+    return std::string("vu");
+  else if (pdg == marley_utils::MUON_ANTINEUTRINO)
+    return std::string("vubar");
+  else if (pdg == marley_utils::TAU_NEUTRINO)
+    return std::string("vt");
+  else if (pdg == marley_utils::TAU_ANTINEUTRINO)
+    return std::string("vtbar");
+  else return std::string("?");
 }
