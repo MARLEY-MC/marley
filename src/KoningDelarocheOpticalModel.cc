@@ -1,7 +1,7 @@
-#include "marley_utils.hh"
-#include "meta_numerics.hh"
-#include "Logger.hh"
-#include "KoningDelarocheOpticalModel.hh"
+#include "marley/marley_utils.hh"
+#include "marley/meta_numerics.hh"
+#include "marley/Logger.hh"
+#include "marley/KoningDelarocheOpticalModel.hh"
 
 std::complex<double>
 marley::KoningDelarocheOpticalModel::optical_model_potential(double r,

@@ -1,8 +1,8 @@
-#include "Error.hh"
-#include "GammaStrengthFunctionModel.hh"
-#include "Level.hh"
-#include "Logger.hh"
-#include "Parity.hh"
+#include "marley/Error.hh"
+#include "marley/GammaStrengthFunctionModel.hh"
+#include "marley/Level.hh"
+#include "marley/Logger.hh"
+#include "marley/Parity.hh"
 
 using TrType = marley::GammaStrengthFunctionModel::TransitionType;
 
@@ -11,7 +11,7 @@ marley::GammaStrengthFunctionModel::GammaStrengthFunctionModel(int Z, int A)
 
 void marley::GammaStrengthFunctionModel::check_multipolarity(int l) {
   /// @todo Improve error message
-  if (l < 1) throw marley::Error(std::string("Invalid multipolarity")
+  if (l < 1) throw marley::Error(std::string("Invalid multipolarity ")
     + std::to_string(l) + " given for gamma ray strength"
     + " function calculation");
 }

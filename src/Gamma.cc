@@ -1,4 +1,4 @@
-#include "Gamma.hh"
+#include "marley/Gamma.hh"
 
 marley::Gamma::Gamma(double energy, double rel_intensity,
   marley::Level* start_lev, marley::Level* end_lev) : energy_(energy),

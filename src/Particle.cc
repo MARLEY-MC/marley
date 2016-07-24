@@ -1,7 +1,7 @@
 #include <cmath>
 
-#include "marley_utils.hh"
-#include "Particle.hh"
+#include "marley/marley_utils.hh"
+#include "marley/Particle.hh"
 
 marley::Particle::Particle() : four_momentum_{0., 0., 0., 0.} {}
 

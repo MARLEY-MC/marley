@@ -2,10 +2,10 @@
 #include <vector>
 #include <regex>
 
-#include "marley_utils.hh"
-#include "Generator.hh"
-#include "Level.hh"
-#include "Parity.hh"
+#include "marley/marley_utils.hh"
+#include "marley/Generator.hh"
+#include "marley/Level.hh"
+#include "marley/Parity.hh"
 
 marley::Level::Level(double E, int twoJ, marley::Parity pi) : energy_(E),
   twoJ_(twoJ), parity_(pi) {}

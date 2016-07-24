@@ -1,7 +1,7 @@
-#include "marley_utils.hh"
-#include "ExitChannel.hh"
-#include "HauserFeshbachDecay.hh"
-#include "OpticalModel.hh"
+#include "marley/marley_utils.hh"
+#include "marley/ExitChannel.hh"
+#include "marley/HauserFeshbachDecay.hh"
+#include "marley/OpticalModel.hh"
 
 void marley::FragmentDiscreteExitChannel::do_decay(double& Ex, int& two_J,
   marley::Parity& Pi, marley::Particle& emitted_particle,

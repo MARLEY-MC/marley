@@ -1,9 +1,9 @@
-#include "marley_utils.hh"
-#include "BackshiftedFermiGasModel.hh"
-#include "KoningDelarocheOpticalModel.hh"
-#include "Logger.hh"
-#include "StandardLorentzianModel.hh"
-#include "StructureDatabase.hh"
+#include "marley/marley_utils.hh"
+#include "marley/BackshiftedFermiGasModel.hh"
+#include "marley/KoningDelarocheOpticalModel.hh"
+#include "marley/Logger.hh"
+#include "marley/StandardLorentzianModel.hh"
+#include "marley/StructureDatabase.hh"
 
 marley::StructureDatabase::StructureDatabase() {}
 

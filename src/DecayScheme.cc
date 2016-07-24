@@ -6,12 +6,12 @@
 #include <string>
 #include <vector>
 
-#include "marley_utils.hh"
-#include "DecayScheme.hh"
-#include "Generator.hh"
-#include "marley_kinematics.hh"
-#include "Logger.hh"
-#include "HauserFeshbachDecay.hh"
+#include "marley/marley_utils.hh"
+#include "marley/DecayScheme.hh"
+#include "marley/Generator.hh"
+#include "marley/marley_kinematics.hh"
+#include "marley/Logger.hh"
+#include "marley/HauserFeshbachDecay.hh"
 
 // Returns a pointer to the level owned by this decay scheme object
 // that has the closest excitation energy to E_level (E_level
@@ -149,7 +149,7 @@ void marley::DecayScheme::parse_talys(std::string filename) {
   // If the file doesn't exist or some other error
   // occurred, complain and give up.
   if (!file_in.good()) throw marley::Error(std::string("Could not")
-    + "read from the TALYS data file " + filename);
+    + " read from the TALYS data file " + filename);
 
   std::string line; // String to store the current line
                     // of the TALYS file during parsing

@@ -1,7 +1,7 @@
 #include <cmath>
 
-#include "marley_utils.hh"
-#include "Integrator.hh"
+#include "marley/marley_utils.hh"
+#include "marley/Integrator.hh"
 
 marley::Integrator::Integrator(size_t num) : N_(num), weights_(num + 1, 0.),
   offsets_(num - 1)

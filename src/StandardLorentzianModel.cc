@@ -1,10 +1,10 @@
 #include <cmath>
 #include <string>
 
-#include "marley_utils.hh"
-#include "Error.hh"
-#include "Logger.hh"
-#include "StandardLorentzianModel.hh"
+#include "marley/marley_utils.hh"
+#include "marley/Error.hh"
+#include "marley/Logger.hh"
+#include "marley/StandardLorentzianModel.hh"
 
 using TrType = marley::GammaStrengthFunctionModel::TransitionType;
 

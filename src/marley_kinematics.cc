@@ -1,6 +1,6 @@
-#include "marley_utils.hh"
-#include "Particle.hh"
-#include "marley_kinematics.hh"
+#include "marley/marley_utils.hh"
+#include "marley/Particle.hh"
+#include "marley/marley_kinematics.hh"
 
 namespace {
 

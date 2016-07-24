@@ -1,11 +1,11 @@
 #include <cmath>
 #include <string>
 
-#include "ConfigurationFile.hh"
-#include "Error.hh"
-#include "Generator.hh"
-#include "Logger.hh"
-#include "NuclearReaction.hh"
+#include "marley/ConfigurationFile.hh"
+#include "marley/Error.hh"
+#include "marley/Generator.hh"
+#include "marley/Logger.hh"
+#include "marley/NuclearReaction.hh"
 
 marley::Generator::Generator(marley::ConfigurationFile& cf) {
   init(cf);

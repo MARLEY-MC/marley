@@ -1,5 +1,5 @@
-#include "Generator.hh"
-#include "NeutrinoSource.hh"
+#include "marley/Generator.hh"
+#include "marley/NeutrinoSource.hh"
 
 marley::NeutrinoSource::NeutrinoSource(int particle_id) {
   if (!pid_is_allowed(particle_id)) throw marley::Error(

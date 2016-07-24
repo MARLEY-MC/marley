@@ -8,17 +8,17 @@
 #include <string>
 #include <vector>
 
-#include "marley_utils.hh"
+#include "marley/marley_utils.hh"
 
 #ifdef USE_ROOT
-#include "RootConfigurationFile.hh"
+#include "marley/RootConfigurationFile.hh"
 #else
-#include "ConfigurationFile.hh"
+#include "marley/ConfigurationFile.hh"
 #endif
 
-#include "Generator.hh"
-#include "Event.hh"
-#include "Logger.hh"
+#include "marley/Generator.hh"
+#include "marley/Event.hh"
+#include "marley/Logger.hh"
 
 #ifdef USE_ROOT
 #include "TFile.h"

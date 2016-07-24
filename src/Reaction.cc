@@ -1,5 +1,5 @@
-#include "marley_kinematics.hh"
-#include "Reaction.hh"
+#include "marley/marley_kinematics.hh"
+#include "marley/Reaction.hh"
 
 // Performs kinematics calculations for a two-two scattering reaction
 // (a + b -> c + d)

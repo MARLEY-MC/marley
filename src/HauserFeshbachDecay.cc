@@ -1,11 +1,11 @@
 #include <memory>
 
-#include "marley_utils.hh"
-#include "ExitChannel.hh"
-#include "Generator.hh"
-#include "marley_kinematics.hh"
-#include "MassTable.hh"
-#include "HauserFeshbachDecay.hh"
+#include "marley/marley_utils.hh"
+#include "marley/ExitChannel.hh"
+#include "marley/Generator.hh"
+#include "marley/marley_kinematics.hh"
+#include "marley/MassTable.hh"
+#include "marley/HauserFeshbachDecay.hh"
 
 using TrType = marley::GammaStrengthFunctionModel::TransitionType;
 

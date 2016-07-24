@@ -4,14 +4,14 @@
 #include <iostream>
 #include <sstream>
 
-#include "marley_utils.hh"
-#include "Error.hh"
-#include "Event.hh"
-#include "Generator.hh"
-#include "Level.hh"
-#include "Logger.hh"
-#include "HauserFeshbachDecay.hh"
-#include "Reaction.hh"
+#include "marley/marley_utils.hh"
+#include "marley/Error.hh"
+#include "marley/Event.hh"
+#include "marley/Generator.hh"
+#include "marley/Level.hh"
+#include "marley/Logger.hh"
+#include "marley/HauserFeshbachDecay.hh"
+#include "marley/Reaction.hh"
 
 marley::NuclearReaction::NuclearReaction(std::string filename,
   marley::StructureDatabase& db)

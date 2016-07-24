@@ -1,8 +1,8 @@
 #include <cmath>
 
-#include "marley_utils.hh"
-#include "MassTable.hh"
-#include "BackshiftedFermiGasModel.hh"
+#include "marley/marley_utils.hh"
+#include "marley/MassTable.hh"
+#include "marley/BackshiftedFermiGasModel.hh"
 
 marley::BackshiftedFermiGasModel::BackshiftedFermiGasModel(int Z, int A)
   : Z_(Z), A_(A)

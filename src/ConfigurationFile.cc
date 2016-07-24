@@ -1,7 +1,7 @@
-#include "marley_utils.hh"
-#include "ConfigurationFile.hh"
-#include "InterpolationGrid.hh"
-#include "Logger.hh"
+#include "marley/marley_utils.hh"
+#include "marley/ConfigurationFile.hh"
+#include "marley/InterpolationGrid.hh"
+#include "marley/Logger.hh"
 
 // Static constant definitions
 const std::array<double, 3>
@@ -69,7 +69,7 @@ marley::ConfigurationFile::ConfigurationFile()
   : seed_(std::chrono::system_clock::now().time_since_epoch().count()),
   structure_db_(new marley::StructureDatabase),
   check_hepevt_overwrite_(true), hepevt_filename_("events.hepevt"),
-  num_events_(DEFAULT_NUM_EVENTS_), write_hepevt_(false) {}
+  num_events_(DEFAULT_NUM_EVENTS_), write_hepevt_(true) {}
 
 // Call the default constructor first to set all configuration
 // file parameters to their default values

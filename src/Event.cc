@@ -2,8 +2,8 @@
 #include <iostream>
 #include <iomanip>
 
-#include "Error.hh"
-#include "Event.hh"
+#include "marley/Error.hh"
+#include "marley/Event.hh"
 
 // Local constants used only within this file
 namespace {

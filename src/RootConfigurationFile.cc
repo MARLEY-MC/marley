@@ -1,7 +1,7 @@
-#include "marley_utils.hh"
-#include "Logger.hh"
-#include "RootConfigurationFile.hh"
-#include "InterpolationGrid.hh"
+#include "marley/marley_utils.hh"
+#include "marley/Logger.hh"
+#include "marley/RootConfigurationFile.hh"
+#include "marley/InterpolationGrid.hh"
 
 // ROOT includes
 #include "TAxis.h"

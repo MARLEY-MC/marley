@@ -4,7 +4,7 @@
 // (see the LICENSE file included in this distribution of MARLEY or
 // https://opensource.org/licenses/BSD-2-Clause for the full license text).
 
-#include "meta_numerics.hh"
+#include "marley/meta_numerics.hh"
 
 constexpr std::array<int, 12> meta_numerics::BulrischStoerStoermerStepper::N;
 

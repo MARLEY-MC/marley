@@ -1,6 +1,6 @@
-#include "Error.hh"
-#include "Logger.hh"
-#include "WeisskopfSingleParticleModel.hh"
+#include "marley/Error.hh"
+#include "marley/Logger.hh"
+#include "marley/WeisskopfSingleParticleModel.hh"
 
 using TrType = marley::GammaStrengthFunctionModel::TransitionType;
 

@@ -2,8 +2,8 @@
 #include <cmath>
 #include <string>
 
-#include "Error.hh"
-#include "RotationMatrix.hh"
+#include "marley/Error.hh"
+#include "marley/RotationMatrix.hh"
 
 using ThreeVector = std::array<double, 3>;
 

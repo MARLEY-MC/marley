@@ -27,8 +27,8 @@ if(ROOT AND ROOTCINT AND ROOTCONFIG)
   set(ROOT_LDFLAGS "${ROOT_LDFLAGS} -L${ROOT_LIBDIR} -lCore -lRIO \
     -lHist -lTree -rdynamic")
 
-  set(ROOT_DICT_INCLUDES ${INCLUDE_DIR}/Particle.hh
-    ${INCLUDE_DIR}/Event.hh ${INCLUDE_DIR}/marley_linkdef.hh)
+  set(ROOT_DICT_INCLUDES ${INCLUDE_DIR}/marley/Particle.hh
+    ${INCLUDE_DIR}/marley/Event.hh ${INCLUDE_DIR}/marley/marley_linkdef.hh)
 
   # Create a ROOT dictionary target for our analysis classes based on their latest header files
   add_custom_command(OUTPUT marley_root_dict.cc marley_root_dict.h
@@ -96,10 +96,15 @@ endif()
 # Set installation directories for MARLEY components
 get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
 
-if ("${LIB64}" STREQUAL "TRUE")
-    set(LIBSUFFIX 64)
+# Allow the user to set -DMARLEY_LIB_DIR_SUFFIX in case CMake gets confused
+# about whether the libraries should be installed in lib, lib64, or lib32.
+# This can happen when you're cross-compiling, for example.
+if (DEFINED MARLEY_LIB_DIR_SUFFIX)
+  set(LIBSUFFIX "${MARLEY_LIB_DIR_SUFFIX}")
+elseif ("${LIB64}" STREQUAL "TRUE")
+  set(LIBSUFFIX 64)
 else()
-    set(LIBSUFFIX "")
+  set(LIBSUFFIX "")
 endif()
 
 set(INSTALL_LIB_DIR lib${LIBSUFFIX} CACHE PATH "Installation

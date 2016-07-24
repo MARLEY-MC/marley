@@ -1,8 +1,8 @@
 #include <iostream>
 #include <functional>
 
-#include "marley_utils.hh"
-#include "MassTable.hh"
+#include "marley/marley_utils.hh"
+#include "marley/MassTable.hh"
 
 const marley::MassTable& marley::MassTable::Instance() {
 

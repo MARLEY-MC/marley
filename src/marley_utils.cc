@@ -11,8 +11,8 @@
 #include <string>
 #include <vector>
 
-#include "marley_utils.hh"
-#include "Error.hh"
+#include "marley/marley_utils.hh"
+#include "marley/Error.hh"
 
 // Strings to use for latex table output of ENSDF data
 std::string marley_utils::latex_table_1 = "\\documentclass[12pt]{article}\n"
