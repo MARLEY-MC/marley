@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "ConfigurationFile.hh"
+#include "marley/ConfigurationFile.hh"
 
 namespace marley {
 

@@ -3,10 +3,10 @@
 #include <complex>
 #include <vector>
 
-#include "DecayScheme.hh"
-#include "MassTable.hh"
-#include "OpticalModel.hh"
-#include "marley_utils.hh"
+#include "marley/DecayScheme.hh"
+#include "marley/MassTable.hh"
+#include "marley/OpticalModel.hh"
+#include "marley/marley_utils.hh"
 
 namespace marley {
 

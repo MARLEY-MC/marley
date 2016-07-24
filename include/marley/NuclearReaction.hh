@@ -4,12 +4,12 @@
 #include <string>
 #include <vector>
 
-#include "DecayScheme.hh"
-#include "Event.hh"
-#include "Level.hh"
-#include "MassTable.hh"
-#include "Reaction.hh"
-#include "StructureDatabase.hh"
+#include "marley/DecayScheme.hh"
+#include "marley/Event.hh"
+#include "marley/Level.hh"
+#include "marley/MassTable.hh"
+#include "marley/Reaction.hh"
+#include "marley/StructureDatabase.hh"
 
 namespace marley {
 

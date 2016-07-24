@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "Error.hh"
+#include "marley/Error.hh"
 
 namespace marley {
 

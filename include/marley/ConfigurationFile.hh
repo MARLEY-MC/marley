@@ -8,10 +8,10 @@
 #include <string>
 #include <unordered_set>
 
-#include "DecayScheme.hh"
-#include "Error.hh"
-#include "NeutrinoSource.hh"
-#include "StructureDatabase.hh"
+#include "marley/DecayScheme.hh"
+#include "marley/Error.hh"
+#include "marley/NeutrinoSource.hh"
+#include "marley/StructureDatabase.hh"
 
 namespace marley {
 

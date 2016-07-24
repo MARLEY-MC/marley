@@ -4,12 +4,12 @@
 #include <sstream>
 #include <vector>
 
-#include "ConfigurationFile.hh"
-#include "NeutrinoSource.hh"
-#include "Parity.hh"
-#include "NuclearReaction.hh"
-#include "RotationMatrix.hh"
-#include "StructureDatabase.hh"
+#include "marley/ConfigurationFile.hh"
+#include "marley/NeutrinoSource.hh"
+#include "marley/Parity.hh"
+#include "marley/NuclearReaction.hh"
+#include "marley/RotationMatrix.hh"
+#include "marley/StructureDatabase.hh"
 
 namespace marley {
 

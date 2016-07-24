@@ -2,7 +2,7 @@
 #include <functional>
 #include <vector>
 
-#include "marley_utils.hh"
+#include "marley/marley_utils.hh"
 
 namespace marley {
 

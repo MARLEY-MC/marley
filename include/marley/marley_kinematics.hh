@@ -1,7 +1,7 @@
 #pragma once
 #include <cmath>
 
-#include "Error.hh"
+#include "marley/Error.hh"
 
 namespace marley {
   class Particle;

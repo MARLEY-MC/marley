@@ -1,12 +1,12 @@
 #pragma once
 #include <vector>
 
-#include "Fragment.hh"
-#include "Generator.hh"
-#include "IteratorToPointerMember.hh"
-#include "Level.hh"
-#include "MassTable.hh"
-#include "Parity.hh"
+#include "marley/Fragment.hh"
+#include "marley/Generator.hh"
+#include "marley/IteratorToPointerMember.hh"
+#include "marley/Level.hh"
+#include "marley/MassTable.hh"
+#include "marley/Parity.hh"
 
 namespace marley {
 

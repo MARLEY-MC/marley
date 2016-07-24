@@ -1,6 +1,6 @@
 # Example MARLEY run configuration file
 # S. Gardiner (sjgardiner@ucdavis.edu)
-# 3 June 2016
+# Revised 24 July 2016
 #
 # Comments may be added anywhere by creating a line with '#' as the
 # first non-whitespace character. All other lines should begin with
@@ -90,7 +90,23 @@ source ve fd   0.   60.   3.5   0.
 # and 2^64 - 1, inclusive) if you would like to set a specific seed.
 seed time
 #
+#
+# INCIDENT NEUTRINO DIRECTION
+# Use the given 3-vector as the direction of the incident neutrinos. Note
+# that this vector does not need to be normalized to unity, but at least one
+# element *must* be nonzero.
+#
+# The format is "direction Dx Dy Dz" where Dx, Dy, and Dz are the x, y, and
+# z components of the direction vector, respectively.
+#
+# Incident neutrinos travel in the +z direction
+direction 0 0 1
+#
+#
 # OUTPUT SETTINGS
+# (ignored if using MARLEY via a shared library instead of the command-line
+# executable)
+#
 # Generate 1000 events
 events 1e3
 #

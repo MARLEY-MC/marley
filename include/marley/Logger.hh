@@ -3,7 +3,7 @@
 #include <fstream>
 #include <vector>
 
-#include "HauserFeshbachDecay.hh"
+#include "marley/HauserFeshbachDecay.hh"
 
 namespace marley {
 

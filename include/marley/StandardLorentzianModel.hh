@@ -1,5 +1,5 @@
 #pragma once
-#include "GammaStrengthFunctionModel.hh"
+#include "marley/GammaStrengthFunctionModel.hh"
 
 namespace marley {
 

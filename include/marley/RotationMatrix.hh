@@ -1,6 +1,6 @@
 #include <array>
 
-#include "Particle.hh"
+#include "marley/Particle.hh"
 
 namespace marley {
 

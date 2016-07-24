@@ -3,10 +3,10 @@
 #include <memory>
 #include <vector>
 
-#include "Error.hh"
-#include "Event.hh"
-#include "Level.hh"
-#include "Parity.hh"
+#include "marley/Error.hh"
+#include "marley/Event.hh"
+#include "marley/Level.hh"
+#include "marley/Parity.hh"
 
 namespace marley {
 

@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
 
-#include "Event.hh"
-#include "MassTable.hh"
+#include "marley/Event.hh"
+#include "marley/MassTable.hh"
 
 namespace marley {
 

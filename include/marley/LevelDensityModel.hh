@@ -1,5 +1,5 @@
 #pragma once
-#include "Parity.hh"
+#include "marley/Parity.hh"
 
 namespace marley {
 

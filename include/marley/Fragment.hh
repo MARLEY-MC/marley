@@ -1,7 +1,7 @@
 #pragma once
-#include "marley_utils.hh"
-#include "MassTable.hh"
-#include "Parity.hh"
+#include "marley/marley_utils.hh"
+#include "marley/MassTable.hh"
+#include "marley/Parity.hh"
 
 namespace marley {
 

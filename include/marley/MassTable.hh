@@ -3,8 +3,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "marley_utils.hh"
-#include "Error.hh"
+#include "marley/marley_utils.hh"
+#include "marley/Error.hh"
 
 namespace marley {
 

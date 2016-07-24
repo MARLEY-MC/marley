@@ -2,10 +2,10 @@
 #include <functional>
 #include <set>
 
-#include "marley_utils.hh"
-#include "Error.hh"
-#include "InterpolationGrid.hh"
-#include "MassTable.hh"
+#include "marley/marley_utils.hh"
+#include "marley/Error.hh"
+#include "marley/InterpolationGrid.hh"
+#include "marley/MassTable.hh"
 
 namespace marley {
 

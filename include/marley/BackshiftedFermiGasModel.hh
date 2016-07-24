@@ -1,5 +1,5 @@
 #pragma once
-#include "LevelDensityModel.hh"
+#include "marley/LevelDensityModel.hh"
 
 namespace marley {
 

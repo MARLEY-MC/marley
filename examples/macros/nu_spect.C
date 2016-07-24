@@ -22,7 +22,7 @@ void nu_spect(const std::string& filename) {
 
     tree->GetEntry(i);
 
-    E_vec.push_back(ev.projectile().total_energy());
+    E_vec.push_back(ev->projectile().total_energy());
 
     if (i % 1000 == 0) std::cout << "Event " << i << '\n';
   }

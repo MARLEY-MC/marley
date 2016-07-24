@@ -3,16 +3,16 @@
 #include <ostream>
 #include <unordered_map>
 
-#include "marley_utils.hh"
-#include "ExitChannel.hh"
-#include "Fragment.hh"
-#include "GammaStrengthFunctionModel.hh"
-#include "Level.hh"
-#include "LevelDensityModel.hh"
-#include "MassTable.hh"
-#include "OpticalModel.hh"
-#include "Parity.hh"
-#include "StructureDatabase.hh"
+#include "marley/marley_utils.hh"
+#include "marley/ExitChannel.hh"
+#include "marley/Fragment.hh"
+#include "marley/GammaStrengthFunctionModel.hh"
+#include "marley/Level.hh"
+#include "marley/LevelDensityModel.hh"
+#include "marley/MassTable.hh"
+#include "marley/OpticalModel.hh"
+#include "marley/Parity.hh"
+#include "marley/StructureDatabase.hh"
 
 namespace marley {
 

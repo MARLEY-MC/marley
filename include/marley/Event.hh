@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "Particle.hh"
+#include "marley/Particle.hh"
 
 namespace marley {
 

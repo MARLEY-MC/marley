@@ -27,14 +27,14 @@ if(ROOT AND ROOTCINT AND ROOTCONFIG)
   set(ROOT_LDFLAGS "${ROOT_LDFLAGS} -L${ROOT_LIBDIR} -lCore -lRIO \
     -lHist -lTree -rdynamic")
 
-  set(ROOT_DICT_INCLUDES ${INCLUDE_DIR}/marley/Particle.hh
-    ${INCLUDE_DIR}/marley/Event.hh ${INCLUDE_DIR}/marley/marley_linkdef.hh)
+  set(ROOT_DICT_INCLUDES -I${INCLUDE_DIR} marley/Particle.hh
+    marley/Event.hh marley/marley_linkdef.hh)
 
   # Create a ROOT dictionary target for our analysis classes based on their latest header files
   add_custom_command(OUTPUT marley_root_dict.cc marley_root_dict.h
                       COMMAND rm -f marley_root_dict.*
                       COMMAND echo "Building MARLEY ROOT dictionaries..."
-                      COMMAND ${ROOTCINT} marley_root_dict.cc -c ${ROOT_DICT_INCLUDES})
+                      COMMAND ${ROOTCINT} -f marley_root_dict.cc -c ${ROOT_DICT_INCLUDES})
   add_custom_target(root_dictionaries DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/marley_root_dict.cc)
 
   # Tell the MARLEY sources to use optional ROOT-dependent features
@@ -79,11 +79,12 @@ else()
 endif()
 
 # ROOT dictionaries generated with rootcint trigger clang++'s keyword-macro
-# warning, so disable it.
+# warning, so disable it. Since g++ 4.9.3 gives many false positives for
+# -Wshadow, also disable that warning.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} -O3 \
-  -Wall -Wextra -Wshadow -pedantic \
+  -Wall -Wextra -pedantic \
   -Wcast-align -Wunused -Woverloaded-virtual \
-  -Wno-keyword-macro -Wno-missing-braces")
+  -Wno-keyword-macro -Wno-missing-braces -Wno-shadow ")
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # Linking to ROOT libraries can be problematic on distributions (e.g., Ubuntu)

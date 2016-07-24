@@ -1,9 +1,9 @@
 #pragma once
 #include <random>
 
-#include "Gamma.hh"
-#include "IteratorToPointerMember.hh"
-#include "Parity.hh"
+#include "marley/Gamma.hh"
+#include "marley/IteratorToPointerMember.hh"
+#include "marley/Parity.hh"
 
 namespace marley {
 

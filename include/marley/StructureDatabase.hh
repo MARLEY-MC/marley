@@ -3,11 +3,11 @@
 #include <string>
 #include <unordered_map>
 
-#include "ConfigurationFile.hh"
-#include "DecayScheme.hh"
-#include "GammaStrengthFunctionModel.hh"
-#include "LevelDensityModel.hh"
-#include "OpticalModel.hh"
+#include "marley/ConfigurationFile.hh"
+#include "marley/DecayScheme.hh"
+#include "marley/GammaStrengthFunctionModel.hh"
+#include "marley/LevelDensityModel.hh"
+#include "marley/OpticalModel.hh"
 
 namespace marley {
 

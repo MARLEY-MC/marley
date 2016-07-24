@@ -1,7 +1,7 @@
 #pragma once
-#include "GammaStrengthFunctionModel.hh"
-#include "LevelDensityModel.hh"
-#include "StructureDatabase.hh"
+#include "marley/GammaStrengthFunctionModel.hh"
+#include "marley/LevelDensityModel.hh"
+#include "marley/StructureDatabase.hh"
 
 namespace marley {
 

@@ -64,5 +64,5 @@ void fp_spect(const std::string& filename, int pdg) {
   //c->SaveAs("KEs.pdf");
 
   std::cout << "Found " << KE_vec.size() << " particles with"
-    << " pdg = " << pdg << " in " << num_events << "events\n";
+    << " pdg = " << pdg << " in " << num_events << " events\n";
 }

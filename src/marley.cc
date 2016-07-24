@@ -22,6 +22,8 @@
 
 #ifdef USE_ROOT
 #include "TFile.h"
+#include "TInterpreter.h"
+#include "TROOT.h"
 #include "TTree.h"
 #endif
 
@@ -216,6 +218,34 @@ int main(int argc, char* argv[]){
   TTree* event_tree = nullptr;
 
   if (write_root) {
+
+    // Current (24 July 2016) versions of ROOT 6 require runtime
+    // loading of headers for custom classes in order to use
+    // dictionaries correctly. If we're running ROOT 6+, do the
+    // loading here, and give the user guidance if there are any
+    // problems.
+    // TODO: see if you can use the -inlineInputHeader to include
+    // the headers in the libMARLEY_ROOT library and then load them
+    // at runtime from there. This isn't very well documented, so your
+    // early efforts at doing this didn't work out.
+    if (gROOT->GetVersionInt() >= 60000) {
+      std::cout << "ROOT 6 or greater detected. Loading class"
+        << " information\nfrom headers \"marley/Particle.hh\""
+        << " and \"marley/Event.hh\"\n";
+      TInterpreter::EErrorCode* ec = new TInterpreter::EErrorCode();
+      gInterpreter->ProcessLine("#include \"marley/Particle.hh\"", ec);
+      if (*ec != 0) throw marley::Error(std::string("Error loading")
+        + " MARLEY header Particle.hh. For MARLEY headers stored in"
+        + " /path/to/include/marley/, please add /path/to/include"
+        + " to your ROOT_INCLUDE_PATH environment variable and"
+        + " try again.");
+      gInterpreter->ProcessLine("#include \"marley/Event.hh\"");
+      if (*ec != 0) throw marley::Error(std::string("Error loading")
+        + " MARLEY header Event.hh. For MARLEY headers stored in"
+        + " /path/to/include/marley/, please add /path/to/include"
+        + " to your ROOT_INCLUDE_PATH environment variable and"
+        + " try again.");
+    }
 
     std::string tfile_open_mode("recreate");
     if (root_file_existed && check_overwrite_root) {
