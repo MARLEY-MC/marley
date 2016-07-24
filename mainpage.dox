@@ -1,0 +1,14 @@
+/**
+@mainpage MARLEY documentation
+
+The source code for MARLEY v0.9.3 is available
+<a href="https://ucdavis.box.com/shared/static/m9kdzp0um4q4syt7irpa3cc14dcq51l6.gz">here</a>. Build requirements: g++ >= 4.9 (or a recent version of clang)
+and cmake >= 3.0
+
+The nuclear structure data that we recommend for use with MARLEY is
+available
+<a href="https://ucdavis.box.com/shared/static/b4yzte2yxpsebtrozeg2q3kjl5znkris.gz">here</a>.
+
+The beginning of a draft user manual is available <a
+href="https://ucdavis.box.com/shared/static/dfslb5q0zf4zd6c6maa8runu08litq9l.pdf">here</a>.
+*/

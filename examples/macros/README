@@ -1,0 +1,87 @@
+This directory contains several example ROOT macros that can be used to
+analyze MARLEY events at the 4-vector level. Brief descriptions of each
+of these macros are given below. To use these macros, you will need
+to build the MARLEY shared library for ROOT support (libMARLEY_ROOT.so on
+Linux systems) and load it into the ROOT interpreter. To load the
+libMARLEY_ROOT library, open ROOT and execute the setup_marley.C
+macro (provided in this directory) like this:
+
+  .x setup_marley.C
+
+If ROOT cannot find the library, then you'll need to add the directory that
+contains libMARLEY_ROOT.so to your LD_LIBRARY_PATH environment variable (or
+equivalent on non-Linux systems) and try again.
+
+ROOT 6 note: starting with version 6 of ROOT, the precompiled dictionary
+dynamic libraries do not contain some of the information present in the
+headers. This will prevent the macros described below from working correctly
+unless the headers are made visible to ROOT. The MARLEY headers should be
+installed in a directory of the form /path/to/include/marley. To make ROOT 6
+aware of their existence, execute
+
+  gInterpreter->AddIncludePath("/path/to/include")
+
+where /path/to/include is the parent of a directory called "marley" that
+contains the MARLEY headers Particle.hh and Event.hh. After you execute
+this command, the setup_marley.C macro should work normally.
+
+ecos_plot.C
+-----------
+
+Plot a histogram of cos(theta) values for the outgoing electron, where
+cos(theta) is the angle between the electron and the incident neutrino.
+
+Usage:
+
+  .x ecos_plot.C("/path/to/event/file.root")
+
+Ex.C
+----
+
+Plot a histogram of excitation energies accessed by the initial two-two
+scatter on the argon nucleus.
+
+Usage:
+
+  .x Ex.C("/path/to/event/file.root")
+
+fp_spect.C
+----------
+
+Plot a histogram of kinetic energies for the final particle type with
+a given Particle Data Group (PDG) code.
+
+Usage:
+
+  .x fp_spect.C("/path/to/event/file.root", PDG code)
+
+
+nu_spect.C
+----------
+
+Plot a histogram of the reacting neutrino energies sampled by the generator.
+
+Usage:
+
+  .x nu_spect.C("/path/to/event/file.root")
+
+print_events.C
+--------------
+
+Print a human-readable description of each event in the ROOT file.
+
+Usage:
+
+  .x print_events.C("/path/to/event/file.root")
+
+reco_spectrum.C
+---------------
+
+Plot the true spectrum of reacting neutrino energies, the reconstructed
+spectrum if we miss every neutron but see everything else perfectly, and the
+reconstructed spectrum if we see only the electron (and add in the
+ground-state-to-ground-state Q value).
+
+Usage:
+
+  .x reco_spectrum.C("/path/to/event/file.root")
