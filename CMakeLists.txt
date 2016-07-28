@@ -30,17 +30,20 @@ if(ROOT AND ROOTCINT AND ROOTCONFIG)
   set(ROOT_DICT_INCLUDES -I${INCLUDE_DIR} marley/Particle.hh
     marley/Event.hh marley/marley_linkdef.hh)
 
-  # Create a ROOT dictionary target for our analysis classes based on their latest header files
+  # Create a ROOT dictionary target for our analysis classes based on their
+  # latest header files
   add_custom_command(OUTPUT marley_root_dict.cc marley_root_dict.h
-                      COMMAND rm -f marley_root_dict.*
-                      COMMAND echo "Building MARLEY ROOT dictionaries..."
-                      COMMAND ${ROOTCINT} -f marley_root_dict.cc -c ${ROOT_DICT_INCLUDES})
-  add_custom_target(root_dictionaries DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/marley_root_dict.cc)
+    COMMAND rm -f marley_root_dict.*
+    COMMAND echo "Building MARLEY ROOT dictionaries..."
+    COMMAND ${ROOTCINT} -f marley_root_dict.cc -c ${ROOT_DICT_INCLUDES})
+  add_custom_target(root_dictionaries DEPENDS
+    ${CMAKE_CURRENT_BINARY_DIR}/marley_root_dict.cc)
 
   # Tell the MARLEY sources to use optional ROOT-dependent features
   add_definitions(-DUSE_ROOT)
 else()
-  message("WARNING: Could not find a valid ROOT installation. MARLEY will be built without ROOT support.")
+  message("WARNING: Could not find a valid ROOT installation. \
+    MARLEY will be built without ROOT support.")
 endif()
 
 # Build shared and static libraries with the same name (other than the suffix)
@@ -64,15 +67,18 @@ endif()
 add_executable(${EXECUTABLE_NAME} "src/marley.cc")
 
 if(ROOT AND ROOTCINT AND ROOTCONFIG)
-  # Create a shared library to allow the ROOT dictionary to be easily loaded on demand
-  add_library(MARLEY_ROOT SHARED ${CMAKE_CURRENT_BINARY_DIR}/marley_root_dict.cc
+  # Create a shared library to allow the ROOT dictionary to be easily loaded on
+  # demand
+  add_library(MARLEY_ROOT SHARED
+    ${CMAKE_CURRENT_BINARY_DIR}/marley_root_dict.cc
     ${SOURCE_DIR}/RootConfigurationFile.cc)
   target_link_libraries(MARLEY_ROOT MARLEY)
   set_target_properties(MARLEY_ROOT PROPERTIES LINK_FLAGS ${ROOT_LDFLAGS})
 
   # Create the example executable using ROOT.
   target_link_libraries(${EXECUTABLE_NAME} MARLEY_ROOT)
-  set_target_properties(${EXECUTABLE_NAME} PROPERTIES LINK_FLAGS ${ROOT_LDFLAGS})
+  set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+    LINK_FLAGS ${ROOT_LDFLAGS})
 else()
   # Create the example executable without using ROOT
   target_link_libraries(${EXECUTABLE_NAME} MARLEY)

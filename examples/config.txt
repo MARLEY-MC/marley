@@ -12,11 +12,11 @@
 #
 # NUCLEAR STRUCTURE DATA
 # Load discrete level data and gamma-ray branching ratios for the specified
-# nuclides. To get the recommended data, please visit http://marleygen.org
-# and click on the "structure data" link on the main page. You will need
-# to add the full path to the second entry (e.g., z019) on each line if you
-# run MARLEY from a directory other than the one used to store the structure
-# data.
+# nuclides. To get the recommended data, please visit http://www.marleygen.org
+# and download the recommended nuclear structure data using the link on the
+# main page. You will need to add the full path to the second entry (e.g., z019)
+# on each line if you run MARLEY from a directory other than the one used to
+# store the structure data.
 structure z019 talys 40K 39K 38K
 structure z018 talys 37Ar 38Ar 39Ar 40Ar
 structure z017 talys 35Cl 36Cl 37Cl
