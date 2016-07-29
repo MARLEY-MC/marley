@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 set(CMAKE_DISABLE_SOURCE_CHANGES on)
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED on)
+#set(CMAKE_CXX_STANDARD 14)
+#set(CMAKE_CXX_STANDARD_REQUIRED on)
 
 project(marley)
 
@@ -42,8 +42,8 @@ if(ROOT AND ROOTCINT AND ROOTCONFIG)
   # Tell the MARLEY sources to use optional ROOT-dependent features
   add_definitions(-DUSE_ROOT)
 else()
-  message("WARNING: Could not find a valid ROOT installation. \
-    MARLEY will be built without ROOT support.")
+  message("WARNING: Could not find a valid ROOT installation.")
+  message("MARLEY will be built without ROOT support.")
 endif()
 
 # Build shared and static libraries with the same name (other than the suffix)
@@ -87,7 +87,7 @@ endif()
 # ROOT dictionaries generated with rootcint trigger clang++'s keyword-macro
 # warning, so disable it. Since g++ 4.9.3 gives many false positives for
 # -Wshadow, also disable that warning.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} -O3 \
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} -O3 -std=c++14 \
   -Wall -Wextra -pedantic \
   -Wcast-align -Wunused -Woverloaded-virtual \
   -Wno-keyword-macro -Wno-missing-braces -Wno-shadow ")

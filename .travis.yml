@@ -1,0 +1,24 @@
+# doxygen and g++-4.9 install trick taken from
+# https://amodernstory.com/2015/07/27/upgrading-travisci-build-scripts/
+language: cpp
+compiler:
+# - clang
+  - gcc
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - george-edison55-precise-backports
+    packages:
+      - doxygen
+      - g++-4.9
+      - cmake
+      - cmake-data
+script:
+  - cd build
+  - cmake -DCMAKE_CXX_COMPILER=g++-4.9 ..
+  - make
+  - cd ..
+  - doxygen
+after_success:
+  - bash deploy.sh
