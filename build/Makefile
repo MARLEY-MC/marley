@@ -10,7 +10,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
  
   # Use g++ as the default compiler
   CXX = g++
-  CXXFLAGS = -std=c++14 -g -I$(INCLUDE_DIR) -Wall -Wextra -Wpedantic
+  CXXFLAGS = -std=c++14 -O3 -I$(INCLUDE_DIR) -Wall -Wextra -Wpedantic
   CXXFLAGS += -Werror -Wno-error=unused-parameter -Wcast-align
 
   # Add extra compiler flags for recognized compilers (currently just gcc
@@ -25,20 +25,21 @@ ifneq ($(MAKECMDGOALS),uninstall)
     # disable it. Also disable (for now) warnings for braces around
     # initialization of subobjects (overkill in the meta_numerics header)
     CXXFLAGS += -Wno-keyword-macro -Wno-missing-braces
-  endif
-  ifneq (,$(findstring GCC,$(CXXVERSION)))
-    # gcc
-    $(info Compiling using version $(COMPILER_VERSION) of GCC)
-    ifneq (,$(findstring $(COMPILER_VERSION), 4.9.))
-      # g++ 4.9 gives many false positives for -Wshadow, so disable it
-      # for now.
-      CXXFLAGS += -Wno-shadow
+  else
+    ifneq (,$(or $(findstring GCC,$(CXXVERSION)), $(findstring g++,$(CXXVERSION))))
+      # gcc
+      $(info Compiling using version $(COMPILER_VERSION) of GCC)
+      ifneq (,$(findstring $(COMPILER_VERSION), 4.9.))
+        # g++ 4.9 gives many false positives for -Wshadow, so disable it
+        # for now.
+        CXXFLAGS += -Wno-shadow
+      endif
+      # Linking to ROOT libraries can be problematic on distributions (e.g.,
+      # Ubuntu) that set the g++ flag -Wl,--as-needed by default (see
+      # http://www.bnikolic.co.uk/blog/gnu-ld-as-needed.html for details), so
+      # disable this behavior
+      CXXFLAGS += -Wl,--no-as-needed
     endif
-    # Linking to ROOT libraries can be problematic on distributions (e.g.,
-    # Ubuntu) that set the g++ flag -Wl,--as-needed by default (see
-    # http://www.bnikolic.co.uk/blog/gnu-ld-as-needed.html for details), so
-    # disable this behavior
-    CXXFLAGS += -Wl,--no-as-needed
   endif
   
   OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
@@ -69,7 +70,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
   ifndef ROOTCONFIG
     $(info WARNING: Could not find a valid ROOT installation.)
     $(info MARLEY will be built without ROOT support.)
-    undefine USE_ROOT
+    USE_ROOT=""
   else
     ROOT_VERSION := $(shell $(ROOTCONFIG) --version)
     $(info Found ROOT version $(ROOT_VERSION) in $(ROOT))
@@ -122,8 +123,8 @@ $(SHARED_LIB): $(OBJECTS)
 	  lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX) $^
 
 marley: $(SHARED_LIB) $(ROOT_SHARED_LIB) marley.o
-	$(CXX) $(CXXFLAGS) -o $@ -L. -l$(SHARED_LIB_NAME) \
-	  $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
+	$(CXX) $(CXXFLAGS) -o $@ -L. \
+	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
 	  -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
 
 .PHONY: clean install uninstall

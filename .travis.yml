@@ -8,17 +8,14 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - george-edison55-precise-backports
+      - george-edison55-precise-backports 
     packages:
       - doxygen
       - g++-4.9
-      - cmake
-      - cmake-data
 script:
   - cd build
-  - cmake -DCMAKE_CXX_COMPILER=g++-4.9 ..
-  - make
+  - make CXX=g++-4.9
+after_success:
   - cd ..
   - doxygen
-after_success:
   - bash deploy.sh
