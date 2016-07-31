@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 set(CMAKE_DISABLE_SOURCE_CHANGES on)
-#set(CMAKE_CXX_STANDARD 14)
-#set(CMAKE_CXX_STANDARD_REQUIRED on)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED on)
 
 project(marley)
 
@@ -46,14 +46,8 @@ else()
   message("MARLEY will be built without ROOT support.")
 endif()
 
-# Build shared and static libraries with the same name (other than the suffix)
-# on systems other than Windows (doing this on Windows causes problems).
+# Build a shared library containing the core MARLEY class definitions
 add_library(MARLEY SHARED ${SOURCES})
-add_library(MARLEY_static STATIC ${SOURCES})
-if (NOT WIN32)
-  set_target_properties(MARLEY_static PROPERTIES OUTPUT_NAME MARLEY)
-endif()
-
 
 # Create the example executable. Use the name "marley.exe" on OS X
 # to avoid problems with the case-insensitive file system. Also use
@@ -87,7 +81,7 @@ endif()
 # ROOT dictionaries generated with rootcint trigger clang++'s keyword-macro
 # warning, so disable it. Since g++ 4.9.3 gives many false positives for
 # -Wshadow, also disable that warning.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} -O3 -std=c++14 \
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CFLAGS} -O3 \
   -Wall -Wextra -pedantic \
   -Wcast-align -Wunused -Woverloaded-virtual \
   -Wno-keyword-macro -Wno-missing-braces -Wno-shadow ")
@@ -100,33 +94,15 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--no-as-needed")
 endif()
 
-# Set installation directories for MARLEY components
-get_property(LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
-
-# Allow the user to set -DMARLEY_LIB_DIR_SUFFIX in case CMake gets confused
-# about whether the libraries should be installed in lib, lib64, or lib32.
-# This can happen when you're cross-compiling, for example.
-if (DEFINED MARLEY_LIB_DIR_SUFFIX)
-  set(LIBSUFFIX "${MARLEY_LIB_DIR_SUFFIX}")
-elseif ("${LIB64}" STREQUAL "TRUE")
-  set(LIBSUFFIX 64)
-else()
-  set(LIBSUFFIX "")
-endif()
-
-set(INSTALL_LIB_DIR lib${LIBSUFFIX} CACHE PATH "Installation
-directory for libraries")
-mark_as_advanced(INSTALL_LIB_DIR)
-
-install(TARGETS marley MARLEY MARLEY_static
+install(TARGETS marley MARLEY
   RUNTIME DESTINATION bin
-  LIBRARY DESTINATION ${INSTALL_LIB_DIR}
-  ARCHIVE DESTINATION ${INSTALL_LIB_DIR})
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib)
 
-install(DIRECTORY include/ DESTINATION include/marley
+install(DIRECTORY include/marley DESTINATION include/marley
   FILES_MATCHING PATTERN "*.hh")
 
 install(DIRECTORY react/ DESTINATION share/marley/react
   FILES_MATCHING PATTERN "*.react")
 
-install(FILES config.txt DESTINATION share/marley)
+install(DIRECTORY examples DESTINATION share/marley/examples)
