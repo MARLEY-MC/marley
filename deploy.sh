@@ -29,6 +29,13 @@ git reset upstream/gh-pages
 
 echo "www.marleygen.org" > CNAME
 
+# Creating the .nojekyll file prevents Jekyll from processing the files
+# pushed to the gh-pages branch. This is needed so that some of the
+# doxygen files that begin with an underscore (e.g., _event_8hh_source.html)
+# will be included in the live website. See http://stackoverflow.com/a/6398875
+# for more information about this problem.
+touch .nojekyll
+
 rm -f .gitignore
 touch .
 

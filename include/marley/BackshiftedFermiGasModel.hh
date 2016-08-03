@@ -26,15 +26,13 @@ namespace marley {
       /// fits
       BackshiftedFermiGasModel(int Z, int A);
 
-      /// @copydoc marley::LevelDensityModel::level_density(double Ex)
+      /// @copydoc marley::LevelDensityModel::level_density(double)
       virtual double level_density(double Ex) override;
 
-      /// @copydoc marley::LevelDensityModel::level_density(double Ex,
-      ///   int two_J)
+      /// @copydoc marley::LevelDensityModel::level_density(double, int)
       virtual double level_density(double Ex, int two_J) override;
 
-      /// @copydoc marley::LevelDensityModel::level_density(double Ex,
-      ///   int two_j, marley::Parity Pi)
+      /// @copydoc LevelDensityModel::level_density(double, int, marley::Parity)
       /// @details The current implementation assumes parity equipartition.
       virtual double level_density(double Ex, int two_J, marley::Parity Pi)
         override;

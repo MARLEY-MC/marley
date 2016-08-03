@@ -7,7 +7,7 @@
 namespace marley {
 
   /// @brief ConfigurationFile that adds support for <a
-  /// href="root.cern.ch">ROOT</a> input and output
+  /// href="http://root.cern.ch">ROOT</a> input and output
   class RootConfigurationFile : public marley::ConfigurationFile {
 
     public:
