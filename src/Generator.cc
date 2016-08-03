@@ -30,6 +30,15 @@ void marley::Generator::seed_using_state_string(std::string& state_string) {
   strstr >> rand_gen_;
 }
 
+void marley::Generator::reseed(uint_fast64_t seed) {
+  // This is an attempt to do a decent job of seeding the random number
+  // generator, but optimally accomplishing this can be tricky (see, for
+  // example, http://www.pcg-random.org/posts/cpp-seeding-surprises.html)
+  seed_ = seed;
+  std::seed_seq seed_sequence{seed_};
+  rand_gen_.seed(seed_sequence);
+}
+
 std::string marley::Generator::get_state_string() const {
   std::stringstream ss;
   ss << rand_gen_;
@@ -69,12 +78,8 @@ void marley::Generator::normalize_E_pdf() {
 void marley::Generator::init(marley::ConfigurationFile& cf) {
 
   // Use the seed from the config file object to prepare the random number
-  // generator.  This is an attempt to do a decent job of seeding the random
-  // number generator, but optimally accomplishing this can be tricky (see, for
-  // example, http://www.pcg-random.org/posts/cpp-seeding-surprises.html)
-  seed_ = cf.get_seed();
-  std::seed_seq seed_sequence{seed_};
-  rand_gen_.seed(seed_sequence);
+  // generator.
+  reseed(cf.get_seed());
 
   // Transfer ownership of the structure database from the ConfigurationFile
   // object to the Generator. If the ConfigurationFile object does not own a

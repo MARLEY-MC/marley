@@ -1,6 +1,18 @@
 void setup_marley() {
 
-  int return_code = gSystem->Load("libMARLEY_ROOT");
+  int return_code = 0;
+
+  // Pre-load the 2D graphics library if we're using ROOT 6+.
+  // Some versions of ROOT 6 seem to require this in order to load
+  // the MARLEY dictionaries correctly.
+  if (gROOT->GetVersionInt() >= 60000) {
+    return_code = gSystem->Load("libGraf");
+    if (return_code != 0) std::cout << "\nError loading ROOT Graf"
+      " library.\n";
+  }
+
+  // Load the ROOT interface for MARLEY
+  return_code = gSystem->Load("libMARLEY_ROOT");
   if (return_code == 0) std::cout << "\nSuccessfully loaded MARLEY_ROOT"
     " dynamic library.\n";
   else std::cout << "\nError loading MARLEY_ROOT dynamic library.\n"

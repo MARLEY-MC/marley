@@ -32,6 +32,9 @@ namespace marley {
       /// @brief Get the seed used to initialize this Generator
       inline uint_fast64_t get_seed() const;
 
+      /// @brief Reseeds the Generator
+      void reseed(uint_fast64_t seed);
+
       /// @brief Use a string to set this Generator's internal state
       /// @details This function is typically used to restore a Generator
       /// to a state saved using get_state_string().
