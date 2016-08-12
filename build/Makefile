@@ -1,6 +1,25 @@
 INCLUDE_DIR = ../include
 SRC_DIR = ../src
 
+# Set C++ compiler flags common to all build types
+CXXFLAGS = -std=c++14 -I$(INCLUDE_DIR) -Wall -Wextra -Wpedantic
+CXXFLAGS += -Werror -Wno-error=unused-parameter -Wcast-align
+
+# This Makefile provides three targets with different debugging
+# and optimization compiler flags. The default, "prof", enables
+# optimization but includes debugging information. The "debug"
+# target turns optimization off and, unsurprisingly, also includes
+# debugging information. The third, "opt", enables optimization
+# and omits debugging information.
+prof: CXXFLAGS += -O3 -g -fno-omit-frame-pointer -DNDEBUG
+prof: all
+
+debug: CXXFLAGS += -O0 -g
+debug: all
+
+opt: CXXFLAGS += -O3 -DNDEBUG
+opt: all
+
 all: marley $(SHARED_LIB) $(ROOT_SHARED_LIB)
 
 # Skip lots of initialization if all we want is "make clean/install/uninstall"
@@ -10,8 +29,6 @@ ifneq ($(MAKECMDGOALS),uninstall)
  
   # Use g++ as the default compiler
   CXX = g++
-  CXXFLAGS = -std=c++14 -O3 -I$(INCLUDE_DIR) -Wall -Wextra -Wpedantic
-  CXXFLAGS += -Werror -Wno-error=unused-parameter -Wcast-align
 
   # Add extra compiler flags for recognized compilers (currently just gcc
   # and clang)
@@ -26,7 +43,9 @@ ifneq ($(MAKECMDGOALS),uninstall)
     # initialization of subobjects (overkill in the meta_numerics header)
     CXXFLAGS += -Wno-keyword-macro -Wno-missing-braces
   else
-    ifneq (,$(or $(findstring GCC,$(CXXVERSION)), $(findstring g++,$(CXXVERSION))))
+    ifneq (,$(or $(findstring GCC,$(CXXVERSION)), \
+      $(findstring g++,$(CXXVERSION))))
+
       # gcc
       $(info Compiling using version $(COMPILER_VERSION) of GCC)
       ifneq (,$(findstring $(COMPILER_VERSION), 4.9.))
@@ -59,6 +78,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
   SHARED_LIB := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
   
   ROOTCONFIG := $(shell command -v root-config 2> /dev/null)
+
   # prefer rootcling as the dictionary generator executable name, but use
   # rootcint if you can't find it
   ROOTCLING := $(shell command -v rootcling 2> /dev/null)
@@ -116,7 +136,7 @@ libdir = $(exec_prefix)/lib
 incdir = $(prefix)/include
 
 %.o: $(SRC_DIR)/%.cc
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -I$(INCLUDE_DIR) -fPIC -o $@ -c $^
+	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -fPIC -o $@ -c $^
 
 $(SHARED_LIB): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -fPIC -shared -o \
