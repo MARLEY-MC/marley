@@ -49,10 +49,10 @@ namespace marley {
       /// @return Probability density (MeV<sup> -1</sup>)
       virtual double pdf(double E) = 0;
 
-      /// Returns true if the particle ID passed to the function is
-      /// allowed to be used by a neutrino source object, and returns false
+      /// Returns true if the Particle Data Group code passed to the function
+      /// is allowed to be used by a neutrino source object, and returns false
       /// otherwise.
-      static inline bool pid_is_allowed(const int particle_id);
+      static inline bool pdg_is_allowed(const int pdg);
 
       /// @brief Samples an incident neutrino energy and loads pdg with
       /// the PDG code of the appropriate neutrino type
@@ -271,8 +271,8 @@ namespace marley {
 
   // Inline function definitions
   inline int NeutrinoSource::get_pid() const { return pid_; }
-  inline bool NeutrinoSource::pid_is_allowed(const int particle_id)
-    { return (pids_.count(particle_id) > 0); }
+  inline bool NeutrinoSource::pdg_is_allowed(const int pdg)
+    { return (pids_.count(pdg) > 0); }
 
   inline MonoNeutrinoSource::MonoNeutrinoSource(int particle_id, double E)
     : NeutrinoSource(particle_id), energy_(E) {}

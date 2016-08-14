@@ -457,6 +457,24 @@ std::string marley_utils::get_next_line(std::ifstream &file_in,
   return std::string("");
 }
 
+/// @brief Convert a string to a neutrino PDG code
+/// @param str String to attempt to convert
+/// @param[out] pdg PDG code of the requested neutrino
+/// @return Whether the conversion was successful (true) or not (false)
+bool marley_utils::string_to_neutrino_pdg(const std::string& str, int& pdg) {
+  if (str == "ve") pdg = marley_utils::ELECTRON_NEUTRINO;
+  else if (str == "vebar") pdg = marley_utils::ELECTRON_ANTINEUTRINO;
+  else if (str == "vu") pdg = marley_utils::MUON_NEUTRINO;
+  else if (str == "vubar") pdg = marley_utils::MUON_ANTINEUTRINO;
+  else if (str == "vt") pdg = marley_utils::TAU_NEUTRINO;
+  else if (str == "vtbar") pdg = marley_utils::TAU_ANTINEUTRINO;
+  else {
+    pdg = 0;
+    return false;
+  }
+  return true;
+}
+
 // Trim an ENSDF nucid string and make two-letter element symbols have a
 // lowercase last letter. Currently, no checking is done to see if the
 // string is a valid nucid.

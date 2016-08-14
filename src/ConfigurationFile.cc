@@ -43,24 +43,6 @@ namespace {
       + " string_to_format()");
   }
 
-  /// @brief Convert a string to a neutrino PDG code
-  /// @param str String to attempt to convert
-  /// @param[out] pdg PDG code of the requested neutrino
-  /// @return Whether the conversion was successful (true) or not (false)
-  bool string_to_neutrino_pid(const std::string& str, int& pdg) {
-    if (str == "ve") pdg = marley_utils::ELECTRON_NEUTRINO;
-    else if (str == "vebar") pdg = marley_utils::ELECTRON_ANTINEUTRINO;
-    else if (str == "vu") pdg = marley_utils::MUON_NEUTRINO;
-    else if (str == "vubar") pdg = marley_utils::MUON_ANTINEUTRINO;
-    else if (str == "vt") pdg = marley_utils::TAU_NEUTRINO;
-    else if (str == "vtbar") pdg = marley_utils::TAU_ANTINEUTRINO;
-    else {
-      pdg = 0;
-      return false;
-    }
-    return true;
-  }
-
 }
 
 // The default constructor assigns default values to all
@@ -258,14 +240,14 @@ void marley::ConfigurationFile::parse() {
       // Anything other than an integer entry or one of the
       // allowed strings (e.g., "ve", "vubar") here is not allowed.
       // These strings are not case-sensitive.
-      else if (!string_to_neutrino_pid(arg, neutrino_pid)) {
+      else if (!marley_utils::string_to_neutrino_pdg(arg, neutrino_pid)) {
         throw marley::Error(std::string("Invalid")
         + " neutrino source particle ID '" + arg
         + "' given on line " + std::to_string(line_num_)
         + " of the configuration file " + filename_);
       }
 
-      if (!marley::NeutrinoSource::pid_is_allowed(neutrino_pid)) {
+      if (!marley::NeutrinoSource::pdg_is_allowed(neutrino_pid)) {
         throw marley::Error(std::string("Unallowed")
           + " neutrino source particle ID '" + arg
           + "' given on line " + std::to_string(line_num_)

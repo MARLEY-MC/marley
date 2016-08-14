@@ -39,7 +39,7 @@ namespace marley {
       /// @param format DecayScheme::FileFormat specifier that indicates
       /// which nuclear data format is used in the file
       std::set<int> find_all_nuclides(const std::string& filename,
-        DecayScheme::FileFormat format);
+        DecayScheme::FileFormat format = DecayScheme::FileFormat::talys);
 
       /// @brief Removes all previously stored data from the database.
       void clear();

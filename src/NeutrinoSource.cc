@@ -2,7 +2,7 @@
 #include "marley/NeutrinoSource.hh"
 
 marley::NeutrinoSource::NeutrinoSource(int particle_id) {
-  if (!pid_is_allowed(particle_id)) throw marley::Error(
+  if (!pdg_is_allowed(particle_id)) throw marley::Error(
     "Creating a neutrino source object that produces"
     " particles with PDG ID number " + std::to_string(particle_id)
     + " is not allowed.");

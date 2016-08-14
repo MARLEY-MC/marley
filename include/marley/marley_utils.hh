@@ -132,6 +132,12 @@ namespace marley_utils {
     else return 0;
   }
 
+  /// @brief Convert a string to a neutrino PDG code
+  /// @param str String to attempt to convert
+  /// @param[out] pdg PDG code of the requested neutrino
+  /// @return Whether the conversion was successful (true) or not (false)
+  bool string_to_neutrino_pdg(const std::string& str, int& pdg);
+
   // Take the square root of a number. Assume that a negative argument is
   // due to roundoff error and return zero in such cases rather than NaN.
   double real_sqrt(double num);
