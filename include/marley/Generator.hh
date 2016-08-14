@@ -18,7 +18,10 @@ namespace marley {
 
     public:
 
-      /// @brief Create a Generator using a ConfigFile object
+      /// @brief Create a Generator using default settings
+      Generator();
+
+      /// @brief Create a Generator using a ConfigurationFile object
       Generator(marley::ConfigurationFile& cf);
 
       /// @brief Create a Generator using a configuration file
@@ -74,6 +77,13 @@ namespace marley {
       inline const std::vector<std::unique_ptr<marley::Reaction> >&
         get_reactions() const;
 
+      /// @brief Take ownership of a new Reaction
+      /// @param reaction A pointer to the new Reaction to use
+      void add_reaction(std::unique_ptr<marley::Reaction> reaction);
+
+      /// @brief Clear the vector of Reaction objects owned by this Generator
+      void clear_reactions();
+
       /// @brief Sample a Reaction and an energy for the reacting neutrino
       /// @param[out] E Total energy of the neutrino undergoing the reaction
       /// @return Reference to the sampled Reaction owned by this Generator
@@ -90,18 +100,16 @@ namespace marley {
       /// @return Probability density (MeV<sup> -1</sup>)
       double E_pdf(double E);
 
-      /// @brief Get a reference to the NeutrinoSource owned by this Generator
+      /// @brief Get a const reference to the NeutrinoSource owned by this
+      /// Generator
       /// @details Throws a marley::Error if this Generator does not own a
       /// NeutrinoSource object.
-      /// @note The sampling interval [Emin, Emax] for the incident neutrino
-      /// energy distribution described by marley::NeutrinoSource::pdf() should
-      /// not be changed using the reference returned by this function. Doing
-      /// so could silently invalidate the normalization of E_pdf(). This is
-      /// currently impossible to do using the public interface of
-      /// marley::NeutrinoSource, but future changes to the NeutrinoSource or
-      /// Generator classes should continue to protect against this
-      /// possibility.
-      marley::NeutrinoSource& get_source();
+      const marley::NeutrinoSource& get_source();
+
+      /// @brief Take ownership of a new NeutrinoSource, replacing any
+      /// existing source owned by this Generator
+      /// @param source A pointer to the new NeutrinoSource to use
+      void set_source(std::unique_ptr<marley::NeutrinoSource> source);
 
       /// @brief Sample from a std::discrete_distribution
       template <typename numType> inline numType

@@ -1,3 +1,4 @@
+#include <chrono>
 #include <cmath>
 #include <string>
 
@@ -6,6 +7,34 @@
 #include "marley/Generator.hh"
 #include "marley/Logger.hh"
 #include "marley/NuclearReaction.hh"
+
+
+// The default constructor uses the system time as the seed and a
+// default-constructured monoenergetic neutrion source. No reactions are
+// defined, so the user must call add_reaction() at least once before using a
+// default-constructed Generator.
+marley::Generator::Generator()
+  : seed_(std::chrono::system_clock::now().time_since_epoch().count()),
+  source_(new marley::MonoNeutrinoSource),
+  structure_db_(new marley::StructureDatabase), dir_vec_{0., 0., 1}
+{
+  reseed(seed_);
+
+  // Print the MARLEY logo to the logger stream(s) when the first
+  // Generator instance is initialized. If other instances are created,
+  // don't reprint the logo.
+  static bool printed_logo = false;
+  if (!printed_logo) {
+    MARLEY_LOG_INFO() << '\n' << marley_utils::marley_logo
+      << "\nDon't worry about a thing,\n'Cause every little thing"
+      << " gonna be all right.\n-- Bob, \"Three Little Birds\"\n\n"
+      << "Model of Argon Reaction Low Energy Yields\n"
+      << "version " << marley_utils::MARLEY_VERSION << '\n';
+    printed_logo = true;
+  }
+
+  MARLEY_LOG_INFO() << "Seed for random number generator: " << seed_;
+}
 
 marley::Generator::Generator(marley::ConfigurationFile& cf) {
   init(cf);
@@ -60,6 +89,13 @@ void marley::Generator::normalize_E_pdf() {
     }
   }
   else {
+    // Reset the normalization factor to its default of one until
+    // we can calculate the new value. This prevents strange things
+    // from happening when we lose precision due to an abnormally
+    // high or low norm_ value from a previous source or reaction
+    // definition.
+    norm_ = 1.;
+
     // Update the normalization factor for use with the reacting neutrino
     // energy probability density function
     norm_ = marley_utils::num_integrate([this](double E)
@@ -262,11 +298,59 @@ marley::Reaction& marley::Generator::sample_reaction(double& E) {
   return *reactions_.at(r_index);
 }
 
-marley::NeutrinoSource& marley::Generator::get_source() {
+const marley::NeutrinoSource& marley::Generator::get_source() {
   if (source_) return *source_;
   else throw marley::Error(std::string("Error")
     + " in marley::Generator::get_source(). The member variable source_ =="
     + " nullptr.");
+}
+
+void marley::Generator::set_source(
+  std::unique_ptr<marley::NeutrinoSource> source)
+{
+  // If we're passed a nullptr, then don't bother to do anything
+  if (source) {
+    // Transfer ownership of the neutrino source the generator, leaving
+    // the std::unique_ptr passed to this function null afterwards.
+    source_.reset(source.release());
+
+    // Don't bother to renormalize if there are no reactions defined yet
+    if (!reactions_.empty()) {
+      // Update the neutrino energy probability density function based on the
+      // new source spectrum
+      normalize_E_pdf();
+    }
+  }
+}
+
+void marley::Generator::add_reaction(std::unique_ptr<marley::Reaction> reaction)
+{
+  // If we're passed a nullptr, then don't bother to do anything
+  if (reaction) {
+
+    // Transfer ownership to a new unique_ptr in the reactions vector, leaving
+    // the original empty
+    reactions_.push_back(std::move(reaction));
+
+    // Add a new entry in the reaction cross sections vector
+    total_xs_values_.push_back(0.);
+
+    // TODO: consider adding a check to see whether source_ is non-null.
+    // Right now, this shouldn't be possible, but an explicit check might
+    // be good.
+
+    // Update the neutrino energy probability density function by including the
+    // cross section for the new reaction
+    normalize_E_pdf();
+  }
+}
+
+void marley::Generator::clear_reactions() {
+  reactions_.clear();
+  total_xs_values_.clear();
+  // Reset the normalization factor to 1. We don't need it until we define
+  // one or more new reactions.
+  norm_ = 1.;
 }
 
 marley::StructureDatabase& marley::Generator::get_structure_db() {
