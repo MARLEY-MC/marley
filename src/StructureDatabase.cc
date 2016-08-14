@@ -21,6 +21,58 @@ void marley::StructureDatabase::emplace_decay_scheme(int pdg,
     Z_ds, A_ds, filename, format));
 }
 
+std::set<int> marley::StructureDatabase::find_all_nuclides(
+  const std::string& filename, DecayScheme::FileFormat format)
+{
+  if (format != DecayScheme::FileFormat::talys)
+    throw marley::Error(std::string("StructureDatabase::")
+      + "find_all_nuclides() is not implemented for"
+      + " formats other than TALYS.");
+
+  // First line in a TALYS level dataset has fortran
+  // format (2i4, 2i5, 56x, i4, a2)
+  // General regex for this line:
+  static const std::regex nuclide_line("[0-9 ]{18} {56}[0-9 ]{4}.{2}");
+
+  // Open the TALYs level data file for parsing
+  std::ifstream file_in(filename);
+
+  // If the file doesn't exist or some other error
+  // occurred, complain and give up.
+  if (!file_in.good()) throw marley::Error(std::string("Could not")
+    + " read from the TALYS data file " + filename);
+
+  std::string line; // String to store the current line
+                    // of the TALYS file during parsing
+
+  std::istringstream iss; // String stream used to parse the line
+
+  double Z; // atomic number
+  double A; // mass number
+
+  // Particle Data Group codes for each nuclide in the file
+  std::set<int> PDGs;
+
+  // Loop through the data file, recording all nuclide PDGs found
+  while (std::getline(file_in, line)) {
+    if (std::regex_match(line, nuclide_line)) {
+      // Load the new line into our istringstream object for parsing. Reset
+      // the stream so that we start parsing from the beginning of the string.
+      iss.str(line);
+      iss.clear();
+
+      // The first two entries on a TALYS nuclide line are Z and A.
+      iss >> Z >> A;
+
+      PDGs.insert(marley_utils::get_nucleus_pid(Z, A));
+    }
+  }
+
+  file_in.close();
+
+  return PDGs;
+}
+
 marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(
   const int particle_id)
 {

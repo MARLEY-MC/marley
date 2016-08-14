@@ -224,6 +224,14 @@ void marley::ConfigurationFile::parse() {
           // for this structure file
           nucleus_pdg_codes.insert(marley_utils::get_nucleus_pid(Znuc, Anuc));
         }
+        else if (arg == "all") {
+          // Get PDG codes for all nuclides included in the file
+          std::set<int> all_PDGs = structure_db_->find_all_nuclides(
+            structure_file_name, format);
+
+          // Insert all of these PDG codes into our master set
+          nucleus_pdg_codes.insert(all_PDGs.begin(), all_PDGs.end());
+        }
         // Other nuclide specifiers are not allowed
         else throw marley::Error(std::string("Invalid")
           + " nuclide specifier '" + arg

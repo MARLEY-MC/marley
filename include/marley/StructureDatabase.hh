@@ -32,6 +32,15 @@ namespace marley {
       void emplace_decay_scheme(int pdg, const std::string& filename,
         DecayScheme::FileFormat format = DecayScheme::FileFormat::talys);
 
+      /// @brief Create a set of Particle Data Group codes for every
+      /// nuclide in a discrete level data file
+      /// @param filename Name of the file that contains the discrete level
+      /// data
+      /// @param format DecayScheme::FileFormat specifier that indicates
+      /// which nuclear data format is used in the file
+      std::set<int> find_all_nuclides(const std::string& filename,
+        DecayScheme::FileFormat format);
+
       /// @brief Removes all previously stored data from the database.
       void clear();
 
