@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">v0.9.4</span>
+   &#160;<span id="projectnumber">v0.9.5</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino-nucleus interactions in liquid argon</div>
   </td>
@@ -109,13 +109,27 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:aa173ef9997442f9ddc26bfaeba861551"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa173ef9997442f9ddc26bfaeba861551"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#aa173ef9997442f9ddc26bfaeba861551">Generator</a> ()</td></tr>
+<tr class="memdesc:aa173ef9997442f9ddc26bfaeba861551"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a> using default settings. <br/></td></tr>
+<tr class="separator:aa173ef9997442f9ddc26bfaeba861551"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac968fb1aaea02733254ef469b8ca7c10"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#ac968fb1aaea02733254ef469b8ca7c10">Generator</a> (uint_fast64_t seed)</td></tr>
+<tr class="memdesc:ac968fb1aaea02733254ef469b8ca7c10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a> using default settings except for a given initial seed.  <a href="#ac968fb1aaea02733254ef469b8ca7c10">More...</a><br/></td></tr>
+<tr class="separator:ac968fb1aaea02733254ef469b8ca7c10"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1062c32d5f4bdf44fb5ac6668862c08f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1062c32d5f4bdf44fb5ac6668862c08f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#a1062c32d5f4bdf44fb5ac6668862c08f">Generator</a> (<a class="el" href="classmarley_1_1_configuration_file.html">marley::ConfigurationFile</a> &amp;cf)</td></tr>
-<tr class="memdesc:a1062c32d5f4bdf44fb5ac6668862c08f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a> using a ConfigFile object. <br/></td></tr>
+<tr class="memdesc:a1062c32d5f4bdf44fb5ac6668862c08f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a> using a <a class="el" href="classmarley_1_1_configuration_file.html" title="Parser for a MARLEY Generator configuration file.">ConfigurationFile</a> object. <br/></td></tr>
 <tr class="separator:a1062c32d5f4bdf44fb5ac6668862c08f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25e91c36a4b77164af1c2da02cdad5e0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#a25e91c36a4b77164af1c2da02cdad5e0">Generator</a> (const std::string &amp;filename)</td></tr>
 <tr class="memdesc:a25e91c36a4b77164af1c2da02cdad5e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a> using a configuration file.  <a href="#a25e91c36a4b77164af1c2da02cdad5e0">More...</a><br/></td></tr>
 <tr class="separator:a25e91c36a4b77164af1c2da02cdad5e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8edcb90a4b31df5a6be75777494adf7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#ae8edcb90a4b31df5a6be75777494adf7">add_reaction</a> (std::unique_ptr&lt; <a class="el" href="classmarley_1_1_reaction.html">marley::Reaction</a> &gt; reaction)</td></tr>
+<tr class="memdesc:ae8edcb90a4b31df5a6be75777494adf7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Take ownership of a new <a class="el" href="classmarley_1_1_reaction.html" title="Abstract base class that represents a two-two scattering reaction.">Reaction</a>.  <a href="#ae8edcb90a4b31df5a6be75777494adf7">More...</a><br/></td></tr>
+<tr class="separator:ae8edcb90a4b31df5a6be75777494adf7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ba16b994605ee1476556a34503701b1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0ba16b994605ee1476556a34503701b1"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#a0ba16b994605ee1476556a34503701b1">clear_reactions</a> ()</td></tr>
+<tr class="memdesc:a0ba16b994605ee1476556a34503701b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear the vector of <a class="el" href="classmarley_1_1_reaction.html" title="Abstract base class that represents a two-two scattering reaction.">Reaction</a> objects owned by this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a>. <br/></td></tr>
+<tr class="separator:a0ba16b994605ee1476556a34503701b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a034bfadb6d248690ad79d152f5eb6890"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a034bfadb6d248690ad79d152f5eb6890"></a>
 <a class="el" href="classmarley_1_1_event.html">marley::Event</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#a034bfadb6d248690ad79d152f5eb6890">create_event</a> ()</td></tr>
 <tr class="memdesc:a034bfadb6d248690ad79d152f5eb6890"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an <a class="el" href="classmarley_1_1_event.html" title="Container for ingoing and outgoing momentum 4-vectors from a reaction.">Event</a> using the <a class="el" href="classmarley_1_1_neutrino_source.html" title="Abstract base class for all objects that describe the incident neutrino energy distribution.">NeutrinoSource</a>, <a class="el" href="classmarley_1_1_reaction.html" title="Abstract base class that represents a two-two scattering reaction.">Reaction</a>, and <a class="el" href="classmarley_1_1_structure_database.html" title="Container for nuclear structure information organized by nuclide.">StructureDatabase</a> objects owned by this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a>. <br/></td></tr>
@@ -143,9 +157,9 @@ const std::vector<br class="typebreak"/>
 uint_fast64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#a07bbe1b4d8fb0d662fb676f86ef4f751">get_seed</a> () const </td></tr>
 <tr class="memdesc:a07bbe1b4d8fb0d662fb676f86ef4f751"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the seed used to initialize this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a>. <br/></td></tr>
 <tr class="separator:a07bbe1b4d8fb0d662fb676f86ef4f751"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25a099b72b758aa67094225aece4891f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classmarley_1_1_neutrino_source.html">marley::NeutrinoSource</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#a25a099b72b758aa67094225aece4891f">get_source</a> ()</td></tr>
-<tr class="memdesc:a25a099b72b758aa67094225aece4891f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a reference to the <a class="el" href="classmarley_1_1_neutrino_source.html" title="Abstract base class for all objects that describe the incident neutrino energy distribution.">NeutrinoSource</a> owned by this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a>.  <a href="#a25a099b72b758aa67094225aece4891f">More...</a><br/></td></tr>
-<tr class="separator:a25a099b72b758aa67094225aece4891f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa20398a63eb3a3875a5d45deb7d73db2"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classmarley_1_1_neutrino_source.html">marley::NeutrinoSource</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#aa20398a63eb3a3875a5d45deb7d73db2">get_source</a> ()</td></tr>
+<tr class="memdesc:aa20398a63eb3a3875a5d45deb7d73db2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a const reference to the <a class="el" href="classmarley_1_1_neutrino_source.html" title="Abstract base class for all objects that describe the incident neutrino energy distribution.">NeutrinoSource</a> owned by this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a>.  <a href="#aa20398a63eb3a3875a5d45deb7d73db2">More...</a><br/></td></tr>
+<tr class="separator:aa20398a63eb3a3875a5d45deb7d73db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab601b19ca2df9cb6465cefa9388080d5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab601b19ca2df9cb6465cefa9388080d5"></a>
 std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#ab601b19ca2df9cb6465cefa9388080d5">get_state_string</a> () const </td></tr>
 <tr class="memdesc:ab601b19ca2df9cb6465cefa9388080d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a string that represents the current internal state of this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a>. <br/></td></tr>
@@ -174,6 +188,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:ab36ae5a40f6720042588d00343c3308d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#ab36ae5a40f6720042588d00343c3308d">set_neutrino_direction</a> (const std::array&lt; double, 3 &gt; dir_vec)</td></tr>
 <tr class="memdesc:ab36ae5a40f6720042588d00343c3308d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the direction of the incident neutrinos to use when generating events.  <a href="#ab36ae5a40f6720042588d00343c3308d">More...</a><br/></td></tr>
 <tr class="separator:ab36ae5a40f6720042588d00343c3308d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e8e36e941afde379b66a76762a027b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#a0e8e36e941afde379b66a76762a027b3">set_source</a> (std::unique_ptr&lt; <a class="el" href="classmarley_1_1_neutrino_source.html">marley::NeutrinoSource</a> &gt; source)</td></tr>
+<tr class="memdesc:a0e8e36e941afde379b66a76762a027b3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Take ownership of a new <a class="el" href="classmarley_1_1_neutrino_source.html" title="Abstract base class for all objects that describe the incident neutrino energy distribution.">NeutrinoSource</a>, replacing any existing source owned by this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a>.  <a href="#a0e8e36e941afde379b66a76762a027b3">More...</a><br/></td></tr>
+<tr class="separator:a0e8e36e941afde379b66a76762a027b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f589845050dad9b4640ab25750db4ca"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_generator.html#a0f589845050dad9b4640ab25750db4ca">uniform_random_double</a> (double min, double max, bool inclusive)</td></tr>
 <tr class="memdesc:a0f589845050dad9b4640ab25750db4ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sample a random number uniformly on either [min, max) or [min, max].  <a href="#a0f589845050dad9b4640ab25750db4ca">More...</a><br/></td></tr>
 <tr class="separator:a0f589845050dad9b4640ab25750db4ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -181,6 +198,30 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The MARLEY <a class="el" href="classmarley_1_1_event.html" title="Container for ingoing and outgoing momentum 4-vectors from a reaction.">Event</a> generator. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a class="anchor" id="ac968fb1aaea02733254ef469b8ca7c10"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">marley::Generator::Generator </td>
+          <td>(</td>
+          <td class="paramtype">uint_fast64_t&#160;</td>
+          <td class="paramname"><em>seed</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a> using default settings except for a given initial seed. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">seed</td><td>The initial seed to use for this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a> </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="a25e91c36a4b77164af1c2da02cdad5e0"></a>
 <div class="memitem">
 <div class="memproto">
@@ -206,6 +247,30 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="ae8edcb90a4b31df5a6be75777494adf7"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void marley::Generator::add_reaction </td>
+          <td>(</td>
+          <td class="paramtype">std::unique_ptr&lt; <a class="el" href="classmarley_1_1_reaction.html">marley::Reaction</a> &gt;&#160;</td>
+          <td class="paramname"><em>reaction</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Take ownership of a new <a class="el" href="classmarley_1_1_reaction.html" title="Abstract base class that represents a two-two scattering reaction.">Reaction</a>. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">reaction</td><td>A pointer to the new <a class="el" href="classmarley_1_1_reaction.html" title="Abstract base class that represents a two-two scattering reaction.">Reaction</a> to use </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="a33eab85e138f03a61407188cbaf6aaec"></a>
 <div class="memitem">
 <div class="memproto">
@@ -232,12 +297,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 
 </div>
 </div>
-<a class="anchor" id="a25a099b72b758aa67094225aece4891f"></a>
+<a class="anchor" id="aa20398a63eb3a3875a5d45deb7d73db2"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classmarley_1_1_neutrino_source.html">marley::NeutrinoSource</a> &amp; marley::Generator::get_source </td>
+          <td class="memname">const <a class="el" href="classmarley_1_1_neutrino_source.html">marley::NeutrinoSource</a> &amp; marley::Generator::get_source </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -245,9 +310,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
       </table>
 </div><div class="memdoc">
 
-<p>Get a reference to the <a class="el" href="classmarley_1_1_neutrino_source.html" title="Abstract base class for all objects that describe the incident neutrino energy distribution.">NeutrinoSource</a> owned by this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a>. </p>
+<p>Get a const reference to the <a class="el" href="classmarley_1_1_neutrino_source.html" title="Abstract base class for all objects that describe the incident neutrino energy distribution.">NeutrinoSource</a> owned by this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a>. </p>
 <p>Throws a <a class="el" href="classmarley_1_1_error.html" title="Base class for all exceptions thrown by MARLEY functions.">marley::Error</a> if this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a> does not own a <a class="el" href="classmarley_1_1_neutrino_source.html" title="Abstract base class for all objects that describe the incident neutrino energy distribution.">NeutrinoSource</a> object. </p>
-<dl class="section note"><dt>Note</dt><dd>The sampling interval [Emin, Emax] for the incident neutrino energy distribution described by <a class="el" href="classmarley_1_1_neutrino_source.html#a5c67671b87f5e97e19dbc78be476307e" title="Probability density function describing the incident neutrino energy distribution.">marley::NeutrinoSource::pdf()</a> should not be changed using the reference returned by this function. Doing so could silently invalidate the normalization of <a class="el" href="classmarley_1_1_generator.html#a33eab85e138f03a61407188cbaf6aaec" title="Probability density function that describes the distribution of reacting neutrino energies...">E_pdf()</a>. This is currently impossible to do using the public interface of <a class="el" href="classmarley_1_1_neutrino_source.html" title="Abstract base class for all objects that describe the incident neutrino energy distribution.">marley::NeutrinoSource</a>, but future changes to the <a class="el" href="classmarley_1_1_neutrino_source.html" title="Abstract base class for all objects that describe the incident neutrino energy distribution.">NeutrinoSource</a> or <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a> classes should continue to protect against this possibility. </dd></dl>
 
 </div>
 </div>
@@ -382,6 +446,30 @@ If y &gt; f(x), reject the sampled x value, and return to step 2 to try again </
   </dd>
 </dl>
 <dl class="section note"><dt>Note</dt><dd>The dir_vec passed to this function does not need to be normalized, but it must have at least one nonzero element or a <a class="el" href="classmarley_1_1_error.html" title="Base class for all exceptions thrown by MARLEY functions.">marley::Error</a> will be thrown. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a0e8e36e941afde379b66a76762a027b3"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void marley::Generator::set_source </td>
+          <td>(</td>
+          <td class="paramtype">std::unique_ptr&lt; <a class="el" href="classmarley_1_1_neutrino_source.html">marley::NeutrinoSource</a> &gt;&#160;</td>
+          <td class="paramname"><em>source</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Take ownership of a new <a class="el" href="classmarley_1_1_neutrino_source.html" title="Abstract base class for all objects that describe the incident neutrino energy distribution.">NeutrinoSource</a>, replacing any existing source owned by this <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">Generator</a>. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">source</td><td>A pointer to the new <a class="el" href="classmarley_1_1_neutrino_source.html" title="Abstract base class for all objects that describe the incident neutrino energy distribution.">NeutrinoSource</a> to use </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

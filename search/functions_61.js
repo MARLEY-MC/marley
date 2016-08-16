@@ -6,6 +6,7 @@ var searchData=
   ['add_5fgamma',['add_gamma',['../classmarley_1_1_level.html#a54046eb6cd9f17ae6617a40a3275acd3',1,'marley::Level::add_gamma(const marley::Gamma &amp;gamma)'],['../classmarley_1_1_level.html#a28908ce685689326033ead42ce4c03d7',1,'marley::Level::add_gamma(double energy, double branching_ratio, marley::Level *end_lev=nullptr)']]],
   ['add_5finitial_5fparticle',['add_initial_particle',['../classmarley_1_1_event.html#a18fb53dc410c81f8b67bd2be35cbd9df',1,'marley::Event']]],
   ['add_5flevel',['add_level',['../classmarley_1_1_decay_scheme.html#a56078533e972a9542f27c5166b11944e',1,'marley::DecayScheme']]],
+  ['add_5freaction',['add_reaction',['../classmarley_1_1_generator.html#ae8edcb90a4b31df5a6be75777494adf7',1,'marley::Generator']]],
   ['add_5freaction_5ffilename',['add_reaction_filename',['../classmarley_1_1_configuration_file.html#afec6e05d1642526c7cef91942be5f21a',1,'marley::ConfigurationFile']]],
   ['add_5fstream',['add_stream',['../classmarley_1_1_logger.html#ac3ff4067da233c9e67389d46c94e1d35',1,'marley::Logger']]],
   ['at',['at',['../classmarley_1_1_interpolation_grid.html#a6c7c202255ea1d8869e5248fd750a7d7',1,'marley::InterpolationGrid']]]

@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">v0.9.4</span>
+   &#160;<span id="projectnumber">v0.9.5</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino-nucleus interactions in liquid argon</div>
   </td>
@@ -112,40 +112,43 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;      <span class="keywordtype">void</span> <a class="code" href="classmarley_1_1_structure_database.html#aaff1e208b98b70b8f22b7c8ce7adf080" title="Construct and add a DecayScheme object to the database that contains discrete level data for a specif...">emplace_decay_scheme</a>(<span class="keywordtype">int</span> pdg, <span class="keyword">const</span> std::string&amp; filename,</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;        <a class="code" href="classmarley_1_1_decay_scheme.html#aa75467c6e05ac55f00784c7cece8fd19" title="The FileFormat type is used to tell the DecayScheme class which format to assume when parsing a discr...">DecayScheme::FileFormat</a> format = DecayScheme::FileFormat::talys);</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;      <span class="keywordtype">void</span> <a class="code" href="classmarley_1_1_structure_database.html#af8e01aadc206f1f15494fb2fc3ec2d15" title="Removes all previously stored data from the database.">clear</a>();</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;      <span class="keywordtype">void</span> <a class="code" href="classmarley_1_1_structure_database.html#a0bddd33849b21670cef2968811e9ea88" title="Deletes the discrete level data in the database associated with a given nuclide.">remove_decay_scheme</a>(<span class="keywordtype">int</span> pdg);</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;      <a class="code" href="classmarley_1_1_decay_scheme.html" title="Discrete level and γ-ray data for a specific nuclide.">marley::DecayScheme</a>* <a class="code" href="classmarley_1_1_structure_database.html#aee50360e942b83d9ddba81675d48d1fc" title="Retrieves discrete level data from the database.">get_decay_scheme</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> particle_id);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;      <a class="code" href="classmarley_1_1_decay_scheme.html" title="Discrete level and γ-ray data for a specific nuclide.">marley::DecayScheme</a>* <a class="code" href="classmarley_1_1_structure_database.html#aee50360e942b83d9ddba81675d48d1fc" title="Retrieves discrete level data from the database.">get_decay_scheme</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> Z, <span class="keyword">const</span> <span class="keywordtype">int</span> A);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;      <a class="code" href="classmarley_1_1_optical_model.html" title="Abstract base class for nuclear optical model implementations.">marley::OpticalModel</a>&amp; <a class="code" href="classmarley_1_1_structure_database.html#a5f8c71d9a57616cf7b078eda3489a34b" title="Retrieves an optical model object from the database, creating it if one did not already exist...">get_optical_model</a>(<span class="keywordtype">int</span> nucleus_pid);</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;      <a class="code" href="classmarley_1_1_optical_model.html" title="Abstract base class for nuclear optical model implementations.">marley::OpticalModel</a>&amp; <a class="code" href="classmarley_1_1_structure_database.html#a5f8c71d9a57616cf7b078eda3489a34b" title="Retrieves an optical model object from the database, creating it if one did not already exist...">get_optical_model</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> Z,</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">int</span> A);</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;      <a class="code" href="classmarley_1_1_level_density_model.html" title="Abstract base class for models of nuclear level densities.">marley::LevelDensityModel</a>&amp; <a class="code" href="classmarley_1_1_structure_database.html#a28f42f5426aec1394c7fd9eecd2dbc9d" title="Retrieves a level density model object from the database, creating it if one did not already exist...">get_level_density_model</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> Z,</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">int</span> A);</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      <a class="code" href="classmarley_1_1_gamma_strength_function_model.html" title="Abstract base class for models of gamma-ray strength functions.">marley::GammaStrengthFunctionModel</a>&amp; <a class="code" href="classmarley_1_1_structure_database.html#a09d958d1cccc38c5e668fec25e061115" title="Retrieves a gamma-ray strength function model object from the database, creating it if one did not al...">get_gamma_strength_function_model</a>(</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">int</span> Z, <span class="keyword">const</span> <span class="keywordtype">int</span> A);</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;      std::set&lt;int&gt; <a class="code" href="classmarley_1_1_structure_database.html#a8aa3a193c5543dc1bf06034333cf1033" title="Create a set of Particle Data Group codes for every nuclide in a discrete level data file...">find_all_nuclides</a>(<span class="keyword">const</span> std::string&amp; filename,</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        <a class="code" href="classmarley_1_1_decay_scheme.html#aa75467c6e05ac55f00784c7cece8fd19" title="The FileFormat type is used to tell the DecayScheme class which format to assume when parsing a discr...">DecayScheme::FileFormat</a> format = DecayScheme::FileFormat::talys);</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;      <span class="keywordtype">void</span> <a class="code" href="classmarley_1_1_structure_database.html#af8e01aadc206f1f15494fb2fc3ec2d15" title="Removes all previously stored data from the database.">clear</a>();</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;      <span class="keywordtype">void</span> <a class="code" href="classmarley_1_1_structure_database.html#a0bddd33849b21670cef2968811e9ea88" title="Deletes the discrete level data in the database associated with a given nuclide.">remove_decay_scheme</a>(<span class="keywordtype">int</span> pdg);</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;      <a class="code" href="classmarley_1_1_decay_scheme.html" title="Discrete level and γ-ray data for a specific nuclide.">marley::DecayScheme</a>* <a class="code" href="classmarley_1_1_structure_database.html#aee50360e942b83d9ddba81675d48d1fc" title="Retrieves discrete level data from the database.">get_decay_scheme</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> particle_id);</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;      <a class="code" href="classmarley_1_1_decay_scheme.html" title="Discrete level and γ-ray data for a specific nuclide.">marley::DecayScheme</a>* <a class="code" href="classmarley_1_1_structure_database.html#aee50360e942b83d9ddba81675d48d1fc" title="Retrieves discrete level data from the database.">get_decay_scheme</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> Z, <span class="keyword">const</span> <span class="keywordtype">int</span> A);</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;      <a class="code" href="classmarley_1_1_optical_model.html" title="Abstract base class for nuclear optical model implementations.">marley::OpticalModel</a>&amp; <a class="code" href="classmarley_1_1_structure_database.html#a5f8c71d9a57616cf7b078eda3489a34b" title="Retrieves an optical model object from the database, creating it if one did not already exist...">get_optical_model</a>(<span class="keywordtype">int</span> nucleus_pid);</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;      <a class="code" href="classmarley_1_1_optical_model.html" title="Abstract base class for nuclear optical model implementations.">marley::OpticalModel</a>&amp; <a class="code" href="classmarley_1_1_structure_database.html#a5f8c71d9a57616cf7b078eda3489a34b" title="Retrieves an optical model object from the database, creating it if one did not already exist...">get_optical_model</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> Z,</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">int</span> A);</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;      <a class="code" href="classmarley_1_1_level_density_model.html" title="Abstract base class for models of nuclear level densities.">marley::LevelDensityModel</a>&amp; <a class="code" href="classmarley_1_1_structure_database.html#a28f42f5426aec1394c7fd9eecd2dbc9d" title="Retrieves a level density model object from the database, creating it if one did not already exist...">get_level_density_model</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> Z,</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">int</span> A);</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;      std::unordered_map&lt;int, std::unique_ptr&lt;marley::DecayScheme&gt; &gt;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        decay_scheme_table_;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;      std::unordered_map&lt;int, std::unique_ptr&lt;marley::OpticalModel&gt; &gt;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;        optical_model_table_;</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;      std::unordered_map&lt;int, std::unique_ptr&lt;marley::LevelDensityModel&gt; &gt;</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        level_density_table_;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;      std::unordered_map&lt;int, std::unique_ptr&lt;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;        <a class="code" href="classmarley_1_1_gamma_strength_function_model.html" title="Abstract base class for models of gamma-ray strength functions.">marley::GammaStrengthFunctionModel</a>&gt; &gt; gamma_strength_function_table_;</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  };</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;}</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;      <a class="code" href="classmarley_1_1_gamma_strength_function_model.html" title="Abstract base class for models of gamma-ray strength functions.">marley::GammaStrengthFunctionModel</a>&amp; <a class="code" href="classmarley_1_1_structure_database.html#a09d958d1cccc38c5e668fec25e061115" title="Retrieves a gamma-ray strength function model object from the database, creating it if one did not al...">get_gamma_strength_function_model</a>(</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">int</span> Z, <span class="keyword">const</span> <span class="keywordtype">int</span> A);</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      std::unordered_map&lt;int, std::unique_ptr&lt;marley::DecayScheme&gt; &gt;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;        decay_scheme_table_;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;      std::unordered_map&lt;int, std::unique_ptr&lt;marley::OpticalModel&gt; &gt;</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        optical_model_table_;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;      std::unordered_map&lt;int, std::unique_ptr&lt;marley::LevelDensityModel&gt; &gt;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;        level_density_table_;</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;      std::unordered_map&lt;int, std::unique_ptr&lt;</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        <a class="code" href="classmarley_1_1_gamma_strength_function_model.html" title="Abstract base class for models of gamma-ray strength functions.">marley::GammaStrengthFunctionModel</a>&gt; &gt; gamma_strength_function_table_;</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  };</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;}</div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

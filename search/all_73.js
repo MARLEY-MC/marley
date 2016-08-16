@@ -18,7 +18,7 @@ var searchData=
   ['set_5fpy',['set_py',['../classmarley_1_1_particle.html#a82a52996d9ed6a3b15cfd076133b518f',1,'marley::Particle']]],
   ['set_5fpz',['set_pz',['../classmarley_1_1_particle.html#a807daa08f2abe7dba6fc3b7b3339605d',1,'marley::Particle']]],
   ['set_5fseed',['set_seed',['../classmarley_1_1_configuration_file.html#a4cffc53e8a38d7b1f83ba19a8c7d9003',1,'marley::ConfigurationFile']]],
-  ['set_5fsource',['set_source',['../classmarley_1_1_configuration_file.html#a0ce2281511238c45179b1b8857ee6152',1,'marley::ConfigurationFile']]],
+  ['set_5fsource',['set_source',['../classmarley_1_1_configuration_file.html#a0ce2281511238c45179b1b8857ee6152',1,'marley::ConfigurationFile::set_source()'],['../classmarley_1_1_generator.html#a0e8e36e941afde379b66a76762a027b3',1,'marley::Generator::set_source()']]],
   ['set_5fstart_5flevel',['set_start_level',['../classmarley_1_1_gamma.html#aa3694e631435830d43a83a73e18f1ad7',1,'marley::Gamma']]],
   ['set_5ftotal_5fenergy',['set_total_energy',['../classmarley_1_1_particle.html#a4b5359afab7a2d03fcae8649f27beea2',1,'marley::Particle']]],
   ['set_5ftwoj',['set_twoJ',['../classmarley_1_1_level.html#a040f8d0abe8f9b4b997a46abb4a85b22',1,'marley::Level']]],

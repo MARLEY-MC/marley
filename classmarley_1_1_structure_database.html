@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">v0.9.4</span>
+   &#160;<span id="projectnumber">v0.9.5</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino-nucleus interactions in liquid argon</div>
   </td>
@@ -120,6 +120,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:aaff1e208b98b70b8f22b7c8ce7adf080"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_structure_database.html#aaff1e208b98b70b8f22b7c8ce7adf080">emplace_decay_scheme</a> (int pdg, const std::string &amp;filename, <a class="el" href="classmarley_1_1_decay_scheme.html#aa75467c6e05ac55f00784c7cece8fd19">DecayScheme::FileFormat</a> format=DecayScheme::FileFormat::talys)</td></tr>
 <tr class="memdesc:aaff1e208b98b70b8f22b7c8ce7adf080"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct and add a <a class="el" href="classmarley_1_1_decay_scheme.html" title="Discrete level and γ-ray data for a specific nuclide.">DecayScheme</a> object to the database that contains discrete level data for a specific nuclide.  <a href="#aaff1e208b98b70b8f22b7c8ce7adf080">More...</a><br/></td></tr>
 <tr class="separator:aaff1e208b98b70b8f22b7c8ce7adf080"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8aa3a193c5543dc1bf06034333cf1033"><td class="memItemLeft" align="right" valign="top">std::set&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_structure_database.html#a8aa3a193c5543dc1bf06034333cf1033">find_all_nuclides</a> (const std::string &amp;filename, <a class="el" href="classmarley_1_1_decay_scheme.html#aa75467c6e05ac55f00784c7cece8fd19">DecayScheme::FileFormat</a> format=DecayScheme::FileFormat::talys)</td></tr>
+<tr class="memdesc:a8aa3a193c5543dc1bf06034333cf1033"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a set of <a class="el" href="classmarley_1_1_particle.html" title="Momentum four-vector for a simulated particle.">Particle</a> Data Group codes for every nuclide in a discrete level data file.  <a href="#a8aa3a193c5543dc1bf06034333cf1033">More...</a><br/></td></tr>
+<tr class="separator:a8aa3a193c5543dc1bf06034333cf1033"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee50360e942b83d9ddba81675d48d1fc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classmarley_1_1_decay_scheme.html">marley::DecayScheme</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_structure_database.html#aee50360e942b83d9ddba81675d48d1fc">get_decay_scheme</a> (const int particle_id)</td></tr>
 <tr class="memdesc:aee50360e942b83d9ddba81675d48d1fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves discrete level data from the database.  <a href="#aee50360e942b83d9ddba81675d48d1fc">More...</a><br/></td></tr>
 <tr class="separator:aee50360e942b83d9ddba81675d48d1fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -180,6 +183,41 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">pdg</td><td>PDG code for the desired nuclide </td></tr>
+    <tr><td class="paramname">filename</td><td>Name of the file that contains the discrete level data </td></tr>
+    <tr><td class="paramname">format</td><td><a class="el" href="classmarley_1_1_decay_scheme.html#aa75467c6e05ac55f00784c7cece8fd19" title="The FileFormat type is used to tell the DecayScheme class which format to assume when parsing a discr...">DecayScheme::FileFormat</a> specifier that indicates which nuclear data format is used in the file </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a8aa3a193c5543dc1bf06034333cf1033"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::set&lt; int &gt; marley::StructureDatabase::find_all_nuclides </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>filename</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classmarley_1_1_decay_scheme.html#aa75467c6e05ac55f00784c7cece8fd19">DecayScheme::FileFormat</a>&#160;</td>
+          <td class="paramname"><em>format</em> = <code>DecayScheme::FileFormat::talys</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a set of <a class="el" href="classmarley_1_1_particle.html" title="Momentum four-vector for a simulated particle.">Particle</a> Data Group codes for every nuclide in a discrete level data file. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
     <tr><td class="paramname">filename</td><td>Name of the file that contains the discrete level data </td></tr>
     <tr><td class="paramname">format</td><td><a class="el" href="classmarley_1_1_decay_scheme.html#aa75467c6e05ac55f00784c7cece8fd19" title="The FileFormat type is used to tell the DecayScheme class which format to assume when parsing a discr...">DecayScheme::FileFormat</a> specifier that indicates which nuclear data format is used in the file </td></tr>
   </table>

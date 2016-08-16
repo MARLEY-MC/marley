@@ -13,10 +13,11 @@ var searchData=
   ['clear',['clear',['../classmarley_1_1_interpolation_grid.html#a43a7cfa50325b1886efd4fa458fff6aa',1,'marley::InterpolationGrid::clear()'],['../classmarley_1_1_structure_database.html#af8e01aadc206f1f15494fb2fc3ec2d15',1,'marley::StructureDatabase::clear()']]],
   ['clear_5fgammas',['clear_gammas',['../classmarley_1_1_level.html#ad42bf065b06427035b19574bad890df0',1,'marley::Level']]],
   ['clear_5freaction_5ffilenames',['clear_reaction_filenames',['../classmarley_1_1_configuration_file.html#afaabc64180cb4e4a5b9bbce41bf4df22',1,'marley::ConfigurationFile']]],
+  ['clear_5freactions',['clear_reactions',['../classmarley_1_1_generator.html#a0ba16b994605ee1476556a34503701b1',1,'marley::Generator']]],
   ['clear_5fstreams',['clear_streams',['../classmarley_1_1_logger.html#a976be270274bce15a7be5c8f8bdf991c',1,'marley::Logger']]],
-  ['configurationfile',['ConfigurationFile',['../classmarley_1_1_configuration_file.html',1,'marley']]],
   ['configurationfile',['ConfigurationFile',['../classmarley_1_1_configuration_file.html#ad2fdce138416ccb511303657d8c7b33c',1,'marley::ConfigurationFile::ConfigurationFile()'],['../classmarley_1_1_configuration_file.html#a04352d3f15c831c933e1aa7223017a13',1,'marley::ConfigurationFile::ConfigurationFile(const std::string &amp;file_name)']]],
-  ['continuumexitchannel',['ContinuumExitChannel',['../classmarley_1_1_continuum_exit_channel.html',1,'marley']]],
+  ['configurationfile',['ConfigurationFile',['../classmarley_1_1_configuration_file.html',1,'marley']]],
   ['continuumexitchannel',['ContinuumExitChannel',['../classmarley_1_1_continuum_exit_channel.html#a9727435714c5da00699bceb57629bb3f',1,'marley::ContinuumExitChannel']]],
+  ['continuumexitchannel',['ContinuumExitChannel',['../classmarley_1_1_continuum_exit_channel.html',1,'marley']]],
   ['create_5fevent',['create_event',['../classmarley_1_1_generator.html#a034bfadb6d248690ad79d152f5eb6890',1,'marley::Generator::create_event()'],['../classmarley_1_1_nuclear_reaction.html#a5d4fab7b35caf006478055e171028e63',1,'marley::NuclearReaction::create_event()'],['../classmarley_1_1_reaction.html#a374c98313cb2e5d254523cfc830f73e5',1,'marley::Reaction::create_event()']]]
 ];
