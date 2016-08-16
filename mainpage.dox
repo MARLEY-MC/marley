@@ -1,13 +1,13 @@
 /**
 @mainpage MARLEY documentation
 
-The source code for MARLEY v0.9.4 is available
-<a href="https://github.com/sjgardiner/marley/archive/v0.9.4.tar.gz">here</a>.
+The source code for MARLEY v0.9.5 is available
+<a href="https://github.com/sjgardiner/marley/archive/v0.9.5.tar.gz">here</a>.
 Build requirements: g++ >= 4.9 (or a recent version of clang) and GNU make
 
-The nuclear structure data that we recommend for use with MARLEY are available
-<a href="https://github.com/sjgardiner/marley-data/archive/v0.9.4.tar.gz">
-here</a>.
+The nuclear structure data that we recommend for use with MARLEY are
+taken from <a href="http://talys.eu">TALYS-1.6</a> and are available
+in the source code tar.gz file under the structure/ subdirectory.
 
 The beginning of a draft user manual is available <a
 href="https://ucdavis.box.com/shared/static/dfslb5q0zf4zd6c6maa8runu08litq9l.pdf">here</a>.
