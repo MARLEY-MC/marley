@@ -161,6 +161,7 @@ install:
 	cp libMARLEY* $(DESTDIR)$(libdir)
 	cp -r ../react $(DESTDIR)$(datadir)/marley
 	cp -r ../examples $(DESTDIR)$(datadir)/marley
+	cp -r ../structure $(DESTDIR)$(datadir)/marley
 	cp -r ../include/marley $(DESTDIR)$(incdir)
 
 uninstall:

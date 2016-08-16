@@ -8,7 +8,7 @@ MARLEY (Model of Argon Reaction Low Energy Yields) is a Monte Carlo event
 generator for tens-of-MeV neutrino-nucleus interactions in liquid argon. The
 current version includes matrix element evaluations for the charged-current
 reaction
-v<sub>e</sub> + <sup>40</sup>Ar &rarr; e<sup>&mdash;</sup> + <sup>40
+&nu;<sub>e</sub> + <sup>40</sup>Ar &rarr; e<sup>&mdash;</sup> + <sup>40
 </sup>K<sup>*</sup> only. With some additional matrix element
 evaluations, MARLEY could be expanded to include more reactions and more target
 nuclei. Users interested in creating reaction matrix element evaluations for
