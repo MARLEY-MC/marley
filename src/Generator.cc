@@ -8,7 +8,6 @@
 #include "marley/Logger.hh"
 #include "marley/NuclearReaction.hh"
 
-
 // The default constructor uses the system time as the seed and a
 // default-constructured monoenergetic neutrion source. No reactions are
 // defined, so the user must call add_reaction() at least once before using a
@@ -20,9 +19,22 @@ marley::Generator::Generator()
 {
   reseed(seed_);
 
-  // Print the MARLEY logo to the logger stream(s) when the first
-  // Generator instance is initialized. If other instances are created,
-  // don't reprint the logo.
+  print_logo();
+}
+
+// The seed-only constructor is like the default constructor, but it uses
+// a specific initial seed.
+marley::Generator::Generator(uint_fast64_t seed)
+  : seed_(seed), source_(new marley::MonoNeutrinoSource),
+  structure_db_(new marley::StructureDatabase), dir_vec_{0., 0., 1.}
+{
+  reseed(seed_);
+
+  print_logo();
+}
+
+// Print the MARLEY logo to the logger stream(s) if you haven't already.
+void marley::Generator::print_logo() {
   static bool printed_logo = false;
   if (!printed_logo) {
     MARLEY_LOG_INFO() << '\n' << marley_utils::marley_logo
@@ -32,8 +44,6 @@ marley::Generator::Generator()
       << "version " << marley_utils::MARLEY_VERSION << '\n';
     printed_logo = true;
   }
-
-  MARLEY_LOG_INFO() << "Seed for random number generator: " << seed_;
 }
 
 marley::Generator::Generator(marley::ConfigurationFile& cf) {
@@ -66,6 +76,8 @@ void marley::Generator::reseed(uint_fast64_t seed) {
   seed_ = seed;
   std::seed_seq seed_sequence{seed_};
   rand_gen_.seed(seed_sequence);
+
+  MARLEY_LOG_INFO() << "Seeded random number generator with " << seed_;
 }
 
 std::string marley::Generator::get_state_string() const {
@@ -161,17 +173,7 @@ void marley::Generator::init(marley::ConfigurationFile& cf) {
   // Print the MARLEY logo to the logger stream(s) when the first
   // Generator instance is initialized. If other instances are created,
   // don't reprint the logo.
-  static bool printed_logo = false;
-  if (!printed_logo) {
-    MARLEY_LOG_INFO() << '\n' << marley_utils::marley_logo
-      << "\nDon't worry about a thing,\n'Cause every little thing"
-      << " gonna be all right.\n-- Bob, \"Three Little Birds\"\n\n"
-      << "Model of Argon Reaction Low Energy Yields\n"
-      << "version " << marley_utils::MARLEY_VERSION << '\n';
-    printed_logo = true;
-  }
-
-  MARLEY_LOG_INFO() << "Seed for random number generator: " << seed_;
+  print_logo();
 
   // Initialize the incident neutrino direction settings using the direction
   // given in the configuration file

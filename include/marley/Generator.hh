@@ -21,6 +21,11 @@ namespace marley {
       /// @brief Create a Generator using default settings
       Generator();
 
+      /// @brief Create a Generator using default settings except for
+      /// a given initial seed
+      /// @param seed The initial seed to use for this Generator
+      Generator(uint_fast64_t seed);
+
       /// @brief Create a Generator using a ConfigurationFile object
       Generator(marley::ConfigurationFile& cf);
 
@@ -152,6 +157,10 @@ namespace marley {
       /// just before the finished event is returned by create_event().
       /// @param[in,out] ev Event whose Particle 3-vectors will be rotated
       void rotate_event(marley::Event& ev);
+
+      /// @brief Print the MARLEY logo (called once during construction of
+      /// the first Generator object) to any active Logger streams
+      void print_logo();
 
       /// @brief Seed for the random number generator
       uint_fast64_t seed_;
