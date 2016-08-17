@@ -1,24 +1,22 @@
 INCLUDE_DIR = ../include
 SRC_DIR = ../src
 
-# Set C++ compiler flags common to all build types
-CXXFLAGS = -std=c++14 -I$(INCLUDE_DIR) -Wall -Wextra -Wpedantic
-CXXFLAGS += -Werror -Wno-error=unused-parameter -Wcast-align
+ifndef CXX_FLAGS
+  CXX_FLAGS = -std=c++14 -O3
+endif
 
-# This Makefile provides three targets with different debugging
-# and optimization compiler flags. The default, "prof", enables
-# optimization but includes debugging information. The "debug"
-# target turns optimization off and, unsurprisingly, also includes
-# debugging information. The third, "opt", enables optimization
-# and omits debugging information.
-prof: CXXFLAGS += -O3 -g -fno-omit-frame-pointer -DNDEBUG
-prof: all
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+  SHARED_LIB_SUFFIX=dylib
+else ifeq ($(UNAME_S),Linux)
+  SHARED_LIB_SUFFIX=so
+else
+  $(warning Unrecognized operating system encountered.)
+  SHARED_LIB_SUFFIX=so
+endif
 
-debug: CXXFLAGS += -O0 -g
-debug: all
-
-opt: CXXFLAGS += -O3 -DNDEBUG
-opt: all
+SHARED_LIB_NAME := MARLEY
+SHARED_LIB := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
 
 all: marley $(SHARED_LIB) $(ROOT_SHARED_LIB)
 
@@ -29,6 +27,8 @@ ifneq ($(MAKECMDGOALS),uninstall)
  
   # Use g++ as the default compiler
   CXX = g++
+  CXXFLAGS = ${CXX_FLAGS} -I$(INCLUDE_DIR) -Wall -Wextra -Wpedantic
+  CXXFLAGS += -Werror -Wno-error=unused-parameter -Wcast-align
 
   # Add extra compiler flags for recognized compilers (currently just gcc
   # and clang)
@@ -43,9 +43,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
     # initialization of subobjects (overkill in the meta_numerics header)
     CXXFLAGS += -Wno-keyword-macro -Wno-missing-braces
   else
-    ifneq (,$(or $(findstring GCC,$(CXXVERSION)), \
-      $(findstring g++,$(CXXVERSION))))
-
+    ifneq (,$(or $(findstring GCC,$(CXXVERSION)), $(findstring g++,$(CXXVERSION))))
       # gcc
       $(info Compiling using version $(COMPILER_VERSION) of GCC)
       ifneq (,$(findstring $(COMPILER_VERSION), 4.9.))
@@ -56,29 +54,17 @@ ifneq ($(MAKECMDGOALS),uninstall)
       # Linking to ROOT libraries can be problematic on distributions (e.g.,
       # Ubuntu) that set the g++ flag -Wl,--as-needed by default (see
       # http://www.bnikolic.co.uk/blog/gnu-ld-as-needed.html for details), so
-      # disable this behavior
-      CXXFLAGS += -Wl,--no-as-needed
+      # disable this behavior on Linux.
+      ifneq ($(UNAME_S),Darwin)
+        CXXFLAGS += -Wl,--no-as-needed
+      endif
     endif
   endif
   
   OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
   OBJECTS := $(filter-out marley.o RootConfigurationFile.o, $(OBJECTS))
   
-  UNAME_S := $(shell uname -s)
-  ifeq ($(UNAME_S),Darwin)
-    SHARED_LIB_SUFFIX=dylib
-  else ifeq ($(UNAME_S),Linux)
-    SHARED_LIB_SUFFIX=so
-  else
-    $(warning Unrecognized operating system encountered.)
-    SHARED_LIB_SUFFIX=so
-  endif
-  
-  SHARED_LIB_NAME := MARLEY
-  SHARED_LIB := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
-  
   ROOTCONFIG := $(shell command -v root-config 2> /dev/null)
-
   # prefer rootcling as the dictionary generator executable name, but use
   # rootcint if you can't find it
   ROOTCLING := $(shell command -v rootcling 2> /dev/null)
@@ -136,7 +122,7 @@ libdir = $(exec_prefix)/lib
 incdir = $(prefix)/include
 
 %.o: $(SRC_DIR)/%.cc
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -fPIC -o $@ -c $^
+	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -I$(INCLUDE_DIR) -fPIC -o $@ -c $^
 
 $(SHARED_LIB): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -fPIC -shared -o \
@@ -150,7 +136,8 @@ marley: $(SHARED_LIB) $(ROOT_SHARED_LIB) marley.o
 .PHONY: clean install uninstall
 
 clean:
-	rm -f *.so *.o marley_root_dict*.* marley
+	rm -f *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
+	rm -rf *.dSYM
 
 install:
 	mkdir -p $(DESTDIR)$(bindir)
@@ -158,14 +145,14 @@ install:
 	mkdir -p $(DESTDIR)$(incdir)/marley
 	mkdir -p $(DESTDIR)$(datadir)/marley
 	cp marley $(DESTDIR)$(bindir)
-	cp libMARLEY* $(DESTDIR)$(libdir)
+	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
 	cp -r ../react $(DESTDIR)$(datadir)/marley
-	cp -r ../examples $(DESTDIR)$(datadir)/marley
 	cp -r ../structure $(DESTDIR)$(datadir)/marley
+	cp -r ../examples $(DESTDIR)$(datadir)/marley
 	cp -r ../include/marley $(DESTDIR)$(incdir)
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/marley
-	rm -f $(DESTDIR)$(libdir)/libMARLEY*
+	rm -f $(DESTDIR)$(libdir)/lib$(SHARED_LIB_NAME)*
 	rm -rf $(DESTDIR)$(datadir)/marley
 	rm -rf $(DESTDIR)$(incdir)/marley
