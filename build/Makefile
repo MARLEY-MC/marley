@@ -163,6 +163,7 @@ install:
 	cp -r ../structure $(DESTDIR)$(datadir)/marley
 	cp -r ../examples $(DESTDIR)$(datadir)/marley
 	cp -r ../include/marley $(DESTDIR)$(incdir)
+	ldconfig
 
 uninstall:
 	rm -f $(DESTDIR)$(bindir)/marley
@@ -171,6 +172,7 @@ uninstall:
 	rm -f $(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm
 	rm -rf $(DESTDIR)$(datadir)/marley
 	rm -rf $(DESTDIR)$(incdir)/marley
+	ldconfig
 
 remove_temporary_files:
 	rm -f *.o marley_root_dict.cc
