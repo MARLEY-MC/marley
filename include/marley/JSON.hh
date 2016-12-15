@@ -565,12 +565,31 @@ namespace marley {
       for (;;) {
 
         consume_ws(in);
+        JSON key;
+
         if ( in.peek() == '}' ) {
           in.ignore();
           return std::move(object);
         }
+        else if ( in.peek() == '\"' ) {
+          key = parse_next(in);
+        }
+        // The key isn't quoted, so assume it's a single word followed
+        // by a colon. Note that vanilla JSON requires all keys to be quoted,
+        // but Javascript object literals allow unquoted keys.
+        else {
+          std::string key_str;
+          char c;
+          while (in.get(c)) {
+            if (c == ':' || std::isspace(c)) {
+              in.putback(c);
+              break;
+            }
+            key_str += c;
+          }
+          key = key_str;
+        }
 
-        JSON key = parse_next(in);
         char next = get_next_char(in);
         if ( next != ':' ) {
           issue_parse_warning(next, "JSON object: Expected colon, found ");

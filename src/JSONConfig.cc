@@ -216,11 +216,9 @@ void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
       int Z = marley_utils::get_particle_Z(pdg);
       int A = marley_utils::get_particle_A(pdg);
 
-      std::string trimmed_nucid = marley_utils::trim_copy(
-        marley_utils::nuc_id(Z, A));
-
       MARLEY_LOG_INFO() << "Loading nuclear structure data for "
-        << trimmed_nucid << " from file " << filename;
+        << A << marley_utils::element_symbols.at(Z) << " from file "
+        << filename;
 
       sdb.emplace_decay_scheme(pdg, filename);
     }
