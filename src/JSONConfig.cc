@@ -1,4 +1,5 @@
 // standard library includes
+#include <chrono>
 #include <vector>
 
 // MARLEY includes
@@ -108,8 +109,17 @@ int marley::JSONConfig::neutrino_pdg(const std::string& nu) const {
 
 marley::Generator marley::JSONConfig::create_generator() const
 {
-  // Start with a default-constructed Generator
-  marley::Generator gen;
+  uint_fast64_t seed;
+  if (json_.has_key("seed")) {
+    bool ok;
+    seed = json_.at("seed").to_long(ok);
+    if (!ok) handle_json_error("seed", json_.at("seed"));
+  }
+  else seed = std::chrono::system_clock::now().time_since_epoch().count();
+
+  // Start with a default-constructed Generator seeded with either a
+  // user-supplied seed or the current number of seconds since the Unix epoch.
+  marley::Generator gen(seed);
 
   // Use the JSON settings to update the generator's parameters
   prepare_direction(gen);
