@@ -473,7 +473,7 @@ namespace marley {
     return std::move(JSON::make(JSON::DataType::Array));
   }
 
-  template <typename... T> JSON Array( T... args ) {
+  template <typename... T> JSON array( T... args ) {
     JSON arr = JSON::make(JSON::DataType::Array);
     arr.append(args...);
     return std::move(arr);
@@ -507,10 +507,10 @@ namespace marley {
 
       JSON object = JSON::make(JSON::DataType::Object);
 
-      consume_ws(in);
-      if ( in.peek() == '}' ) return std::move(object);
-
       for (;;) {
+        consume_ws(in);
+        if ( in.peek() == '}' ) return std::move(object);
+
         JSON key = parse_next(in);
         char next = get_next_char(in);
         if ( next != ':' ) {
@@ -539,10 +539,14 @@ namespace marley {
       JSON array = JSON::make(JSON::DataType::Array);
       unsigned index = 0;
 
-      consume_ws(in);
-      if (in.peek() == ']') return std::move(array);
-
       for (;;) {
+
+        consume_ws(in);
+        if (in.peek() == ']') {
+          in.ignore();
+          return std::move(array);
+        }
+
         array[index++] = parse_next(in);
         consume_ws(in);
 
