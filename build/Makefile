@@ -20,7 +20,7 @@ SHARED_LIB := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
 ROOT_SHARED_LIB_NAME := MARLEY_ROOT
 ROOT_SHARED_LIB := lib$(ROOT_SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
 
-all: marley
+all: marley remove_temporary_files
 
 # Skip lots of initialization if all we want is "make clean/install/uninstall"
 ifneq ($(MAKECMDGOALS),clean)
@@ -65,6 +65,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
   
   OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
   OBJECTS := $(filter-out marley.o RootConfigurationFile.o, $(OBJECTS))
+  OBJECTS := $(filter-out marley_root.o RootJSONConfig.o, $(OBJECTS))
   
   ROOTCONFIG := $(shell command -v root-config 2> /dev/null)
   # prefer rootcling as the dictionary generator executable name, but use
@@ -96,7 +97,8 @@ ifneq ($(MAKECMDGOALS),uninstall)
     USE_ROOT = yes
     ROOT_OBJ_DICT = marley_root_dict.o
     ROOT_SHARED_LIB_LDFLAGS := -l$(ROOT_SHARED_LIB_NAME)
-    ROOT_SHARED_LIB_OBJECTS = RootConfigurationFile.o $(ROOT_OBJ_DICT)
+    ROOT_SHARED_LIB_OBJECTS = marley_root.o RootConfigurationFile.o
+    ROOT_SHARED_LIB_OBJECTS += RootJSONConfig.o $(ROOT_OBJ_DICT)
   
 $(ROOT_OBJ_DICT):
 	rm -f marley_root_dict*.*
@@ -116,7 +118,7 @@ endif
 
 # Set up default variables for the install/uninstall targets and for setting
 # the executable rpath
-prefix = /usr/local
+prefix = /usr
 exec_prefix = $(prefix)
 bindir = $(exec_prefix)/bin
 datadir = $(prefix)/share
@@ -140,7 +142,9 @@ marley: $(MARLEY_LIBS) marley.o
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
 	  -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
 
-.PHONY: clean install uninstall
+.PHONY: clean install uninstall remove_temporaries
+
+.NOTPARALLEL: remove_temporaries
 
 clean:
 	rm -f *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
@@ -167,3 +171,6 @@ uninstall:
 	rm -f $(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm
 	rm -rf $(DESTDIR)$(datadir)/marley
 	rm -rf $(DESTDIR)$(incdir)/marley
+
+remove_temporary_files:
+	rm -f *.o marley_root_dict.cc

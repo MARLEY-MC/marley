@@ -121,23 +121,28 @@ double marley::DecayAtRestNeutrinoSource::pdf(double E) {
 /// @brief Method called near the end of construction to verify that the
 /// newly-created grid source object is valid.
 void marley::GridNeutrinoSource::check_for_errors() {
-  // @todo Check that energy grid values are nondecreasing
-  // @todo Check for at least one nonzero pair.second value
   size_t grid_size = grid_.size();
   if (grid_size < 2) throw marley::Error(std::string("Grid with")
     + " less than 2 gridpoints passed to the constructor of"
     + " marley::GridNeutrinoSource.");
+
+  double sum_of_PDs = 0.;
   for (size_t j = 0; j < grid_size; ++j) {
     auto& pair = grid_.at(j);
     if (pair.first < 0.) throw marley::Error(std::string("All energy")
       + " values used in a marley::GridNeutrinoSource"
       + " object must be nonnegative");
+
     // Prevent actually sampling an energy value of zero by advancing to
     // the next representable double value.
     else if (pair.first == 0.) pair.first = std::nextafter(0.,
       marley_utils::infinity);
     if (pair.second < 0.) throw marley::Error(std::string("All PDF")
-      + " values used in a marley::GridNeutrinoSource"
-      + " object must be nonnegative");
+      + " values used in a marley::GridNeutrinoSource object must be"
+      + " nonnegative");
+    else sum_of_PDs += pair.second;
   }
+
+  if (sum_of_PDs <= 0.) throw marley::Error(std::string("All probability")
+    + " density grid point values are zero for the neutrino source");
 }

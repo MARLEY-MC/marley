@@ -108,9 +108,18 @@ namespace marley {
         : interpolation_method_(interp_method),
         extrapolation_method_(extrap_method)
       {
-        /// @todo Add error checks for the supplied vectors
-        for (size_t j = 0; j < xs.size(); ++j)
+        if (xs.size() != ys.size()) throw marley::Error(
+          std::string("Vectors of x and y values passed to the constructor")
+          + " of marley::InterpolationGrid have unequal sizes.");
+
+        double old_x = marley_utils::minus_infinity;
+        for (size_t j = 0; j < xs.size(); ++j) {
+          double new_x = xs.at(j);
+          if (new_x <= old_x) throw marley::Error(std::string("The grid")
+            + " point x-values defined for a marley::InterpolationGrid object"
+            + " are not strictly increasing");
           ordered_pairs_.push_back(OrderedPair(xs.at(j), ys.at(j)));
+        }
       };
 
       /// @brief Compute y(x) using the current InterpolationMethod

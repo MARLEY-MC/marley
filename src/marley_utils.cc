@@ -475,6 +475,22 @@ bool marley_utils::string_to_neutrino_pdg(const std::string& str, int& pdg) {
   return true;
 }
 
+std::string marley_utils::neutrino_pdg_to_string(int pdg) {
+  if (pdg == marley_utils::ELECTRON_NEUTRINO)
+    return std::string("ve");
+  else if (pdg == marley_utils::ELECTRON_ANTINEUTRINO)
+    return std::string("vebar");
+  else if (pdg == marley_utils::MUON_NEUTRINO)
+    return std::string("vu");
+  else if (pdg == marley_utils::MUON_ANTINEUTRINO)
+    return std::string("vubar");
+  else if (pdg == marley_utils::TAU_NEUTRINO)
+    return std::string("vt");
+  else if (pdg == marley_utils::TAU_ANTINEUTRINO)
+    return std::string("vtbar");
+  else return std::string("?");
+}
+
 // Trim an ENSDF nucid string and make two-letter element symbols have a
 // lowercase last letter. Currently, no checking is done to see if the
 // string is a valid nucid.

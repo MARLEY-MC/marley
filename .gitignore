@@ -3,7 +3,6 @@
 *.root
 *.hepevt
 *.swp
-marley
 marley_root_dict.cc
 marley_root_dict.h
 E_lev*.pdf

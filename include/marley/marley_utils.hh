@@ -17,7 +17,7 @@
 namespace marley_utils {
 
   // MARLEY version string
-  constexpr const char* MARLEY_VERSION = "0.9.5";
+  constexpr const char* MARLEY_VERSION = "0.10.0";
 
   // Frequently used particle IDs
   constexpr int PHOTON = 22;
@@ -137,6 +137,11 @@ namespace marley_utils {
   /// @param[out] pdg PDG code of the requested neutrino
   /// @return Whether the conversion was successful (true) or not (false)
   bool string_to_neutrino_pdg(const std::string& str, int& pdg);
+
+  /// @brief Convert a neutrino PDG code to a string
+  /// @param pdg PDG code of the neutrino type to convert
+  /// @return String representing the given neutrino type
+  std::string neutrino_pdg_to_string(int pdg);
 
   // Take the square root of a number. Assume that a negative argument is
   // due to roundoff error and return zero in such cases rather than NaN.
