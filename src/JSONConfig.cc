@@ -112,7 +112,7 @@ marley::Generator marley::JSONConfig::create_generator() const
   uint_fast64_t seed;
   if (json_.has_key("seed")) {
     bool ok;
-    seed = json_.at("seed").to_long(ok);
+    seed = static_cast<uint_fast64_t>(json_.at("seed").to_long(ok));
     if (!ok) handle_json_error("seed", json_.at("seed"));
   }
   else seed = std::chrono::system_clock::now().time_since_epoch().count();

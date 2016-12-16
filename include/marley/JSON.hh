@@ -287,7 +287,7 @@ namespace marley {
         else return -1;
       }
 
-      bool has_key( const std::string &key ) const {
+      bool has_key(const std::string& key) const {
         if (type_ == DataType::Object)
           return data_.map_->find( key ) != data_.map_->end();
         else return false;
@@ -323,6 +323,13 @@ namespace marley {
         return ok ? std::move(json_escape(*data_.string_)) : std::string("");
       }
 
+      std::string to_string_or_throw() const {
+        bool ok;
+        std::string result = to_string(ok);
+        if (!ok) throw marley::Error("Failed to convert JSON value to string");
+        return result;
+      }
+
       double to_double() const {
         bool b;
         return to_double(b);
@@ -336,6 +343,14 @@ namespace marley {
         return 0.;
       }
 
+      double to_double_or_throw() const {
+        bool ok;
+        double result = to_double(ok);
+        if (!ok) throw marley::Error("Failed to convert JSON value '"
+          + to_string() + "' to double");
+        return result;
+      }
+
       long to_long() const {
         bool b;
         return to_long( b );
@@ -346,6 +361,14 @@ namespace marley {
         return ok ? data_.integer_ : 0;
       }
 
+      long to_long_or_throw() const {
+        bool ok;
+        double result = to_long(ok);
+        if (!ok) throw marley::Error("Failed to convert JSON value '"
+          + to_string() + "' to long");
+        return result;
+      }
+
       bool to_bool() const {
         bool b;
         return to_bool( b );
@@ -354,6 +377,14 @@ namespace marley {
       bool to_bool(bool& ok) const {
         ok = (type_ == DataType::Boolean);
         return ok ? data_.boolean_ : false;
+      }
+
+      bool to_bool_or_throw() const {
+        bool ok;
+        double result = to_bool(ok);
+        if (!ok) throw marley::Error("Failed to convert JSON value '"
+          + to_string() + "' to bool");
+        return result;
       }
 
       JSONWrapper<std::map<std::string,JSON> > object_range() {
@@ -426,6 +457,12 @@ namespace marley {
 
     private:
 
+      void check_if_object(const std::string& key) {
+        if (type_ != DataType::Object) throw marley::Error("Attempted"
+          " to retrieve a value for the key '" + key + " from a JSON primitive"
+          " that is not an object");
+      }
+
       void set_type(DataType type) {
         if (type == type_) return;
 
@@ -467,6 +504,92 @@ namespace marley {
         }
 
         type_ = type;
+      }
+
+    public:
+
+      // Attempts to get a floating point number from a JSON object with
+      // a given key. If the attempt fails, throw a marley::Error.
+      double get_double(const std::string& key) {
+        check_if_object(key);
+        if (has_key(key)) return this->at(key).to_double_or_throw();
+        else throw marley::Error("Missing JSON key '" + key + '\'');
+        return 0.;
+      }
+
+      // Attempts to get a floating point number from a JSON object with
+      // a given key. If the key doesn't exist, use a default value. If a
+      // conversion attempt fails, throw a marley::Error.
+      double get_double(const std::string& key, double default_value) {
+        check_if_object(key);
+        if (!has_key(key)) return default_value;
+        else return this->at(key).to_double_or_throw();
+      }
+
+      // Attempts to get an integer from a JSON object with
+      // a given key. If the attempt fails, throw a marley::Error.
+      long get_long(const std::string& key) {
+        check_if_object(key);
+        if (has_key(key)) return this->at(key).to_long_or_throw();
+        else throw marley::Error("Missing JSON key '" + key + '\'');
+        return 0.;
+      }
+
+      // Attempts to get an integer from a JSON object with
+      // a given key. If the key doesn't exist, use a default value. If a
+      // conversion attempt fails, throw a marley::Error.
+      long get_long(const std::string& key, long default_value) {
+        check_if_object(key);
+        if (!has_key(key)) return default_value;
+        else return this->at(key).to_long_or_throw();
+      }
+
+      // Attempts to get a bool from a JSON object with
+      // a given key. If the attempt fails, throw a marley::Error.
+      bool get_bool(const std::string& key) {
+        check_if_object(key);
+        if (has_key(key)) return this->at(key).to_bool_or_throw();
+        else throw marley::Error("Missing JSON key '" + key + '\'');
+        return 0.;
+      }
+
+      // Attempts to get a bool from a JSON object with
+      // a given key. If the key doesn't exist, use a default value. If a
+      // conversion attempt fails, throw a marley::Error.
+      bool get_bool(const std::string& key, bool default_value) {
+        check_if_object(key);
+        if (!has_key(key)) return default_value;
+        else return this->at(key).to_bool_or_throw();
+      }
+
+      // Attempts to get a string from a JSON object with
+      // a given key. If the attempt fails, throw a marley::Error.
+      std::string get_string(const std::string& key) {
+        check_if_object(key);
+        if (has_key(key)) return this->at(key).to_string_or_throw();
+        else throw marley::Error("Missing JSON key '" + key + '\'');
+        return std::string("");
+      }
+
+      // Attempts to get a string from a JSON object with
+      // a given key. If the key doesn't exist, use a default value. If a
+      // conversion attempt fails, throw a marley::Error.
+      std::string get_string(const std::string& key,
+        const std::string& default_value)
+      {
+        check_if_object(key);
+        if (!has_key(key)) return default_value;
+        else return this->at(key).to_string_or_throw();
+      }
+
+      // Copies a subobject from a JSON object with a given key. If the attempt
+      // fails, throw a marley::Error, unless the user asks us not to do so.
+      marley::JSON get_object(const std::string& key, bool throw_error = true)
+      {
+        check_if_object(key);
+        if (has_key(key)) return this->at(key);
+        else if (throw_error) marley::Error("Missing JSON key '" + key + '\'');
+        return std::move(JSON::make(JSON::DataType::Object));
       }
 
     private:
