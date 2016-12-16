@@ -123,8 +123,8 @@ marley::Generator marley::JSONConfig::create_generator() const
 
   // Use the JSON settings to update the generator's parameters
   prepare_direction(gen);
-  prepare_reactions(gen);
   prepare_structure(gen);
+  prepare_reactions(gen);
   prepare_neutrino_source(gen);
 
   return gen;
