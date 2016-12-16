@@ -127,7 +127,7 @@ marley::Generator marley::JSONConfig::create_generator() const
   prepare_structure(gen);
   prepare_neutrino_source(gen);
 
-  return std::move(gen);
+  return gen;
 }
 
 //------------------------------------------------------------------------------

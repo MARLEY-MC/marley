@@ -35,7 +35,7 @@ namespace marley {
         case '\t': output += "\\t";  break;
         default  : output += str[i]; break;
       }
-      return std::move(output);
+      return output;
     }
   }
 
@@ -315,12 +315,12 @@ namespace marley {
 
       std::string to_string() const {
         bool b;
-        return std::move(to_string(b));
+        return to_string(b);
       }
 
       std::string to_string(bool& ok) const {
         ok = (type_ == DataType::String);
-        return ok ? std::move(json_escape(*data_.string_)) : std::string("");
+        return ok ? json_escape(*data_.string_) : std::string("");
       }
 
       std::string to_string_or_throw() const {
@@ -589,7 +589,7 @@ namespace marley {
         check_if_object(key);
         if (has_key(key)) return this->at(key);
         else if (throw_error) marley::Error("Missing JSON key '" + key + '\'');
-        return std::move(JSON::make(JSON::DataType::Object));
+        return JSON::make(JSON::DataType::Object);
       }
 
     private:
@@ -598,17 +598,17 @@ namespace marley {
   };
 
   JSON array() {
-    return std::move(JSON::make(JSON::DataType::Array));
+    return JSON::make(JSON::DataType::Array);
   }
 
   template <typename... T> JSON array( T... args ) {
     JSON arr = JSON::make(JSON::DataType::Array);
     arr.append(args...);
-    return std::move(arr);
+    return arr;
   }
 
   JSON object() {
-    return std::move(JSON::make(JSON::DataType::Object));
+    return JSON::make(JSON::DataType::Object);
   }
 
   namespace {
@@ -692,7 +692,7 @@ namespace marley {
 
         if ( in.peek() == '}' ) {
           in.ignore();
-          return std::move(object);
+          return object;
         }
         else if ( in.peek() == '\"' ) {
           key = parse_next(in);
@@ -732,7 +732,7 @@ namespace marley {
         }
       }
 
-      return std::move(object);
+      return object;
     }
 
     JSON parse_array(std::istream& in) {
@@ -744,7 +744,7 @@ namespace marley {
         consume_ws(in);
         if (in.peek() == ']') {
           in.ignore();
-          return std::move(array);
+          return array;
         }
 
         array[index++] = parse_next(in);
@@ -756,11 +756,11 @@ namespace marley {
         else {
           issue_parse_warning(next, "JSON array: Expected ',' or ']'"
             ", found ");
-          return std::move(JSON::make(JSON::DataType::Array));
+          return JSON::make(JSON::DataType::Array);
         }
       }
 
-      return std::move(array);
+      return array;
     }
 
     JSON parse_string(std::istream& in) {
@@ -786,7 +786,7 @@ namespace marley {
                 else {
                   issue_parse_warning(c, "JSON string: Expected hex character"
                     " in unicode escape, found ");
-                  return std::move(JSON::make(JSON::DataType::String));
+                  return JSON::make(JSON::DataType::String);
                 }
               }
               break;
@@ -797,7 +797,7 @@ namespace marley {
         else val += c;
       }
       str = val;
-      return std::move(str);
+      return str;
     }
 
     //FIXME
@@ -827,7 +827,7 @@ namespace marley {
           else if ( !std::isspace( c ) && c != ',' && c != ']' && c != '}' ) {
             issue_parse_warning(c, "JSON number: Expected a number for"
               " exponent, found ");
-            return std::move(JSON::make(JSON::DataType::Null));
+            return JSON::make(JSON::DataType::Null);
           }
           else
             break;
@@ -836,7 +836,7 @@ namespace marley {
       }
       else if ( !std::isspace( c ) && c != ',' && c != ']' && c != '}' ) {
         issue_parse_warning(c, "JSON number: unexpected character ");
-        return std::move(JSON::make(JSON::DataType::Null));
+        return JSON::make(JSON::DataType::Null);
       }
       in.putback(c);
 
@@ -848,7 +848,7 @@ namespace marley {
         else
           Number = std::stol( val );
       }
-      return std::move( Number );
+      return  Number ;
     }
 
     JSON parse_bool(std::istream& in, char old) {
@@ -865,9 +865,9 @@ namespace marley {
       if (b.type() == JSON::DataType::Null) {
         issue_parse_warning("JSON bool: Expected 'true' or 'false', found ",
           s, in);
-        return std::move(JSON::make(JSON::DataType::Null));
+        return JSON::make(JSON::DataType::Null);
       }
-      return std::move(b);
+      return b;
     }
 
     JSON parse_null(std::istream& in) {
@@ -876,23 +876,23 @@ namespace marley {
       for (size_t i = 0; i < 3; ++i) s += in.get();
       if ( s != "null") {
         issue_parse_warning("JSON null: Expected 'null', found ", s, in);
-        return std::move(JSON::make(JSON::DataType::Null));
+        return JSON::make(JSON::DataType::Null);
       }
-      return std::move(null);
+      return null;
     }
 
     JSON parse_next(std::istream& in) {
       char value = get_next_char(in);
       switch(value) {
-        case '[' : return std::move(parse_array(in));
-        case '{' : return std::move(parse_object(in));
-        case '\"': return std::move(parse_string(in));
+        case '[' : return parse_array(in);
+        case '{' : return parse_object(in);
+        case '\"': return parse_string(in);
         case 't' :
-        case 'f' : return std::move(parse_bool(in, value));
-        case 'n' : return std::move(parse_null(in));
+        case 'f' : return parse_bool(in, value);
+        case 'n' : return parse_null(in);
         default  :
           if ((value <= '9' && value >= '0') || value == '-')
-            return std::move(parse_number(in, value));
+            return parse_number(in, value);
       }
       // Exit gracefully if there was a problem, but complain a bit.
       if (!in) MARLEY_LOG_WARNING() << "Unexpected end of JSON configuration"
@@ -908,12 +908,12 @@ namespace marley {
     if (in.good()) return load(in);
     else {
       std::cerr << "Couldn't open the file '" << filename << "'\n";
-      return std::move(JSON::make(JSON::DataType::Null));
+      return JSON::make(JSON::DataType::Null);
     }
   }
 
   JSON JSON::load(std::istream& in) {
-    return std::move(parse_next(in));
+    return parse_next(in);
   }
 
   JSON JSON::load(const std::string& str) {
@@ -930,6 +930,6 @@ std::ostream& operator<<(std::ostream &os, const marley::JSON& json) {
 }
 
 std::istream& operator>>(std::istream &is, marley::JSON& json) {
-  json = std::move(marley::JSON::load(is));
+  json = marley::JSON::load(is);
   return is;
 }

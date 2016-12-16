@@ -2,13 +2,13 @@
 
 #include "marley/marley_root.hh"
 
-std::unique_ptr<marley::NeutrinoSource>
+std::unique_ptr<marley::GridNeutrinoSource>
   marley_root::make_root_neutrino_source(int pdg_code, const TH1* th1)
 {
   if (!th1) {
     throw marley::Error(std::string("Null TH1* passed")
       + " to marley_root::make_root_neutrino_source");
-    return std::unique_ptr<marley::NeutrinoSource>(nullptr);
+    return std::unique_ptr<marley::GridNeutrinoSource>(nullptr);
   }
 
   // Read in the (energy low edge, bin weight) ordered pairs. Keep the
@@ -51,13 +51,13 @@ std::unique_ptr<marley::NeutrinoSource>
   return source;
 }
 
-std::unique_ptr<marley::NeutrinoSource>
+std::unique_ptr<marley::GridNeutrinoSource>
   marley_root::make_root_neutrino_source(int pdg_code, const TGraph* tg)
 {
   if (!tg) {
     throw marley::Error(std::string("Null TGraph* passed")
       + " to marley_root::make_root_neutrino_source");
-    return std::unique_ptr<marley::NeutrinoSource>(nullptr);
+    return std::unique_ptr<marley::GridNeutrinoSource>(nullptr);
   }
 
   size_t num_points = tg->GetN();

@@ -24,10 +24,10 @@ namespace marley_root {
   template<typename T> T* get_root_object(const std::string& tfile_name,
     const std::string& namecycle);
 
-  std::unique_ptr<marley::NeutrinoSource>
+  std::unique_ptr<marley::GridNeutrinoSource>
     make_root_neutrino_source(int pdg_code, const TH1* th1);
 
-  std::unique_ptr<marley::NeutrinoSource>
+  std::unique_ptr<marley::GridNeutrinoSource>
     make_root_neutrino_source(int pdg_code, const TGraph* tgraph);
 }
 
