@@ -104,8 +104,9 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
     // order of ascending energy.
     double energy, strength, strength_id;
     iss >> energy >> strength >> strength_id;
-    if (old_energy >= energy) throw marley::Error(std::string("Invalid reaction dataset. ")
-      + "Level energies must be unique and must be given in ascending order.");
+    if (old_energy >= energy) throw marley::Error(std::string("Invalid")
+      + " reaction dataset. Level energies must be unique and must be"
+      + " given in ascending order.");
     residue_level_energies_.push_back(energy);
     residue_level_strengths_.push_back(strength);
     residue_level_strength_ids_.push_back(strength_id);
@@ -135,7 +136,8 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
 void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
 
   if (ds == nullptr) throw marley::Error(std::string("Null pointer")
-    + " passed to marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds)");
+    + " passed to marley::NuclearReaction::set_decay_scheme(marley::Decay"
+    + "Scheme* ds)");
 
   // Check to see if the decay scheme being associated with this
   // reaction is for the correct nuclide. If the PDG code in the decay
@@ -153,13 +155,14 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
   // levels. Before looking them up, start by setting the unbound threshold to
   // infinity.
   double unbound_threshold = std::numeric_limits<double>::max();
-  MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << std::endl;
+  MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << '\n';
   for (const auto& f : marley::HauserFeshbachDecay::get_fragments()) {
     double thresh = marley::HauserFeshbachDecay
       ::get_fragment_emission_threshold(Zf_, Af_, f);
-    MARLEY_LOG_DEBUG() << f.get_pid() << " emission threshold = " << thresh << std::endl;
+    MARLEY_LOG_DEBUG() << f.get_pid() << " emission threshold = " << thresh
+      << '\n';
     if (thresh < unbound_threshold) unbound_threshold = thresh;
-    MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << std::endl;
+    MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << '\n';
   }
 
   // Cycle through each of the level energies given in the reaction dataset.
@@ -167,9 +170,9 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
   {
     double en = residue_level_energies_.at(j);
     // If the level is above the fragment emission threshold, assign it a null
-    // level pointer. Such levels will be handled by a fragment evaporation routine
-    // and therefore do not need pointers to level objects describing their
-    // de-excitation gammas.
+    // level pointer. Such levels will be handled by a fragment evaporation
+    // routine and therefore do not need pointers to level objects describing
+    // their de-excitation gammas.
     if (en > unbound_threshold) {
       residue_level_pointers_.at(j) = nullptr;
       continue;
@@ -205,8 +208,8 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
 // Fermi function used to calculate cross-sections
 // The form used here is based on http://en.wikipedia.org/wiki/Beta_decay
 // but rewritten for convenient use inside this class.
-// Input: beta_c (3-momentum magnitude of particle c / total energy of particle c),
-// where we assume that the ejectile (particle c) is the light product from
+// Input: beta_c (3-momentum magnitude of particle c / total energy of particle
+// c), where we assume that the ejectile (particle c) is the light product from
 // 2-2 scattering.
 double marley::NuclearReaction::fermi_function(double beta_c) const {
 
@@ -263,8 +266,8 @@ double marley::NuclearReaction::threshold_kinetic_energy() const {
   return KEa_threshold_;
 }
 
-// Creates an event object by sampling the appropriate
-// quantities and performing kinematic calculations
+// Creates an event object by sampling the appropriate quantities and
+// performing kinematic calculations
 marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   marley::Generator& gen)
 {
@@ -340,8 +343,8 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
       // don't have to do that ourselves.
       xs = total_xs(level_energy, KEa, matrix_el);
       if (std::isnan(xs)) {
-        MARLEY_LOG_WARNING() << "Partial cross section for reaction " << description_
-          << " gave NaN result.";
+        MARLEY_LOG_WARNING() << "Partial cross section for reaction "
+          << description_ << " gave NaN result.";
         MARLEY_LOG_DEBUG() << "Parameters were level energy = " << level_energy
           << " MeV, projectile kinetic energy = " << KEa
           << " MeV, and matrix element = " << matrix_el;
@@ -411,8 +414,8 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   // Sample a CM frame scattering cosine for the ejectile.
   //double matrix_el = residue_level_strengths.at(l_index);
   int m_type = residue_level_strength_ids_.at(l_index);
-  double cos_theta_c_cm = sample_cos_theta_c_cm(/*matrix_el,*/ m_type, beta_c_cm,
-    gen);
+  double cos_theta_c_cm = sample_cos_theta_c_cm(/*matrix_el,*/ m_type,
+    beta_c_cm, gen);
 
   // Sample a CM frame azimuthal scattering angle (phi) uniformly on [0, 2*pi).
   // We can do this because the matrix elements are azimuthally invariant
@@ -518,8 +521,9 @@ double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
 
     if (matrix_el != 0.) {
       // If the matrix element is nonzero, assign a weight to this level equal
-      // to the total reaction cross section. Note that std::discrete_distribution
-      // automatically normalizes the weights, so we don't have to do that ourselves.
+      // to the total reaction cross section. Note that
+      // std::discrete_distribution automatically normalizes the weights, so we
+      // don't have to do that ourselves.
       double md2 = std::pow(md_gs_ + level_energy, 2);
 
       // Compute Mandelstam s (the square of the total CM frame energy)
