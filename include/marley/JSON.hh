@@ -202,15 +202,31 @@ namespace marley {
 
       JSON(std::nullptr_t) : data_(), type_(DataType::Null) {}
 
-      static JSON make(DataType type) {
+      static inline JSON make(DataType type) {
         JSON ret;
         ret.set_type(type);
         return ret;
       }
 
-      static JSON load(const std::string& s);
-      static JSON load(std::istream& is);
-      static JSON load_file(const std::string& s);
+      static inline JSON array() {
+        return JSON::make(JSON::DataType::Array);
+      }
+
+      template <typename... T>
+        static JSON array( T... args )
+      {
+        JSON arr = JSON::make(JSON::DataType::Array);
+        arr.append(args...);
+        return arr;
+      }
+
+      static inline JSON object() {
+        return JSON::make(JSON::DataType::Object);
+      }
+
+      static inline JSON load(const std::string& s);
+      static inline JSON load(std::istream& is);
+      static inline JSON load_file(const std::string& s);
 
       template <typename T> void append(T arg) {
         set_type(DataType::Array);
@@ -597,20 +613,6 @@ namespace marley {
       DataType type_ = DataType::Null;
   };
 
-  JSON array() {
-    return JSON::make(JSON::DataType::Array);
-  }
-
-  template <typename... T> JSON array( T... args ) {
-    JSON arr = JSON::make(JSON::DataType::Array);
-    arr.append(args...);
-    return arr;
-  }
-
-  JSON object() {
-    return JSON::make(JSON::DataType::Object);
-  }
-
   namespace {
 
     JSON parse_next(std::istream&);
@@ -903,7 +905,7 @@ namespace marley {
     }
   }
 
-  JSON JSON::load_file(const std::string& filename) {
+  inline JSON JSON::load_file(const std::string& filename) {
     std::ifstream in(filename);
     if (in.good()) return load(in);
     else {
@@ -912,11 +914,11 @@ namespace marley {
     }
   }
 
-  JSON JSON::load(std::istream& in) {
+  inline JSON JSON::load(std::istream& in) {
     return parse_next(in);
   }
 
-  JSON JSON::load(const std::string& str) {
+  inline JSON JSON::load(const std::string& str) {
     std::stringstream iss(str);
     return load(iss);
   }
@@ -924,12 +926,12 @@ namespace marley {
 }
 
 // Stream operators for JSON input and output using C++ streams
-std::ostream& operator<<(std::ostream &os, const marley::JSON& json) {
+inline std::ostream& operator<<(std::ostream &os, const marley::JSON& json) {
   os << json.dump_string();
   return os;
 }
 
-std::istream& operator>>(std::istream &is, marley::JSON& json) {
+inline std::istream& operator>>(std::istream &is, marley::JSON& json) {
   json = marley::JSON::load(is);
   return is;
 }

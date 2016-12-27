@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "marley/marley_utils.hh"
+#include "marley/JSON.hh"
 #include "marley/Particle.hh"
 
 marley::Particle::Particle() : four_momentum_{0., 0., 0., 0.} {}
@@ -52,4 +53,16 @@ double marley::Particle::kinetic_energy() const {
 void marley::Particle::print(std::ostream& out) const {
   out << pdg_code_ << ' ' << four_momentum_[0] << ' ' << four_momentum_[1]
     << ' ' << four_momentum_[2] << ' ' << four_momentum_[3];
+}
+
+marley::JSON marley::Particle::to_json() const {
+  marley::JSON particle = marley::JSON::object();
+  particle["pdg"] = pdg_code_;
+  particle["E"] = four_momentum_[0];
+  particle["px"] = four_momentum_[1];
+  particle["py"] = four_momentum_[2];
+  particle["pz"] = four_momentum_[3];
+  particle["mass"] = mass_;
+  particle["charge"] = charge_;
+  return particle;
 }

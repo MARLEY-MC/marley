@@ -6,6 +6,12 @@
 
 namespace marley {
 
+  // Forward declare the JSON class so that we can define a function that
+  // creates a JSON representation of a Event. Avoid including the JSON.hh
+  // header so that we won't have issues using marley::Event objects with
+  // ROOT 5.
+  class JSON;
+
   /// @brief Container for ingoing and outgoing momentum 4-vectors from a
   /// reaction
   /// @details For a two-two scattering reaction a + b &rarr; c + d, this class
@@ -114,6 +120,9 @@ namespace marley {
       /// @brief Print this event to a std::ostream
       /// @param out The std::ostream to which this event will be written
       void print(std::ostream& out) const;
+
+      /// @brief Create a JSON representation of this event
+      marley::JSON to_json() const;
 
     protected:
 

@@ -4,6 +4,7 @@
 
 #include "marley/Error.hh"
 #include "marley/Event.hh"
+#include "marley/JSON.hh"
 
 // Local constants used only within this file
 namespace {
@@ -197,4 +198,20 @@ void marley::Event::write_hepevt(size_t event_num, std::ostream& out) {
   out << event_num  << ' ' << final_particles_.size() + 1 << '\n';
   dump_hepevt_particle(*initial_particles_.at(PROJECTILE_INDEX), out, false);
   for (const auto fp : final_particles_) dump_hepevt_particle(*fp, out, true);
+}
+
+marley::JSON marley::Event::to_json() const {
+  marley::JSON event = marley::JSON::object();
+
+  event["Ex"] = Ex_;
+  event["initial_particles"] = marley::JSON::array();
+  event["final_particles"] = marley::JSON::array();
+
+  for (const auto ip : initial_particles_)
+    event.at("initial_particles").append(ip->to_json());
+
+  for (const auto fp : final_particles_)
+    event.at("final_particles").append(fp->to_json());
+
+  return event;
 }

@@ -1,7 +1,14 @@
 #pragma once
 #include <fstream>
 
+
 namespace marley {
+
+  // Forward declare the JSON class so that we can define a function that
+  // creates a JSON representation of a Particle. Avoid including the JSON.hh
+  // header so that we won't have issues using marley::Particle objects with
+  // ROOT 5.
+  class JSON;
 
   /// @brief Momentum four-vector for a simulated particle
   class Particle {
@@ -99,6 +106,9 @@ namespace marley {
 
       /// @brief Print information about this particle to a std::ostream
       void print(std::ostream& out) const;
+
+      /// @brief Create a JSON representation of this Particle
+      marley::JSON to_json() const;
 
     protected:
 
