@@ -20,11 +20,18 @@ SHARED_LIB := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
 ROOT_SHARED_LIB_NAME := MARLEY_ROOT
 ROOT_SHARED_LIB := lib$(ROOT_SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
 
-all: marley remove_temporary_files
+# Using this form for the "all" target allows us to build marley using parallel
+# jobs while forcing the removal of temporary files only after the build is
+# complete. See http://stackoverflow.com/a/8496739/4081973 for more
+# information.
+all:
+	$(MAKE) marley
+	$(MAKE) remove_temporary_files
 
-# Skip lots of initialization if all we want is "make clean/install/uninstall"
+# Skip lots of initialization if all we want is
+# "make clean/uninstall/remove_temporary_files"
+ifneq ($(MAKECMDGOALS),remove_temporary_files)
 ifneq ($(MAKECMDGOALS),clean)
-ifneq ($(MAKECMDGOALS),install)
 ifneq ($(MAKECMDGOALS),uninstall)
  
   # Use g++ as the default compiler
@@ -142,15 +149,13 @@ marley: $(MARLEY_LIBS) marley.o
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
 	  -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
 
-.PHONY: clean install uninstall remove_temporaries
-
-.NOTPARALLEL: remove_temporaries
+.PHONY: clean install uninstall remove_temporary_files
 
 clean:
 	rm -f *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
 	rm -rf *.dSYM
 
-install:
+install: all
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(incdir)/marley
