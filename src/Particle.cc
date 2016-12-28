@@ -50,9 +50,16 @@ double marley::Particle::kinetic_energy() const {
   return std::max(four_momentum_[0] - mass_, 0.);
 }
 
+/// @note Although marley::Event::print() guarantees full precision for
+/// stream output, this function does not if it is called directly. If you
+/// need to serialize individual particle objects to text and read them
+/// back in again, either use an output stream with the proper precision
+/// set in advance (at least std::numeric_limits<double>::max_digits10),
+/// or consider using JSON input/output.
 void marley::Particle::print(std::ostream& out) const {
   out << pdg_code_ << ' ' << four_momentum_[0] << ' ' << four_momentum_[1]
-    << ' ' << four_momentum_[2] << ' ' << four_momentum_[3];
+    << ' ' << four_momentum_[2] << ' ' << four_momentum_[3]
+    << ' ' << mass_ << ' ' << charge_;
 }
 
 marley::JSON marley::Particle::to_json() const {

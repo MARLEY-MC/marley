@@ -168,9 +168,19 @@ void marley::Event::add_final_particle(const marley::Particle& p)
 }
 
 void marley::Event::print(std::ostream& out) const {
-  if (initial_particles_.empty()) return;
-  out << *initial_particles_.at(PROJECTILE_INDEX) << '\n';
-  for (const auto p : final_particles_) out << *p << '\n';
+  // Use an temporary ostringstream object so that we can ensure all
+  // floating-point values are output with full precision without disturbing
+  // the user's settings in the "out" stream.
+  std::ostringstream temp;
+  temp.precision(std::numeric_limits<double>::max_digits10);
+
+  temp << initial_particles_.size() << ' ' << final_particles_.size()
+    << ' ' << Ex_ << '\n';
+
+  for (const auto i : initial_particles_) temp << *i << '\n';
+  for (const auto f : final_particles_) temp << *f << '\n';
+
+  out << temp.str();
 }
 
 // Function that dumps a marley::Particle to an output stream in HEPEvt format.
@@ -178,6 +188,8 @@ void marley::Event::print(std::ostream& out) const {
 void marley::Event::dump_hepevt_particle(const marley::Particle& p,
   std::ostream& os, bool track)
 {
+  // Print the flag that indicates whether the particle should be tracked
+  // (i.e., it is a final particle) or not
   if (track) os << "1 ";
   else os << "0 ";
 
@@ -194,10 +206,22 @@ void marley::Event::dump_hepevt_particle(const marley::Particle& p,
 }
 
 void marley::Event::write_hepevt(size_t event_num, std::ostream& out) {
-  out << std::setprecision(16) << std::scientific;
-  out << event_num  << ' ' << final_particles_.size() + 1 << '\n';
-  dump_hepevt_particle(*initial_particles_.at(PROJECTILE_INDEX), out, false);
-  for (const auto fp : final_particles_) dump_hepevt_particle(*fp, out, true);
+
+  // Use an temporary ostringstream object so that we can ensure all
+  // floating-point values are output with full precision without disturbing
+  // the user's settings in the "out" stream.
+  std::ostringstream temp;
+  temp.precision(std::numeric_limits<double>::max_digits10);
+  temp << std::scientific;
+
+  size_t num_particles = initial_particles_.size() + final_particles_.size();
+  temp << event_num  << ' ' << num_particles << '\n';
+
+  for (const auto i : initial_particles_) dump_hepevt_particle(*i, temp, false);
+  for (const auto f : final_particles_) dump_hepevt_particle(*f, temp, true);
+
+  // Output the finished HEPEvt format event to the "out" stream
+  out << temp.str();
 }
 
 marley::JSON marley::Event::to_json() const {
