@@ -20,17 +20,9 @@ SHARED_LIB := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
 ROOT_SHARED_LIB_NAME := MARLEY_ROOT
 ROOT_SHARED_LIB := lib$(ROOT_SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
 
-# Using this form for the "all" target allows us to build marley using parallel
-# jobs while forcing the removal of temporary files only after the build is
-# complete. See http://stackoverflow.com/a/8496739/4081973 for more
-# information.
-all:
-	$(MAKE) marley
-	$(MAKE) remove_temporary_files
+all: marley
 
-# Skip lots of initialization if all we want is
-# "make clean/uninstall/remove_temporary_files"
-ifneq ($(MAKECMDGOALS),remove_temporary_files)
+# Skip lots of initialization if all we want is "make clean/uninstall"
 ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(MAKECMDGOALS),uninstall)
  
@@ -74,52 +66,60 @@ ifneq ($(MAKECMDGOALS),uninstall)
   OBJECTS := $(filter-out marley.o RootConfigurationFile.o, $(OBJECTS))
   OBJECTS := $(filter-out marley_root.o RootJSONConfig.o, $(OBJECTS))
   
-  ROOTCONFIG := $(shell command -v root-config 2> /dev/null)
-  # prefer rootcling as the dictionary generator executable name, but use
-  # rootcint if you can't find it
-  ROOTCLING := $(shell command -v rootcling 2> /dev/null)
-  ifndef ROOTCLING
-    ROOTCLING := $(shell command -v rootcint 2> /dev/null)
-  endif
-  ROOT := $(shell command -v root 2> /dev/null)
-  
-  ifndef ROOTCONFIG
-    $(info WARNING: Could not find a valid ROOT installation.)
-    $(info MARLEY will be built without ROOT support.)
-    USE_ROOT = no
-  else
-    ROOT_VERSION := $(shell $(ROOTCONFIG) --version)
-    $(info Found ROOT version $(ROOT_VERSION) in $(ROOT))
-    $(info MARLEY will be built with ROOT support.)
-    CXXFLAGS += -DUSE_ROOT
-    ROOT_CXXFLAGS := $(shell $(ROOTCONFIG) --cflags)
-    ROOT_LDFLAGS := $(shell $(ROOTCONFIG) --ldflags)
-    ROOT_LIBDIR := $(shell $(ROOTCONFIG) --libdir)
-    ROOT_LDFLAGS += -L$(ROOT_LIBDIR) -lCore -lRIO -lHist -lTree
-    ifeq ($(UNAME_S),Linux)
-      ROOT_LDFLAGS += -rdynamic
+  # The user may force the Makefile to ignore ROOT entirely by defining
+  # IGNORE_ROOT="yes" (or any non-empty string) on the command line
+  # invocation of make.
+  ifndef IGNORE_ROOT
+    ROOTCONFIG := $(shell command -v root-config 2> /dev/null)
+    # prefer rootcling as the dictionary generator executable name, but use
+    # rootcint if you can't find it
+    ROOTCLING := $(shell command -v rootcling 2> /dev/null)
+    ifndef ROOTCLING
+      ROOTCLING := $(shell command -v rootcint 2> /dev/null)
     endif
-    ROOT_DICT_INCLUDES := -I$(INCLUDE_DIR) marley/Particle.hh \
-      marley/Event.hh marley/marley_linkdef.hh
-    USE_ROOT = yes
-    ROOT_OBJ_DICT = marley_root_dict.o
-    ROOT_SHARED_LIB_LDFLAGS := -l$(ROOT_SHARED_LIB_NAME)
-    ROOT_SHARED_LIB_OBJECTS = marley_root.o RootConfigurationFile.o
-    ROOT_SHARED_LIB_OBJECTS += RootJSONConfig.o $(ROOT_OBJ_DICT)
+    ROOT := $(shell command -v root 2> /dev/null)
+
+    ifndef ROOTCONFIG
+      $(info WARNING: Could not find a valid ROOT installation.)
+      $(info MARLEY will be built without ROOT support.)
+      USE_ROOT = no
+    else
+      ROOT_VERSION := $(shell $(ROOTCONFIG) --version)
+      $(info Found ROOT version $(ROOT_VERSION) in $(ROOT))
+      $(info MARLEY will be built with ROOT support.)
+      CXXFLAGS += -DUSE_ROOT
+      ROOT_CXXFLAGS := $(shell $(ROOTCONFIG) --cflags)
+      ROOT_LDFLAGS := $(shell $(ROOTCONFIG) --ldflags)
+      ROOT_LIBDIR := $(shell $(ROOTCONFIG) --libdir)
+      ROOT_LDFLAGS += -L$(ROOT_LIBDIR) -lCore -lRIO -lHist -lTree
+      ifeq ($(UNAME_S),Linux)
+        ROOT_LDFLAGS += -rdynamic
+      endif
+      ROOT_DICT_INCLUDES := -I$(INCLUDE_DIR) marley/Particle.hh \
+        marley/Event.hh marley/marley_linkdef.hh
+      USE_ROOT = yes
+      ROOT_OBJ_DICT = marley_root_dict.o
+      ROOT_SHARED_LIB_LDFLAGS := -l$(ROOT_SHARED_LIB_NAME)
+      ROOT_SHARED_LIB_OBJECTS = marley_root.o RootConfigurationFile.o
+      ROOT_SHARED_LIB_OBJECTS += RootJSONConfig.o $(ROOT_OBJ_DICT)
   
 $(ROOT_OBJ_DICT):
-	rm -f marley_root_dict*.*
+	$(RM) marley_root_dict*.*
 	$(ROOTCLING) -f marley_root_dict.cc -c $(ROOT_DICT_INCLUDES)
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -fPIC -o $(ROOT_OBJ_DICT) -c \
 	  marley_root_dict.cc
+	$(RM) marley_root_dict.cc
   
 $(ROOT_SHARED_LIB): $(SHARED_LIB) $(ROOT_SHARED_LIB_OBJECTS)
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -fPIC -shared \
 	  -o $(ROOT_SHARED_LIB) -L. -l$(SHARED_LIB_NAME) \
 	  $(ROOT_SHARED_LIB_OBJECTS) $(ROOT_LDFLAGS)
 
+    endif
+  else
+    $(info Ignoring any ROOT installations that may be present.)
+    $(info MARLEY will be built without ROOT support.)
   endif
-endif
 endif
 endif
 
@@ -137,6 +137,9 @@ ifeq ($(USE_ROOT),yes)
   MARLEY_LIBS += $(ROOT_SHARED_LIB)
 endif
 
+# Causes GNU make to auto-delete the object files when the build is complete
+.INTERMEDIATE: $(OBJECTS) $(ROOT_SHARED_LIB_OBJECTS) marley.o
+
 %.o: $(SRC_DIR)/%.cc
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -I$(INCLUDE_DIR) -fPIC -o $@ -c $^
 
@@ -149,13 +152,13 @@ marley: $(MARLEY_LIBS) marley.o
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
 	  -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
 
-.PHONY: clean install uninstall remove_temporary_files
+.PHONY: clean install uninstall
 
 clean:
-	rm -f *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
-	rm -rf *.dSYM
+	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
+	$(RM) *.dSYM
 
-install: all
+install: marley
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(incdir)/marley
@@ -171,13 +174,10 @@ install: all
 	ldconfig
 
 uninstall:
-	rm -f $(DESTDIR)$(bindir)/marley
-	rm -f $(DESTDIR)$(libdir)/$(SHARED_LIB)
-	rm -f $(DESTDIR)$(libdir)/$(ROOT_SHARED_LIB)
-	rm -f $(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm
-	rm -rf $(DESTDIR)$(datadir)/marley
-	rm -rf $(DESTDIR)$(incdir)/marley
+	$(RM) $(DESTDIR)$(bindir)/marley
+	$(RM) $(DESTDIR)$(libdir)/$(SHARED_LIB)
+	$(RM) $(DESTDIR)$(libdir)/$(ROOT_SHARED_LIB)
+	$(RM) $(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm
+	$(RM) -r $(DESTDIR)$(datadir)/marley
+	$(RM) -r $(DESTDIR)$(incdir)/marley
 	ldconfig
-
-remove_temporary_files:
-	rm -f *.o marley_root_dict.cc
