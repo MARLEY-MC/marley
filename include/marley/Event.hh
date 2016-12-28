@@ -121,6 +121,11 @@ namespace marley {
       /// @param out The std::ostream to which this event will be written
       void print(std::ostream& out) const;
 
+      /// @brief Read in this event from a std::istream. Any previous contents
+      /// of this event will be deleted
+      /// @param in The std::istream from which this event will be read
+      void read(std::istream& in);
+
       /// @brief Create a JSON representation of this event
       marley::JSON to_json() const;
 
@@ -167,4 +172,9 @@ namespace marley {
 inline std::ostream& operator<<(std::ostream& out, const marley::Event& e) {
   e.print(out);
   return out;
+}
+
+inline std::istream& operator>>(std::istream& in, marley::Event& e) {
+  e.read(in);
+  return in;
 }

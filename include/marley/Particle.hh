@@ -107,6 +107,10 @@ namespace marley {
       /// @brief Print information about this particle to a std::ostream
       void print(std::ostream& out) const;
 
+      /// @brief Read in this particle from a std::istream. Any previous
+      /// contents of this particle will be deleted.
+      void read(std::istream& in);
+
       /// @brief Create a JSON representation of this Particle
       marley::JSON to_json() const;
 
@@ -123,7 +127,8 @@ namespace marley {
       double four_momentum_[4];
 
       /// @brief %Particle Data Group code identifying this particle
-      /// @details See the <a href="http://pdg.lbl.gov/2014/reviews/rpp2014-rev-monte-carlo-numbering.pdf">full list</a> of PDG codes for details.
+      /// @details See the <a href="http://tinyurl.com/hrvjjyl">full list</a>
+      /// of PDG codes for details.
       int pdg_code_ = 0;
 
       /// @brief mass (MeV)
@@ -174,4 +179,11 @@ inline std::ostream& operator<<(std::ostream& out, const marley::Particle& p)
 {
   p.print(out);
   return out;
+}
+
+// Operator for reading in Particle objects from a std::istream
+inline std::istream& operator>>(std::istream& in, marley::Particle& p)
+{
+  p.read(in);
+  return in;
 }

@@ -183,6 +183,32 @@ void marley::Event::print(std::ostream& out) const {
   out << temp.str();
 }
 
+void marley::Event::read(std::istream& in) {
+  for (auto& p : initial_particles_) delete p;
+  for (auto& p : final_particles_) delete p;
+  initial_particles_.clear();
+  final_particles_.clear();
+
+  size_t num_initial;
+  size_t num_final;
+
+  in >> num_initial >> num_final >> Ex_;
+
+  initial_particles_.resize(num_initial);
+  final_particles_.resize(num_final);
+
+  for (size_t i = 0; i < num_initial; ++i) {
+    marley::Particle* p = new marley::Particle;
+    in >> *p;
+    initial_particles_.at(i) = p;
+  }
+  for (size_t f = 0; f < num_final; ++f) {
+    marley::Particle* p = new marley::Particle;
+    in >> *p;
+    final_particles_.at(f) = p;
+  }
+}
+
 // Function that dumps a marley::Particle to an output stream in HEPEvt format.
 // This is a private helper function for the publicly-accessible write_hepevt.
 void marley::Event::dump_hepevt_particle(const marley::Particle& p,

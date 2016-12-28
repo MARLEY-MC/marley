@@ -62,6 +62,11 @@ void marley::Particle::print(std::ostream& out) const {
     << ' ' << mass_ << ' ' << charge_;
 }
 
+void marley::Particle::read(std::istream& in) {
+  in >> pdg_code_ >> four_momentum_[0] >> four_momentum_[1]
+    >> four_momentum_[2] >> four_momentum_[3] >> mass_ >> charge_;
+}
+
 marley::JSON marley::Particle::to_json() const {
   marley::JSON particle = marley::JSON::object();
   particle["pdg"] = pdg_code_;
