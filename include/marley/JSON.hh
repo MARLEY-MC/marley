@@ -428,50 +428,112 @@ namespace marley {
         else return JSONConstWrapper<std::deque<JSON>>(nullptr);
       }
 
-      std::string dump_string(int depth = 1, std::string tab = "  ") const {
-        std::string pad("");
-        for(int i = 0; i < depth; ++i, pad += tab);
+      // Portions of the serialization functions (dump_string, print)
+      // are based on techniques used in the JSON for Modern C++
+      // library by Niels Lohmann (https://github.com/nlohmann/json).
+      std::string dump_string(const int indent_step = -1) const {
+        // Use max_digits10 for outputting double-precision floating-point
+        // numbers. This ensures that repeated input/output via JSON will
+        // not result in any loss of precision. For more information, please
+        // see http://tinyurl.com/p8wyhnn
+        std::ostringstream out;
+        out.precision(std::numeric_limits<double>::max_digits10);
+        // Enable pretty-printing if the user specified a nonnegative
+        // indent_step value
+        if (indent_step >= 0)
+          print(out, static_cast<unsigned int>(indent_step), true);
+        // Otherwise, print the JSON object in the most compact form possible
+        else print(out, 0, false);
 
-        switch( type_ ) {
-          case DataType::Null:
-            return "null";
-          case DataType::Object: {
-             std::string s = "{\n";
-            bool skip = true;
-            for( auto &p : *data_.map_ ) {
-              if ( !skip ) s += ",\n";
-              s += ( pad + "\"" + p.first + "\" : "
-                + p.second.dump_string( depth + 1, tab ) );
-              skip = false;
-            }
-            s += ( "\n" + pad.erase( 0, 2 ) + "}" ) ;
-            return s;
-          }
-          case DataType::Array: {
-             std::string s = "[";
-            bool skip = true;
-            for( auto &p : *data_.list_ ) {
-              if ( !skip ) s += ", ";
-              s += p.dump_string( depth + 1, tab );
-              skip = false;
-            }
-            s += "]";
-            return s;
-          }
-          case DataType::String:
-            return "\"" + json_escape( *data_.string_ ) + "\"";
-          case DataType::Floating:
-            return std::to_string( data_.float_ );
-          case DataType::Integral:
-            return std::to_string( data_.integer_ );
-          case DataType::Boolean:
-            return data_.boolean_ ? "true" : "false";
-          default:
-            return "";
-        }
+        // Return the completed JSON string
+        return out.str();
       }
 
     private:
+
+      // Implementation of serialization to text. Used by the public
+      // dump_string() method.
+      void print(std::ostream& out, const unsigned int indent_step,
+        bool pretty, const unsigned int current_indent = 0) const
+      {
+        unsigned int indent = current_indent;
+
+        switch( type_ ) {
+          case DataType::Null:
+            out << "null";
+            return;
+          case DataType::Object: {
+            out << '{';
+            if (pretty) {
+              indent += indent_step;
+              out << '\n';
+            }
+            bool skip = true;
+            for( auto &p : *data_.map_ ) {
+              if ( !skip ) {
+                out << ',';
+                if (pretty) out << '\n';
+              }
+
+              out << std::string(indent, ' ') << '\"'
+                << json_escape( p.first ) << '\"';
+
+              if (pretty) out << " : ";
+              else out << ':';
+
+              p.second.print( out, indent_step, pretty, indent );
+              skip = false;
+            }
+            if (pretty) {
+              indent -= indent_step;
+              out << '\n';
+            }
+            out << std::string(indent, ' ') + '}';
+            return;
+          }
+          case DataType::Array: {
+            out << '[';
+            if (pretty) {
+              indent += indent_step;
+              out << '\n';
+            }
+            bool skip = true;
+            for( auto &p : *data_.list_ ) {
+              if ( !skip ) {
+                out << ',';
+                if (pretty) out << '\n';
+              }
+              out << std::string(indent, ' ');
+              p.print( out, indent_step, pretty, indent );
+              skip = false;
+            }
+            if (pretty) {
+              indent -= indent_step;
+              out << '\n';
+            }
+            out << std::string(indent, ' ') << ']';
+            return;
+          }
+          case DataType::String:
+            out << '\"' + json_escape( *data_.string_ ) + '\"';
+            return;
+          case DataType::Floating:
+            out << data_.float_;
+            return;
+          case DataType::Integral:
+            out << data_.integer_;
+            return;
+          case DataType::Boolean:
+            out << (data_.boolean_ ? "true" : "false");
+            return;
+          default:
+            break;
+        }
+
+        return;
+      }
+
+
 
       void check_if_object(const std::string& key) {
         if (type_ != DataType::Object) throw marley::Error("Attempted"
