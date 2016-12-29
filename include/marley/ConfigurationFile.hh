@@ -9,8 +9,10 @@
 #include <unordered_set>
 
 #include "marley/DecayScheme.hh"
-#include "marley/Error.hh"
+#include "marley/GammaStrengthFunctionModel.hh"
+#include "marley/LevelDensityModel.hh"
 #include "marley/NeutrinoSource.hh"
+#include "marley/OpticalModel.hh"
 #include "marley/StructureDatabase.hh"
 
 namespace marley {

@@ -1,15 +1,16 @@
 #pragma once
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
 
-#include "marley/ConfigurationFile.hh"
 #include "marley/DecayScheme.hh"
-#include "marley/GammaStrengthFunctionModel.hh"
-#include "marley/LevelDensityModel.hh"
-#include "marley/OpticalModel.hh"
 
 namespace marley {
+
+  class GammaStrengthFunctionModel;
+  class LevelDensityModel;
+  class OpticalModel;
 
   /// @brief Container for nuclear structure information organized by nuclide
   /// @details Currently, the StructureDatabase object can hold nuclear

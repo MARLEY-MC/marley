@@ -4,8 +4,6 @@
 #include <memory>
 #include <vector>
 
-#include "marley/HauserFeshbachDecay.hh"
-
 namespace marley {
 
   /// @brief Simple singleton logging class

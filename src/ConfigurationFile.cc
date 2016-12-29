@@ -1,7 +1,11 @@
 #include "marley/marley_utils.hh"
 #include "marley/ConfigurationFile.hh"
 #include "marley/InterpolationGrid.hh"
+#include "marley/GammaStrengthFunctionModel.hh"
+#include "marley/LevelDensityModel.hh"
 #include "marley/Logger.hh"
+#include "marley/OpticalModel.hh"
+#include "marley/StructureDatabase.hh"
 
 // Static constant definitions
 const std::array<double, 3>

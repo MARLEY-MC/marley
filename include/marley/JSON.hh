@@ -17,6 +17,7 @@
 #include <type_traits>
 
 // MARLEY includes
+#include "marley/Error.hh"
 #include "marley/Logger.hh"
 
 namespace marley {

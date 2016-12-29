@@ -1,5 +1,6 @@
 #include "marley/marley_utils.hh"
 #include "marley/meta_numerics.hh"
+#include "marley/HauserFeshbachDecay.hh"
 #include "marley/Logger.hh"
 #include "marley/KoningDelarocheOpticalModel.hh"
 

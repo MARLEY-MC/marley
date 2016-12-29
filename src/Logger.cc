@@ -1,3 +1,6 @@
+#include <iostream>
+
+#include "marley/Error.hh"
 #include "marley/Logger.hh"
 
 const char* marley::Logger::loglevel_to_str(LogLevel lev)

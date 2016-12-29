@@ -3,12 +3,12 @@
 #include <memory>
 #include <vector>
 
-#include "marley/Error.hh"
-#include "marley/Event.hh"
 #include "marley/Level.hh"
-#include "marley/Parity.hh"
 
 namespace marley {
+
+  class Event;
+  class Generator;
 
   /// @brief Discrete level and &gamma;-ray data for a specific nuclide
   class DecayScheme {

@@ -3,9 +3,7 @@
 #include <set>
 
 #include "marley/marley_utils.hh"
-#include "marley/Error.hh"
 #include "marley/InterpolationGrid.hh"
-#include "marley/MassTable.hh"
 
 namespace marley {
 

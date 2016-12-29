@@ -7,6 +7,10 @@
 #include "marley/Generator.hh"
 #include "marley/Logger.hh"
 #include "marley/NuclearReaction.hh"
+#include "marley/GammaStrengthFunctionModel.hh"
+#include "marley/LevelDensityModel.hh"
+#include "marley/OpticalModel.hh"
+#include "marley/StructureDatabase.hh"
 
 // The default constructor uses the system time as the seed and a
 // default-constructured monoenergetic neutrion source. No reactions are

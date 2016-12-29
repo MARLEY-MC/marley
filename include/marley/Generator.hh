@@ -5,9 +5,12 @@
 #include <vector>
 
 #include "marley/ConfigurationFile.hh"
+#include "marley/GammaStrengthFunctionModel.hh"
 #include "marley/NeutrinoSource.hh"
-#include "marley/Parity.hh"
 #include "marley/NuclearReaction.hh"
+#include "marley/LevelDensityModel.hh"
+#include "marley/OpticalModel.hh"
+#include "marley/Parity.hh"
 #include "marley/RotationMatrix.hh"
 #include "marley/StructureDatabase.hh"
 
