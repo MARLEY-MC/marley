@@ -17,9 +17,9 @@ marley::Generator::Generator()
   source_(new marley::MonoNeutrinoSource),
   structure_db_(new marley::StructureDatabase), dir_vec_{0., 0., 1}
 {
-  reseed(seed_);
-
   print_logo();
+
+  reseed(seed_);
 }
 
 // The seed-only constructor is like the default constructor, but it uses
@@ -28,9 +28,9 @@ marley::Generator::Generator(uint_fast64_t seed)
   : seed_(seed), source_(new marley::MonoNeutrinoSource),
   structure_db_(new marley::StructureDatabase), dir_vec_{0., 0., 1.}
 {
-  reseed(seed_);
-
   print_logo();
+
+  reseed(seed_);
 }
 
 // Print the MARLEY logo to the logger stream(s) if you haven't already.
@@ -125,6 +125,11 @@ void marley::Generator::normalize_E_pdf() {
 
 void marley::Generator::init(marley::ConfigurationFile& cf) {
 
+  // Print the MARLEY logo to the logger stream(s) when the first
+  // Generator instance is initialized. If other instances are created,
+  // don't reprint the logo.
+  print_logo();
+
   // Use the seed from the config file object to prepare the random number
   // generator.
   reseed(cf.get_seed());
@@ -169,11 +174,6 @@ void marley::Generator::init(marley::ConfigurationFile& cf) {
   // Update the normalization factor for the reacting neutrino energy
   // distribution
   normalize_E_pdf();
-
-  // Print the MARLEY logo to the logger stream(s) when the first
-  // Generator instance is initialized. If other instances are created,
-  // don't reprint the logo.
-  print_logo();
 
   // Initialize the incident neutrino direction settings using the direction
   // given in the configuration file

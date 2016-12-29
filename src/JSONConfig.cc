@@ -1,5 +1,6 @@
 // standard library includes
 #include <chrono>
+#include <iostream>
 #include <vector>
 
 // MARLEY includes
@@ -65,7 +66,7 @@ namespace {
         double dub = el.to_double(ok);
         if (ok) result.push_back(dub);
         else throw marley::Error(std::string("Invalid array entry '")
-          + el.to_string() + "' given for the " + name + " key for a "
+          + el.dump_string() + "' given for the " + name + " key for a "
           + description + " source specification.");
       }
     }
@@ -82,7 +83,10 @@ namespace {
 
 }
 
-marley::JSONConfig::JSONConfig(const marley::JSON& json) : json_(json) {}
+marley::JSONConfig::JSONConfig(const marley::JSON& json) : json_(json)
+{
+  update_logger_settings();
+}
 
 int marley::JSONConfig::neutrino_pdg(const std::string& nu) const {
 
@@ -434,4 +438,92 @@ std::string marley::JSONConfig::source_get(const char* name,
   if (!ok) throw marley::Error(std::string("Invalid value given for source.")
     + name + " key for " + description + " source");
   return result;
+}
+
+void marley::JSONConfig::update_logger_settings() const {
+  using LogLevel = marley::Logger::LogLevel;
+
+  marley::Logger& logger = marley::Logger::Instance();
+  logger.clear_streams();
+
+  if (!json_.has_key("log")) {
+    // If the user hasn't specified a logger configuration, use the default,
+    // which is logging at the INFO level to stdout.
+    logger.add_stream(std::cout, LogLevel::INFO);
+    logger.enable();
+    return;
+  }
+  else {
+    const marley::JSON& log_config = json_.at("log");
+
+    if (!log_config.is_array()) {
+      throw marley::Error(std::string("The configuration given")
+        + " for the \"log\" key should be an array of JSON objects.");
+    }
+
+    auto elements = log_config.array_range();
+    bool ok;
+    // If the user has specified an empty list of logger files, then
+    // disable the Logger and return immediately.
+    if (elements.begin() == elements.end()) {
+      logger.disable();
+      return;
+    }
+    else logger.enable();
+
+    // Loop over the list of log files and add them one-by-one to the Logger.
+    for (const auto& el : elements) {
+      // Get the file name for the new log file
+      if (!el.has_key("file")) throw marley::Error(std::string("Missing")
+        + " file name in a log file specification");
+      std::string file_name = el.at("file").to_string(ok);
+      if (!ok) throw marley::Error("Invalid log file name \""
+        + file_name + '\"');
+
+      // Use "info" as the default logging level
+      LogLevel level = LogLevel::INFO;
+      // Set the logging level for the current file to a non-default value
+      // if the user has specified one. Complain if you get confused.
+      if (el.has_key("level")) {
+        std::string level_str = el.at("level").to_string();
+        if (level_str == "error") level = LogLevel::ERROR;
+        else if (level_str == "warning") level = LogLevel::WARNING;
+        else if (level_str == "info") level = LogLevel::INFO;
+        else if (level_str == "debug") level = LogLevel::DEBUG;
+        else throw marley::Error("Invalid logging level \""
+          + el.dump_string() + '\"');
+      }
+
+      // If the file name is "stdout", then add std::cout as a logging stream.
+      // Do the same sort of thing for std::cerr. Otherwise, open the requested
+      // file and add it to the logger streams.
+      if (file_name == "stdout")
+        logger.add_stream(std::cout, level);
+      else if (file_name == "stderr")
+        logger.add_stream(std::cerr, level);
+      else {
+        // If the user specified a value for the "overwrite" key, use it
+        // to determine whether we should append to the file (false) or
+        // overwrite it (true). Otherwise, assume we want to append to it.
+        auto file_mode = std::ios::out;
+        if (el.has_key("overwrite")) {
+
+          marley::JSON ow = el.at("overwrite");
+
+          bool overwrite = ow.to_bool(ok);
+          if (!ok) throw marley::Error("Invalid log file overwrite setting \""
+            + ow.dump_string() + '\"');
+
+          if (overwrite) file_mode |= std::ios::trunc;
+          else file_mode |= std::ios::app;
+        }
+        else file_mode |= std::ios::app;
+
+        auto outfile = std::make_shared<std::ofstream>(file_name, file_mode);
+        if (!outfile || (!outfile->good())) throw marley::Error("Unable"
+          " to open the log file \"" + file_name + "\"");
+        else logger.add_stream(outfile, level);
+      }
+    }
+  }
 }

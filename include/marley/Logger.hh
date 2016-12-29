@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <fstream>
+#include <memory>
 #include <vector>
 
 #include "marley/HauserFeshbachDecay.hh"
@@ -35,18 +36,48 @@ namespace marley {
 
         public:
 
-          /// @param os std::ostream object that will receive logging messages
+          /// @param os std::shared_ptr that points to a std::ostream object
+          /// that will receive logging messages
           /// @param lev marley::Logger::LogLevel specifier that indicates
           /// what the logging level should be for this stream
           /// @param enable Whether to enable (true) or disable (false)
           /// logging to this stream upon construction
+          /// @note Because std::shared_ptr will auto-delete the pointed-to
+          /// object when the use_count falls to zero (unless a custom deleter
+          /// is used), this version of the OutStream constructor <b>should
+          /// not</b> be used with the std::cout or std::cerr streams. For
+          /// streams that should never be deleted when the OutStream is
+          /// destroyed, use @see OutStream::(std::ostream& os, LogLevel lev,
+          /// bool enable = true)
+          /// @exception marley::Error std::cout or std::cerr was passed to
+          /// this function. This could still be permissible if a suitable
+          /// custom deleter was used to define the shared_ptr, but for safety,
+          /// one should use @see OutStream::(std::ostream& os, LogLevel lev,
+          /// bool enable) instead.
+          OutStream(std::shared_ptr<std::ostream> os, LogLevel lev,
+            bool enable = true);
+
+          /// @param [in] os Reference to std::ostream object that will receive
+          /// logging messages
+          /// @param lev marley::Logger::LogLevel specifier that indicates
+          /// what the logging level should be for this stream
+          /// @param enable Whether to enable (true) or disable (false)
+          /// logging to this stream upon construction
+          /// @note Because this version of the constructor uses a bare
+          /// reference instead of a std::shared_ptr, the std::ostream is not
+          /// guaranteed to exist throughout the life of the OutStream. If the
+          /// std::ostream goes out of scope before the OutStream does, logging
+          /// to the std::ostream will silently stop. The alternative
+          /// constructor @see OutStream::(std::shared_ptr<std::ostream> os,
+          /// LogLevel lev, bool enable) is recommended for use with all
+          /// streams except for std::cout and std::cerr.
           OutStream(std::ostream& os, LogLevel lev, bool enable = true);
 
         private:
 
           /// @brief Pointer to a std::ostream that will receive logging
           /// messages
-          std::ostream* stream_;
+          std::shared_ptr<std::ostream> stream_;
 
           /// @brief Logging level
           LogLevel level_;
@@ -92,6 +123,21 @@ namespace marley {
 
       /// @brief Add a std::ostream to the vector of streams that will receive
       /// Logger output
+      /// @note The stream owned by the std::shared_ptr should have been
+      /// dynamically allocated since std::shared_ptr will auto-delete it when
+      /// use_count falls to zero (unless a suitable custom deleter was used).
+      /// For adding std::cout or std::cerr to the Logger, please use @see
+      /// add_stream(std::ostream& stream, LogLevel level) instead. See also
+      /// the documentation for @see marley::Logger::OutStream::OutStream.
+      void add_stream(std::shared_ptr<std::ostream> stream,
+        LogLevel level = LogLevel::WARNING);
+
+      /// @brief Add a std::ostream to the vector of streams that will receive
+      /// Logger output
+      /// @note For streams other than std::cout and std::cerr, using @see
+      /// add_stream(std::shared_ptr<std::ostream> stream, LogLevel level)
+      /// instead of this function is recommended. See also the documentation
+      /// for @see marley::Logger::OutStream::OutStream.
       void add_stream(std::ostream& stream,
         LogLevel level = LogLevel::WARNING);
 
@@ -101,6 +147,9 @@ namespace marley {
       /// @brief Enable or disable the Logger
       /// @param log_enabled Enable (true) or disable (false) the Logger
       void enable(bool log_enabled = true);
+
+      /// @brief Disable the Logger
+      inline void disable();
 
       /// @brief Prepare the Logger to receive a log message via
       /// the << stream operator
@@ -119,6 +168,19 @@ namespace marley {
 
     private:
 
+      /// @brief Helper function for the marley::Logger::add_stream() methods
+      /// @param os Pointer to the std::ostream that we're attempting to add
+      /// to the Logger
+      /// @param [out] stream_enabled Whether the stream is enabled based on
+      /// the Logger state and the new LogLevel value
+      /// @param level The logging level for this stream
+      /// @return A pointer to the matching stream if it has already been added
+      /// to the Logger, or nullptr otherwise. If the stream has already been
+      /// added, its logging level and enabled/disabled state will be updated
+      /// by this function.
+      OutStream* find_stream(const std::ostream* os, bool& stream_enabled,
+        LogLevel level);
+
       /// @brief Vector of wrapped std::ostream objects that will
       /// receive the log messages
       OutStreamVector streams_;
@@ -134,6 +196,7 @@ namespace marley {
 
 // Inline function definitions
 inline void marley::Logger::clear_streams() { streams_.clear(); }
+inline void marley::Logger::disable() { enable(false); }
 
 template<typename OutputType> marley::Logger::OutStreamVector&
   marley::Logger::OutStreamVector::operator<<(const OutputType& ot)
