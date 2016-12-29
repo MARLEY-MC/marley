@@ -978,7 +978,16 @@ namespace marley {
   }
 
   inline JSON JSON::load(std::istream& in) {
-    return parse_next(in);
+    char first = get_next_char(in);
+    if (first != '{') {
+      MARLEY_LOG_WARNING() << "Missing '{' at beginning of JSON object";
+      in.putback(first);
+      return parse_object(in);
+    }
+    else {
+      in.putback(first);
+      return parse_next(in);
+    }
   }
 
   inline JSON JSON::load(const std::string& str) {
