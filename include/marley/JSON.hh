@@ -928,8 +928,8 @@ namespace marley {
         if (s == "false") b = false;
       }
       if (b.type() == JSON::DataType::Null) {
-        issue_parse_warning("JSON bool: Expected 'true' or 'false', found ",
-          s, in);
+        issue_parse_warning(s, "JSON bool: Expected 'true' or 'false', found ",
+          in);
         return JSON::make(JSON::DataType::Null);
       }
       return b;
@@ -972,7 +972,7 @@ namespace marley {
     std::ifstream in(filename);
     if (in.good()) return load(in);
     else {
-      std::cerr << "Couldn't open the file '" << filename << "'\n";
+      throw marley::Error("Could not open the file \"" + filename + "\"");
       return JSON::make(JSON::DataType::Null);
     }
   }

@@ -149,6 +149,17 @@ namespace marley {
       /// @brief Disable the Logger
       inline void disable();
 
+      /// @brief Flush all output streams associated with the Logger
+      void flush();
+
+      /// @brief Send a newline character to all output streams ignoring
+      /// logging level settings
+      void newline();
+
+      /// @brief Returns true if stream is already registered with the
+      /// Logger, or false otherwise
+      bool has_stream(const std::ostream& stream) const;
+
       /// @brief Prepare the Logger to receive a log message via
       /// the << stream operator
       /// @param lev marley::Logger::LogLevel of the incoming message

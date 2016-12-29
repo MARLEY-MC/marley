@@ -1,4 +1,5 @@
 #include <iostream>
+#include <exception>
 
 #include "marley/Error.hh"
 #include "marley/Logger.hh"
@@ -61,12 +62,38 @@ marley::Logger::OutStreamVector&
   return *this;
 }
 
+void marley::Logger::flush() {
+  for (auto s : streams_) if (s.stream_) s.stream_->flush();
+}
+
+void marley::Logger::newline() {
+  for (auto s : streams_) if (s.stream_) (*s.stream_) << '\n';
+}
+
 marley::Logger::Logger(bool log_enabled) : enabled_(log_enabled),
   old_level_(LogLevel::INFO) {}
 
 marley::Logger& marley::Logger::Instance() {
   static Logger instance;
+  static bool terminate_is_set = false;
+  if (!terminate_is_set) {
+    std::set_terminate([]() {
+      auto& log = marley::Logger::Instance();
+      log.newline();
+      log.flush();
+      std::abort();
+    });
+    terminate_is_set = true;
+  }
   return instance;
+}
+
+bool marley::Logger::has_stream(const std::ostream& os) const {
+  auto end = streams_.end();
+  auto iter = std::find_if(streams_.begin(), end, [&os](const OutStream& s)
+    -> bool { return s.stream_.get() == &os; });
+  if ( iter == end) return false;
+  else return true;
 }
 
 marley::Logger::OutStream* marley::Logger::find_stream(const std::ostream* os,

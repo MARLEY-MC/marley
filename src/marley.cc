@@ -138,10 +138,6 @@ int main(int argc, char* argv[]){
     }
   }
 
-  //std::ofstream log_file("marley.log", std::ofstream::out |
-  //  std::ofstream::trunc);
-  //marley::Logger::Instance().add_stream(log_file,
-  //  marley::Logger::LogLevel::INFO);
   marley::Logger::Instance().add_stream(std::cout,
     marley::Logger::LogLevel::INFO);
 
