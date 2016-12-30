@@ -17,6 +17,7 @@
 #include <type_traits>
 
 // MARLEY includes
+#include "marley/marley_utils.hh"
 #include "marley/Error.hh"
 #include "marley/Logger.hh"
 
@@ -928,6 +929,10 @@ namespace marley {
         if (s == "false") b = false;
       }
       if (b.type() == JSON::DataType::Null) {
+        // Get the entire string if the user supplied an invalid value
+        while (in.good() && !std::isspace(in.peek())) s += in.get();
+        marley_utils::trim_inplace(s);
+
         issue_parse_warning(s, "JSON bool: Expected 'true' or 'false', found ",
           in);
         return JSON::make(JSON::DataType::Null);

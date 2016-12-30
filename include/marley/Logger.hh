@@ -18,7 +18,7 @@ namespace marley {
       /// enum class members (which have an underlying integral type) in the
       /// order that they are written in the definition, so ERROR < WARNING <
       /// INFO < DEBUG.
-      enum class LogLevel { ERROR, WARNING, INFO, DEBUG };
+      enum class LogLevel { DISABLED, ERROR, WARNING, INFO, DEBUG };
 
     private:
 
@@ -140,7 +140,7 @@ namespace marley {
         LogLevel level = LogLevel::WARNING);
 
       /// @brief Clear the vector of streams that receive Logger output
-      inline void clear_streams();
+      void clear_streams();
 
       /// @brief Enable or disable the Logger
       /// @param log_enabled Enable (true) or disable (false) the Logger
@@ -190,6 +190,14 @@ namespace marley {
       OutStream* find_stream(const std::ostream* os, bool& stream_enabled,
         LogLevel level);
 
+      // @brief Returns a pointer to the given stream's OutStream object if
+      // it has been added to the Logger, or nullptr otherwise.
+      const OutStream* get_stream(const std::ostream* os) const;
+
+      // @brief Returns a pointer to the given stream's OutStream object if
+      // it has been added to the Logger, or nullptr otherwise.
+      OutStream* get_stream(const std::ostream* os);
+
       /// @brief Vector of wrapped std::ostream objects that will
       /// receive the log messages
       OutStreamVector streams_;
@@ -204,7 +212,6 @@ namespace marley {
 }
 
 // Inline function definitions
-inline void marley::Logger::clear_streams() { streams_.clear(); }
 inline void marley::Logger::disable() { enable(false); }
 
 template<typename OutputType> marley::Logger::OutStreamVector&
