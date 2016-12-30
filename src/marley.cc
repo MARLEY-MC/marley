@@ -99,406 +99,425 @@ inline bool check_if_file_exists(const std::string& filename) {
 
 int main(int argc, char* argv[]){
 
-  // TODO: if you need command line parsing beyond the
-  // trivial stuff used here, consider using a header-only
-  // option parser library like cxxopts (https://github.com/jarro2783/cxxopts)
-  std::string config_file_name;
+  try {
+    // TODO: if you need command line parsing beyond the trivial stuff used
+    // here, consider using a header-only option parser library like cxxopts
+    // (https://github.com/jarro2783/cxxopts)
+    std::string config_file_name;
 
-  // If the user has not supplied any command-line
-  // arguments, display the standard help message
-  // and exit
-  if (argc <= 1) {
-    print_help(argv[0]);
-  }
-  // The first command-line argument does not begin with a
-  // hyphen, so assume that it is the configuration file name.
-  else if (std::string(argv[1]).substr(0,1) != "-") {
-    config_file_name = argv[1];
-  }
-  // The first command-line argument begins with a hyphen,
-  // so treat it as an option and react accordingly.
-  // All of the current options cannot be combined, so
-  // just parse the first one and ignore the others.
-  else {
-    std::string option = argv[1];
-    if (option == "-h" || option == "--help") {
+    // If the user has not supplied any command-line
+    // arguments, display the standard help message
+    // and exit
+    if (argc <= 1) {
       print_help(argv[0]);
     }
-    else if (option == "-v" || option == "--version") {
-      print_version();
+    // The first command-line argument does not begin with a
+    // hyphen, so assume that it is the configuration file name.
+    else if (std::string(argv[1]).substr(0,1) != "-") {
+      config_file_name = argv[1];
     }
-    else if (option == "--marley") {
-      std::cout << marley_utils::marley_pic;
-      exit(0);
-    }
+    // The first command-line argument begins with a hyphen,
+    // so treat it as an option and react accordingly.
+    // All of the current options cannot be combined, so
+    // just parse the first one and ignore the others.
     else {
-     std::cout << argv[0] << ": unrecognized "
-       << "command line option '" <<  option << "'\n";
-     print_help(argv[0]);
-    }
-  }
-
-  marley::Logger::Instance().add_stream(std::cout,
-    marley::Logger::LogLevel::INFO);
-
-  // Parse the objects from the JSON-based configuration file
-  marley::JSON json = marley::JSON::load_file(config_file_name);
-
-  // Process them to get the generator configuration. Enable ROOT support if it
-  // is available.
-  #ifdef USE_ROOT
-    marley::RootJSONConfig jc(json);
-  #else
-    marley::JSONConfig jc(json);
-  #endif
-
-  // Create a new generator object with the settings from the file
-  marley::Generator gen = jc.create_generator();
-
-  // Get the time that the program was started
-  std::chrono::system_clock::time_point start_time_point
-    = std::chrono::system_clock::now();
-
-  std::time_t start_time = std::chrono::system_clock::to_time_t(
-    start_time_point);
-
-  std::cout << "\nMARLEY started on "
-    << put_time(std::localtime(&start_time), "%c %Z") << '\n';
-
-  int num_old_events = 0;
-
-  marley::JSON ex_set = json.get_object("executable_settings");
-
-  // Desired number of events to be generated in this run. This
-  // will be read back from the ROOT file and overwritten
-  // if we're doing a continuation run.
-  long num_events = ex_set.get_long("events", 1e3);
-
-  // Whether to write the events to a HEPEvt file
-  bool write_hepevt = ex_set.get_bool("write_hepevt", true);
-  std::ofstream hepevt_stream;
-  // If writing a HEPEvt file is enabled, then prepare one
-  if (write_hepevt) {
-    std::string hepevt_file_name = ex_set.get_string("hepevt_filename",
-      "events.hepevt");
-    bool hepevt_file_exists = check_if_file_exists(hepevt_file_name);
-    bool overwrite_check = ex_set.get_bool("hepevt_overwrite_check", true);
-    // add new events at the end by default
-    auto open_mode_flag = std::ofstream::ate;
-    if (hepevt_file_exists && overwrite_check) {
-      std::string response;
-      while (std::cout << "Overwrite HEPEvt file " << hepevt_file_name
-        << " [y/n]? " && std::getline(std::cin, response)
-        && !(response == "y" || response == "n" || response == "Y"
-        || response == "N"));
-      if (response == "y" || response == "Y")
-        open_mode_flag = std::ofstream::trunc;
-    }
-    hepevt_stream.open(hepevt_file_name, std::ofstream::out | open_mode_flag);
-    std::cout << "Events for this run will be ";
-    if (hepevt_file_exists && open_mode_flag == std::ofstream::ate)
-      std::cout << "appended";
-    else std::cout << "written";
-    std::cout << " to the HEPEvt format file " << hepevt_file_name << '\n';
-  }
-
-  #ifdef USE_ROOT
-    // Whether to write the events to a ROOT file
-    bool write_root = ex_set.get_bool("write_root", false);
-    // Whether to check before overwriting the ROOT file
-    bool check_overwrite_root = ex_set.get_bool("root_overwrite_check", true);
-
-    // Create a pointer to an event object. This will be used to fill the event
-    // tree with the events generated in the loop below
-    marley::Event* p_event = nullptr;
-
-    // Check if the ROOT file used to store the event tree already exists
-    std::string tree_file_name = ex_set.get_string("root_filename",
-      "events.root");
-    bool root_file_existed = check_if_file_exists(tree_file_name);
-
-    // The amount of data written to the ROOT file represented as a string
-    // (e.g., "10 MB")
-    std::string data_written;
-
-    std::unique_ptr<TFile> treeFile(nullptr);
-    // This is a bare pointer, but ROOT will associate it with treeFile, so we
-    // don't want to delete it ourselves or let a smart pointer do it.
-    TTree* event_tree = nullptr;
-
-    if (write_root) {
-
-      // Current (24 July 2016) versions of ROOT 6 require runtime loading of
-      // headers for custom classes in order to use dictionaries correctly. If
-      // we're running ROOT 6+, do the loading here, and give the user guidance
-      // if there are any problems.
-      // TODO: see if you can use the -inlineInputHeader to include the headers
-      // in the libMARLEY_ROOT library and then load them at runtime from there.
-      // This isn't very well documented, so your early efforts at doing this
-      // didn't work out.
-      if (gROOT->GetVersionInt() >= 60000) {
-        std::cout << "ROOT 6 or greater detected. Loading class"
-          << " information\nfrom headers \"marley/Particle.hh\""
-          << " and \"marley/Event.hh\"\n";
-        TInterpreter::EErrorCode* ec = new TInterpreter::EErrorCode();
-        gInterpreter->ProcessLine("#include \"marley/Particle.hh\"", ec);
-        if (*ec != 0) throw marley::Error(std::string("Error loading")
-          + " MARLEY header Particle.hh. For MARLEY headers stored in"
-          + " /path/to/include/marley/, please add /path/to/include"
-          + " to your ROOT_INCLUDE_PATH environment variable and"
-          + " try again.");
-        gInterpreter->ProcessLine("#include \"marley/Event.hh\"");
-        if (*ec != 0) throw marley::Error(std::string("Error loading")
-          + " MARLEY header Event.hh. For MARLEY headers stored in"
-          + " /path/to/include/marley/, please add /path/to/include"
-          + " to your ROOT_INCLUDE_PATH environment variable and"
-          + " try again.");
+      std::string option = argv[1];
+      if (option == "-h" || option == "--help") {
+        print_help(argv[0]);
       }
+      else if (option == "-v" || option == "--version") {
+        print_version();
+      }
+      else if (option == "--marley") {
+        std::cout << marley_utils::marley_pic;
+        exit(0);
+      }
+      else {
+       std::cout << argv[0] << ": unrecognized "
+         << "command line option '" <<  option << "'\n";
+       print_help(argv[0]);
+      }
+    }
 
-      std::string tfile_open_mode("recreate");
-      if (root_file_existed && check_overwrite_root) {
+    marley::Logger::Instance().add_stream(std::cout,
+      marley::Logger::LogLevel::INFO);
+
+    // Parse the objects from the JSON-based configuration file
+    marley::JSON json = marley::JSON::load_file(config_file_name);
+
+    // Process them to get the generator configuration. Enable ROOT support if
+    // it is available.
+    #ifdef USE_ROOT
+      marley::RootJSONConfig jc(json);
+    #else
+      marley::JSONConfig jc(json);
+    #endif
+
+    // Create a new generator object with the settings from the file
+    marley::Generator gen = jc.create_generator();
+
+    // Get the time that the program was started
+    std::chrono::system_clock::time_point start_time_point
+      = std::chrono::system_clock::now();
+
+    std::time_t start_time = std::chrono::system_clock::to_time_t(
+      start_time_point);
+
+    std::cout << "\nMARLEY started on "
+      << put_time(std::localtime(&start_time), "%c %Z") << '\n';
+
+    int num_old_events = 0;
+
+    marley::JSON ex_set = json.get_object("executable_settings");
+
+    // Desired number of events to be generated in this run. This
+    // will be read back from the ROOT file and overwritten
+    // if we're doing a continuation run.
+    long num_events = ex_set.get_long("events", 1e3);
+
+    // Whether to write the events to a HEPEvt file
+    bool write_hepevt = ex_set.get_bool("write_hepevt", true);
+    std::ofstream hepevt_stream;
+    // If writing a HEPEvt file is enabled, then prepare one
+    if (write_hepevt) {
+      std::string hepevt_file_name = ex_set.get_string("hepevt_filename",
+        "events.hepevt");
+      bool hepevt_file_exists = check_if_file_exists(hepevt_file_name);
+      bool overwrite_check = ex_set.get_bool("hepevt_overwrite_check", true);
+      // add new events at the end by default
+      auto open_mode_flag = std::ofstream::ate;
+      if (hepevt_file_exists && overwrite_check) {
         std::string response;
-        while (std::cout << "Overwrite ROOT file " << tree_file_name
+        while (std::cout << "Overwrite HEPEvt file " << hepevt_file_name
           << " [y/n]? " && std::getline(std::cin, response)
           && !(response == "y" || response == "n" || response == "Y"
           || response == "N"));
-        if (response == "n" || response == "N")
-          tfile_open_mode = std::string("update");
+        if (response == "y" || response == "Y")
+          open_mode_flag = std::ofstream::trunc;
       }
-
-      // Create a ROOT file to store the event tree
-      // if it does not already exist. Otherwise, open
-      // it so that we can append to it.
-      treeFile = std::make_unique<TFile>(tree_file_name.c_str(),
-        tfile_open_mode.c_str());
-
-      // Check if there was a problem opening the file
-      // (e.g., pre-existing file that has the wrong
-      // format, etc.). If so, complain and quit.
-      if (treeFile->IsZombie()) {
-        throw marley::Error(std::string("Invalid format or other error ")
-          + "encountered while opening the ROOT file " + tree_file_name);
-      }
-
-      // Attempt to get the old ROOT event tree if the ROOT file already exists
-      if (root_file_existed) {
-        treeFile->GetObject("MARLEY Event Tree", event_tree);
-      }
-
-      // If the ROOT file didn't already exist, or if we had a problem
-      // retrieving the old event tree, then make a new event tree
-      if (!event_tree) {
-        // Create a ROOT tree to store the events
-        event_tree = new TTree("MARLEY Event Tree",
-          "A tree of marley::Event objects");
-
-        // Create a branch in this ROOT tree, and associate
-        // it with the event pointer we made before
-        event_tree->Branch("events", "marley::Event", &p_event);
-
-        // Write the seed for the random number generator to the ROOT file
-        // Since ROOT does not allow us to write a single integer to the file,
-        // we will convert it to a std::string object first
-        // TODO: consider writing both the RNG seed and the RNG state string
-        // to the UserInfo array of TObjects (a member of the event TTree)
-        std::string dummy_str = std::to_string(gen.get_seed());
-        treeFile->WriteObject(&dummy_str, "MARLEY RNG Seed");
-
-        // Write the desired number of events in this run to the ROOT file.
-        // Use a string so that we can write a single int without much trouble.
-        std::string str_num_events = std::to_string(num_events);
-        treeFile->WriteObject(&str_num_events,
-          "number of MARLEY events to generate");
-
-        std::cout << "Events for this run will be written to the ROOT file "
-          << tree_file_name << '\n';
-      }
-
-      // If we were able to read in the event tree from the file, get
-      // ready to add new events to it, and notify the user
-      else {
-
-        // Get previous number of events to generate from the ROOT file
-        std::string* str_num_events;
-        treeFile->GetObject("number of MARLEY events to generate",
-          str_num_events);
-        num_events = std::stoi(*str_num_events);
-
-        //TODO: add check to handle cases where we can read an event
-        //tree with the correct name from the ROOT file, but we can't find
-        //a branch that matches the one we expect
-        event_tree->SetBranchAddress("events", &p_event);
-        num_old_events = event_tree->GetEntries();
-        std::cout << "Continuing previous run from ROOT file "
-          << tree_file_name << "\nwhich contains " << num_old_events
-          << " events.\n";
-        std::cout << "A total of " << num_events
-          << " events will be generated.\n";
-
-        // Get previous random number generator state string from the ROOT file
-        std::string* p_rng_state_string = nullptr;
-        treeFile->GetObject("MARLEY RNG State String", p_rng_state_string);
-
-        // TODO: add error handling here (p_rng_state_string may be nullptr)
-        // Use the state string to reset the MARLEY RNG
-        gen.seed_using_state_string(*p_rng_state_string);
-
-        // Get previous RNG seed from the ROOT file
-        std::string* p_rng_seed_str = nullptr;
-        treeFile->GetObject("MARLEY RNG Seed", p_rng_seed_str);
-        // TODO: add error handling here (p_rng_seed_str may be nullptr)
-        uint_fast64_t old_seed = static_cast<uint_fast64_t>(
-          std::stoull(*p_rng_seed_str));
-
-        // Notify the user of the seed that was used previously
-        std::cout << "The previous run was initialized using the "
-          << "random number generator seed " << old_seed << '\n';
-      }
+      hepevt_stream.open(hepevt_file_name, std::ofstream::out | open_mode_flag);
+      std::cout << "Events for this run will be ";
+      if (hepevt_file_exists && open_mode_flag == std::ofstream::ate)
+        std::cout << "appended";
+      else std::cout << "written";
+      std::cout << " to the HEPEvt format file " << hepevt_file_name << '\n';
     }
-  #endif
-
-  // Display all floating-point numbers without using scientific notation and
-  // using one decimal digit
-  std::cout << std::fixed << std::setprecision(1);
-
-  // Use the signal handler defined above to deal with
-  // SIGINT signals (e.g., ctrl+c interruptions initiated
-  // by the user). This will allow us to terminate the
-  // loop gracefully, leaving a valid event tree file, etc.
-  std::signal(SIGINT, signal_handler);
-
-  // Generate all of the requested events. End the loop early
-  // if the user interrupts execution (e.g., via ctrl+C)
-  for (int i = 1 + num_old_events; i <= num_events && !interrupted; ++i) {
-
-    // Create an event using the generator object
-    marley::Event e = gen.create_event();
 
     #ifdef USE_ROOT
-      // Get the address of this event object
-      p_event = new marley::Event;
-      *p_event = e;
+      // Whether to write the events to a ROOT file
+      bool write_root = ex_set.get_bool("write_root", false);
+      // Whether to check before overwriting the ROOT file
+      bool check_overwrite_root = ex_set.get_bool("root_overwrite_check", true);
 
-      // Store this event in the ROOT tree
-      if (write_root) event_tree->Fill();
+      // Create a pointer to an event object. This will be used to fill the
+      // event tree with the events generated in the loop below
+      marley::Event* p_event = nullptr;
+
+      // Check if the ROOT file used to store the event tree already exists
+      std::string tree_file_name = ex_set.get_string("root_filename",
+        "events.root");
+      bool root_file_existed = check_if_file_exists(tree_file_name);
+
+      // The amount of data written to the ROOT file represented as a string
+      // (e.g., "10 MB")
+      std::string data_written;
+
+      std::unique_ptr<TFile> treeFile(nullptr);
+      // This is a bare pointer, but ROOT will associate it with treeFile, so we
+      // don't want to delete it ourselves or let a smart pointer do it.
+      TTree* event_tree = nullptr;
+
+      if (write_root) {
+
+        // Current (24 July 2016) versions of ROOT 6 require runtime loading of
+        // headers for custom classes in order to use dictionaries correctly. If
+        // we're running ROOT 6+, do the loading here, and give the user
+        // guidance if there are any problems.
+        // TODO: see if you can use the -inlineInputHeader to include the
+        // headers in the libMARLEY_ROOT library and then load them at runtime
+        // from there. This isn't very well documented, so your early efforts at
+        // doing this didn't work out.
+        if (gROOT->GetVersionInt() >= 60000) {
+          std::cout << "ROOT 6 or greater detected. Loading class"
+            << " information\nfrom headers \"marley/Particle.hh\""
+            << " and \"marley/Event.hh\"\n";
+          TInterpreter::EErrorCode* ec = new TInterpreter::EErrorCode();
+          gInterpreter->ProcessLine("#include \"marley/Particle.hh\"", ec);
+          if (*ec != 0) throw marley::Error(std::string("Error loading")
+            + " MARLEY header Particle.hh. For MARLEY headers stored in"
+            + " /path/to/include/marley/, please add /path/to/include"
+            + " to your ROOT_INCLUDE_PATH environment variable and"
+            + " try again.");
+          gInterpreter->ProcessLine("#include \"marley/Event.hh\"");
+          if (*ec != 0) throw marley::Error(std::string("Error loading")
+            + " MARLEY header Event.hh. For MARLEY headers stored in"
+            + " /path/to/include/marley/, please add /path/to/include"
+            + " to your ROOT_INCLUDE_PATH environment variable and"
+            + " try again.");
+        }
+
+        std::string tfile_open_mode("recreate");
+        if (root_file_existed && check_overwrite_root) {
+          std::string response;
+          while (std::cout << "Overwrite ROOT file " << tree_file_name
+            << " [y/n]? " && std::getline(std::cin, response)
+            && !(response == "y" || response == "n" || response == "Y"
+            || response == "N"));
+          if (response == "n" || response == "N")
+            tfile_open_mode = std::string("update");
+        }
+
+        // Create a ROOT file to store the event tree
+        // if it does not already exist. Otherwise, open
+        // it so that we can append to it.
+        treeFile = std::make_unique<TFile>(tree_file_name.c_str(),
+          tfile_open_mode.c_str());
+
+        // Check if there was a problem opening the file
+        // (e.g., pre-existing file that has the wrong
+        // format, etc.). If so, complain and quit.
+        if (treeFile->IsZombie()) {
+          throw marley::Error(std::string("Invalid format or other error ")
+            + "encountered while opening the ROOT file " + tree_file_name);
+        }
+
+        // Attempt to get the old ROOT event tree if the ROOT file already
+        // exists
+        if (root_file_existed) {
+          treeFile->GetObject("MARLEY Event Tree", event_tree);
+        }
+
+        // If the ROOT file didn't already exist, or if we had a problem
+        // retrieving the old event tree, then make a new event tree
+        if (!event_tree) {
+          // Create a ROOT tree to store the events
+          event_tree = new TTree("MARLEY Event Tree",
+            "A tree of marley::Event objects");
+
+          // Create a branch in this ROOT tree, and associate
+          // it with the event pointer we made before
+          event_tree->Branch("events", "marley::Event", &p_event);
+
+          // Write the seed for the random number generator to the ROOT file
+          // Since ROOT does not allow us to write a single integer to the file,
+          // we will convert it to a std::string object first
+          // TODO: consider writing both the RNG seed and the RNG state string
+          // to the UserInfo array of TObjects (a member of the event TTree)
+          std::string dummy_str = std::to_string(gen.get_seed());
+          treeFile->WriteObject(&dummy_str, "MARLEY RNG Seed");
+
+          // Write the desired number of events in this run to the ROOT file.
+          // Use a string so that we can write a single int without much
+          // trouble.
+          std::string str_num_events = std::to_string(num_events);
+          treeFile->WriteObject(&str_num_events,
+            "number of MARLEY events to generate");
+
+          std::cout << "Events for this run will be written to the ROOT file "
+            << tree_file_name << '\n';
+        }
+
+        // If we were able to read in the event tree from the file, get
+        // ready to add new events to it, and notify the user
+        else {
+
+          // Get previous number of events to generate from the ROOT file
+          std::string* str_num_events;
+          treeFile->GetObject("number of MARLEY events to generate",
+            str_num_events);
+          num_events = std::stoi(*str_num_events);
+
+          //TODO: add check to handle cases where we can read an event
+          //tree with the correct name from the ROOT file, but we can't find
+          //a branch that matches the one we expect
+          event_tree->SetBranchAddress("events", &p_event);
+          num_old_events = event_tree->GetEntries();
+          std::cout << "Continuing previous run from ROOT file "
+            << tree_file_name << "\nwhich contains " << num_old_events
+            << " events.\n";
+          std::cout << "A total of " << num_events
+            << " events will be generated.\n";
+
+          // Get previous random number generator state string from the ROOT
+          // file
+          std::string* p_rng_state_string = nullptr;
+          treeFile->GetObject("MARLEY RNG State String", p_rng_state_string);
+
+          // TODO: add error handling here (p_rng_state_string may be nullptr)
+          // Use the state string to reset the MARLEY RNG
+          gen.seed_using_state_string(*p_rng_state_string);
+
+          // Get previous RNG seed from the ROOT file
+          std::string* p_rng_seed_str = nullptr;
+          treeFile->GetObject("MARLEY RNG Seed", p_rng_seed_str);
+          // TODO: add error handling here (p_rng_seed_str may be nullptr)
+          uint_fast64_t old_seed = static_cast<uint_fast64_t>(
+            std::stoull(*p_rng_seed_str));
+
+          // Notify the user of the seed that was used previously
+          std::cout << "The previous run was initialized using the "
+            << "random number generator seed " << old_seed << '\n';
+        }
+      }
     #endif
 
-    if (write_hepevt && hepevt_stream.good()) {
-      e.write_hepevt(i, hepevt_stream);
-    }
+    // Display all floating-point numbers without using scientific notation and
+    // using one decimal digit
+    std::cout << std::fixed << std::setprecision(1);
 
-    // Print status messages about simulation progress after every 100
-    // events have been generated
-    if ((i - num_old_events) % 100 == 1 || i == num_events) {
-      // Print a status message showing the current number of events
-      std::cout << "Event Count = " << i << "/" << num_events
-        << " (" << i*100/static_cast<double>(num_events)
-        << "% complete)\n";
+    // Use the signal handler defined above to deal with
+    // SIGINT signals (e.g., ctrl+c interruptions initiated
+    // by the user). This will allow us to terminate the
+    // loop gracefully, leaving a valid event tree file, etc.
+    std::signal(SIGINT, signal_handler);
 
-      // Print timing information
-      std::chrono::system_clock::time_point current_time_point
-        = std::chrono::system_clock::now();
-      std::cout << "Elapsed time: "
-        << marley_utils::elapsed_time_string(start_time_point,
-        current_time_point) << " (Estimated total run time: ";
+    // Generate all of the requested events. End the loop early
+    // if the user interrupts execution (e.g., via ctrl+C)
+    for (int i = 1 + num_old_events; i <= num_events && !interrupted; ++i) {
 
-      marley_utils::seconds<float> estimated_total_time =
-        (current_time_point - start_time_point)*(static_cast<float>(num_events
-        - num_old_events)/(i - num_old_events));
-
-      std::cout << marley_utils::duration_to_string
-        <marley_utils::seconds<float>>(estimated_total_time)
-        << ")\033[K\n";
+      // Create an event using the generator object
+      marley::Event e = gen.create_event();
 
       #ifdef USE_ROOT
-        if (write_root) {
-          data_written = marley_utils::num_bytes_to_string(
-            treeFile->GetBytesWritten(),2);
-          std::cout << "Data written to ROOT file = " << data_written
+        // Get the address of this event object
+        p_event = new marley::Event;
+        *p_event = e;
+
+        // Store this event in the ROOT tree
+        if (write_root) event_tree->Fill();
+      #endif
+
+      if (write_hepevt && hepevt_stream.good()) {
+        e.write_hepevt(i, hepevt_stream);
+      }
+
+      // Print status messages about simulation progress after every 100
+      // events have been generated
+      if ((i - num_old_events) % 100 == 1 || i == num_events) {
+        // Print a status message showing the current number of events
+        std::cout << "Event Count = " << i << "/" << num_events
+          << " (" << i*100/static_cast<double>(num_events)
+          << "% complete)\n";
+
+        // Print timing information
+        std::chrono::system_clock::time_point current_time_point
+          = std::chrono::system_clock::now();
+        std::cout << "Elapsed time: "
+          << marley_utils::elapsed_time_string(start_time_point,
+          current_time_point) << " (Estimated total run time: ";
+
+        marley_utils::seconds<float> estimated_total_time =
+          (current_time_point - start_time_point)
+          * (static_cast<float>(num_events - num_old_events)
+          / (i - num_old_events));
+
+        std::cout << marley_utils::duration_to_string
+          <marley_utils::seconds<float>>(estimated_total_time)
+          << ")\033[K\n";
+
+        #ifdef USE_ROOT
+          if (write_root) {
+            data_written = marley_utils::num_bytes_to_string(
+              treeFile->GetBytesWritten(),2);
+            std::cout << "Data written to ROOT file = " << data_written
+              << "\033[K\n";
+          }
+        #endif
+
+        if (write_hepevt) {
+          hepevt_stream.flush();
+          double num_bytes_to_hepevt_file = hepevt_stream.tellp();
+          std::cout << "Data written to HEPEvt file = "
+            << marley_utils::num_bytes_to_string(num_bytes_to_hepevt_file)
             << "\033[K\n";
         }
-      #endif
 
-      if (write_hepevt) {
-        hepevt_stream.flush();
-        double num_bytes_to_hepevt_file = hepevt_stream.tellp();
-        std::cout << "Data written to HEPEvt file = "
-          << marley_utils::num_bytes_to_string(num_bytes_to_hepevt_file)
+        std::time_t estimated_end_time = std::chrono::system_clock::to_time_t(
+          start_time_point + std::chrono::duration_cast
+          <std::chrono::system_clock::duration>(estimated_total_time));
+
+        std::cout << "MARLEY is estimated to terminate on "
+          << put_time(std::localtime(&estimated_end_time), "%c %Z") << '\n';
+
+        #ifdef USE_ROOT
+          // Move up an extra line if we're using ROOT and
+          // therefore displaying information about the
+          // amount of data written to disk
+          if (write_root) std::cout << "\033[F";
+        #endif
+
+        // Move up an extra line if we're writing data to a HEPEvt format file
+        // and therefore displaying the amount of data written to it.
+        if (write_hepevt) {
+          std::cout << "\033[F";
+        }
+
+        // Move up three lines in std::cout
+        std::cout << "\033[F\033[F\033[F";
+      }
+    }
+
+    std::cout << "\033[E";
+
+    #ifdef USE_ROOT
+      // Write the event tree to the ROOT file, replacing the previous
+      // version if one exists. Avoid data loss by not deleting the previous
+      // version until the new version is completely written to disk.
+      if (write_root) {
+        event_tree->Write(event_tree->GetName(), TTree::kWriteDelete);
+
+        // Write the internal state string of the random number generator to
+        // disk. This will allow MARLEY to resume event generation from where
+        // it left off with no loss of consistency. This trick is based on
+        // http://tinyurl.com/hb7rqsj
+        std::string rng_state_string = gen.get_state_string();
+        treeFile->WriteObject(&rng_state_string, "MARLEY RNG State String",
+          "WriteDelete");
+
+        // Close the ROOT file and print final information about
+        // the amount of data written to disk
+        treeFile->Close();
+        data_written = marley_utils::num_bytes_to_string(
+          treeFile->GetBytesWritten());
+        std::cout << "Data written to ROOT file = " << data_written
           << "\033[K\n";
       }
+    #endif
 
-      std::time_t estimated_end_time = std::chrono::system_clock::to_time_t(
-        start_time_point + std::chrono::duration_cast
-        <std::chrono::system_clock::duration>(estimated_total_time));
-
-      std::cout << "MARLEY is estimated to terminate on "
-        << put_time(std::localtime(&estimated_end_time), "%c %Z") << '\n';
-
-      #ifdef USE_ROOT
-        // Move up an extra line if we're using ROOT and
-        // therefore displaying information about the
-        // amount of data written to disk
-        if (write_root) std::cout << "\033[F";
-      #endif
-
-      // Move up an extra line if we're writing data to a HEPEvt format file
-      // and therefore displaying the amount of data written to it.
-      if (write_hepevt) {
-        std::cout << "\033[F";
-      }
-
-      // Move up three lines in std::cout
-      std::cout << "\033[F\033[F\033[F";
+    if (write_hepevt) {
+      hepevt_stream.flush();
+      double num_bytes_to_hepevt_file = hepevt_stream.tellp();
+      std::cout << "Data written to HEPEvt file = "
+        << marley_utils::num_bytes_to_string(num_bytes_to_hepevt_file)
+        << "\033[K\n";
     }
-  }
 
-  std::cout << "\033[E";
+    // Display the time that the program terminated
+    std::chrono::system_clock::time_point end_time_point
+      = std::chrono::system_clock::now();
+    std::time_t end_time = std::chrono::system_clock::to_time_t(
+      end_time_point);
 
-  #ifdef USE_ROOT
-    // Write the event tree to the ROOT file, replacing the previous
-    // version if one exists. Avoid data loss by not deleting the previous
-    // version until the new version is completely written to disk.
-    if (write_root) {
-      event_tree->Write(event_tree->GetName(), TTree::kWriteDelete);
-
-      // Write the internal state string of the random number generator to
-      // disk. This will allow MARLEY to resume event generation from where
-      // it left off with no loss of consistency. This trick is based on
-      // http://tinyurl.com/hb7rqsj
-      std::string rng_state_string = gen.get_state_string();
-      treeFile->WriteObject(&rng_state_string, "MARLEY RNG State String",
-        "WriteDelete");
-
-      // Close the ROOT file and print final information about
-      // the amount of data written to disk
-      treeFile->Close();
-      data_written = marley_utils::num_bytes_to_string(
-        treeFile->GetBytesWritten());
-      std::cout << "Data written to ROOT file = " << data_written << "\033[K\n";
+    if (!interrupted) {
+      std::cout << "MARLEY terminated normally on ";
     }
-  #endif
+    else {
+      std::cout << "MARLEY was interrupted by the user on ";
+    }
+    std::cout << put_time(std::localtime(&end_time), "%c %Z")
+      << "\033[K\033[E\033[K";
 
-  if (write_hepevt) {
-    hepevt_stream.flush();
-    double num_bytes_to_hepevt_file = hepevt_stream.tellp();
-    std::cout << "Data written to HEPEvt file = "
-      << marley_utils::num_bytes_to_string(num_bytes_to_hepevt_file)
-      << "\033[K\n";
+    return 0;
   }
 
-  // Display the time that the program terminated
-  std::chrono::system_clock::time_point end_time_point
-    = std::chrono::system_clock::now();
-  std::time_t end_time = std::chrono::system_clock::to_time_t(end_time_point);
-
-  if (!interrupted) {
-    std::cout << "MARLEY terminated normally on ";
+  catch (const marley::Error& error) {
+    // Flush the Logger, then rethrow the error for the system to handle.
+    // This will probably result in std::terminate() being called.
+    auto& log = marley::Logger::Instance();
+    log.newline();
+    log.flush();
+    throw error;
   }
-  else {
-    std::cout << "MARLEY was interrupted by the user on ";
-  }
-  std::cout << put_time(std::localtime(&end_time), "%c %Z")
-    << "\033[K\033[E\033[K";
 
-  return 0;
+  return 1;
 }

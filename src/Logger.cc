@@ -99,16 +99,6 @@ marley::Logger::Logger(bool log_enabled) : enabled_(log_enabled),
 
 marley::Logger& marley::Logger::Instance() {
   static Logger instance;
-  static bool terminate_is_set = false;
-  if (!terminate_is_set) {
-    std::set_terminate([]() {
-      auto& log = marley::Logger::Instance();
-      log.newline();
-      log.flush();
-      std::abort();
-    });
-    terminate_is_set = true;
-  }
   return instance;
 }
 
