@@ -451,8 +451,6 @@ namespace marley {
         return out.str();
       }
 
-    private:
-
       // Implementation of serialization to text. Used by the public
       // dump_string() method.
       void print(std::ostream& out, const unsigned int indent_step,
@@ -535,7 +533,7 @@ namespace marley {
         return;
       }
 
-
+    private:
 
       void check_if_object(const std::string& key) {
         if (type_ != DataType::Object) throw marley::Error("Attempted"

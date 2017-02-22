@@ -115,7 +115,7 @@ namespace marley {
       /// @param out The std::ostream to which the HEPEvt record will be written
       /// @todo Alter marley::Event::write_hepevt() so that the user can specify
       /// a vertex position 4-vector to use.
-      void write_hepevt(size_t event_num, std::ostream& out);
+      void write_hepevt(size_t event_num, std::ostream& out) const;
 
       /// @brief Print this event to a std::ostream
       /// @param out The std::ostream to which this event will be written
@@ -150,7 +150,7 @@ namespace marley {
       /// @param track whether the particle should be marked for future
       /// tracking in a simulation (true) or not (false).
       void dump_hepevt_particle(const marley::Particle& p, std::ostream& os,
-        bool track = true);
+        bool track = true) const;
   };
 
   // Inline function definitions

@@ -49,7 +49,7 @@ namespace marley {
       /// @brief Use a string to set this Generator's internal state
       /// @details This function is typically used to restore a Generator
       /// to a state saved using get_state_string().
-      void seed_using_state_string(std::string& state_string);
+      void seed_using_state_string(const std::string& state_string);
 
       /// @brief Get a string that represents the current internal state of
       /// this Generator

@@ -67,7 +67,9 @@ marley::Event marley::Generator::create_event() {
   return ev;
 }
 
-void marley::Generator::seed_using_state_string(std::string& state_string) {
+void marley::Generator::seed_using_state_string(
+  const std::string& state_string)
+{
   // TODO: add error handling here (check that state_string is valid)
   std::stringstream strstr(state_string);
   strstr >> rand_gen_;

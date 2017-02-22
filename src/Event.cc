@@ -212,7 +212,7 @@ void marley::Event::read(std::istream& in) {
 // Function that dumps a marley::Particle to an output stream in HEPEvt format.
 // This is a private helper function for the publicly-accessible write_hepevt.
 void marley::Event::dump_hepevt_particle(const marley::Particle& p,
-  std::ostream& os, bool track)
+  std::ostream& os, bool track) const
 {
   // Print the flag that indicates whether the particle should be tracked
   // (i.e., it is a final particle) or not
@@ -231,7 +231,7 @@ void marley::Event::dump_hepevt_particle(const marley::Particle& p,
     << " 0. 0. 0. 0." << '\n';
 }
 
-void marley::Event::write_hepevt(size_t event_num, std::ostream& out) {
+void marley::Event::write_hepevt(size_t event_num, std::ostream& out) const {
 
   // Use an temporary ostringstream object so that we can ensure all
   // floating-point values are output with full precision without disturbing
