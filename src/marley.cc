@@ -407,6 +407,31 @@ namespace {
   class TextOutputFile : public OutputFile {
     private:
 
+      // Formats the beginning of a JSON output file properly based on the
+      // current indent level. Writes the result to a std::ostream.
+      void start_json_output(bool start_array) {
+        if (format_ != Format::JSON) throw marley::Error("TextOutputFile"
+          "::start_json_output() called for a non-JSON file format");
+
+        stream_ << '{';
+        if (indent_ >= 0) {
+          stream_ << '\n';
+          for (int k = 0; k < indent_; ++k) stream_ << ' ';
+        }
+        stream_ << "\"events\"";
+        if (indent_ >= 0) stream_ << ' ';
+        stream_ << ':';
+        if (indent_ >= 0) stream_ << ' ';
+
+        if (!start_array) return;
+
+        stream_ << '[';
+        if (indent_ >= 0) {
+          stream_ << '\n';
+          for (int k = 0; k < 2*indent_; ++k) stream_ << ' ';
+        }
+      }
+
       // Stream used to read and write from the output file as needed
       std::fstream stream_;
 
@@ -466,20 +491,7 @@ namespace {
 
         // Get the event array started if we're writing a fresh JSON file
         if (format_ == Format::JSON && mode_ == Mode::OVERWRITE) {
-          stream_ << '{';
-          if (indent_ >= 0) {
-            stream_ << '\n';
-            for (int k = 0; k < indent_; ++k) stream_ << ' ';
-          }
-          stream_ << "\"events\"";
-          if (indent_ >= 0) stream_ << ' ';
-          stream_ << ':';
-          if (indent_ >= 0) stream_ << ' ';
-          stream_ << '[';
-          if (indent_ >= 0) {
-            stream_ << '\n';
-            for (int k = 0; k < 2*indent_; ++k) stream_ << ' ';
-          }
+          start_json_output(true);
         }
         //MARLEY_LOG_INFO() << "Events for this run will be ";
         //if (hepevt_file_exists && open_mode_flag == std::ios:ate)
@@ -564,18 +576,35 @@ namespace {
         // We've loaded all the metadata we need, so erase the file,
         // and write out all the previous events to it again.
         stream_.open(name_, std::ios::out | std::ios::trunc);
+
+        start_json_output(false);
+
         auto evt_array = temp_json.at("events");
-        std::string temp_str = "{\"events\":" + evt_array.dump_string();
+
+        // Use a stringstream to pretty-print the events as needed
+        std::stringstream temp_ss;
+        if (indent_ < 0) temp_ss << evt_array.dump_string();
+        else evt_array.print(temp_ss, indent_, true, indent_);
+
+        // Get the string containing the printed events, and delete
+        // the copy owned by the stringstream after doing so
+        std::string temp_str = temp_ss.str();
+
+        temp_ss.str("");
+        temp_ss.clear();
+
         // Remove the closing ']' from the array of events, and any
         // trailing whitespace
         while (std::isspace(temp_str.back())) temp_str.pop_back();
         temp_str.pop_back();
         while (std::isspace(temp_str.back())) temp_str.pop_back();
+
         // Unless the event array is empty, add a comma before continuing
         // to write events to the file
         const auto arr = evt_array.array_range();
         if (arr.begin() != arr.end()) needs_comma_ = true;
         else needs_comma_ = false;
+
         // Write the previous events to the file
         stream_ << temp_str;
 
@@ -952,7 +981,7 @@ int main(int argc, char* argv[]){
     std::cout << "\033[E";
 
     for (const auto& file : output_files) {
-      file->close(json, *gen, ev_count);
+      file->close(json, *gen, ev_count - 1);
       std::cout << "Data written to " << file->name() << ' '
         << marley_utils::num_bytes_to_string(file->bytes_written())
         << "\033[K\n";
