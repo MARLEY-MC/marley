@@ -77,6 +77,7 @@ namespace {
   // Prompts the user with a question that requires a yes/no answer. Returns
   // true if the answer was yes, or false if the answer was no.
   bool prompt_yes_no(const std::string& message) {
+    std::cout << '\n';
     std::string response;
     while (std::cout << message << " [y/n]? "
       && std::getline(std::cin, response)
@@ -520,6 +521,9 @@ namespace {
           return false;
         }
 
+        MARLEY_LOG_INFO() << "Continuing previous run from JSON file "
+          << name_;
+
         // Get the JSON objects from the file
         stream_.close();
         stream_.open(name_, std::ios::in);
@@ -577,36 +581,28 @@ namespace {
         // and write out all the previous events to it again.
         stream_.open(name_, std::ios::out | std::ios::trunc);
 
-        start_json_output(false);
+        start_json_output(true);
 
-        auto evt_array = temp_json.at("events");
+        const auto& evt_array = temp_json.at("events").array_range();
 
-        // Use a stringstream to pretty-print the events as needed
-        std::stringstream temp_ss;
-        if (indent_ < 0) temp_ss << evt_array.dump_string();
-        else evt_array.print(temp_ss, indent_, true, indent_);
+        // Pretty-print the events one-by-one as needed
+        auto begin = evt_array.begin();
+        auto end = evt_array.end();
 
-        // Get the string containing the printed events, and delete
-        // the copy owned by the stringstream after doing so
-        std::string temp_str = temp_ss.str();
-
-        temp_ss.str("");
-        temp_ss.clear();
-
-        // Remove the closing ']' from the array of events, and any
-        // trailing whitespace
-        while (std::isspace(temp_str.back())) temp_str.pop_back();
-        temp_str.pop_back();
-        while (std::isspace(temp_str.back())) temp_str.pop_back();
+        for (auto iter = begin; iter != end; ++iter) {
+          if (iter != begin) stream_ << ',';
+          if (indent_ < 0) stream_ << iter->dump_string();
+          else {
+            stream_ << '\n';
+            for (int i = 0; i < 2*indent_; ++i) stream_ << ' ';
+            iter->print(stream_, indent_, true, 2*indent_);
+          }
+        }
 
         // Unless the event array is empty, add a comma before continuing
         // to write events to the file
-        const auto arr = evt_array.array_range();
-        if (arr.begin() != arr.end()) needs_comma_ = true;
+        if (begin != end) needs_comma_ = true;
         else needs_comma_ = false;
-
-        // Write the previous events to the file
-        stream_ << temp_str;
 
         // Close the file and re-open it, this time appending to the end
         stream_.close();
@@ -638,7 +634,7 @@ namespace {
           case Format::JSON:
             if (needs_comma_) {
               stream_ << ',';
-              if (indent_ < 0) {
+              if (indent_ > 0) {
                 stream_ << '\n';
                 for (int k = 0; k < 2*indent_; ++k) stream_ << ' ';
               }
@@ -670,14 +666,14 @@ namespace {
           "write_generator_state() should only be used with the JSON format");
 
         stream_ << ',';
-        if (indent_ < 0) {
+        if (indent_ > 0) {
           stream_ << '\n';
           for (int k = 0; k < indent_; ++k) stream_ << ' ';
         }
         stream_ << "\"gen_state\"";
-        if (indent_ < 0) stream_ << ' ';
+        if (indent_ > 0) stream_ << ' ';
         stream_ << ':';
-        if (indent_ < 0) stream_ << ' ';
+        if (indent_ > 0) stream_ << ' ';
 
         marley::JSON temp = marley::JSON::object();
 
@@ -695,7 +691,7 @@ namespace {
       {
         if (format_ == Format::JSON) {
           // End the JSON array of event objects
-          if (indent_ < 0) {
+          if (indent_ > 0) {
             stream_ << '\n';
             for (int k = 0; k < indent_; ++k) stream_ << ' ';
           }
@@ -706,7 +702,7 @@ namespace {
           write_generator_state(json_config, gen, num_events);
 
           // Terminate the JSON file with a closing curly brace
-          if (indent_ < 0) stream_ << '\n';
+          if (indent_ > 0) stream_ << '\n';
           stream_ << '}';
         }
 

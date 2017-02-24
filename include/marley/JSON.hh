@@ -434,12 +434,7 @@ namespace marley {
       // are based on techniques used in the JSON for Modern C++
       // library by Niels Lohmann (https://github.com/nlohmann/json).
       std::string dump_string(const int indent_step = -1) const {
-        // Use max_digits10 for outputting double-precision floating-point
-        // numbers. This ensures that repeated input/output via JSON will
-        // not result in any loss of precision. For more information, please
-        // see http://tinyurl.com/p8wyhnn
-        std::ostringstream out;
-        out.precision(std::numeric_limits<double>::max_digits10);
+        std::stringstream out;
         // Enable pretty-printing if the user specified a nonnegative
         // indent_step value
         if (indent_step >= 0)
@@ -456,6 +451,17 @@ namespace marley {
       void print(std::ostream& out, const unsigned int indent_step,
         bool pretty, const unsigned int current_indent = 0) const
       {
+        // Use max_digits10 for outputting double-precision floating-point
+        // numbers. This ensures that repeated input/output via JSON will
+        // not result in any loss of precision. For more information, please
+        // see http://tinyurl.com/p8wyhnn
+        static std::ostringstream out_float;
+        static bool set_precision = false;
+        if (!set_precision) {
+          out_float.precision(std::numeric_limits<double>::max_digits10);
+          set_precision = true;
+        }
+
         unsigned int indent = current_indent;
 
         switch( type_ ) {
@@ -518,7 +524,13 @@ namespace marley {
             out << '\"' + json_escape( *data_.string_ ) + '\"';
             return;
           case DataType::Floating:
-            out << data_.float_;
+            // Clear any previous contents of the stringstream
+            out_float.str("");
+            out_float.clear();
+            // Fill it with the new floating-point number
+            out_float << data_.float_;
+            // Output the resulting string to the stream
+            out << out_float.str();
             return;
           case DataType::Integral:
             out << data_.integer_;
