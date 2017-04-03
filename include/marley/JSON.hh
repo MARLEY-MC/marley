@@ -842,7 +842,7 @@ namespace marley {
     JSON parse_string(std::istream& in) {
       JSON str;
       std::string val;
-      for(char c = in.get(); c != '\"' ; c = in.get()) {
+      for(char c = in.get(); c != '\"' && in; c = in.get()) {
         if (c == '\\') {
           switch( in.get() ) {
             case '\"': val += '\"'; break;
