@@ -8,9 +8,9 @@
 #include "marley/Error.hh"
 #include "marley/Event.hh"
 #include "marley/Generator.hh"
+#include "marley/HauserFeshbachDecay.hh"
 #include "marley/Level.hh"
 #include "marley/Logger.hh"
-#include "marley/HauserFeshbachDecay.hh"
 #include "marley/Reaction.hh"
 
 marley::NuclearReaction::NuclearReaction(std::string filename,

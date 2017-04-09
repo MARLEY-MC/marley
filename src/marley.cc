@@ -206,7 +206,7 @@ namespace {
           open();
         }
 
-        int_fast64_t bytes_written() {
+        int_fast64_t bytes_written() override {
           return file_->GetBytesWritten();
         }
 
@@ -611,7 +611,7 @@ namespace {
         return true;
       }
 
-      int_fast64_t bytes_written() {
+      int_fast64_t bytes_written() override {
         // If the stream is open, then update the byte count. Otherwise, just
         // use the saved value.
         if (stream_.is_open()) {

@@ -4,6 +4,15 @@
 #include <memory>
 #include <vector>
 
+// Forward declare the HauserFeshbachDecay class and its operator<< so that
+// we can stream it to the Logger
+namespace marley {
+  class HauserFeshbachDecay;
+}
+
+inline std::ostream& operator<<(std::ostream& out,
+  const marley::HauserFeshbachDecay& hfd);
+
 namespace marley {
 
   /// @brief Simple singleton logging class
