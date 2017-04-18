@@ -172,6 +172,7 @@ void marley::Event::print(std::ostream& out) const {
   // floating-point values are output with full precision without disturbing
   // the user's settings in the "out" stream.
   std::ostringstream temp;
+  temp << std::scientific;
   temp.precision(std::numeric_limits<double>::max_digits10);
 
   temp << initial_particles_.size() << ' ' << final_particles_.size()
