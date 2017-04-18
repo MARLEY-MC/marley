@@ -1,8 +1,8 @@
 /**
 @mainpage MARLEY documentation
 
-The source code for MARLEY v0.9.5 is available
-<a href="https://github.com/sjgardiner/marley/archive/v0.9.5.tar.gz">here</a>.
+The source code for MARLEY v1.0.0 is available
+<a href="https://github.com/sjgardiner/marley/archive/v1.0.0.tar.gz">here</a>.
 Build requirements: g++ >= 4.9 (or a recent version of clang) and GNU make
 
 The nuclear structure data that we recommend for use with MARLEY are

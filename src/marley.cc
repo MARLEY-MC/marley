@@ -570,7 +570,11 @@ namespace {
           return false;
         }
 
-        marley::RootJSONConfig jc(config);
+        #ifdef USE_ROOT
+          marley::RootJSONConfig jc(config);
+        #else
+          marley::JSONConfig jc(config);
+        #endif
         gen = std::make_unique<marley::Generator>(jc.create_generator());
         gen->seed_using_state_string(state_string);
 
@@ -726,7 +730,7 @@ namespace {
   void print_version() {
     std::cout << "MARLEY (Model of Argon Reaction Low Energy Yields) "
       << marley_utils::MARLEY_VERSION << '\n';
-    std::cout << "Copyright (C) 2016 Steven Gardiner\n";
+    std::cout << "Copyright (C) 2016-2017 Steven Gardiner\n";
     std::cout << "License BSD2C: BSD 2-Clause "
       << "<http://opensource.org/licenses/BSD-2-Clause>\n";
     std::cout << "This is free software: you are free to change and"
@@ -866,11 +870,15 @@ int main(int argc, char* argv[]){
           }
         }
 
-        if (format == "root") output_files.push_back(
-          std::make_unique<RootOutputFile>(filename, format, mode, force));
-        else output_files.push_back(
-          std::make_unique<TextOutputFile>(filename, format, mode,
-            force, indent));
+        #ifdef USE_ROOT
+          if (format == "root") output_files.push_back(
+            std::make_unique<RootOutputFile>(filename, format, mode, force));
+          else output_files.push_back(std::make_unique<TextOutputFile>(
+            filename, format, mode, force, indent));
+        #else
+          output_files.push_back(std::make_unique<TextOutputFile>(filename,
+            format, mode, force, indent));
+        #endif
       }
     }
     else {
