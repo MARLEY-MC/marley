@@ -99,20 +99,23 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
     /// @todo Consider implementing a sorting procedure rather than strictly
     /// enforcing that energies must be given in ascending order.
 
-    // The order of the entries is important because later uses of the
-    // residue_level_energies vector assume that they are sorted in
-    // order of ascending energy.
-    double energy, strength, strength_id;
-    iss >> energy >> strength >> strength_id;
+    // The order of the entries is important because later uses of the vector of
+    // matrix elements assume that they are sorted in order of ascending final
+    // level energy.
+    double energy, strength;
+    int me_type;
+    iss >> energy >> strength >> me_type;
     if (old_energy >= energy) throw marley::Error(std::string("Invalid")
       + " reaction dataset. Level energies must be unique and must be"
       + " given in ascending order.");
-    residue_level_energies_.push_back(energy);
-    residue_level_strengths_.push_back(strength);
-    residue_level_strength_ids_.push_back(strength_id);
-    // Initialize all of the level pointers to nullptr. This may be changed
-    // later if discrete level data can be found for the residual nucleus.
-    residue_level_pointers_.push_back(nullptr);
+    // @todo Right now, 0 corresponds to a Fermi transition, and 1 corresponds
+    // to a Gamow-Teller transition. As you add new matrix element types,
+    // consider changing the convention and its implementation.
+    // All of the level pointers owned by the matrix elements will initially be
+    // set to nullptr. This may be changed later if discrete level data can be
+    // found for the residual nucleus.
+    matrix_elements_.emplace_back(energy, strength,
+      static_cast<marley::MatrixElement::TransitionType>(me_type), nullptr);
     old_energy = energy;
   }
 
@@ -166,15 +169,15 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
   }
 
   // Cycle through each of the level energies given in the reaction dataset.
-  for(size_t j = 0, s = residue_level_energies_.size(); j < s; ++j)
+  for (auto& mat_el : matrix_elements_)
   {
-    double en = residue_level_energies_.at(j);
+    double en = mat_el.level_energy();
     // If the level is above the fragment emission threshold, assign it a null
     // level pointer. Such levels will be handled by a fragment evaporation
     // routine and therefore do not need pointers to level objects describing
     // their de-excitation gammas.
     if (en > unbound_threshold) {
-      residue_level_pointers_.at(j) = nullptr;
+      mat_el.set_level(nullptr);
       continue;
     }
 
@@ -187,10 +190,14 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
 
     // Complain if there are duplicates (if there are duplicates, we'll have
     // two different B(F) + B(GT) values for the same level object)
-    if (std::find(residue_level_pointers_.begin(),
-      residue_level_pointers_.end(), plevel) != residue_level_pointers_.end())
+    const auto begin = matrix_elements_.cbegin();
+    const auto end = matrix_elements_.cend();
+    const auto found = std::find_if(begin, end,
+      [plevel](const marley::MatrixElement& me) -> bool
+      { return plevel == me.level(); });
+    if (found != end)
     {
-      // residue_level_pointers already contains plevel
+      // One of the matrix elements already uses a level pointer equal to plevel
       throw marley::Error(std::string("Reaction dataset gives two")
         + " level energies that refer to the same DecayScheme level at "
         + std::to_string(plevel->energy()) + " MeV");
@@ -201,7 +208,7 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
     /// level matchup is likely incorrect.
 
     // Add the level pointer to the list
-    residue_level_pointers_.at(j) = plevel;
+    mat_el.set_level(plevel);
   }
 }
 
@@ -300,27 +307,27 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   // levels, so we won't worry about its default behavior.
   static std::discrete_distribution<size_t> ldist;
 
-  // The pointers in residue_level_pointers are ordered by increasing energy
-  // (this is currently enforced by the reaction data format and is checked
-  // during parsing). Iterate over the levels, assigning the total cross
+  // The level pointers owned by the matrix elements are ordered by increasing
+  // energy (this is currently enforced by the reaction data format and is
+  // checked during parsing). Iterate over the levels, assigning the total cross
   // section for each level as its weight until you reach the end of
-  // residue_level_pointers or a level that is kinematically forbidden. If the
+  // the matrix elements or a level that is kinematically forbidden. If the
   // matrix element B(F) + B(GT) for a level vanishes, skip computing the total
   // cross section and assign a weight of zero for efficiency.
   bool at_least_one_nonzero_matrix_el = false;
 
-  for(size_t i = 0; i < residue_level_pointers_.size(); ++i) {
+  for (const auto& mat_el : matrix_elements_) {
 
     double level_energy;
 
     // Get the excitation energy for the current level
-    if (residue_level_pointers_[i] != nullptr) {
-      level_energy = residue_level_pointers_[i]->energy();
+    if (mat_el.level() != nullptr) {
+      level_energy = mat_el.level()->energy();
     }
     else {
       // Level is unbound, so just use the energy given in the reaction dataset
       // rather than trying to find its DecayScheme version
-      level_energy = residue_level_energies_[i];
+      level_energy = mat_el.level_energy();
     }
 
     // Exit the loop early if you reach a level with an energy that's too high
@@ -329,10 +336,10 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
     // Check whether the matrix element (B(F) + B(GT)) is nonvanishing for the
     // current level. If it is, just set the weight equal to zero rather than
     // calling total_xs. This will avoid unnecessary numerical integrations.
-    double matrix_el = residue_level_strengths_[i];
+    double strength = mat_el.strength();
     double xs;
 
-    if (matrix_el == 0.) {
+    if (strength == 0.) {
       xs = 0.;
     }
     else {
@@ -341,13 +348,13 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
       // to the total reaction cross section. Note that
       // std::discrete_distribution automatically normalizes the weights, so we
       // don't have to do that ourselves.
-      xs = total_xs(level_energy, KEa, matrix_el);
+      xs = total_xs(level_energy, KEa, strength);
       if (std::isnan(xs)) {
         MARLEY_LOG_WARNING() << "Partial cross section for reaction "
           << description_ << " gave NaN result.";
         MARLEY_LOG_DEBUG() << "Parameters were level energy = " << level_energy
           << " MeV, projectile kinetic energy = " << KEa
-          << " MeV, and matrix element = " << matrix_el;
+          << " MeV, and matrix element = " << strength;
         MARLEY_LOG_DEBUG() << "The partial cross section to this level"
           << " will be set to zero for this event.";
         xs = 0.;
@@ -382,12 +389,14 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   std::discrete_distribution<size_t>::param_type params(level_weights.begin(),
     level_weights.end());
 
-  // Sample a level index using our discrete distribution and the
+  // Sample a matrix_element using our discrete distribution and the
   // current set of weights
-  size_t l_index = gen.discrete_sample(ldist, params);
+  size_t me_index = gen.discrete_sample(ldist, params);
+
+  const auto& sampled_matrix_el = matrix_elements_.at(me_index);
 
   // Get a pointer to the selected level
-  marley::Level* plevel = residue_level_pointers_.at(l_index);
+  const marley::Level* plevel = sampled_matrix_el.level();
 
   // Get the energy of the selected level.
   double E_level;
@@ -396,7 +405,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   }
   else {
     // Level is unbound, so use the level energy found in the reaction dataset
-    E_level = residue_level_energies_.at(l_index);
+    E_level = sampled_matrix_el.level_energy();
   }
 
   md_ = md_gs_ + E_level;
@@ -412,9 +421,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   double beta_c_cm = pc_cm / Ec_cm;
 
   // Sample a CM frame scattering cosine for the ejectile.
-  //double matrix_el = residue_level_strengths.at(l_index);
-  int m_type = residue_level_strength_ids_.at(l_index);
-  double cos_theta_c_cm = sample_cos_theta_c_cm(/*matrix_el,*/ m_type,
+  double cos_theta_c_cm = sample_cos_theta_c_cm(sampled_matrix_el,
     beta_c_cm, gen);
 
   // Sample a CM frame azimuthal scattering angle (phi) uniformly on [0, 2*pi).
@@ -446,7 +453,16 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
     // = 0+), these also correspond to the 40K* state spins.
     /// @todo Come up with a better way of determining the Jpi values that will
     /// work for forbidden transition operators.
-    int twoJ = 2*m_type;
+
+    marley::MatrixElement::TransitionType me_type = sampled_matrix_el.type();
+    int twoJ;
+    if (me_type == marley::MatrixElement::TransitionType::FERMI) twoJ = 0;
+    else if (me_type == marley::MatrixElement::TransitionType::GAMOW_TELLER) {
+      twoJ = 2;
+    }
+    else throw marley::Error("Unrecognized matrix element type encountered"
+      " during a continuum decay in marley::NuclearReaction::create_event()");
+
     // Fermi transition gives 0+ -> 0+, GT transition gives 0+ -> 1+
     /// @todo include possibility of negative parity here.
     marley::Parity P(true); // positive parity
@@ -497,18 +513,18 @@ double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
 
   double max_E_level = max_level_energy(KEa);
   double xs = 0;
-  for(size_t i = 0; i < residue_level_pointers_.size(); ++i) {
+  for (const auto& mat_el : matrix_elements_) {
 
     double level_energy;
 
     // Get the excitation energy for the current level
-    if (residue_level_pointers_[i] != nullptr) {
-      level_energy = residue_level_pointers_[i]->energy();
+    if (mat_el.level() != nullptr) {
+      level_energy = mat_el.level()->energy();
     }
     else {
       // Level is unbound, so just use the energy given in the reaction dataset
       // rather than trying to find its DecayScheme version
-      level_energy = residue_level_energies_[i];
+      level_energy = mat_el.level_energy();
     }
 
     // Exit the loop early if you reach a level with an energy that's too high
@@ -517,7 +533,7 @@ double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
     // Check whether the matrix element (B(F) + B(GT)) is nonvanishing for the
     // current level. If it is, just set the weight equal to zero rather than
     // computing the total xs.
-    double matrix_el = residue_level_strengths_[i];
+    double matrix_el = mat_el.strength();
 
     if (matrix_el != 0.) {
       // If the matrix element is nonzero, assign a weight to this level equal
@@ -582,28 +598,31 @@ double marley::NuclearReaction::total_xs(double E_level, double KEa,
 }
 
 // Sample an ejectile scattering cosine in the CM frame.
-double marley::NuclearReaction::sample_cos_theta_c_cm(/*double matrix_el,*/
-  int m_type, double beta_c_cm, marley::Generator& gen) const
+double marley::NuclearReaction::sample_cos_theta_c_cm(
+  const marley::MatrixElement& matrix_el, double beta_c_cm,
+  marley::Generator& gen) const
 {
+  using ME_Type = marley::MatrixElement::TransitionType;
+
   // Choose the correct form factor to use based on the matrix element type.
   // Note that our rejection sampling technique does not require that we
   // normalize the form factors before sampling from them.
   /// @todo Implement a more general way of labeling the matrix elements
   std::function<double(double)> form_factor;
 
-  if (m_type == 0) {
+  if (matrix_el.type() == ME_Type::FERMI) {
     // B(F)
     form_factor = [&beta_c_cm](double cos_theta_c_cm)
       -> double { return 1. + beta_c_cm * cos_theta_c_cm; };
   }
-  else if (m_type == 1) {
+  else if (matrix_el.type() == ME_Type::GAMOW_TELLER) {
     // B(GT)
     form_factor = [&beta_c_cm](double cos_theta_c_cm)
       -> double { return (3. - beta_c_cm * cos_theta_c_cm) / 3.; };
   }
-  else throw marley::Error(std::string("Unrecognized matrix element")
-    + " type " + std::to_string(m_type) + " encountered while sampling a"
-    + " CM frame scattering angle");
+  else throw marley::Error("Unrecognized matrix element type "
+    + std::to_string(matrix_el.type()) + " encountered while sampling a"
+    " CM frame scattering angle");
 
   // Sample a CM frame scattering cosine using the appropriate form factor for
   // this matrix element.

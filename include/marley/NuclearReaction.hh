@@ -8,6 +8,7 @@
 #include "marley/Event.hh"
 #include "marley/Level.hh"
 #include "marley/MassTable.hh"
+#include "marley/MatrixElement.hh"
 #include "marley/Reaction.hh"
 #include "marley/StructureDatabase.hh"
 
@@ -73,7 +74,7 @@ namespace marley {
       /// href="http://scienceworld.wolfram.com/physics/RelativisticBeta.html">
       /// Dimensionless speed</a> of the ejectile in the CM frame
       /// @param gen Reference to the Generator to use for random sampling
-      double sample_cos_theta_c_cm(/*double matrix_el,*/ int m_type,
+      double sample_cos_theta_c_cm(const marley::MatrixElement& matrix_el,
         double beta_c_cm, marley::Generator& gen) const;
 
       /// @brief Total cross section for a given final nuclear level energy, in
@@ -101,31 +102,9 @@ namespace marley {
       /// all final-state particles are at rest in the CM frame)
       double KEa_threshold_;
 
-      /// @todo Refactor NuclearReaction class to use a vector of objects
-      /// rather than multiple vectors to hold the level energies, strengths,
-      /// etc.
-
-      /// @brief Excitation energy values (MeV) for each level from the
-      /// reaction data file
-      std::vector<double> residue_level_energies_;
-
-      /// @brief B(F) and B(GT) values from the reaction data file
-      std::vector<double> residue_level_strengths_;
-
-      /// @brief Matrix element type identifiers from the reaction data file
-      /// @todo Come up with a more general way of representing what kind of
-      /// matrix element is given in a reaction dataset entry. Right now 0
-      /// represents B(F) and 1 represents B(GT), but when you start to include
-      /// other kinds of matrix elements (e.g., forbidden transitions) this
-      /// will need to change. One possible solution is an enum or enum class
-      /// that can be extended as needed.
-      std::vector<double> residue_level_strength_ids_;
-
-      /// @brief Pointers to the Level objects representing final states
-      /// of the residue.
-      /// @details Particle-unbound levels have nullptr entries and de-excite
-      /// using the HauserFeshbachDecay model.
-      std::vector<marley::Level*> residue_level_pointers_;
+      /// @brief Matrix elements representing all of the possible nuclear
+      /// transitions that may be caused by this reaction
+      std::vector<marley::MatrixElement> matrix_elements_;
   };
 
 }
