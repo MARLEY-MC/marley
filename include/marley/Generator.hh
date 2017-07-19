@@ -121,13 +121,25 @@ namespace marley {
 
       /// @brief Sample from a std::discrete_distribution
       template <typename numType> inline numType
-        discrete_sample(std::discrete_distribution<numType>& disc_dist);
+        sample_discrete(std::discrete_distribution<numType>& disc_dist);
 
       /// @brief Sample from a std::discrete_distribution using the parameters
       /// params
       template <typename numType> inline numType
-        discrete_sample(std::discrete_distribution<numType>& disc_dist,
+        sample_discrete(std::discrete_distribution<numType>& disc_dist,
         const typename std::discrete_distribution<numType>::param_type& params);
+
+      /// @brief Sample from a std::uniform_int_distribution
+      template <typename numType> inline numType
+        sample_uniform_int(std::uniform_int_distribution<numType>&
+        uniform_int_dist);
+
+      /// @brief Sample from a std::uniform_int_distribution using the
+      /// parameters params
+      template <typename numType> inline numType
+        sample_uniform_int(std::uniform_int_distribution<numType>&
+        uniform_int_dist, const typename
+        std::uniform_int_distribution<numType>::param_type& params);
 
       /// @brief Sets the direction of the incident neutrinos to use when
       /// generating events
@@ -219,11 +231,21 @@ namespace marley {
     { return dir_vec_; }
 
   template <typename numType> inline numType
-    Generator::discrete_sample(std::discrete_distribution<numType>& disc_dist)
+    Generator::sample_discrete(std::discrete_distribution<numType>& disc_dist)
     { return disc_dist(rand_gen_); }
 
   template <typename numType> inline numType
-    Generator::discrete_sample(std::discrete_distribution<numType>& disc_dist,
+    Generator::sample_discrete(std::discrete_distribution<numType>& disc_dist,
     const typename std::discrete_distribution<numType>::param_type& params)
     { return disc_dist(rand_gen_, params); }
+
+  template <typename numType> inline numType
+    Generator::sample_uniform_int(std::uniform_int_distribution<numType>&
+    uniform_int_dist) { return uniform_int_dist(rand_gen_); }
+
+  template <typename numType> inline numType
+    Generator::sample_uniform_int(std::uniform_int_distribution<numType>&
+    uniform_int_dist, const typename
+    std::uniform_int_distribution<numType>::param_type& params)
+    { return uniform_int_dist(rand_gen_, params); }
 }

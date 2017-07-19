@@ -323,7 +323,7 @@ bool marley::HauserFeshbachDecay::do_decay(double& Exf, int& twoJf,
 
   std::discrete_distribution<size_t> exit_channel_dist(widths_begin,
     widths_end);
-  size_t exit_channel_index = gen_.discrete_sample(exit_channel_dist);
+  size_t exit_channel_index = gen_.sample_discrete(exit_channel_dist);
 
   marley::ExitChannel* ec = exit_channels_.at(exit_channel_index).get();
 

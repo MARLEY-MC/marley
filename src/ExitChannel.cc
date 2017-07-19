@@ -108,7 +108,7 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
     const double>(jpi_widths_table_.cend(),
     &SpinParityWidth::width);
   std::discrete_distribution<size_t> jpi_dist(begin, end);
-  size_t jpi_index = gen.discrete_sample(jpi_dist);
+  size_t jpi_index = gen.sample_discrete(jpi_dist);
 
   // Store the results
   SpinParityWidth Jpi = jpi_widths_table_.at(jpi_index);
@@ -207,7 +207,7 @@ void marley::GammaContinuumExitChannel::sample_spin_parity(int Z, int A,
     const double>(jpi_widths_table_.cend(),
     &SpinParityWidth::width);
   std::discrete_distribution<size_t> jpi_dist(begin, end);
-  size_t jpi_index = gen.discrete_sample(jpi_dist);
+  size_t jpi_index = gen.sample_discrete(jpi_dist);
 
   // Store the results
   SpinParityWidth Jpi = jpi_widths_table_.at(jpi_index);

@@ -391,7 +391,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 
   // Sample a matrix_element using our discrete distribution and the
   // current set of weights
-  size_t me_index = gen.discrete_sample(ldist, params);
+  size_t me_index = gen.sample_discrete(ldist, params);
 
   const auto& sampled_matrix_el = matrix_elements_.at(me_index);
 
