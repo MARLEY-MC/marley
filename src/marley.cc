@@ -319,6 +319,7 @@ namespace {
           // https://root.cern.ch/phpBB3/viewtopic.php?t=3162 for details. You
           // can retrieve the stored string by calling the object's GetTitle()
           // member function.
+          file_->cd();
           TNamed config("MARLEY JSON configuration", json_config.dump_string());
           TNamed state("MARLEY RNG state string", gen.get_state_string());
           TNamed seed("MARLEY RNG seed", std::to_string(gen.get_seed()));
@@ -338,6 +339,7 @@ namespace {
           // version if one exists. Avoid data loss by not deleting the
           // previous version until the new version is completely written to
           // disk.
+          file_->cd();
           tree_->Write(tree_->GetName(), TTree::kWriteDelete);
 
           // Save the current state of the generator to the ROOT file in case
