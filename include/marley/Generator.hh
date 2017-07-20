@@ -119,27 +119,31 @@ namespace marley {
       /// @param source A pointer to the new NeutrinoSource to use
       void set_source(std::unique_ptr<marley::NeutrinoSource> source);
 
-      /// @brief Sample from a std::discrete_distribution
-      template <typename numType> inline numType
-        sample_discrete(std::discrete_distribution<numType>& disc_dist);
+      /// @brief Sample from an arbitrary probability distribution (defined
+      /// here as any object that implements an operator()(std::mt19937_64&)
+      /// function)
+      /// @detail This template function
+      //  Based on a trick given at https://stackoverflow.com/a/9154394/4081973
+      template <class RandomNumberDistribution>
+        inline auto sample_from_distribution(RandomNumberDistribution& rnd)
+        -> decltype( std::declval<RandomNumberDistribution&>().operator()(
+        std::declval<std::mt19937_64&>()) )
+      {
+        return rnd(rand_gen_);
+      }
 
-      /// @brief Sample from a std::discrete_distribution using the parameters
-      /// params
-      template <typename numType> inline numType
-        sample_discrete(std::discrete_distribution<numType>& disc_dist,
-        const typename std::discrete_distribution<numType>::param_type& params);
-
-      /// @brief Sample from a std::uniform_int_distribution
-      template <typename numType> inline numType
-        sample_uniform_int(std::uniform_int_distribution<numType>&
-        uniform_int_dist);
-
-      /// @brief Sample from a std::uniform_int_distribution using the
+      /// @brief Sample from an arbitrary probability distribution (defined
+      /// here as any object that implements an
+      /// operator()(std::mt19937_64&, const ParamType&) function) using the
       /// parameters params
-      template <typename numType> inline numType
-        sample_uniform_int(std::uniform_int_distribution<numType>&
-        uniform_int_dist, const typename
-        std::uniform_int_distribution<numType>::param_type& params);
+      template <class RandomNumberDistribution, typename ParamType>
+        inline auto sample_from_distribution(RandomNumberDistribution& rnd,
+        const ParamType& params) -> decltype(
+        std::declval<RandomNumberDistribution&>().operator()(
+        std::declval<std::mt19937_64&>(), std::declval<const ParamType&>() ) )
+      {
+        return rnd(rand_gen_, params);
+      }
 
       /// @brief Sets the direction of the incident neutrinos to use when
       /// generating events
@@ -229,23 +233,4 @@ namespace marley {
 
   inline const std::array<double, 3>& Generator::neutrino_direction()
     { return dir_vec_; }
-
-  template <typename numType> inline numType
-    Generator::sample_discrete(std::discrete_distribution<numType>& disc_dist)
-    { return disc_dist(rand_gen_); }
-
-  template <typename numType> inline numType
-    Generator::sample_discrete(std::discrete_distribution<numType>& disc_dist,
-    const typename std::discrete_distribution<numType>::param_type& params)
-    { return disc_dist(rand_gen_, params); }
-
-  template <typename numType> inline numType
-    Generator::sample_uniform_int(std::uniform_int_distribution<numType>&
-    uniform_int_dist) { return uniform_int_dist(rand_gen_); }
-
-  template <typename numType> inline numType
-    Generator::sample_uniform_int(std::uniform_int_distribution<numType>&
-    uniform_int_dist, const typename
-    std::uniform_int_distribution<numType>::param_type& params)
-    { return uniform_int_dist(rand_gen_, params); }
 }

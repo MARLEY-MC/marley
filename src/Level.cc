@@ -17,7 +17,7 @@ const marley::Gamma* marley::Level::sample_gamma(marley::Generator& gen)
     // Get the index of the gamma to return by randomly sampling from the
     // discrete distribution gamma_dist using the standard marley_utils random
     // number generator.
-    size_t g_index = gen.sample_discrete(gamma_dist_);
+    size_t g_index = gen.sample_from_distribution(gamma_dist_);
     // Return a pointer to the corresponding gamma
     return &(gammas_[g_index]);
   }
