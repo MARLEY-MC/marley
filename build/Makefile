@@ -1,8 +1,8 @@
 INCLUDE_DIR = ../include
 SRC_DIR = ../src
 
-ifndef CXX_FLAGS
-  CXX_FLAGS = -std=c++14 -O3
+ifndef CXXFLAGS
+  CXXFLAGS = -std=c++14 -O3
 endif
 
 UNAME_S := $(shell uname -s)
@@ -28,7 +28,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
  
   # Use g++ as the default compiler
   CXX = g++
-  CXXFLAGS = ${CXX_FLAGS} -I$(INCLUDE_DIR) -Wall -Wextra -Wpedantic
+  CXXFLAGS += -I$(INCLUDE_DIR) -Wall -Wextra -Wpedantic
   CXXFLAGS += -Werror -Wno-error=unused-parameter -Wcast-align
 
   # Add extra compiler flags for recognized compilers (currently just gcc
@@ -144,8 +144,7 @@ endif
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -I$(INCLUDE_DIR) -fPIC -o $@ -c $^
 
 $(SHARED_LIB): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -fPIC -shared -o \
-	  lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX) $^
+	$(CXX) $(CXXFLAGS) -fPIC -shared -o $@ $^
 
 marley: $(MARLEY_LIBS) marley.o
 	$(CXX) $(CXXFLAGS) -o $@ -L. \
