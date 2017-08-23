@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">v0.9.5</span>
+   &#160;<span id="projectnumber">v1.0.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino-nucleus interactions in liquid argon</div>
   </td>
@@ -101,16 +101,21 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <p>This is the complete list of members for <a class="el" href="classmarley_1_1_logger.html">marley::Logger</a>, including all inherited members.</p>
 <table class="directory">
-  <tr class="even"><td class="entry"><a class="el" href="classmarley_1_1_logger.html#ac3ff4067da233c9e67389d46c94e1d35">add_stream</a>(std::ostream &amp;stream, LogLevel level=LogLevel::WARNING)</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="classmarley_1_1_logger.html#a976be270274bce15a7be5c8f8bdf991c">clear_streams</a>()</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classmarley_1_1_logger.html#abc6cc1e774453919566806d76b43f8a9">add_stream</a>(std::shared_ptr&lt; std::ostream &gt; stream, LogLevel level=LogLevel::WARNING)</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="classmarley_1_1_logger.html#ac3ff4067da233c9e67389d46c94e1d35">add_stream</a>(std::ostream &amp;stream, LogLevel level=LogLevel::WARNING)</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classmarley_1_1_logger.html#a976be270274bce15a7be5c8f8bdf991c">clear_streams</a>()</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="classmarley_1_1_logger.html#ab5a26be409e081d63ce6ebd9281e0f12">disable</a>()</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classmarley_1_1_logger.html#ad019a02d8e5a670592f00fe1715c471c">enable</a>(bool log_enabled=true)</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="classmarley_1_1_logger.html#ae56074b2ed433714436e3cc8d006f4fb">flush</a>()</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classmarley_1_1_logger.html#aaf7eeac03871a0cd96014c35ef10160f">has_stream</a>(const std::ostream &amp;stream) const </td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="classmarley_1_1_logger.html#a3b468a717e702986d66a964dd65abdab">Instance</a>()</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"><span class="mlabel">static</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classmarley_1_1_logger.html#abacf24a3cc91ee8fa928c48d51fee477">log</a>(LogLevel lev=LogLevel::WARNING)</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="classmarley_1_1_logger.html#a45a89c464092950de5df7e6d9002b24d">Logger</a>(const Logger &amp;)=delete</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classmarley_1_1_logger.html#af5b2dd01e07de044b950b0ece0119049">Logger</a>(Logger &amp;&amp;)=delete</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="classmarley_1_1_logger.html#a704069c861a25a5295a04aa85dd09964">LogLevel</a> enum name</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="classmarley_1_1_logger.html#a7d0b61389b5fac10c9be00c3ed1e39e0">operator=</a>(const Logger &amp;)=delete</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="classmarley_1_1_logger.html#a48ae005bf1c51d02de5e83a6cfae9124">operator=</a>(Logger &amp;&amp;)=delete</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classmarley_1_1_logger.html#adab8777ddd3ca3642a6d963bb946ea67">newline</a>()</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="classmarley_1_1_logger.html#a7d0b61389b5fac10c9be00c3ed1e39e0">operator=</a>(const Logger &amp;)=delete</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classmarley_1_1_logger.html#a48ae005bf1c51d02de5e83a6cfae9124">operator=</a>(Logger &amp;&amp;)=delete</td><td class="entry"><a class="el" href="classmarley_1_1_logger.html">marley::Logger</a></td><td class="entry"></td></tr>
 </table></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

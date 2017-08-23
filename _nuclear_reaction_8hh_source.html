@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">v0.9.5</span>
+   &#160;<span id="projectnumber">v1.0.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino-nucleus interactions in liquid argon</div>
   </td>
@@ -100,66 +100,60 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;marley/Event.hh&quot;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;marley/Level.hh&quot;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;marley/MassTable.hh&quot;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;marley/Reaction.hh&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;marley/StructureDatabase.hh&quot;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">namespace </span>marley {</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  <span class="keyword">class </span>Generator;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;</div>
-<div class="line"><a name="l00019"></a><span class="lineno"><a class="code" href="classmarley_1_1_nuclear_reaction.html">   19</a></span>&#160;  <span class="keyword">class </span><a class="code" href="classmarley_1_1_nuclear_reaction.html" title="A neutrino-nucleus reaction.">NuclearReaction</a> : <span class="keyword">public</span> <a class="code" href="classmarley_1_1_reaction.html" title="Abstract base class that represents a two-two scattering reaction.">marley::Reaction</a> {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;      <a class="code" href="classmarley_1_1_nuclear_reaction.html#aa9eb1619db6bc1bf7403408406c3e567">NuclearReaction</a>(std::string filename, <a class="code" href="classmarley_1_1_structure_database.html" title="Container for nuclear structure information organized by nuclide.">marley::StructureDatabase</a>&amp; db);</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;      <span class="keyword">virtual</span> <a class="code" href="classmarley_1_1_event.html" title="Container for ingoing and outgoing momentum 4-vectors from a reaction.">marley::Event</a> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a5d4fab7b35caf006478055e171028e63" title="Create an event object for this reaction.">create_event</a>(<span class="keywordtype">int</span> particle_id_a,</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;        <span class="keywordtype">double</span> KEa, <a class="code" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">marley::Generator</a>&amp; gen) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;      <span class="keywordtype">double</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a650093cb366f0fd5cf2080610a2fc84b" title="Compute the Fermi function">fermi_function</a>(<span class="keywordtype">double</span> beta_c) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;      <span class="keywordtype">double</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a2cc815315110fa009b37e074a0a4ed85" title="Get the maximum possible excitation energy (MeV) of the final-state residue that is kinematically all...">max_level_energy</a>(<span class="keywordtype">double</span> KEa) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;      <span class="keywordtype">void</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a7843d2e4a518fd04a5328e1f95cb2b13" title="Sets the DecayScheme object to use for sampling excited levels in the residue.">set_decay_scheme</a>(<a class="code" href="classmarley_1_1_decay_scheme.html" title="Discrete level and γ-ray data for a specific nuclide.">marley::DecayScheme</a>* scheme);</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;      <span class="keywordtype">double</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a9caac909438b2d8242e80fb205c5efcd" title="Get the minimum lab-frame kinetic energy (MeV) of the projectile that allows this reaction to proceed...">threshold_kinetic_energy</a>() <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;      <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a3f0767da832abe9eaec0483ba4549a8e" title="Total reaction cross section (MeV -2), including all kinematically-allowed final nuclear levels...">total_xs</a>(<span class="keywordtype">int</span> pdg_a, <span class="keywordtype">double</span> KEa) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;      <span class="keyword">virtual</span> <a class="code" href="classmarley_1_1_event.html" title="Container for ingoing and outgoing momentum 4-vectors from a reaction.">marley::Event</a> make_event_object(<span class="keywordtype">double</span> KEa,</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        <span class="keywordtype">double</span> pc_cm, <span class="keywordtype">double</span> cos_theta_c_cm, <span class="keywordtype">double</span> phi_c_cm, <span class="keywordtype">double</span> Ec_cm,</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="keywordtype">double</span> Ed_cm, <span class="keywordtype">double</span> E_level = 0.) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;      <span class="keywordtype">double</span> sample_cos_theta_c_cm(<span class="comment">/*double matrix_el,*/</span> <span class="keywordtype">int</span> m_type,</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        <span class="keywordtype">double</span> beta_c_cm, <a class="code" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">marley::Generator</a>&amp; gen) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a3f0767da832abe9eaec0483ba4549a8e" title="Total reaction cross section (MeV -2), including all kinematically-allowed final nuclear levels...">total_xs</a>(<span class="keywordtype">double</span> E_level, <span class="keywordtype">double</span> KEa,</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        <span class="keywordtype">double</span> matrix_element) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;      <span class="keywordtype">double</span> md_gs_; </div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;      <span class="keywordtype">int</span> Zi_; </div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;      <span class="keywordtype">int</span> Ai_; </div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;      <span class="keywordtype">int</span> Zf_; </div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;      <span class="keywordtype">int</span> Af_; </div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;      <span class="keywordtype">int</span> q_d_;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;      <span class="keywordtype">double</span> KEa_threshold_;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;      std::vector&lt;double&gt; residue_level_energies_;</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;      std::vector&lt;double&gt; residue_level_strengths_;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      std::vector&lt;double&gt; residue_level_strength_ids_;</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;      std::vector&lt;marley::Level*&gt; residue_level_pointers_;</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  };</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;}</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;marley/MatrixElement.hh&quot;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;marley/Reaction.hh&quot;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;marley/StructureDatabase.hh&quot;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">namespace </span>marley {</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  <span class="keyword">class </span>Generator;</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
+<div class="line"><a name="l00020"></a><span class="lineno"><a class="code" href="classmarley_1_1_nuclear_reaction.html">   20</a></span>&#160;  <span class="keyword">class </span><a class="code" href="classmarley_1_1_nuclear_reaction.html" title="A neutrino-nucleus reaction.">NuclearReaction</a> : <span class="keyword">public</span> <a class="code" href="classmarley_1_1_reaction.html" title="Abstract base class that represents a two-two scattering reaction.">marley::Reaction</a> {</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;      <a class="code" href="classmarley_1_1_nuclear_reaction.html#aa9eb1619db6bc1bf7403408406c3e567">NuclearReaction</a>(std::string filename, <a class="code" href="classmarley_1_1_structure_database.html" title="Container for nuclear structure information organized by nuclide.">marley::StructureDatabase</a>&amp; db);</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;      <span class="keyword">virtual</span> <a class="code" href="classmarley_1_1_event.html" title="Container for ingoing and outgoing momentum 4-vectors from a reaction.">marley::Event</a> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a5d4fab7b35caf006478055e171028e63" title="Create an event object for this reaction.">create_event</a>(<span class="keywordtype">int</span> particle_id_a,</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;        <span class="keywordtype">double</span> KEa, <a class="code" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">marley::Generator</a>&amp; gen) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;      <span class="keywordtype">double</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a650093cb366f0fd5cf2080610a2fc84b" title="Compute the Fermi function">fermi_function</a>(<span class="keywordtype">double</span> beta_c) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;      <span class="keywordtype">double</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a2cc815315110fa009b37e074a0a4ed85" title="Get the maximum possible excitation energy (MeV) of the final-state residue that is kinematically all...">max_level_energy</a>(<span class="keywordtype">double</span> KEa) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;      <span class="keywordtype">void</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a7843d2e4a518fd04a5328e1f95cb2b13" title="Sets the DecayScheme object to use for sampling excited levels in the residue.">set_decay_scheme</a>(<a class="code" href="classmarley_1_1_decay_scheme.html" title="Discrete level and γ-ray data for a specific nuclide.">marley::DecayScheme</a>* scheme);</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;      <span class="keywordtype">double</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a9caac909438b2d8242e80fb205c5efcd" title="Get the minimum lab-frame kinetic energy (MeV) of the projectile that allows this reaction to proceed...">threshold_kinetic_energy</a>() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;      <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a3f0767da832abe9eaec0483ba4549a8e" title="Total reaction cross section (MeV -2), including all kinematically-allowed final nuclear levels...">total_xs</a>(<span class="keywordtype">int</span> pdg_a, <span class="keywordtype">double</span> KEa) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;      <span class="keyword">virtual</span> <a class="code" href="classmarley_1_1_event.html" title="Container for ingoing and outgoing momentum 4-vectors from a reaction.">marley::Event</a> make_event_object(<span class="keywordtype">double</span> KEa,</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="keywordtype">double</span> pc_cm, <span class="keywordtype">double</span> cos_theta_c_cm, <span class="keywordtype">double</span> phi_c_cm, <span class="keywordtype">double</span> Ec_cm,</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        <span class="keywordtype">double</span> Ed_cm, <span class="keywordtype">double</span> E_level = 0.) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;      <span class="keywordtype">double</span> sample_cos_theta_c_cm(<span class="keyword">const</span> <a class="code" href="classmarley_1_1_matrix_element.html" title="A nuclear matrix element that represents a transition caused by a neutrino-nucleus reaction...">marley::MatrixElement</a>&amp; matrix_el,</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        <span class="keywordtype">double</span> beta_c_cm, <a class="code" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">marley::Generator</a>&amp; gen) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;      <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classmarley_1_1_nuclear_reaction.html#a3f0767da832abe9eaec0483ba4549a8e" title="Total reaction cross section (MeV -2), including all kinematically-allowed final nuclear levels...">total_xs</a>(<span class="keywordtype">double</span> E_level, <span class="keywordtype">double</span> KEa,</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="keywordtype">double</span> matrix_element) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;      <span class="keywordtype">double</span> md_gs_; </div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;      <span class="keywordtype">int</span> Zi_; </div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;      <span class="keywordtype">int</span> Ai_; </div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;      <span class="keywordtype">int</span> Zf_; </div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;      <span class="keywordtype">int</span> Af_; </div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      <span class="keywordtype">int</span> q_d_;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;      <span class="keywordtype">double</span> KEa_threshold_;</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;      std::vector&lt;marley::MatrixElement&gt; matrix_elements_;</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  };</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;}</div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

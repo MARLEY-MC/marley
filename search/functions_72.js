@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['read',['read',['../classmarley_1_1_event.html#aeb9e68e8d40d229cf98de96f47885967',1,'marley::Event::read()'],['../classmarley_1_1_particle.html#af36f592e507a6d4234d8f608c802f90e',1,'marley::Particle::read()']]],
   ['read_5ffrom_5fstream',['read_from_stream',['../classmarley_1_1_decay_scheme.html#a0628dd23df6c8c4c9720e0f5076b8f0e',1,'marley::DecayScheme']]],
   ['rejection_5fsample',['rejection_sample',['../classmarley_1_1_generator.html#a2532d8a00875980e4af435fdf156a063',1,'marley::Generator']]],
   ['relative_5fintensity',['relative_intensity',['../classmarley_1_1_gamma.html#a86739ffd5f728cdbc84f34baffc916bd',1,'marley::Gamma']]],

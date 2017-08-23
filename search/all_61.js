@@ -10,6 +10,6 @@ var searchData=
   ['add_5flevel',['add_level',['../classmarley_1_1_decay_scheme.html#a56078533e972a9542f27c5166b11944e',1,'marley::DecayScheme']]],
   ['add_5freaction',['add_reaction',['../classmarley_1_1_generator.html#ae8edcb90a4b31df5a6be75777494adf7',1,'marley::Generator']]],
   ['add_5freaction_5ffilename',['add_reaction_filename',['../classmarley_1_1_configuration_file.html#afec6e05d1642526c7cef91942be5f21a',1,'marley::ConfigurationFile']]],
-  ['add_5fstream',['add_stream',['../classmarley_1_1_logger.html#ac3ff4067da233c9e67389d46c94e1d35',1,'marley::Logger']]],
+  ['add_5fstream',['add_stream',['../classmarley_1_1_logger.html#abc6cc1e774453919566806d76b43f8a9',1,'marley::Logger::add_stream(std::shared_ptr&lt; std::ostream &gt; stream, LogLevel level=LogLevel::WARNING)'],['../classmarley_1_1_logger.html#ac3ff4067da233c9e67389d46c94e1d35',1,'marley::Logger::add_stream(std::ostream &amp;stream, LogLevel level=LogLevel::WARNING)']]],
   ['at',['at',['../classmarley_1_1_interpolation_grid.html#a6c7c202255ea1d8869e5248fd750a7d7',1,'marley::InterpolationGrid']]]
 ];

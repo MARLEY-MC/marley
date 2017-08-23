@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">v0.9.5</span>
+   &#160;<span id="projectnumber">v1.0.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino-nucleus interactions in liquid argon</div>
   </td>
@@ -101,8 +101,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <dd>Refine the approximate decay-at-rest Michel spectra to use more exact expressions.  </dd>
 <dt><a class="anchor" id="_todo000025"></a>Class <a class="el" href="classmarley_1_1_error.html">marley::Error</a>  </dt>
 <dd>Create an MARLEY exception class hierarchy as needed.  </dd>
-<dt><a class="anchor" id="_todo000026"></a>Member <a class="el" href="classmarley_1_1_event.html#ad72da483324f538371fea1fe489ed653">marley::Event::write_hepevt</a>  (size_t event_num, std::ostream &amp;out)</dt>
-<dd>Alter <a class="el" href="classmarley_1_1_event.html#ad72da483324f538371fea1fe489ed653" title="Write a HEPEvt record for this event to a std::ostream. Use the spacetime origin (t = 0 mm/c...">marley::Event::write_hepevt()</a> so that the user can specify a vertex position 4-vector to use.  </dd>
+<dt><a class="anchor" id="_todo000026"></a>Member <a class="el" href="classmarley_1_1_event.html#a742993aa74b394477d1f61e533a5970a">marley::Event::write_hepevt</a>  (size_t event_num, std::ostream &amp;out) const </dt>
+<dd>Alter <a class="el" href="classmarley_1_1_event.html#a742993aa74b394477d1f61e533a5970a" title="Write a HEPEvt record for this event to a std::ostream. Use the spacetime origin (t = 0 mm/c...">marley::Event::write_hepevt()</a> so that the user can specify a vertex position 4-vector to use.  </dd>
 <dt><a class="anchor" id="_todo000008"></a>Member <a class="el" href="classmarley_1_1_fermi_dirac_neutrino_source.html#a06b9324bc2549b85cf91d8b016a9bdda">marley::FermiDiracNeutrinoSource::FermiDiracNeutrinoSource</a>  (int particle_id=marley_utils::ELECTRON_NEUTRINO, double Emin=0., double Emax=50., double temp=3.5, double eta=0.)</dt>
 <dd>Remove hard-coded number of integration subintervals in this function  </dd>
 <dt><a class="anchor" id="_todo000010"></a>Member <a class="el" href="classmarley_1_1_function_neutrino_source.html#a4f767069f9631a96edaa0de83469ca4d">marley::FunctionNeutrinoSource::FunctionNeutrinoSource</a>  (int particle_id=marley_utils::ELECTRON_NEUTRINO, double Emin=0., double Emax=50., std::function&lt; double(double)&gt; prob_dens_func=[](double) -&gt; double{return 1.;})</dt>
@@ -117,8 +117,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <dd><p class="startdd">add error check for when num == 0 or too small </p>
 <p class="enddd">add error check for when num is ridiculously large  </p>
 </dd>
-<dt><a class="anchor" id="_todo000030"></a>Member <a class="el" href="classmarley_1_1_interpolation_grid.html#a49835d662d958315feb6fdcbe0958090">marley::InterpolationGrid&lt; FirstNumericType, SecondNumericType &gt;::InterpolationGrid</a>  (const std::vector&lt; FirstNumericType &gt; &amp;xs, const std::vector&lt; SecondNumericType &gt; &amp;ys, InterpolationMethod interp_method=InterpolationMethod::LinearLinear, ExtrapolationMethod extrap_method=ExtrapolationMethod::Zero)</dt>
-<dd>Add error checks for the supplied vectors  </dd>
 <dt><a class="anchor" id="_todo000029"></a>Member <a class="el" href="classmarley_1_1_interpolation_grid.html#a31e40519c66691e953178588ce4d9e2a">marley::InterpolationGrid&lt; FirstNumericType, SecondNumericType &gt;::InterpolationGrid</a>  (const Grid &amp;grid, InterpolationMethod interp_method=InterpolationMethod::LinearLinear, ExtrapolationMethod extrap_method=ExtrapolationMethod::Zero)</dt>
 <dd>Add error checks for the supplied grid  </dd>
 <dt><a class="anchor" id="_todo000016"></a>Member <a class="el" href="classmarley_1_1_nuclear_reaction.html#a5d4fab7b35caf006478055e171028e63">marley::NuclearReaction::create_event</a>  (int particle_id_a, double KEa, <a class="el" href="classmarley_1_1_generator.html" title="The MARLEY Event generator.">marley::Generator</a> &amp;gen) override</dt>
@@ -136,11 +134,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <dd>Add check to see if the energy of the chosen level is very different from the energy given in the reaction dataset. If it is, the level matchup is likely incorrect.  </dd>
 <dt><a class="anchor" id="_todo000020"></a>Member <a class="el" href="classmarley_1_1_nuclear_reaction.html#a3f0767da832abe9eaec0483ba4549a8e">marley::NuclearReaction::total_xs</a>  (int pdg_a, double KEa) override</dt>
 <dd>Consider whether you should use an exception if pdg_a != pdg_a_  </dd>
-<dt><a class="anchor" id="_todo000036"></a>Member <a class="el" href="classmarley_1_1_particle.html#aaf3981c8b1c12039bed79a276064b4d1">marley::Particle::charge_</a>  </dt>
+<dt><a class="anchor" id="_todo000033"></a>Member <a class="el" href="classmarley_1_1_particle.html#aaf3981c8b1c12039bed79a276064b4d1">marley::Particle::charge_</a>  </dt>
 <dd>add error handling for cases where a <a class="el" href="classmarley_1_1_particle.html" title="Momentum four-vector for a simulated particle.">marley::Particle</a> is constructed with a charge that is inappropriate.  </dd>
-<dt><a class="anchor" id="_todo000035"></a>Member <a class="el" href="classmarley_1_1_particle.html#a71ecb16b4bcabba0117e2e6f89fe2a2c">marley::Particle::mass_</a>  </dt>
+<dt><a class="anchor" id="_todo000032"></a>Member <a class="el" href="classmarley_1_1_particle.html#a71ecb16b4bcabba0117e2e6f89fe2a2c">marley::Particle::mass_</a>  </dt>
 <dd>Refactor the Particle class to ensure that the mass, 3-momentum, and total energy are always consistent with each other. MARLEY enforces this by using the Particle class carefully, but consistency should be guaranteed in the Particle class internals.  </dd>
-<dt><a class="anchor" id="_todo000037"></a>Class <a class="el" href="classmarley_1_1_reaction.html">marley::Reaction</a>  </dt>
+<dt><a class="anchor" id="_todo000034"></a>Class <a class="el" href="classmarley_1_1_reaction.html">marley::Reaction</a>  </dt>
 <dd>Add check that projectile kinetic energy KEa &gt;= 0. for all relevant member functions of Reaction and NuclearReaction  </dd>
 <dt><a class="anchor" id="_todo000023"></a>Member <a class="el" href="classmarley_1_1_structure_database.html#a5f8c71d9a57616cf7b078eda3489a34b">marley::StructureDatabase::get_optical_model</a>  (int nucleus_pid)</dt>
 <dd>add check for invalid nucleus particle ID value </dd>

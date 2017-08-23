@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">v0.9.5</span>
+   &#160;<span id="projectnumber">v1.0.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino-nucleus interactions in liquid argon</div>
   </td>
@@ -182,6 +182,9 @@ const <a class="el" href="classmarley_1_1_particle.html">marley::Particle</a> &a
 <a class="el" href="classmarley_1_1_particle.html">marley::Particle</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_event.html#a0e917b78024dec88c45c160ccbe8f5c1">projectile</a> ()</td></tr>
 <tr class="memdesc:a0e917b78024dec88c45c160ccbe8f5c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a non-const reference to the projectile. <br/></td></tr>
 <tr class="separator:a0e917b78024dec88c45c160ccbe8f5c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb9e68e8d40d229cf98de96f47885967"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_event.html#aeb9e68e8d40d229cf98de96f47885967">read</a> (std::istream &amp;in)</td></tr>
+<tr class="memdesc:aeb9e68e8d40d229cf98de96f47885967"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read in this event from a std::istream. Any previous contents of this event will be deleted.  <a href="#aeb9e68e8d40d229cf98de96f47885967">More...</a><br/></td></tr>
+<tr class="separator:aeb9e68e8d40d229cf98de96f47885967"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a261aa86973433b271b8b19b824255e95"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a261aa86973433b271b8b19b824255e95"></a>
 const <a class="el" href="classmarley_1_1_particle.html">marley::Particle</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_event.html#a261aa86973433b271b8b19b824255e95">residue</a> () const </td></tr>
 <tr class="memdesc:a261aa86973433b271b8b19b824255e95"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a const reference to the residue. <br/></td></tr>
@@ -198,9 +201,13 @@ const <a class="el" href="classmarley_1_1_particle.html">marley::Particle</a> &a
 <a class="el" href="classmarley_1_1_particle.html">marley::Particle</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_event.html#a530d313c32fec0af2bb42c2865369dd7">target</a> ()</td></tr>
 <tr class="memdesc:a530d313c32fec0af2bb42c2865369dd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a non-const reference to the target. <br/></td></tr>
 <tr class="separator:a530d313c32fec0af2bb42c2865369dd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad72da483324f538371fea1fe489ed653"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_event.html#ad72da483324f538371fea1fe489ed653">write_hepevt</a> (size_t event_num, std::ostream &amp;out)</td></tr>
-<tr class="memdesc:ad72da483324f538371fea1fe489ed653"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a <a href="http://home.fnal.gov/~mrenna/lutp0613man2/node49.html">HEPEvt</a> record for this event to a std::ostream. Use the spacetime origin (t = 0 mm/c, x = 0 mm, y = 0 mm, z = 0 mm) as the initial position 4-vector for all particles.  <a href="#ad72da483324f538371fea1fe489ed653">More...</a><br/></td></tr>
-<tr class="separator:ad72da483324f538371fea1fe489ed653"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae15d57635a0d87715ffca672ec155610"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae15d57635a0d87715ffca672ec155610"></a>
+<a class="el" href="classmarley_1_1_j_s_o_n.html">marley::JSON</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_event.html#ae15d57635a0d87715ffca672ec155610">to_json</a> () const </td></tr>
+<tr class="memdesc:ae15d57635a0d87715ffca672ec155610"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a <a class="el" href="classmarley_1_1_j_s_o_n.html">JSON</a> representation of this event. <br/></td></tr>
+<tr class="separator:ae15d57635a0d87715ffca672ec155610"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a742993aa74b394477d1f61e533a5970a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_event.html#a742993aa74b394477d1f61e533a5970a">write_hepevt</a> (size_t event_num, std::ostream &amp;out) const </td></tr>
+<tr class="memdesc:a742993aa74b394477d1f61e533a5970a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a <a href="http://home.fnal.gov/~mrenna/lutp0613man2/node49.html">HEPEvt</a> record for this event to a std::ostream. Use the spacetime origin (t = 0 mm/c, x = 0 mm, y = 0 mm, z = 0 mm) as the initial position 4-vector for all particles.  <a href="#a742993aa74b394477d1f61e533a5970a">More...</a><br/></td></tr>
+<tr class="separator:a742993aa74b394477d1f61e533a5970a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -302,7 +309,31 @@ std::vector&lt; <a class="el" href="classmarley_1_1_particle.html">marley::Parti
 
 </div>
 </div>
-<a class="anchor" id="ad72da483324f538371fea1fe489ed653"></a>
+<a class="anchor" id="aeb9e68e8d40d229cf98de96f47885967"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void marley::Event::read </td>
+          <td>(</td>
+          <td class="paramtype">std::istream &amp;&#160;</td>
+          <td class="paramname"><em>in</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Read in this event from a std::istream. Any previous contents of this event will be deleted. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">in</td><td>The std::istream from which this event will be read </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="a742993aa74b394477d1f61e533a5970a"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -321,7 +352,7 @@ std::vector&lt; <a class="el" href="classmarley_1_1_particle.html">marley::Parti
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td></td>
+          <td></td><td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -334,7 +365,7 @@ std::vector&lt; <a class="el" href="classmarley_1_1_particle.html">marley::Parti
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000026">Todo:</a></b></dt><dd>Alter <a class="el" href="classmarley_1_1_event.html#ad72da483324f538371fea1fe489ed653" title="Write a HEPEvt record for this event to a std::ostream. Use the spacetime origin (t = 0 mm/c...">marley::Event::write_hepevt()</a> so that the user can specify a vertex position 4-vector to use. </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000026">Todo:</a></b></dt><dd>Alter <a class="el" href="classmarley_1_1_event.html#a742993aa74b394477d1f61e533a5970a" title="Write a HEPEvt record for this event to a std::ostream. Use the spacetime origin (t = 0 mm/c...">marley::Event::write_hepevt()</a> so that the user can specify a vertex position 4-vector to use. </dd></dl>
 
 </div>
 </div>
