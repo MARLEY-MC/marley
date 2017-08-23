@@ -23,7 +23,10 @@ aware of their existence, execute
 
 where /path/to/include is the parent of a directory called "marley" that
 contains the MARLEY headers Particle.hh and Event.hh. After you execute
-this command, the setup_marley.C macro should work normally.
+this command, the setup_marley.C macro should work normally. If you prefer,
+rather than using the gInterpreter command shown above, you may also append
+the path to the MARLEY header files to the environment variable
+ROOT_INCLUDE_PATH before running setup_marley.C.
 
 ecos_plot.C
 -----------

@@ -3,16 +3,16 @@
 
 void fp_spect(const std::string& filename, int pdg) {
 
-  TFile* file = new TFile(filename.c_str(), "read");
+  TFile file(filename.c_str(), "read");
   TTree* tree = NULL;
-  file->GetObject("MARLEY Event Tree", tree);
+  file.GetObject("MARLEY_event_tree", tree);
   if (!tree) {
     std::cout << "MARLEY event tree not found" << '\n';
     return;
   }
 
-  marley::Event* ev = new marley::Event;
-  tree->SetBranchAddress("events", &ev);
+  marley::Event* ev = NULL;
+  tree->SetBranchAddress("event", &ev);
 
   size_t num_events = tree->GetEntries();
 
@@ -46,6 +46,9 @@ void fp_spect(const std::string& filename, int pdg) {
   title_str.Form("kinetic energies for pdg = %d", pdg);
 
   TH1D* KEs = new TH1D("KEs", title_str.Data(), 100, KE_max, KE_min);
+  // Prevent this histogram from being automatically deleted when the
+  // current TFile is closed
+  KEs->SetDirectory(NULL);
 
   for (size_t j = 0; j < KE_vec.size(); ++j) {
     KEs->Fill(KE_vec.at(j));

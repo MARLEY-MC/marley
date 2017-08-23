@@ -7,14 +7,14 @@ void ecos_plot(const std::string& filename) {
 
   TFile* file = new TFile(filename.c_str(), "read");
   TTree* tree = NULL;
-  file->GetObject("MARLEY Event Tree", tree);
+  file->GetObject("MARLEY_event_tree", tree);
   if (!tree) {
     std::cout << "MARLEY event tree not found" << '\n';
     return;
   }
 
   marley::Event* ev = new marley::Event;
-  tree->SetBranchAddress("events", &ev);
+  tree->SetBranchAddress("event", &ev);
 
   size_t num_events = tree->GetEntries();
 

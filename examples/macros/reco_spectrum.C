@@ -9,14 +9,14 @@ void reco_spectrum(const std::string& filename) {
 
   TFile* file = new TFile(filename.c_str(), "read");
   TTree* tree = NULL;
-  file->GetObject("MARLEY Event Tree", tree);
+  file->GetObject("MARLEY_event_tree", tree);
   if (!tree) {
     std::cout << "MARLEY event tree not found" << '\n';
     return;
   }
 
   marley::Event* ev = new marley::Event;
-  tree->SetBranchAddress("events", &ev);
+  tree->SetBranchAddress("event", &ev);
 
   TH1D* true_Es = new TH1D("true_Es", "true neutrino energies", 110, 0., 60.);
   TH1D* eq_Es = new TH1D("eq_Es", "e- KE + g.s.->g.s. Q value", 110, 0., 60.);
