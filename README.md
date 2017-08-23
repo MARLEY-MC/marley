@@ -96,9 +96,9 @@ it may be easily modified.
 Non-developer MARLEY authors:
 **Christopher Grant**, **Emilija Pantic**, **Robert Svoboda**
 
-See also the list of [contributors]
-(https://github.com/sjgardiner/marley/contributors) who participated in this
-project.
+See also the list of
+[contributors](https://github.com/sjgardiner/marley/contributors) who
+participated in this project.
 
 ## Website
 
