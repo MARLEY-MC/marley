@@ -40,21 +40,6 @@ Each data file is named zXXX, where XXX is a 3-digit number that corresponds to
 the atomic number of all nuclides in the file. Many different mass numbers are
 represented in these files.
 
-To use these data in MARLEY, include the following lines in your run
-configuration file:
-
-    structure z019 talys all
-    structure z018 talys all
-    structure z017 talys all
-
-If you prefer to use only a subset of these data, individual nuclides
-may be selected on configuration file lines like this:
-
-    structure z018 talys 37Ar 38Ar 39Ar 40Ar
-
-Both ENSDF-style "nucids" (mass number + element symbol as a string) and
-"ZAs" (integer codes equal to Z * 1000 + A) are allowed as nuclide identifiers.
-
-If you run MARLEY from a directory other than the one where you're storing
-these files, add the full data file path to the second entry in each line,
-e.g., "structure /path/to/z019 talys ..."
+To use the data within MARLEY, you will need to include paths to each of these
+files in the "structure" JSON array of your configuration file. For a working
+example, please see the NUCLEAR STRUCTURE DATA section in examples/config.js.
