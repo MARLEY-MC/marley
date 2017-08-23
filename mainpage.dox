@@ -2,10 +2,14 @@
 @mainpage MARLEY documentation
 
 The source code for MARLEY v1.0.0 is available
-<a href="https://github.com/sjgardiner/marley/archive/v1.0.0.tar.gz">here</a>.
-Build requirements: g++ >= 4.9 (or a recent version of clang) and GNU make
+<a href="https://github.com/sjgardiner/marley/archive/v1.0.0.tar.gz">here</a>
+or from the official MARLEY
+<a href="https://github.com/sjgardiner/marley">GitHub repository</a>.
+Build requirements: g++ >= 4.9 (or clang++ >= 3.4) and GNU make
 
-MARLEY may also be built as a product for the relocatable ups tool developed
+MARLEY may also be built as a product for the
+<a href="https://cdcvs.fnal.gov/redmine/projects/ups/wiki/Documentation">
+relocatable ups tool</a> developed
 by <a href="https://fnal.gov">Fermilab</a>. To do so, use the code found
 in the <a href="https://github.com/sjgardiner/marley-ups-build">ups-specific
 repository</a>.

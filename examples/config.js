@@ -391,4 +391,5 @@
     //
     output: [ { file: "events.ascii", format: "ascii", mode: "overwrite" } ],
   },
-}
+
+} // A closing curly brace should appear at the end of the file

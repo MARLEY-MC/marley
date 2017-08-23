@@ -82,8 +82,12 @@ be present in the `build/` folder:
   - `events.ascii` contains the generated events in MARLEY's native format
   - `marley.log` contains logging messages from the simulation
   
-The example configuration file (`examples/config.js`) is heavily commented,
-and reading it serves as a good next step for new users.
+The example configuration file (`examples/config.js`) is heavily commented, and
+reading it serves as a good next step for new users. When you are ready to
+start writing your own configuration files, editing a copy of
+`examples/COPY_ME.js` is recommended. That file contains settings similar to
+those in `examples/config.js`, but it omits the long comments so that
+it may be easily modified.
 
 ## Authors
 
