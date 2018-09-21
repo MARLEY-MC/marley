@@ -551,9 +551,16 @@ double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
       double Eb_cm = (s + mb2_ - ma2_) / (2 * sqrt_s);
       double Ec_cm = (s + mc2_ - md2) / (2 * sqrt_s);
       double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2_);
-      double beta_c_cm = pc_cm / Ec_cm;
 
-      xs += fermi_function(beta_c_cm) * matrix_el * pc_cm * Ec_cm
+      // Dot product of the four-momenta of particles c and d
+      double pc_dot_pd = (sqrt_s - Ec_cm)*Ec_cm + std::pow(pc_cm, 2);
+
+      // Relative speed of particles c and d, computed with a manifestly
+      // Lorentz-invariant expression
+      double beta_rel_cd = marley_utils::real_sqrt(
+        std::pow(pc_dot_pd, 2) - mc2_*md2) / pc_dot_pd;
+
+      xs += fermi_function(beta_rel_cd) * matrix_el * pc_cm * Ec_cm
         * Eb_cm * (sqrt_s - Ec_cm) / s;
     }
   }
@@ -590,9 +597,16 @@ double marley::NuclearReaction::total_xs(double E_level, double KEa,
     double Eb_cm = (s + mb2_ - ma2_) / (2 * sqrt_s);
     double Ec_cm = (s + mc2_ - md2) / (2 * sqrt_s);
     double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2_);
-    double beta_c_cm = pc_cm / Ec_cm;
 
-    return fermi_function(beta_c_cm) * matrix_element * pc_cm * Ec_cm
+    // Dot product of the four-momenta of particles c and d
+    double pc_dot_pd = (sqrt_s - Ec_cm)*Ec_cm + std::pow(pc_cm, 2);
+
+    // Relative speed of particles c and d, computed with a manifestly
+    // Lorentz-invariant expression
+    double beta_rel_cd = marley_utils::real_sqrt(
+      std::pow(pc_dot_pd, 2) - mc2_*md2) / pc_dot_pd;
+
+    return fermi_function(beta_rel_cd) * matrix_element * pc_cm * Ec_cm
       * Eb_cm * (sqrt_s - Ec_cm) / s;
   }
 }
