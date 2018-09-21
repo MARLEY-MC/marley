@@ -77,23 +77,30 @@ double marley::BackshiftedFermiGasModel::level_density(double Ex) {
   /// TALYS
   const double Ed = 0.;
 
-  // Compute the spin cut-off parameter
-  double sigma_F2 = 0.;
+  // Compute the spin cut-off parameter sigma_
 
-  // To avoid numerical problems, we will always use the discrete spin cutoff parameter for U <= Ed.
-  // The TALYS manual suggests using this for Ex <= Ed, but this isn't a huge change. The actual TALYS
-  // code may make this same choice.
-  /// @todo Reconsider method used for handling spin cut-off parameter calculation for U <= Ed.
+  // To avoid numerical problems, we will always use the discrete spin cutoff
+  // parameter for U <= Ed.
+  // The TALYS manual suggests using this for Ex <= Ed, but this isn't a huge
+  // change. The actual TALYS code may make this same choice.
+  /// @todo Reconsider method used for handling spin cut-off parameter
+  /// calculation for U <= Ed.
   if (U <= Ed) sigma_ = sigma_d_global_;
   else {
-    sigma_F2 = 0.01389 * std::pow(A_, 5.0/3.0)
-      * std::sqrt(a * U) / a_tilde_;
-    if (Ex >= Sn_) sigma_ = std::sqrt(sigma_F2);
+
+    if (Ex >= Sn_) {
+      double sigma_F2 = compute_sigma_F2(Ex, a);
+      sigma_ = std::sqrt(sigma_F2);
+    }
     else {
+
+      // sigma_F2 evaluated for Ex == Sn for the linear interpolation
+      double sigma_F2_Sn = compute_sigma_F2(Sn_, a);
+
       // Ed < Ex < Sn_
       double sigma_d2 = std::pow(sigma_d_global_, 2);
       sigma_ = std::sqrt(sigma_d2 + (Ex - Ed)
-        * (sigma_F2 - sigma_d2) / (Sn_ - Ed));
+        * (sigma_F2_Sn - sigma_d2) / (Sn_ - Ed));
     }
   }
 

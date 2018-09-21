@@ -39,6 +39,16 @@ namespace marley {
 
     protected:
 
+      /// Helper function used when evaluating the spin cutoff parameter
+      inline double compute_sigma_F2(double Ex, double a) {
+        double U = Ex - Delta_BFM_;
+
+        double sigma_F2 = 0.01389 * std::pow(A_, 5.0/3.0)
+          * std::sqrt(a * U) / a_tilde_;
+
+        return sigma_F2;
+      }
+
       int Z_; ///< atomic number for this nuclide
       int A_; ///< mass number for this nuclide
 
