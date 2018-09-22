@@ -1,6 +1,6 @@
 // Example MARLEY configuration file
 // S. Gardiner <sjgardiner@ucdavis.edu>
-// Revised 22 August 2017 for version 1.0.0
+// Revised 22 September 2018 for version 1.1.0
 //
 // INTRODUCTION
 //
@@ -74,19 +74,20 @@
   // different data evaluations) the user should ensure that only one
   // reaction data file for each desired reaction channel is used.
   //
-  // In MARLEY v1.0.0, the only available channel is charged current ve,
-  // and there are two available tables of evaluated nuclear matrix elements
+  // In MARLEY v1.1.0, the only available channel is charged current ve,
+  // and there are three available tables of evaluated nuclear matrix elements
   // for this channel:
   //
-  //   - react/ve40ArCC_2009.react
-  //   - react/ve40ArCC_1998.react
+  //   - react/ve40ArCC_Bhattacharya2009.react
+  //   - react/ve40ArCC_Bhattacharya1998.react
+  //   - react/ve40ArCC_Liu1998.react
   //
   // See each of these files for details about their respective nuclear
   // matrix element evaluations.
   //
   // Unless a particular reaction channel is represented by a data file given
   // in this list, it will not be included in the MARLEY simulation.
-  reactions: [ "../react/ve40ArCC_2009.react" ],
+  reactions: [ "../react/ve40ArCC_Bhattacharya2009.react" ],
 
   // NEUTRINO SOURCE SPECIFICATION (required)
   //

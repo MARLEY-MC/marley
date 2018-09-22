@@ -61,8 +61,8 @@ If the build is successful, then executing
 
 should produce the following output:
 ```
-MARLEY (Model of Argon Reaction Low Energy Yields) 1.0.0
-Copyright (C) 2016-2017 Steven Gardiner
+MARLEY (Model of Argon Reaction Low Energy Yields) 1.1.0
+Copyright (C) 2016-2018 Steven Gardiner
 License BSD2C: BSD 2-Clause <http://opensource.org/licenses/BSD-2-Clause>
 This is free software: you are free to change and redistribute it.
 ```
@@ -108,10 +108,6 @@ MARLEY may be found on the official webpage at <http://www.marleygen.org/>.
 ## Acknowledgements
 
 Special thanks go to
-
-* David Wright for providing portions of his
-  [Meta.Numerics](http://www.meta-numerics.net/) code to be used to compute
-  Coulomb wavefunctions
 
 * The [TALYS](http://talys.eu) developers (Arjan Koning, Stéphane Hilaire, and
   Marieke Duijvestijn) for sharing their nuclear structure data

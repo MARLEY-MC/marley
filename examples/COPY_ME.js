@@ -8,7 +8,7 @@
                "../structure/z017", ],
 
   // Reaction matrix element files
-  reactions: [ "../react/ve40ArCC_2009.react" ],
+  reactions: [ "../react/ve40ArCC_Bhattacharya2009.react" ],
 
   // Neutrino source specification
   source: {
