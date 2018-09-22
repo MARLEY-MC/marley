@@ -1,8 +1,9 @@
 #include "marley/marley_utils.hh"
-#include "marley/meta_numerics.hh"
 #include "marley/HauserFeshbachDecay.hh"
 #include "marley/Logger.hh"
 #include "marley/KoningDelarocheOpticalModel.hh"
+
+#include "marley/coulomb_wavefunctions.hh"
 
 std::complex<double>
 marley::KoningDelarocheOpticalModel::optical_model_potential(double r,
@@ -365,18 +366,15 @@ marley::KoningDelarocheOpticalModel::s_matrix_element(double E,
   double eta = mu * Z_ * z * marley_utils::e2 / (marley_utils::hbar_c2 * k);
 
   // Compute the Coulomb wavefunctions at the matching radii
-  double F, G;
+  //double F, G;
   std::complex<double> Hplus1, Hminus1, Hplus2, Hminus2;
-  F = meta_numerics::CoulombF(l, eta, k*r_match_1);
-  G = meta_numerics::CoulombG(l, eta, k*r_match_1);
-  Hplus1 = std::complex<double>(G, F);
+
+  Hplus1 = coulomb_H_plus(l, eta, k*r_match_1);
 
   // H+ and H- are complex conjugates of each other
   Hminus1 = std::conj(Hplus1);
 
-  F = meta_numerics::CoulombF(l, eta, k*r_match_2);
-  G = meta_numerics::CoulombG(l, eta, k*r_match_2);
-  Hplus2 = std::complex<double>(G, F);
+  Hplus2 = coulomb_H_plus(l, eta, k*r_match_2);
   Hminus2 = std::conj(Hplus2);
 
   // Compute the S matrix element using the radial wavefunction

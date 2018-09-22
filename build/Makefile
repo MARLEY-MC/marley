@@ -2,7 +2,7 @@ INCLUDE_DIR = ../include
 SRC_DIR = ../src
 
 ifndef CXXFLAGS
-  CXXFLAGS = -std=c++14 -O3
+  CXXFLAGS = -O3
 endif
 
 UNAME_S := $(shell uname -s)
@@ -65,7 +65,22 @@ ifneq ($(MAKECMDGOALS),uninstall)
   OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
   OBJECTS := $(filter-out marley.o RootConfigurationFile.o, $(OBJECTS))
   OBJECTS := $(filter-out marley_root.o RootJSONConfig.o, $(OBJECTS))
-  
+
+  # Get information about the GNU Scientific Library installation
+  # (required as of MARLEY v1.1.0)
+  GSLCONFIG := $(shell which gsl-config)
+  ifeq (, $(shell which gsl-config))
+    define err_message
+Could not find a working GNU Scientific Library installation.
+Please ensure that the gsl-config executable is on your PATH and try again.
+    endef
+    $(error "$(err_message)")
+  endif
+
+  # Add the appropriate compilation flags to use the GNU Scientific Library
+  GSL_CXXFLAGS := $(shell $(GSLCONFIG) --cflags)
+  GSL_LDFLAGS := $(shell $(GSLCONFIG) --libs)
+
   # The user may force the Makefile to ignore ROOT entirely by defining
   # IGNORE_ROOT="yes" (or any non-empty string) on the command line
   # invocation of make.
@@ -83,6 +98,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
       $(info WARNING: Could not find a valid ROOT installation.)
       $(info MARLEY will be built without ROOT support.)
       USE_ROOT = no
+      CXXFLAGS += -std=c++14
     else
       ROOT_VERSION := $(shell $(ROOTCONFIG) --version)
       $(info Found ROOT version $(ROOT_VERSION) in $(ROOT))
@@ -106,14 +122,14 @@ ifneq ($(MAKECMDGOALS),uninstall)
 $(ROOT_OBJ_DICT):
 	$(RM) marley_root_dict*.*
 	$(ROOTCLING) -f marley_root_dict.cc -c $(ROOT_DICT_INCLUDES)
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -I$(INCLUDE_DIR) \
-	-fPIC -o $(ROOT_OBJ_DICT) -c marley_root_dict.cc
+	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) \
+	-I$(INCLUDE_DIR) -fPIC -o $(ROOT_OBJ_DICT) -c marley_root_dict.cc
 	$(RM) marley_root_dict.cc
   
 $(ROOT_SHARED_LIB): $(SHARED_LIB) $(ROOT_SHARED_LIB_OBJECTS)
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -fPIC -shared \
+	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) -fPIC -shared \
 	  -o $(ROOT_SHARED_LIB) -L. -l$(SHARED_LIB_NAME) \
-	  $(ROOT_SHARED_LIB_OBJECTS) $(ROOT_LDFLAGS)
+	  $(ROOT_SHARED_LIB_OBJECTS) $(ROOT_LDFLAGS) $(GSL_LDFLAGS)
 
     endif
   else
@@ -141,21 +157,23 @@ endif
 .INTERMEDIATE: $(OBJECTS) $(ROOT_SHARED_LIB_OBJECTS) marley.o
 
 %.o: $(SRC_DIR)/%.cc
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -I$(INCLUDE_DIR) -fPIC -o $@ -c $^
+	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) \
+	-I$(INCLUDE_DIR) -fPIC -o $@ -c $^
 
 $(SHARED_LIB): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -fPIC -shared -o $@ $^
+	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(GSL_LDFLAGS) \
+	-fPIC -shared -o $@ $^
 
 marley: $(MARLEY_LIBS) marley.o
-	$(CXX) $(CXXFLAGS) -o $@ -L. \
+	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
-	  -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
+	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
 
 .PHONY: clean install uninstall
 
 clean:
 	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
-	$(RM) *.dSYM
+	$(RM) -rf *.dSYM
 
 install: marley
 	mkdir -p $(DESTDIR)$(bindir)

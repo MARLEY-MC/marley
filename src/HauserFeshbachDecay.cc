@@ -16,8 +16,10 @@ namespace {
   // touching by modeling them as uniformly charged spheres with radii
   // given by R = (1.2 fm) * A^(1/3).
   double coulomb_barrier(int Z, int A, int z, int a) {
-    return Z * z * marley_utils::e2
-      / (marley_utils::r0 * (std::pow(A, 1.0/3.0) + std::pow(a, 1.0/3.0)));
+    if (z >= 1) return 0.01; // DEBUG
+    return 0.;
+    //return Z * z * marley_utils::e2
+    //  / (marley_utils::r0 * (std::pow(A, 1.0/3.0) + std::pow(a, 1.0/3.0)));
   }
 
   // Helper function for
