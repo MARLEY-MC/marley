@@ -560,8 +560,11 @@ double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
       double beta_rel_cd = marley_utils::real_sqrt(
         std::pow(pc_dot_pd, 2) - mc2_*md2) / pc_dot_pd;
 
-      xs += fermi_function(beta_rel_cd) * matrix_el * pc_cm * Ec_cm
-        * Eb_cm * (sqrt_s - Ec_cm) / s;
+      // Calculate a Coulomb correction factor using either a Fermi function
+      // or the effective momentum approximation
+      double factor_C = coulomb_correction_factor(beta_rel_cd, KEa, md2);
+
+      xs += factor_C * matrix_el * pc_cm * Ec_cm * Eb_cm * (sqrt_s - Ec_cm) / s;
     }
   }
 
@@ -606,7 +609,11 @@ double marley::NuclearReaction::total_xs(double E_level, double KEa,
     double beta_rel_cd = marley_utils::real_sqrt(
       std::pow(pc_dot_pd, 2) - mc2_*md2) / pc_dot_pd;
 
-    return fermi_function(beta_rel_cd) * matrix_element * pc_cm * Ec_cm
+    // Calculate a Coulomb correction factor using either a Fermi function
+    // or the effective momentum approximation
+    double factor_C = coulomb_correction_factor(beta_rel_cd, KEa, md2);
+
+    return factor_C * matrix_element * pc_cm * Ec_cm
       * Eb_cm * (sqrt_s - Ec_cm) / s;
   }
 }
@@ -657,4 +664,54 @@ marley::Event marley::NuclearReaction::make_event_object(double KEa,
   event.residue().set_charge(q_d_);
 
   return event;
+}
+
+double marley::NuclearReaction::coulomb_correction_factor(double beta_rel_cd,
+  double E_a_lab, double md2) const
+{
+  // Don't bother to calculate anything if the light product from
+  // this reaction (particle c) is not an electron nor a positron.
+  // This situation occurs for neutral current reactions, for example.
+  /// \todo Revisit this when you have more reaction data files
+  bool electron = (pdg_c_ == marley_utils::ELECTRON);
+  if (!electron && pdg_c_ != marley_utils::POSITRON) return 1.;
+
+  // Fermi function approach to the Coulomb correction
+  double fermi_func = fermi_function(beta_rel_cd);
+
+  // Effective momentum approximation for the Coulomb correction
+
+  // Approximate the lab-frame energy of the outgoing charged lepton,
+  // ignoring the angular dependence. For small momentum transfers, it's
+  // a relatively small correction. This approximation is consistent with
+  // the allowed approximation (q = 0)
+  double E_c_lab = E_a_lab + ( mb2_ - md2 ) / (2. * mb_);
+
+  // Approximate Coulomb potential
+  double Vc = -3.*Zf_*marley_utils::alpha / (2. * marley_utils::r0
+    * std::pow(Af_, marley_utils::ONE_THIRD));
+  if ( !electron ) Vc *= -1;
+
+  // Effective lab frame energy for the effective momentum approximation
+  double E_c_lab_eff = E_c_lab - Vc;
+
+  double p_c_lab = marley_utils::real_sqrt( std::pow(E_c_lab, 2) - mc2_ );
+  double p_c_lab_eff = marley_utils::real_sqrt(
+    std::pow(E_c_lab_eff, 2) - mc2_ );
+
+  double f_EMA2 = std::pow(p_c_lab_eff / p_c_lab, 2);
+
+  bool is_antineutrino = pdg_a_ < 0;
+
+  // Choose the larger of the two factors for antineutrinos, and the
+  // smaller of the two factors for neutrinos
+  double correction_factor = 1.;
+  if ( is_antineutrino ) {
+    correction_factor = std::max( fermi_func, f_EMA2 );
+  }
+  else {
+    correction_factor = std::min( fermi_func, f_EMA2 );
+  }
+
+  return correction_factor;
 }

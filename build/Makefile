@@ -106,8 +106,8 @@ ifneq ($(MAKECMDGOALS),uninstall)
 $(ROOT_OBJ_DICT):
 	$(RM) marley_root_dict*.*
 	$(ROOTCLING) -f marley_root_dict.cc -c $(ROOT_DICT_INCLUDES)
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -fPIC -o $(ROOT_OBJ_DICT) -c \
-	  marley_root_dict.cc
+	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) -I$(INCLUDE_DIR) \
+	-fPIC -o $(ROOT_OBJ_DICT) -c marley_root_dict.cc
 	$(RM) marley_root_dict.cc
   
 $(ROOT_SHARED_LIB): $(SHARED_LIB) $(ROOT_SHARED_LIB_OBJECTS)

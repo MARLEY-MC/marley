@@ -86,6 +86,15 @@ namespace marley {
       virtual double total_xs(double E_level, double KEa,
         double matrix_element) const;
 
+      /// Computes an approximate correction factor to account for
+      /// effects of the Coulomb potential when calculating cross sections
+      /// @param beta_rel_cd The relative speed of the final particles c and d
+      /// (dimensionless)
+      /// @param E_a_lab The lab frame total energy of particle a (MeV)
+      /// @param md2 The square of the residue mass (MeV)
+      double coulomb_correction_factor(double beta_rel_cd, double E_a_lab,
+        double md2) const;
+
       double md_gs_; ///< Ground state mass (MeV) of the residue
 
       int Zi_; ///< Target atomic number
