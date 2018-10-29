@@ -18,6 +18,8 @@ namespace marley {
       /// @param width Partial decay width (MeV)
       ExitChannel(double width) : width_(width) {}
 
+      virtual ~ExitChannel() = default;
+
       /// @brief Returns true if this channel accesses the particle-unbound
       /// continuum of nuclear levels or false otherwise
       virtual bool is_continuum() const = 0;

@@ -12,6 +12,8 @@ namespace marley {
       /// @param A Mass number of the desired nuclide
       OpticalModel(int Z, int A) : Z_(Z), A_(A) {}
 
+      virtual ~OpticalModel() = default;
+
       /// @brief Calculate the optical model potential (including the Coulomb
       /// potential)
       /// @param r Distance from nuclear center (fm)

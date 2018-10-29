@@ -19,6 +19,8 @@ namespace marley {
       /// @param A Mass number of the desired nuclide
       GammaStrengthFunctionModel(int Z, int A);
 
+      virtual ~GammaStrengthFunctionModel() = default;
+
       /// @brief Electromagnetic transitions in nuclei may be classified by
       /// their <a href="http://tinyurl.com/hscpepq">multipolarity</a>
       /// (electric vs. magnetic multipole radiation)

@@ -19,6 +19,8 @@ namespace marley {
 
     public:
 
+      virtual ~Reaction() = default;
+
       /// @brief Compute the reaction's total cross section (MeV<sup> -2</sup>)
       /// @param pdg_a Projectile's PDG code
       /// @param KEa Lab-frame kinetic energy of the incident projectile

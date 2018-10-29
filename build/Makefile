@@ -2,7 +2,7 @@ INCLUDE_DIR = ../include
 SRC_DIR = ../src
 
 ifndef CXXFLAGS
-  CXXFLAGS = -O3
+  CXXFLAGS = -O3 -std=c++14
 endif
 
 UNAME_S := $(shell uname -s)
@@ -29,7 +29,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
   # Use g++ as the default compiler
   CXX = g++
   CXXFLAGS += -I$(INCLUDE_DIR) -Wall -Wextra -Wpedantic
-  CXXFLAGS += -Werror -Wno-error=unused-parameter -Wcast-align
+  CXXFLAGS += -Wno-error=unused-parameter -Wcast-align
 
   # Add extra compiler flags for recognized compilers (currently just gcc
   # and clang)

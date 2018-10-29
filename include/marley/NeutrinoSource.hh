@@ -26,6 +26,8 @@ namespace marley {
       /// source
       NeutrinoSource(int particle_id);
 
+      virtual ~NeutrinoSource() = default;
+
       /// @brief Get the maximum neutrino energy (MeV) that can be sampled by
       /// this source
       virtual double get_Emax() const = 0;
@@ -216,7 +218,7 @@ namespace marley {
 
       inline virtual double get_Emin() const override;
 
-      inline virtual double pdf(double E) override;
+      virtual double pdf(double E) override;
 
     private:
       // Muon mass stuff (m_mu^(-4) pre-computed for speed)

@@ -8,6 +8,8 @@ namespace marley {
 
     public:
 
+      virtual ~LevelDensityModel() = default;
+
       /// Nuclear level density @f$ \rho(E_x) @f$ including all spins and
       /// parities.
       /// @param Ex Excitation energy in MeV

@@ -121,6 +121,8 @@ namespace {
           + "\" given in an output file specification");
       }
 
+      virtual ~OutputFile() = default;
+
       const std::string& name() const { return name_; }
 
       // Load a marley::Generator object whose configuration and state was
@@ -205,6 +207,8 @@ namespace {
           load_marley_headers();
           open();
         }
+
+        virtual ~RootOutputFile() = default;
 
         int_fast64_t bytes_written() override {
           return file_->GetBytesWritten();
@@ -457,6 +461,8 @@ namespace {
       {
         open();
       }
+
+      virtual ~TextOutputFile() = default;
 
       void set_indent(int indent) { indent_ = indent; }
 
