@@ -74,19 +74,6 @@ namespace {
     return temp_stream.str();
   }
 
-  // Prompts the user with a question that requires a yes/no answer. Returns
-  // true if the answer was yes, or false if the answer was no.
-  bool prompt_yes_no(const std::string& message) {
-    std::cout << '\n';
-    std::string response;
-    while (std::cout << message << " [y/n]? "
-      && std::getline(std::cin, response)
-      && !(response == "y" || response == "n" || response == "Y"
-      || response == "N"));
-    if (response == "y" || response == "Y") return true;
-    else return false;
-  }
-
   // Helper class used to parse the output file specifications from the
   // configuration file and deliver output to the files.
   class OutputFile {
@@ -221,7 +208,8 @@ namespace {
 
           std::string tfile_open_mode("recreate");
           if (mode_ == Mode::OVERWRITE && file_exists && !force_) {
-            bool overwrite = prompt_yes_no("Overwrite ROOT file " + name_);
+            bool overwrite = marley_utils::prompt_yes_no(
+              "Overwrite ROOT file " + name_);
             if (!overwrite) {
               MARLEY_LOG_INFO() << "Cancelling overwrite of ROOT file \""
                 << name_ << '\"';
@@ -472,7 +460,8 @@ namespace {
         auto open_mode_flag = std::ios::out | std::ios::trunc;
 
         if (mode_ == Mode::OVERWRITE && file_exists && !force_) {
-          bool overwrite = prompt_yes_no("Overwrite file " + name_);
+          bool overwrite = marley_utils::prompt_yes_no("Overwrite file "
+            + name_);
           if (!overwrite) {
             MARLEY_LOG_INFO() << "Cancelling overwrite of output file \""
               << name_ << '\"';

@@ -25,7 +25,7 @@ all: marley
 # Skip lots of initialization if all we want is "make clean/uninstall"
 ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(MAKECMDGOALS),uninstall)
- 
+
   # Use g++ as the default compiler
   CXX = g++
   CXXFLAGS += -I$(INCLUDE_DIR) -Wall -Wextra -Wpedantic
@@ -65,6 +65,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
   OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
   OBJECTS := $(filter-out marley.o RootConfigurationFile.o, $(OBJECTS))
   OBJECTS := $(filter-out marley_root.o RootJSONConfig.o, $(OBJECTS))
+  OBJECTS := $(filter-out marsum.o RootJSONConfig.o, $(OBJECTS))
 
   # Get information about the GNU Scientific Library installation
   # (required as of MARLEY v1.1.0)
@@ -104,6 +105,7 @@ Please ensure that the gsl-config executable is on your PATH and try again.
       $(info Found ROOT version $(ROOT_VERSION) in $(ROOT))
       $(info MARLEY will be built with ROOT support.)
       CXXFLAGS += -DUSE_ROOT
+      MAYBE_MARSUM = marsum
       ROOT_CXXFLAGS := $(shell $(ROOTCONFIG) --cflags)
       ROOT_LDFLAGS := $(shell $(ROOTCONFIG) --ldflags)
       ROOT_LIBDIR := $(shell $(ROOTCONFIG) --libdir)
@@ -154,7 +156,7 @@ ifeq ($(USE_ROOT),yes)
 endif
 
 # Causes GNU make to auto-delete the object files when the build is complete
-.INTERMEDIATE: $(OBJECTS) $(ROOT_SHARED_LIB_OBJECTS) marley.o
+.INTERMEDIATE: $(OBJECTS) $(ROOT_SHARED_LIB_OBJECTS) marley.o marsum.o
 
 %.o: $(SRC_DIR)/%.cc
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) \
@@ -164,7 +166,12 @@ $(SHARED_LIB): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(GSL_LDFLAGS) \
 	-fPIC -shared -o $@ $^
 
-marley: $(MARLEY_LIBS) marley.o
+marsum: $(MARLEY_LIBS) marsum.o
+	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \
+	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
+	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marsum.o
+
+marley: $(MARLEY_LIBS) marley.o $(MAYBE_MARSUM)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o

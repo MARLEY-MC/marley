@@ -294,6 +294,19 @@ double marley_utils::real_sqrt(double num) {
   }
 }
 
+// Prompts the user with a question that requires a yes/no answer. Returns
+// true if the answer was yes, or false if the answer was no.
+bool marley_utils::prompt_yes_no(const std::string& message) {
+  std::cout << '\n';
+  std::string response;
+  while (std::cout << message << " [y/n]? "
+    && std::getline(std::cin, response)
+    && !(response == "y" || response == "n" || response == "Y"
+    || response == "N"));
+  if (response == "y" || response == "Y") return true;
+  else return false;
+}
+
 // For a given atomic number Z and mass number A, return a matching ENSDF nucid
 std::string marley_utils::nuc_id(int Z, int A) {
   // Check to make sure Z and A have acceptable values

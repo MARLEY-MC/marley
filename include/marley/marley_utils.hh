@@ -416,6 +416,9 @@ namespace marley_utils {
     else return particle_electric_charges.at(pid);
   }
 
+  // Prompt the user with a yes/no question and retrieve the result
+  bool prompt_yes_no(const std::string& message);
+
   // Lookup table for element symbols (keys are atomic numbers Z,
   // values are symbols on the periodic table). The symbol "Nn" is
   // used for a neutron to match the ENSDF convention.
