@@ -77,6 +77,7 @@ namespace marley {
       double sample_cos_theta_c_cm(const marley::MatrixElement& matrix_el,
         double beta_c_cm, marley::Generator& gen) const;
 
+    public:
       /// @brief Total cross section for a given final nuclear level energy, in
       /// units convenient for sampling
       /// @param E_level Residue excitation energy (MeV)
@@ -85,6 +86,8 @@ namespace marley {
       /// to the level of interest
       virtual double total_xs(double E_level, double KEa,
         double matrix_element) const;
+
+    private:
 
       /// Computes an approximate correction factor to account for
       /// effects of the Coulomb potential when calculating cross sections

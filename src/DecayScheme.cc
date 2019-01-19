@@ -124,13 +124,13 @@ marley::DecayScheme::DecayScheme(int Z, int A) : Z_(Z), A_(A)
 {
 }
 
-marley::DecayScheme::DecayScheme(int Z, int A, std::string filename,
+marley::DecayScheme::DecayScheme(int Z, int A, const std::string& filename,
   marley::DecayScheme::FileFormat ff) : Z_(Z), A_(A)
 {
   parse(filename, ff);
 }
 
-void marley::DecayScheme::parse_talys(std::string filename) {
+void marley::DecayScheme::parse_talys(const std::string& filename) {
   // First line in a TALYS level dataset has fortran
   // format (2i4, 2i5, 56x, i4, a2)
   // General regex for this line:
@@ -383,32 +383,41 @@ void marley::DecayScheme::print(std::ostream& out) const {
 
 void marley::DecayScheme::read_from_stream(std::istream& in) {
 
-  levels_.clear();
+  try {
+    levels_.clear();
 
-  size_t num_levels;
-  in >> Z_ >> A_ >> num_levels;
+    size_t num_levels;
+    in >> Z_ >> A_ >> num_levels;
 
-  double energy, ri;
-  int two_j;
-  marley::Parity pi;
-  size_t num_gammas;
-  size_t level_f_idx;
+    double energy, ri;
+    int two_j;
+    marley::Parity pi;
+    size_t num_gammas;
+    size_t level_f_idx;
 
-  for (size_t i = 0; i < num_levels; ++i) {
-    in >> energy >> two_j >> pi >> num_gammas;
-    marley::Level& l = add_level(marley::Level(energy, two_j, pi));
-    for (size_t j = 0; j < num_gammas; ++j) {
-      in >> energy >> ri >> level_f_idx;
-      l.add_gamma(energy, ri, levels_.at(level_f_idx).get());
+    for (size_t i = 0; i < num_levels; ++i) {
+      in >> energy >> two_j >> pi >> num_gammas;
+      marley::Level& l = add_level(marley::Level(energy, two_j, pi));
+      for (size_t j = 0; j < num_gammas; ++j) {
+        in >> energy >> ri >> level_f_idx;
+        l.add_gamma(energy, ri, levels_.at(level_f_idx).get());
+      }
     }
+  }
+  catch ( const marley::Error& ) {
+    in.setstate( std::ios_base::failbit );
   }
 }
 
-void marley::DecayScheme::parse(std::string filename,
+void marley::DecayScheme::parse(const std::string& filename,
   marley::DecayScheme::FileFormat ff)
 {
   // Parse the data file using the appropriate format
   switch (ff) {
+
+    case FileFormat::native:
+      parse_native(filename);
+      break;
 
     case FileFormat::talys:
       parse_talys(filename);
@@ -420,4 +429,19 @@ void marley::DecayScheme::parse(std::string filename,
       throw marley::Error(std::string("Unsupported file format")
         + " passed to marley::DecayScheme constructor.");
   }
+}
+
+void marley::DecayScheme::parse_native(const std::string& filename) {
+
+  // Open the level data file for parsing
+  std::ifstream file_in(filename);
+
+  // If the file doesn't exist or some other error
+  // occurred, complain and give up.
+  if ( !file_in.good() ) throw marley::Error(std::string("Could not")
+    + " read from the data file " + filename);
+
+  read_from_stream( file_in );
+
+  file_in.close();
 }

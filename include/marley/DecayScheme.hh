@@ -17,9 +17,12 @@ namespace marley {
 
       /// @brief The FileFormat type is used to tell the DecayScheme class
       /// which format to assume when parsing a discrete level data file
-      /// @details Currently, only discrete level data in the format used
-      /// by the <a href="http://talys.eu">TALYS</a> nuclear code is allowed.
-      enum class FileFormat { talys };
+      /// @details Currently, only discrete level data in MARLEY's native
+      /// format (which may be read from a std::istream to initialize a
+      /// marley::DecayScheme object via the >> operator) or in the format
+      /// used by the <a href="http://talys.eu">TALYS</a> nuclear code are
+      /// allowed.
+      enum class FileFormat { native, talys };
 
       /// @brief Create a DecayScheme without any levels
       /// @param Z Atomic number of the desired nuclide
@@ -32,7 +35,7 @@ namespace marley {
       /// @param filename Name of the file containing the discrete level data
       /// @param format FileFormat specifier that indicates which nuclear data
       /// format is used in the file
-      DecayScheme(int Z, int A, std::string filename,
+      DecayScheme(int Z, int A, const std::string& filename,
         FileFormat format = FileFormat::talys);
 
       /// @brief Get a const reference to the vector that holds the Level
@@ -105,14 +108,19 @@ namespace marley {
 
       /// @brief Helper function that selects the correct parser
       /// when constructing the DecayScheme using a data file
-      void parse(std::string filename, FileFormat ff = FileFormat::talys);
+      void parse(const std::string& filename,
+        FileFormat ff = FileFormat::talys);
 
       // Functions called by the constructor to parse the
       // different nuclear data formats accepted by this class
 
       /// @brief Initialize the Level objects in this DecayScheme using a <a
       /// href="http://talys.eu">TALYS</a>-format discrete level data file
-      void parse_talys(std::string filename);
+      void parse_talys(const std::string& filename);
+
+      /// @brief Initialize the Level objects in this DecayScheme using
+      /// discrete level data file in MARLEY's native format
+      void parse_native(const std::string& filename);
       // Add more formats as needed
   };
 

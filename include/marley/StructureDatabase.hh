@@ -33,6 +33,13 @@ namespace marley {
       void emplace_decay_scheme(int pdg, const std::string& filename,
         DecayScheme::FileFormat format = DecayScheme::FileFormat::talys);
 
+      /// @brief Add a DecayScheme object to the database that
+      /// contains discrete level data for a specific nuclide
+      /// @param pdg PDG code for the desired nuclide
+      /// @param ds A unique_ptr to DecayScheme object to move into the
+      /// database.
+      void add_decay_scheme(int pdg, std::unique_ptr<marley::DecayScheme>& ds);
+
       /// @brief Create a set of Particle Data Group codes for every
       /// nuclide in a discrete level data file
       /// @param filename Name of the file that contains the discrete level

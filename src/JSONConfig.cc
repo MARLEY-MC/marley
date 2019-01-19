@@ -1,5 +1,6 @@
 // standard library includes
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -208,23 +209,77 @@ void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
 
   for (const auto& s : structure) {
 
-    std::string filename = s.to_string();
+    // If the user specifies the structure file as an object, then it
+    // will have a format specifier. If it's not a JSON object, assume that
+    // it is a string giving the file name, with the default TALYS input
+    // format being implied.
+    std::string filename;
+    auto format = marley::DecayScheme::FileFormat::talys;
+    if ( s.is_object() ) {
+      if ( s.has_key("file") && s.has_key("format") ) {
+        filename = s.at("file").to_string();
+        std::string form = s.at("format").to_string();
+        if ( form == "native" || form == "marley" ) {
+          format = marley::DecayScheme::FileFormat::native;
+        }
+        else if ( form == "talys" ) {
+          format = marley::DecayScheme::FileFormat::talys;
+        }
+        else handle_json_error("structure.format", s.at("format"));
+      }
+      else handle_json_error("structure", s);
+    }
+    else {
+      // No structure file format was specified, so assume that it is in TALYS
+      // format
+      filename = s.to_string();
+      format = marley::DecayScheme::FileFormat::talys;
+    }
 
-    // Load data for all nuclides in each structure data file. Assume that all
-    // files use the default TALYS format.
+    // Load data for all nuclides in the structure data file.
     auto& sdb = gen.get_structure_db();
 
-    std::set<int> nucleus_PDGs = sdb.find_all_nuclides(filename);
+    if ( format == marley::DecayScheme::FileFormat::talys ) {
+      // TALYS format data
+      std::set<int> nucleus_PDGs = sdb.find_all_nuclides(filename);
 
-    for (int pdg : nucleus_PDGs) {
-      int Z = marley_utils::get_particle_Z(pdg);
-      int A = marley_utils::get_particle_A(pdg);
+      for (int pdg : nucleus_PDGs) {
+        int Z = marley_utils::get_particle_Z(pdg);
+        int A = marley_utils::get_particle_A(pdg);
 
-      MARLEY_LOG_INFO() << "Loading nuclear structure data for "
-        << A << marley_utils::element_symbols.at(Z) << " from file "
-        << filename;
+        MARLEY_LOG_INFO() << "Loading nuclear structure data for "
+          << A << marley_utils::element_symbols.at(Z) << " from file "
+          << filename;
 
-      sdb.emplace_decay_scheme(pdg, filename);
+        sdb.emplace_decay_scheme(pdg, filename);
+      }
+    }
+    else if ( format == marley::DecayScheme::FileFormat::native ) {
+      // Data in MARLEY's native format
+      std::ifstream in_file( filename );
+
+      // Make a dummy decay scheme
+      auto temp_ds = std::make_unique<marley::DecayScheme>(0, 0);
+      auto& log = marley::Logger::Instance();
+      // Use it to read one or more decay scheme objects from the input file.
+      // Temporarily disable the logger in an ugly hack to avoid a spurious
+      // error message about an invalid parity value when reaching EOF.
+      /// @\todo Rewrite this in a better way
+      while ( log.disable(), in_file >> *temp_ds )
+      {
+        log.enable(true);
+        // Load each one into the structure database
+        int A = temp_ds->A();
+        int Z = temp_ds->Z();
+        MARLEY_LOG_INFO() << "Loading nuclear structure data for "
+          << A << marley_utils::element_symbols.at(Z) << " from file "
+          << filename;
+        int pdg = marley_utils::get_nucleus_pid(Z, A);
+        sdb.add_decay_scheme(pdg, temp_ds);
+        if ( in_file.eof() ) break;
+        temp_ds.reset( new marley::DecayScheme(0, 0) );
+      }
+      log.enable(true);
     }
   }
 }

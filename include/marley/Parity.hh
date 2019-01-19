@@ -119,8 +119,8 @@ inline std::istream& operator>> (std::istream& in,
 
   if (c == '+') p = marley::Parity(true);
   else if (c == '-') p = marley::Parity(false);
-  else throw marley::Error(std::string("Invalid parity ")
-    + c + " assigned via the >> operator to"
+  else throw marley::Error(std::string("Invalid parity \"")
+    + c + "\" assigned via the >> operator to"
     + " a variable of type marley::Parity");
 
   return in;
