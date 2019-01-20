@@ -16,9 +16,9 @@ are encouraged to contact the MARLEY development team
 
 ## Licensing
 
-MARLEY is distributed under the terms of the [BSD 2-clause
-license](http://opensource.org/licenses/BSD-2-Clause). Please see the LICENSE
-file for details.
+MARLEY is distributed under the terms of version 3 of the
+[GNU General Public License](http://opensource.org/licenses/GPL-3.0).
+Please see the LICENSE file for details.
 
 ## Getting Started
 
@@ -62,8 +62,8 @@ If the build is successful, then executing
 should produce the following output:
 ```
 MARLEY (Model of Argon Reaction Low Energy Yields) 1.1.0
-Copyright (C) 2016-2018 Steven Gardiner
-License BSD2C: BSD 2-Clause <http://opensource.org/licenses/BSD-2-Clause>
+Copyright (C) 2016-2019 Steven Gardiner
+License: GNU GPL version 3 <http://opensource.org/licenses/GPL-3.0>
 This is free software: you are free to change and redistribute it.
 ```
 

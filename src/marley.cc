@@ -727,9 +727,10 @@ namespace {
   void print_version() {
     std::cout << "MARLEY (Model of Argon Reaction Low Energy Yields) "
       << marley_utils::MARLEY_VERSION << '\n';
-    std::cout << "Copyright (C) 2016-2017 Steven Gardiner\n";
-    std::cout << "License BSD2C: BSD 2-Clause "
-      << "<http://opensource.org/licenses/BSD-2-Clause>\n";
+
+    std::cout << "Copyright (C) 2016-2019 Steven Gardiner\n";
+    std::cout << "License: GNU GPL version 3 "
+      << "<http://opensource.org/licenses/GPL-3.0>\n";
     std::cout << "This is free software: you are free to change and"
       << " redistribute it.\n";
     exit(0);
