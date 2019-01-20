@@ -7,9 +7,19 @@
 
 std::complex<double>
 marley::KoningDelarocheOpticalModel::optical_model_potential(double r,
-  double E, int fragment_pdg, int two_j, int l, int two_s)
+  double fragment_KE_lab, int fragment_pdg, int two_j, int l, int two_s,
+  int target_charge)
 {
-  calculate_om_parameters(E, fragment_pdg, two_j, l, two_s);
+  update_target_mass( target_charge );
+
+  const auto& mt = marley::MassTable::Instance();
+  double fragment_mass = mt.get_particle_mass( fragment_pdg );
+
+  double KE_tot_CM = std::max(0., marley_utils::real_sqrt(
+    std::pow(target_mass_ + fragment_mass, 2)
+    + 2.*target_mass_*fragment_KE_lab) - fragment_mass - target_mass_);
+  calculate_kinematic_variables( KE_tot_CM, fragment_pdg );
+  calculate_om_parameters(fragment_pdg, two_j, l, two_s);
   return omp(r);
 }
 
@@ -41,16 +51,19 @@ marley::KoningDelarocheOpticalModel::omp_minus_Vc(double r) const
     -temp_Wv - temp_Wd + temp_Wso);
 }
 
-// Compute all of the pieces of the optical model that depend on the
-// fragment's energy E but not on its distance from the origin r.
-// Store them in the appropriate class members.
-void marley::KoningDelarocheOpticalModel::calculate_om_parameters(double E,
+// Compute all of the pieces of the optical model that depend on the fragment's
+// kinetic energy in the lab frame fragment_KE_lab but not on its distance from
+// the origin r. Store them in the appropriate class members.
+void marley::KoningDelarocheOpticalModel::calculate_om_parameters(
   int fragment_pdg, int two_j, int l, int two_s)
 {
   // Fragment atomic, mass, and neutron numbers
   z = marley_utils::get_particle_Z(fragment_pdg);
   int a = marley_utils::get_particle_A(fragment_pdg);
   int n = a - z;
+
+  // Abbreviate the variable name here for simplicity
+  const double E = fragment_KE_lab_;
 
   // Eigenvalue of the spin-orbit operator
   // 2*(l.s) = j*(j + 1)  - l*(l + 1) -  s*(s + 1)
@@ -159,6 +172,8 @@ void marley::KoningDelarocheOpticalModel::calculate_om_parameters(double E,
 marley::KoningDelarocheOpticalModel::KoningDelarocheOpticalModel(int Z,
   int A, double step_size) : marley::OpticalModel(Z, A), step_size_(step_size)
 {
+  const auto& mt = marley::MassTable::Instance();
+  target_mass_ = mt.get_atomic_mass(Z, A);
 
   int N = A_ - Z_; // Neutron number
 
@@ -214,72 +229,67 @@ marley::KoningDelarocheOpticalModel::KoningDelarocheOpticalModel(int Z,
     + 12.994*std::pow(A_to_the_one_third, -4); // fm
   Vcbar_p = 1.73 * Z_ / Rc; // MeV
 
-  // Compute and store reduced masses for all of the fragments of interest
-  const marley::MassTable& mt = marley::MassTable::Instance();
-  double m_nucleus = mt.get_atomic_mass(Z_, A_);
-  for (const auto& f : marley::HauserFeshbachDecay::get_fragments()) {
-    int pdg = f.get_pid();
-    double m_fragment = mt.get_particle_mass(pdg);
-    reduced_masses_[pdg] = (m_fragment * m_nucleus) / (m_fragment + m_nucleus);
-  }
 }
 
-// Computes the total cross section (in barns) for a given fragment
-// scattering on this nucleus at a given kinetic energy E.
+//// Computes the total cross section (in barns) for a given fragment
+//// scattering on this nucleus at a given kinetic energy E.
+////
+//// The total cross section given here by the optical model may be directly
+//// compared to experiment. Expressions exist for the optical model elastic and
+//// reaction (absorption) cross sections, but these are hard to directly compare
+//// to the data because the absorption cross section includes the compound
+//// elastic channel.
+//double marley::KoningDelarocheOpticalModel::total_cross_section(
+//  double fragment_KE_lab, int fragment_pdg, int two_s, size_t l_max,
+//  int target_charge)
+//{
+//  update_target_mass( target_charge );
+//  double sum = 0.;
+//  for (size_t l = 0; l <= l_max; ++l) {
+//    int two_l = 2*l;
+//    for (int two_j = std::abs(two_l - two_s);
+//      two_j <= two_l + two_s; two_j += 2)
+//    {
+//      std::complex<double> S = s_matrix_element(E, fragment_pdg, two_j, l,
+//        two_s);
+//      sum += (two_j + 1) * (1 - S.real());
+//    }
+//  }
 //
-// The total cross section given here by the optical model may be directly
-// compared to experiment. Expressions exist for the optical model elastic and
-// reaction (absorption) cross sections, but these are hard to directly compare
-// to the data because the absorption cross section includes the compound
-// elastic channel.
-double marley::KoningDelarocheOpticalModel::total_cross_section(double E,
-  int fragment_pdg, int two_s, size_t l_max)
+//  double mu = get_fragment_reduced_mass(fragment_pdg);
+//  double k = marley_utils::real_sqrt(2.0 * mu * E) / marley_utils::hbar_c;
+//  // If k == 0, then eta blows up, so use a really small k instead of zero
+//  // (or a negative k due to roundoff error)
+//  if (k <= 0) k = 1e-8; //DEBUG!
+//
+//  // This expression is based on equation 3.2.34 from I. Thompson and F. Nunes,
+//  // Nuclear Reactions for Astrophysics, p. 85. Note that we have reduced the
+//  // coupled-channels form shown therein to a single channel, and we have also
+//  // assumed that the nucleus has zero spin (spherical optical model).
+//  //
+//  // Compute the cross section in units of fm^2
+//  double xs = marley_utils::two_pi * sum / ((two_s + 1) * std::pow(k, 2));
+//  // Return the cross section in barns (1 b = 100 fm^2)
+//  return xs / 100.;
+//}
+
+double marley::KoningDelarocheOpticalModel::transmission_coefficient(
+  double total_KE_CM, int fragment_pdg, int two_j, int l, int two_s,
+  int target_charge)
 {
-  double sum = 0.;
-  for (size_t l = 0; l <= l_max; ++l) {
-    int two_l = 2*l;
-    for (int two_j = std::abs(two_l - two_s);
-      two_j <= two_l + two_s; two_j += 2)
-    {
-      std::complex<double> S = s_matrix_element(E, fragment_pdg, two_j, l,
-        two_s);
-      sum += (two_j + 1) * (1 - S.real());
-    }
-  }
-
-  double mu = get_fragment_reduced_mass(fragment_pdg);
-  double k = marley_utils::real_sqrt(2.0 * mu * E) / marley_utils::hbar_c;
-  // If k == 0, then eta blows up, so use a really small k instead of zero
-  // (or a negative k due to roundoff error)
-  if (k <= 0) k = 1e-8; //DEBUG!
-
-  // This expression is based on equation 3.2.34 from I. Thompson and F. Nunes,
-  // Nuclear Reactions for Astrophysics, p. 85. Note that we have reduced the
-  // coupled-channels form shown therein to a single channel, and we have also
-  // assumed that the nucleus has zero spin (spherical optical model).
-  //
-  // Compute the cross section in units of fm^2
-  double xs = marley_utils::two_pi * sum / ((two_s + 1) * std::pow(k, 2));
-  // Return the cross section in barns (1 b = 100 fm^2)
-  return xs / 100.;
-}
-
-double marley::KoningDelarocheOpticalModel::transmission_coefficient(double E,
-  int fragment_pdg, int two_j, int l, int two_s)
-{
-  std::complex<double> S = s_matrix_element(E, fragment_pdg, two_j, l,
-    two_s);
+  update_target_mass( target_charge );
+  calculate_kinematic_variables( total_KE_CM, fragment_pdg );
+  std::complex<double> S = s_matrix_element(fragment_pdg, two_j, l, two_s);
   return 1.0 - std::norm(S);
 }
 
 std::complex<double>
-marley::KoningDelarocheOpticalModel::s_matrix_element(double E,
-  int fragment_pdg, int two_j, int l, int two_s)
+marley::KoningDelarocheOpticalModel::s_matrix_element(int fragment_pdg,
+  int two_j, int l, int two_s)
 {
-
   // Update the optical model parameters stored in this object for the
   // given fragment, energy, and angular momenta
-  calculate_om_parameters(E, fragment_pdg, two_j, l, two_s);
+  calculate_om_parameters(fragment_pdg, two_j, l, two_s);
 
   double step_size2_over_twelve = std::pow(step_size_, 2) / 12.0;
 
@@ -291,7 +301,7 @@ marley::KoningDelarocheOpticalModel::s_matrix_element(double E,
   // we're saved by the boundary condition that u(0) = 0. We just need
   // something finite here, but we might as well make it zero.
   std::complex<double> a_n_minus_one = 0;
-  std::complex<double> a_n = a(step_size_, E, fragment_pdg, l);
+  std::complex<double> a_n = a(step_size_, l);
 
   std::complex<double> u_n_minus_two;
   // Boundary condition that the wavefunction vanishes at the origin (the
@@ -316,7 +326,7 @@ marley::KoningDelarocheOpticalModel::s_matrix_element(double E,
 
     U_minus_Vc = omp_minus_Vc(r),
     U = U_minus_Vc + Vc(r, Rc, z, Z_);
-    a_n = a(r, E, fragment_pdg, l, U);
+    a_n = a(r, l, U);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -341,7 +351,7 @@ marley::KoningDelarocheOpticalModel::s_matrix_element(double E,
     r += step_size_;
     a_n_minus_two = a_n_minus_one;
     a_n_minus_one = a_n;
-    a_n = a(r, E, fragment_pdg, l);
+    a_n = a(r, l);
 
     u_n_minus_two = u_n_minus_one;
     u_n_minus_one = u_n;
@@ -355,19 +365,24 @@ marley::KoningDelarocheOpticalModel::s_matrix_element(double E,
   double r_match_2 = r;
   u2 = u_n;
 
-  // Coulomb parameter
-  double mu = get_fragment_reduced_mass(fragment_pdg);
-  double k = marley_utils::real_sqrt(2.0 * mu * E) / marley_utils::hbar_c;
+  // Coulomb (Sommerfeld) parameter
+  // Note that the relative (dimensionless) speed of the two particles
+  // is just the speed of the fragment in the lab frame
+  double beta_rel = marley_utils::real_sqrt( std::pow(fragment_KE_lab_, 2)
+    + 2.*fragment_KE_lab_*fragment_mass_ ) / ( fragment_KE_lab_
+    + fragment_mass_);
 
-  // If k == 0, then eta blows up, so use a really small k instead of zero
-  // (or a negative k due to roundoff error)
-  if (k <= 0) k = 1e-8; //DEBUG!
+  // If k == 0, then eta blows up, so use a really small value
+  if (beta_rel <= 0) beta_rel = 1e-8; //DEBUG!
 
-  double eta = mu * Z_ * z * marley_utils::e2 / (marley_utils::hbar_c2 * k);
+  double eta = Z_ * z * marley_utils::alpha / beta_rel;
 
   // Compute the Coulomb wavefunctions at the matching radii
-  //double F, G;
   std::complex<double> Hplus1, Hminus1, Hplus2, Hminus2;
+
+  // Fragment's CM frame wavenumber
+  double k = marley_utils::real_sqrt( CM_frame_momentum_squared_ )
+    / marley_utils::hbar_c;
 
   Hplus1 = coulomb_H_plus(l, eta, k*r_match_1);
 
@@ -386,19 +401,19 @@ marley::KoningDelarocheOpticalModel::s_matrix_element(double E,
 // Version of Schrodinger equation terms with the optical model potential
 // U pre-computed
 std::complex<double> marley::KoningDelarocheOpticalModel::a(double r,
-  double E, int fragment_pdg, int l, std::complex<double> U) const
+  int l, std::complex<double> U) const
 {
   return (-l*(l+1) / std::pow(r, 2)) +
-    2 * reduced_masses_.at(fragment_pdg) * (E - U) / marley_utils::hbar_c2;
+    (1. - (U / total_CM_frame_KE_)) * CM_frame_momentum_squared_
+    / marley_utils::hbar_c2;
 }
 
 // Non-derivative radial Schrödinger equation terms to use for computing
 // transmission coefficients via the Numerov method
-std::complex<double> marley::KoningDelarocheOpticalModel::a(double r,
-  double E, int fragment_pdg, int l)
+std::complex<double> marley::KoningDelarocheOpticalModel::a(double r, int l)
 {
   return (-l*(l+1) / std::pow(r, 2)) +
-    2 * reduced_masses_.at(fragment_pdg) * (E - omp(r))
+    (1. - (omp(r) / total_CM_frame_KE_)) * CM_frame_momentum_squared_
     / marley_utils::hbar_c2;
 }
 
@@ -438,4 +453,33 @@ double marley::KoningDelarocheOpticalModel::dfdr(double r, double R, double a) c
   if (std::abs(exponent) > 100.) return 0;
   double temp = std::exp(exponent);
   return -temp / (a * std::pow(1 + temp, 2));
+}
+
+void marley::KoningDelarocheOpticalModel::calculate_kinematic_variables(
+  double KE_tot_CM, int fragment_pdg)
+{
+  // Store the total kinetic energy in the CM frame
+  total_CM_frame_KE_ = KE_tot_CM;
+
+  // Calculate the lab frame kinetic energy of the fragment from the
+  // total CM frame kinetic energy
+  const auto& mt = marley::MassTable::Instance();
+  fragment_mass_ = mt.get_particle_mass( fragment_pdg );
+  fragment_KE_lab_ = total_CM_frame_KE_ * (
+    2.*(fragment_mass_ + target_mass_) + total_CM_frame_KE_ )
+    / (2. * target_mass_);
+
+  // Calculate the square of the CM frame 3-momentum of either particle
+  CM_frame_momentum_squared_ = std::pow(target_mass_, 2) * fragment_KE_lab_
+    * (2.*fragment_mass_ + fragment_KE_lab_)
+    / ( std::pow(fragment_mass_ + target_mass_, 2)
+    + 2.*target_mass_*fragment_KE_lab_ );
+}
+
+void marley::KoningDelarocheOpticalModel::update_target_mass(int target_charge)
+{
+  // Update the target mass based on its charge state
+  const auto& mt = marley::MassTable::Instance();
+  target_mass_ = mt.get_atomic_mass(Z_, A_)
+   - target_charge*mt.get_particle_mass( marley_utils::ELECTRON );
 }

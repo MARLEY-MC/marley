@@ -25,15 +25,16 @@ namespace marley {
       /// @param two_s Two times the spin of the fragment
       /// @returns Complex-valued optical model potential (MeV)
       virtual std::complex<double> optical_model_potential(double r, double E,
-        int fragment_pdg, int two_j, int l, int two_s) = 0;
+        int fragment_pdg, int two_j, int l, int two_s, int target_charge = 0)
+        = 0;
 
       /// @brief Calculate the transmission coefficient for a nuclear fragment
       virtual double transmission_coefficient(double E, int fragment_pdg,
-        int two_j, int l, int two_s) = 0;
+        int two_j, int l, int two_s, int target_charge = 0) = 0;
 
-      /// @brief Calculate the total cross section for a nuclear fragment
-      virtual double total_cross_section(double E, int fragment_pdg, int two_s,
-        size_t l_max) = 0;
+      ///// @brief Calculate the total cross section for a nuclear fragment
+      //virtual double total_cross_section(double E, int fragment_pdg, int two_s,
+      //  size_t l_max) = 0;
 
       /// @brief Get the atomic number
       inline int Z() const;

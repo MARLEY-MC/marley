@@ -11,17 +11,6 @@ using TrType = marley::GammaStrengthFunctionModel::TransitionType;
 
 namespace {
 
-  // Approximates the electric potential energy (in MeV) of two nuclei
-  // (with atomic numbers Z, z and mass numbers A, a) that are just
-  // touching by modeling them as uniformly charged spheres with radii
-  // given by R = (1.2 fm) * A^(1/3).
-  double coulomb_barrier(int Z, int A, int z, int a) {
-    if (z >= 1) return 0.01; // DEBUG
-    return 0.;
-    //return Z * z * marley_utils::e2
-    //  / (marley_utils::r0 * (std::pow(A, 1.0/3.0) + std::pow(a, 1.0/3.0)));
-  }
-
   // Helper function for
   // marley::HauserFeshbachDecay::gamma_continuum_partial_width(). It doesn't
   // really need access to any class members to do its job, so we've hidden it
@@ -113,33 +102,15 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     marley::OpticalModel& om = db.get_optical_model(pid_final);
 
     // Determine the maximum excitation energy available after fragment
-    // emission in the final nucleus. Use a simpler functional form as a
-    // shortcut if the fragment is neutral [and can therefore be emitted with
-    // arbitrarily low kinetic energy due to the absence of a Coulomb barrier])
-    double Exf_max;
-    double Vc; // Coulomb barrier
-    if (f.get_Z() == 0) {
-      Vc = 0;
-      Exf_max = Exi_ - Sa;
-    }
-    else {
-      Vc = coulomb_barrier(Zf, Af, Za, f.get_A()); // Ea_min = Vc
-      Exf_max = std::sqrt(std::pow(Mi - Ma, 2) - 2*Vc*Mi) - Mfgs_ion;
-    }
-
-    // The fragment kinetic energy depends on the final level energy. For
-    // speed, we precompute here a portion of the fragment energy that doesn't
-    // depend on the final level energy.
-    double Mconst = (Exi_ - Sa) * (Mi + Mfgs_ion - Ma);
+    // emission in the final nucleus. This is simply the difference
+    // between the initial excitation energy and the fragment separation
+    // energy.
+    double Exf_max = Exi_ - Sa;
 
     // Check if emission of this fragment is energetically allowed. If we're
-    // below the fragment emission threshold, the partial decay width is
-    // approximately zero (neglecting tunneling), so we can skip this fragment
-    // rather than slogging through the calculation.  We'll also skip it if
-    // we're exactly at threshold to avoid numerical problems.
-    // TODO: consider changing this rule to allow tunneling through the Coulomb
-    // barrier
-    if (Mconst / (2 * Mi) - Vc <= 0.) continue;
+    // exactly at threshold, still refuse to emit the fragment to avoid
+    // numerical problems.
+    if (Exf_max <= 0.) continue;
 
     // Let the continuum go down to 0 MeV unless there is a decay scheme object
     // available for the final nuclide (we'll check this in a second).
@@ -168,7 +139,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
         double Exf = level->energy();
         if (Exf < Exf_max) {
           double discrete_width = 0.;
-          double Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
+          double total_KE_CM_frame = Exf_max - Exf;
           int twoJf = level->twoJ();
           marley::Parity Pf = level->parity();
           for (int two_j = std::abs(twoJi_ - twoJf); two_j <= twoJi_ + twoJf;
@@ -188,7 +159,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
               // Add to the total transmission coefficient if parity is
               // conserved
               if (Pi_ == P_final_state) discrete_width
-                += om.transmission_coefficient(Ea, fragment_pid, two_j, l,
+                += om.transmission_coefficient(total_KE_CM_frame, fragment_pid, two_j, l,
                 two_s);
             }
           }
@@ -213,8 +184,9 @@ void marley::HauserFeshbachDecay::build_exit_channels()
       // Create a function object for the continuum partial width member
       // function that takes a single argument.
       std::function<double(double)> cpw = [=, &om, &ldm](double Exf) -> double {
-        double Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
-        return fragment_continuum_partial_width(om, ldm, f, Ea, Exf);
+        double total_KE_CM_frame = Exf_max - Exf;
+        return fragment_continuum_partial_width(om, ldm, f, total_KE_CM_frame,
+          Exf);
       };
 
       // Numerically integrate using the call wrapper, the integration bounds,
@@ -225,10 +197,10 @@ void marley::HauserFeshbachDecay::build_exit_channels()
       // Create a normalized probability density function to use for sampling a
       // final excitation energy from the continuum for this exit channel.
       std::function<double(double&, double)> pdf
-        = [=, &f, &om, &ldm](double& Ea, double Exf) -> double {
-        Ea = (Mconst - Exf*(2*Mfgs_ion + Exf)) / (2 * Mi);
-        return fragment_continuum_partial_width(om, ldm, f, Ea, Exf)
-          / continuum_width;
+        = [=, &f, &om, &ldm](double& total_KE_CM_frame, double Exf) -> double {
+        total_KE_CM_frame = Exf_max - Exf;
+        return fragment_continuum_partial_width(om, ldm, f, total_KE_CM_frame,
+          Exf) / continuum_width;
       };
 
       // Store information for this decay channel
@@ -385,7 +357,7 @@ double marley::HauserFeshbachDecay::gamma_continuum_partial_width(
 
 double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
   marley::OpticalModel& om, marley::LevelDensityModel& ldm,
-  const marley::Fragment& frag, double fragment_KE, double Exf)
+  const marley::Fragment& frag, double total_KE_CM_frame, double Exf)
 {
   int two_s = frag.get_two_s();
   marley::Parity Pa = frag.get_parity();
@@ -407,7 +379,7 @@ double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
       for (int twoJf = std::abs(twoJi_ - two_j);
         twoJf <= twoJi_ + two_j; twoJf += 2)
       {
-        continuum_width += om.transmission_coefficient(fragment_KE,
+        continuum_width += om.transmission_coefficient(total_KE_CM_frame,
           frag.get_pid(), two_j, l, two_s)
           * ldm.level_density(Exf, twoJf);
           // TODO: since only the spin distribution changes in the twoJf loop,
@@ -422,35 +394,17 @@ double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
 double marley::HauserFeshbachDecay::get_fragment_emission_threshold(
   const int Zi, const int Ai, const marley::Fragment& f)
 {
-  int Zf = Zi - f.get_Z();
-  int Af = Ai - f.get_A();
-
   const marley::MassTable& mt = marley::MassTable::Instance();
 
-  // Get various masses that will be needed for fragment emission kinematics
-  // (including nuclear recoil)
-  double Migs = mt.get_atomic_mass(Zi, Ai);
-  double Ma = f.get_mass();
-  double Mfgs = mt.get_atomic_mass(Zf, Af);
-  double me = mt.get_particle_mass(marley_utils::ELECTRON);
-  // Fragment atomic number
-  int Za = f.get_Z();
-  // Approximate the ground state rest energy of the negative ion (with
-  // charge Za-) formed when the bare fragment f is emitted by adding Za
-  // electron masses to the atomic mass for the final nucleus.
-  double Mfgs_ion = Mfgs + Za*me;
+  // Separation energy for the fragment
+  double Sa = mt.get_fragment_separation_energy(Zi, Ai, f.get_pid());
 
-  // Get Coulomb potential for this fragment
-  double Vc;
-  if (Za != 0) Vc = coulomb_barrier(Zf, Af, Za, f.get_A());
-  else Vc = 0.;
-
-  return Ma - Migs + Vc + marley_utils::real_sqrt(Vc * (2*Ma + Vc)
-    + std::pow(Mfgs_ion, 2));
+  return Sa;
 }
 
 void marley::HauserFeshbachDecay::print(std::ostream& out) const {
 
+  // Needed to print results in conventional units
   static constexpr double hbar = 6.58211951e-22; // MeV * s
   int pid_initial = compound_nucleus_.pdg_code();
   int Zi = marley_utils::get_particle_Z(pid_initial);

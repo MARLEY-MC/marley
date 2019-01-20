@@ -29,25 +29,43 @@ namespace marley {
       KoningDelarocheOpticalModel(int Z, int A, double step_size
         = DEFAULT_NUMEROV_STEP_SIZE_);
 
-      virtual std::complex<double> optical_model_potential(double r, double E,
-        int fragment_pdg, int two_j, int l, int two_s) override;
+      virtual std::complex<double> optical_model_potential(double r,
+        double fragment_KE_lab, int fragment_pdg, int two_j, int l, int two_s,
+        int target_charge = 0) override;
 
-      virtual double transmission_coefficient(double E, int fragment_pdg,
-        int two_j, int l, int two_s) override;
+      virtual double transmission_coefficient(double total_KE_CM,
+        int fragment_pdg, int two_j, int l, int two_s, int target_charge = 0)
+        override;
 
-      virtual double total_cross_section(double E, int fragment_pdg, int two_s,
-        size_t l_max) override;
+      // \@todo TODO: add this back in!
+      //virtual double total_cross_section(double E, int fragment_pdg, int two_s,
+      //  size_t l_max) override;
 
     private:
 
+      /// Total CM frame kinetic energy of both particles
+      double total_CM_frame_KE_;
+      /// Mass of the fragment
+      double fragment_mass_;
+      /// Fragment kinetic energy in the laboratory frame (rest frame of the
+      /// target nucleus represented by this optical potential)
+      double fragment_KE_lab_;
+      /// 3-momentum of either particle in the CM frame
+      double CM_frame_momentum_squared_;
+
+      // Storage for the mass of the nuclear target represented by this
+      // optical model potential. Its value will be adjusted based on
+      // the ionization state of the target.
+      double target_mass_;
+
       // Helper function for computing optical model transmission coefficients
       // and cross sections
-      std::complex<double> s_matrix_element(double E, int fragment_pdg,
-        int two_j, int l, int two_s);
+      std::complex<double> s_matrix_element(int fragment_pdg, int two_j,
+        int l, int two_s);
 
       // Helper functions for computing the optical model potential
-      void calculate_om_parameters(double E, int fragment_pdg, int two_j,
-        int l, int two_s);
+      void calculate_om_parameters(int fragment_pdg, int two_j, int l,
+        int two_s);
 
       // Compute the optical model potential at radius r
       std::complex<double> omp(double r) const;
@@ -59,8 +77,6 @@ namespace marley {
       // Woods-Saxon shape
       double f(double r, double R, double a) const;
 
-      inline double get_fragment_reduced_mass(int fragment_pdg) const;
-
       // Partial derivative with respect to r of the Woods-Saxon shape
       double dfdr(double r, double R, double a) const;
 
@@ -70,12 +86,11 @@ namespace marley {
 
       // Non-derivative radial Schrödinger equation terms to use for computing
       // transmission coefficients via the Numerov method
-      std::complex<double> a(double r, double E, int fragment_pdg, int l);
+      std::complex<double> a(double r, int l);
 
       // Version of Schrodinger equation terms with the optical model potential
       // U pre-computed
-      std::complex<double> a(double r, double E, int fragment_pdg, int l,
-        std::complex<double> U) const;
+      std::complex<double> a(double r, int l, std::complex<double> U) const;
 
       // Neutron parameters
       double v1n, v2n, v3n, v4n, w1n, w2n, d1n, d2n, d3n, vso1n, vso2n;
@@ -85,8 +100,6 @@ namespace marley {
       double wso1p, wso2p, Efp, Vcbar_p, Rvp, avp, Rdp, adp, Rso_p, aso_p;
       // Radius for nuclear Coulomb potential
       double Rc;
-      // Reduced mass lookup table
-      std::unordered_map<int, double> reduced_masses_;
 
       // Mass of a charged pion
       static constexpr double mpiplus = 139.57018; // MeV
@@ -123,9 +136,10 @@ namespace marley {
       /// @todo Make this a user-controlled value specified in the
       /// configuration file
       static constexpr double DEFAULT_NUMEROV_STEP_SIZE_ = 0.1;
+
+      // More helper functions
+      void calculate_kinematic_variables(double KE_tot_CM, int fragment_pdg);
+      void update_target_mass(int target_charge);
   };
 
-  // Inline function definitions
-  inline double KoningDelarocheOpticalModel::get_fragment_reduced_mass(
-    int fragment_pdg) const { return reduced_masses_.at(fragment_pdg); }
 }
