@@ -37,9 +37,9 @@ namespace marley {
         int fragment_pdg, int two_j, int l, int two_s, int target_charge = 0)
         override;
 
-      // \@todo TODO: add this back in!
-      //virtual double total_cross_section(double E, int fragment_pdg, int two_s,
-      //  size_t l_max) override;
+      virtual double total_cross_section(double fragment_KE_lab,
+        int fragment_pdg, int two_s, size_t l_max, int target_charge = 0)
+        override;
 
     private:
 
