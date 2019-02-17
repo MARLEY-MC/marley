@@ -372,8 +372,9 @@ marley::KoningDelarocheOpticalModel::s_matrix_element(int fragment_pdg,
     + 2.*fragment_KE_lab_*fragment_mass_ ) / ( fragment_KE_lab_
     + fragment_mass_);
 
-  // If k == 0, then eta blows up, so use a really small value
-  if (beta_rel <= 0) beta_rel = 1e-8; //DEBUG!
+  // If beta_rel == 0, then eta blows up, so use a really small value
+  /// @todo TODO: revisit this to see if you want to do something else
+  if (beta_rel <= 0) beta_rel = 1e-8;
 
   double eta = Z_ * z * marley_utils::alpha / beta_rel;
 

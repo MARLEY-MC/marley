@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Update the branch addresses (manipulating the vectors may have
-    // invalidated them
+    // invalidated them)
     out_tree->SetBranchAddress("pdg", PDGs.data());
     out_tree->SetBranchAddress("E",  Es.data());
     out_tree->SetBranchAddress("KE", KEs.data());
