@@ -18,10 +18,32 @@ The nuclear structure data that we recommend for use with MARLEY are
 taken from <a href="http://talys.eu">TALYS-1.6</a> and are available
 in the source code tar.gz file under the structure/ subdirectory.
 
-Documentation describing the new configuration file format for v1.0.0 is in
-preparation. The
-<a href="https://github.com/sjgardiner/marley/archive/v0.9.5.tar.gz">source
-code</a> and the beginning of a draft
-<a href="https://ucdavis.box.com/shared/static/dfslb5q0zf4zd6c6maa8runu08litq9l.pdf">
-user manual</a> for v0.9.5 are both available in the meantime.
+A journal publication discussing the models implemented in MARLEY is in
+preparation. If you would like to refer to calculations performed using MARLEY
+in published work, please contact Steven Gardiner
+(@htmlonly<script type="text/javascript" language="javascript">
+//<!--
+// Email obfuscator script 2.1 by Tim Williams, University of Arizona
+// Random encryption key feature coded by Andrew Moulden
+// This code is freeware provided these four comment lines remain intact
+// A wizard to generate this code is at http://www.jottings.com/obfuscator/
+{ coded = "rGbwYzqb@czGp.rFB"
+  key = "MZfnPsUiHyqQWEdgLIoczCKvY4a56OAwrRxF3X8hBmTGl2DNtb17S9JeVu0kjp"
+  shift=coded.length
+  link=""
+  for (i=0; i<coded.length; i++) {
+    if (key.indexOf(coded.charAt(i))==-1) {
+      ltr = coded.charAt(i)
+      link += (ltr)
+    }
+    else {
+      ltr = (key.indexOf(coded.charAt(i))-shift+key.length) % key.length
+      link += (key.charAt(ltr))
+    }
+  }
+document.write("<a href='mailto:"+link+"'>"+link+"</a>")
+}
+//-->
+</script><noscript>Sorry, you need Javascript on to email me.</noscript>@endhtmlonly )
+for the most current bibliographic information to use in citations.
 */
