@@ -277,6 +277,7 @@ double marley::KoningDelarocheOpticalModel::transmission_coefficient(
   double total_KE_CM, int fragment_pdg, int two_j, int l, int two_s,
   int target_charge)
 {
+  if ( total_KE_CM <= 0. ) return 0.;
   update_target_mass( target_charge );
   calculate_kinematic_variables( total_KE_CM, fragment_pdg );
   std::complex<double> S = s_matrix_element(fragment_pdg, two_j, l, two_s);
