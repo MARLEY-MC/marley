@@ -1,9 +1,7 @@
 INCLUDE_DIR = ../include
 SRC_DIR = ../src
 
-ifndef CXXFLAGS
-  CXXFLAGS = -O3 -std=c++14
-endif
+CXXFLAGS ?= -O3 -std=c++14
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
@@ -27,7 +25,7 @@ ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(MAKECMDGOALS),uninstall)
 
   # Use g++ as the default compiler
-  CXX = g++
+  CXX ?= g++
   CXXFLAGS += -I$(INCLUDE_DIR) -Wall -Wextra -Wpedantic
   CXXFLAGS += -Wno-error=unused-parameter -Wcast-align
 
@@ -104,7 +102,7 @@ Please ensure that the gsl-config executable is on your PATH and try again.
       ROOT_VERSION := $(shell $(ROOTCONFIG) --version)
       $(info Found ROOT version $(ROOT_VERSION) in $(ROOT))
       $(info MARLEY will be built with ROOT support.)
-      CXXFLAGS += -DUSE_ROOT
+      override CXXFLAGS += -DUSE_ROOT
       MAYBE_MARSUM = marsum
       ROOT_CXXFLAGS := $(shell $(ROOTCONFIG) --cflags)
       ROOT_LDFLAGS := $(shell $(ROOTCONFIG) --ldflags)
