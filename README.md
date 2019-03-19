@@ -89,12 +89,27 @@ start writing your own configuration files, editing a copy of
 those in `examples/config.js`, but it omits the long comments so that
 it may be easily modified.
 
-## Authors
+To use the command-line executable from outside the `build/` folder, one may optionally
+run
+```
+sudo make install
+```
+to copy the `marley` executable and other files to standard system locations (e.g.,
+`/usr/bin`). The installation can be removed automatically by invoking
+```
+sudo make uninstall
+```
+from the `build/` folder. For users that prefer a local installation, the `setup_marley.sh`
+bash script has also been provided. Running
+```
+source setup_marley.sh
+```
+from the root MARLEY folder will add `build/` to the system `PATH`. It will also set up
+a few other helpful environment variables.
+
+## Developers
 
 * **Steven Gardiner** - [sjgardiner](https://github.com/sjgardiner)
-
-Non-developer MARLEY authors:
-**Christopher Grant**, **Emilija Pantic**, **Robert Svoboda**
 
 See also the list of
 [contributors](https://github.com/sjgardiner/marley/contributors) who
