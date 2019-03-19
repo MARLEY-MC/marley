@@ -6,6 +6,9 @@
 # symlinks).
 THIS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# The root MARLEY folder
+export MARLEY_DIR=${THIS_DIRECTORY}
+
 # For running MARLEY
 export PATH=$PATH:${THIS_DIRECTORY}/build
 
