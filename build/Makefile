@@ -180,14 +180,14 @@ marley: $(MARLEY_LIBS) marley.o $(MAYBE_MARSUM)
 
 clean:
 	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
-	$(RM) -rf *.dSYM
+	$(RM) -rf *.dSYM marsum
 
 install: marley
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(incdir)/marley
 	mkdir -p $(DESTDIR)$(datadir)/marley
-	cp marley $(DESTDIR)$(bindir)
+	cp marley $(MAYBE_MARSUM) $(DESTDIR)$(bindir)
 	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
 	cp $(ROOT_SHARED_LIB) $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp marley_root_dict_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
@@ -199,6 +199,7 @@ install: marley
 
 uninstall:
 	$(RM) $(DESTDIR)$(bindir)/marley
+	$(RM) $(DESTDIR)$(bindir)/marsum
 	$(RM) $(DESTDIR)$(libdir)/$(SHARED_LIB)
 	$(RM) $(DESTDIR)$(libdir)/$(ROOT_SHARED_LIB)
 	$(RM) $(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm
