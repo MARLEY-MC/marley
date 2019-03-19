@@ -475,8 +475,20 @@ void marley::JSONConfig::prepare_neutrino_source(marley::Generator& gen) const
       + " type '" + type + "'");
   }
 
+  // If the user has specified whether to weight the incident neutrino spectrum
+  // by the reaction cross section(s), then set the weight_flux_ flag in the
+  // new Generator object accordingly
+  if ( source_spec.has_key("weight_flux") ) {
+    bool ok = false;
+    bool should_we_weight = source_spec.at("weight_flux").to_bool(ok);
+    if (!ok) handle_json_error("source.weight_flux",
+      source_spec.at("weight_flux"));
+    gen.set_weight_flux(should_we_weight);
+  }
+
   // Load the generator with the new source object
   gen.set_source(std::move(source));
+
 }
 
 std::string marley::JSONConfig::source_get(const char* name,

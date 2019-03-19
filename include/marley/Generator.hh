@@ -158,6 +158,11 @@ namespace marley {
       /// generating events
       inline const std::array<double, 3>& neutrino_direction();
 
+      /// @brief Sets the value of the weight_flux flag
+      /// @details This is potentially dangerous. Use only if you know
+      /// what you are doing.
+      void set_weight_flux(bool should_we_weight );
+
     private:
 
       /// @brief Helper function that contains initialization code shared by
@@ -223,6 +228,12 @@ namespace marley {
       /// @brief Boolean value that indicates whether Event objects need
       /// to be rotated (true) or not (false)
       bool need_to_rotate_events_ = false;
+
+      /// @brief Whether the generator should weight the incident
+      /// neutrino spectrum by the reaction cross section(s)
+      /// @details Don't change this unless you understand what you
+      /// are doing!
+      bool weight_flux_ = true;
   };
 
   // Inline function definitions

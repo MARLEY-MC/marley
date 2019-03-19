@@ -277,10 +277,22 @@ double marley::Generator::E_pdf(double E) {
     total_xs_values_.at(j) = tot_xs;
     pdf += tot_xs;
   }
-  // Multiply the total cross section by the neutrino spectrum
-  // from the source object to get the (unnormalized) PDF
-  // for sampling reacting neutrino energies.
-  pdf *= source_->pdf(E);
+
+  // Normally, we want to fold the flux with the reaction cross section(s)
+  // in order to obtain the distribution of reacting neutrino energies
+  if ( weight_flux_ ) {
+    // Multiply the total cross section by the neutrino spectrum
+    // from the source object to get the (unnormalized) PDF
+    // for sampling reacting neutrino energies.
+    pdf *= source_->pdf(E);
+  }
+  else {
+    // If the user has specifically requested it, don't weight the
+    // energy PDF by the cross section(s), as long as at least one of them
+    // is non-vanishing
+    if ( pdf <= 0. ) return 0.;
+    pdf = source_->pdf(E);
+  }
 
   //  Divide by the normalization factor (computed when this source
   //  was made available to the Generator) to obtain the normalized PDF.
@@ -414,4 +426,8 @@ void marley::Generator::set_neutrino_direction(
     need_to_rotate_events_ = false;
     rotation_matrix_ = marley::RotationMatrix(); // identity matrix
   }
+}
+
+void marley::Generator::set_weight_flux(bool should_we_weight) {
+  weight_flux_ = should_we_weight;
 }
