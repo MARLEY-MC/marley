@@ -22,8 +22,7 @@ progress and to allow local modifications to meet the specific
 requirements of the individual user.
 
 Therefore we have decided to release this program under the GNU
-General Public License (GPL) version 2 (with the option to instead
-follow the terms and conditions of any later version of GPL). This
+General Public License (GPL) version 3. This
 ensures that the source code will be available to you and grants you
 the freedom to use and modify the program. You can redistribute your
 modified versions as long as you retain the GPL and respect existing
@@ -89,7 +88,7 @@ and usage of event generator software in an academic setting.
 
     POSTSCRIPT
 
-The copyright license of the software is the GPL v2 alone, therefore
+The copyright license of the software is the GPL v3 alone, therefore
 the above guidelines are not legally binding. However, we reserve the
 right to criticize offenders. The guidelines should always be combined
 with common sense, for interpretation and for issues not covered.
