@@ -12,6 +12,7 @@ addons:
     packages:
       - doxygen
       - g++-4.9
+      - libgsl0-dev
 script:
   - cd build
   - make CXX=g++-4.9

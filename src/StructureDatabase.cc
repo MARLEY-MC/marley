@@ -11,7 +11,7 @@ void marley::StructureDatabase::add_decay_scheme(int pdg,
   std::unique_ptr<marley::DecayScheme>& ds)
 {
   auto* temp_ptr = ds.release();
-  decay_scheme_table_.emplace(pdg, temp_ptr);
+  decay_scheme_table_.emplace(pdg, std::unique_ptr<marley::DecayScheme>(temp_ptr));
 }
 
 void marley::StructureDatabase::emplace_decay_scheme(int pdg,
