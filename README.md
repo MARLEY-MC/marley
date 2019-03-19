@@ -30,13 +30,21 @@ repository](https://github.com/sjgardiner/marley-ups-build). The instructions
 given here describe the ordinary build procedure.
 
 ### Prerequisites
-There are only two prerequisites needed to build MARLEY:
+There are three prerequisites needed to build MARLEY:
 
 - A C++14-compliant compiler. The following compilers are officially supported:
   * g++ >= 4.9
   * clang++ >= 3.4
 
 - [GNU Make](https://www.gnu.org/software/make/)
+
+- The [GNU Scientific Library](https://www.gnu.org/software/gsl/) (GSL)
+  * MARLEY's Makefile verifies that GSL is installed by checking that
+the `gsl-config` executable is available on the system `PATH`.
+
+On Linux machines, all three of these prerequisites will likely be available
+through the standard package manager. On Mac OSX, installing GSL may be done
+using [homebrew](https://brew.sh/).
 
 Building MARLEY on Windows has not yet been attempted. Please contact the
 developers (<support@marleygen.org>) if you are interested in building the code
