@@ -42,14 +42,15 @@
   // The generator uses discrete nuclear level data and gamma-ray branching
   // ratios to simulate nuclear de-excitations. The nuclear structure data
   // included with MARLEY were taken with attribution from the TALYS nuclear
-  // reaction code (see structure/README.md for more information).
+  // reaction code (see structure/README.md for more information) and
+  // reformatted.
   //
-  // The "structure" JSON array contains a list of TALYS-format nuclear
-  // structure data files that should be used during the simulation. Paths must
-  // be included unless the data files are stored in the current working
-  // directory. Relative paths are assumed to be specified relative to the
-  // current working directory. MARLEY configuration files currently do
-  // not support the use of environment variables, bash globs, etc.
+  // The "structure" JSON array contains a list of nuclear structure data files
+  // that should be used during the simulation. Paths must be included unless
+  // the data files are stored in the current working directory. Relative paths
+  // are assumed to be specified relative to the current working directory.
+  // MARLEY configuration files currently do not support the use of environment
+  // variables, bash globs, etc.
   //
   // MARLEY will load and use data for all nuclides present in each file given
   // in this list. If MARLEY creates a final-state nucleus
@@ -57,7 +58,7 @@
   // use simple gamma-ray models to simulate bound-state de-excitations.
   //
   // The three files shown in this example contain all of the structure data
-  // recommended for use with MARLEY.
+  // currently recommended for use with MARLEY.
   structure: [ "../structure/z019",
                "../structure/z018",
                "../structure/z017", ],

@@ -230,10 +230,10 @@ void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
       else handle_json_error("structure", s);
     }
     else {
-      // No structure file format was specified, so assume that it is in TALYS
-      // format
+      // No structure file format was specified, so assume that it is in MARLEY's
+      // native format
       filename = s.to_string();
-      format = marley::DecayScheme::FileFormat::talys;
+      format = marley::DecayScheme::FileFormat::native;
     }
 
     // Load data for all nuclides in the structure data file.
