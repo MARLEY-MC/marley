@@ -4,11 +4,13 @@
 
 namespace marley {
 
+  #ifndef __MAKECINT__
   // Forward declare the JSON class so that we can define a function that
-  // creates a JSON representation of a Particle. Avoid including the JSON.hh
-  // header so that we won't have issues using marley::Particle objects with
+  // creates a JSON representation of a Particle. Hide the JSON class from
+  // rootcint so that we won't have issues using marley::Particle objects with
   // ROOT 5.
   class JSON;
+  #endif
 
   /// @brief Momentum four-vector for a simulated particle
   class Particle {
@@ -111,8 +113,10 @@ namespace marley {
       /// contents of this particle will be deleted.
       void read(std::istream& in);
 
+      #ifndef __MAKECINT__
       /// @brief Create a JSON representation of this Particle
       marley::JSON to_json() const;
+      #endif
 
     protected:
 

@@ -6,11 +6,13 @@
 
 namespace marley {
 
+  #ifndef __MAKECINT__
   // Forward declare the JSON class so that we can define a function that
-  // creates a JSON representation of a Event. Avoid including the JSON.hh
-  // header so that we won't have issues using marley::Event objects with
+  // creates a JSON representation of a Event. Hide the JSON class from
+  // rootcint so that we won't have issues using marley::Event objects with
   // ROOT 5.
   class JSON;
+  #endif
 
   /// @brief Container for ingoing and outgoing momentum 4-vectors from a
   /// reaction
@@ -126,8 +128,10 @@ namespace marley {
       /// @param in The std::istream from which this event will be read
       void read(std::istream& in);
 
+      #ifndef __MAKECINT__
       /// @brief Create a JSON representation of this event
       marley::JSON to_json() const;
+      #endif
 
     protected:
 
