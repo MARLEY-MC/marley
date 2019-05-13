@@ -114,7 +114,7 @@ namespace marley {
     { return gammas_; }
   inline std::vector<marley::Gamma>& Level::gammas() { return gammas_; }
 
-  inline bool Level::has_gammas() const { return gammas_.empty(); }
+  inline bool Level::has_gammas() const { return !gammas_.empty(); }
 
   template<typename It> inline marley::IteratorToPointerMember<It,
     marley::Level, double> Level::make_energy_iterator(It it)

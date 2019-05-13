@@ -99,6 +99,13 @@ namespace marley {
       marley::GammaStrengthFunctionModel& get_gamma_strength_function_model(
         const int Z, const int A);
 
+      /// Retrieves a const reference to the table of DecayScheme objects
+      inline const std::unordered_map<int,
+        std::unique_ptr<marley::DecayScheme> >& decay_schemes() const
+      {
+        return decay_scheme_table_;
+      }
+
     private:
 
       /// @brief Lookup table for marley::DecayScheme objects.

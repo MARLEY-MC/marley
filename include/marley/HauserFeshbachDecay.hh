@@ -65,6 +65,9 @@ namespace marley {
       /// std::ostream
       void print(std::ostream& out) const;
 
+      inline const std::vector<std::unique_ptr<marley::ExitChannel> >&
+        exit_channels() const;
+
     private:
 
       /// @brief Helper function called by the constructor. Loads
@@ -126,6 +129,9 @@ namespace marley {
   // Inline function definitions
   inline const std::vector<marley::Fragment>&
     HauserFeshbachDecay::get_fragments() { return fragments_; }
+
+  inline const std::vector<std::unique_ptr<marley::ExitChannel> >&
+    HauserFeshbachDecay::exit_channels() const { return exit_channels_; }
 }
 
 /// @brief Operator for printing HauserFeshbachDecay objects to a std::ostream
