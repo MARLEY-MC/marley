@@ -281,6 +281,16 @@ double marley::KoningDelarocheOpticalModel::transmission_coefficient(
   update_target_mass( target_charge );
   calculate_kinematic_variables( total_KE_CM, fragment_pdg );
   std::complex<double> S = s_matrix_element(fragment_pdg, two_j, l, two_s);
+
+  // Guard against ±inf or NaN values that can occur in edge cases when the
+  // Coulomb wavefunctions get huge, e.g., for low-energy alpha emission.
+  // Numerical precision problems can lead to wrong answers, such as S == (inf,
+  // 0) instead of the correct (1, 0).
+  bool S_is_finite = std::isfinite( S.real() ) && std::isfinite( S.imag() );
+  // If we have a ±inf or NaN in one of the components of S, then set the
+  // transmission coefficient to zero
+  if ( !S_is_finite ) return 0.;
+  // Otherwise, compute it normally
   return 1.0 - std::norm(S);
 }
 
