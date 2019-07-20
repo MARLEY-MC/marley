@@ -120,9 +120,13 @@ Inheritance diagram for marley::NuclearReaction:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:aa9eb1619db6bc1bf7403408406c3e567"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_nuclear_reaction.html#aa9eb1619db6bc1bf7403408406c3e567">NuclearReaction</a> (std::string filename, <a class="el" href="classmarley_1_1_structure_database.html">marley::StructureDatabase</a> &amp;db)</td></tr>
 <tr class="separator:aa9eb1619db6bc1bf7403408406c3e567"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a103b7037c841633abd3ef3a99c093a4b"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_nuclear_reaction.html#a103b7037c841633abd3ef3a99c093a4b">coulomb_correction_factor</a> (double beta_rel_cd) const </td></tr>
+<tr class="separator:a103b7037c841633abd3ef3a99c093a4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d4fab7b35caf006478055e171028e63"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classmarley_1_1_event.html">marley::Event</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_nuclear_reaction.html#a5d4fab7b35caf006478055e171028e63">create_event</a> (int particle_id_a, double KEa, <a class="el" href="classmarley_1_1_generator.html">marley::Generator</a> &amp;gen) override</td></tr>
 <tr class="memdesc:a5d4fab7b35caf006478055e171028e63"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an event object for this reaction.  <a href="#a5d4fab7b35caf006478055e171028e63">More...</a><br/></td></tr>
 <tr class="separator:a5d4fab7b35caf006478055e171028e63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5ebb0c72447f6bd37214c29a5b6cd1d"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_nuclear_reaction.html#aa5ebb0c72447f6bd37214c29a5b6cd1d">ema_factor</a> (double beta_rel_cd, bool &amp;ok) const </td></tr>
+<tr class="separator:aa5ebb0c72447f6bd37214c29a5b6cd1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a650093cb366f0fd5cf2080610a2fc84b"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classmarley_1_1_nuclear_reaction.html#a650093cb366f0fd5cf2080610a2fc84b">fermi_function</a> (double beta_c) const </td></tr>
 <tr class="memdesc:a650093cb366f0fd5cf2080610a2fc84b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the <a href="https://en.wikipedia.org/wiki/Beta_decay#Fermi_function">Fermi function</a>  <a href="#a650093cb366f0fd5cf2080610a2fc84b">More...</a><br/></td></tr>
 <tr class="separator:a650093cb366f0fd5cf2080610a2fc84b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -247,6 +251,30 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a103b7037c841633abd3ef3a99c093a4b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double marley::NuclearReaction::coulomb_correction_factor </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>beta_rel_cd</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Computes an approximate correction factor to account for effects of the Coulomb potential when calculating cross sections </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">beta_rel_cd</td><td>The relative speed of the final particles c and d (dimensionless) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000026">Todo:</a></b></dt><dd>Revisit this when you have more reaction data files </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a5d4fab7b35caf006478055e171028e63"></a>
 <div class="memitem">
 <div class="memproto">
@@ -300,6 +328,40 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000023">Todo:</a></b></dt><dd>include possibility of negative parity here. </dd></dl>
 
 <p>Implements <a class="el" href="classmarley_1_1_reaction.html#a374c98313cb2e5d254523cfc830f73e5">marley::Reaction</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="aa5ebb0c72447f6bd37214c29a5b6cd1d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double marley::NuclearReaction::ema_factor </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>beta_rel_cd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool &amp;&#160;</td>
+          <td class="paramname"><em>ok</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Computes a Coulomb correction factor according to the effective momentum approximation. See J. Engel, Phys. Rev. C 57, 2004 (1998) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">beta_rel_cd</td><td>The relative speed of the final particles c and d (dimensionless) </td></tr>
+    <tr><td class="paramname">ok</td><td>Flag that is set to false if subtracting the Coulomb potential pulls the event below threshold </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>

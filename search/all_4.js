@@ -2,6 +2,7 @@ var searchData=
 [
   ['e_5fpdf',['E_pdf',['../classmarley_1_1_generator.html#a33eab85e138f03a61407188cbaf6aaec',1,'marley::Generator']]],
   ['ejectile',['ejectile',['../classmarley_1_1_event.html#a87c6c136d39a427cb07c721905a73301',1,'marley::Event::ejectile() const '],['../classmarley_1_1_event.html#a18ce6a63fc4fd3d80723a4467ad14f2f',1,'marley::Event::ejectile()']]],
+  ['ema_5ffactor',['ema_factor',['../classmarley_1_1_nuclear_reaction.html#aa5ebb0c72447f6bd37214c29a5b6cd1d',1,'marley::NuclearReaction']]],
   ['emax_5f',['Emax_',['../classmarley_1_1_continuum_exit_channel.html#a4d625badc3c629bc55011896c279fa74',1,'marley::ContinuumExitChannel::Emax_()'],['../classmarley_1_1_fermi_dirac_neutrino_source.html#aadec2829a3f96975583f18071882ddbd',1,'marley::FermiDiracNeutrinoSource::Emax_()'],['../classmarley_1_1_beta_fit_neutrino_source.html#a54d78a67902eeeb87b1ca596adabeb5b',1,'marley::BetaFitNeutrinoSource::Emax_()']]],
   ['emean_5f',['Emean_',['../classmarley_1_1_beta_fit_neutrino_source.html#a691123bbd667d22c28536dc513a24906',1,'marley::BetaFitNeutrinoSource']]],
   ['emin_5f',['Emin_',['../classmarley_1_1_continuum_exit_channel.html#ab43f5031027ad9aa3b70d1a345578290',1,'marley::ContinuumExitChannel::Emin_()'],['../classmarley_1_1_fermi_dirac_neutrino_source.html#a840b81921c35c96652fc69b7eb9c5475',1,'marley::FermiDiracNeutrinoSource::Emin_()'],['../classmarley_1_1_beta_fit_neutrino_source.html#a742270b1915f9de279ab48b2a83b4034',1,'marley::BetaFitNeutrinoSource::Emin_()']]],
@@ -16,8 +17,8 @@ var searchData=
   ['error',['Error',['../classmarley_1_1_error.html#aa9aa1cf3adada436c39dfb8a91856bd9',1,'marley::Error::Error(const char *message)'],['../classmarley_1_1_error.html#a1e04e0236c4e9ad644f056b8486c95a7',1,'marley::Error::Error(const std::string &amp;message)']]],
   ['error',['Error',['../classmarley_1_1_error.html',1,'marley']]],
   ['eta_5f',['eta_',['../classmarley_1_1_fermi_dirac_neutrino_source.html#a1707efc0e50afa99e26593a4bdb2361b',1,'marley::FermiDiracNeutrinoSource']]],
-  ['event',['Event',['../classmarley_1_1_event.html',1,'marley']]],
   ['event',['Event',['../classmarley_1_1_event.html#ac30818b1920a632fa63c5699c93aedf4',1,'marley::Event::Event(double Ex=0.)'],['../classmarley_1_1_event.html#aa2259f5e6651aae22c3a47f6d375c494',1,'marley::Event::Event(const marley::Particle &amp;a, const marley::Particle &amp;b, const marley::Particle &amp;c, const marley::Particle &amp;d, double Ex=0.)'],['../classmarley_1_1_event.html#a8d2b99495842e18035733d5e94d5290c',1,'marley::Event::Event(const Event &amp;other_event)'],['../classmarley_1_1_event.html#a539aed96901d4297076c7d78da852241',1,'marley::Event::Event(Event &amp;&amp;other_event)']]],
+  ['event',['Event',['../classmarley_1_1_event.html',1,'marley']]],
   ['ex',['Ex',['../classmarley_1_1_event.html#a4dc61273f2ab123c0cf840b7c31ee3a0',1,'marley::Event']]],
   ['ex_5f',['Ex_',['../classmarley_1_1_event.html#a692656324d67901318077b9e66730bd9',1,'marley::Event']]],
   ['exitchannel',['ExitChannel',['../classmarley_1_1_exit_channel.html#aa4b792cf7173cb2f2bd0635b2c0ebc38',1,'marley::ExitChannel']]],

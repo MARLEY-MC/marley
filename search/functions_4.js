@@ -2,6 +2,7 @@ var searchData=
 [
   ['e_5fpdf',['E_pdf',['../classmarley_1_1_generator.html#a33eab85e138f03a61407188cbaf6aaec',1,'marley::Generator']]],
   ['ejectile',['ejectile',['../classmarley_1_1_event.html#a87c6c136d39a427cb07c721905a73301',1,'marley::Event::ejectile() const '],['../classmarley_1_1_event.html#a18ce6a63fc4fd3d80723a4467ad14f2f',1,'marley::Event::ejectile()']]],
+  ['ema_5ffactor',['ema_factor',['../classmarley_1_1_nuclear_reaction.html#aa5ebb0c72447f6bd37214c29a5b6cd1d',1,'marley::NuclearReaction']]],
   ['emits_5ffragment',['emits_fragment',['../classmarley_1_1_exit_channel.html#a0e0b267edae5e28e76b959d2a416ef86',1,'marley::ExitChannel::emits_fragment()'],['../classmarley_1_1_fragment_discrete_exit_channel.html#a70afeca218a1504ff471f0fe0c4918f9',1,'marley::FragmentDiscreteExitChannel::emits_fragment()'],['../classmarley_1_1_gamma_discrete_exit_channel.html#a7934f4d721dc7ec90374328d21b7cd17',1,'marley::GammaDiscreteExitChannel::emits_fragment()'],['../classmarley_1_1_fragment_continuum_exit_channel.html#a86f6642793dcbf85cf1fe81339a4e251',1,'marley::FragmentContinuumExitChannel::emits_fragment()'],['../classmarley_1_1_gamma_continuum_exit_channel.html#a219f05c212fd24e96440a69a3dc96d59',1,'marley::GammaContinuumExitChannel::emits_fragment()']]],
   ['emplace_5fdecay_5fscheme',['emplace_decay_scheme',['../classmarley_1_1_structure_database.html#aaff1e208b98b70b8f22b7c8ce7adf080',1,'marley::StructureDatabase']]],
   ['enable',['enable',['../classmarley_1_1_logger.html#ad019a02d8e5a670592f00fe1715c471c',1,'marley::Logger']]],

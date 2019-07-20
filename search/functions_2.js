@@ -14,5 +14,6 @@ var searchData=
   ['compute_5fsigma_5ff2',['compute_sigma_F2',['../classmarley_1_1_backshifted_fermi_gas_model.html#a86585e11c811274d1c93004c6c5e3414',1,'marley::BackshiftedFermiGasModel']]],
   ['configurationfile',['ConfigurationFile',['../classmarley_1_1_configuration_file.html#ad2fdce138416ccb511303657d8c7b33c',1,'marley::ConfigurationFile::ConfigurationFile()'],['../classmarley_1_1_configuration_file.html#a04352d3f15c831c933e1aa7223017a13',1,'marley::ConfigurationFile::ConfigurationFile(const std::string &amp;file_name)']]],
   ['continuumexitchannel',['ContinuumExitChannel',['../classmarley_1_1_continuum_exit_channel.html#a9727435714c5da00699bceb57629bb3f',1,'marley::ContinuumExitChannel']]],
+  ['coulomb_5fcorrection_5ffactor',['coulomb_correction_factor',['../classmarley_1_1_nuclear_reaction.html#a103b7037c841633abd3ef3a99c093a4b',1,'marley::NuclearReaction']]],
   ['create_5fevent',['create_event',['../classmarley_1_1_generator.html#a034bfadb6d248690ad79d152f5eb6890',1,'marley::Generator::create_event()'],['../classmarley_1_1_nuclear_reaction.html#a5d4fab7b35caf006478055e171028e63',1,'marley::NuclearReaction::create_event()'],['../classmarley_1_1_reaction.html#a374c98313cb2e5d254523cfc830f73e5',1,'marley::Reaction::create_event()']]]
 ];
