@@ -75,7 +75,7 @@
   // different data evaluations) the user should ensure that only one
   // reaction data file for each desired reaction channel is used.
   //
-  // In MARLEY v1.1.0, the only available channel is charged current ve,
+  // In MARLEY v1.1.1, the only available channel is charged current ve,
   // and there are three available tables of evaluated nuclear matrix elements
   // for this channel:
   //

@@ -1,8 +1,8 @@
 /**
 @mainpage MARLEY documentation
 
-The source code for MARLEY v1.1.0 is available
-<a href="https://github.com/sjgardiner/marley/archive/v1.1.0.tar.gz">here</a>
+The source code for MARLEY v1.1.1 is available
+<a href="https://github.com/sjgardiner/marley/archive/v1.1.1.tar.gz">here</a>
 or from the official MARLEY
 <a href="https://github.com/sjgardiner/marley">GitHub repository</a>.
 Build requirements: g++ >= 4.9 (or clang++ >= 3.4), <a href="https://www.gnu.org/software/make/">GNU make</a>, and
