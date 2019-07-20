@@ -227,9 +227,9 @@ double marley::NuclearReaction::fermi_function(double beta_c) const {
   if (!electron && pdg_c_ != marley_utils::POSITRON) return 1.;
 
   // Lorentz factor gamma for particle c
-  double gamma_c = std::pow(1 - beta_c*beta_c, -marley_utils::ONE_HALF);
+  double gamma_c = std::pow(1. - beta_c*beta_c, -marley_utils::ONE_HALF);
 
-  double s = std::sqrt(1 - std::pow(marley_utils::alpha * Zf_, 2));
+  double s = std::sqrt(1. - std::pow(marley_utils::alpha * Zf_, 2));
 
   // Estimate the nuclear radius using r_n = r_0*A^(1/3)
   double r_n = marley_utils::r0 * std::pow(Af_, marley_utils::ONE_THIRD);
@@ -562,7 +562,7 @@ double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
 
       // Calculate a Coulomb correction factor using either a Fermi function
       // or the effective momentum approximation
-      double factor_C = coulomb_correction_factor(beta_rel_cd, KEa, md2);
+      double factor_C = coulomb_correction_factor(beta_rel_cd);
 
       xs += factor_C * matrix_el * pc_cm * Ec_cm * Eb_cm * (sqrt_s - Ec_cm) / s;
     }
@@ -611,7 +611,7 @@ double marley::NuclearReaction::total_xs(double E_level, double KEa,
 
     // Calculate a Coulomb correction factor using either a Fermi function
     // or the effective momentum approximation
-    double factor_C = coulomb_correction_factor(beta_rel_cd, KEa, md2);
+    double factor_C = coulomb_correction_factor(beta_rel_cd);
 
     return factor_C * matrix_element * pc_cm * Ec_cm
       * Eb_cm * (sqrt_s - Ec_cm) / s;
@@ -666,8 +666,8 @@ marley::Event marley::NuclearReaction::make_event_object(double KEa,
   return event;
 }
 
-double marley::NuclearReaction::coulomb_correction_factor(double beta_rel_cd,
-  double E_a_lab, double md2) const
+double marley::NuclearReaction::coulomb_correction_factor(double beta_rel_cd)
+  const
 {
   // Don't bother to calculate anything if the light product from
   // this reaction (particle c) is not an electron nor a positron.
@@ -680,38 +680,80 @@ double marley::NuclearReaction::coulomb_correction_factor(double beta_rel_cd,
   double fermi_func = fermi_function(beta_rel_cd);
 
   // Effective momentum approximation for the Coulomb correction
+  bool EMA_ok = false;
+  double factor_EMA = ema_factor(beta_rel_cd, EMA_ok);
 
-  // Approximate the lab-frame energy of the outgoing charged lepton,
-  // ignoring the angular dependence. For small momentum transfers, it's
-  // a relatively small correction. This approximation is consistent with
-  // the allowed approximation (q = 0)
-  double E_c_lab = E_a_lab + ( mb2_ - md2 ) / (2. * mb_);
+  // If the effective momentum approximation is invalid because subtracting
+  // off the Coulomb potential brings the reaction below threshold, then
+  // just use the Fermi function
+  if ( !EMA_ok ) return fermi_func;
+
+
+  // Otherwise, choose the larger of the two factors for antineutrinos, and the
+  // smaller of the two factors for neutrinos
+  bool is_antineutrino = pdg_a_ < 0;
+
+  double correction_factor = 1.;
+  if ( is_antineutrino ) {
+    correction_factor = std::max( fermi_func, factor_EMA );
+  }
+  else {
+    correction_factor = std::min( fermi_func, factor_EMA );
+  }
+
+  return correction_factor;
+}
+
+// Effective momentum approximation for the Coulomb correction factor
+double marley::NuclearReaction::ema_factor(double beta_rel_cd, bool& ok) const
+{
+  // Don't bother to calculate anything if the light product from
+  // this reaction (particle c) is not an electron nor a positron.
+  // This situation occurs for neutral current reactions, for example.
+  bool electron = (pdg_c_ == marley_utils::ELECTRON);
+  if (!electron && pdg_c_ != marley_utils::POSITRON) return 1.;
+
+  // Like the Fermi function, this approximation uses a static nuclear Coulomb
+  // potential (a sphere at the origin). Typically nuclear recoil is neglected,
+  // allowing one to compute the effective lepton momentum in the lab frame. In
+  // MARLEY's case, we do this by calculating it in the rest frame of the final
+  // nucleus ("FNR" frame). We already have the relative speed of the final
+  // nucleus and outgoing lepton, so this is easy.
+  double gamma_rel_cd = std::pow(
+    1. - std::pow(beta_rel_cd, 2), -marley_utils::ONE_HALF);
+
+  // Check for numerical errors from the square root
+  if ( !std::isfinite(gamma_rel_cd) ) {
+    MARLEY_LOG_WARNING() << "Invalid beta_rel = " << beta_rel_cd
+      << " encountered in marley::NuclearReaction::ema_factor()";
+  }
+
+  // Total energy of the outgoing lepton in the FNR frame
+  double E_c_FNR = gamma_rel_cd * mc_;
 
   // Approximate Coulomb potential
   double Vc = -3.*Zf_*marley_utils::alpha / (2. * marley_utils::r0
     * std::pow(Af_, marley_utils::ONE_THIRD));
   if ( !electron ) Vc *= -1;
 
-  // Effective lab frame energy for the effective momentum approximation
-  double E_c_lab_eff = E_c_lab - Vc;
+  // Effective FNR frame total energy
+  double E_c_FNR_eff = E_c_FNR - Vc;
 
-  double p_c_lab = marley_utils::real_sqrt( std::pow(E_c_lab, 2) - mc2_ );
-  double p_c_lab_eff = marley_utils::real_sqrt(
-    std::pow(E_c_lab_eff, 2) - mc2_ );
+  // If subtracting off the Coulomb potential drops the effective energy
+  // below the lepton mass, then the expression for the effective momentum
+  // will give an imaginary value. Signal this by setting the "ok" flag to
+  // false.
+  ok = (E_c_FNR_eff >= mc_);
 
-  double f_EMA2 = std::pow(p_c_lab_eff / p_c_lab, 2);
+  // Lepton momentum in FNR frame
+  double p_c_FNR = marley_utils::real_sqrt( std::pow(E_c_FNR, 2) - mc2_ );
 
-  bool is_antineutrino = pdg_a_ < 0;
+  // Effective momentum in FNR frame
+  double p_c_FNR_eff = marley_utils::real_sqrt(
+    std::pow(E_c_FNR_eff, 2) - mc2_ );
 
-  // Choose the larger of the two factors for antineutrinos, and the
-  // smaller of the two factors for neutrinos
-  double correction_factor = 1.;
-  if ( is_antineutrino ) {
-    correction_factor = std::max( fermi_func, f_EMA2 );
-  }
-  else {
-    correction_factor = std::min( fermi_func, f_EMA2 );
-  }
+  // Coulomb correction factor
+  double f_EMA2 = std::pow(p_c_FNR_eff / p_c_FNR, 2);
 
-  return correction_factor;
+  return f_EMA2;
 }

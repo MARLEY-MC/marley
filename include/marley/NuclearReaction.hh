@@ -60,6 +60,29 @@ namespace marley {
       /// @note This function returns 0. if pdg_a != pdg_a_.
       virtual double total_xs(int pdg_a, double KEa) override;
 
+      /// @brief Total cross section for a given final nuclear level energy, in
+      /// units convenient for sampling
+      /// @param E_level Residue excitation energy (MeV)
+      /// @param KEa Lab-frame projectile kinetic energy (MeV)
+      /// @param matrix_element Nuclear matrix element for a transition
+      /// to the level of interest
+      virtual double total_xs(double E_level, double KEa,
+        double matrix_element) const;
+
+      /// Computes an approximate correction factor to account for
+      /// effects of the Coulomb potential when calculating cross sections
+      /// @param beta_rel_cd The relative speed of the final particles c and d
+      /// (dimensionless)
+      double coulomb_correction_factor(double beta_rel_cd) const;
+
+      /// Computes a Coulomb correction factor according to the effective
+      /// momentum approximation. See J. Engel, Phys. Rev. C 57, 2004 (1998)
+      /// @param beta_rel_cd The relative speed of the final particles c and d
+      /// (dimensionless)
+      /// @param ok Flag that is set to false if subtracting the Coulomb
+      /// potential pulls the event below threshold
+      double ema_factor(double beta_rel_cd, bool& ok) const;
+
     private:
 
       virtual marley::Event make_event_object(double KEa,
@@ -76,27 +99,6 @@ namespace marley {
       /// @param gen Reference to the Generator to use for random sampling
       double sample_cos_theta_c_cm(const marley::MatrixElement& matrix_el,
         double beta_c_cm, marley::Generator& gen) const;
-
-    public:
-      /// @brief Total cross section for a given final nuclear level energy, in
-      /// units convenient for sampling
-      /// @param E_level Residue excitation energy (MeV)
-      /// @param KEa Lab-frame projectile kinetic energy (MeV)
-      /// @param matrix_element Nuclear matrix element for a transition
-      /// to the level of interest
-      virtual double total_xs(double E_level, double KEa,
-        double matrix_element) const;
-
-    private:
-
-      /// Computes an approximate correction factor to account for
-      /// effects of the Coulomb potential when calculating cross sections
-      /// @param beta_rel_cd The relative speed of the final particles c and d
-      /// (dimensionless)
-      /// @param E_a_lab The lab frame total energy of particle a (MeV)
-      /// @param md2 The square of the residue mass (MeV)
-      double coulomb_correction_factor(double beta_rel_cd, double E_a_lab,
-        double md2) const;
 
       double md_gs_; ///< Ground state mass (MeV) of the residue
 
