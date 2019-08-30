@@ -3,6 +3,8 @@ SRC_DIR = ../src
 
 CXXFLAGS ?= -O3 -std=c++14
 
+#EXTRA_LDFLAGS = -ldlib -lblas -llapack
+
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
   SHARED_LIB_SUFFIX=dylib
@@ -162,7 +164,7 @@ endif
 
 $(SHARED_LIB): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(GSL_LDFLAGS) \
-	-fPIC -shared -o $@ $^
+	$(EXTRA_LDFLAGS) -fPIC -shared -o $@ $^
 
 marsum: $(MARLEY_LIBS) marsum.o
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \

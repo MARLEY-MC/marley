@@ -44,6 +44,7 @@ volatile static std::sig_atomic_t interrupted = false;
 void signal_handler(int)
 {
   interrupted = true;
+  std::exit(1);
 }
 
 namespace {
@@ -933,7 +934,7 @@ int main(int argc, char* argv[]){
 
       // Print status messages about simulation progress after every 100
       // events have been generated
-      if ((ev_count - num_old_events) % 100 == 1 || ev_count == num_events) {
+      if ( true ) {
 
         // Print a status message showing the current number of events
         std::cout << "Event Count = " << ev_count << "/" << num_events

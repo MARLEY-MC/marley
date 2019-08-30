@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "marley/marley_utils.hh"
+#include "marley/Integrator.hh"
 #include "marley/Error.hh"
 
 // Strings to use for latex table output of ENSDF data
@@ -223,8 +224,16 @@ double marley_utils::maximize(const std::function<double(double)> f, // [in] obj
   double leftEnd,     // [in] smaller value of bracketing interval
   double rightEnd,    // [in] larger value of bracketing interval
   double epsilon,     // [in] stopping tolerance
-  double& maxLoc)     // [out] location of maximum
+  double& maxLoc,     // [out] location of maximum
+  bool /*global*/)
 {
+  // Use dlib's MaxLIPO+TR algorithm to find a global maximum
+  //if ( global ) {
+  //  auto result = dlib::find_max_global(f, leftEnd, rightEnd, dlib::max_function_calls(20));
+  //  maxLoc = result.x;
+  //  return result.y;
+  //}
+
   double result = minimize([&f](double x) -> double { return -1.0*f(x); },
     leftEnd, rightEnd, epsilon, maxLoc);
   return -1.0*result;
@@ -236,14 +245,10 @@ double marley_utils::maximize(const std::function<double(double)> f, // [in] obj
 // rule over n subintervals.
 // (see http://en.wikipedia.org/wiki/Numerical_integration)
 double marley_utils::num_integrate(const std::function<double(double)> &f,
-  double a, double b, int n)
+  double a, double b, int /*n*/)
 {
-  double integral = 0;
-  for(int k = 1; k < n-1; k++) {
-    integral += ((b - a)/n)*f(a + k*(b - a)/n);
-  }
-  integral += ((b - a)/n)*(f(a)/2 + f(b)/2);
-  return integral;
+  static marley::Integrator integrator(50);
+  return integrator.num_integrate(f, a, b);
 }
 
 // Solves a quadratic equation of the form A*x^2 + B*x + C = 0

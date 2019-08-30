@@ -132,21 +132,28 @@ marley::OpticalModel& marley::StructureDatabase::get_optical_model(
 }
 
 marley::LevelDensityModel& marley::StructureDatabase::get_level_density_model(
-  const int Z, const int A)
+  int nucleus_pid)
 {
-  int pid = marley_utils::get_nucleus_pid(Z, A);
-
-  auto iter = level_density_table_.find(pid);
+  auto iter = level_density_table_.find(nucleus_pid);
 
   if (iter == level_density_table_.end()) {
     // The requested level density model wasn't found, so create it and add it
     // to the table, returning a reference to the stored level density model
     // afterwards.
-    return *(level_density_table_.emplace(pid,
+    int Z = marley_utils::get_particle_Z( nucleus_pid );
+    int A = marley_utils::get_particle_A( nucleus_pid );
+    return *(level_density_table_.emplace(nucleus_pid,
       std::make_unique<marley::BackshiftedFermiGasModel>(Z, A)).first
       ->second.get());
   }
   else return *(iter->second.get());
+}
+
+marley::LevelDensityModel& marley::StructureDatabase::get_level_density_model(
+  const int Z, const int A)
+{
+  int pid = marley_utils::get_nucleus_pid(Z, A);
+  return this->get_level_density_model( pid );
 }
 
 marley::GammaStrengthFunctionModel&

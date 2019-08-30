@@ -631,15 +631,19 @@ double marley::NuclearReaction::sample_cos_theta_c_cm(
   /// @todo Implement a more general way of labeling the matrix elements
   std::function<double(double)> form_factor;
 
+  double max;
+
   if (matrix_el.type() == ME_Type::FERMI) {
     // B(F)
     form_factor = [&beta_c_cm](double cos_theta_c_cm)
       -> double { return 1. + beta_c_cm * cos_theta_c_cm; };
+    max = form_factor(1.);
   }
   else if (matrix_el.type() == ME_Type::GAMOW_TELLER) {
     // B(GT)
     form_factor = [&beta_c_cm](double cos_theta_c_cm)
       -> double { return (3. - beta_c_cm * cos_theta_c_cm) / 3.; };
+    max = form_factor(-1.);
   }
   else throw marley::Error("Unrecognized matrix element type "
     + std::to_string(matrix_el.type()) + " encountered while sampling a"
@@ -647,7 +651,7 @@ double marley::NuclearReaction::sample_cos_theta_c_cm(
 
   // Sample a CM frame scattering cosine using the appropriate form factor for
   // this matrix element.
-  return gen.rejection_sample(form_factor, -1, 1);
+  return gen.rejection_sample(form_factor, -1, 1, max);
 }
 
 marley::Event marley::NuclearReaction::make_event_object(double KEa,

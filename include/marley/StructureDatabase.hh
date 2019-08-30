@@ -87,6 +87,11 @@ namespace marley {
 
       /// @brief Retrieves a level density model object from the database,
       /// creating it if one did not already exist
+      /// @param nucleus_pid PDG particle ID for the desired nucleus
+      marley::LevelDensityModel& get_level_density_model(const int nucleus_pid);
+
+      /// @brief Retrieves a level density model object from the database,
+      /// creating it if one did not already exist
       /// @param Z atomic number
       /// @param A mass number
       marley::LevelDensityModel& get_level_density_model(const int Z,

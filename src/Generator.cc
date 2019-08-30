@@ -1,6 +1,8 @@
 #include <chrono>
 #include <cmath>
+#include <limits>
 #include <string>
+#include <thread>
 
 #include "marley/ConfigurationFile.hh"
 #include "marley/Error.hh"
@@ -240,7 +242,8 @@ double marley::Generator::uniform_random_double(double min, double max,
 /// probability density functions to unity before using rejection sampling.
 /// @todo Check the convergence explanation for the first step.
 double marley::Generator::rejection_sample(std::function<double(double)> f,
-  double xmin, double xmax, double max_search_tolerance)
+  double xmin, double xmax, double& fmax, double max_search_tolerance, bool global,
+  double safety_factor, std::function<double(double)>* upper_bound_on_f)
 {
   // This variable will be loaded with the value of x
   // that corresponds to the maximum of f(x).
@@ -248,23 +251,46 @@ double marley::Generator::rejection_sample(std::function<double(double)> f,
   // a required parameter of marley_utils::maximize
   double x_at_max;
 
+  double ub_max;
+
   // Get the maximum value of f(x). This is needed to
   // correctly apply rejection sampling.
-  double fmax = marley_utils::maximize(f, xmin, xmax, max_search_tolerance,
-    x_at_max);
+  if ( std::isnan(fmax) && !upper_bound_on_f ) {
+    fmax = marley_utils::maximize(f, xmin, xmax, max_search_tolerance,
+      x_at_max, global) * safety_factor;
+  }
+  else if ( upper_bound_on_f ) {
+    ub_max = marley_utils::maximize(*upper_bound_on_f, xmin, xmax,
+      max_search_tolerance, x_at_max, global) * safety_factor;
+  }
 
-  double x, y;
+  double x, y, val;
 
   do {
-    // Sample x value uniformly from [xmin, xmax]
-    x = uniform_random_double(xmin, xmax, true);
+    if ( upper_bound_on_f ) {
+      x = this->rejection_sample( *upper_bound_on_f, xmin, xmax,
+        ub_max );
+      fmax = upper_bound_on_f->operator()( x );
+    }
+    else {
+      // Sample x value uniformly from [xmin, xmax]
+      x = uniform_random_double(xmin, xmax, true);
+    }
+
     // Sample y uniformly from [0, fmax]
     y = uniform_random_double(0, fmax, true);
+
+    val = f(x);
+    std::cout << "x = " << x << ", fmax = " << fmax << ", val = " << val
+      << ", val / fmax = " << val / fmax << '\n';
+    if ( val > fmax ) MARLEY_LOG_WARNING() << "MAX PROBLEM: "
+      << " fmax = " << fmax << ", val = " << val;
   }
   // Keep sampling until you get a y value less than f(x)
   // (the probability density function evaluated at the sampled value of x)
-  while (y > f(x));
+  while ( y > val );
 
+  std::cout << "SELECTED x = " << x << '\n';
   return x;
 }
 
@@ -304,11 +330,13 @@ marley::Reaction& marley::Generator::sample_reaction(double& E) {
     + " a reaction in marley::Generator::sample_reaction(). The vector of"
     + " marley::Reaction objects owned by this generator is empty.");
 
+  static double max = std::numeric_limits<double>::quiet_NaN();
+
   // TODO: protect against source_ changing E_min or E_max after you compute
   // the normalization factor norm_ in marley::Generator::init()
   E = rejection_sample([this](double E_nu)
     -> double { return this->E_pdf(E_nu); }, source_->get_Emin(),
-    source_->get_Emax());
+    source_->get_Emax(), max);
   // The total cross section values have already been updated by the final call
   // to E_pdg during rejection sampling, so we can now sample a reaction type
   // using our discrete distribution object.

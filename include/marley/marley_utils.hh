@@ -160,7 +160,7 @@ namespace marley_utils {
     double rightEnd, double epsilon, double& minLoc);
 
   double maximize(const std::function<double(double)> f, double leftEnd,
-    double rightEnd, double epsilon, double& maxLoc);
+    double rightEnd, double epsilon, double& maxLoc, bool global = false);
 
   // Find both solutions of a quadratic equation while attempting
   // to avoid floating-point arithmetic issues

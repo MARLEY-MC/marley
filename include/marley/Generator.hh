@@ -1,4 +1,5 @@
 #pragma once
+#include <limits>
 #include <memory>
 #include <random>
 #include <sstream>
@@ -73,8 +74,10 @@ namespace marley {
       /// method</a>
       /// @return Sampled value of x
       double rejection_sample(std::function<double(double)> f, double xmin,
-        double xmax, double max_search_tolerance
-        = DEFAULT_REJECTION_SAMPLING_TOLERANCE_);
+        double xmax, double& fmax, double max_search_tolerance
+        = DEFAULT_REJECTION_SAMPLING_TOLERANCE_, bool global = false,
+        double safety_factor = 1.01,
+        std::function<double(double)>* upper_bound_on_f = nullptr);
 
       /// @brief Get a reference to the StructureDatabase owned by this
       /// Generator
