@@ -77,6 +77,15 @@ namespace marley {
         double xmax, double& fmax, double safety_factor = 1.01,
         double max_search_tolerance = DEFAULT_REJECTION_SAMPLING_TOLERANCE_);
 
+      /// @brief Sample from a given 1D probability density function f(x) on
+      /// the interval [xmin, xmax] using an inverse transform technique
+      /// @param f Probability density function to use for sampling
+      /// @param xmin Lower bound of the sampling interval
+      /// @param xmax Upper bound of the sampling interval
+      /// @return Sampled value of x
+      double inverse_transform_sample(std::function<double(double)> f,
+        double xmin, double xmax, double bisection_tolerance = 1e-14);
+
       /// @brief Get a reference to the StructureDatabase owned by this
       /// Generator
       marley::StructureDatabase& get_structure_db();

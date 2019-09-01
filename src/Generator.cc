@@ -446,3 +446,42 @@ void marley::Generator::set_neutrino_direction(
 void marley::Generator::set_weight_flux(bool should_we_weight) {
   weight_flux_ = should_we_weight;
 }
+
+double marley::Generator::inverse_transform_sample(
+  std::function<double(double)> f, double xmin, double xmax,
+  double bisection_tolerance)
+{
+  // First, sample a probability value uniformly on [0, 1]
+  double prob = uniform_random_double(0., 1., true);
+
+  // If we chose an endpoint, we're done, so just return the appropriate one
+  if ( prob == 0. ) return xmin;
+  else if ( prob == 1. ) return xmax;
+
+  // Integrate the PDF over the region of interest. We'll use this
+  // to normalize the CDF.
+  double integral = marley_utils::num_integrate(f, xmin, xmax, 1e4);
+
+  // Make a CDF function to invert
+  std::function<double(double)> cdf = [&f, xmin, integral](double x) -> double
+    { return marley_utils::num_integrate(f, xmin, x, 1e4) / integral; };
+
+  // Find the x value corresponding to the sampled probability via bisection
+  // (slow but robust)
+  double a = xmin;
+  double b = xmax;
+  while ( (b - a) > bisection_tolerance ) {
+    double midpoint = (a + b) / 2.;
+    double mid_cdf = cdf( midpoint );
+    // If the CDF at the midpoint exactly matches our sampled
+    // probability, we're done. Just return the midpoint.
+    if ( mid_cdf == prob ) return midpoint;
+    // Otherwise, shrink the bisection interval and try again
+    else if ( mid_cdf > prob ) b = midpoint;
+    else a = midpoint; // mid_cdf < prob
+  }
+
+  // Return the midpoint of the bisection interval as our sampled x value
+  double x = (a + b) / 2.;
+  return x;
+}
