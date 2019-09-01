@@ -224,8 +224,7 @@ double marley_utils::maximize(const std::function<double(double)> f, // [in] obj
   double leftEnd,     // [in] smaller value of bracketing interval
   double rightEnd,    // [in] larger value of bracketing interval
   double epsilon,     // [in] stopping tolerance
-  double& maxLoc,     // [out] location of maximum
-  bool /*global*/)
+  double& maxLoc)     // [out] location of maximum
 {
   // Use dlib's MaxLIPO+TR algorithm to find a global maximum
   //if ( global ) {

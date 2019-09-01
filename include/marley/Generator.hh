@@ -74,10 +74,8 @@ namespace marley {
       /// method</a>
       /// @return Sampled value of x
       double rejection_sample(std::function<double(double)> f, double xmin,
-        double xmax, double& fmax, double max_search_tolerance
-        = DEFAULT_REJECTION_SAMPLING_TOLERANCE_, bool global = false,
-        double safety_factor = 1.01,
-        std::function<double(double)>* upper_bound_on_f = nullptr);
+        double xmax, double& fmax, double safety_factor = 1.01,
+        double max_search_tolerance = DEFAULT_REJECTION_SAMPLING_TOLERANCE_);
 
       /// @brief Get a reference to the StructureDatabase owned by this
       /// Generator

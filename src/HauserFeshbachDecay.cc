@@ -17,10 +17,14 @@ namespace {
   // in an anonymous namespace rather than including it as a private member.
   double gamma_cpw_helper(marley::LevelDensityModel& ldm,
     marley::GammaStrengthFunctionModel& gsfm, marley::Parity Pi, int mpol,
-    double e_gamma, double Exf, int twoJf)
+    double e_gamma, double Exf, int twoJf, bool use_TCs)
   {
-    double tcE = gsfm.transmission_coefficient(TrType::electric, mpol, e_gamma);
-    double tcM = gsfm.transmission_coefficient(TrType::magnetic, mpol, e_gamma);
+    double tcE = 1.;
+    double tcM = 1.;
+    if ( use_TCs ) {
+      tcE = gsfm.transmission_coefficient(TrType::electric, mpol, e_gamma);
+      tcM = gsfm.transmission_coefficient(TrType::magnetic, mpol, e_gamma);
+    }
 
     // Final parity for the electric transition will match
     // the initial parity for even multipolarities
@@ -186,7 +190,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
       std::function<double(double)> cpw = [=, &om, &ldm](double Exf) -> double {
         double total_KE_CM_frame = Exf_max - Exf;
         return fragment_continuum_partial_width(om, ldm, f, total_KE_CM_frame,
-          Exf);
+          Exf, true);
       };
 
       // Numerically integrate using the call wrapper, the integration bounds,
@@ -196,11 +200,13 @@ void marley::HauserFeshbachDecay::build_exit_channels()
 
       // Create a normalized probability density function to use for sampling a
       // final excitation energy from the continuum for this exit channel.
-      std::function<double(double&, double)> pdf
-        = [=, &f, &om, &ldm](double& total_KE_CM_frame, double Exf) -> double {
+      std::function<double(double&, double, bool)> pdf
+        = [=, &f, &om, &ldm](double& total_KE_CM_frame, double Exf,
+        bool use_TCs) -> double
+      {
         total_KE_CM_frame = Exf_max - Exf;
         return fragment_continuum_partial_width(om, ldm, f, total_KE_CM_frame,
-          Exf) / continuum_width;
+          Exf, use_TCs) / continuum_width;
       };
 
       // Store information for this decay channel
@@ -264,13 +270,14 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     // energy
     double continuum_width = marley_utils::num_integrate(
       [&ldm, &gsfm, this](double Exf)
-      -> double { return gamma_continuum_partial_width(ldm, gsfm, Exf); },
+      -> double { return gamma_continuum_partial_width(ldm, gsfm, Exf, true); },
       E_c_min, Exi_, DEFAULT_CONTINUUM_SUBINTERVALS_);
 
     // Normalized probability density used for sampling a final excitation
     // energy in the continuum
-    std::function<double(double)> pdf = [=, &ldm, &gsfm](double Exf)
-      -> double { return gamma_continuum_partial_width(ldm, gsfm, Exf)
+    std::function<double(double, bool)> pdf = [=, &ldm, &gsfm](double Exf,
+      bool use_TCs) -> double
+    { return gamma_continuum_partial_width(ldm, gsfm, Exf, use_TCs)
       / continuum_width; };
 
     // Store information for this decay channel
@@ -320,7 +327,7 @@ bool marley::HauserFeshbachDecay::do_decay(double& Exf, int& twoJf,
 
 double marley::HauserFeshbachDecay::gamma_continuum_partial_width(
   marley::LevelDensityModel& ldm, marley::GammaStrengthFunctionModel& gsfm,
-  double Exf)
+  double Exf, bool use_TCs)
 {
   double continuum_width = 0.;
   // Approximate the gamma energy by the energy difference between the two
@@ -342,22 +349,23 @@ double marley::HauserFeshbachDecay::gamma_continuum_partial_width(
     // momentum conservation.
     if (!initial_spin_is_zero) {
       continuum_width += gamma_cpw_helper(ldm, gsfm, Pi_, mpol, e_gamma,
-        Exf, twoJf);
+        Exf, twoJf, use_TCs);
       // Consider the other possible final spin value for this multipolarity if
       // it is allowed (Jf = Ji - l is positive)
       twoJf = twoJi_ - two_l;
       if (twoJf >= 0) continuum_width += gamma_cpw_helper(ldm, gsfm, Pi_, mpol,
-        e_gamma, Exf, twoJf);
+        e_gamma, Exf, twoJf, use_TCs);
     }
     else if (twoJf > 0) continuum_width += gamma_cpw_helper(ldm, gsfm, Pi_,
-      mpol, e_gamma, Exf, twoJf);
+      mpol, e_gamma, Exf, twoJf, use_TCs);
   }
   return continuum_width;
 }
 
 double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
   marley::OpticalModel& om, marley::LevelDensityModel& ldm,
-  const marley::Fragment& frag, double total_KE_CM_frame, double Exf)
+  const marley::Fragment& frag, double total_KE_CM_frame, double Exf,
+  bool use_TCs)
 {
   int two_s = frag.get_two_s();
   marley::Parity Pa = frag.get_parity();
@@ -379,12 +387,15 @@ double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
       for (int twoJf = std::abs(twoJi_ - two_j);
         twoJf <= twoJi_ + two_j; twoJf += 2)
       {
-        continuum_width += om.transmission_coefficient(total_KE_CM_frame,
-          frag.get_pid(), two_j, l, two_s)
-          * ldm.level_density(Exf, twoJf);
-          // TODO: since only the spin distribution changes in the twoJf loop,
-          // you can optimize this by precomputing most of the level density
-          // and the multiplying here by the appropriate spin distribution
+        double tc = 1.;
+        if ( use_TCs ) {
+          tc = om.transmission_coefficient(total_KE_CM_frame,
+            frag.get_pid(), two_j, l, two_s);
+        }
+        continuum_width += tc * ldm.level_density(Exf, twoJf);
+        // TODO: since only the spin distribution changes in the twoJf loop,
+        // you can optimize this by precomputing most of the level density
+        // and the multiplying here by the appropriate spin distribution
       }
     }
   }

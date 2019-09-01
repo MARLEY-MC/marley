@@ -242,47 +242,35 @@ double marley::Generator::uniform_random_double(double min, double max,
 /// probability density functions to unity before using rejection sampling.
 /// @todo Check the convergence explanation for the first step.
 double marley::Generator::rejection_sample(std::function<double(double)> f,
-  double xmin, double xmax, double& fmax, double max_search_tolerance, bool global,
-  double safety_factor, std::function<double(double)>* upper_bound_on_f)
+  double xmin, double xmax, double& fmax, double safety_factor,
+  double max_search_tolerance)
 {
-  // This variable will be loaded with the value of x
-  // that corresponds to the maximum of f(x).
-  // We don't actually use this, but currently it's
-  // a required parameter of marley_utils::maximize
-  double x_at_max;
+  // If we were passed a NaN for fmax, then this signals
+  // that we need to search for the function maximum ourselves.
+  // Otherwise, we'll assume that the value passed over is good.
+  if ( std::isnan(fmax)  ) {
+    // This variable will be loaded with the value of x
+    // that corresponds to the maximum of f(x).
+    // We don't actually use this, but currently it's
+    // a required parameter of marley_utils::maximize
+    double x_at_max;
 
-  double ub_max;
-
-  // Get the maximum value of f(x). This is needed to
-  // correctly apply rejection sampling.
-  if ( std::isnan(fmax) && !upper_bound_on_f ) {
+    // Maximize the function and multiply by a safety factor just
+    // in case we didn't quite find the exact peak
     fmax = marley_utils::maximize(f, xmin, xmax, max_search_tolerance,
-      x_at_max, global) * safety_factor;
-  }
-  else if ( upper_bound_on_f ) {
-    ub_max = marley_utils::maximize(*upper_bound_on_f, xmin, xmax,
-      max_search_tolerance, x_at_max, global) * safety_factor;
+      x_at_max) * safety_factor;
   }
 
   double x, y, val;
 
   do {
-    if ( upper_bound_on_f ) {
-      x = this->rejection_sample( *upper_bound_on_f, xmin, xmax,
-        ub_max );
-      fmax = upper_bound_on_f->operator()( x );
-    }
-    else {
-      // Sample x value uniformly from [xmin, xmax]
-      x = uniform_random_double(xmin, xmax, true);
-    }
+    // Sample x value uniformly from [xmin, xmax]
+    x = uniform_random_double(xmin, xmax, true);
 
     // Sample y uniformly from [0, fmax]
     y = uniform_random_double(0, fmax, true);
 
     val = f(x);
-    std::cout << "x = " << x << ", fmax = " << fmax << ", val = " << val
-      << ", val / fmax = " << val / fmax << '\n';
     if ( val > fmax ) MARLEY_LOG_WARNING() << "MAX PROBLEM: "
       << " fmax = " << fmax << ", val = " << val;
   }
@@ -290,7 +278,6 @@ double marley::Generator::rejection_sample(std::function<double(double)> f,
   // (the probability density function evaluated at the sampled value of x)
   while ( y > val );
 
-  std::cout << "SELECTED x = " << x << '\n';
   return x;
 }
 

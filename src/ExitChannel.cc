@@ -33,16 +33,22 @@ void marley::FragmentContinuumExitChannel::do_decay(double& Ex,
   marley::Particle& residual_nucleus, marley::Generator& gen)
 {
   double Ea;
-  double max = std::numeric_limits<double>::quiet_NaN();
 
-  auto& ldm = gen.get_structure_db()
-    .get_level_density_model( gs_residue_.pdg_code() );
-  std::function<double(double)> rho_tot
-    = [&ldm, this](double Ex) -> double { return ldm.level_density(Ex) / this->width_; };
+  double max = this->Epdf_(Ea, Emax_, false);
 
-  Ex = gen.rejection_sample([&Ea, this](double ex)
-    -> double { return this->Epdf_(Ea, ex); }, Emin_, Emax_, max, 1e-8, true, 1.01,
-    &rho_tot);
+  double y, val;
+
+  do {
+    Ex = gen.rejection_sample([&Ea, this](double ex)
+      -> double { return this->Epdf_(Ea, ex, false); }, Emin_, Emax_, max);
+
+    double max_val = this->Epdf_(Ea, Ex, false);
+
+    y = gen.uniform_random_double(0., max_val, true);
+
+    val = Epdf_(Ea, Ex, true);
+  }
+  while ( y > val );
 
   sample_spin_parity(two_J, Pi, gen, Ex, Ea);
 
@@ -131,15 +137,22 @@ void marley::GammaContinuumExitChannel::do_decay(double& Ex, int& two_J,
   marley::Particle& residual_nucleus, marley::Generator& gen)
 {
   double Exi = Ex;
-  double max = std::numeric_limits<double>::quiet_NaN();
 
-  auto& ldm = gen.get_structure_db()
-    .get_level_density_model( gs_residue_.pdg_code() );
-  std::function<double(double)> rho_tot
-    = [&ldm, this](double Ex) -> double { return ldm.level_density(Ex) / this->width_; };
+  double max = this->Epdf_(Emax_, false);
 
-  Ex = gen.rejection_sample(Epdf_, Emin_, Emax_, max, 1e-8, true, 1.01,
-    &rho_tot);
+  double y, val;
+
+  do {
+    Ex = gen.rejection_sample([this](double ex)
+      -> double { return this->Epdf_(ex, false); }, Emin_, Emax_, max);
+
+    double max_val = this->Epdf_(Ex, false);
+
+    y = gen.uniform_random_double(0., max_val, true);
+
+    val = Epdf_(Ex, true);
+  }
+  while ( y > val );
 
   int nuc_pid = residual_nucleus.pdg_code();
   int Z = marley_utils::get_particle_Z(nuc_pid);
