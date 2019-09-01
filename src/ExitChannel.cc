@@ -1,5 +1,3 @@
-#include <limits>
-
 #include "marley/marley_utils.hh"
 #include "marley/ExitChannel.hh"
 #include "marley/HauserFeshbachDecay.hh"
@@ -33,22 +31,9 @@ void marley::FragmentContinuumExitChannel::do_decay(double& Ex,
   marley::Particle& residual_nucleus, marley::Generator& gen)
 {
   double Ea;
-
-  double max = this->Epdf_(Ea, Emax_, false);
-
-  double y, val;
-
-  do {
-    Ex = gen.rejection_sample([&Ea, this](double ex)
-      -> double { return this->Epdf_(Ea, ex, false); }, Emin_, Emax_, max);
-
-    double max_val = this->Epdf_(Ea, Ex, false);
-
-    y = gen.uniform_random_double(0., max_val, true);
-
-    val = Epdf_(Ea, Ex, true);
-  }
-  while ( y > val );
+  double max = std::numeric_limits<double>::quiet_NaN();
+  Ex = gen.rejection_sample([&Ea, this](double ex)
+    -> double { return this->Epdf_(Ea, ex); }, Emin_, Emax_, max);
 
   sample_spin_parity(two_J, Pi, gen, Ex, Ea);
 
@@ -137,22 +122,8 @@ void marley::GammaContinuumExitChannel::do_decay(double& Ex, int& two_J,
   marley::Particle& residual_nucleus, marley::Generator& gen)
 {
   double Exi = Ex;
-
-  double max = this->Epdf_(Emax_, false);
-
-  double y, val;
-
-  do {
-    Ex = gen.rejection_sample([this](double ex)
-      -> double { return this->Epdf_(ex, false); }, Emin_, Emax_, max);
-
-    double max_val = this->Epdf_(Ex, false);
-
-    y = gen.uniform_random_double(0., max_val, true);
-
-    val = Epdf_(Ex, true);
-  }
-  while ( y > val );
+  double max = std::numeric_limits<double>::quiet_NaN();
+  Ex = gen.rejection_sample(Epdf_, Emin_, Emax_, max);
 
   int nuc_pid = residual_nucleus.pdg_code();
   int Z = marley_utils::get_particle_Z(nuc_pid);

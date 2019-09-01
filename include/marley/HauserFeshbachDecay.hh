@@ -79,12 +79,12 @@ namespace marley {
       /// for emission of a nuclear fragment to the continuum of nuclear levels
       double fragment_continuum_partial_width(marley::OpticalModel& om,
         marley::LevelDensityModel& ldm, const marley::Fragment& frag,
-        double fragment_KE, double Exf, bool use_TCs);
+        double fragment_KE, double Exf);
 
       /// @brief Helper function used when computing the partial decay
       /// width for gamma emission to the continuum of nuclear levels
       double gamma_continuum_partial_width(marley::LevelDensityModel& ldm,
-        marley::GammaStrengthFunctionModel& gsfm, double Exf, bool use_TCs);
+        marley::GammaStrengthFunctionModel& gsfm, double Exf);
 
       /// @brief Mass of a charged pion (MeV)
       /// @hideinitializer

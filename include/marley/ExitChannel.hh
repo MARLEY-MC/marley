@@ -207,7 +207,7 @@ namespace marley {
       /// gs_residue Particle and the sampled excitation energy to determine
       /// the mass of the final-state nucleus
       FragmentContinuumExitChannel(double width, double Emin, double Emax,
-        std::function<double(double&, double, bool)> Epdf,
+        std::function<double(double&, double)> Epdf,
         const marley::Fragment& frag, marley::Particle gs_residue)
         : marley::ContinuumExitChannel(width, Emin, Emax, gs_residue),
         Epdf_(Epdf), fragment_(frag) {}
@@ -240,7 +240,7 @@ namespace marley {
       /// The second is the final-state nuclear excitation energy (MeV).
       /// The return value is a probability density (MeV<sup> -1</sup>)
       /// for sampling the final-state nuclear excitation energy.
-      std::function<double(double&, double, bool)> Epdf_;
+      std::function<double(double&, double)> Epdf_;
       const marley::Fragment& fragment_; ///< Emitted Fragment
   };
 
@@ -261,7 +261,7 @@ namespace marley {
       /// gs_residue Particle and the sampled excitation energy to determine
       /// the mass of the final-state nucleus
       GammaContinuumExitChannel(double width, double Emin, double Emax,
-        std::function<double(double, bool)> Epdf, marley::Particle gs_residue)
+        std::function<double(double)> Epdf, marley::Particle gs_residue)
         : marley::ContinuumExitChannel(width, Emin, Emax, gs_residue),
         Epdf_(Epdf) {}
 
@@ -292,7 +292,7 @@ namespace marley {
       /// @details The argument is the final-state nuclear excitation energy
       /// (MeV). The return value is a probability density (MeV<sup> -1</sup>)
       /// for sampling the final-state nuclear excitation energy.
-      std::function<double(double, bool)> Epdf_;
+      std::function<double(double)> Epdf_;
 
     private:
 
