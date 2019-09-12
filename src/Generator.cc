@@ -14,6 +14,7 @@
 #include "marley/LevelDensityModel.hh"
 #include "marley/OpticalModel.hh"
 #include "marley/StructureDatabase.hh"
+#include "marley/marley_utils.hh"
 
 // The default constructor uses the system time as the seed and a
 // default-constructured monoenergetic neutrion source. No reactions are
@@ -246,10 +247,10 @@ double marley::Generator::rejection_sample(std::function<double(double)> f,
   double xmin, double xmax, double& fmax, double safety_factor,
   double max_search_tolerance)
 {
-  // If we were passed a NaN for fmax, then this signals
-  // that we need to search for the function maximum ourselves.
+  // If we were passed the value marley_utils::UNKNOWN_MAX for fmax, then this
+  // signals that we need to search for the function maximum ourselves.
   // Otherwise, we'll assume that the value passed over is good.
-  if ( std::isnan(fmax)  ) {
+  if ( fmax == marley_utils::UNKNOWN_MAX  ) {
     // This variable will be loaded with the value of x
     // that corresponds to the maximum of f(x).
     // We don't actually use this, but currently it's
@@ -318,7 +319,7 @@ marley::Reaction& marley::Generator::sample_reaction(double& E) {
     + " a reaction in marley::Generator::sample_reaction(). The vector of"
     + " marley::Reaction objects owned by this generator is empty.");
 
-  static double max = std::numeric_limits<double>::quiet_NaN();
+  static double max = marley_utils::UNKNOWN_MAX;
 
   // TODO: protect against source_ changing E_min or E_max after you compute
   // the normalization factor norm_ in marley::Generator::init()

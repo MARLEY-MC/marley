@@ -25,7 +25,7 @@ const std::set<int> marley::NeutrinoSource::pids_ = {
 double marley::NeutrinoSource::sample_incident_neutrino(int& pdg,
   marley::Generator& gen)
 {
-  static double max = std::numeric_limits<double>::quiet_NaN();
+  static double max = marley_utils::UNKNOWN_MAX;
   pdg = pid_;
   return gen.rejection_sample([this](double E)
     -> double { return this->pdf(E); }, get_Emin(), get_Emax(), max);
