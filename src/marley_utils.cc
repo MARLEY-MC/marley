@@ -226,13 +226,6 @@ double marley_utils::maximize(const std::function<double(double)> f, // [in] obj
   double epsilon,     // [in] stopping tolerance
   double& maxLoc)     // [out] location of maximum
 {
-  // Use dlib's MaxLIPO+TR algorithm to find a global maximum
-  //if ( global ) {
-  //  auto result = dlib::find_max_global(f, leftEnd, rightEnd, dlib::max_function_calls(20));
-  //  maxLoc = result.x;
-  //  return result.y;
-  //}
-
   double result = minimize([&f](double x) -> double { return -1.0*f(x); },
     leftEnd, rightEnd, epsilon, maxLoc);
   return -1.0*result;
@@ -240,12 +233,12 @@ double marley_utils::maximize(const std::function<double(double)> f, // [in] obj
 
 // Numerically integrate a given function f (that takes a
 // double argument to integrate over and returns a double)
-// over the interval [a,b] using the composite trapezoidal
-// rule over n subintervals.
-// (see http://en.wikipedia.org/wiki/Numerical_integration)
+// over the interval [a,b] using Clenshaw-Curtis quadrature
 double marley_utils::num_integrate(const std::function<double(double)> &f,
-  double a, double b, int /*n*/)
+  double a, double b)
 {
+  /// @todo remove the hard-coded number of Chebyshev points here in
+  /// favor of adaptive integration.
   static marley::Integrator integrator(50);
   return integrator.num_integrate(f, a, b);
 }

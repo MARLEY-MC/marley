@@ -192,7 +192,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
       // Numerically integrate using the call wrapper, the integration bounds,
       // and the number of subintervals
       double continuum_width = marley_utils::num_integrate(cpw, E_c_min,
-        Exf_max, DEFAULT_CONTINUUM_SUBINTERVALS_);
+        Exf_max);
 
       // Create a normalized probability density function to use for sampling a
       // final excitation energy from the continuum for this exit channel.
@@ -265,7 +265,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     double continuum_width = marley_utils::num_integrate(
       [&ldm, &gsfm, this](double Exf)
       -> double { return gamma_continuum_partial_width(ldm, gsfm, Exf); },
-      E_c_min, Exi_, DEFAULT_CONTINUUM_SUBINTERVALS_);
+      E_c_min, Exi_);
 
     // Normalized probability density used for sampling a final excitation
     // energy in the continuum

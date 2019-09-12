@@ -122,7 +122,7 @@ void marley::Generator::normalize_E_pdf() {
     // energy probability density function
     norm_ = marley_utils::num_integrate([this](double E)
       -> double { return this->E_pdf(E); }, source_->get_Emin(),
-      source_->get_Emax(), 1e3); // TODO: remove hard-coded value here
+      source_->get_Emax());
 
     if (norm_ <= 0. || std::isnan(norm_)) {
       throw marley::Error(std::string("The integral of the")
@@ -459,14 +459,6 @@ double marley::Generator::inverse_transform_sample(
   // If we chose an endpoint, we're done, so just return the appropriate one
   if ( prob == 0. ) return xmin;
   else if ( prob == 1. ) return xmax;
-
-  //// Integrate the PDF over the region of interest. We'll use this
-  //// to normalize the CDF.
-  //double integral = marley_utils::num_integrate(f, xmin, xmax, 1e4);
-
-  //// Make a CDF function to invert
-  //std::function<double(double)> cdf = [&f, xmin, integral](double x) -> double
-  //  { return marley_utils::num_integrate(f, xmin, x, 1e4) / integral; };
 
   marley::ChebyshevInterpolatingFunction func(f, xmin, xmax, 64);
   auto cdf = func.cdf();

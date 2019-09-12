@@ -39,10 +39,8 @@ marley::FermiDiracNeutrinoSource::FermiDiracNeutrinoSource(int particle_id,
   // Normalize the source spectrum (not strictly necessary, but having the
   // spectrum approximately normalized makes the default rejection sampling
   // tolerance of 1e-8 reliable for finding the maximum of the spectrum)
-  /// @todo Remove hard-coded number of integration subintervals in this
-  /// function
   double integral = marley_utils::num_integrate(
-    [this](double E) -> double { return this->pdf(E); }, Emin_, Emax_, 1e4);
+    [this](double E) -> double { return this->pdf(E); }, Emin_, Emax_);
 
   // Update the normalization constant, thereby normalizing this object's
   // pdf in the process.
@@ -63,10 +61,8 @@ marley::BetaFitNeutrinoSource::BetaFitNeutrinoSource(int particle_id,
   // Normalize the source spectrum (not strictly necessary, but having the
   // spectrum approximately normalized makes the default rejection sampling
   // tolerance of 1e-8 reliable for finding the maximum of the spectrum)
-  /// @todo Remove hard-coded number of integration subintervals in this
-  /// function
   double integral = marley_utils::num_integrate(
-    [this](double E) -> double { return this->pdf(E); }, Emin_, Emax_, 1e4);
+    [this](double E) -> double { return this->pdf(E); }, Emin_, Emax_);
 
   // Update the normalization constant, thereby normalizing this object's
   // pdf in the process.
@@ -86,10 +82,7 @@ marley::FunctionNeutrinoSource::FunctionNeutrinoSource(int particle_id,
   // Normalize the supplied spectrum (not strictly necessary, but having the
   // spectrum approximately normalized makes the default rejection sampling
   // tolerance of 1e-8 reliable for finding the maximum of the spectrum)
-  /// @todo Remove hard-coded number of integration subintervals in this
-  /// function
-  double integral = marley_utils::num_integrate(prob_dens_func, Emin, Emax,
-    1e4);
+  double integral = marley_utils::num_integrate(prob_dens_func, Emin, Emax);
   probability_density_ = [prob_dens_func, integral](double E)
     -> double { return prob_dens_func(E) / integral; };
 }

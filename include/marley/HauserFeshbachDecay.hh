@@ -95,12 +95,6 @@ namespace marley {
       static constexpr double lambda_piplus2_ = (marley_utils::hbar_c
         / mpiplus_) * (marley_utils::hbar_c / mpiplus_);
 
-      /// @brief Default number of subintervals to use when integrating
-      /// fragment and gamma decay widths over the energy continuum.
-      /// @todo Consider changing the integration method to use
-      /// marley::Integrator
-      static constexpr int DEFAULT_CONTINUUM_SUBINTERVALS_ = 50;
-
       /// @brief Particle object that represents the compound nucleus before it
       /// decays
       const marley::Particle& compound_nucleus_;
