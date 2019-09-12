@@ -33,9 +33,6 @@ void marley::FragmentContinuumExitChannel::do_decay(double& Ex,
   double Ea;
   Ex = gen.inverse_transform_sample([&Ea, this](double ex)
     -> double { return this->Epdf_(Ea, ex); }, Emin_, Emax_);
-  //double max = marley_utils::UNKNOWN_MAX;
-  //Ex = gen.rejection_sample([&Ea, this](double ex)
-  //  -> double { return this->Epdf_(Ea, ex); }, Emin_, Emax_, max);
 
   sample_spin_parity(two_J, Pi, gen, Ex, Ea);
 
@@ -125,9 +122,6 @@ void marley::GammaContinuumExitChannel::do_decay(double& Ex, int& two_J,
 {
   double Exi = Ex;
   Ex = gen.inverse_transform_sample(Epdf_, Emin_, Emax_);
-  //double max = marley_utils::UNKNOWN_MAX;
-  //Ex = gen.rejection_sample(Epdf_, Emin_, Emax_, max);
-
 
   int nuc_pid = residual_nucleus.pdg_code();
   int Z = marley_utils::get_particle_Z(nuc_pid);
