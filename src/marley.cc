@@ -44,7 +44,6 @@ volatile static std::sig_atomic_t interrupted = false;
 void signal_handler(int)
 {
   interrupted = true;
-  std::exit(1);
 }
 
 namespace {
@@ -754,11 +753,118 @@ namespace {
     return time_str;
   }
 
+  // Formats the lines of the status display shown at the bottom of the
+  // screen when this executable is running
+  std::string makeStatusLines(long ev_count, long num_events, long num_old_events,
+    std::chrono::system_clock::time_point start_time_point,
+    const std::vector<std::unique_ptr<OutputFile> >& output_files)
+  {
+    std::ostringstream temp_oss;
+    // Print a status message showing the current number of events
+    temp_oss << "\nEvent Count = " << ev_count << "/" << num_events
+      << " (" << format_number(ev_count*100
+        / static_cast<double>(num_events))
+      << "% complete)\033[K\n";
+
+    // Print timing information
+    std::chrono::system_clock::time_point current_time_point
+      = std::chrono::system_clock::now();
+    temp_oss << "Elapsed time: "
+      << marley_utils::elapsed_time_string(start_time_point,
+      current_time_point) << " (Estimated total run time: ";
+
+    marley_utils::seconds<float> estimated_total_time =
+      (current_time_point - start_time_point)
+      * (static_cast<float>(num_events - num_old_events)
+      / (ev_count - num_old_events));
+
+    temp_oss << marley_utils::duration_to_string
+      <marley_utils::seconds<float>>(estimated_total_time)
+      << ")\033[K\n";
+
+    for (const auto& file : output_files) {
+      temp_oss << "Data written to " << file->name() << ' '
+        << marley_utils::num_bytes_to_string(file->bytes_written(), 2)
+        << "\033[K\n";
+    }
+
+    std::time_t estimated_end_time = std::chrono::system_clock::to_time_t(
+      start_time_point + std::chrono::duration_cast
+      <std::chrono::system_clock::duration>(estimated_total_time));
+
+    temp_oss << "MARLEY is estimated to terminate on "
+      << put_time(std::localtime(&estimated_end_time), "%c %Z") << '\n';
+
+    // Move up an extra line in the terminal for each output file because
+    // we're displaying the amount of data written to disk for each of them
+    // on a separate line.
+    for (size_t i = 0; i < output_files.size(); ++i) temp_oss << "\033[F";
+
+    // Move up four lines
+    temp_oss << "\033[F\033[F\033[F\033[F";
+
+    return temp_oss.str();
+  }
+
+  // Inserts an updated copy of the status lines after each
+  // newline is written to std::cout (e.g., by the marley::Logger
+  // class). Based on https://stackoverflow.com/a/22043916
+  class StatusInserter : public std::streambuf {
+    public:
+      StatusInserter(std::streambuf* dest, const long& ev_count,
+        const long& num_events, const long& num_old_events,
+        const std::chrono::system_clock::time_point& start_time_point,
+        const std::vector<std::unique_ptr<OutputFile> >& output_files)
+        : std::streambuf(), myDest_( dest ), myIsAtStartOfLine_(true),
+        do_status_(true), ev_count_( ev_count ), num_events_( num_events ),
+        num_old_events_( num_old_events ), start_time_point_( start_time_point ),
+        output_files_( output_files ) {}
+
+      inline void set_do_status(bool do_it) { do_status_ = do_it; }
+
+    protected:
+      std::streambuf* myDest_;
+      bool myIsAtStartOfLine_;
+      bool do_status_;
+      const long& ev_count_;
+      const long& num_events_;
+      const long& num_old_events_;
+      const std::chrono::system_clock::time_point& start_time_point_;
+      const std::vector<std::unique_ptr<OutputFile> >& output_files_;
+
+      int overflow( int ch ) override {
+        int retval = 0;
+        if ( ch != traits_type::eof() ) {
+          if ( do_status_ && myIsAtStartOfLine_ ) {
+            std::string status = makeStatusLines(ev_count_,
+              num_events_, num_old_events_, start_time_point_, output_files_);
+            myDest_->sputn( status.data(), status.size() );
+          }
+          myIsAtStartOfLine_ = ch == '\n';
+          if ( myIsAtStartOfLine_ ) {
+            std::string erase( "\033[K" );
+            myDest_->sputn( erase.data(), erase.size() );
+          }
+          retval = myDest_->sputc( ch );
+        }
+        return retval;
+      }
+  };
+
 }
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[]) {
+
+  std::streambuf* cout_default_buf = std::cout.rdbuf();
+  std::streambuf* cerr_default_buf = std::cerr.rdbuf();
 
   try {
+
+    // Initialize the logger. Use a default log level of INFO. This will
+    // quickly be overwritten while parsing the JSON configuration file.
+    marley::Logger::Instance().add_stream(std::cout,
+      marley::Logger::LogLevel::INFO);
+
     // TODO: if you need command line parsing beyond the trivial stuff used
     // here, consider using a header-only option parser library like cxxopts
     // (https://github.com/jarro2783/cxxopts)
@@ -808,10 +914,6 @@ int main(int argc, char* argv[]){
     #else
       marley::JSONConfig jc(json);
     #endif
-
-    // Initialize the logger
-    marley::Logger::Instance().add_stream(std::cout,
-      marley::Logger::LogLevel::INFO);
 
     // Get the time that the program was started
     std::chrono::system_clock::time_point start_time_point
@@ -923,6 +1025,15 @@ int main(int argc, char* argv[]){
     std::cout << '\n';
     auto event = std::make_unique<marley::Event>();
     long ev_count = 1 + num_old_events;
+
+    // Make std::cout use our "status inserter" std::streambuf
+    // object so that the status lines get automatically updated
+    // with every newline
+    StatusInserter my_status_inserter(cout_default_buf, ev_count,
+      num_events, num_old_events, start_time_point, output_files);
+    std::cout.rdbuf( &my_status_inserter );
+    std::cerr.rdbuf( &my_status_inserter );
+
     for (; ev_count <= num_events && !interrupted; ++ev_count) {
 
       // Create an event using the generator object
@@ -934,52 +1045,26 @@ int main(int argc, char* argv[]){
 
       // Print status messages about simulation progress after every 100
       // events have been generated
-      if ( true ) {
+      if ((ev_count - num_old_events) % 100 == 1 || ev_count == num_events) {
+
+        // Temporarily disable the auto-printing of the status lines by
+        // the StatusInserter class. This will avoid duplication of the
+        // information.
+        my_status_inserter.set_do_status( false );
 
         // Print a status message showing the current number of events
-        std::cout << "Event Count = " << ev_count << "/" << num_events
-          << " (" << format_number(ev_count*100
-            / static_cast<double>(num_events))
-          << "% complete)\033[K\n";
+        std::cout << makeStatusLines(ev_count, num_events, num_old_events,
+          start_time_point, output_files);
 
-        // Print timing information
-        std::chrono::system_clock::time_point current_time_point
-          = std::chrono::system_clock::now();
-        std::cout << "Elapsed time: "
-          << marley_utils::elapsed_time_string(start_time_point,
-          current_time_point) << " (Estimated total run time: ";
-
-        marley_utils::seconds<float> estimated_total_time =
-          (current_time_point - start_time_point)
-          * (static_cast<float>(num_events - num_old_events)
-          / (ev_count - num_old_events));
-
-        std::cout << marley_utils::duration_to_string
-          <marley_utils::seconds<float>>(estimated_total_time)
-          << ")\033[K\n";
-
-        for (const auto& file : output_files) {
-          std::cout << "Data written to " << file->name() << ' '
-            << marley_utils::num_bytes_to_string(file->bytes_written(), 2)
-            << "\033[K\n";
-        }
-
-        std::time_t estimated_end_time = std::chrono::system_clock::to_time_t(
-          start_time_point + std::chrono::duration_cast
-          <std::chrono::system_clock::duration>(estimated_total_time));
-
-        std::cout << "MARLEY is estimated to terminate on "
-          << put_time(std::localtime(&estimated_end_time), "%c %Z") << '\n';
-
-        // Move up an extra line in the terminal for each output file because
-        // we're displaying the amount of data written to disk for each of them
-        // on a separate line.
-        for (size_t i = 0; i < output_files.size(); ++i) std::cout << "\033[F";
-
-        // Move up three lines in std::cout
-        std::cout << "\033[F\033[F\033[F";
+        // Re-enable the auto-printing of the status lines now that we've
+        // printed them manually
+        my_status_inserter.set_do_status( true );
       }
     }
+
+    // Restore the default std::streambuf to std::cout
+    std::cout.rdbuf( cout_default_buf );
+    std::cerr.rdbuf( cerr_default_buf );
 
     std::cout << "\033[E";
 
@@ -999,12 +1084,16 @@ int main(int argc, char* argv[]){
     if (!interrupted) std::cout << "MARLEY terminated normally on ";
     else std::cout << "MARLEY was interrupted by the user on ";
     std::cout << put_time(std::localtime(&end_time), "%c %Z")
-      << "\033[K\033[E\033[K";
+      << "\033[K\033[E\033[K\n\033[K";
 
     return 0;
   }
 
   catch (const marley::Error& error) {
+    // Restore the old std::streambuf for std::cout
+    std::cout.rdbuf( cout_default_buf );
+    std::cerr.rdbuf( cerr_default_buf );
+
     // Flush the Logger, then rethrow the error for the system to handle.
     // This will probably result in std::terminate() being called.
     auto& log = marley::Logger::Instance();

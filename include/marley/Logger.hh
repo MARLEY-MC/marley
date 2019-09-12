@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <fstream>
 #include <memory>
+#include <sstream>
 #include <vector>
 
 // Forward declare the HauserFeshbachDecay class and its operator<< so that
@@ -92,10 +93,6 @@ namespace marley {
           /// @brief Whether logging to the stream is enabled (true) or
           /// disabled (false)
           bool enabled_;
-
-          /// @brief Whether the stream has previously received at least one
-          /// logging message
-          bool previously_used_;
       };
 
       /// @brief A std::vector of OutStream objects that provides a stream
@@ -116,6 +113,28 @@ namespace marley {
 
           /// @brief Backup overload for extra output manipulators
           OutStreamVector& operator<<(std::ios_base& (*manip)(std::ios_base&));
+      };
+
+      /// @brief Temporary object used for forming logger messages
+      /// @details Upon destruction, a newline is appended to the message. This
+      /// is based on a trick from https://stackoverflow.com/a/57553824
+      class Message {
+        public:
+          Message(OutStreamVector& vec) : osvec_( vec ) {}
+
+          inline ~Message() {
+            osvec_ << '\n';
+          }
+
+          template<typename OutputType> Message&&
+            operator<<(const OutputType& ot)
+          {
+            osvec_ << ot;
+            return std::move( *this );
+          }
+
+        protected:
+          OutStreamVector& osvec_;
       };
 
       /// @brief Create the singleton Logger
@@ -172,7 +191,7 @@ namespace marley {
       /// @brief Prepare the Logger to receive a log message via
       /// the << stream operator
       /// @param lev marley::Logger::LogLevel of the incoming message
-      OutStreamVector& log(LogLevel lev = LogLevel::WARNING);
+      Message log(LogLevel lev = LogLevel::WARNING);
 
       // Make the singleton Logger uncopyable and unmovable
       /// @brief Deleted copy constructor

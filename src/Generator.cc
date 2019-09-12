@@ -4,6 +4,7 @@
 #include <string>
 #include <thread>
 
+#include "marley/ChebyshevInterpolatingFunction.hh"
 #include "marley/ConfigurationFile.hh"
 #include "marley/Error.hh"
 #include "marley/Generator.hh"
@@ -458,13 +459,17 @@ double marley::Generator::inverse_transform_sample(
   if ( prob == 0. ) return xmin;
   else if ( prob == 1. ) return xmax;
 
-  // Integrate the PDF over the region of interest. We'll use this
-  // to normalize the CDF.
-  double integral = marley_utils::num_integrate(f, xmin, xmax, 1e4);
+  //// Integrate the PDF over the region of interest. We'll use this
+  //// to normalize the CDF.
+  //double integral = marley_utils::num_integrate(f, xmin, xmax, 1e4);
 
-  // Make a CDF function to invert
-  std::function<double(double)> cdf = [&f, xmin, integral](double x) -> double
-    { return marley_utils::num_integrate(f, xmin, x, 1e4) / integral; };
+  //// Make a CDF function to invert
+  //std::function<double(double)> cdf = [&f, xmin, integral](double x) -> double
+  //  { return marley_utils::num_integrate(f, xmin, x, 1e4) / integral; };
+
+  marley::ChebyshevInterpolatingFunction func(f, xmin, xmax, 64);
+  auto cdf = func.cdf();
+  double norm = cdf.evaluate( xmax );
 
   // Find the x value corresponding to the sampled probability via bisection
   // (slow but robust)
@@ -472,7 +477,7 @@ double marley::Generator::inverse_transform_sample(
   double b = xmax;
   while ( (b - a) > bisection_tolerance ) {
     double midpoint = (a + b) / 2.;
-    double mid_cdf = cdf( midpoint );
+    double mid_cdf = cdf.evaluate( midpoint ) / norm;
     // If the CDF at the midpoint exactly matches our sampled
     // probability, we're done. Just return the midpoint.
     if ( mid_cdf == prob ) return midpoint;

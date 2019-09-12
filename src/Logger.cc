@@ -23,8 +23,7 @@ const char* marley::Logger::loglevel_to_str(LogLevel lev)
 }
 
 marley::Logger::OutStream::OutStream(std::shared_ptr<std::ostream> os,
-  LogLevel lev, bool enable) : stream_(os), level_(lev), enabled_(enable),
-  previously_used_(false)
+  LogLevel lev, bool enable) : stream_(os), level_(lev), enabled_(enable)
 {
   constexpr char error_1[] = "std::shared_ptr to ";
   constexpr char error_2[] = " passed to constructor of marley::Logger"
@@ -37,8 +36,7 @@ marley::Logger::OutStream::OutStream(std::shared_ptr<std::ostream> os,
 }
 
 marley::Logger::OutStream::OutStream(std::ostream& os,
-  LogLevel lev, bool enable) : level_(lev), enabled_(enable),
-  previously_used_(false)
+  LogLevel lev, bool enable) : level_(lev), enabled_(enable)
 {
   // Avoid any deletion problems when the std::shared_ptr goes out of scope by
   // providing a custom deleter that does nothing.
@@ -63,21 +61,14 @@ marley::Logger::OutStreamVector&
 }
 
 void marley::Logger::flush() {
-  for (auto s : streams_) if (s.stream_) s.stream_->flush();
+  for (auto s : streams_) if (s.enabled_ && s.stream_) s.stream_->flush();
 }
 
 void marley::Logger::newline() {
-  for (auto s : streams_) if (s.stream_) (*s.stream_) << '\n';
+  for (auto s : streams_) if (s.enabled_ && s.stream_) (*s.stream_) << '\n';
 }
 
 void marley::Logger::clear_streams() {
-  // Preserve the "previously used" state of the std::cerr stream after
-  // clearing the streams
-  auto cerr_stream = get_stream(&std::cerr);
-  bool cerr_previously_used = false;
-  if (cerr_stream && cerr_stream->previously_used_)
-    cerr_previously_used = true;
-
   // Empty the vector of output streams for the Logger
   streams_.clear();
 
@@ -85,7 +76,6 @@ void marley::Logger::clear_streams() {
   // add_stream(), the Logger will always write warning and error messages to
   // stderr.
   add_stream(std::cerr, LogLevel::WARNING);
-  if (cerr_previously_used) get_stream(&std::cerr)->previously_used_ = true;
 }
 
 marley::Logger::Logger(bool log_enabled) : enabled_(log_enabled),
@@ -170,7 +160,7 @@ void marley::Logger::enable(bool log_enabled) {
   for (auto& s : streams_) s.enabled_ = enabled_ && (s.level_ >= old_level_);
 }
 
-marley::Logger::OutStreamVector& marley::Logger::log(LogLevel lev)
+marley::Logger::Message marley::Logger::log(LogLevel lev)
 {
   if (lev == LogLevel::DISABLED) throw marley::Error("marley::Logger::log()"
     " may not be called for the DISABLED logging level.");
@@ -192,30 +182,10 @@ marley::Logger::OutStreamVector& marley::Logger::log(LogLevel lev)
         if (s.stream_.get() == &std::cout)
           s.enabled_ = (s.enabled_) && (lev > LogLevel::WARNING);
       }
-      if (s.enabled_) {
-        // Insert a new line at the beginning of each logging message
-        // unless this is the first message. If the stream in question is
-        // std::cout and std::cerr has been previously used, also insert
-        // a new line. Do the same for std::cerr.
-        if (s.previously_used_) *s.stream_ << '\n';
-        else {
-          s.previously_used_ = true;
-          if (s.stream_.get() == &std::cout) {
-            auto cerr_stream = get_stream(&std::cerr);
-            if (cerr_stream && cerr_stream->previously_used_)
-              *s.stream_ << '\n';
-          }
-          if (s.stream_.get() == &std::cerr) {
-            auto cout_stream = get_stream(&std::cout);
-            if (cout_stream && cout_stream->previously_used_)
-              *s.stream_ << '\n';
-          }
-        }
-        *s.stream_ << loglevel_to_str(lev);
-      }
+      if (s.enabled_) *s.stream_ << loglevel_to_str(lev);
     }
     // Update the old logging level
     old_level_ = lev;
   }
-  return streams_;
+  return marley::Logger::Message( streams_ );
 }

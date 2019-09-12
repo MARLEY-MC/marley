@@ -84,7 +84,7 @@ namespace marley {
       /// @param xmax Upper bound of the sampling interval
       /// @return Sampled value of x
       double inverse_transform_sample(std::function<double(double)> f,
-        double xmin, double xmax, double bisection_tolerance = 1e-14);
+        double xmin, double xmax, double bisection_tolerance = 1e-12);
 
       /// @brief Get a reference to the StructureDatabase owned by this
       /// Generator

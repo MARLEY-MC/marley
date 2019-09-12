@@ -162,8 +162,6 @@ namespace marley {
 
       inline virtual bool is_continuum() const final override { return true; }
 
-    protected:
-
       /// @brief A spin-parity value with its corresponding partial decay width
       /// @details This struct is used to sample final-state nuclear
       /// spin-parities in classes derived from ContinuumExitChannel
@@ -232,7 +230,6 @@ namespace marley {
         marley::Particle& residual_nucleus, marley::Generator& gen)
         override;
 
-    protected:
       /// @brief Probability density function describing the distribution
       /// of final-state nuclear excitation energies within the continuum.
       /// @details The first argument is a reference to a double that will
@@ -285,16 +282,12 @@ namespace marley {
         marley::Particle& residual_nucleus, marley::Generator& gen)
         override;
 
-    protected:
-
       /// @brief Probability density function describing the distribution
       /// of final-state nuclear excitation energies within the continuum.
       /// @details The argument is the final-state nuclear excitation energy
       /// (MeV). The return value is a probability density (MeV<sup> -1</sup>)
       /// for sampling the final-state nuclear excitation energy.
       std::function<double(double)> Epdf_;
-
-    private:
 
       /// @brief Helper function for building the table of final spin-parities
       /// and widths

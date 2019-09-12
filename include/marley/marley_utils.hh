@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <complex>
 #include <functional>
 #include <unordered_map>
@@ -66,7 +67,7 @@ namespace marley_utils {
   constexpr double m_mu = 113428.9267; // micro-amu
 
   // Consistent value of pi to use throughout all of MARLEY
-  constexpr double pi = 3.14159265358979323846;
+  constexpr double pi = M_PI;
   constexpr double two_pi = 2*pi;
   const double sqrt_two_pi = std::sqrt(pi);
   constexpr double half_pi = pi/2.0;
