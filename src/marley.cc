@@ -23,6 +23,7 @@
 #ifdef USE_ROOT
   #include "TFile.h"
   #include "TInterpreter.h"
+  #include "TParameter.h"
   #include "TROOT.h"
   #include "TTree.h"
 #endif
@@ -133,6 +134,11 @@ namespace {
 
       bool mode_is_resume() const { return mode_ == Mode::RESUME; }
 
+      // If needed (for HEPEvt and ascii formats), write the
+      // flux-averaged total cross section to the file. Only do this
+      // if we're at the beginning of the stream.
+      virtual void write_flux_avg_tot_xsec(double avg_tot_xsec) = 0;
+
     protected:
 
       bool check_if_file_exists(const std::string& filename) {
@@ -200,6 +206,12 @@ namespace {
         int_fast64_t bytes_written() override {
           return file_->GetBytesWritten();
         }
+
+        // This function is a no-op for the ROOT format (we will take
+        // care of saving this information when we write the generator
+        // state variables)
+        inline virtual void write_flux_avg_tot_xsec(double /*avg_tot_xsec*/)
+          override {}
 
       private:
 
@@ -316,9 +328,14 @@ namespace {
           std::string state( gen.get_state_string() );
           std::string seed( std::to_string(gen.get_seed()) );
 
+          TParameter<double> avg_tot_xsec("MARLEY_flux_avg_xsec",
+            gen.flux_averaged_total_xs());
+
           file_->WriteObject(&config, "MARLEY_config", "WriteDelete");
           file_->WriteObject(&state, "MARLEY_state", "WriteDelete");
           file_->WriteObject(&seed, "MARLEY_seed", "WriteDelete");
+          file_->WriteTObject(&avg_tot_xsec, "MARLEY_flux_avg_xsec",
+            "WriteDelete");
         }
 
         // Clean up once we're done with the ROOT file. Save some information
@@ -491,11 +508,7 @@ namespace {
         if (format_ == Format::JSON && mode_ == Mode::OVERWRITE) {
           start_json_output(true);
         }
-        //MARLEY_LOG_INFO() << "Events for this run will be ";
-        //if (hepevt_file_exists && open_mode_flag == std::ios:ate)
-        //  std::cout << "appended ";
-        //else std::cout << "written ";
-        //std::cout << "to the HEPEvt format file " << hepevt_file_name << '\n';
+
       }
 
       // TODO: consider a better way of doing this
@@ -682,6 +695,7 @@ namespace {
         temp["generator_state_string"] = gen.get_state_string();
         temp["seed"] = std::to_string(gen.get_seed());
         temp["event_count"] = num_events;
+        temp["flux_avg_xsec"] = gen.flux_averaged_total_xs();
 
         if (indent_ < 0) stream_ << temp.dump_string();
         else temp.print(stream_, indent_, true, indent_);
@@ -709,6 +723,27 @@ namespace {
 
         stream_.close();
       }
+
+      // This function is a no-op for the JSON format (we will write the
+      // flux-averaged cross section to the output file when saving the
+      // generator state)
+      inline virtual void write_flux_avg_tot_xsec(double avg_tot_xsec)
+        override
+      {
+        // If we're at the beginning of a HEPEvt or ascii format file, write
+        // the flux-averaged total cross section before the events. This will
+        // be written upon closing the file in the case of the JSON output
+        // format. If we're not at the start of the file, don't bother.
+        // We probably are appending to an existing file. We'll have to trust
+        // the user not to mix events with different flux-averaged cross sections
+        // in these file formats.
+        /// @todo Consider other ways of handling this
+        if (format_ == Format::ASCII || format_ == Format::HEPEVT) {
+          bool at_start_of_file = stream_.tellp() == 0;
+          if ( at_start_of_file ) stream_ << avg_tot_xsec << '\n';
+        }
+      }
+
   };
 
   void print_help(std::string executable_name) {
@@ -1040,6 +1075,12 @@ int main(int argc, char* argv[]) {
     MARLEY_LOG_INFO() << "Flux-averaged total cross section: "
       << marley_utils::hbar_c2 * avg_tot_xs * fm2_to_minus40_cm2
       << " * 10^(-40) cm^2";
+
+    // Write the flux-averaged total cross section to the output
+    // files (if needed)
+    for (auto& file : output_files) {
+      file->write_flux_avg_tot_xsec( avg_tot_xs );
+    }
 
     for (; ev_count <= num_events && !interrupted; ++ev_count) {
 
