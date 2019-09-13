@@ -69,7 +69,7 @@ If the build is successful, then executing
 
 should produce the following output:
 ```
-MARLEY (Model of Argon Reaction Low Energy Yields) 1.1.1
+MARLEY (Model of Argon Reaction Low Energy Yields) 1.2.0
 Copyright (C) 2016-2019 Steven Gardiner
 License: GNU GPL version 3 <http://opensource.org/licenses/GPL-3.0>
 This is free software: you are free to change and redistribute it.
