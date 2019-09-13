@@ -5,7 +5,6 @@
 #include <thread>
 
 #include "marley/ChebyshevInterpolatingFunction.hh"
-#include "marley/ConfigurationFile.hh"
 #include "marley/Error.hh"
 #include "marley/Generator.hh"
 #include "marley/Logger.hh"
@@ -15,6 +14,11 @@
 #include "marley/OpticalModel.hh"
 #include "marley/StructureDatabase.hh"
 #include "marley/marley_utils.hh"
+
+namespace {
+  constexpr std::array<double, 3>
+    DEFAULT_INCIDENT_NEUTRINO_DIRECTION = { 0., 0., 1.};
+}
 
 // The default constructor uses the system time as the seed and a
 // default-constructured monoenergetic neutrion source. No reactions are
@@ -52,15 +56,6 @@ void marley::Generator::print_logo() {
       << "version " << marley_utils::MARLEY_VERSION << '\n';
     printed_logo = true;
   }
-}
-
-marley::Generator::Generator(marley::ConfigurationFile& cf) {
-  init(cf);
-}
-
-marley::Generator::Generator(const std::string& filename) {
-  marley::ConfigurationFile cf(filename);
-  init(cf);
 }
 
 marley::Event marley::Generator::create_event() {
@@ -101,8 +96,8 @@ void marley::Generator::normalize_E_pdf() {
   // Treat monoenergetic sources differently since they can cause
   // problems for the standard numerical integration check
   if (source_->get_Emin() == source_->get_Emax()) {
-    double pdf_test = E_pdf(source_->get_Emin());
-    if (pdf_test <= 0. || std::isnan(pdf_test)) {
+    norm_ = E_pdf(source_->get_Emin());
+    if (norm_ <= 0. || std::isnan(norm_)) {
       throw marley::Error(std::string("The total cross section")
         + " for all defined reactions is <= 0 or NaN for the neutrino"
         + " energy defined in a monoenergetic source. Please verify that"
@@ -131,64 +126,6 @@ void marley::Generator::normalize_E_pdf() {
         + " above the reaction threshold(s).");
     }
   }
-}
-
-void marley::Generator::init(marley::ConfigurationFile& cf) {
-
-  // Print the MARLEY logo to the logger stream(s) when the first
-  // Generator instance is initialized. If other instances are created,
-  // don't reprint the logo.
-  print_logo();
-
-  // Use the seed from the config file object to prepare the random number
-  // generator.
-  reseed(cf.get_seed());
-
-  // Transfer ownership of the structure database from the ConfigurationFile
-  // object to the Generator. If the ConfigurationFile object does not own a
-  // StructureDatabase object (for some strange reason), then create a
-  // default-constructed one.
-  auto& cf_sdb = cf.get_structure_db();
-  if (cf_sdb) structure_db_.reset(cf_sdb.release());
-  else {
-    structure_db_ = std::make_unique<marley::StructureDatabase>();
-    MARLEY_LOG_WARNING() << "A ConfigurationFile that does not"
-      << " own a StructureDatabase object was passed to"
-      << " marley::Generator::init()";
-  }
-
-  // Create the reactions. Count them for later reference.
-  size_t react_count = 0;
-  for (const std::string& filename : cf.get_reaction_filenames()) {
-    MARLEY_LOG_INFO() << "Loading reaction data from file " << filename;
-    reactions_.push_back(std::make_unique<marley::NuclearReaction>(filename,
-      *structure_db_));
-    MARLEY_LOG_INFO() << "Added reaction "
-      << reactions_.back()->get_description();
-    ++react_count;
-  }
-
-  // Transfer ownership of the neutrino source from the ConfigurationFile to
-  // the Generator.
-  auto& cf_source = cf.get_source();
-  if (cf_source) source_.reset(cf_source.release());
-  else throw marley::Error(std::string("Cannot finish creating")
-    + " the marley::Generator object. The ConfigurationFile passed to"
-    + " marley::Generator::init() does not own a NeutrinoSource object.");
-
-  // Initialize the vector of total cross section values to be all zeros and
-  // have as many entries as there are reactions available to this generator.
-  total_xs_values_.clear();
-  total_xs_values_.resize(react_count, 0.);
-
-  // Update the normalization factor for the reacting neutrino energy
-  // distribution
-  normalize_E_pdf();
-
-  // Initialize the incident neutrino direction settings using the direction
-  // given in the configuration file
-  std::array<double, 3> nu_dir = cf.get_neutrino_direction();
-  set_neutrino_direction(nu_dir);
 }
 
 // Sample a random double uniformly between min and max using the class
@@ -431,7 +368,7 @@ void marley::Generator::set_neutrino_direction(
 
   // Get the default incident neutrino direction
   std::array<double, 3> nu_default_dir = marley::RotationMatrix::normalize(
-    marley::ConfigurationFile::get_default_neutrino_direction());
+    DEFAULT_INCIDENT_NEUTRINO_DIRECTION);
 
   // Update the rotation matrix and the event rotation flag as needed
   if (dir_vec_ != nu_default_dir)
@@ -483,3 +420,29 @@ double marley::Generator::inverse_transform_sample(
   double x = (a + b) / 2.;
   return x;
 }
+
+double marley::Generator::flux_averaged_total_xs() const {
+  // If we've disabled weighting the neutrino energy PDF
+  // by the total cross section, just return zero
+  if ( !weight_flux_ ) return 0.;
+
+  double avg_total_xs = 0.;
+
+  // For a monoenergetic source, don't bother to do the full
+  // integral
+  double Emin = source_->get_Emin();
+  double Emax = source_->get_Emax();
+  if ( Emin == Emax ) {
+    avg_total_xs = norm_ / source_->pdf(Emin);
+  }
+  else {
+    double source_norm = marley_utils::num_integrate(
+      [this](double Ev) -> double { return this->source_->pdf(Ev); },
+      Emin, Emax);
+
+    // Use the precomputed integral of the reacting neutrino energy PDF
+    avg_total_xs = norm_ / source_norm;
+  }
+  return avg_total_xs;
+}
+

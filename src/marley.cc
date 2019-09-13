@@ -713,7 +713,7 @@ namespace {
 
   void print_help(std::string executable_name) {
     constexpr char help_message1[] = "Usage: ";
-    constexpr char help_message2[] = " [OPTION...] FILE\n"
+    constexpr char help_message2[] = " [OPTION...] CONFIG_FILE\n"
       "\n"
       "  -h, --help     Print this help message\n"
       "  -v, --version  Print version and exit\n";
@@ -1022,7 +1022,6 @@ int main(int argc, char* argv[]) {
 
     // Generate all of the requested events. End the loop early
     // if the user interrupts execution (e.g., via ctrl+C)
-    std::cout << '\n';
     auto event = std::make_unique<marley::Event>();
     long ev_count = 1 + num_old_events;
 
@@ -1033,6 +1032,14 @@ int main(int argc, char* argv[]) {
       num_events, num_old_events, start_time_point, output_files);
     std::cout.rdbuf( &my_status_inserter );
     std::cerr.rdbuf( &my_status_inserter );
+
+    // Compute the flux-averaged total cross section for all
+    // enabled reactions
+    double avg_tot_xs = gen->flux_averaged_total_xs(); // MeV^(-2)
+    constexpr double fm2_to_minus40_cm2 = 1e14;
+    MARLEY_LOG_INFO() << "Flux-averaged total cross section: "
+      << marley_utils::hbar_c2 * avg_tot_xs * fm2_to_minus40_cm2
+      << " * 10^(-40) cm^2";
 
     for (; ev_count <= num_events && !interrupted; ++ev_count) {
 

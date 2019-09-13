@@ -43,7 +43,7 @@ namespace marley_utils {
   // Dummy double value representing an unknown maximum PDF value. Signals to
   // marley::Generator::rejection_sample that it needs to search for the
   // maximum before doing the sampling.
-  constexpr double UNKNOWN_MAX = std::numeric_limits<double>::quiet_NaN();
+  constexpr double UNKNOWN_MAX = std::numeric_limits<double>::infinity();
 
   // Fermi coupling constant (MeV^(-2))
   constexpr double GF = 1.16637e-11;

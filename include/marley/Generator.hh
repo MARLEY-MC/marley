@@ -5,7 +5,6 @@
 #include <sstream>
 #include <vector>
 
-#include "marley/ConfigurationFile.hh"
 #include "marley/GammaStrengthFunctionModel.hh"
 #include "marley/NeutrinoSource.hh"
 #include "marley/NuclearReaction.hh"
@@ -17,25 +16,16 @@
 
 namespace marley {
 
+  class JSONConfig;
+
   /// @brief The MARLEY Event generator
   class Generator {
 
+    // Allow the JSONConfig class to access the private
+    // constructors of Generator
+    friend JSONConfig;
+
     public:
-
-      /// @brief Create a Generator using default settings
-      Generator();
-
-      /// @brief Create a Generator using default settings except for
-      /// a given initial seed
-      /// @param seed The initial seed to use for this Generator
-      Generator(uint_fast64_t seed);
-
-      /// @brief Create a Generator using a ConfigurationFile object
-      Generator(marley::ConfigurationFile& cf);
-
-      /// @brief Create a Generator using a configuration file
-      /// @param filename Name of the configuration file
-      Generator(const std::string& filename);
 
       /// @brief Create an Event using the NeutrinoSource, Reaction, and
       /// StructureDatabase objects owned by this Generator
@@ -173,11 +163,23 @@ namespace marley {
       /// what you are doing.
       void set_weight_flux(bool should_we_weight );
 
+
+      /// @brief Computes the flux-averaged total cross section for all
+      /// enabled neutrino reactions
+      /// @details If flux weighting is disabled (via a call to set_weight_flux())
+      /// then this function will return zero
+      /// @return Total cross section (MeV<sup> -2</sup>)
+      double flux_averaged_total_xs() const;
+
     private:
 
-      /// @brief Helper function that contains initialization code shared by
-      /// multiple constructors
-      void init(marley::ConfigurationFile& cf);
+      /// @brief Create a Generator using default settings
+      Generator();
+
+      /// @brief Create a Generator using default settings except for
+      /// a given initial seed
+      /// @param seed The initial seed to use for this Generator
+      Generator(uint_fast64_t seed);
 
       /// @brief Helper function that updates the normalization factor to
       /// use in E_pdf()
