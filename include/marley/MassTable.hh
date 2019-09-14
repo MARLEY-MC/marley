@@ -1,10 +1,10 @@
 #pragma once
-#include <functional>
 #include <unordered_map>
 #include <vector>
 
-#include "marley/marley_utils.hh"
 #include "marley/Error.hh"
+#include "marley/JSON.hh"
+#include "marley/marley_utils.hh"
 
 namespace marley {
 
@@ -108,6 +108,12 @@ namespace marley {
 
     private:
 
+      // Helper function that converts the input JSON array into
+      // (PDG code, mass) pairs and stores them in map_to_use
+      void assign_masses(const marley::JSON& obj_array,
+        const std::string& array_key,
+        std::unordered_map<int, double>& map_to_use);
+
       // Function used internally by the mass table. Returns an atomic mass and
       // loads the boolean value exp with true if it is an experimental value
       // from the lookup table (and therefore has units of micro-amu) or false
@@ -121,14 +127,17 @@ namespace marley {
 
       // Lookup table for particle masses. Keys are PDG particle
       // ID numbers, values are masses in micro-amu.
-      const std::unordered_map<int, double> particle_masses_;
+      std::unordered_map<int, double> particle_masses_;
 
       // Lookup table for atomic masses. Keys are PDG particle
       // ID numbers for the nuclei, values are masses in micro-amu.
-      const std::unordered_map<int, double> atomic_masses_;
+      std::unordered_map<int, double> atomic_masses_;
 
       // Factor to use when converting from micro-amu to MeV
       static constexpr double micro_amu_ = 0.000931494061; // MeV/uAMU
+
+      /// Name of the JSON data file containing the masses
+      static const std::string data_file_name_;
   };
 
 }

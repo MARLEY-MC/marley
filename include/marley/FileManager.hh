@@ -95,7 +95,9 @@ namespace marley {
       /// the base name of the file (no path). The return value should
       /// be true if no further iterations are needed (e.g., because
       /// a file matching a desired name was found) and false otherwise.
-      static void dir_iterate(const std::string& dir_name,
+      /// @return True if the iterations were stopped early (due to function
+      /// returning true) or false if they were completed
+      static bool dir_iterate(const std::string& dir_name,
         const std::function<bool(const std::string&, const std::string&)>& func);
 
       /// @brief By default, use this search path when looking for files

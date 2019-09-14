@@ -141,12 +141,10 @@ namespace {
 
     protected:
 
+      // Checks that a given file exists (and is readable)
       bool check_if_file_exists(const std::string& filename) {
-        static std::ifstream test_stream;
-        test_stream.open(filename);
-        bool file_exists = test_stream.good();
-        test_stream.close();
-        return file_exists;
+        std::ifstream test_stream( filename );
+        return  test_stream.good();
       }
 
       // Opens the output file for writing, making whatever preparations are
@@ -1147,8 +1145,9 @@ int main(int argc, char* argv[]) {
     auto& log = marley::Logger::Instance();
     log.newline();
     log.flush();
-    throw error;
+    //throw error;
   }
 
+  // We shouldn't ever get here unless there was an error
   return 1;
 }

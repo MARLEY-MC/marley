@@ -14,6 +14,19 @@ namespace {
   // Delimiter that separates directory names in search paths used by
   // marley::FileManager
   constexpr char SEARCH_PATH_DELIMITER = ':';
+
+  // A stat-based method for checking that a file exists. See
+  // https://tinyurl.com/stat-exist.
+  /// @todo Add check that it's a regular file (not a directory)
+  bool file_exists(const std::string& file_name) {
+    struct stat dummy;
+    return ( stat(file_name.c_str(), &dummy) == 0 );
+  }
+
+  //bool file_is_readable(const std::string& file_name) {
+  //  std::ifstream test_stream( file_name );
+  //  return test_stream.good();
+  //}
 }
 
 // Define the static default search path member variable. Its value will be set
@@ -26,7 +39,7 @@ marley::FileManager::FileManager() {
   char* mar = std::getenv("MARLEY");
   if ( !mar ) throw marley::Error("The MARLEY enviornment variable is not set."
     " Please set it (e.g., by sourcing the setup_marley.sh script) and"
-    "try again.");
+    " try again.");
 
   // If the MARLEY_SEARCH_PATH enviornment variable is set, use that
   // instead of the default search path
@@ -74,12 +87,17 @@ std::string marley::FileManager::find_file(const std::string& base_name,
 {
   std::string full_path_to_file;
 
+  // First check if we can find the file just using base_name. We can
+  // avoid the search if it's already accessible (e.g., because the
+  // full path was supplied instead of the base name)
+  if ( file_exists(base_name) ) return base_name;
+
   // Search the directories in the order listed. In each directory,
   // compare all regular file names to the given base name. If a match
   // is found, stop the search and store the result in full_path_to_file.
   // If no match is found, full_path_to_file will remain empty.
   for (const auto& dir : search_dirs) {
-    dir_iterate(dir,
+    bool file_found = dir_iterate(dir,
       [&full_path_to_file, &base_name](const std::string& other_full_path,
         const std::string& other_base_name) -> bool
       {
@@ -92,6 +110,8 @@ std::string marley::FileManager::find_file(const std::string& base_name,
         return false;
       }
     );
+
+    if ( file_found ) break;
   }
 
   return full_path_to_file;
@@ -133,7 +153,7 @@ std::vector<std::string> marley::FileManager::list_all_files(
 // If the function returns true, the iteration continues.
 // If it returns false, then the iteration will stop before the
 // next file is used.
-void marley::FileManager::dir_iterate(const std::string& dir_name,
+bool marley::FileManager::dir_iterate(const std::string& dir_name,
   const std::function<bool(const std::string&, const std::string&)>& func)
 {
   // Open the directory for reading
@@ -142,12 +162,12 @@ void marley::FileManager::dir_iterate(const std::string& dir_name,
   if ( !directory ) {
     MARLEY_LOG_WARNING() << "Could not read from the directory \""
       << dir_name << '\"';
-    return;
+    return false;
   }
 
   // Loop through the files in the directory one by one
-  bool stop_iterations = false;
   dirent* file = nullptr;
+  bool stop_iterations = false;
   while ( file = readdir(directory), !stop_iterations && file ) {
 
     // Get information about the current file using the stat() function
@@ -159,7 +179,7 @@ void marley::FileManager::dir_iterate(const std::string& dir_name,
       << full_file_name << '\"';
 
     // If we had a problem, complain and try the next file
-    if ( stat(base_name.c_str(), &file_stat) ) {
+    if ( stat(full_file_name.c_str(), &file_stat) ) {
       MARLEY_LOG_DEBUG() << "Couldn't stat the file \""
         << full_file_name << '\"';
       continue;
@@ -167,10 +187,13 @@ void marley::FileManager::dir_iterate(const std::string& dir_name,
 
     // If the file is a regular file (as opposed to, e.g., a subdirectory),
     // then call the function with it as an argument
-    if (file_stat.st_mode & S_IFREG) {
+    if ( file_stat.st_mode & S_IFREG ) {
       stop_iterations = func( full_file_name, base_name );
     }
+
   }
 
   closedir( directory );
+
+  return stop_iterations;
 }
