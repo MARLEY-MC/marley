@@ -24,9 +24,7 @@ namespace marley {
       /// FileManager
       static const FileManager& Instance();
 
-      /// @brief Calculate a theoretical
-      /// <a href="https://en.wikipedia.org/wiki/Mass_excess">mass excess</a>
-      /// for a nucleus using the liquid drop model
+      /// @brief
       /// @param Z Atomic number
       /// @param A Mass number
       /// @return Mass excess (MeV)

@@ -13,6 +13,7 @@
 #include <limits>
 #include <random>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 
@@ -304,6 +305,21 @@ namespace marley_utils {
     return trim_left_inplace(trim_right_inplace(s,delimiters), delimiters);
   }
 
+  // Split a string into substrings separated by a single-character
+  // delimiter. Return a container loaded with the resulting array of strings.
+  // Based on http://www.martinbroadhurst.com/how-to-split-a-string-in-c.html
+  template <class Container> Container split_string(const std::string& str,
+    char delim = ' ')
+  {
+    Container con;
+    std::stringstream ss(str);
+    std::string token;
+    while ( std::getline(ss, token, delim) ) {
+      con.push_back( token );
+    }
+    return con;
+  }
+
   // Function that takes a number of bytes and returns a string
   // representing the amount of memory in more readable units
   std::string num_bytes_to_string(double bytes, unsigned precision = 3);
@@ -407,11 +423,7 @@ namespace marley_utils {
     { 16, 0},
     { 22, 0},
     { 2112, 0},
-    { 2212, 1},
-    //{ 1000010020, 1}, // bare deuteron
-    //{ 1000010030, 1}, // bare triton
-    //{ 1000020030, 2}, // bare helion
-    //{ 1000020040, 2}, // bare alpha
+    { 2212, 1}
   };
 
   // Looks up the electric charge of a particle based on its PDG particle ID
