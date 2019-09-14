@@ -306,18 +306,18 @@ namespace marley_utils {
   }
 
   // Split a string into substrings separated by a single-character
-  // delimiter. Return a container loaded with the resulting array of strings.
+  // delimiter. Return a vector loaded with the resulting array of strings.
   // Based on http://www.martinbroadhurst.com/how-to-split-a-string-in-c.html
-  template <class Container> Container split_string(const std::string& str,
+  inline std::vector<std::string> split_string(const std::string& str,
     char delim = ' ')
   {
-    Container con;
-    std::stringstream ss(str);
+    std::vector<std::string> vec;
+    std::stringstream ss( str );
     std::string token;
     while ( std::getline(ss, token, delim) ) {
-      con.push_back( token );
+      vec.push_back( token );
     }
-    return con;
+    return vec;
   }
 
   // Function that takes a number of bytes and returns a string
