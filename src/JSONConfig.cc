@@ -1,5 +1,6 @@
 // standard library includes
 #include <chrono>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -7,6 +8,7 @@
 // MARLEY includes
 #include "marley/marley_utils.hh"
 #include "marley/Error.hh"
+#include "marley/FileManager.hh"
 #include "marley/JSONConfig.hh"
 #include "marley/NeutrinoSource.hh"
 #include "marley/NuclearReaction.hh"
@@ -166,6 +168,8 @@ void marley::JSONConfig::prepare_direction(marley::Generator& gen) const {
 
 void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
 
+  const auto& fm = marley::FileManager::Instance();
+
   if (json_.has_key("reactions")) {
 
     const marley::JSON& rs = json_.at("reactions");
@@ -179,13 +183,23 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
 
           std::string filename = r.to_string();
 
-          MARLEY_LOG_INFO() << "Loading reaction data from file " << filename;
-          auto nr = std::make_unique<marley::NuclearReaction>(filename,
+          // Find the reaction data file using the MARLEY search path
+          std::string full_file_name = fm.find_file( filename );
+          if ( full_file_name.empty() ) {
+            throw marley::Error("Could not locate the reaction data file "
+              + filename + ". Please check that the file name is spelled"
+              " correctly and that the file is in a folder"
+              " on the MARLEY search path.");
+          }
+
+          MARLEY_LOG_INFO() << "Loading reaction data from file "
+            << full_file_name;
+          auto nr = std::make_unique<marley::NuclearReaction>(full_file_name,
             gen.get_structure_db());
 
           MARLEY_LOG_INFO() << "Added reaction " << nr->get_description();
 
-          gen.add_reaction(std::move(nr));
+          gen.add_reaction( std::move(nr) );
         }
 
         return;
@@ -201,8 +215,41 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
 
 void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
 {
-  if (!json_.has_key("structure")) return;
-  const marley::JSON& st = json_.at("structure");
+  // Copy of the structure portion of the JSON configuration.
+  // If the user didn't provide one, we'll build the default
+  // one ourselves.
+  marley::JSON st;
+
+  // If the "structure" key is not present, default to
+  // loading data from all files in ${MARLEY}/data/structure
+  // (not including files in subdirectories). We don't have
+  // to bother to exclude README.md or any other file
+  // with the wrong format. All such files will be ignored.
+  if ( !json_.has_key("structure") ) {
+
+    // Construct the directory name ${MARLEY}/data/structure
+    char* mar = std::getenv("MARLEY");
+    if ( !mar ) throw marley::Error("The MARLEY environment"
+      " variable was not set in call to marley::JSONConfig::"
+      "prepare_structure(). Please set it and try again.");
+    std::string structure_dir( mar );
+    structure_dir += "/data/structure";
+
+    // Get a vector containing all the file names in that directory
+    // (each one with its full path included)
+    const auto& fm = marley::FileManager::Instance();
+    auto file_vec = fm.list_all_files( structure_dir );
+
+    MARLEY_LOG_INFO() << "Loading default nuclear structure data from "
+      << structure_dir;
+
+    // Load these file names into our temporary JSON object before continuing
+    st = marley::JSON::array();
+    for (const std::string& file_name : file_vec) st.append( file_name );
+  }
+  // If the user supplied a nuclear structure data configuration, then just use
+  // that
+  else st = json_.at("structure");
 
   if (!st.is_array()) return;
   auto structure = st.array_range();
@@ -239,6 +286,7 @@ void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
     // Load data for all nuclides in the structure data file.
     auto& sdb = gen.get_structure_db();
 
+    int file_nuclide_count = 0;
     if ( format == marley::DecayScheme::FileFormat::talys ) {
       // TALYS format data
       std::set<int> nucleus_PDGs = sdb.find_all_nuclides(filename);
@@ -247,11 +295,12 @@ void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
         int Z = marley_utils::get_particle_Z(pdg);
         int A = marley_utils::get_particle_A(pdg);
 
-        MARLEY_LOG_INFO() << "Loading nuclear structure data for "
+        MARLEY_LOG_DEBUG() << "Loading nuclear structure data for "
           << A << marley_utils::element_symbols.at(Z) << " from file "
           << filename;
 
         sdb.emplace_decay_scheme(pdg, filename);
+        ++file_nuclide_count;
       }
     }
     else if ( format == marley::DecayScheme::FileFormat::native ) {
@@ -271,15 +320,21 @@ void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
         // Load each one into the structure database
         int A = temp_ds->A();
         int Z = temp_ds->Z();
-        MARLEY_LOG_INFO() << "Loading nuclear structure data for "
+        MARLEY_LOG_DEBUG() << "Loading nuclear structure data for "
           << A << marley_utils::element_symbols.at(Z) << " from file "
           << filename;
         int pdg = marley_utils::get_nucleus_pid(Z, A);
         sdb.add_decay_scheme(pdg, temp_ds);
+        ++file_nuclide_count;
         if ( in_file.eof() ) break;
         temp_ds.reset( new marley::DecayScheme(0, 0) );
       }
       log.enable(true);
+    }
+
+    if ( file_nuclide_count > 0 ) {
+      MARLEY_LOG_INFO() << "Loaded structure data for " << file_nuclide_count
+        << " nuclides from " << filename;
     }
   }
 }

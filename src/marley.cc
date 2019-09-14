@@ -1080,6 +1080,12 @@ int main(int argc, char* argv[]) {
       file->write_flux_avg_tot_xsec( avg_tot_xs );
     }
 
+    // Update the start time to just before we begin the event loop.
+    // This will help us get the best estimate for the remaining time
+    // that the program will run.
+    start_time_point = std::chrono::system_clock::now();
+    start_time = std::chrono::system_clock::to_time_t( start_time_point );
+
     for (; ev_count <= num_events && !interrupted; ++ev_count) {
 
       // Create an event using the generator object
