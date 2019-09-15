@@ -104,6 +104,23 @@ Please ensure that the gsl-config executable is on your PATH and try again.
       override CXXFLAGS += -DUSE_ROOT
       MAYBE_MARSUM = marsum
       ROOT_CXXFLAGS := $(shell $(ROOTCONFIG) --cflags)
+
+      # If ROOT was built with C++17 support, switch to building
+      # MARLEY with -std=c++17 as well. Otherwise we're likely
+      # to hit problems with std::string_view in ROOT headers, etc.
+      # Later -std options take precedence, so just tack on
+      # a new one to keep things simple.
+      ifneq (, $(findstring c++1z, $(ROOT_CXXFLAGS)))
+        override CXXFLAGS += -std=c++1z
+      endif
+      ifneq (, $(findstring c++17, $(ROOT_CXXFLAGS)))
+        override CXXFLAGS += -std=c++17
+      endif
+      # Do the same thing for C++2a
+      ifneq (, $(findstring c++2a, $(ROOT_CXXFLAGS)))
+        override CXXFLAGS += -std=c++2a
+      endif
+
       ROOT_LDFLAGS := $(shell $(ROOTCONFIG) --ldflags)
       ROOT_LIBDIR := $(shell $(ROOTCONFIG) --libdir)
       ROOT_LDFLAGS += -L$(ROOT_LIBDIR) -lCore -lRIO -lHist -lTree
