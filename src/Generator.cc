@@ -101,6 +101,12 @@ void marley::Generator::normalize_E_pdf() {
   // Treat monoenergetic sources differently since they can cause
   // problems for the standard numerical integration check
   if (source_->get_Emin() == source_->get_Emax()) {
+    // Set the normalization factor back to one. It's used
+    // in the call to E_pdf() below, so we need to do this before
+    // we assign it a different value.
+    norm_ = 1.0; //
+    // Now norm_ is assigned to be the product of the total cross section times
+    // the source PDF at energy Emin
     norm_ = E_pdf(source_->get_Emin());
     if (norm_ <= 0. || std::isnan(norm_)) {
       throw marley::Error(std::string("The total cross section")
