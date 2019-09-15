@@ -13,6 +13,7 @@
 #include "marley/Parity.hh"
 #include "marley/RotationMatrix.hh"
 #include "marley/StructureDatabase.hh"
+#include "marley/marley_utils.hh"
 
 namespace marley {
 
@@ -246,6 +247,27 @@ namespace marley {
       /// @details Don't change this unless you understand what you
       /// are doing!
       bool weight_flux_ = true;
+
+      /// @brief Current estimate of the maximum value of E_pdf(),
+      /// the probability density used for sampling reacting neutrino
+      /// energies.
+      /// @details This variable is used to double-check the validity
+      /// of the estimated maximum during rejection sampling
+      double E_pdf_max_;
+
+      /// @brief When E_pdf(), the probability density used for
+      /// sampling reacting neutrino energies, is changed or
+      /// initialized for the first time, E_pdf_max_ is set
+      /// to this value.
+      double E_PDF_MAX_DEFAULT_ = marley_utils::UNKNOWN_MAX;
+
+      /// @brief Sets the default value of E_pdf_max_
+      /// @details This function is used only in cases where the user
+      /// has provided their own estimate of the PDF maximum (likely
+      /// because automatic estimation failed)
+      inline void set_default_E_pdf_max( double def_max ) {
+        E_PDF_MAX_DEFAULT_ = def_max;
+      }
   };
 
   // Inline function definitions

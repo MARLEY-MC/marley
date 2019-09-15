@@ -93,6 +93,11 @@ std::string marley::Generator::get_state_string() const {
 
 void marley::Generator::normalize_E_pdf() {
 
+  // This function is called whenever the reacting neutrino energy PDF changes,
+  // so reset the estimated maximum PDF value to its default. We will update
+  // this during rejection sampling.
+  E_pdf_max_ = E_PDF_MAX_DEFAULT_;
+
   // Treat monoenergetic sources differently since they can cause
   // problems for the standard numerical integration check
   if (source_->get_Emin() == source_->get_Emax()) {
@@ -210,8 +215,16 @@ double marley::Generator::rejection_sample(std::function<double(double)> f,
     y = uniform_random_double(0, fmax, true);
 
     val = f(x);
-    if ( val > fmax ) MARLEY_LOG_WARNING() << "MAX PROBLEM: "
-      << " fmax = " << fmax << ", val = " << val;
+    if ( val > fmax ) {
+
+      MARLEY_LOG_WARNING() << "PDF value f(x) = "
+      << val << " at x = " << x << " exceeded the estimated maximum "
+      << " fmax = " << fmax << " during rejection sampling.";
+
+      fmax = val * safety_factor;
+      MARLEY_LOG_WARNING() << "A new estimate fmax = " << val * safety_factor
+        << " will now be adopted.";
+    }
   }
   // Keep sampling until you get a y value less than f(x)
   // (the probability density function evaluated at the sampled value of x)
@@ -252,17 +265,50 @@ double marley::Generator::E_pdf(double E) {
 }
 
 marley::Reaction& marley::Generator::sample_reaction(double& E) {
-  if (reactions_.empty()) throw marley::Error(std::string("Cannot sample")
-    + " a reaction in marley::Generator::sample_reaction(). The vector of"
-    + " marley::Reaction objects owned by this generator is empty.");
+  if ( reactions_.empty() ) throw marley::Error("Cannot sample"
+    " a reaction in marley::Generator::sample_reaction(). The vector of"
+    " marley::Reaction objects owned by this generator is empty.");
 
-  static double max = marley_utils::UNKNOWN_MAX;
+  // Store the "old" value of E_pdf_max_, i.e., the one we had before calling
+  // rejection_sample(). This will be used to check for problems.
+  double old_max = E_pdf_max_;
 
   // TODO: protect against source_ changing E_min or E_max after you compute
   // the normalization factor norm_ in marley::Generator::init()
   E = rejection_sample([this](double E_nu)
     -> double { return this->E_pdf(E_nu); }, source_->get_Emin(),
-    source_->get_Emax(), max);
+    source_->get_Emax(), E_pdf_max_);
+
+  // If the value of max changed after the call to rejection_sample() and the
+  // old value wasn't UNKNOWN_MAX, then the rejection sampling routine must
+  // have encountered a PDF value that was larger than our estimated maximum.
+  // Alert the user about this and advise them to change the configuration
+  // appropriately to avoid a biased reacting neutrino energy distribution.
+  static bool issued_long_error_message = false;
+  if ( old_max != marley_utils::UNKNOWN_MAX
+    && old_max != E_pdf_max_ )
+  {
+    if ( !issued_long_error_message ) {
+      MARLEY_LOG_ERROR() << "Estimation of the maximum PDF value failed when"
+        << " using a rejection method to sample reacting neutrino energies.\n"
+        << "This may occur when, e.g., an incident neutrino flux"
+        << " is used that includes multiple sharp peaks.\n"
+        << "To avoid biasing the energy distribution, please rerun the simulation"
+        << " after adding the following line to the MARLEY JSON configuration"
+        << " file:\n"
+        << "    energy_pdf_max: " << E_pdf_max_ << ",\n"
+        << "If this error message persists after raising energy_pdf_max to a"
+        << " relatively high value, please contact the MARLEY developers for"
+        << " troubleshooting help.";
+      issued_long_error_message = true;
+    }
+    else {
+      MARLEY_LOG_ERROR() << "The maximum PDF value for sampling reacting neutrino"
+       << " energies was exceeded again. The new estimated maximum is\n"
+       << "    energy_pdf_max: " << E_pdf_max_;
+    }
+  }
+
   // The total cross section values have already been updated by the final call
   // to E_pdg during rejection sampling, so we can now sample a reaction type
   // using our discrete distribution object.
@@ -283,13 +329,13 @@ void marley::Generator::set_source(
   std::unique_ptr<marley::NeutrinoSource> source)
 {
   // If we're passed a nullptr, then don't bother to do anything
-  if (source) {
+  if ( source ) {
     // Transfer ownership of the neutrino source the generator, leaving
     // the std::unique_ptr passed to this function null afterwards.
-    source_.reset(source.release());
+    source_.reset( source.release() );
 
     // Don't bother to renormalize if there are no reactions defined yet
-    if (!reactions_.empty()) {
+    if ( !reactions_.empty() ) {
       // Update the neutrino energy probability density function based on the
       // new source spectrum
       normalize_E_pdf();
@@ -300,7 +346,7 @@ void marley::Generator::set_source(
 void marley::Generator::add_reaction(std::unique_ptr<marley::Reaction> reaction)
 {
   // If we're passed a nullptr, then don't bother to do anything
-  if (reaction) {
+  if ( reaction ) {
 
     // Transfer ownership to a new unique_ptr in the reactions vector, leaving
     // the original empty

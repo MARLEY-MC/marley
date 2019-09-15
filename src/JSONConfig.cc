@@ -378,6 +378,18 @@ InterpMethod marley::JSONConfig::get_interpolation_method(
 //------------------------------------------------------------------------------
 void marley::JSONConfig::prepare_neutrino_source(marley::Generator& gen) const
 {
+  // Check whether the user provided their own estimate of the source PDF
+  // maximum value. If they did, adopt that before building the source.
+  // This is useful when automatic searches for the maximum don't work.
+  // The user can put in a value manually to get rejection sampling to work.
+  if ( json_.has_key("energy_pdf_max" ) ) {
+    bool ok;
+    const marley::JSON& max_spec = json_.at("energy_pdf_max");
+    double user_max = max_spec.to_double( ok );
+    if ( !ok ) handle_json_error("energy_pdf_max", max_spec);
+    else gen.set_default_E_pdf_max( user_max );
+  }
+
   // Check whether the JSON configuration includes a neutrino source
   // specification
   if (!json_.has_key("source")) return;
