@@ -71,7 +71,9 @@ marley::BetaFitNeutrinoSource::BetaFitNeutrinoSource(int particle_id,
 
 double marley::BetaFitNeutrinoSource::pdf(double E) {
   if (E < Emin_ || E > Emax_) return 0.;
-  else return C_ * std::pow(E / Emean_, beta_ - 1)
+  // Guard against NaNs in the std::pow factor below
+  else if ( E == 0. && beta_ < 1. ) return 0.;
+  else return C_ * std::pow(E / Emean_, beta_ - 1.)
     * std::exp(-beta_ * E / Emean_);
 }
 
