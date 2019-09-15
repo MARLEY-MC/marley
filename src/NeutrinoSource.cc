@@ -58,6 +58,13 @@ marley::BetaFitNeutrinoSource::BetaFitNeutrinoSource(int particle_id,
   : NeutrinoSource(particle_id), Emin_(Emin), Emax_(Emax), Emean_(Emean),
   beta_(beta), C_(1.)
 {
+  if ( beta_ < 1. ) {
+    throw marley::Error("For a \"beta-fit\" neutrino source, a value of"
+      " the fit parameter beta < 1 is unphysical. It causes the neutrino energy"
+      " distribution to diverge near zero. Please choose another value and"
+      " try again.");
+  }
+
   // Normalize the source spectrum (not strictly necessary, but having the
   // spectrum approximately normalized makes the default rejection sampling
   // tolerance of 1e-8 reliable for finding the maximum of the spectrum)
