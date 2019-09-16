@@ -496,6 +496,20 @@ double marley::NuclearReaction::summed_diff_xs(int pdg_a, double KEa,
   return summed_xs_helper(pdg_a, KEa, cos_theta_c_cm, nullptr, true);
 }
 
+// Compute the differential cross section d\sigma / d\cos\theta_c^{CM} for a
+// transition to a particular final nuclear level. This is done in units of
+// MeV^(-2) using the center of momentum frame.
+double marley::NuclearReaction::diff_xs(const marley::MatrixElement& mat_el,
+  double KEa, double cos_theta_c_cm)
+{
+  // Check that the scattering cosine is within the physically meaningful range
+  if ( std::abs(cos_theta_c_cm) > 1. ) return 0.;
+  double beta_c_cm;
+  double xsec = total_xs(mat_el, KEa, beta_c_cm, true);
+  xsec *= mat_el.cos_theta_pdf(cos_theta_c_cm, beta_c_cm);
+  return xsec;
+}
+
 // Helper function for total_xs and summed_diff_xs()
 double marley::NuclearReaction::summed_xs_helper(int pdg_a, double KEa,
   double cos_theta_c_cm, std::vector<double>* level_xsecs, bool differential)
@@ -505,6 +519,11 @@ double marley::NuclearReaction::summed_xs_helper(int pdg_a, double KEa,
   // for the given projectile.
   /// @todo Consider whether you should use an exception if pdg_a != pdg_a_
   if (pdg_a != pdg_a_) return 0.;
+
+  // If we're evaluating a differential cross section, check that the
+  // scattering cosine is within the physically meaningful range. If it's
+  // not, then just return 0.
+  if ( differential && std::abs(cos_theta_c_cm) > 1. ) return 0.;
 
   // If we've been passed a vector to load with the partial cross sections
   // to each nuclear level, then clear it before storing them

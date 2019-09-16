@@ -58,9 +58,22 @@ namespace marley {
       /// all kinematically-allowed final nuclear levels
       /// @param pdg_a PDG code for the projectile
       /// @param KEa Lab-frame kinetic energy (MeV) of the projectile
-      /// @return %Reaction total cross section (MeV<sup> -2</sup>)
+      /// @return Reaction total cross section (MeV<sup> -2</sup>)
       /// @note This function returns 0. if pdg_a != pdg_a_.
       virtual double total_xs(int pdg_a, double KEa) override;
+
+
+      /// @brief Differential cross section
+      /// @f$d\sigma/d\cos\theta_{c}^{\mathrm{CM}}@f$
+      /// (MeV<sup> -2</sup>) evaluated in the center-of-momentum frame
+      /// for a transition to a particular final nuclear level
+      /// @param mat_el MatrixElement object describing the transition to the
+      /// final nuclear level
+      /// @param KEa Lab-frame projectile kinetic energy (MeV)
+      /// @param cos_theta_c_cm Ejectile scattering cosine as measured
+      /// in the CM frame
+      double diff_xs(const marley::MatrixElement& mat_el, double KEa,
+        double cos_theta_c_cm);
 
       /// @brief Differential cross section
       /// @f$d\sigma/d\cos\theta_{c}^{\mathrm{CM}}@f$
