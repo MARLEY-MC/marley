@@ -26,7 +26,30 @@ namespace marley {
 
       /// @brief Get the excitation energy (MeV) of the final-state nuclear
       /// level accessed by the matrix element
-      inline double level_energy() const { return level_energy_; }
+      inline double level_energy() const {
+        // If this matrix element accesses a discrete final nuclear level,
+        // then return that level's excitation energy
+        if ( final_level_ ) return final_level_->energy();
+        // Otherwise, we're in the ubound continuum, and we can just
+        // use the tabulated value from the reaction matrix element data file
+        else return level_energy_;
+      }
+
+      /// @brief Get the excitation energy (MeV) listed for this level
+      /// in the reaction matrix element data file
+      /// @details This value may differ from that returned by level_energy()
+      /// for discrete nuclear levels. When final_level_ is not nullptr,
+      /// level_energy() returns the excitation energy owned by final_level_,
+      /// while tabulated_level_energy() returns the value of the level_energy_
+      /// member variable. The latter is initialized from the reaction data
+      /// file and may not match the discrete level data. To achieve consistency
+      /// between the two sets of level energies, MARLEY overrides the
+      /// values tabulated in the reaction data files with their closest
+      /// matching discrete level energies. The level_energy_ member
+      /// variable retains the reaction dataset value for validation purposes.
+      /// For any physics calculation in MARLEY, level_energy() should be
+      /// used instead of tabulated_level_energy().
+      inline double tabulated_level_energy() const { return level_energy_; }
 
       /// @brief Get the numerical value (dimensionless) of the matrix element
       inline double strength() const { return strength_; }

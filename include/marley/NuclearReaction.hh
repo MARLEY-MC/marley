@@ -75,20 +75,16 @@ namespace marley {
 
       /// @brief Total cross section (MeV<sup> -2</sup>) for a given final
       /// nuclear level
-      /// @param E_level Residue excitation energy (MeV)
+      /// @param me MatrixElement object describing the transition to the
+      /// final nuclear level
       /// @param KEa Lab-frame projectile kinetic energy (MeV)
-      /// @param matrix_element Nuclear matrix element for a transition
-      /// to the level of interest
-      /// @param tr_type Enum value indicating what kind of nuclear transition
-      /// (e.g., Fermi or Gamow-Teller) is represented by the matrix element
       /// @param[out] beta_c_cm After this function is called, this variable
       /// will contain the (dimensionless) speed of the ejectile as measured
       /// in the center of momentum frame
       /// @param check_max_E_level Whether to check the reaction threshold
       /// via a call to max_level_energy(). If this argument is set to false,
       /// then the check will be skipped.
-      virtual double total_xs(double E_level, double KEa,
-        double matrix_element, marley::MatrixElement::TransitionType tr_type,
+      virtual double total_xs(const marley::MatrixElement& me, double KEa,
         double& beta_c_cm, bool check_max_E_level = true) const;
 
       /// Computes an approximate correction factor to account for
@@ -112,6 +108,10 @@ namespace marley {
       /// @f$ \theta_W @f$ is the weak mixing angle.
       double weak_nuclear_charge() const;
 
+      /// Allows access to the owned vector of MatrixElement objects
+      inline const std::vector<marley::MatrixElement>& matrix_elements() const
+        { return matrix_elements_; }
+
     private:
 
       virtual marley::Event make_event_object(double KEa,
@@ -133,6 +133,11 @@ namespace marley {
       /// @param pdg_a PDG code for the projectile
       /// @param KEa Lab-frame projectile kinetic energy (MeV)
       /// @param cos_theta_c_cm CM frame scattering cosine for the ejectile
+      /// @param level_xsecs If this pointer is not nullptr, then
+      /// the std::vector<double> that it points to will be cleared
+      /// and loaded with the partial cross sections to each individual nuclear
+      /// level included in the sum. This feature is helpful when computing
+      /// weights for sampling a nuclear transition in create_event().
       /// @param differential Whether the total cross section (false)
       /// or the differential cross section (true,
       /// @f$d\sigma/d\cos\theta_{c}^{\mathrm{CM}}@f$) should
@@ -140,7 +145,7 @@ namespace marley {
       /// by this function
       /// @return The requested cross section (MeV<sup> -2</sup>)
       double summed_xs_helper(int pdg_a, double KEa, double cos_theta_c_cm,
-        bool differential);
+        std::vector<double>* level_xsecs, bool differential);
 
       double md_gs_; ///< Ground state mass (MeV) of the residue
 

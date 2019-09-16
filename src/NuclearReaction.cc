@@ -190,21 +190,27 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
   }
 
   // Cycle through each of the level energies given in the reaction dataset.
-  for (auto& mat_el : matrix_elements_)
+  for ( auto& mat_el : matrix_elements_ )
   {
-    double en = mat_el.level_energy();
+    // Get the excitation energy for the level accessed by the transition
+    // represented by this matrix element. Use the value from the reaction
+    // data file rather than that owned by any previous discrete level
+    // assignment. We'll use that value because we need to (re-)assign
+    // levels to each matrix element using the DecayScheme ds.
+    double en = mat_el.tabulated_level_energy();
+
     // If the level is above the fragment emission threshold, assign it a null
     // level pointer. Such levels will be handled by a fragment evaporation
     // routine and therefore do not need pointers to level objects describing
     // their de-excitation gammas.
-    if (en > unbound_threshold) {
+    if ( en > unbound_threshold ) {
       mat_el.set_level(nullptr);
       continue;
     }
 
     // For each energy, find a pointer to the level with the closest energy
     // owned by the decay scheme object.
-    marley::Level* plevel = ds->get_pointer_to_closest_level(en);
+    marley::Level* plevel = ds->get_pointer_to_closest_level( en );
     MARLEY_LOG_DEBUG() << "reaction level at " << en
       << " MeV was matched to the decay scheme level at "
       << plevel->energy() << " MeV";
@@ -216,12 +222,12 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
     const auto found = std::find_if(begin, end,
       [plevel](const marley::MatrixElement& me) -> bool
       { return plevel == me.level(); });
-    if (found != end)
+    if ( found != end )
     {
       // One of the matrix elements already uses a level pointer equal to plevel
-      throw marley::Error(std::string("Reaction dataset gives two")
-        + " level energies that refer to the same DecayScheme level at "
-        + std::to_string(plevel->energy()) + " MeV");
+      throw marley::Error("Reaction dataset gives two"
+        " level energies that refer to the same DecayScheme level at "
+        + std::to_string( plevel->energy() ) + " MeV");
     }
 
     /// @todo Add check to see if the energy of the chosen level is very
@@ -229,7 +235,7 @@ void marley::NuclearReaction::set_decay_scheme(marley::DecayScheme* ds) {
     /// level matchup is likely incorrect.
 
     // Add the level pointer to the list
-    mat_el.set_level(plevel);
+    mat_el.set_level( plevel );
   }
 }
 
@@ -315,11 +321,8 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 
   /// @todo Add more error checks to NuclearReaction::create_event as necessary
 
-  // Calculate the maximum value of E_level that is
-  // kinematically allowed
-  double max_E_level = max_level_energy( KEa );
-
-  // Create an empty vector of sampling weights
+  // Create an empty vector of sampling weights (partial total cross
+  // sections to each kinematically accessible final level)
   std::vector<double> level_weights;
 
   // Create a discrete distribution object for level sampling.
@@ -328,86 +331,40 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   // levels, so we won't worry about its default behavior.
   static std::discrete_distribution<size_t> ldist;
 
-  // The level pointers owned by the matrix elements are ordered by increasing
-  // energy (this is currently enforced by the reaction data format and is
-  // checked during parsing). Iterate over the levels, assigning the total cross
-  // section for each level as its weight until you reach the end of
-  // the matrix elements or a level that is kinematically forbidden. If the
-  // matrix element B(F) + B(GT) for a level vanishes, skip computing the total
-  // cross section and assign a weight of zero for efficiency.
-  bool at_least_one_nonzero_matrix_el = false;
+  // Compute the total cross section for a transition to each individual nuclear
+  // level, and save the results in the level_weights vector (which will be
+  // cleared by summed_xs_helper() before being loaded with the cross sections).
+  // The summed_xs_helper() method can also be used for differential
+  // (d\sigma/d\cos\theta_c^{CM}) cross sections, so supply a dummy cos_theta_c_cm
+  // value and request total cross sections by setting the last argument to false.
+  double dummy = 0.;
+  double sum_of_xsecs = summed_xs_helper(pdg_a, KEa, dummy,
+    &level_weights, false);
 
-  for (const auto& mat_el : matrix_elements_) {
-
-    double level_energy;
-
-    // Get the excitation energy for the current level
-    if ( mat_el.level() != nullptr ) {
-      level_energy = mat_el.level()->energy();
-    }
-    else {
-      // Level is unbound, so just use the energy given in the reaction dataset
-      // rather than trying to find its DecayScheme version
-      level_energy = mat_el.level_energy();
-    }
-
-    // Exit the loop early if you reach a level with an energy that's too high
-    if (level_energy > max_E_level) break;
-
-    // Check whether the matrix element (B(F) + B(GT)) is nonvanishing for the
-    // current level. If it is, just set the weight equal to zero rather than
-    // calling total_xs. This will avoid unnecessary numerical integrations.
-    double strength = mat_el.strength();
-    auto tr_type = mat_el.type();
-    double xs;
-
-    if ( strength == 0. ) xs = 0.;
-    else {
-      // If the matrix element is nonzero, assign a weight to this level equal
-      // to the total reaction cross section. Note that
-      // std::discrete_distribution automatically normalizes the weights, so we
-      // don't have to do that ourselves. We've also already checked that
-      // the level excitation energy doesn't exceed the maximum value
-      // allowed by kinematics, so we avoid an extra check of that by
-      // setting the last argument below to false.
-      double dummy_beta_c_cm;
-      xs = total_xs(level_energy, KEa, strength, tr_type,
-        dummy_beta_c_cm, false);
-
-      if ( std::isnan(xs) ) {
-        MARLEY_LOG_WARNING() << "Partial cross section for reaction "
-          << description_ << " gave NaN result.";
-        MARLEY_LOG_DEBUG() << "Parameters were level energy = " << level_energy
-          << " MeV, projectile kinetic energy = " << KEa
-          << " MeV, and matrix element = " << strength;
-        MARLEY_LOG_DEBUG() << "The partial cross section to this level"
-          << " will be set to zero for this event.";
-        xs = 0.;
-      }
-      if ( !at_least_one_nonzero_matrix_el && xs != 0 ) {
-        at_least_one_nonzero_matrix_el = true;
-      }
-    }
-    level_weights.push_back(xs);
-  }
+  // Note that the elements in matrix_elements_ are given in order of
+  // increasing excitation energy (this is currently enforced by the reaction
+  // data format and is checked during parsing). This ensures that we can
+  // sample a matrix element index from level_weights (which is populated in
+  // the same order by summed_xs_helper()) and have it refer to the correct
+  // object.
 
   // Complain if none of the levels we have data for are kinematically allowed
-  if (level_weights.empty()) {
-    throw marley::Error(std::string("Could not create this event. The ")
-      + "DecayScheme object associated with this reaction "
-      + "does not contain data for any kinematically accessible levels "
-      + "for a projectile kinetic energy of " + std::to_string(KEa)
-      + " MeV (max E_level = " + std::to_string(max_E_level)
-      + " MeV).");
+  if ( level_weights.empty() ) {
+    throw marley::Error("Could not create this event. The DecayScheme object"
+      " associated with this reaction does not contain data for any"
+      " kinematically accessible levels for a projectile kinetic energy of "
+      + std::to_string(KEa) + " MeV (max E_level = "
+      + std::to_string( max_level_energy(KEa) ) + " MeV).");
   }
 
-  // Complain if none of the levels have nonzero weight (this means that
-  // all kinematically allowed levels have a vanishing matrix element)
-  if (!at_least_one_nonzero_matrix_el) {
-    throw marley::Error(std::string("Could not create this event. All ")
-      + "kinematically accessible levels for a projectile kinetic energy of "
+  // Complain if the total cross section (the sum of all partial level cross
+  // sections) is zero or negative (the latter is just to cover all possibilities).
+  if ( sum_of_xsecs <= 0. ) {
+    throw marley::Error("Could not create this event. All kinematically"
+      " accessible levels for a projectile kinetic energy of "
       + std::to_string(KEa) + " MeV (max E_level = "
-      + std::to_string(max_E_level) + " MeV) have vanishing matrix elements.");
+      + std::to_string( max_level_energy(KEa) )
+      + " MeV) have vanishing matrix elements.");
   }
 
   // Create a list of parameters used to supply the weights to our discrete
@@ -419,21 +376,17 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   // current set of weights
   size_t me_index = gen.sample_from_distribution(ldist, params);
 
-  const auto& sampled_matrix_el = matrix_elements_.at(me_index);
+  const auto& sampled_matrix_el = matrix_elements_.at( me_index );
 
-  // Get a pointer to the selected level
+  // Get a pointer to the selected level (this will be nullptr
+  // if the transition is to the unbound continuum)
   const marley::Level* plevel = sampled_matrix_el.level();
 
   // Get the energy of the selected level.
-  double E_level;
-  if (plevel != nullptr) {
-    E_level = plevel->energy();
-  }
-  else {
-    // Level is unbound, so use the level energy found in the reaction dataset
-    E_level = sampled_matrix_el.level_energy();
-  }
+  double E_level = sampled_matrix_el.level_energy();
 
+  // Update the residue mass based on its excitation energy for the current
+  // event
   md_ = md_gs_ + E_level;
   md2_ = std::pow(md_, 2);
 
@@ -470,7 +423,9 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   double Ex = E_level;
 
   if ( continuum ) {
+
     double cutoff = CONTINUUM_GS_CUTOFF;
+
     // Load the initial twoJ and parity values into twoJ and P.  These
     // variables will be changed during every step of the Hauser-Feshbach decay
     // cascade.
@@ -479,23 +434,21 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
     // = 0+), these also correspond to the 40K* state spins.
     /// @todo Come up with a better way of determining the Jpi values that will
     /// work for forbidden transition operators.
-
-    ME_Type temp_me_type = sampled_matrix_el.type();
     int twoJ;
-    if (temp_me_type == ME_Type::FERMI) twoJ = 0;
-    else if (temp_me_type == ME_Type::GAMOW_TELLER) {
-      twoJ = 2;
-    }
+    if ( sampled_matrix_el.type() == ME_Type::FERMI) twoJ = 0;
+    else if ( sampled_matrix_el.type() == ME_Type::GAMOW_TELLER) twoJ = 2;
     else throw marley::Error("Unrecognized matrix element type encountered"
       " during a continuum decay in marley::NuclearReaction::create_event()");
 
     // Fermi transition gives 0+ -> 0+, GT transition gives 0+ -> 1+
+    /// @todo handle target nuclei that are not initially 0+
     /// @todo include possibility of negative parity here.
     marley::Parity P(true); // positive parity
     marley::Particle first, second;
+
     // The selected level is unbound, so handle its de-excitation using
     // the Hauser-Feshbach statistical model.
-    while (continuum && Ex > cutoff) {
+    while ( continuum && Ex > cutoff ) {
       marley::HauserFeshbachDecay hfd(residue, Ex, twoJ, P, gen);
       MARLEY_LOG_DEBUG() << hfd;
       continuum = hfd.do_decay(Ex, twoJ, P, first, second);
@@ -531,7 +484,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 // in units of MeV^(-2) using the center of momentum frame.
 double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
   double dummy_cos_theta = 0.;
-  return summed_xs_helper(pdg_a, KEa, dummy_cos_theta, false);
+  return summed_xs_helper(pdg_a, KEa, dummy_cos_theta, nullptr, false);
 }
 
 // Compute the differential cross section d\sigma / d\cos\theta_c^{CM}
@@ -540,12 +493,12 @@ double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
 double marley::NuclearReaction::summed_diff_xs(int pdg_a, double KEa,
   double cos_theta_c_cm)
 {
-  return summed_xs_helper(pdg_a, KEa, cos_theta_c_cm, true);
+  return summed_xs_helper(pdg_a, KEa, cos_theta_c_cm, nullptr, true);
 }
 
 // Helper function for total_xs and summed_diff_xs()
 double marley::NuclearReaction::summed_xs_helper(int pdg_a, double KEa,
-  double cos_theta_c_cm, bool differential)
+  double cos_theta_c_cm, std::vector<double>* level_xsecs, bool differential)
 {
   // Check that the projectile supplied to this event is correct. If not,
   // return a total cross section of zero since this reaction is not available
@@ -553,50 +506,54 @@ double marley::NuclearReaction::summed_xs_helper(int pdg_a, double KEa,
   /// @todo Consider whether you should use an exception if pdg_a != pdg_a_
   if (pdg_a != pdg_a_) return 0.;
 
+  // If we've been passed a vector to load with the partial cross sections
+  // to each nuclear level, then clear it before storing them
+  if ( level_xsecs ) level_xsecs->clear();
+
   double max_E_level = max_level_energy( KEa );
   double xsec = 0.;
-  for (const auto& mat_el : matrix_elements_) {
-
-    double level_energy;
+  for ( const auto& mat_el : matrix_elements_ ) {
 
     // Get the excitation energy for the current level
-    if ( mat_el.level() != nullptr ) {
-      level_energy = mat_el.level()->energy();
-    }
-    else {
-      // Level is unbound, so just use the energy given in the reaction dataset
-      // rather than trying to find its DecayScheme version
-      level_energy = mat_el.level_energy();
-    }
+    double level_energy = mat_el.level_energy();
 
     // Exit the loop early if you reach a level with an energy that's too high
-    if (level_energy > max_E_level) break;
+    if ( level_energy > max_E_level ) break;
 
     // Check whether the matrix element (B(F) + B(GT)) is nonvanishing for the
     // current level. If it is, just set the weight equal to zero rather than
     // computing the total xs.
-    double matrix_el = mat_el.strength();
-
-    if ( matrix_el != 0. ) {
-      // If the matrix element is nonzero, assign a weight to this level equal
-      // to the total reaction cross section. Note that
-      // std::discrete_distribution automatically normalizes the weights, so we
-      // don't have to do that ourselves.
+    if ( mat_el.strength() != 0. ) {
 
       // Set the check_max_E_level flag to false when calculating the total
       // cross section for this level (we've already verified that the
       // current level is kinematically accessible in the check against
       // max_E_level above)
       double beta_c_cm = 0.;
-      double partial_xsec = total_xs(level_energy, KEa, matrix_el,
-        mat_el.type(), beta_c_cm, false);
+      double partial_xsec = total_xs(mat_el, KEa, beta_c_cm, false);
 
       // If a differential cross section (d\sigma / d\cos\theta_{CM})
       // is desired, then multiply by the appropriate angular factor
       if ( differential ) {
         partial_xsec *= mat_el.cos_theta_pdf(cos_theta_c_cm, beta_c_cm);
       }
+
+      if ( std::isnan(partial_xsec) ) {
+        MARLEY_LOG_WARNING() << "Partial cross section for reaction "
+          << description_ << " gave NaN result.";
+        MARLEY_LOG_DEBUG() << "Parameters were level energy = "
+          << mat_el.level_energy() << " MeV, projectile kinetic energy = "
+          << KEa << " MeV, and reduced matrix element = " << mat_el.strength();
+        MARLEY_LOG_DEBUG() << "The partial cross section to this level"
+          << " will be set to zero.";
+        partial_xsec = 0.;
+      }
+
       xsec += partial_xsec;
+
+      // Store the partial cross section to the current individual nuclear
+      // level if needed (i.e., if level_xsecs is not nullptr)
+      if ( level_xsecs ) level_xsecs->push_back( partial_xsec );
     }
   }
 
@@ -605,13 +562,12 @@ double marley::NuclearReaction::summed_xs_helper(int pdg_a, double KEa,
 
 // Compute the total reaction cross section (in MeV^(-2)) for a transition to a
 // particular nuclear level using the center of momentum frame
-double marley::NuclearReaction::total_xs(double E_level, double KEa,
-  double matrix_element, ME_Type transition_type, double& beta_c_cm,
-  bool check_max_E_level) const
+double marley::NuclearReaction::total_xs(const marley::MatrixElement& me,
+  double KEa, double& beta_c_cm, bool check_max_E_level) const
 {
   // Don't bother to compute anything if the matrix element vanishes for this
   // level
-  if ( matrix_element == 0. ) return 0.;
+  if ( me.strength() == 0. ) return 0.;
 
   // Also don't proceed further if the reaction is below threshold (equivalently,
   // if the requested level excitation energy E_level exceeds that maximum
@@ -619,12 +575,12 @@ double marley::NuclearReaction::total_xs(double E_level, double KEa,
   // skip this check if check_max_E_level is set to false.
   if ( check_max_E_level ) {
     double max_E_level = max_level_energy( KEa );
-    if ( E_level > max_E_level ) return 0.;
+    if ( me.level_energy() > max_E_level ) return 0.;
   }
 
   // The final nuclear mass (before nuclear de-excitations) is the sum of the
   // ground state residue mass plus the excitation energy of the accessed level
-  double md2 = std::pow(md_gs_ + E_level, 2);
+  double md2 = std::pow(md_gs_ + me.level_energy(), 2);
 
   // Compute Mandelstam s (the square of the total CM frame energy)
   double s = std::pow(ma_ + mb_, 2) + 2.*mb_*KEa;
@@ -653,20 +609,20 @@ double marley::NuclearReaction::total_xs(double E_level, double KEa,
   // Common factors for the allowed approximation total cross sections
   // for both CC and NC reactions
   double total_xsec = (marley_utils::GF2 / marley_utils::pi)
-    * ( Eb_cm * Ed_cm / s ) * Ec_cm * pc_cm * matrix_element;
+    * ( Eb_cm * Ed_cm / s ) * Ec_cm * pc_cm * me.strength();
 
   if ( process_type_ == ProcessType::CC ) {
 
     // Calculate a Coulomb correction factor using either a Fermi function
     // or the effective momentum approximation
-    double factor_C = coulomb_correction_factor(beta_rel_cd);
+    double factor_C = coulomb_correction_factor( beta_rel_cd );
     total_xsec *= marley_utils::Vud2 * factor_C;
   }
   else if ( process_type_ == ProcessType::NC )
   {
     // For NC, extra factors are only needed for Fermi transitions (which
     // correspond to CEvNS since they can only access the nuclear ground state)
-    if ( transition_type == ME_Type::FERMI ) {
+    if ( me.type() == ME_Type::FERMI ) {
       double Q_w = weak_nuclear_charge();
       total_xsec *= 0.25*std::pow(Q_w, 2);
     }
