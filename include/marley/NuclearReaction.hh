@@ -103,7 +103,7 @@ namespace marley {
 
       /// Computes the weak nuclear charge @f$ Q_W = N - (1
       /// - 4\sin^2\theta_W)Z @f$ for the target nucleus
-      /// @details In the expression above, @f$ N @f$ (@f$ Z @f$) is the
+      /// @details In the expression above, @f$ N @f$ (@f$Z@f$) is the
       /// neutron (proton) number of the target nucleus and
       /// @f$ \theta_W @f$ is the weak mixing angle.
       double weak_nuclear_charge() const;

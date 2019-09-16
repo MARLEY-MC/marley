@@ -2,7 +2,7 @@
 
 namespace marley {
 
-  /// @brief A nuclear matrix element that represents a transition
+  /// @brief A reduced nuclear matrix element that represents a transition
   /// caused by a neutrino-nucleus reaction
   class MatrixElement {
 
@@ -10,7 +10,40 @@ namespace marley {
 
       /// @brief Enumerated type that represents the possible kinds of nuclear
       /// transitions recognized by MARLEY
-      enum TransitionType { FERMI = 0, GAMOW_TELLER = 1 };
+      enum TransitionType {
+        FERMI = 0, ///< The reduced Fermi matrix element is defined by
+                   ///< @f$ \frac{ g_V^2 \big| \big< J_f \big\lVert
+                   /// \mathcal{O}_\mathrm{F} \big\rVert J_i \big> \big|^2 }
+                   /// { 2J_i + 1 }, @f$ where @f$J_i@f$ (@f$J_f@f$) is the
+                   ///< initial (final) nuclear spin and @f$g_V@f$ is the
+                   ///< vector coupling constant of the nucleon. The Fermi
+                   ///< operator @f$ \mathcal{O}_\mathrm{F} @f$
+                   ///< depends on the interaction process type
+                   ///< (charged- vs. neutral-current) and is given by
+                   ///< @f$ \mathcal{O}_\mathrm{F} = \begin{cases}
+                   ///   \sum_{k = 1}^A t_{-}(k)
+                   /// & \text{CC, }\nu\text{ projectile} \\
+                   ///   \sum_{k = 1}^A t_{+}(k)
+                   /// & \text{CC, }\bar{\nu}\text{ projectile} \\
+                   /// I & \text{NC} \\
+                   /// \end{cases} @f$ <br> where @f$ t_{\pm} @f$ are the isospin
+                   ///< raising and lowering operators and @f$ I @f$ is
+                   ///< the identity operator in isospace. MARLEY uses the
+                   ///< convention where @f$ t_{-}\big|n\big> = \big|p\big> @f$.
+
+        GAMOW_TELLER = 1 ///< The reduced Gamow-Teller matrix element is
+                   ///< defined by @f$ \frac{ g_A^2 \big| \big< J_f \big\lVert
+                   /// \sum_{k = 1}^A \boldsymbol{\sigma}(k)\Theta(k)
+                   /// \big\rVert J_i \big> \big|^2 }{ 2J_i + 1 } @f$ where
+                   ///< @f$ g_A @f$ is the axial coupling constant of the
+                   ///< nucleon and @f$ \Theta(k) @f$ is an operator in
+                   ///< isospace that depends on the type of scattering process:
+                   ///< @f$ \Theta = \begin{cases}
+                   /// t_{-} & \text{CC, }\nu\text{ projectile} \\
+                   /// t_{+} & \text{CC, }\bar{\nu}\text{ projectile} \\
+                   /// t_3   & \text{NC} \\
+                   /// \end{cases} @f$
+      };
 
       /// @param level_energy Excitation energy (MeV) of the final-state nuclear
       /// level accessed by the matrix element
