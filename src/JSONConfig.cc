@@ -197,7 +197,18 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
           auto nr = std::make_unique<marley::NuclearReaction>(full_file_name,
             gen.get_structure_db());
 
-          MARLEY_LOG_INFO() << "Added reaction " << nr->get_description();
+          std::string proc_type_str;
+          if ( nr->process_type() == marley::Reaction::ProcessType::CC ) {
+            proc_type_str = "CC";
+          }
+          else if ( nr->process_type() == marley::Reaction::ProcessType::NC ) {
+            proc_type_str = "NC";
+          }
+          else throw marley::Error("Unrecognized process type encountered in"
+            "marley::JSONConfig::prepare_reactions()");
+
+          MARLEY_LOG_INFO() << "Added " << proc_type_str << " reaction "
+            << nr->get_description();
 
           gen.add_reaction( std::move(nr) );
         }

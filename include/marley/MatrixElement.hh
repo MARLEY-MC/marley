@@ -60,6 +60,24 @@ namespace marley {
       /// by the matrix element
       inline void set_level(marley::Level* lev) { final_level_ = lev; }
 
+      /// @brief Compute the PDF for the CM frame scattering cosine
+      /// @param cos_theta_c_cm Ejectile scattering cosine in the CM frame
+      /// @param beta_c_cm Ejectile speed (dimensionless) as measured
+      /// in the CM frame
+      inline double cos_theta_pdf(double cos_theta_c_cm, double beta_c_cm) const
+      {
+        double pdf = 0.;
+        if ( type_ == TransitionType::FERMI ) {
+          pdf = 1. + beta_c_cm * cos_theta_c_cm;
+        }
+        else if ( type_ == TransitionType::GAMOW_TELLER ) {
+          pdf = (3. - beta_c_cm * cos_theta_c_cm) / 3.;
+        }
+        else throw marley::Error("Unrecognized transition type encountered"
+          " in marley::MatrixElement::cos_theta_pdf()");
+        return pdf;
+      }
+
     protected:
 
       /// @brief Energy (MeV) of the final-state nuclear level accessed by this

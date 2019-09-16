@@ -21,6 +21,10 @@ namespace marley {
 
       virtual ~Reaction() = default;
 
+      // Enumerated type describing the kind of scattering process
+      // represented by a Reaction
+      enum class ProcessType { CC, NC };
+
       /// @brief Compute the reaction's total cross section (MeV<sup> -2</sup>)
       /// @param pdg_a Projectile's PDG code
       /// @param KEa Lab-frame kinetic energy of the incident projectile
@@ -38,6 +42,9 @@ namespace marley {
 
       /// @brief Get a string that contains the formula for this reaction
       inline std::string get_description() { return description_; }
+
+      /// @brief Get the process type for this reaction
+      inline ProcessType process_type() { return process_type_; }
 
     protected:
 
@@ -59,6 +66,10 @@ namespace marley {
 
       /// @brief String that contains a formula describing the reaction
       std::string description_;
+
+      /// @brief Type of scattering process (CC, NC) represented by
+      /// this reaction
+      ProcessType process_type_;
 
       /// @brief Helper function that handles CM frame kinematics for the
       /// reaction

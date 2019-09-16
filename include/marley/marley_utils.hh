@@ -48,10 +48,14 @@ namespace marley_utils {
 
   // Fermi coupling constant (MeV^(-2))
   constexpr double GF = 1.16637e-11;
+  // Square of the Fermi coupling constant (MeV^(-4))
+  constexpr double GF2 = GF * GF;
 
   // Absolute value of the CKM matrix element for mixing between the up and
   // down quarks abs(V_ud)
   constexpr double Vud = 0.97427;
+  // Square of abs(V_ud)
+  constexpr double Vud2 = Vud * Vud;
 
   // sin^2(theta_W) (sine squared of the weak mixing angle)
   // Effective value taken from 2014 PDG Review of Particle Physics,

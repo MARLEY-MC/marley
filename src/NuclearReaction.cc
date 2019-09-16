@@ -11,9 +11,23 @@
 #include "marley/HauserFeshbachDecay.hh"
 #include "marley/Level.hh"
 #include "marley/Logger.hh"
+#include "marley/MatrixElement.hh"
 #include "marley/Reaction.hh"
 
-marley::NuclearReaction::NuclearReaction(std::string filename,
+using ME_Type = marley::MatrixElement::TransitionType;
+
+namespace {
+  // In cases where no discrete level data are available, a continuum level density
+  // is used all the way down to the ground state. To avoid asymptotically approaching
+  // Ex = 0 in these cases, the de-excitation cascade will end once the excitation energy of
+  // the residual nucleus falls below this (small) value. Excitation energies below this
+  // value are considered "close enough" to the ground state for MARLEY not to worry about
+  // further de-excitations.
+  /// @todo Make this configurable?
+  constexpr double CONTINUUM_GS_CUTOFF = 0.001; // MeV
+}
+
+marley::NuclearReaction::NuclearReaction(const std::string& filename,
   marley::StructureDatabase& db)
 {
 
@@ -48,6 +62,13 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
   // Read in the particle IDs
   std::istringstream iss(line);
   iss >> pdg_a_ >> pdg_b_ >> pdg_c_ >> pdg_d_ >> q_d_;
+
+  // For now, set the process type based on whether the projectile
+  // and ejectile PDG codes are equal
+  /// @todo Note that this will fail to distinguish between NC and EM
+  /// reactions when the latter are added to MARLEY. Fix this.
+  if ( pdg_a_ == pdg_c_ ) process_type_ = marley::Reaction::ProcessType::NC;
+  else process_type_ = marley::Reaction::ProcessType::CC;
 
   // Get initial and final values of the nuclear
   // charge and mass number from the pids
@@ -103,8 +124,8 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
     // matrix elements assume that they are sorted in order of ascending final
     // level energy.
     double energy, strength;
-    int me_type;
-    iss >> energy >> strength >> me_type;
+    int integer_me_type;
+    iss >> energy >> strength >> integer_me_type;
     if (old_energy >= energy) throw marley::Error(std::string("Invalid")
       + " reaction dataset. Level energies must be unique and must be"
       + " given in ascending order.");
@@ -115,7 +136,7 @@ marley::NuclearReaction::NuclearReaction(std::string filename,
     // set to nullptr. This may be changed later if discrete level data can be
     // found for the residual nucleus.
     matrix_elements_.emplace_back(energy, strength,
-      static_cast<marley::MatrixElement::TransitionType>(me_type), nullptr);
+      static_cast<ME_Type>(integer_me_type), nullptr);
     old_energy = energy;
   }
 
@@ -296,7 +317,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 
   // Calculate the maximum value of E_level that is
   // kinematically allowed
-  double max_E_level = max_level_energy(KEa);
+  double max_E_level = max_level_energy( KEa );
 
   // Create an empty vector of sampling weights
   std::vector<double> level_weights;
@@ -321,7 +342,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
     double level_energy;
 
     // Get the excitation energy for the current level
-    if (mat_el.level() != nullptr) {
+    if ( mat_el.level() != nullptr ) {
       level_energy = mat_el.level()->energy();
     }
     else {
@@ -337,19 +358,23 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
     // current level. If it is, just set the weight equal to zero rather than
     // calling total_xs. This will avoid unnecessary numerical integrations.
     double strength = mat_el.strength();
+    auto tr_type = mat_el.type();
     double xs;
 
-    if (strength == 0.) {
-      xs = 0.;
-    }
+    if ( strength == 0. ) xs = 0.;
     else {
-
       // If the matrix element is nonzero, assign a weight to this level equal
       // to the total reaction cross section. Note that
       // std::discrete_distribution automatically normalizes the weights, so we
-      // don't have to do that ourselves.
-      xs = total_xs(level_energy, KEa, strength);
-      if (std::isnan(xs)) {
+      // don't have to do that ourselves. We've also already checked that
+      // the level excitation energy doesn't exceed the maximum value
+      // allowed by kinematics, so we avoid an extra check of that by
+      // setting the last argument below to false.
+      double dummy_beta_c_cm;
+      xs = total_xs(level_energy, KEa, strength, tr_type,
+        dummy_beta_c_cm, false);
+
+      if ( std::isnan(xs) ) {
         MARLEY_LOG_WARNING() << "Partial cross section for reaction "
           << description_ << " gave NaN result.";
         MARLEY_LOG_DEBUG() << "Parameters were level energy = " << level_energy
@@ -359,8 +384,9 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
           << " will be set to zero for this event.";
         xs = 0.;
       }
-      if (!at_least_one_nonzero_matrix_el && xs != 0)
+      if ( !at_least_one_nonzero_matrix_el && xs != 0 ) {
         at_least_one_nonzero_matrix_el = true;
+      }
     }
     level_weights.push_back(xs);
   }
@@ -426,7 +452,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 
   // Sample a CM frame azimuthal scattering angle (phi) uniformly on [0, 2*pi).
   // We can do this because the matrix elements are azimuthally invariant
-  double phi_c_cm = gen.uniform_random_double(0, 2*marley_utils::pi, false);
+  double phi_c_cm = gen.uniform_random_double(0., 2.*marley_utils::pi, false);
 
   // Create the preliminary event object (after 2-2 scattering, but before
   // de-excitation of the residual nucleus)
@@ -443,8 +469,8 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   // during every step of the Hauser-Feshbach decay cascade.
   double Ex = E_level;
 
-  if (continuum) {
-    double cutoff = 0.001; /// @todo Remove hard-coded cutoff value
+  if ( continuum ) {
+    double cutoff = CONTINUUM_GS_CUTOFF;
     // Load the initial twoJ and parity values into twoJ and P.  These
     // variables will be changed during every step of the Hauser-Feshbach decay
     // cascade.
@@ -454,10 +480,10 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
     /// @todo Come up with a better way of determining the Jpi values that will
     /// work for forbidden transition operators.
 
-    marley::MatrixElement::TransitionType me_type = sampled_matrix_el.type();
+    ME_Type temp_me_type = sampled_matrix_el.type();
     int twoJ;
-    if (me_type == marley::MatrixElement::TransitionType::FERMI) twoJ = 0;
-    else if (me_type == marley::MatrixElement::TransitionType::GAMOW_TELLER) {
+    if (temp_me_type == ME_Type::FERMI) twoJ = 0;
+    else if (temp_me_type == ME_Type::GAMOW_TELLER) {
       twoJ = 2;
     }
     else throw marley::Error("Unrecognized matrix element type encountered"
@@ -485,7 +511,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
     }
   }
 
-  if (!continuum) {
+  if ( !continuum ) {
     // Either the selected initial level was bound (so it will only decay via
     // gamma emission) or the Hauser-Feshbach decay process has now accessed a
     // bound level in the residual nucleus. In either case, use gamma-ray decay
@@ -501,24 +527,40 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   return event;
 }
 
-// Compute the total reaction cross section (including all final nuclear levels)
-// in units of MeV^(-2) using the center of mass frame.
+// Compute the total reaction cross section (summed over all final nuclear levels)
+// in units of MeV^(-2) using the center of momentum frame.
 double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
+  double dummy_cos_theta = 0.;
+  return summed_xs_helper(pdg_a, KEa, dummy_cos_theta, false);
+}
 
+// Compute the differential cross section d\sigma / d\cos\theta_c^{CM}
+// summed over all final nuclear levels. This is done in units of MeV^(-2)
+// using the center of momentum frame.
+double marley::NuclearReaction::summed_diff_xs(int pdg_a, double KEa,
+  double cos_theta_c_cm)
+{
+  return summed_xs_helper(pdg_a, KEa, cos_theta_c_cm, true);
+}
+
+// Helper function for total_xs and summed_diff_xs()
+double marley::NuclearReaction::summed_xs_helper(int pdg_a, double KEa,
+  double cos_theta_c_cm, bool differential)
+{
   // Check that the projectile supplied to this event is correct. If not,
   // return a total cross section of zero since this reaction is not available
   // for the given projectile.
   /// @todo Consider whether you should use an exception if pdg_a != pdg_a_
   if (pdg_a != pdg_a_) return 0.;
 
-  double max_E_level = max_level_energy(KEa);
-  double xs = 0;
+  double max_E_level = max_level_energy( KEa );
+  double xsec = 0.;
   for (const auto& mat_el : matrix_elements_) {
 
     double level_energy;
 
     // Get the excitation energy for the current level
-    if (mat_el.level() != nullptr) {
+    if ( mat_el.level() != nullptr ) {
       level_energy = mat_el.level()->energy();
     }
     else {
@@ -535,87 +577,104 @@ double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
     // computing the total xs.
     double matrix_el = mat_el.strength();
 
-    if (matrix_el != 0.) {
+    if ( matrix_el != 0. ) {
       // If the matrix element is nonzero, assign a weight to this level equal
       // to the total reaction cross section. Note that
       // std::discrete_distribution automatically normalizes the weights, so we
       // don't have to do that ourselves.
-      double md2 = std::pow(md_gs_ + level_energy, 2);
 
-      // Compute Mandelstam s (the square of the total CM frame energy)
-      double s = std::pow(ma_ + mb_, 2) + 2*mb_*KEa;
-      double sqrt_s = std::sqrt(s);
+      // Set the check_max_E_level flag to false when calculating the total
+      // cross section for this level (we've already verified that the
+      // current level is kinematically accessible in the check against
+      // max_E_level above)
+      double beta_c_cm = 0.;
+      double partial_xsec = total_xs(level_energy, KEa, matrix_el,
+        mat_el.type(), beta_c_cm, false);
 
-      // Compute CM frame energies for two of the particles. Also
-      // compute the ejectile CM frame momentum.
-      double Eb_cm = (s + mb2_ - ma2_) / (2 * sqrt_s);
-      double Ec_cm = (s + mc2_ - md2) / (2 * sqrt_s);
-      double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2_);
-
-      // Dot product of the four-momenta of particles c and d
-      double pc_dot_pd = (sqrt_s - Ec_cm)*Ec_cm + std::pow(pc_cm, 2);
-
-      // Relative speed of particles c and d, computed with a manifestly
-      // Lorentz-invariant expression
-      double beta_rel_cd = marley_utils::real_sqrt(
-        std::pow(pc_dot_pd, 2) - mc2_*md2) / pc_dot_pd;
-
-      // Calculate a Coulomb correction factor using either a Fermi function
-      // or the effective momentum approximation
-      double factor_C = coulomb_correction_factor(beta_rel_cd);
-
-      xs += factor_C * matrix_el * pc_cm * Ec_cm * Eb_cm * (sqrt_s - Ec_cm) / s;
+      // If a differential cross section (d\sigma / d\cos\theta_{CM})
+      // is desired, then multiply by the appropriate angular factor
+      if ( differential ) {
+        partial_xsec *= mat_el.cos_theta_pdf(cos_theta_c_cm, beta_c_cm);
+      }
+      xsec += partial_xsec;
     }
   }
 
-  // Include the quark mixing matrix element Vud if this is a charged-current
-  // reaction. For now, we determine that by asking whether the light product
-  // (particle c) is an electron or a positron. If it is neither, we don't
-  // multiply by marley_utils::Vud^2.
-  if (pdg_c_ == marley_utils::ELECTRON || pdg_c_ == marley_utils::POSITRON) {
-    xs *= std::pow(marley_utils::Vud, 2);
-  }
-
-  return std::pow(marley_utils::GF, 2) * xs / marley_utils::pi;
+  return xsec;
 }
 
-// Compute the total reaction cross section for a given level (ignoring some
-// constants for speed, since this version of the function is intended for use
-// in sampling only) using the center of mass frame
+// Compute the total reaction cross section (in MeV^(-2)) for a transition to a
+// particular nuclear level using the center of momentum frame
 double marley::NuclearReaction::total_xs(double E_level, double KEa,
-  double matrix_element) const
+  double matrix_element, ME_Type transition_type, double& beta_c_cm,
+  bool check_max_E_level) const
 {
   // Don't bother to compute anything if the matrix element vanishes for this
   // level
-  if (matrix_element == 0.) return 0.;
-  else {
-    double md2 = std::pow(md_gs_ + E_level, 2);
+  if ( matrix_element == 0. ) return 0.;
 
-    // Compute Mandelstam s (the square of the total CM frame energy)
-    double s = std::pow(ma_ + mb_, 2) + 2*mb_*KEa;
-    double sqrt_s = std::sqrt(s);
+  // Also don't proceed further if the reaction is below threshold (equivalently,
+  // if the requested level excitation energy E_level exceeds that maximum
+  // kinematically-allowed value). To avoid redundant checks of the threshold,
+  // skip this check if check_max_E_level is set to false.
+  if ( check_max_E_level ) {
+    double max_E_level = max_level_energy( KEa );
+    if ( E_level > max_E_level ) return 0.;
+  }
 
-    // Compute CM frame energies for two of the particles. Also
-    // compute the ejectile CM frame momentum.
-    double Eb_cm = (s + mb2_ - ma2_) / (2 * sqrt_s);
-    double Ec_cm = (s + mc2_ - md2) / (2 * sqrt_s);
-    double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2_);
+  // The final nuclear mass (before nuclear de-excitations) is the sum of the
+  // ground state residue mass plus the excitation energy of the accessed level
+  double md2 = std::pow(md_gs_ + E_level, 2);
 
-    // Dot product of the four-momenta of particles c and d
-    double pc_dot_pd = (sqrt_s - Ec_cm)*Ec_cm + std::pow(pc_cm, 2);
+  // Compute Mandelstam s (the square of the total CM frame energy)
+  double s = std::pow(ma_ + mb_, 2) + 2.*mb_*KEa;
+  double sqrt_s = std::sqrt(s);
 
-    // Relative speed of particles c and d, computed with a manifestly
-    // Lorentz-invariant expression
-    double beta_rel_cd = marley_utils::real_sqrt(
-      std::pow(pc_dot_pd, 2) - mc2_*md2) / pc_dot_pd;
+  // Compute CM frame total energies for two of the particles. Also
+  // compute the magnitude of the ejectile CM frame momentum.
+  double Eb_cm = (s + mb2_ - ma2_) / (2. * sqrt_s);
+  double Ec_cm = (s + mc2_ - md2) / (2. * sqrt_s);
+  double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2_);
+
+  // Compute the (dimensionless) speed of the ejectile in the CM frame
+  beta_c_cm = pc_cm / Ec_cm;
+
+  // CM frame total energy of the nuclear residue
+  double Ed_cm = sqrt_s - Ec_cm;
+
+  // Dot product of the four-momenta of particles c and d
+  double pc_dot_pd = Ed_cm*Ec_cm + std::pow(pc_cm, 2);
+
+  // Relative speed of particles c and d, computed with a manifestly
+  // Lorentz-invariant expression
+  double beta_rel_cd = marley_utils::real_sqrt(
+    std::pow(pc_dot_pd, 2) - mc2_*md2) / pc_dot_pd;
+
+  // Common factors for the allowed approximation total cross sections
+  // for both CC and NC reactions
+  double total_xsec = (marley_utils::GF2 / marley_utils::pi)
+    * ( Eb_cm * Ed_cm / s ) * Ec_cm * pc_cm * matrix_element;
+
+  if ( process_type_ == ProcessType::CC ) {
 
     // Calculate a Coulomb correction factor using either a Fermi function
     // or the effective momentum approximation
     double factor_C = coulomb_correction_factor(beta_rel_cd);
-
-    return factor_C * matrix_element * pc_cm * Ec_cm
-      * Eb_cm * (sqrt_s - Ec_cm) / s;
+    total_xsec *= marley_utils::Vud2 * factor_C;
   }
+  else if ( process_type_ == ProcessType::NC )
+  {
+    // For NC, extra factors are only needed for Fermi transitions (which
+    // correspond to CEvNS since they can only access the nuclear ground state)
+    if ( transition_type == ME_Type::FERMI ) {
+      double Q_w = weak_nuclear_charge();
+      total_xsec *= 0.25*std::pow(Q_w, 2);
+    }
+  }
+  else throw marley::Error("Unrecognized process type encountered in"
+    " marley::NuclearReaction::total_xs()");
+
+  return total_xsec;
 }
 
 // Sample an ejectile scattering cosine in the CM frame.
@@ -623,35 +682,28 @@ double marley::NuclearReaction::sample_cos_theta_c_cm(
   const marley::MatrixElement& matrix_el, double beta_c_cm,
   marley::Generator& gen) const
 {
-  using ME_Type = marley::MatrixElement::TransitionType;
-
-  // Choose the correct form factor to use based on the matrix element type.
-  // Note that our rejection sampling technique does not require that we
-  // normalize the form factors before sampling from them.
-  /// @todo Implement a more general way of labeling the matrix elements
-  std::function<double(double)> form_factor;
-
+  // To avoid wasting time searching for the maximum of these distributions
+  // for rejection sampling, set the maximum to the known value before
+  // proceeding.
   double max;
-
-  if (matrix_el.type() == ME_Type::FERMI) {
+  if ( matrix_el.type() == ME_Type::FERMI ) {
     // B(F)
-    form_factor = [&beta_c_cm](double cos_theta_c_cm)
-      -> double { return 1. + beta_c_cm * cos_theta_c_cm; };
-    max = form_factor(1.);
+    max = matrix_el.cos_theta_pdf(1., beta_c_cm);
   }
   else if (matrix_el.type() == ME_Type::GAMOW_TELLER) {
     // B(GT)
-    form_factor = [&beta_c_cm](double cos_theta_c_cm)
-      -> double { return (3. - beta_c_cm * cos_theta_c_cm) / 3.; };
-    max = form_factor(-1.);
+    max = matrix_el.cos_theta_pdf(-1., beta_c_cm);
   }
   else throw marley::Error("Unrecognized matrix element type "
     + std::to_string(matrix_el.type()) + " encountered while sampling a"
     " CM frame scattering angle");
 
-  // Sample a CM frame scattering cosine using the appropriate form factor for
+  // Sample a CM frame scattering cosine using the appropriate distribution for
   // this matrix element.
-  return gen.rejection_sample(form_factor, -1, 1, max);
+  return gen.rejection_sample(
+    [&matrix_el, &beta_c_cm](double cos_theta_c_cm)
+    -> double { return matrix_el.cos_theta_pdf(cos_theta_c_cm, beta_c_cm); },
+    -1., 1., max);
 }
 
 marley::Event marley::NuclearReaction::make_event_object(double KEa,
@@ -760,4 +812,14 @@ double marley::NuclearReaction::ema_factor(double beta_rel_cd, bool& ok) const
   double f_EMA2 = std::pow(p_c_FNR_eff / p_c_FNR, 2);
 
   return f_EMA2;
+}
+
+// Factor that appears in the cross section for coherent elastic
+// neutrino-nucleus scattering (CEvNS), which corresponds to the Fermi
+// component of NC scattering under the allowed approximation
+double marley::NuclearReaction::weak_nuclear_charge() const
+{
+  int Ni = Ai_ - Zi_;
+  double Qw = Ni - (1. - 4.*marley_utils::sin2thetaw)*Zi_;
+  return Qw;
 }
