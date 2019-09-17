@@ -1,4 +1,4 @@
-// standard library includes
+// Standard library includes
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -17,7 +17,7 @@
   #include "TLegend.h"
 #endif
 
-// Catch includes
+// Catch2 includes
 #include "catch.hpp"
 
 // MARLEY includes
@@ -35,10 +35,15 @@
 
 namespace {
 
-constexpr int NUM_EVENTS = 100000;
+// The number of events to generate for each sampling test
+constexpr int NUM_EVENTS = 10000;
+
+// The number of bins to use when histogramming events
 constexpr int NUM_BINS = 50;
 
 #ifdef USE_ROOT
+// The number of points to use when making TGraphs
+// for validation plots
 constexpr int NUM_TGRAPH_POINTS = 10000;
 #endif
 
@@ -47,7 +52,8 @@ constexpr int NUM_TGRAPH_POINTS = 10000;
 constexpr double SIGNIFICANCE_LEVEL = 0.01;
 
 // ROOT has better histogram classes, but we'd like the tests to be
-// able to run without it
+// able to run without it. This class does just enough to get us
+// what we want outside of ROOT.
 class Histogram {
 
   public:
@@ -136,15 +142,16 @@ class Histogram {
     /// (p-value > our chosen significance level) or false otherwise
     /// @return A vector containing the bin counts predicted by the model
     std::vector<double> chi2_test(const std::function<double(double)>& pdf,
-      bool& passed, double& chi2, int& degrees_of_freedom, double& p_value) const
+      bool& passed, double& chi2, int& degrees_of_freedom, double& p_value)
+      const
     {
       std::vector<double> expected_counts_vec;
       chi2 = 0.;
       degrees_of_freedom = N_bins_ - 1;
       for ( size_t b = 0; b < N_bins_; ++b ) {
         double observed_counts = bin_counts_.at( b );
-        double expected_counts = num_entries_ * marley_utils::num_integrate(pdf,
-          get_bin_left_edge( b ), get_bin_right_edge( b ));
+        double expected_counts = num_entries_ * marley_utils::num_integrate(
+          pdf, get_bin_left_edge( b ), get_bin_right_edge( b ));
 
         expected_counts_vec.push_back( expected_counts );
 
@@ -177,11 +184,13 @@ class Histogram {
     double x_step_;
 };
 
+// Operator for writing a Histogram to a std::ostream
 std::ostream& operator<<(std::ostream& out, const Histogram& h) {
   h.print( out );
   return out;
 }
 
+// Operator for reading in a Histogram from a std::istream
 std::istream& operator>>(std::istream& in, Histogram& h) {
   in >> h.N_bins_;
   in >> h.x_min_;
@@ -199,8 +208,124 @@ std::istream& operator>>(std::istream& in, Histogram& h) {
   return in;
 }
 
+#ifdef USE_ROOT
+/// @param hist_title Title to use when drawing the histograms in ROOT
+/// @param events_hist Histogram filled with the variable of interest
+/// from generated events
+/// @param theory_counts Vector of expected bin counts based on the theory
+/// model. This vector can be generated automatically by Histogram::chi2_test()
+/// @param flux_avg_xsec Flux-averaged total cross section (10^(-40) cm^2)
+/// @param chi2 The value of chi^2 from a previously-run test of agreement
+/// between the model and the event distribution
+/// @param ndof Number of degrees of freedom from the chi^2 test
+/// @param p_value P-value obtained from the chi^2 test
+/// @param output_filename Name of the output file to which the plot
+/// will be saved via a call to TCanvas::SaveAs()
+/// @param mod_xsec Function that takes a value within the domain of the
+/// histogram and returns the model prediction for the flux-averaged
+/// differential cross section
+void make_plots(const std::string& hist_title, const Histogram& events_hist,
+  const std::vector<double> theory_counts, double flux_avg_xsec, double chi2,
+  int ndof, double p_value, const std::string& output_filename,
+  const std::function<double(double)>& mod_xsec)
+{
+  // Prepare histograms of the energy distribution from the events
+  // and bin integrals of the model PDF
+  TH1D model_th1d("model", hist_title.c_str(), events_hist.num_bins(),
+    events_hist.x_min(), events_hist.x_max());
+  for ( size_t b = 0; b < theory_counts.size(); ++b ) {
+    double counts = theory_counts.at( b );
+    model_th1d.SetBinContent(b + 1, counts);
+  }
+
+  // Convert the event Histogram to a TH1D
+  TH1D events_th1d = events_hist.th1d( "events" );
+  events_th1d.SetTitle( hist_title.c_str() );
+
+  double total_counts = static_cast<double>( events_hist.entries() );
+
+  // Normalize the histograms so that they represent a flux-weighted
+  // differential cross section
+  double norm_factor = flux_avg_xsec / (total_counts * events_hist.bin_width());
+  events_th1d.Scale( norm_factor );
+  model_th1d.Scale( norm_factor );
+
+  // Set the plotting style for the histograms
+  events_th1d.SetLineWidth(2);
+  events_th1d.SetLineColor(kBlack);
+  events_th1d.SetStats(false);
+
+  model_th1d.SetLineWidth(2);
+  model_th1d.SetLineColor(kRed);
+  model_th1d.SetLineStyle(2);
+  model_th1d.SetStats(false);
+
+  // Also plot the continuous model distribution
+  std::vector<double> Xs;
+  std::vector<double> model_xsecs;
+  double x_min = events_hist.x_min();
+  double x_max = events_hist.x_max();
+  double graph_x_step = (x_max - x_min)
+    / static_cast<double>(NUM_TGRAPH_POINTS);
+
+  double max_model_diff_xs = 0.;
+  for ( size_t k = 0; k <= NUM_TGRAPH_POINTS; ++k ) {
+    double x = x_min + (k * graph_x_step);
+    double model_diff_xs = mod_xsec( x );
+
+    Xs.push_back( x );
+    model_xsecs.push_back( model_diff_xs );
+
+    if ( max_model_diff_xs < model_diff_xs ) max_model_diff_xs = model_diff_xs;
+  }
+
+  // Create the model TGraph and set its plotting style
+  TGraph model_graph(Xs.size(), Xs.data(), model_xsecs.data());
+
+  model_graph.SetLineColor(kBlue);
+  model_graph.SetLineWidth(3);
+  //model_graph.SetLineStyle(2);
+
+  TCanvas canvas;
+  events_th1d.Draw("hist e");
+  //model_th1d.Draw("hist same");
+  model_graph.Draw("l");
+
+  TLegend lg(0.15, 0.65, 0.3, 0.85);
+  lg.AddEntry(&events_th1d, "events", "l");
+  //lg.AddEntry(&model_th1d, "model bin integrals", "l");
+  lg.AddEntry(&model_graph, "model", "l");
+
+  lg.Draw("same");
+
+  // Add the chi2 test results to the plot
+  std::ostringstream oss;
+  oss << "reduced #chi^{2} = " << chi2 / ndof;
+
+  // Pick a spot to draw the chi^2 and p-value text
+  double x_ltx = (x_max - x_min) / 12.;
+  double y_ltx = 0.65 * max_model_diff_xs;
+
+  TLatex ltx(x_ltx, y_ltx, oss.str().c_str());
+  ltx.SetTextColor(kBlack);
+  ltx.Draw("same");
+  ltx.SetTextSize(0.035);
+
+  oss = std::ostringstream();
+  oss << "p-value = " << p_value;
+
+  TLatex ltx2(x_ltx, 0.8*y_ltx, oss.str().c_str());
+  ltx2.SetTextColor(kBlack);
+  ltx2.Draw("same");
+  ltx2.SetTextSize(0.035);
+
+  canvas.SaveAs( output_filename.c_str() );
+}
+#endif
+
 } // anonymous namespace
 
+// *** Tests for MC sampling of physics quantities ***
 SCENARIO( "Reacting neutrino energies in events match underlying distribution",
   "[physics]" )
 {
@@ -248,115 +373,21 @@ SCENARIO( "Reacting neutrino energies in events match underlying distribution",
 
         // If we've built the tests against ROOT, then make a plot
         #ifdef USE_ROOT
+        std::string energy_title("MARLEY reacting #nu energies;"
+          "neutrino energy (MeV); #left[d#sigma/dE_{#nu}#right]_{flux}"
+          " (10^{-40} cm^{2} / MeV)");
 
-          // Prepare histograms of the energy distribution from the events
-          // and bin integrals of the model PDF
-          std::string energy_title("MARLEY reacting #nu energies;"
-            "neutrino energy (MeV); #left[d#sigma/dE_{#nu}#right]_{flux}"
-            " (10^{-40} cm^{2} / MeV)");
+        // Flux-averaged total cross section (10^(-40) cm^2)
+        double flux_avg_xsec = gen.flux_averaged_total_xs()
+          * marley_utils::hbar_c2 * marley_utils::fm2_to_minus40_cm2;
 
-          TH1D model_th1d("energy_model", energy_title.c_str(), NUM_BINS,
-            E_min, E_max);
-          for ( size_t b = 0; b < expected_bin_counts.size(); ++b ) {
-            double counts = expected_bin_counts.at( b );
-            model_th1d.SetBinContent(b + 1, counts);
-          }
-
-          TH1D events_th1d = energy_hist.th1d( "energy_events" );
-          events_th1d.SetTitle( energy_title.c_str() );
-
-          // Retrieve the flux-averaged total cross section and
-          // convert it from MeV^(-2) to 10^(-40) cm^2
-          double xsec = gen.flux_averaged_total_xs();
-          xsec *= marley_utils::hbar_c2 * marley_utils::fm2_to_minus40_cm2;
-
-          double total_counts = static_cast<double>( energy_hist.entries() );
-
-          // Factor to convert from bin probabilities to flux-weighted total
-          // cross section
-          double norm_factor = xsec / (total_counts * energy_hist.bin_width());
-
-          // Normalize the histograms so that they represent flux-weighted
-          // total cross section
-          events_th1d.Scale( norm_factor );
-          model_th1d.Scale( norm_factor );
-
-          // Set the plotting style for the histograms
-          events_th1d.SetLineWidth(2);
-          events_th1d.SetLineColor(kBlack);
-          events_th1d.SetStats(false);
-
-          model_th1d.SetLineWidth(2);
-          model_th1d.SetLineColor(kRed);
-          model_th1d.SetLineStyle(2);
-          model_th1d.SetStats(false);
-
-          // Also plot the continuous model distribution
-          std::vector<double> energies;
-          std::vector<double> model_xsecs;
-          double energy_step = (energy_hist.x_max() - energy_hist.x_min())
-            / static_cast<double>(NUM_TGRAPH_POINTS);
-          double energy_min = energy_hist.x_min();
-
-          double max_model_xs = 0.;
-          for ( size_t k = 0; k <= NUM_TGRAPH_POINTS; ++k ) {
-            double Ev = energy_min + (k * energy_step);
-            double mod_xs = gen.E_pdf(Ev) * xsec;
-
-            energies.push_back( Ev );
-            model_xsecs.push_back( mod_xs );
-
-            if ( max_model_xs < mod_xs ) max_model_xs = mod_xs;
-          }
-
-          // Create the model TGraph and set its plotting style
-          TGraph model_graph(energies.size(), energies.data(),
-            model_xsecs.data());
-
-          model_graph.SetLineColor(kBlue);
-          model_graph.SetLineWidth(3);
-          //model_graph.SetLineStyle(2);
-
-          TCanvas canvas;
-          events_th1d.Draw("hist e");
-          //model_th1d.Draw("hist same");
-          model_graph.Draw("l");
-
-          TLegend lg(0.15, 0.65, 0.3, 0.85);
-          lg.AddEntry(&events_th1d, "events", "l");
-          //lg.AddEntry(&model_th1d, "model bin integrals", "l");
-          lg.AddEntry(&model_graph, "model", "l");
-
-          lg.Draw("same");
-
-          // Add the chi2 test results to the plot
-          std::ostringstream oss;
-          oss << "reduced #chi^{2} = " << chi2 / ndof;
-
-          double x_ltx = (E_max - E_min) / 12.;
-          double y_ltx = 0.65 * max_model_xs;
-
-          TLatex ltx(x_ltx, y_ltx, oss.str().c_str());
-          ltx.SetTextColor(kBlack);
-          ltx.Draw("same");
-          ltx.SetTextSize(0.035);
-
-          oss = std::ostringstream();
-          oss << "p-value = " << p_value;
-
-          TLatex ltx2(x_ltx, 0.8*y_ltx, oss.str().c_str());
-          ltx2.SetTextColor(kBlack);
-          ltx2.Draw("same");
-          ltx2.SetTextSize(0.035);
-
-          canvas.SaveAs("test1.pdf");
-          canvas.SaveAs("test1.root");
-
+        make_plots(energy_title, energy_hist, expected_bin_counts,
+          flux_avg_xsec, chi2, ndof, p_value, "test2.pdf",
+          [&pdf, &flux_avg_xsec](double Ev) -> double
+          { return pdf(Ev) * flux_avg_xsec; });
         #endif
 
-        if ( !passed ) {
-          FAIL_CHECK("Neutrino energy distribution failed chi^2 test");
-        }
+        if ( !passed ) FAIL_CHECK("Energy distribution failed chi^2 test");
       }
     }
   }
