@@ -2,6 +2,8 @@
 #include <functional>
 #include <vector>
 
+#include "marley/marley_utils.hh"
+
 namespace marley {
 
   /// @brief Approximate representation of a 1D continuous function
@@ -93,7 +95,7 @@ namespace marley {
       /// used here
       inline double chebyshev_point(size_t j) const {
         // jth Chebyshev point (of the second kind) on [-1, 1]
-        double x = std::cos( static_cast<double>(M_PI * j) / N_ );
+        double x = std::cos( static_cast<double>(marley_utils::pi * j) / N_ );
         // Affine transformation to [x_min_, x_max_] (primed basis)
         double x_prime = (( x_max_ - x_min_ )*x + ( x_max_ + x_min_ )) / 2.;
         return x_prime;

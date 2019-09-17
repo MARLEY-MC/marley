@@ -102,6 +102,8 @@ namespace marley_utils {
   constexpr double m_e = 0.510998928; // MeV
   // Constant to use when converting from mb to MeV^(-2)
   constexpr double mb = 1/3.89379338e5; // MeV^(-2) mb^(-1)
+  // Constant to use to convert from fm^2 to 10^(-40) cm^2
+  constexpr double fm2_to_minus40_cm2 = 1e14;
   // Square of the elementary charge
   constexpr double e2 = hbar_c * alpha; // MeV*fm
   // Constant to use when approximating nuclear radii via

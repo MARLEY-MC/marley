@@ -1069,9 +1069,8 @@ int main(int argc, char* argv[]) {
     // Compute the flux-averaged total cross section for all
     // enabled reactions
     double avg_tot_xs = gen->flux_averaged_total_xs(); // MeV^(-2)
-    constexpr double fm2_to_minus40_cm2 = 1e14;
     MARLEY_LOG_INFO() << "Flux-averaged total cross section: "
-      << marley_utils::hbar_c2 * avg_tot_xs * fm2_to_minus40_cm2
+      << marley_utils::hbar_c2 * avg_tot_xs * marley_utils::fm2_to_minus40_cm2
       << " * 10^(-40) cm^2";
 
     // Write the flux-averaged total cross section to the output
