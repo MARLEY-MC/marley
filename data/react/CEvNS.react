@@ -1,0 +1,20 @@
+# MARLEY reaction data for coherent elastic neutrino-nucleus
+# scattering (CEvNS) on 40Ar
+# Prepared 17 September 2019 by Steven Gardiner
+#
+# Particle IDs conform to the 2017 revision of the
+# Particle Data Group Monte Carlo Particle Numbering Scheme
+# (see http://pdg.lbl.gov/2018/reviews/rpp2018-rev-monte-carlo-numbering.pdf)
+#
+# This file is intended to be used for testing the extension of MARLEY to NC
+# scattering with a simple case. Under the alowed approximation, the NC B(F)
+# matrix element only participates in ground-state-to-ground-state transitions
+# (CEvNS). B(GT) values (which give rise to inelastic NC reactions) are omitted
+# from this file for now.
+#
+# Reaction description
+vubar + 40Ar --> vubar + 40Ar (g.s.)
+# Particle IDs and final ion charge
+-14 1000180400 -14 1000180400 0
+# B(F) value is just gV^2 = 1
+0.000000 1.00  0
