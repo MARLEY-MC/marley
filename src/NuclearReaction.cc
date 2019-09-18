@@ -525,6 +525,10 @@ double marley::NuclearReaction::summed_xs_helper(int pdg_a, double KEa,
   // not, then just return 0.
   if ( differential && std::abs(cos_theta_c_cm) > 1. ) return 0.;
 
+  // If the projectile kinetic energy is zero (or negative), then
+  // just return zero.
+  if ( KEa <= 0. ) return 0.;
+
   // If we've been passed a vector to load with the partial cross sections
   // to each nuclear level, then clear it before storing them
   if ( level_xsecs ) level_xsecs->clear();

@@ -36,9 +36,6 @@
 
 namespace {
 
-// PDG code of the projectile to use for testing
-constexpr int PROJECTILE_PDG = marley_utils::ELECTRON_NEUTRINO;
-
 // The number of events to generate for each sampling test
 constexpr int NUM_EVENTS = 100000;
 
@@ -361,8 +358,8 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
   Histogram energy_hist(NUM_ENERGY_BINS, E_min, E_max);
   Histogram cos_hist(NUM_COS_BINS, COS_MIN, COS_MAX);
 
-  std::ifstream ev_file("events.ascii");
-  marley::Event ev;
+  //std::ifstream ev_file("events.ascii");
+  //marley::Event ev;
 
   //std::ofstream ev_file("events.ascii");
 
@@ -371,11 +368,11 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     if ( e % 1000 == 0 ) MARLEY_LOG_INFO() << "Event " << e;
 
     // Generate a new event
-    //marley::Event ev = gen.create_event();
+    marley::Event ev = gen.create_event();
     //ev_file << ev << '\n';
 
     // DEBUG
-    ev_file >> ev;
+    //ev_file >> ev;
 
     // Store the neutrino energy
     energy_hist.fill( ev.projectile().kinetic_energy() );
@@ -447,9 +444,10 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     {
       const auto& reactions = gen.get_reactions();
       auto& source = const_cast<marley::NeutrinoSource&>(gen.get_source());
+      int pdg_a = source.get_pid();
       double diff_xsec = 0.;
       for ( const auto& react : reactions ) {
-        diff_xsec += react->diff_xs(PROJECTILE_PDG, Ev, cos_theta_c_cm);
+        diff_xsec += react->diff_xs(pdg_a, Ev, cos_theta_c_cm);
       }
       return diff_xsec;
     };

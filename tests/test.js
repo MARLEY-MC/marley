@@ -1,13 +1,11 @@
 {
-  //energy_pdf_max: 0.000001,
-
   // Reaction matrix element files
-  reactions: [ "ve40ArCC_Liu1998.react" ],
+  reactions: [ "CEvNS.react" ],
 
   // Neutrino source specification
   source: {
     type: "dar",
-    neutrino: "ve",
+    neutrino: "vubar",
   },
 
   //// Neutrino source specification
@@ -28,18 +26,4 @@
 
   // Logging configuration
   log: [ { file: "stdout", level: "info" }, ],
-
-  // Settings for marley command-line executable
-  executable_settings: {
-
-    events: 100000, // The number of events to generate
-
-    // Event output configuration
-    output: [
-      { file: "test.root", format: "root", mode: "overwrite" },
-      { file: "test.ascii", format: "ascii", mode: "overwrite" },
-      { file: "test.hepevt", format: "hepevt", mode: "overwrite" },
-      { file: "test.json", format: "json", mode: "overwrite" }
-    ],
-  },
 }
