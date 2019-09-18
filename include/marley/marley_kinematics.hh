@@ -33,4 +33,7 @@ namespace marley_kinematics {
   // two particles
   double get_mandelstam_s(const marley::Particle& p1,
     const marley::Particle& p2);
+
+  // Boost two particles into their mutual center-of-momentum frame
+  void boost_to_cm_frame(marley::Particle& p1, marley::Particle& p2);
 }

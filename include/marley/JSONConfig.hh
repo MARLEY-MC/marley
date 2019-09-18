@@ -18,6 +18,7 @@ namespace marley {
         ::InterpolationMethod;
 
       explicit JSONConfig(const marley::JSON& object);
+      explicit JSONConfig(const std::string& json_filename);
 
       marley::Generator create_generator() const;
 

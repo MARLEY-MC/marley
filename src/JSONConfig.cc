@@ -91,6 +91,12 @@ marley::JSONConfig::JSONConfig(const marley::JSON& json) : json_(json)
   update_logger_settings();
 }
 
+marley::JSONConfig::JSONConfig(const std::string& json_filename)
+{
+  json_ = marley::JSON::load_file( json_filename );
+  update_logger_settings();
+}
+
 int marley::JSONConfig::neutrino_pdg(const std::string& nu) const {
 
   int pdg = 0;

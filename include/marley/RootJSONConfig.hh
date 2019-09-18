@@ -12,6 +12,9 @@ namespace marley {
       explicit RootJSONConfig(const marley::JSON& object)
         : JSONConfig(object) {}
 
+      explicit RootJSONConfig(const std::string& json_filename)
+        : JSONConfig(json_filename) {}
+
       virtual bool process_extra_source_types(const std::string& type,
         const marley::JSON& source_spec, int pdg_code,
         std::unique_ptr<marley::NeutrinoSource>& source) const override;

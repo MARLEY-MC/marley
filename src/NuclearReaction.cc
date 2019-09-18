@@ -490,7 +490,7 @@ double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
 // Compute the differential cross section d\sigma / d\cos\theta_c^{CM}
 // summed over all final nuclear levels. This is done in units of MeV^(-2)
 // using the center of momentum frame.
-double marley::NuclearReaction::summed_diff_xs(int pdg_a, double KEa,
+double marley::NuclearReaction::diff_xs(int pdg_a, double KEa,
   double cos_theta_c_cm)
 {
   return summed_xs_helper(pdg_a, KEa, cos_theta_c_cm, nullptr, true);
@@ -510,7 +510,7 @@ double marley::NuclearReaction::diff_xs(const marley::MatrixElement& mat_el,
   return xsec;
 }
 
-// Helper function for total_xs and summed_diff_xs()
+// Helper function for total_xs and diff_xs()
 double marley::NuclearReaction::summed_xs_helper(int pdg_a, double KEa,
   double cos_theta_c_cm, std::vector<double>* level_xsecs, bool differential)
 {

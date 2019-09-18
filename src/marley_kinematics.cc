@@ -209,4 +209,24 @@ double marley_kinematics::get_mandelstam_s(const marley::Particle& p1,
 
     return std::pow(E_tot_cm, 2);
   }
+
+}
+
+
+// Boost two particles into their mutual CM frame
+void marley_kinematics::boost_to_cm_frame(marley::Particle& p1,
+  marley::Particle& p2)
+{
+  // Get parameters for a Lorentz boost to the center of momentum frame
+  double E_tot = p1.total_energy() + p2.total_energy();
+  double px_tot = p1.px() + p2.px();
+  double py_tot = p1.py() + p2.py();
+  double pz_tot = p1.pz() + p2.pz();
+
+  double beta_x = px_tot / E_tot;
+  double beta_y = py_tot / E_tot;
+  double beta_z = pz_tot / E_tot;
+
+  lorentz_boost(beta_x, beta_y, beta_z, p1);
+  lorentz_boost(beta_x, beta_y, beta_z, p2);
 }

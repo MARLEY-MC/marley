@@ -131,6 +131,9 @@ namespace marley {
         }
         else throw marley::Error("Unrecognized transition type encountered"
           " in marley::MatrixElement::cos_theta_pdf()");
+
+        // Normalize to unit integral
+        pdf *= 0.5;
         return pdf;
       }
 

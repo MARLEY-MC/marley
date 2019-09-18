@@ -31,20 +31,29 @@
 #include "marley/JSON.hh"
 #include "marley/Logger.hh"
 #include "marley/Reaction.hh"
+#include "marley/marley_kinematics.hh"
 #include "marley/marley_utils.hh"
 
 namespace {
 
+// PDG code of the projectile to use for testing
+constexpr int PROJECTILE_PDG = marley_utils::ELECTRON_NEUTRINO;
+
 // The number of events to generate for each sampling test
-constexpr int NUM_EVENTS = 10000;
+constexpr int NUM_EVENTS = 100000;
 
 // The number of bins to use when histogramming events
-constexpr int NUM_BINS = 50;
+constexpr int NUM_ENERGY_BINS = 50;
+constexpr int NUM_COS_BINS = 5;
+
+// Cosine range for histograms
+constexpr double COS_MIN = -1.;
+constexpr double COS_MAX = 1.;
 
 #ifdef USE_ROOT
 // The number of points to use when making TGraphs
 // for validation plots
-constexpr int NUM_TGRAPH_POINTS = 10000;
+constexpr int NUM_TGRAPH_POINTS = 3000;
 #endif
 
 // Threshold p-value below which we'll reject the null hypothesis
@@ -81,11 +90,11 @@ class Histogram {
 
     // Get the x value corresponding to the lower edge of the bin
     inline double get_bin_left_edge(size_t b) const
-      { return b*x_step_; }
+      { return x_min_ + b*x_step_; }
 
     // Get the x value corresponding to the higher edge of the bin
     inline double get_bin_right_edge(size_t b) const
-      { return (b + 1)*x_step_; }
+      { return x_min_ + (b + 1)*x_step_; }
 
     // Set the contents of the bth bin
     void set_bin_content(size_t b, int counts) {
@@ -102,7 +111,11 @@ class Histogram {
 
     inline void fill( double x ) {
       for ( size_t b = 0; b < N_bins_; ++b ) {
-        if ( x >= b*x_step_ + x_min_ && x < (b+1)*x_step_ + x_min_ ) {
+
+        double left_edge = get_bin_left_edge( b );
+        double right_edge = get_bin_right_edge( b );
+
+        if ( x >= left_edge && x < right_edge ) {
           ++bin_counts_.at( b );
           break;
         }
@@ -326,69 +339,170 @@ void make_plots(const std::string& hist_title, const Histogram& events_hist,
 } // anonymous namespace
 
 // *** Tests for MC sampling of physics quantities ***
-SCENARIO( "Reacting neutrino energies in events match underlying distribution",
-  "[physics]" )
+TEST_CASE( "Events match their underlying distributions", "[physics]" )
 {
-  GIVEN( "A configured Generator object" ) {
+  // Configure the generator
+  std::string config_file_name("test.js");
+  #ifdef USE_ROOT
+    marley::RootJSONConfig config( config_file_name );
+  #else
+    marley::JSONConfig config( config_file_name );
+  #endif
 
-    auto json = marley::JSON::load_file("test.js");
+  marley::Generator gen = config.create_generator();
+
+  MARLEY_LOG_INFO() << "Generating " << NUM_EVENTS << " events";
+
+  double E_min = gen.get_source().get_Emin();
+  double E_max = gen.get_source().get_Emax();
+
+  // Histograms to store the quantities of interest from the events
+  // for testing
+  Histogram energy_hist(NUM_ENERGY_BINS, E_min, E_max);
+  Histogram cos_hist(NUM_COS_BINS, COS_MIN, COS_MAX);
+
+  std::ifstream ev_file("events.ascii");
+  marley::Event ev;
+
+  //std::ofstream ev_file("events.ascii");
+
+  for ( int e = 0; e < NUM_EVENTS; ++e ) {
+
+    if ( e % 1000 == 0 ) MARLEY_LOG_INFO() << "Event " << e;
+
+    // Generate a new event
+    //marley::Event ev = gen.create_event();
+    //ev_file << ev << '\n';
+
+    // DEBUG
+    ev_file >> ev;
+
+    // Store the neutrino energy
+    energy_hist.fill( ev.projectile().kinetic_energy() );
+
+    // Calculate the boost parameters needed to go from the lab frame
+    // to the CM frame.
+    const marley::Particle& p1 = ev.projectile();
+    const marley::Particle& p2 = ev.target();
+
+    double E_tot = p1.total_energy() + p2.total_energy();
+
+    double beta_x = ( p1.px() + p2.px() ) / E_tot;
+    double beta_y = ( p1.py() + p2.py() ) / E_tot;
+    double beta_z = ( p1.pz() + p2.pz() ) / E_tot;
+
+    // Make copies of the projectile and ejectile and boost them to the CM
+    // frame
+    marley::Particle pr = ev.projectile();
+    marley::Particle ej = ev.ejectile();
+
+    marley_kinematics::lorentz_boost(beta_x, beta_y, beta_z, pr);
+    marley_kinematics::lorentz_boost(beta_x, beta_y, beta_z, ej);
+
+    // Store the CM frame scattering angle for the current event.
+    double cos_theta_ej_cm = ( pr.px()*ej.px() + pr.py()*ej.py()
+      + pr.pz()*ej.pz() ) / pr.momentum_magnitude()
+      / ej.momentum_magnitude();
+
+    cos_hist.fill( cos_theta_ej_cm );
+  }
+
+  // Reuse these variables for the different test cases
+  bool passed = false;
+  double chi2, p_value;
+  int ndof;
+
+  INFO("Checking sampling of neutrino energies");
+  {
+    std::function<double(double)> pdf = [&gen](double Ev)
+      -> double { return gen.E_pdf(Ev); };
+
+    auto expected_bin_counts = energy_hist.chi2_test(pdf, passed, chi2,
+      ndof, p_value);
+
+    // If we've built the tests against ROOT, then make a plot
     #ifdef USE_ROOT
-      marley::RootJSONConfig config(json);
-    #else
-      marley::JSONConfig config(json);
+    std::string energy_title("MARLEY reacting #nu energies;"
+      "neutrino energy (MeV); #left[d#sigma/dE_{#nu}#right]_{flux}"
+      " (10^{-40} cm^{2} / MeV)");
+
+    // Flux-averaged total cross section (10^(-40) cm^2)
+    double flux_avg_xsec = gen.flux_averaged_total_xs()
+      * marley_utils::hbar_c2 * marley_utils::fm2_to_minus40_cm2;
+
+    make_plots(energy_title, energy_hist, expected_bin_counts,
+      flux_avg_xsec, chi2, ndof, p_value, "test2.pdf",
+      [&pdf, &flux_avg_xsec](double Ev) -> double
+      { return pdf(Ev) * flux_avg_xsec; });
     #endif
 
-    marley::Generator gen = config.create_generator();
+    CHECK( passed );
+  }
 
-    WHEN( "Events are generated" ) {
-
-      MARLEY_LOG_INFO() << "Generating " << NUM_EVENTS << " events";
-
-      double E_min = gen.get_source().get_Emin();
-      double E_max = gen.get_source().get_Emax();
-
-      Histogram energy_hist(NUM_BINS, E_min, E_max);
-
-      for ( int e = 0; e < NUM_EVENTS; ++e ) {
-        if ( e % 1000 == 0 ) MARLEY_LOG_INFO() << "Event " << e;
-        marley::Event ev = gen.create_event();
-        energy_hist.fill( ev.projectile().kinetic_energy() );
+  INFO("Checking sampling of 2->2 scattering cosines")
+  {
+    // First, define a couple of helper functions
+    std::function<double(double, double)> total_diff_xsec
+      = [&gen](double Ev, double cos_theta_c_cm) -> double
+    {
+      const auto& reactions = gen.get_reactions();
+      auto& source = const_cast<marley::NeutrinoSource&>(gen.get_source());
+      double diff_xsec = 0.;
+      for ( const auto& react : reactions ) {
+        diff_xsec += react->diff_xs(PROJECTILE_PDG, Ev, cos_theta_c_cm);
       }
+      return diff_xsec;
+    };
 
-      std::ofstream out_file("energy_hist.txt");
-      out_file << energy_hist;
-      //std::ifstream in_file("energy_hist.txt");
-      //in_file >> energy_hist;
+    std::function<double(double)> flux_av_total_diff_xsec
+      = [&gen, &total_diff_xsec](double cos_theta_c_cm)
+    {
+      auto& source = const_cast<marley::NeutrinoSource&>(gen.get_source());
+      double E_min = source.get_Emin();
+      double E_max = source.get_Emax();
 
-      THEN( "The energy bin probabilities match the underyling distribution" ) {
+      // Compute the flux-averaged differential cross section in MeV^(-2)
+      double result = marley_utils::num_integrate(
+        [cos_theta_c_cm, &source, &total_diff_xsec](double Ev) -> double
+        { return source.pdf(Ev) * total_diff_xsec(Ev, cos_theta_c_cm); },
+        E_min, E_max);
 
-        bool passed = false;
-        std::function<double(double)> pdf = [&gen](double Ev)
-          -> double { return gen.E_pdf(Ev); };
+      // Convert to (10^(-40) cm^2)
+      result *= marley_utils::hbar_c2 * marley_utils::fm2_to_minus40_cm2;
+      return result;
+    };
 
-        double chi2, p_value;
-        int ndof;
-        auto expected_bin_counts = energy_hist.chi2_test(pdf, passed, chi2,
-          ndof, p_value);
+    double pdf_norm = marley_utils::num_integrate(flux_av_total_diff_xsec,
+      COS_MIN, COS_MAX);
 
-        // If we've built the tests against ROOT, then make a plot
-        #ifdef USE_ROOT
-        std::string energy_title("MARLEY reacting #nu energies;"
-          "neutrino energy (MeV); #left[d#sigma/dE_{#nu}#right]_{flux}"
-          " (10^{-40} cm^{2} / MeV)");
+    // Flux-averaged total cross section (10^(-40) cm^2)
+    double flux_avg_xsec = gen.flux_averaged_total_xs()
+      * marley_utils::hbar_c2 * marley_utils::fm2_to_minus40_cm2;
 
-        // Flux-averaged total cross section (10^(-40) cm^2)
-        double flux_avg_xsec = gen.flux_averaged_total_xs()
-          * marley_utils::hbar_c2 * marley_utils::fm2_to_minus40_cm2;
+    // Integrating over energy and then angle should give the same
+    // flux-averaged total cross section as integrating over angle
+    // and then energy
+    CHECK( pdf_norm == Approx(flux_avg_xsec) );
 
-        make_plots(energy_title, energy_hist, expected_bin_counts,
-          flux_avg_xsec, chi2, ndof, p_value, "test2.pdf",
-          [&pdf, &flux_avg_xsec](double Ev) -> double
-          { return pdf(Ev) * flux_avg_xsec; });
-        #endif
+    std::function<double(double)> pdf = [pdf_norm, &flux_av_total_diff_xsec]
+      (double cos_theta_c_cm) -> double
+      { return flux_av_total_diff_xsec(cos_theta_c_cm) / pdf_norm; };
 
-        if ( !passed ) FAIL_CHECK("Energy distribution failed chi^2 test");
-      }
-    }
+    auto expected_bin_counts = cos_hist.chi2_test(pdf, passed, chi2,
+      ndof, p_value);
+
+    // If we've built the tests against ROOT, then make a plot
+    #ifdef USE_ROOT
+    std::string cos_title("MARLEY CM frame scattering cosines;"
+      " cos(#theta_{c}^{CM});"
+      " #left[d#sigma/dcos(#theta_{c}^{CM})#right]_{flux}"
+      " (10^{-40} cm^{2})");
+
+    make_plots(cos_title, cos_hist, expected_bin_counts,
+      flux_avg_xsec, chi2, ndof, p_value, "test3.pdf",
+      flux_av_total_diff_xsec);
+    #endif
+
+    CHECK( passed );
   }
 }
