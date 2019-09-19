@@ -268,6 +268,11 @@ namespace marley {
       inline void set_default_E_pdf_max( double def_max ) {
         E_PDF_MAX_DEFAULT_ = def_max;
       }
+
+      /// @brief Flag manipulated by JSONConfig to prevent premature
+      /// normalization of E_pdf() during construction of a Generator
+      /// object
+      bool dont_normalize_E_pdf_ = false;
   };
 
   // Inline function definitions

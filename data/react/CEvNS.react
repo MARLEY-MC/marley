@@ -12,9 +12,7 @@
 # (CEvNS). B(GT) values (which give rise to inelastic NC reactions) are omitted
 # from this file for now.
 #
-# Reaction description
-vubar + 40Ar --> vubar + 40Ar (g.s.)
-# Particle IDs and final ion charge
--14 1000180400 -14 1000180400 0
+# ProcessType code and nuclear target PDG code
+2 1000180400
 # B(F) value is just gV^2 = 1
 0.000000 1.00  0

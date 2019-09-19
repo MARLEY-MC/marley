@@ -102,10 +102,12 @@ marley::DecayAtRestNeutrinoSource::DecayAtRestNeutrinoSource(int particle_id)
   if (particle_id != marley_utils::ELECTRON_NEUTRINO &&
     particle_id != marley_utils::MUON_ANTINEUTRINO)
   {
-    throw marley::Error(std::string("Decay at rest")
-      + " neutrino source objects may only produce electron neutrinos"
-      + " or muon antineutrinos. PDG particle ID number "
-      + std::to_string(particle_id) + " is therefore not allowed.");
+    throw marley::Error("Muon decay at rest neutrino source objects may only"
+      " produce " + marley_utils::get_particle_symbol(
+      marley_utils::ELECTRON_NEUTRINO) + " or "
+      + marley_utils::get_particle_symbol(marley_utils::MUON_ANTINEUTRINO)
+      + ", but " + marley_utils::get_particle_symbol(particle_id)
+      + " was requested.");
   }
 }
 

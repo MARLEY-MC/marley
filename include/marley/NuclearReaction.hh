@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <memory>
 #include <regex>
 #include <string>
 #include <vector>
@@ -21,11 +22,23 @@ namespace marley {
 
     public:
 
-      /// @param filename Name (with path, if needed) of the matrix element
-      /// data file
-      /// @param db Reference to the StructureDatabase to use for sampling
-      /// excited nuclear levels
-      NuclearReaction(const std::string& filename,
+      /// @param pt Type of scattering process represented by this Reaction
+      /// @param pdg_a Projectile PDG code
+      /// @param pdg_b Target PDG code
+      /// @param pdg_c Ejectile PDG code
+      /// @param pdg_d Residue PDG code
+      /// @param q_d Charge of the residue after the prompt 2->2 scatter
+      /// represented by this NuclearReaction object
+      /// @param mat_els A vector of MatrixElement objects that should
+      /// be used to compute cross sections for this NuclearReaction
+      NuclearReaction(ProcessType pt, int pdg_a, int pdg_b, int pdg_c,
+        int pdg_d, int q_d,
+        const std::shared_ptr<std::vector<marley::MatrixElement> >& mat_els);
+
+      /// Factory method called by JSONConfig to build multiple
+      /// NuclearReaction objects from the same table of matrix elements
+      static std::vector<std::unique_ptr<NuclearReaction> >
+        load_from_file(const std::string& filename,
         marley::StructureDatabase& db);
 
       /// Produces a two-two scattering Event that proceeds via this reaction
@@ -52,7 +65,7 @@ namespace marley {
       /// @brief Get the minimum lab-frame kinetic energy (MeV) of the
       /// projectile that allows this reaction to proceed via a transition to
       /// the residue's ground state
-      double threshold_kinetic_energy() const;
+      double threshold_kinetic_energy() const override;
 
       /// @brief Total reaction cross section (MeV<sup> -2</sup>), including
       /// all kinematically-allowed final nuclear levels
@@ -61,7 +74,6 @@ namespace marley {
       /// @return Reaction total cross section (MeV<sup> -2</sup>)
       /// @note This function returns 0. if pdg_a != pdg_a_.
       virtual double total_xs(int pdg_a, double KEa) override;
-
 
       /// @brief Differential cross section
       /// @f$d\sigma/d\cos\theta_{c}^{\mathrm{CM}}@f$
@@ -123,10 +135,11 @@ namespace marley {
 
       /// Allows access to the owned vector of MatrixElement objects
       inline const std::vector<marley::MatrixElement>& matrix_elements() const
-        { return matrix_elements_; }
+        { return *matrix_elements_; }
 
-    private:
+    protected:
 
+      /// Helper function used by NuclearReaction::create_event()
       virtual marley::Event make_event_object(double KEa,
         double pc_cm, double cos_theta_c_cm, double phi_c_cm, double Ec_cm,
         double Ed_cm, double E_level = 0.) override;
@@ -160,6 +173,10 @@ namespace marley {
       double summed_xs_helper(int pdg_a, double KEa, double cos_theta_c_cm,
         std::vector<double>* level_xsecs, bool differential);
 
+      /// @brief Creates the description string based on the
+      /// PDG code values for the initial and final particles
+      void set_description();
+
       double md_gs_; ///< Ground state mass (MeV) of the residue
 
       int Zi_; ///< Target atomic number
@@ -178,7 +195,7 @@ namespace marley {
 
       /// @brief Matrix elements representing all of the possible nuclear
       /// transitions that may be caused by this reaction
-      std::vector<marley::MatrixElement> matrix_elements_;
+      std::shared_ptr<std::vector<marley::MatrixElement> > matrix_elements_;
   };
 
 }

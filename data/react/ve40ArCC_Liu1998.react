@@ -1,4 +1,4 @@
-# MARLEY reaction data for charged current ve on 40Ar
+# MARLEY reaction data for neutrino CC on 40Ar
 # Prepared 23 July 2018 by Steven Gardiner
 #
 # Particle IDs conform to the 2017 revision of the
@@ -25,10 +25,8 @@
 # B(GT) strength exceeded the experimental integrated B(GT) strength at the
 # highest measured experimental level.
 #
-# Reaction description
-ve + 40Ar --> 40K* + e⁻
-# Particle IDs and final ion charge
-12 1000180400 11 1000190400 1
+# ProcessType code and nuclear target PDG code
+0 1000180400
 # Experimental Ex, B(GT) pairs taken from
 # W. Liu, et al., Phys. Rev. C 58, 2677 (1998)
 2.289868 0.83              1

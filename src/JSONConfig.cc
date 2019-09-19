@@ -16,6 +16,7 @@
 #include "marley/StructureDatabase.hh"
 
 using InterpMethod = marley::InterpolationGrid<double>::InterpolationMethod;
+using ProcType = marley::Reaction::ProcessType;
 
 // anonymous namespace for helper functions, etc.
 namespace {
@@ -134,11 +135,69 @@ marley::Generator marley::JSONConfig::create_generator() const
   // user-supplied seed or the current number of seconds since the Unix epoch.
   marley::Generator gen(seed);
 
+  // Turn off calls to Generator::normalize_E_pdf() until we
+  // have set up all the needed pieces
+  gen.dont_normalize_E_pdf_ = true;
+
   // Use the JSON settings to update the generator's parameters
   prepare_direction(gen);
   prepare_structure(gen);
   prepare_neutrino_source(gen);
   prepare_reactions(gen);
+
+  // Now that the reactions and source are both prepared, check that a neutrino
+  // from the source can interact via at least one of the enabled reactions
+  bool found_matching_pdg = false;
+  int source_pdg = gen.get_source().get_pid();
+  for ( const auto& react : gen.get_reactions() ) {
+    if ( source_pdg == react->pdg_a() ) found_matching_pdg = true;
+  }
+  // If neutrinos from the source can never interact, then complain about it
+  if ( !found_matching_pdg ) throw marley::Error("The neutrino source"
+    " produces " + marley_utils::get_particle_symbol(source_pdg)
+    + ", which cannot participate in any of the configured reactions.");
+
+  // Before returning the newly-created Generator object, print logging
+  // messages describing the reactions that are active.
+  MARLEY_LOG_INFO() << "Generator configuration complete. Active reactions:";
+  for ( const auto& r : gen.get_reactions() ) {
+    if ( r->pdg_a() == source_pdg ) {
+
+      std::string proc_type_str;
+      if ( r->process_type() == ProcType::NeutrinoCC
+        || r->process_type() == ProcType::AntiNeutrinoCC )
+      {
+        proc_type_str = "CC";
+      }
+      else if ( r->process_type() == marley::Reaction::ProcessType::NC )
+      {
+        proc_type_str = "NC";
+      }
+      else throw marley::Error("Unrecognized process type encountered in"
+        " marley::JSONConfig::prepare_reactions()");
+
+      // Show the threshold in red if it's above the maximum energy
+      // produced by the source
+      std::ostringstream temp_oss;
+      double threshold_KE = r->threshold_kinetic_energy();
+      bool no_flux = ( threshold_KE > gen.get_source().get_Emax() );
+      if ( no_flux ) temp_oss << "\u001b[31m";
+      temp_oss << threshold_KE << " MeV";
+      if ( no_flux ) temp_oss << "\u001b[30m";
+      temp_oss << ')';
+
+      MARLEY_LOG_INFO() << "  " << proc_type_str << ": "
+        << r->get_description() << " (KE @ threshold: "
+        << temp_oss.str();
+    }
+  }
+
+  // We've prepared the Generator and checked that at least one cross section
+  // should be non-vanishing. Now actually integrate the cross section to check
+  // that there is flux above threshold (and normalize the energy PDF at the
+  // same time). An exception will be thrown if no neutrinos can interact.
+  gen.dont_normalize_E_pdf_ = false;
+  gen.normalize_E_pdf();
 
   return gen;
 }
@@ -176,14 +235,19 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
 
   const auto& fm = marley::FileManager::Instance();
 
-  if (json_.has_key("reactions")) {
+  if ( json_.has_key("reactions") ) {
 
     const marley::JSON& rs = json_.at("reactions");
 
-    if (rs.is_array()) {
+    if ( rs.is_array() ) {
 
       auto reactions = rs.array_range();
-      if (reactions.begin() != reactions.end()) {
+      if ( reactions.begin() != reactions.end() ) {
+
+        // Create a vector to cache the ProcessType values for
+        // reactions that have been loaded. Complain if there is
+        // duplication.
+        std::vector<ProcType> loaded_proc_types;
 
         for (const auto& r : reactions) {
 
@@ -198,36 +262,48 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
               " on the MARLEY search path.");
           }
 
-          MARLEY_LOG_INFO() << "Loading reaction data from file "
-            << full_file_name;
-          auto nr = std::make_unique<marley::NuclearReaction>(full_file_name,
-            gen.get_structure_db());
+          auto nuc_reacts = marley::NuclearReaction::load_from_file(
+            full_file_name, gen.get_structure_db());
 
-          std::string proc_type_str;
-          if ( nr->process_type() == marley::Reaction::ProcessType::CC ) {
-            proc_type_str = "CC";
+          // All of the NuclearReaction objects loaded from a single file
+          // will have the same process type, so just save the first one
+          auto temp_pt = nuc_reacts.front()->process_type();
+
+          // If we have a duplicate, warn the user that we'll ignore it
+          auto begin = loaded_proc_types.cbegin();
+          auto end = loaded_proc_types.cend();
+          if ( std::find(begin, end, temp_pt) != end ) {
+            MARLEY_LOG_WARNING() << "Reaction matrix elements for the "
+              << marley::Reaction::proc_type_to_string(temp_pt) << " process"
+              " were already loaded. To avoid duplication, those in "
+              << full_file_name << " will be ignored.";
+            continue;
           }
-          else if ( nr->process_type() == marley::Reaction::ProcessType::NC ) {
-            proc_type_str = "NC";
+          // Otherwise, save the process type for later checks of this kind
+          else {
+            MARLEY_LOG_INFO() << "Loaded "
+              << marley::Reaction::proc_type_to_string(temp_pt)
+              << " reaction data from " << full_file_name;
+            loaded_proc_types.push_back( temp_pt );
           }
-          else throw marley::Error("Unrecognized process type encountered in"
-            "marley::JSONConfig::prepare_reactions()");
 
-          MARLEY_LOG_INFO() << "Added " << proc_type_str << " reaction "
-            << nr->get_description();
-
-          gen.add_reaction( std::move(nr) );
+          // Transfer ownership of the new reactions to the generator
+          for ( auto& nr : nuc_reacts ) gen.add_reaction( std::move(nr) );
         }
 
         return;
+      }
+      else {
+        throw marley::Error("At least one reaction matrix data file must be"
+          " specified using the \"reactions\" parameter");
       }
     }
 
     handle_json_error("reactions", rs);
   }
 
-  throw marley::Error(std::string("At least one reaction matrix data file")
-    + " must be specified using the \"reactions\" parameter");
+  throw marley::Error("Missing \"reactions\" key in the MARLEY configuration"
+    " file.");
 }
 
 void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
@@ -409,11 +485,11 @@ void marley::JSONConfig::prepare_neutrino_source(marley::Generator& gen) const
 
   // Check whether the JSON configuration includes a neutrino source
   // specification
-  if (!json_.has_key("source")) return;
+  if ( !json_.has_key("source") ) return;
   const marley::JSON& source_spec = json_.at("source");
 
   // Complain if the user didn't specify a source type
-  if (!source_spec.has_key("type")) {
+  if ( !source_spec.has_key("type") ) {
     throw marley::Error(std::string("Missing \"type\" key in")
       + " neutrino source specification.");
     return;
@@ -422,7 +498,7 @@ void marley::JSONConfig::prepare_neutrino_source(marley::Generator& gen) const
   // Get the neutrino source type
   bool ok;
   std::string type = source_spec.at("type").to_string(ok);
-  if (!ok) handle_json_error("source.type", source_spec.at("type"));
+  if ( !ok ) handle_json_error("source.type", source_spec.at("type"));
 
   // Complain if the user didn't specify a neutrino type
   if (!source_spec.has_key("neutrino")) {
@@ -445,13 +521,13 @@ void marley::JSONConfig::prepare_neutrino_source(marley::Generator& gen) const
     source_check_positive(energy, "energy", "monoenergetic");
     source = std::make_unique<marley::MonoNeutrinoSource>(pdg, energy);
     MARLEY_LOG_INFO() << "Created monoenergetic "
-      << marley_utils::neutrino_pdg_to_string(pdg) << " source with"
+      << marley_utils::get_particle_symbol(pdg) << " source with"
       << " neutrino energy = " << energy << " MeV";
   }
   else if (type == "dar" || type == "decay-at-rest") {
     source = std::make_unique<marley::DecayAtRestNeutrinoSource>(pdg);
      MARLEY_LOG_INFO() << "Created muon decay-at-rest "
-       << marley_utils::neutrino_pdg_to_string(pdg) << " source";
+       << marley_utils::get_particle_symbol(pdg) << " source";
   }
   else if (type == "fd" || type == "fermi-dirac" || type == "fermi_dirac") {
     double Emin = source_get_double("Emin", source_spec, "Fermi-Dirac");
@@ -472,7 +548,7 @@ void marley::JSONConfig::prepare_neutrino_source(marley::Generator& gen) const
     source = std::make_unique<marley::FermiDiracNeutrinoSource>(pdg, Emin,
       Emax, temp, eta);
     MARLEY_LOG_INFO() << "Created Fermi-Dirac "
-      << marley_utils::neutrino_pdg_to_string(pdg) << " source with parameters";
+      << marley_utils::get_particle_symbol(pdg) << " source with parameters";
     MARLEY_LOG_INFO() << "  Emin = " << Emin << " MeV";
     MARLEY_LOG_INFO() << "  Emax = " << Emax << " MeV";
     MARLEY_LOG_INFO() << "  temperature = " << temp << " MeV";
@@ -496,7 +572,7 @@ void marley::JSONConfig::prepare_neutrino_source(marley::Generator& gen) const
     source = std::make_unique<marley::BetaFitNeutrinoSource>(pdg, Emin,
       Emax, Emean, beta);
     MARLEY_LOG_INFO() << "Created beta-fit "
-      << marley_utils::neutrino_pdg_to_string(pdg) << " source with parameters";
+      << marley_utils::get_particle_symbol(pdg) << " source with parameters";
     MARLEY_LOG_INFO() << "  Emin = " << Emin << " MeV";
     MARLEY_LOG_INFO() << "  Emax = " << Emax << " MeV";
     MARLEY_LOG_INFO() << "  average energy = " << Emean << " MeV";
@@ -540,7 +616,7 @@ void marley::JSONConfig::prepare_neutrino_source(marley::Generator& gen) const
     source = std::make_unique<marley::GridNeutrinoSource>(Es, weights, pdg,
       InterpMethod::Constant);
     MARLEY_LOG_INFO() << "Created histogram "
-      << marley_utils::neutrino_pdg_to_string(pdg) << " source";
+      << marley_utils::get_particle_symbol(pdg) << " source";
   }
   else if (type == "grid") {
     std::vector<double> energies = get_vector("energies", source_spec, "grid");
@@ -552,7 +628,7 @@ void marley::JSONConfig::prepare_neutrino_source(marley::Generator& gen) const
     source = std::make_unique<marley::GridNeutrinoSource>(energies, PDs, pdg,
       method);
     MARLEY_LOG_INFO() << "Created grid "
-      << marley_utils::neutrino_pdg_to_string(pdg) << " source";
+      << marley_utils::get_particle_symbol(pdg) << " source";
   }
   else if (!process_extra_source_types(type, source_spec, pdg, source)) {
     throw marley::Error(std::string("Unrecognized MARLEY neutrino source")

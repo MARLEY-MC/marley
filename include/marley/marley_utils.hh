@@ -407,33 +407,33 @@ namespace marley_utils {
   // Lookup table for particle symbols (keys are PDG particle IDs,
   // values are symbols).
   const std::unordered_map<int, std::string> particle_symbols = {
-    { 11, "e"},
-    { 12, "nu_e"}, // "\u03BD"},
-    { 13, "mu"},
-    { 14, "nu_mu"},
-    { 15, "tau"},
-    { 16, "nu_tau"},
-    { 22, "g"}, // "\u03B3"},
-    { 2112, "n"},
-    { 2212, "p"},
-    { 1000010020, "d"},
-    { 1000010030, "t"},
-    { 1000020030, "h"},
-    { 1000020040, "a"}, // "\u03B1"},
+    { 11, "e" },
+    { 12, "\u03BDe" },
+    { 13, "\u03BC" },
+    { 14, "\u03BD\u03BC" },
+    { 15, "\u03C4" },
+    { 16, "\u03BD\u03C4" },
+    { 22, "\u03B3" },
+    { 2112, "n" },
+    { 2212, "p" },
+    { 1000010020, "d" },
+    { 1000010030, "t" },
+    { 1000020030, "h" },
+    { 1000020040, "\u03B1" },
   };
 
   // Lookup table for particle electric charges (keys are PDG particle IDs,
   // values are charges expressed as integer multiples of the proton charge).
   const std::unordered_map<int, int> particle_electric_charges = {
-    { 11, -1},
-    { 12, 0},
-    { 13, -1},
-    { 14, 0},
-    { 15, -1},
-    { 16, 0},
-    { 22, 0},
-    { 2112, 0},
-    { 2212, 1}
+    { 11,  -1 },
+    { 12,   0 },
+    { 13,  -1 },
+    { 14,   0 },
+    { 15,  -1 },
+    { 16,   0 },
+    { 22,   0 },
+    { 2112, 0 },
+    { 2212, 1 }
   };
 
   // Looks up the electric charge of a particle based on its PDG particle ID
@@ -447,6 +447,15 @@ namespace marley_utils {
     // If an antiparticle was requested, return the opposite electric charge.
     if ( pid < 0 ) charge *= -1;
     return charge;
+  }
+
+  inline std::string get_particle_symbol(int pid) {
+    int charge = get_particle_charge( pid );
+    std::string result = particle_symbols.at( std::abs(pid) );
+    if ( charge < 0 ) result += "\u207B";
+    else if ( charge > 0 ) result += "\u207A";
+    else if ( pid < 0 ) result = "anti-" + result;
+    return result;
   }
 
   // Prompt the user with a yes/no question and retrieve the result

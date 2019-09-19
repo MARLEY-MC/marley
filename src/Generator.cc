@@ -93,6 +93,11 @@ std::string marley::Generator::get_state_string() const {
 
 void marley::Generator::normalize_E_pdf() {
 
+  // If we're not ready to do the normalization, then just return without doing
+  // anything. JSONConfig may set this flag to prevent premature calls to
+  // normalize_E_pdf() as the Generator is being constructed
+  if ( dont_normalize_E_pdf_ ) return;
+
   // This function is called whenever the reacting neutrino energy PDF changes,
   // so reset the estimated maximum PDF value to its default. We will update
   // this during rejection sampling.
@@ -109,11 +114,10 @@ void marley::Generator::normalize_E_pdf() {
     // the source PDF at energy Emin
     norm_ = E_pdf(source_->get_Emin());
     if (norm_ <= 0. || std::isnan(norm_)) {
-      throw marley::Error(std::string("The total cross section")
-        + " for all defined reactions is <= 0 or NaN for the neutrino"
-        + " energy defined in a monoenergetic source. Please verify that"
-        + " your neutrino source produces particles above threshold for"
-        + " at least one reaction.");
+      throw marley::Error("The total cross section for all defined reactions"
+        " is <= 0 or NaN for the neutrino energy defined in a monoenergetic"
+        " source. Please verify that your neutrino source produces particles"
+        " above threshold for at least one reaction.");
     }
   }
   else {
@@ -341,11 +345,11 @@ void marley::Generator::set_source(
     source_.reset( source.release() );
 
     // Don't bother to renormalize if there are no reactions defined yet
-    if ( !reactions_.empty() ) {
-      // Update the neutrino energy probability density function based on the
-      // new source spectrum
-      normalize_E_pdf();
-    }
+    if ( reactions_.empty() ) return;
+
+    // Update the neutrino energy probability density function based on the
+    // new source spectrum
+    this->normalize_E_pdf();
   }
 }
 
