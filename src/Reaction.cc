@@ -10,12 +10,12 @@ void marley::Reaction::two_two_scatter(double KEa, double& s, double& Ec_cm,
   double Ea = KEa + ma_;
 
   // Compute Mandelstam s (the square of the total CM frame energy)
-  s = ma2_ + mb2_ + 2 * mb_ * Ea;
+  s = ma_*ma_ + mb_*mb_ + 2.*mb_*Ea;
   double sqrt_s = std::sqrt(s);
 
   // Determine the CM frame energy and momentum of the ejectile
-  Ec_cm = (s + mc2_ - md2_) / (2 * sqrt_s);
-  pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2_);
+  Ec_cm = (s + mc_*mc_ - md_*md_) / (2 * sqrt_s);
+  pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc_*mc_);
 
   // Determine the residue's CM frame energy. Roundoff errors may cause Ed_cm to
   // dip below md, which is unphysical. Prevent this from occurring by allowing

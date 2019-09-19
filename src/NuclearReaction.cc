@@ -148,11 +148,6 @@ marley::NuclearReaction::NuclearReaction(const std::string& filename,
   // levels) and use the energies given in the reaction dataset.
   marley::DecayScheme* scheme = db.get_decay_scheme(Zf_, Af_);
   if (scheme != nullptr) set_decay_scheme(scheme);
-
-  // Precompute these squared masses for speed
-  ma2_ = std::pow(ma_, 2);
-  mb2_ = std::pow(mb_, 2);
-  mc2_ = std::pow(mc_, 2);
 }
 
 // Associate a decay scheme object with this reaction. This will provide
@@ -388,7 +383,6 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   // Update the residue mass based on its excitation energy for the current
   // event
   md_ = md_gs_ + E_level;
-  md2_ = std::pow(md_, 2);
 
   // Compute Mandelstam s, the ejectile's CM frame total energy, the magnitude
   // of the ejectile's CM frame 3-momentum, and the residue's CM frame total
@@ -611,9 +605,9 @@ double marley::NuclearReaction::total_xs(const marley::MatrixElement& me,
 
   // Compute CM frame total energies for two of the particles. Also
   // compute the magnitude of the ejectile CM frame momentum.
-  double Eb_cm = (s + mb2_ - ma2_) / (2. * sqrt_s);
-  double Ec_cm = (s + mc2_ - md2) / (2. * sqrt_s);
-  double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc2_);
+  double Eb_cm = (s + mb_*mb_ - ma_*ma_) / (2. * sqrt_s);
+  double Ec_cm = (s + mc_*mc_ - md2) / (2. * sqrt_s);
+  double pc_cm = marley_utils::real_sqrt(std::pow(Ec_cm, 2) - mc_*mc_);
 
   // Compute the (dimensionless) speed of the ejectile in the CM frame
   beta_c_cm = pc_cm / Ec_cm;
@@ -627,7 +621,7 @@ double marley::NuclearReaction::total_xs(const marley::MatrixElement& me,
   // Relative speed of particles c and d, computed with a manifestly
   // Lorentz-invariant expression
   double beta_rel_cd = marley_utils::real_sqrt(
-    std::pow(pc_dot_pd, 2) - mc2_*md2) / pc_dot_pd;
+    std::pow(pc_dot_pd, 2) - mc_*mc_*md2) / pc_dot_pd;
 
   // Common factors for the allowed approximation total cross sections
   // for both CC and NC reactions
@@ -781,11 +775,11 @@ double marley::NuclearReaction::ema_factor(double beta_rel_cd, bool& ok) const
   ok = (E_c_FNR_eff >= mc_);
 
   // Lepton momentum in FNR frame
-  double p_c_FNR = marley_utils::real_sqrt( std::pow(E_c_FNR, 2) - mc2_ );
+  double p_c_FNR = marley_utils::real_sqrt( std::pow(E_c_FNR, 2) - mc_*mc_ );
 
   // Effective momentum in FNR frame
   double p_c_FNR_eff = marley_utils::real_sqrt(
-    std::pow(E_c_FNR_eff, 2) - mc2_ );
+    std::pow(E_c_FNR_eff, 2) - mc_*mc_ );
 
   // Coulomb correction factor
   double f_EMA2 = std::pow(p_c_FNR_eff / p_c_FNR, 2);

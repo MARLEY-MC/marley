@@ -68,12 +68,6 @@ namespace marley {
       double mc_; ///< Ejectile mass (MeV)
       double md_; ///< Residue mass (MeV)
 
-      /// @note The squared masses of the particles are pre-computed for speed
-      double ma2_; ///< Squared projectile mass (MeV)
-      double mb2_; ///< Squared target mass (MeV)
-      double mc2_; ///< Squared ejectile mass (MeV)
-      double md2_; ///< Squared residue mass (MeV)
-
       /// @brief String that contains a formula describing the reaction
       std::string description_;
 
