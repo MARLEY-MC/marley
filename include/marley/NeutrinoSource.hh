@@ -206,7 +206,7 @@ namespace marley {
   /// 96E^2m_\mu^{-4}(m_\mu - 2E) & 0 < E < m_\mu/2 @f} where @f$m_\mu@f$ is
   /// the muon mass. For a @f$\bar{\nu}_\mu@f$ source, the probability density
   /// function is given by @f{align*}{ P(E) &= 16E^2m_\mu^{-4}(3m_\mu - 4E) & 0
-  /// < E < m_\mu/2. @f} Other neutrino species are not allowed.
+  /// < E < m_\mu/2. @f}
   class DecayAtRestNeutrinoSource : public NeutrinoSource {
     public:
       /// @param particle_id PDG particle ID for the neutrinos produced by this

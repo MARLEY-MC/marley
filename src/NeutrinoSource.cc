@@ -99,15 +99,13 @@ marley::FunctionNeutrinoSource::FunctionNeutrinoSource(int particle_id,
 marley::DecayAtRestNeutrinoSource::DecayAtRestNeutrinoSource(int particle_id)
   : NeutrinoSource(particle_id)
 {
-  if (particle_id != marley_utils::ELECTRON_NEUTRINO &&
-    particle_id != marley_utils::MUON_ANTINEUTRINO)
+  int abs_pid = std::abs(particle_id);
+  if ( abs_pid != marley_utils::ELECTRON_NEUTRINO &&
+    abs_pid != marley_utils::MUON_NEUTRINO )
   {
-    throw marley::Error("Muon decay at rest neutrino source objects may only"
-      " produce " + marley_utils::get_particle_symbol(
-      marley_utils::ELECTRON_NEUTRINO) + " or "
-      + marley_utils::get_particle_symbol(marley_utils::MUON_ANTINEUTRINO)
-      + ", but " + marley_utils::get_particle_symbol(particle_id)
-      + " was requested.");
+    throw marley::Error("Invalid projectile "
+      + marley_utils::get_particle_symbol(particle_id) + " requested"
+      " for a muon decay-at-rest neutrino source");
   }
 }
 
@@ -117,7 +115,8 @@ double marley::DecayAtRestNeutrinoSource::pdf(double E) {
   // on the energy interval [0., m_mu_ / 2.]
   /// @todo Refine the approximate decay-at-rest Michel spectra to use more
   /// exact expressions.
-  else if (pid_ == marley_utils::ELECTRON_NEUTRINO)
+  int abs_pid = std::abs(pid_);
+  if (abs_pid == marley_utils::ELECTRON_NEUTRINO)
     return 96. * std::pow(E, 2) * m_mu_to_the_minus_four_
       * (m_mu_ - 2*E);
   // Spectrum for muon antineutrinos

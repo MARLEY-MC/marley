@@ -1,6 +1,6 @@
 {
   // Reaction matrix element files
-  reactions: [ "CEvNS.react" ],
+  reactions: [ "CEvNS40Ar.react" ],
 
   // Neutrino source specification
   source: {
