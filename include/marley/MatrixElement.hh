@@ -22,12 +22,12 @@ namespace marley {
                    ///< (charged- vs. neutral-current) and is given by
                    ///< @f$ \mathcal{O}_\mathrm{F} = \begin{cases}
                    ///   \sum_{k = 1}^A t_{-}(k)
-                   /// & \text{CC, }\nu\text{ projectile} \\
-                   ///   \sum_{k = 1}^A t_{+}(k)
-                   /// & \text{CC, }\bar{\nu}\text{ projectile} \\
-                   /// I & \text{NC} \\
-                   /// \end{cases} @f$ <br> where @f$ t_{\pm} @f$ are the isospin
-                   ///< raising and lowering operators and @f$ I @f$ is
+                   /// & \text{CC, }\nu\text{ projectile}
+                   /// \\  \sum_{k = 1}^A t_{+}(k)
+                   /// & \text{CC, }\bar{\nu}\text{ projectile}
+                   /// \\ I & \text{NC}
+                   /// \\ \end{cases} @f$ <br> where @f$ t_{\pm} @f$ are the
+                   ///< isospin raising and lowering operators and @f$ I @f$ is
                    ///< the identity operator in isospace. MARLEY uses the
                    ///< convention where @f$ t_{-}\big|n\big> = \big|p\big> @f$.
 
@@ -39,10 +39,10 @@ namespace marley {
                    ///< nucleon and @f$ \Theta(k) @f$ is an operator in
                    ///< isospace that depends on the type of scattering process:
                    ///< @f$ \Theta = \begin{cases}
-                   /// t_{-} & \text{CC, }\nu\text{ projectile} \\
-                   /// t_{+} & \text{CC, }\bar{\nu}\text{ projectile} \\
-                   /// t_3   & \text{NC} \\
-                   /// \end{cases} @f$
+                   /// t_{-} & \text{CC, }\nu\text{ projectile}
+                   /// \\ t_{+} & \text{CC, }\bar{\nu}\text{ projectile}
+                   /// \\ t_3   & \text{NC}
+                   /// \\ \end{cases} @f$
       };
 
       /// @param level_energy Excitation energy (MeV) of the final-state nuclear
