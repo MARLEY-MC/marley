@@ -10,6 +10,7 @@ namespace {
     { ProcType::NeutrinoCC, "\u03BD CC" },
     { ProcType::AntiNeutrinoCC, "anti-\u03BD CC" },
     { ProcType::NC, "NC" },
+    { ProcType::NuElectronElastic, "(anti-)\u03BD + e\u207B ES" },
   };
 
   // Defines the neutrino species that can participate in each type
@@ -27,7 +28,12 @@ namespace {
     { ProcType::NC,
       { ELECTRON_NEUTRINO, MUON_NEUTRINO, TAU_NEUTRINO,
         ELECTRON_ANTINEUTRINO, MUON_ANTINEUTRINO, TAU_ANTINEUTRINO }
-    }
+    },
+
+    { ProcType::NuElectronElastic,
+        { ELECTRON_NEUTRINO, MUON_NEUTRINO, TAU_NEUTRINO,
+          ELECTRON_ANTINEUTRINO, MUON_ANTINEUTRINO, TAU_ANTINEUTRINO }
+    },
 
   };
 
@@ -106,6 +112,7 @@ int marley::Reaction::get_ejectile_pdg(int pdg_a, ProcType proc_type) {
     if ( proc_type == ProcType::NeutrinoCC ) pdg_c = pdg_a - 1;
     else if ( proc_type == ProcType::AntiNeutrinoCC ) pdg_c = pdg_a + 1;
     else if ( proc_type == ProcType::NC ) pdg_c = pdg_a;
+    else if ( proc_type == ProcType::NuElectronElastic ) pdg_c = pdg_a;
     else throw marley::Error("Unrecognized ProcessType encountered in"
       " marley::Reaction::get_ejectile_pdg()");
   }
