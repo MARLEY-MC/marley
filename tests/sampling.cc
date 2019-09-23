@@ -506,7 +506,29 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
   INFO("Checking incident neutrino energy sampling");
   {
-    auto& source = gen.get_source();
+    const auto& source = gen.get_source();
+    Histogram source_E_hist(NUM_ENERGY_BINS, source.get_Emin(),
+      source.get_Emax());
+
+    int dummy;
+    for ( int e = 0; e < NUM_EVENTS; ++e ) {
+      source_E_hist.fill( source.sample_incident_neutrino(dummy, gen) );
+    }
+
+    std::function<double(double)> pdf = [&source](double Ev)
+      -> double { return source.pdf(Ev); };
+
+    auto expected_bin_counts = source_E_hist.chi2_test(pdf, passed, chi2,
+      ndof, p_value);
+
+    // If we've built the tests against ROOT, then make a plot
+    #ifdef USE_ROOT
+    std::string source_E_title("MARLEY incident neutrinos;"
+      " E_{#nu} (MeV); PDF(E_{#nu}) = #phi(E_{#nu}) / #Phi (MeV^{-1})");
+
+    make_plots(source_E_title, source_E_hist, expected_bin_counts,
+      1., chi2, ndof, p_value, "test4.pdf", pdf);
+    #endif
   }
 
 }
