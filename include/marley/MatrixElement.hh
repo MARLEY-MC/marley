@@ -1,5 +1,7 @@
 #pragma once
 
+#include "marley/Level.hh"
+
 namespace marley {
 
   /// @brief A reduced nuclear matrix element that represents a transition

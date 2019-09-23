@@ -79,7 +79,7 @@ double marley::ElectronReaction::total_xs(int pdg_a, double KEa) {
   if ( KEa < KEa_threshold_ ) return 0.;
 
   // Mandelstam s (square of the total center of momentum frame energy)
-  double s = std::pow(ma_ + mb_, 2) + 2*mb_*KEa;
+  double s = std::pow(ma_ + mb_, 2) + 2.*mb_*KEa;
 
   // CM frame ejectile total energy
   double Ec_cm = (s + mc_*mc_ - md_*md_) / ( 2. * std::sqrt(s) );
@@ -125,6 +125,12 @@ double marley::ElectronReaction::diff_xs(int pdg_a, double KEa,
 
   // Compute and return the cross section
   double diff_xsec = overall_factor * terms;
+
+  // Multiply the single-electron cross section by the number of electrons
+  // present in this atom
+  /// @todo Take into account effects of electron binding energy
+  diff_xsec *= Z_atom_;
+
   return diff_xsec;
 }
 

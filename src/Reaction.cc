@@ -1,8 +1,16 @@
 #include "marley/marley_kinematics.hh"
+#include "marley/marley_utils.hh"
+#include "marley/ElectronReaction.hh"
+#include "marley/HauserFeshbachDecay.hh"
+#include "marley/Logger.hh"
+#include "marley/MatrixElement.hh"
+#include "marley/NuclearReaction.hh"
 #include "marley/Reaction.hh"
+#include "marley/StructureDatabase.hh"
 
 using namespace marley_utils;
 using ProcType = marley::Reaction::ProcessType;
+using ME_Type = marley::MatrixElement::TransitionType;
 
 namespace {
 
@@ -36,6 +44,98 @@ namespace {
     },
 
   };
+
+  // Helper function that assigns Level pointers to MatrixElement objects
+  // that represent transitions to discrete nuclear levels
+  void set_level_ptrs(std::vector<marley::MatrixElement>& matrix_elements,
+    int pdg_d, marley::StructureDatabase& db)
+  {
+    // If discrete level data are available for the residual nucleus, use them
+    // to assign values to the level pointers and refine the level energies. If
+    // not, just return without doing anything. This will keep all of the level
+    // pointers nullptr (treating them just like unbound levels) and have the
+    // matrix elements use the energies given in the reaction dataset.
+    marley::DecayScheme* ds = db.get_decay_scheme( pdg_d );
+    if ( !ds ) return;
+
+    // Check to see if the decay scheme being associated with this
+    // reaction is for the correct nuclide. If the PDG code in the decay
+    // scheme object does not match the one we'd expect for this reaction's
+    // final state nucleus, complain
+    int scheme_pdg = marley_utils::get_nucleus_pid(ds->Z(), ds->A());
+    if ( pdg_d != scheme_pdg ) throw marley::Error("Nuclear data mismatch:"
+        " attempted to associate a decay scheme object that has PDG code "
+        + std::to_string(scheme_pdg) + " with a reaction object that has"
+        " PDG code " + std::to_string(pdg_d));
+
+    // Use the smallest nuclear fragment emission threshold to check for unbound
+    // levels. Before looking them up, start by setting the unbound threshold to
+    // infinity.
+    double unbound_threshold = std::numeric_limits<double>::max();
+    MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << '\n';
+
+    int Ad = marley_utils::get_particle_A( pdg_d );
+    int Zd = marley_utils::get_particle_Z( pdg_d );
+
+    for ( const auto& f : marley::HauserFeshbachDecay::get_fragments() ) {
+      double thresh = marley::HauserFeshbachDecay
+        ::get_fragment_emission_threshold(Zd, Ad, f);
+      MARLEY_LOG_DEBUG() << f.get_pid() << " emission threshold = " << thresh
+        << '\n';
+      if (thresh < unbound_threshold) unbound_threshold = thresh;
+      MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << '\n';
+    }
+
+    // Cycle through each of the level energies given in the reaction dataset.
+    for ( auto& mat_el : matrix_elements ) {
+
+      // Get the excitation energy for the level accessed by the transition
+      // represented by this matrix element. Use the value from the reaction
+      // data file rather than that owned by any previous discrete level
+      // assignment. We'll use that value because we need to (re-)assign
+      // levels to each matrix element using the DecayScheme ds.
+      double en = mat_el.tabulated_level_energy();
+
+      // If the level is above the fragment emission threshold, assign it a null
+      // level pointer. Such levels will be handled by a fragment evaporation
+      // routine and therefore do not need pointers to level objects describing
+      // their de-excitation gammas.
+      if ( en > unbound_threshold ) {
+        mat_el.set_level(nullptr);
+        continue;
+      }
+
+      // For each energy, find a pointer to the level with the closest energy
+      // owned by the decay scheme object.
+      marley::Level* plevel = ds->get_pointer_to_closest_level( en );
+      MARLEY_LOG_DEBUG() << "reaction level at " << en
+        << " MeV was matched to the decay scheme level at "
+        << plevel->energy() << " MeV";
+
+      // Complain if there are duplicates (if there are duplicates, we'll have
+      // two different B(F) + B(GT) values for the same level object)
+      const auto begin = matrix_elements.cbegin();
+      const auto end = matrix_elements.cend();
+      const auto found = std::find_if(begin, end,
+        [plevel](const marley::MatrixElement& me) -> bool
+        { return plevel == me.level(); });
+      if ( found != end )
+      {
+        // One of the matrix elements already uses a level pointer equal to
+        // plevel
+        throw marley::Error("Reaction dataset gives two level energies that"
+          " refer to the same DecayScheme level at "
+          + std::to_string( plevel->energy() ) + " MeV");
+      }
+
+      /// @todo Add check to see if the energy of the chosen level is very
+      /// different from the energy given in the reaction dataset. If it is,
+      /// the level matchup is likely incorrect.
+
+      // Set the level pointer in the MatrixElement object
+      mat_el.set_level( plevel );
+    }
+  }
 
 } // Anonymous namespace
 
@@ -129,4 +229,154 @@ std::string marley::Reaction::proc_type_to_string(const ProcType& pt) {
 
 const std::vector<int>& marley::Reaction::get_projectiles(ProcType pt) {
   return proc_type_to_nu_pdg.at( pt );
+}
+
+std::vector<std::unique_ptr<marley::Reaction> >
+  marley::Reaction::load_from_file(const std::string& filename,
+  marley::StructureDatabase& db)
+{
+  // Create an empty vector to start
+  std::vector<std::unique_ptr<marley::Reaction> > loaded_reactions;
+
+  std::regex rx_comment("#.*"); // Matches comment lines
+
+  // Open the reaction data file for parsing
+  std::ifstream file_in( filename );
+
+  // If the file doesn't exist or some other error
+  // occurred, complain and give up.
+  if ( !file_in.good() ) {
+    throw marley::Error("Could not read from the file " + filename);
+  }
+
+  // String to store the current line of the reaction data file during parsing
+  std::string line;
+
+  /// @todo Add error handling for parsing problems
+  line = marley_utils::get_next_line(file_in, rx_comment, false);
+
+  // Read in the ProcessType code and the target PDG code
+  std::istringstream iss( line );
+  int integer_proc_type;
+  int pdg_b;
+  iss >> integer_proc_type >> pdg_b;
+
+  auto proc_type = static_cast<ProcType>( integer_proc_type );
+
+  // For neutrino-electron elastic scattering, we won't have a table of
+  // matrix elements. Just make Reaction objects for each of the possible
+  // projectiles (every neutrino species) and return the result.
+  if ( proc_type == ProcessType::NuElectronElastic ) {
+
+    int target_Z = marley_utils::get_particle_Z( pdg_b );
+
+    for ( const int& pdg_a : get_projectiles(proc_type) ) {
+      loaded_reactions.emplace_back(
+        std::make_unique<marley::ElectronReaction>(pdg_a, target_Z));
+    }
+
+    return loaded_reactions;
+  }
+
+  // For nuclear reaction modes, we proceed to read in the matrix elements
+
+  // Read in all of the level energy (MeV), squared matrix element (B(F) or
+  // B(GT) strength), and matrix element type identifier (0 represents B(F), 1
+  // represents B(GT)) triplets. Create a vector of MatrixElement objects based
+  // on this information. Use a shared pointer so that the vector can be
+  // re-used by multiple Reaction objects, one for each neutrino species for
+  // which the matrix elements are relevant. This avoids unnecessary
+  // duplication of storage for the matrix elements.
+  auto matrix_elements = std::make_shared<std::vector<
+    marley::MatrixElement> >();
+
+  // Set the old energy entry to the lowest representable double
+  // value. This guarantees that we always read in the first energy
+  // value given in the reaction data file
+  double old_energy = std::numeric_limits<double>::lowest();
+  while (line = marley_utils::get_next_line(file_in, rx_comment, false),
+    file_in.good())
+  {
+    iss.str(line);
+    iss.clear();
+    /// @todo Consider implementing a sorting procedure rather than strictly
+    /// enforcing that energies must be given in ascending order.
+
+    // The order of the entries is important because later uses of the vector of
+    // matrix elements assume that they are sorted in order of ascending final
+    // level energy.
+    double energy, strength;
+    int integer_me_type;
+    iss >> energy >> strength >> integer_me_type;
+    if (old_energy >= energy) throw marley::Error(std::string("Invalid")
+      + " reaction dataset. Level energies must be unique and must be"
+      + " given in ascending order.");
+
+    // @todo Right now, 0 corresponds to a Fermi transition, and 1 corresponds
+    // to a Gamow-Teller transition. As you add new matrix element types,
+    // consider changing the convention and its implementation.
+    // All of the level pointers owned by the matrix elements will initially be
+    // set to nullptr. This may be changed later if discrete level data can be
+    // found for the residual nucleus.
+    matrix_elements->emplace_back(energy, strength,
+      static_cast<ME_Type>(integer_me_type), nullptr);
+    old_energy = energy;
+  }
+
+  // We now have all the information that we need. Build Reaction objects
+  // for all neutrino species that can participate in the process described
+  // by the matrix elements in the table. Use the ProcessType code to
+  // figure this out
+
+  // First, figure out the PDG code for the final nucleus and its ionization
+  // state (net atomic charge after the 2->2 scatter)
+  int Zi = marley_utils::get_particle_Z( pdg_b );
+  int A = marley_utils::get_particle_A( pdg_b );
+
+  int pdg_d, q_d;
+  // NC scattering leaves the target nucleus the same
+  if ( proc_type == ProcessType::NC ) {
+    pdg_d = pdg_b;
+    q_d = 0;
+  }
+  // Neutrino CC scattering raises Z by one
+  else if ( proc_type == ProcessType::NeutrinoCC ) {
+    // Check that the neutron number of the target is positive
+    int Ni = A - Zi;
+    if ( Ni <= 0 ) throw marley::Error("A NeutrinoCC process requires"
+      " a target nucleus with N > 0");
+    int Zf = Zi + 1;
+    pdg_d = marley_utils::get_nucleus_pid(Zf, A);
+    // Recoil ion has charge +1
+    q_d = 1;
+  }
+  // Antineutrino CC scattering lowers Z by one
+  else if ( proc_type == ProcessType::AntiNeutrinoCC ) {
+    // Check that the neutron number of the target is positive
+    if ( Zi <= 0 ) throw marley::Error("An AntiNeutrinoCC process requires"
+      " a target nucleus with Z > 0");
+    int Zf = Zi - 1;
+    pdg_d = marley_utils::get_nucleus_pid(Zf, A);
+    // Recoil ion has charge -1
+    q_d = -1;
+  }
+  else throw marley::Error("Unrecognized ProcessType encountered in"
+    " marley::NuclearReaction::load_from_file()");
+
+  // Now that we know the PDG code for the final nucleus, look up discrete
+  // level data for it. Set the level pointers for matrix elements representing
+  // transitions to discrete nuclear levels
+  set_level_ptrs( *matrix_elements, pdg_d, db );
+
+  // Now loop over the projectile PDG codes that can participate in the
+  // scattering process of interest. For each one, decide what the ejectile
+  // PDG code should be, then produce a corresponding Reaction object
+  for ( const int& pdg_a : get_projectiles(proc_type) ) {
+    int pdg_c = get_ejectile_pdg(pdg_a, proc_type);
+
+    loaded_reactions.emplace_back( std::make_unique<marley::NuclearReaction>(
+      proc_type, pdg_a, pdg_b, pdg_c, pdg_d, q_d, matrix_elements) );
+  }
+
+  return loaded_reactions;
 }

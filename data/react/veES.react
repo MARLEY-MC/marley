@@ -1,0 +1,14 @@
+# MARLEY reaction data for (anti)neutrino-electron elastic scattering
+# Prepared 23 September 2019 by Steven Gardiner
+#
+# Particle IDs conform to the 2017 revision of the
+# Particle Data Group Monte Carlo Particle Numbering Scheme
+# (see http://pdg.lbl.gov/2018/reviews/rpp2018-rev-monte-carlo-numbering.pdf)
+#
+# Cross sections for this reaction are calculated at tree level using
+# expressions equivalent to those in C. Giunti & C. Kim, "Fundamentals of
+# Neutrino Physics and Astrophysics," Oxford University Press (2007).
+#
+# ProcessType code and nuclear target PDG code
+3 1000180400
+# No nuclear matrix elements are needed in this case

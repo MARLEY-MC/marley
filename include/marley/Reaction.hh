@@ -7,6 +7,7 @@
 namespace marley {
 
   class Generator;
+  class StructureDatabase;
 
   /// @brief Abstract base class that represents a two-two scattering reaction
   /// @details This class models a reaction of the form a + b &rarr; c + d.
@@ -73,6 +74,12 @@ namespace marley {
       /// projectile that allows this reaction to proceed via a transition to
       /// the residue's ground state
       virtual double threshold_kinetic_energy() const = 0;
+
+      /// Factory method called by JSONConfig to build
+      /// Reaction objects given a file with matrix element data
+      static std::vector<std::unique_ptr<Reaction> >
+        load_from_file(const std::string& filename,
+        marley::StructureDatabase& db);
 
     protected:
 

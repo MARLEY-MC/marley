@@ -169,9 +169,13 @@ marley::Generator marley::JSONConfig::create_generator() const
       {
         proc_type_str = "CC";
       }
-      else if ( r->process_type() == marley::Reaction::ProcessType::NC )
+      else if ( r->process_type() == ProcType::NC )
       {
         proc_type_str = "NC";
+      }
+      else if ( r->process_type() == ProcType::NuElectronElastic )
+      {
+        proc_type_str = "ES";
       }
       else throw marley::Error("Unrecognized process type encountered in"
         " marley::JSONConfig::prepare_reactions()");

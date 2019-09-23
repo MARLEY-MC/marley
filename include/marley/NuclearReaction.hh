@@ -35,12 +35,6 @@ namespace marley {
         int pdg_d, int q_d,
         const std::shared_ptr<std::vector<marley::MatrixElement> >& mat_els);
 
-      /// Factory method called by JSONConfig to build multiple
-      /// NuclearReaction objects from the same table of matrix elements
-      static std::vector<std::unique_ptr<NuclearReaction> >
-        load_from_file(const std::string& filename,
-        marley::StructureDatabase& db);
-
       /// Produces a two-two scattering Event that proceeds via this reaction
       virtual marley::Event create_event(int particle_id_a,
         double KEa, marley::Generator& gen) override;
