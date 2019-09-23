@@ -25,15 +25,15 @@ namespace marley {
 
       // Total reaction cross section (in MeV^(-2)) for an incident
       // projectile with lab-frame kinetic energy Ea
-      virtual double total_xs(int pdg_a, double KEa) override;
+      virtual double total_xs(int pdg_a, double KEa) const override;
 
       // Differential cross section (MeV^(-2)) in the CM frame
       virtual double diff_xs(int pdg_a, double KEa, double cos_theta_c_cm)
-        override;
+        const override;
 
       // Creates an event object for this reaction using the generator gen
       virtual marley::Event create_event(int particle_id_a, double KEa,
-        marley::Generator& gen) override;
+        marley::Generator& gen) const override;
 
       inline virtual double threshold_kinetic_energy() const override
         { return KEa_threshold_; }

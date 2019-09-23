@@ -37,7 +37,7 @@ namespace marley {
       /// @return %Reaction total cross section (MeV<sup> -2</sup>)
       /// @note Functions that override total_xs() should always return zero
       /// if pdg_a != pdg_a_.
-      virtual double total_xs(int pdg_a, double KEa) = 0;
+      virtual double total_xs(int pdg_a, double KEa) const = 0;
 
       /// @brief Differential cross section
       /// @f$d\sigma/d\cos\theta_{c}^{\mathrm{CM}}@f$
@@ -48,7 +48,7 @@ namespace marley {
       /// @note Functions that override diff_xs() should always return zero
       /// if pdg_a != pdg_a_.
       virtual double diff_xs(int pdg_a, double KEa,
-        double cos_theta_c_cm) = 0;
+        double cos_theta_c_cm) const = 0;
 
       /// @brief Create an event object for this reaction
       /// @param pdg_a PDG code for the incident projectile
@@ -57,13 +57,13 @@ namespace marley {
       /// @note Functions that override create_event() should throw an
       /// Error if pdg_a != pdg_a_.
       virtual marley::Event create_event(int pdg_a, double KEa,
-        marley::Generator& gen) = 0;
+        marley::Generator& gen) const = 0;
 
       /// @brief Get a string that contains the formula for this reaction
-      inline const std::string& get_description() { return description_; }
+      inline const std::string& get_description() const { return description_; }
 
       /// @brief Get the process type for this reaction
-      inline ProcessType process_type() { return process_type_; }
+      inline ProcessType process_type() const { return process_type_; }
 
       static std::string proc_type_to_string(const ProcessType& pt);
 
@@ -91,7 +91,11 @@ namespace marley {
       double ma_; ///< Projectile mass (MeV)
       double mb_; ///< Target mass (MeV)
       double mc_; ///< Ejectile mass (MeV)
-      double md_; ///< Residue mass (MeV)
+
+      // Mutable because, for the nuclear reaction case, we
+      // may modify the final nuclear mass based on a sampled
+      // excitation energy
+      mutable double md_; ///< Residue mass (MeV)
 
       /// @brief String that contains a formula describing the reaction
       std::string description_;
@@ -110,7 +114,7 @@ namespace marley {
       /// @param[out] pc_cm Ejectile 3-momentum magnitude (MeV) in the CM frame
       /// @param[out] Ed_cm Residue total energy (MeV) in the CM frame
       void two_two_scatter(double KEa, double& s, double& Ec_cm,
-        double& pc_cm, double& Ed_cm);
+        double& pc_cm, double& Ed_cm) const;
 
       /// @brief Helper function that makes an event object.
       /// @details This function should be called by
@@ -127,7 +131,7 @@ namespace marley {
       /// @param E_level Residue excitation energy (MeV)
       virtual marley::Event make_event_object(double KEa,
         double pc_cm, double cos_theta_c_cm, double phi_c_cm,
-        double Ec_cm, double Ed_cm, double E_level = 0.);
+        double Ec_cm, double Ed_cm, double E_level = 0.) const;
 
       /// Returns a vector of PDG codes for projectiles that participate
       /// in a particular ProcessType

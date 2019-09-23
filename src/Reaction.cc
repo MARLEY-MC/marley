@@ -143,7 +143,7 @@ namespace {
 // Performs kinematics calculations for a two-two scattering reaction
 // (a + b -> c + d)
 void marley::Reaction::two_two_scatter(double KEa, double& s, double& Ec_cm,
-  double& pc_cm, double& Ed_cm)
+  double& pc_cm, double& Ed_cm) const
 {
   // Get the lab-frame total energy of the projectile
   double Ea = KEa + ma_;
@@ -165,9 +165,9 @@ void marley::Reaction::two_two_scatter(double KEa, double& s, double& Ec_cm,
 
 marley::Event marley::Reaction::make_event_object(double KEa,
   double pc_cm, double cos_theta_c_cm, double phi_c_cm,
-  double Ec_cm, double Ed_cm, double E_level)
+  double Ec_cm, double Ed_cm, double E_level) const
 {
-  double sin_theta_c_cm = real_sqrt(1
+  double sin_theta_c_cm = real_sqrt(1.
     - std::pow(cos_theta_c_cm, 2));
 
   // Determine the Cartesian components of the ejectile's CM frame momentum

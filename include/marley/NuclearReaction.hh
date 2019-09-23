@@ -37,7 +37,7 @@ namespace marley {
 
       /// Produces a two-two scattering Event that proceeds via this reaction
       virtual marley::Event create_event(int particle_id_a,
-        double KEa, marley::Generator& gen) override;
+        double KEa, marley::Generator& gen) const override;
 
       /// @brief Compute the
       /// <a href="https://en.wikipedia.org/wiki/Beta_decay#Fermi_function">
@@ -67,7 +67,7 @@ namespace marley {
       /// @param KEa Lab-frame kinetic energy (MeV) of the projectile
       /// @return Reaction total cross section (MeV<sup> -2</sup>)
       /// @note This function returns 0. if pdg_a != pdg_a_.
-      virtual double total_xs(int pdg_a, double KEa) override;
+      virtual double total_xs(int pdg_a, double KEa) const override;
 
       /// @brief Differential cross section
       /// @f$d\sigma/d\cos\theta_{c}^{\mathrm{CM}}@f$
@@ -79,7 +79,7 @@ namespace marley {
       /// @param cos_theta_c_cm Ejectile scattering cosine as measured
       /// in the CM frame
       double diff_xs(const marley::MatrixElement& mat_el, double KEa,
-        double cos_theta_c_cm);
+        double cos_theta_c_cm) const;
 
       /// @brief Differential cross section
       /// @f$d\sigma/d\cos\theta_{c}^{\mathrm{CM}}@f$
@@ -90,7 +90,7 @@ namespace marley {
       /// @param cos_theta_c_cm CM frame scattering cosine of the ejectile
       /// @note This function returns 0. if pdg_a != pdg_a_.
       virtual double diff_xs(int pdg_a, double KEa,
-        double cos_theta_c_cm) override;
+        double cos_theta_c_cm) const override;
 
       /// @brief Total cross section (MeV<sup> -2</sup>) for a given final
       /// nuclear level
@@ -136,7 +136,7 @@ namespace marley {
       /// Helper function used by NuclearReaction::create_event()
       virtual marley::Event make_event_object(double KEa,
         double pc_cm, double cos_theta_c_cm, double phi_c_cm, double Ec_cm,
-        double Ed_cm, double E_level = 0.) override;
+        double Ed_cm, double E_level = 0.) const override;
 
       /// @brief Samples a polar angle cosine for the ejectile using
       /// the relevant portion of the reaction nuclear matrix element
@@ -165,7 +165,7 @@ namespace marley {
       /// by this function
       /// @return The requested cross section (MeV<sup> -2</sup>)
       double summed_xs_helper(int pdg_a, double KEa, double cos_theta_c_cm,
-        std::vector<double>* level_xsecs, bool differential);
+        std::vector<double>* level_xsecs, bool differential) const;
 
       /// @brief Creates the description string based on the
       /// PDG code values for the initial and final particles

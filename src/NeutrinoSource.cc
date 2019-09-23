@@ -23,7 +23,7 @@ const std::set<int> marley::NeutrinoSource::pids_ = {
 };
 
 double marley::NeutrinoSource::sample_incident_neutrino(int& pdg,
-  marley::Generator& gen)
+  marley::Generator& gen) const
 {
   static double max = marley_utils::UNKNOWN_MAX;
   pdg = pid_;
@@ -47,7 +47,7 @@ marley::FermiDiracNeutrinoSource::FermiDiracNeutrinoSource(int particle_id,
   C_ /= integral;
 }
 
-double marley::FermiDiracNeutrinoSource::pdf(double E) {
+double marley::FermiDiracNeutrinoSource::pdf(double E) const {
   if (E < Emin_ || E > Emax_) return 0.;
   else return (C_ / std::pow(temperature_, 4)) * (std::pow(E, 2)
     / (1 + std::exp((E / temperature_) - eta_)));
@@ -76,7 +76,7 @@ marley::BetaFitNeutrinoSource::BetaFitNeutrinoSource(int particle_id,
   C_ /= integral;
 }
 
-double marley::BetaFitNeutrinoSource::pdf(double E) {
+double marley::BetaFitNeutrinoSource::pdf(double E) const {
   if (E < Emin_ || E > Emax_) return 0.;
   // Guard against NaNs in the std::pow factor below
   else if ( E == 0. && beta_ < 1. ) return 0.;
@@ -109,7 +109,7 @@ marley::DecayAtRestNeutrinoSource::DecayAtRestNeutrinoSource(int particle_id)
   }
 }
 
-double marley::DecayAtRestNeutrinoSource::pdf(double E) {
+double marley::DecayAtRestNeutrinoSource::pdf(double E) const {
   if (E < Emin_ || E > Emax_) return 0.;
   // Note that both of these source spectra are normalized to 1
   // on the energy interval [0., m_mu_ / 2.]

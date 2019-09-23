@@ -69,7 +69,7 @@ void marley::ElectronReaction::set_coupling_constants()
     "Reaction::set_coupling_constants()");
 }
 
-double marley::ElectronReaction::total_xs(int pdg_a, double KEa) {
+double marley::ElectronReaction::total_xs(int pdg_a, double KEa) const {
 
   // If the cross section was requested for a different projectile,
   // then just return zero.
@@ -101,7 +101,7 @@ double marley::ElectronReaction::total_xs(int pdg_a, double KEa) {
 }
 
 double marley::ElectronReaction::diff_xs(int pdg_a, double KEa,
-  double cos_theta_c_cm)
+  double cos_theta_c_cm) const
 {
   // If we're asked for the wrong projectile, then just return zero
   if ( pdg_a != pdg_a_ ) return 0.;
@@ -137,7 +137,7 @@ double marley::ElectronReaction::diff_xs(int pdg_a, double KEa,
 // Creates an event object by sampling the appropriate quantities and
 // performing kinematic calculations
 marley::Event marley::ElectronReaction::create_event(int pdg_a, double KEa,
-  marley::Generator& gen)
+  marley::Generator& gen) const
 {
   // If the projectile's PDG code doesn't match that stored in this object,
   // complain and refuse to create an event.

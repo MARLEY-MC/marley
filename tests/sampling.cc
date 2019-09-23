@@ -436,7 +436,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     CHECK( passed );
   }
 
-  INFO("Checking sampling of 2->2 scattering cosines")
+  INFO("Checking sampling of 2->2 scattering cosines");
   {
     // First, define a couple of helper functions
     std::function<double(double, double)> total_diff_xsec
@@ -503,4 +503,10 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
     CHECK( passed );
   }
+
+  INFO("Checking incident neutrino energy sampling");
+  {
+    auto& source = gen.get_source();
+  }
+
 }

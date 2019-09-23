@@ -47,7 +47,7 @@ namespace marley {
       /// creation
       /// @param E neutrino energy (MeV)
       /// @return Probability density (MeV<sup> -1</sup>)
-      virtual double pdf(double E) = 0;
+      virtual double pdf(double E) const = 0;
 
       /// Returns true if the Particle Data Group code passed to the function
       /// is allowed to be used by a neutrino source object, and returns false
@@ -65,7 +65,7 @@ namespace marley {
       /// @param[in] gen Generator to use for random sampling
       /// @return The energy of the sampled neutrino (MeV)
       virtual double sample_incident_neutrino(int& pdg,
-        marley::Generator& gen);
+        marley::Generator& gen) const;
 
     protected:
 
@@ -91,7 +91,7 @@ namespace marley {
 
       inline virtual double get_Emin() const override;
 
-      inline virtual double pdf(double E) override;
+      inline virtual double pdf(double E) const override;
 
     protected:
       double energy_; ///< neutrino energy (MeV)
@@ -122,7 +122,7 @@ namespace marley {
 
       inline virtual double get_Emax() const override;
 
-      virtual double pdf(double E) override;
+      virtual double pdf(double E) const override;
 
     protected:
 
@@ -157,7 +157,7 @@ namespace marley {
       inline virtual double get_Emin() const override;
       inline virtual double get_Emax() const override;
 
-      virtual double pdf(double E) override;
+      virtual double pdf(double E) const override;
 
     protected:
       double Emin_; ///< minimum neutrino energy (MeV)
@@ -190,7 +190,7 @@ namespace marley {
 
       inline virtual double get_Emin() const override;
 
-      inline virtual double pdf(double E) override;
+      inline virtual double pdf(double E) const override;
 
     private:
       double Emin_; ///< minimum neutrino energy (MeV)
@@ -218,7 +218,7 @@ namespace marley {
 
       inline virtual double get_Emin() const override;
 
-      virtual double pdf(double E) override;
+      virtual double pdf(double E) const override;
 
     private:
       // Muon mass stuff (m_mu^(-4) pre-computed for speed)
@@ -258,7 +258,7 @@ namespace marley {
 
       inline virtual double get_Emin() const override;
 
-      inline virtual double pdf(double E) override;
+      inline virtual double pdf(double E) const override;
 
     protected:
       Grid grid_;
@@ -278,7 +278,7 @@ namespace marley {
     : NeutrinoSource(particle_id), energy_(E) {}
   inline double MonoNeutrinoSource::get_Emax() const { return energy_; }
   inline double MonoNeutrinoSource::get_Emin() const { return energy_; }
-  inline double MonoNeutrinoSource::pdf(double E)
+  inline double MonoNeutrinoSource::pdf(double E) const
     { if (energy_ == E) return 1.; else return 0.; }
 
   inline double FermiDiracNeutrinoSource::get_Emax() const { return Emax_; }
@@ -289,7 +289,7 @@ namespace marley {
 
   inline double FunctionNeutrinoSource::get_Emax() const { return Emax_; }
   inline double FunctionNeutrinoSource::get_Emin() const { return Emin_; }
-  inline double FunctionNeutrinoSource::pdf(double E) {
+  inline double FunctionNeutrinoSource::pdf(double E) const {
     if (E < Emin_ || E > Emax_) return 0.;
     else return probability_density_(E);
   }
@@ -301,7 +301,7 @@ namespace marley {
     { return grid_.back().first; }
   inline double GridNeutrinoSource::get_Emin() const
     { return grid_.front().first; }
-  inline double GridNeutrinoSource::pdf(double E)
+  inline double GridNeutrinoSource::pdf(double E) const
     { return grid_.interpolate(E); }
 
   inline GridNeutrinoSource::GridNeutrinoSource(const Grid& g, int particle_id)

@@ -141,7 +141,7 @@ double marley::NuclearReaction::threshold_kinetic_energy() const {
 // Creates an event object by sampling the appropriate quantities and
 // performing kinematic calculations
 marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
-  marley::Generator& gen)
+  marley::Generator& gen) const
 {
   // Check that the projectile supplied to this event is correct. If not, alert
   // the user that this event does not use the requested projectile.
@@ -319,7 +319,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 
 // Compute the total reaction cross section (summed over all final nuclear levels)
 // in units of MeV^(-2) using the center of momentum frame.
-double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
+double marley::NuclearReaction::total_xs(int pdg_a, double KEa) const {
   double dummy_cos_theta = 0.;
   return summed_xs_helper(pdg_a, KEa, dummy_cos_theta, nullptr, false);
 }
@@ -328,7 +328,7 @@ double marley::NuclearReaction::total_xs(int pdg_a, double KEa) {
 // summed over all final nuclear levels. This is done in units of MeV^(-2)
 // using the center of momentum frame.
 double marley::NuclearReaction::diff_xs(int pdg_a, double KEa,
-  double cos_theta_c_cm)
+  double cos_theta_c_cm) const
 {
   return summed_xs_helper(pdg_a, KEa, cos_theta_c_cm, nullptr, true);
 }
@@ -337,7 +337,7 @@ double marley::NuclearReaction::diff_xs(int pdg_a, double KEa,
 // transition to a particular final nuclear level. This is done in units of
 // MeV^(-2) using the center of momentum frame.
 double marley::NuclearReaction::diff_xs(const marley::MatrixElement& mat_el,
-  double KEa, double cos_theta_c_cm)
+  double KEa, double cos_theta_c_cm) const
 {
   // Check that the scattering cosine is within the physically meaningful range
   if ( std::abs(cos_theta_c_cm) > 1. ) return 0.;
@@ -350,6 +350,7 @@ double marley::NuclearReaction::diff_xs(const marley::MatrixElement& mat_el,
 // Helper function for total_xs and diff_xs()
 double marley::NuclearReaction::summed_xs_helper(int pdg_a, double KEa,
   double cos_theta_c_cm, std::vector<double>* level_xsecs, bool differential)
+  const
 {
   // Check that the projectile supplied to this event is correct. If not,
   // return a total cross section of zero since this reaction is not available
@@ -526,7 +527,7 @@ double marley::NuclearReaction::sample_cos_theta_c_cm(
 
 marley::Event marley::NuclearReaction::make_event_object(double KEa,
   double pc_cm, double cos_theta_c_cm, double phi_c_cm, double Ec_cm,
-  double Ed_cm, double E_level)
+  double Ed_cm, double E_level) const
 {
   marley::Event event = marley::Reaction::make_event_object(KEa, pc_cm,
     cos_theta_c_cm, phi_c_cm, Ec_cm, Ed_cm, E_level);
