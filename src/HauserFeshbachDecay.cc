@@ -71,6 +71,15 @@ void marley::HauserFeshbachDecay::build_exit_channels()
   double Mi = compound_nucleus_.mass(); // initial mass
   double Migs = Mi - Exi_; // initial ground-state mass
 
+  // Get the overall normalization factor for the exit channel
+  // partial widths. This isn't strictly needed for MC sampling,
+  // but it's helpful to work with physically meaningful units
+  // when possible.
+  marley::LevelDensityModel& ldm
+    = gen_.get_structure_db().get_level_density_model(Zi, Ai);
+  double two_pi_rho = marley_utils::two_pi
+    * ldm.level_density(Exi_, twoJi_, Pi_);
+
   total_width_ = 0.; // total compound nucleus decay width
 
   marley::StructureDatabase& db = gen_.get_structure_db();
@@ -164,11 +173,15 @@ void marley::HauserFeshbachDecay::build_exit_channels()
             }
           }
 
+          // Apply the normalization factor to get a width in MeV
+          discrete_width /= two_pi_rho;
+
           // Store information for this decay channel
 	  exit_channels_.push_back(
             std::make_unique<marley::FragmentDiscreteExitChannel>(
             discrete_width, *level, marley::Particle(pid_final, Mfgs_ion + Exf,
             qi - f.get_Z()), f));
+
           total_width_ += discrete_width;
         }
         else break;
@@ -203,11 +216,17 @@ void marley::HauserFeshbachDecay::build_exit_channels()
           Exf) / continuum_width;
       };
 
+      // Apply the normalization factor to get a width in MeV. We do this after
+      // making the PDF since the function fragment_continuum_partial_width()
+      // doesn't include this overall factor
+      continuum_width /= two_pi_rho;
+
       // Store information for this decay channel
       exit_channels_.push_back(
         std::make_unique<marley::FragmentContinuumExitChannel>(continuum_width,
         E_c_min, Exf_max, pdf, f, marley::Particle(pid_final, Mfgs_ion,
         qi - f.get_Z())));
+
       total_width_ += continuum_width;
     }
   }
@@ -242,11 +261,15 @@ void marley::HauserFeshbachDecay::build_exit_channels()
         double discrete_width = gsfm.transmission_coefficient(Exi_, twoJi_,
           Pi_, *level_f.get());
 
+        // Apply the normalization factor to get a width in MeV
+        discrete_width /= two_pi_rho;
+
         // Store information for this decay channel if it is allowed
         if (discrete_width > 0.) {
           exit_channels_.push_back(
             std::make_unique<marley::GammaDiscreteExitChannel>(discrete_width,
             *level_f, marley::Particle(pid_initial, Migs + Exf, qi)));
+
           total_width_ += discrete_width;
         }
       }
@@ -273,10 +296,16 @@ void marley::HauserFeshbachDecay::build_exit_channels()
       -> double { return gamma_continuum_partial_width(ldm, gsfm, Exf)
       / continuum_width; };
 
+    // Apply the normalization factor to get a width in MeV. We do this
+    // after making the PDF since the function gamma_continuum_partial_width()
+    // doesn't include this overall factor
+    continuum_width /= two_pi_rho;
+
     // Store information for this decay channel
     exit_channels_.push_back(
       std::make_unique<marley::GammaContinuumExitChannel>(continuum_width,
       E_c_min, Exi_, pdf, marley::Particle(pid_initial, Migs, qi)));
+
     total_width_ += continuum_width;
   }
 }
@@ -285,28 +314,13 @@ bool marley::HauserFeshbachDecay::do_decay(double& Exf, int& twoJf,
   marley::Parity& Pf, marley::Particle& emitted_particle,
   marley::Particle& residual_nucleus)
 {
-  // Throw an error if all decays are impossible
-  if (total_width_ <= 0.) throw marley::Error(std::string("Cannot ")
-    + "continue Hauser-Feshbach decay. All partial decay widths are zero.");
-
-  // Sample an exit channel
-  const auto widths_begin
-    = marley::ExitChannel::make_width_iterator(exit_channels_.cbegin());
-  const auto widths_end
-    = marley::ExitChannel::make_width_iterator(exit_channels_.cend());
-
-  std::discrete_distribution<size_t> exit_channel_dist(widths_begin,
-    widths_end);
-  size_t exit_channel_index = gen_.sample_from_distribution(exit_channel_dist);
-
-  marley::ExitChannel* ec = exit_channels_.at(exit_channel_index).get();
-
+  const auto& ec = this->sample_exit_channel();
   ec->do_decay(Exf, twoJf, Pf, emitted_particle, residual_nucleus, gen_);
 
   // TODO: consider changing this to a more realistic model
   // instead of isotropic emissions
-  double cos_theta_emitted_particle = gen_.uniform_random_double(-1, 1, true);
-  double phi_emitted_particle = gen_.uniform_random_double(0,
+  double cos_theta_emitted_particle = gen_.uniform_random_double(-1., 1., true);
+  double phi_emitted_particle = gen_.uniform_random_double(0.,
     marley_utils::two_pi, false);
 
   // Handle the kinematics calculations for this decay and update the
@@ -405,23 +419,16 @@ double marley::HauserFeshbachDecay::get_fragment_emission_threshold(
 void marley::HauserFeshbachDecay::print(std::ostream& out) const {
 
   // Needed to print results in conventional units
-  static constexpr double hbar = 6.58211951e-22; // MeV * s
-  int pid_initial = compound_nucleus_.pdg_code();
-  int Zi = marley_utils::get_particle_Z(pid_initial);
-  int Ai = marley_utils::get_particle_A(pid_initial);
-  marley::LevelDensityModel& ldm
-    = gen_.get_structure_db().get_level_density_model(Zi, Ai);
-  double two_pi_rho = marley_utils::two_pi
-    * ldm.level_density(Exi_, twoJi_, Pi_);
+  constexpr double hbar = 6.58211951e-22; // MeV * s
 
   out << "Compound nucleus " << compound_nucleus_.pdg_code()
     << " with Ex = " << Exi_ << ", spin = " << twoJi_ / 2;
   if (twoJi_ % 2) out << ".5";
   out << ", and parity = " << Pi_ << '\n';
-  out << "Total width = " << total_width_ / two_pi_rho << " MeV\n";
-  out << "Mean lifetime = " << hbar / (total_width_ / two_pi_rho) << " s\n";
+  out << "Total width = " << total_width_ << " MeV\n";
+  out << "Mean lifetime = " << hbar / total_width_ << " s\n";
   for (const auto& ec : exit_channels_) {
-    double width = ec->width() / two_pi_rho;
+    double width = ec->width();
     bool continuum = ec->is_continuum();
     bool frag = ec->emits_fragment();
     if (continuum) {
@@ -451,4 +458,26 @@ void marley::HauserFeshbachDecay::print(std::ostream& out) const {
         << width << " MeV\n";
     }
   }
+}
+
+const std::unique_ptr<marley::ExitChannel>&
+  marley::HauserFeshbachDecay::sample_exit_channel() const
+{
+  // Throw an error if all decays are impossible
+  if ( total_width_ <= 0. ) throw marley::Error("Cannot sample an exit channel"
+    " for a Hauser-Feshbach decay. All partial decay widths are zero.");
+
+  // Sample an exit channel using a std::discrete distribution and a table of
+  // partial decay widths
+  const auto widths_begin
+    = marley::ExitChannel::make_width_iterator(exit_channels_.cbegin());
+  const auto widths_end
+    = marley::ExitChannel::make_width_iterator(exit_channels_.cend());
+
+  std::discrete_distribution<size_t> exit_channel_dist(widths_begin,
+    widths_end);
+  size_t exit_channel_index = gen_.sample_from_distribution(exit_channel_dist);
+
+  const auto& ec = exit_channels_.at( exit_channel_index );
+  return ec;
 }

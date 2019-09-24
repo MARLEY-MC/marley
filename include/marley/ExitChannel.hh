@@ -7,6 +7,7 @@
 #include "marley/Level.hh"
 #include "marley/MassTable.hh"
 #include "marley/Parity.hh"
+#include "marley/marley_utils.hh"
 
 namespace marley {
 
@@ -56,6 +57,10 @@ namespace marley {
 
       /// @brief Get the partial decay width to this channel
       inline double width() const { return width_; }
+
+      /// @brief Returns the PDG code for the particle (gamma-ray or nuclear
+      /// fragment) emitted by decays into this ExitChannel
+      virtual int emitted_particle_pdg() const = 0;
 
     protected:
 
@@ -109,6 +114,9 @@ namespace marley {
       /// @brief Get a reference to the emitted Fragment
       inline const marley::Fragment& get_fragment() const { return fragment_; }
 
+      inline virtual int emitted_particle_pdg() const final override
+        { return fragment_.get_pid(); }
+
       virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
         marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
@@ -134,6 +142,9 @@ namespace marley {
 
       inline virtual bool emits_fragment() const final override
         { return false; }
+
+      inline virtual int emitted_particle_pdg() const final override
+        { return marley_utils::PHOTON; }
 
       virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
@@ -215,6 +226,9 @@ namespace marley {
       /// @brief Get a reference to the emitted Fragment
       inline const marley::Fragment& get_fragment() const { return fragment_; }
 
+      inline virtual int emitted_particle_pdg() const final override
+        { return fragment_.get_pid(); }
+
       /// @brief Sample a final-state spin and parity for the residual nucleus
       /// @param[out] twoJ Two times the final-state nuclear spin
       /// @param[out] Pi The final-state nuclear parity
@@ -264,6 +278,9 @@ namespace marley {
 
       inline virtual bool emits_fragment() const final override
         { return false; }
+
+      inline virtual int emitted_particle_pdg() const final override
+        { return marley_utils::PHOTON; }
 
       /// @brief Sample a final-state spin and parity for the residual nucleus
       /// @param Z Atomic number

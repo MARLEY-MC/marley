@@ -26,8 +26,10 @@
 #else
   #include "marley/JSONConfig.hh"
 #endif
+#include "marley/Error.hh"
 #include "marley/Event.hh"
 #include "marley/Generator.hh"
+#include "marley/HauserFeshbachDecay.hh"
 #include "marley/JSON.hh"
 #include "marley/Logger.hh"
 #include "marley/Reaction.hh"
@@ -46,6 +48,14 @@ constexpr int NUM_COS_BINS = 5;
 // Cosine range for histograms
 constexpr double COS_MIN = -1.;
 constexpr double COS_MAX = 1.;
+
+// PDG code for a 40K nucleus
+constexpr int PDG_40K = 1000190400;
+// Excitation energy, 2*spin, and parity values to use for testing
+// Hauser-Feshbach continuum decay sampling
+constexpr double HF_Exi = 57.; // MeV
+constexpr int HF_twoJi = 12; // Ji = 6
+const auto HF_Pi = marley::Parity( true ); // positive parity
 
 #ifdef USE_ROOT
 // The number of points to use when making TGraphs
@@ -147,23 +157,27 @@ class Histogram {
     #endif
 
     /// @brief Compares this histogram's contents to a model prediction
-    /// @param pdf Probability density function to use to predict bin contents
+    /// @param expected_counts_vec A std::vector<double> loaded with
+    /// pre-computed numbers of expected counts based on a model. The
+    /// number of entries must be equal to the number of histogram bins,
+    /// or a marley::Error will be thrown.
     /// @param[out] passed Boolean value set to true if the test was passed
     /// (p-value > our chosen significance level) or false otherwise
-    /// @return A vector containing the bin counts predicted by the model
-    std::vector<double> chi2_test(const std::function<double(double)>& pdf,
+    /// @param[out] chi2 The @f$ \chi^2 @f$ value obtained during the test
+    /// @param[out] degrees_of_freedom The number of degrees of freedom
+    /// used during the test
+    /// @param[out] p_value The p-value obtained during the test
+    void chi2_test(const std::vector<double>& expected_counts_vec,
       bool& passed, double& chi2, int& degrees_of_freedom, double& p_value)
       const
     {
-      std::vector<double> expected_counts_vec;
+      if ( expected_counts_vec.size() != N_bins_ ) throw marley::Error("Bin"
+        " number mismatch encountered in Histogram::chi2_test");
       chi2 = 0.;
       degrees_of_freedom = N_bins_ - 1;
       for ( size_t b = 0; b < N_bins_; ++b ) {
         double observed_counts = bin_counts_.at( b );
-        double expected_counts = num_entries_ * marley_utils::num_integrate(
-          pdf, get_bin_left_edge( b ), get_bin_right_edge( b ));
-
-        expected_counts_vec.push_back( expected_counts );
+        double expected_counts = expected_counts_vec.at( b );
 
         // To keep the chi^2 approximation valid, skip bins where the
         // expected number of counts is less than 5
@@ -181,7 +195,36 @@ class Histogram {
       MARLEY_LOG_INFO() << "p-value = " << p_value;
 
       passed = ( p_value >= SIGNIFICANCE_LEVEL );
+    }
 
+    /// @brief Compares this histogram's contents to a model prediction
+    /// @param pdf Probability density function to use to predict bin contents
+    /// @param[out] passed Boolean value set to true if the test was passed
+    /// (p-value > our chosen significance level) or false otherwise
+    /// @param[out] chi2 The @f$ \chi^2 @f$ value obtained during the test
+    /// @param[out] degrees_of_freedom The number of degrees of freedom
+    /// used during the test
+    /// @param[out] p_value The p-value obtained during the test
+    /// @return A vector containing the bin counts predicted by the model
+    std::vector<double> chi2_test(const std::function<double(double)>& pdf,
+      bool& passed, double& chi2, int& degrees_of_freedom, double& p_value)
+      const
+    {
+      // First, build the vector of expected counts
+      std::vector<double> expected_counts_vec;
+      for ( size_t b = 0; b < N_bins_; ++b ) {
+        double expected_counts = num_entries_ * marley_utils::num_integrate(
+          pdf, get_bin_left_edge( b ), get_bin_right_edge( b ));
+
+        expected_counts_vec.push_back( expected_counts );
+      }
+
+      // Now delegate the rest of the work to the overloaded version of
+      // chi2_test()
+      this->chi2_test(expected_counts_vec, passed, chi2, degrees_of_freedom,
+        p_value);
+
+      // We're done. Return the vector of expected counts.
       return expected_counts_vec;
     }
 
@@ -222,8 +265,10 @@ std::istream& operator>>(std::istream& in, Histogram& h) {
 /// @param hist_title Title to use when drawing the histograms in ROOT
 /// @param events_hist Histogram filled with the variable of interest
 /// from generated events
-/// @param theory_counts Vector of expected bin counts based on the theory
-/// model. This vector can be generated automatically by Histogram::chi2_test()
+/// @param theory_counts Pointer to a vector of expected bin counts based on
+/// the theory model. This vector can be generated automatically by
+/// Histogram::chi2_test(). If you don't want to plot the expected counts
+/// histogram, just pass a nullptr for this argument.
 /// @param flux_avg_xsec Flux-averaged total cross section (10^(-40) cm^2)
 /// @param chi2 The value of chi^2 from a previously-run test of agreement
 /// between the model and the event distribution
@@ -233,19 +278,23 @@ std::istream& operator>>(std::istream& in, Histogram& h) {
 /// will be saved via a call to TCanvas::SaveAs()
 /// @param mod_xsec Function that takes a value within the domain of the
 /// histogram and returns the model prediction for the flux-averaged
-/// differential cross section
+/// differential cross section. A nullptr passed here indicates that
+/// we don't want to draw a continuous model prediction.
 void make_plots(const std::string& hist_title, const Histogram& events_hist,
-  const std::vector<double> theory_counts, double flux_avg_xsec, double chi2,
+  const std::vector<double>* theory_counts, double flux_avg_xsec, double chi2,
   int ndof, double p_value, const std::string& output_filename,
-  const std::function<double(double)>& mod_xsec)
+  const std::function<double(double)>* mod_xsec,
+  const std::vector<std::string>* bin_labels = nullptr)
 {
   // Prepare histograms of the energy distribution from the events
   // and bin integrals of the model PDF
   TH1D model_th1d("model", hist_title.c_str(), events_hist.num_bins(),
     events_hist.x_min(), events_hist.x_max());
-  for ( size_t b = 0; b < theory_counts.size(); ++b ) {
-    double counts = theory_counts.at( b );
-    model_th1d.SetBinContent(b + 1, counts);
+  if ( theory_counts ) {
+    for ( size_t b = 0; b < theory_counts->size(); ++b ) {
+      double counts = theory_counts->at( b );
+      model_th1d.SetBinContent(b + 1, counts);
+    }
   }
 
   // Convert the event Histogram to a TH1D
@@ -265,46 +314,66 @@ void make_plots(const std::string& hist_title, const Histogram& events_hist,
   events_th1d.SetLineColor(kBlack);
   events_th1d.SetStats(false);
 
+  // Get the maximum bin y-value as a reference coordinate
+  // for printing the text giving the chi^2 test results
+  double events_max = events_th1d.GetMaximum();
+
   model_th1d.SetLineWidth(2);
   model_th1d.SetLineColor(kRed);
   model_th1d.SetLineStyle(2);
   model_th1d.SetStats(false);
 
-  // Also plot the continuous model distribution
-  std::vector<double> Xs;
-  std::vector<double> model_xsecs;
-  double x_min = events_hist.x_min();
-  double x_max = events_hist.x_max();
-  double graph_x_step = (x_max - x_min)
-    / static_cast<double>(NUM_TGRAPH_POINTS);
+  // If bin labels have been supplied, then have both histograms
+  // use them for corresponding bins
+  if ( bin_labels ) {
+    for ( size_t b = 0; b < events_hist.num_bins(); ++b ) {
+      events_th1d.GetXaxis()->SetBinLabel( b + 1, bin_labels->at(b).c_str() );
+      model_th1d.GetXaxis()->SetBinLabel( b + 1, bin_labels->at(b).c_str() );
+    }
 
-  double max_model_diff_xs = 0.;
-  for ( size_t k = 0; k <= NUM_TGRAPH_POINTS; ++k ) {
-    double x = x_min + (k * graph_x_step);
-    double model_diff_xs = mod_xsec( x );
-
-    Xs.push_back( x );
-    model_xsecs.push_back( model_diff_xs );
-
-    if ( max_model_diff_xs < model_diff_xs ) max_model_diff_xs = model_diff_xs;
+    events_th1d.GetXaxis()->SetLabelSize(0.075);
+    events_th1d.GetXaxis()->SetTitleOffset(1.2);
   }
 
-  // Create the model TGraph and set its plotting style
-  TGraph model_graph(Xs.size(), Xs.data(), model_xsecs.data());
+  // Also plot the continuous model distribution if desired
+  std::unique_ptr<TGraph> model_graph;
+  if ( mod_xsec ) {
+    std::vector<double> Xs;
+    std::vector<double> model_xsecs;
+    double x_min = events_hist.x_min();
+    double x_max = events_hist.x_max();
+    double graph_x_step = (x_max - x_min)
+      / static_cast<double>(NUM_TGRAPH_POINTS);
 
-  model_graph.SetLineColor(kBlue);
-  model_graph.SetLineWidth(3);
-  //model_graph.SetLineStyle(2);
+    for ( size_t k = 0; k <= NUM_TGRAPH_POINTS; ++k ) {
+      double x = x_min + (k * graph_x_step);
+      double model_diff_xs = mod_xsec->operator()( x );
+
+      Xs.push_back( x );
+      model_xsecs.push_back( model_diff_xs );
+    }
+
+    // Create the model TGraph and set its plotting style
+    model_graph = std::make_unique<TGraph>(Xs.size(), Xs.data(),
+      model_xsecs.data());
+
+    model_graph->SetLineColor(kBlue);
+    model_graph->SetLineWidth(3);
+  }
 
   TCanvas canvas;
+  canvas.SetLeftMargin(0.10);
+  canvas.SetRightMargin(0.03);
+  canvas.SetBottomMargin(0.10);
+
   events_th1d.Draw("hist e");
-  //model_th1d.Draw("hist same");
-  model_graph.Draw("l");
+  if ( theory_counts ) model_th1d.Draw("hist same");
+  if ( model_graph ) model_graph->Draw("l");
 
   TLegend lg(0.15, 0.65, 0.3, 0.85);
   lg.AddEntry(&events_th1d, "events", "l");
-  //lg.AddEntry(&model_th1d, "model bin integrals", "l");
-  lg.AddEntry(&model_graph, "model", "l");
+  if ( theory_counts ) lg.AddEntry(&model_th1d, "model bin integrals", "l");
+  if ( model_graph ) lg.AddEntry(model_graph.get(), "model", "l");
 
   lg.Draw("same");
 
@@ -313,8 +382,10 @@ void make_plots(const std::string& hist_title, const Histogram& events_hist,
   oss << "reduced #chi^{2} = " << chi2 / ndof;
 
   // Pick a spot to draw the chi^2 and p-value text
+  double x_min = events_hist.x_min();
+  double x_max = events_hist.x_max();
   double x_ltx = (x_max - x_min) / 12.;
-  double y_ltx = 0.65 * max_model_diff_xs;
+  double y_ltx = 0.65 * events_max;
 
   TLatex ltx(x_ltx, y_ltx, oss.str().c_str());
   ltx.SetTextColor(kBlack);
@@ -427,10 +498,13 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     double flux_avg_xsec = gen.flux_averaged_total_xs()
       * marley_utils::hbar_c2 * marley_utils::fm2_to_minus40_cm2;
 
-    make_plots(energy_title, energy_hist, expected_bin_counts,
+    std::function<double(double)> diff_xs_func
+      = [&pdf, &flux_avg_xsec](double Ev)
+      -> double { return pdf(Ev) * flux_avg_xsec; };
+
+    make_plots(energy_title, energy_hist, nullptr, /* &expected_bin_counts, */
       flux_avg_xsec, chi2, ndof, p_value, "test2.pdf",
-      [&pdf, &flux_avg_xsec](double Ev) -> double
-      { return pdf(Ev) * flux_avg_xsec; });
+      &diff_xs_func);
     #endif
 
     CHECK( passed );
@@ -496,9 +570,9 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
       " #left[d#sigma/dcos(#theta_{c}^{CM})#right]_{flux}"
       " (10^{-40} cm^{2})");
 
-    make_plots(cos_title, cos_hist, expected_bin_counts,
+    make_plots(cos_title, cos_hist, nullptr, /* expected_bin_counts, */
       flux_avg_xsec, chi2, ndof, p_value, "test3.pdf",
-      flux_av_total_diff_xsec);
+      &flux_av_total_diff_xsec);
     #endif
 
     CHECK( passed );
@@ -526,9 +600,188 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     std::string source_E_title("MARLEY incident neutrinos;"
       " E_{#nu} (MeV); PDF(E_{#nu}) = #phi(E_{#nu}) / #Phi (MeV^{-1})");
 
-    make_plots(source_E_title, source_E_hist, expected_bin_counts,
-      1., chi2, ndof, p_value, "test4.pdf", pdf);
+    make_plots(source_E_title, source_E_hist, &expected_bin_counts,
+      1., chi2, ndof, p_value, "test4.pdf", &pdf);
     #endif
+
+    CHECK( passed );
   }
 
+  INFO("Checking sampling of Hauser-Feshbach decays");
+  {
+    // Create a Particle object representing a compound 40K* nucleus
+    const auto& mt = marley::MassTable::Instance();
+    double mass = mt.get_atomic_mass(PDG_40K)
+      - mt.get_particle_mass(marley_utils::ELECTRON);
+    mass += HF_Exi;
+
+    marley::Particle compound_nuc(PDG_40K, mass, 0., 0., 0., mass, 1);
+
+    // Now create a HauserFeshbachDecay object that can be used to decay it
+    marley::HauserFeshbachDecay hfd(compound_nuc, HF_Exi, HF_twoJi, HF_Pi, gen);
+    MARLEY_LOG_INFO() << hfd;
+
+    // **** First, check the MC branching ratios to different final particles
+    // against the underlying discrete distribution
+
+    // Gammas aren't included in the list of "fragments," so add them
+    // manually to start
+    std::map<int, int> pdg_to_num_events = { { marley_utils::PHOTON, 0 } };
+
+    // Loop over the possible fragments that can be emitted, and set their
+    // counts to zero initially
+    for ( const auto& f : marley::HauserFeshbachDecay::get_fragments() ) {
+      pdg_to_num_events[ f.get_pid() ] = 0;
+    }
+
+    // Do a bunch of decays, and record which particle (gamma or fragment)
+    // gets emitted each time
+    for (int e = 0; e < NUM_EVENTS; ++e) {
+      double dummy_Exf;
+      int dummy_twoJf;
+      marley::Parity dummy_Pf;
+      marley::Particle emitted_particle;
+      marley::Particle final_nucleus;
+      const auto& exit_channel = hfd.sample_exit_channel();
+
+      int emitted_pdg = exit_channel->emitted_particle_pdg();
+
+      pdg_to_num_events.at( emitted_pdg ) += 1;
+    }
+
+    // Sum exit channels to get partial widths. Use them to calculated
+    // a predicted number of counts for each possible emitted particle.
+    std::map<int, double> pdg_to_predicted_counts;
+    double total_width = 0.;
+    for ( const auto& ec : hfd.exit_channels() ) {
+      int pdg = ec->emitted_particle_pdg();
+      double width = ec->width();
+      total_width += width;
+
+      auto end = pdg_to_predicted_counts.end();
+      auto iter = pdg_to_predicted_counts.find( pdg );
+      if ( iter == end ) pdg_to_predicted_counts[ pdg ] = width;
+      else pdg_to_predicted_counts.at( pdg ) += width;
+    }
+
+    // Normalize each of the partial widths to get branching ratios, then
+    // multiply by the number of generated decays to get the expected
+    // numbers of counts. These will be compared with the MC results.
+    for ( auto& pair : pdg_to_predicted_counts ) {
+      pair.second *= NUM_EVENTS / total_width;
+    }
+
+    // Make a histogram with the MC results and a vector of expected
+    // counts. These will be used to perform a chi2 test of agreement
+    // between the two. Use one histogram bin per emitted particle PDG
+    // code.
+    int temp_num_bins = pdg_to_predicted_counts.size();
+    Histogram observed_hist(temp_num_bins, 0., temp_num_bins);
+    std::vector<double> expected_counts;
+
+    // Build the histogram and expected counts vector for the chi^2 test. Also
+    // store the particle symbols for use as bin labels.
+    std::vector<std::string> bin_labels;
+    size_t bin = 0u;
+
+    // Use these labels for each particle. The ones used in the marley_utils
+    // namespace are done with unicode, which doesn't play well with ROOT's
+    // plotting utilities.
+    std::map<int, std::string> pdg_to_bin_label = {
+      { marley_utils::PHOTON, "#gamma" },
+      { marley_utils::NEUTRON, "n" },
+      { marley_utils::PROTON, "p" },
+      { marley_utils::DEUTERON, "d" },
+      { marley_utils::HELION, "h" },
+      { marley_utils::TRITON, "t" },
+      { marley_utils::ALPHA, "#alpha" },
+    };
+
+    for ( const auto& pair : pdg_to_num_events ) {
+      int pdg = pair.first;
+      int num_observed = pair.second;
+      observed_hist.set_bin_content(bin, num_observed);
+      expected_counts.push_back( pdg_to_predicted_counts.at(pdg) );
+
+      bin_labels.push_back( pdg_to_bin_label.at(pdg) );
+      ++bin;
+    }
+
+    // Test for agreement
+    observed_hist.chi2_test(expected_counts, passed, chi2, ndof, p_value);
+
+    // If we've built the tests against ROOT, then make a plot
+    #ifdef USE_ROOT
+    std::string ec_title("MARLEY compound nucleus partial decay widths;"
+      " channel; #Gamma_{channel} (MeV)");
+
+    make_plots(ec_title, observed_hist, &expected_counts,
+      total_width, chi2, ndof, p_value, "test5.pdf", nullptr, &bin_labels);
+    #endif
+
+    //// **** Now test differential decay widths
+
+    //// Test each continuum exit channel separately
+    //for ( const auto& ec : hfd.exit_channels() ) {
+
+    //  // Skip discrete exit channels, which are sampled using a discrete
+    //  // distribution
+    //  if ( !ec-is_continuum() ) continue;
+
+    //  int pdg_code = 0;
+    //  const auto& cec = dynamic_cast<const marley::ContinuumExitChannel&>( *ec );
+    //  if ( cec.emits_fragment() ) {
+    //    const auto& fcec = dynamic_cast<const marley::FragmentContinuumExitChannel&>( cec );
+    //    double dummy;
+    //    Ps.push_back( fcec.Epdf_(dummy, Ex) );
+    //    pdg_code = fcec.get_fragment().get_pid();
+    //  }
+    //  else {
+    //    const auto& gcec = dynamic_cast<const marley::GammaContinuumExitChannel&>( cec );
+    //    Ps.push_back( gcec.Epdf_(Ex) );
+    //    pdg_code = marley_utils::PHOTON;
+    //  }
+    //}
+
+    //int counter = 0;
+    //for (auto& gr : graphs) {
+    //  double Emin = gr->GetX()[0];
+    //  double Emax = gr->GetX()[ gr->GetN() - 1 ];
+    //  double Estep = (Emax - Emin) / 1000.;
+    //  std::function<double(double)> func = [gr](double x) -> double { return gr->Eval(x); };
+    //  marley::ChebyshevInterpolatingFunction cif(func, Emin, Emax, 64);
+
+    //  double ymax = TMath::MaxElement(gr->GetN(),gr->GetY());
+
+    //  TH1D* temp_hist = new TH1D(std::to_string(counter).c_str(), "Ex distribution; Ex (MeV); counts", 80,
+    //    Emin, Emax);
+    //  for (int k = 0; k < 40000; ++k) {
+    //    //temp_hist->Fill( gen.inverse_transform_sample(func, Emin, Emax) );
+    //    double max = std::numeric_limits<double>::quiet_NaN();
+    //    temp_hist->Fill( gen.rejection_sample(func, Emin, Emax, max) );
+    //  }
+    //  temp_hist->Scale( cif.integral() / ((Emax - Emin) / 80) / temp_hist->Integral() );
+
+    //  std::vector<double> mEs;
+    //  std::vector<double> mPs;
+    //  for (double Ex = Emin; Ex <= Emax; Ex += Estep) {
+    //    mEs.push_back( Ex );
+    //    mPs.push_back( cif.evaluate(Ex) );
+    //  }
+    //  TGraph* m = new TGraph(mEs.size(), mEs.data(), mPs.data());
+    //  m->SetLineColor(kRed);
+    //  m->SetLineWidth(3);
+    //  m->SetLineStyle(2);
+
+    //  new TCanvas;
+    //  gr->SetLineWidth(2);
+    //  gr->Draw();
+    //  m->Draw("same");
+    //  temp_hist->SetLineColor(kBlue);
+    //  temp_hist->SetLineWidth(2);
+    //  temp_hist->Draw("same");
+
+    //  ++counter;
+    //}
+  }
 }

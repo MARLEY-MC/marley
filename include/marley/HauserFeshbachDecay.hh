@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <memory>
 #include <ostream>
 #include <unordered_map>
 
@@ -65,8 +66,19 @@ namespace marley {
       /// std::ostream
       void print(std::ostream& out) const;
 
+      /// @brief Get a non-const reference to the owned vector of ExitChannel
+      /// pointers
+      inline std::vector<std::unique_ptr<marley::ExitChannel> >&
+        exit_channels();
+
+      /// @brief Get a const reference to the owned vector of ExitChannel
+      /// pointers
       inline const std::vector<std::unique_ptr<marley::ExitChannel> >&
         exit_channels() const;
+
+      /// @brief Helper function for do_decay(). Samples an ExitChannel
+      /// using the partial decay widths as weights
+      const std::unique_ptr<marley::ExitChannel>& sample_exit_channel() const;
 
     private:
 
@@ -123,6 +135,9 @@ namespace marley {
   // Inline function definitions
   inline const std::vector<marley::Fragment>&
     HauserFeshbachDecay::get_fragments() { return fragments_; }
+
+  inline std::vector<std::unique_ptr<marley::ExitChannel> >&
+    HauserFeshbachDecay::exit_channels() { return exit_channels_; }
 
   inline const std::vector<std::unique_ptr<marley::ExitChannel> >&
     HauserFeshbachDecay::exit_channels() const { return exit_channels_; }
