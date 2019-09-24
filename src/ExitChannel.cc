@@ -6,6 +6,7 @@
 void marley::FragmentDiscreteExitChannel::do_decay(double& Ex, int& two_J,
   marley::Parity& Pi, marley::Particle& emitted_particle,
   marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
+  const
 {
   Ex = final_level_.energy();
   two_J = final_level_.twoJ();
@@ -18,6 +19,7 @@ void marley::FragmentDiscreteExitChannel::do_decay(double& Ex, int& two_J,
 void marley::GammaDiscreteExitChannel::do_decay(double& Ex, int& two_J,
   marley::Parity& Pi, marley::Particle& emitted_particle,
   marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
+  const
 {
   Ex = final_level_.energy();
   two_J = final_level_.twoJ();
@@ -29,12 +31,13 @@ void marley::GammaDiscreteExitChannel::do_decay(double& Ex, int& two_J,
 void marley::FragmentContinuumExitChannel::do_decay(double& Ex,
   int& two_J, marley::Parity& Pi, marley::Particle& emitted_particle,
   marley::Particle& residual_nucleus, marley::Generator& gen)
+  const
 {
-  double Ea;
-  Ex = gen.inverse_transform_sample([&Ea, this](double ex)
-    -> double { return this->Epdf_(Ea, ex); }, Emin_, Emax_);
+  double total_KE_CM_frame;
+  Ex = gen.inverse_transform_sample([&total_KE_CM_frame, this](double ex)
+    -> double { return this->Epdf_(total_KE_CM_frame, ex); }, Emin_, Emax_);
 
-  sample_spin_parity(two_J, Pi, gen, Ex, Ea);
+  sample_spin_parity(two_J, Pi, gen, Ex, total_KE_CM_frame);
 
   emitted_particle = marley::Particle(fragment_.get_pid(),
     fragment_.get_mass());
@@ -45,7 +48,8 @@ void marley::FragmentContinuumExitChannel::do_decay(double& Ex,
 }
 
 void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
-  marley::Parity& Pi, marley::Generator& gen, double Exf, double fragment_KE)
+  marley::Parity& Pi, marley::Generator& gen, double Exf,
+  double total_KE_CM_frame) const
 {
   // Clear any previous table entries of spin-parities and decay widths
   jpi_widths_table_.clear();
@@ -83,7 +87,7 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
         // TODO: since only the spin distribution changes in the twoJf loop,
         // you can optimize this by precomputing most of the level density
         // and the multiplying here by the appropriate spin distribution.
-        double width = om.transmission_coefficient(fragment_KE,
+        double width = om.transmission_coefficient(total_KE_CM_frame,
           fragment_.get_pid(), two_j, l, two_s)
           * ldm.level_density(Exf, twoJf, Pf);
 
@@ -103,10 +107,12 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
     std::vector<SpinParityWidth>::const_iterator, SpinParityWidth,
     const double>(jpi_widths_table_.cbegin(),
     &SpinParityWidth::width);
+
   const auto end = marley::IteratorToMember<
     std::vector<SpinParityWidth>::const_iterator, SpinParityWidth,
     const double>(jpi_widths_table_.cend(),
     &SpinParityWidth::width);
+
   std::discrete_distribution<size_t> jpi_dist(begin, end);
   size_t jpi_index = gen.sample_from_distribution(jpi_dist);
 
@@ -119,6 +125,7 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
 void marley::GammaContinuumExitChannel::do_decay(double& Ex, int& two_J,
   marley::Parity& Pi, marley::Particle& emitted_particle,
   marley::Particle& residual_nucleus, marley::Generator& gen)
+  const
 {
   double Exi = Ex;
   Ex = gen.inverse_transform_sample(Epdf_, Emin_, Emax_);
@@ -139,6 +146,7 @@ void marley::GammaContinuumExitChannel::do_decay(double& Ex, int& two_J,
 // determine the final spin and parity and store it in twoJ and Pi
 void marley::GammaContinuumExitChannel::sample_spin_parity(int Z, int A,
   int& twoJ, marley::Parity& Pi, double Exi, double Exf, marley::Generator& gen)
+  const
 {
   using TrType = marley::GammaStrengthFunctionModel::TransitionType;
 
@@ -202,10 +210,12 @@ void marley::GammaContinuumExitChannel::sample_spin_parity(int Z, int A,
     std::vector<SpinParityWidth>::const_iterator, SpinParityWidth,
     const double>(jpi_widths_table_.cbegin(),
     &SpinParityWidth::width);
+
   const auto end = marley::IteratorToMember<
     std::vector<SpinParityWidth>::const_iterator, SpinParityWidth,
     const double>(jpi_widths_table_.cend(),
     &SpinParityWidth::width);
+
   std::discrete_distribution<size_t> jpi_dist(begin, end);
   size_t jpi_index = gen.sample_from_distribution(jpi_dist);
 
@@ -219,7 +229,7 @@ void marley::GammaContinuumExitChannel::sample_spin_parity(int Z, int A,
 // transitions
 double marley::GammaContinuumExitChannel::store_gamma_jpi_width(double Exf,
   int twoJf, marley::Parity Pi, double tcE, double tcM, int mpol,
-  marley::LevelDensityModel& ldm)
+  marley::LevelDensityModel& ldm) const
 {
   marley::Parity Pf;
   double combined_width = 0.;

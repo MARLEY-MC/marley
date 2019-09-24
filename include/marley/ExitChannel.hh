@@ -41,7 +41,7 @@ namespace marley {
       /// @param gen Generator to use for random sampling
       virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
-        marley::Particle& residual_nucleus, marley::Generator& gen) = 0;
+        marley::Particle& residual_nucleus, marley::Generator& gen) const = 0;
 
       /// @brief Convert an iterator that points to an ExitChannel object into
       /// an iterator to the ExitChannel's width_ member variable.
@@ -120,7 +120,7 @@ namespace marley {
       virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
         marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
-        override;
+        const override;
 
     protected:
 
@@ -149,7 +149,7 @@ namespace marley {
       virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
         marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
-        override;
+        const override;
   };
 
 
@@ -195,7 +195,7 @@ namespace marley {
 
       /// @brief Table of possible final-state spin-parities together
       /// with their partial decay widths
-      std::vector<SpinParityWidth> jpi_widths_table_;
+      mutable std::vector<SpinParityWidth> jpi_widths_table_;
   };
 
   /// @brief %Fragment emission ExitChannel that leads to the unbound continuum
@@ -237,12 +237,12 @@ namespace marley {
       /// @param Exf The final-state nuclear excitation energy
       /// @param Ea The final-state fragment kinetic energy
       void sample_spin_parity(int& twoJ, marley::Parity& Pi,
-        marley::Generator& gen, double Exf, double Ea);
+        marley::Generator& gen, double Exf, double Ea) const;
 
       virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
         marley::Particle& residual_nucleus, marley::Generator& gen)
-        override;
+        const override;
 
       /// @brief Probability density function describing the distribution
       /// of final-state nuclear excitation energies within the continuum.
@@ -292,12 +292,12 @@ namespace marley {
       /// @param gen Reference to the Generator object to use for random
       /// sampling
       void sample_spin_parity(int Z, int A, int& twoJ, marley::Parity& Pi,
-        double Exi, double Exf, marley::Generator& gen);
+        double Exi, double Exf, marley::Generator& gen) const;
 
       virtual void do_decay(double& Ex, int& two_J,
         marley::Parity& Pi, marley::Particle& emitted_particle,
         marley::Particle& residual_nucleus, marley::Generator& gen)
-        override;
+        const override;
 
       /// @brief Probability density function describing the distribution
       /// of final-state nuclear excitation energies within the continuum.
@@ -317,6 +317,6 @@ namespace marley {
       /// @param ldm Reference to a LevelDensityModel object representing
       /// the density of nuclear levels in the continuum
       double store_gamma_jpi_width(double Exf, int twoJf, marley::Parity Pi,
-        double tcE, double tcM, int mpol, marley::LevelDensityModel& ldm);
+        double tcE, double tcM, int mpol, marley::LevelDensityModel& ldm) const;
   };
 }

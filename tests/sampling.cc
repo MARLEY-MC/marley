@@ -600,7 +600,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     std::string source_E_title("MARLEY incident neutrinos;"
       " E_{#nu} (MeV); PDF(E_{#nu}) = #phi(E_{#nu}) / #Phi (MeV^{-1})");
 
-    make_plots(source_E_title, source_E_hist, &expected_bin_counts,
+    make_plots(source_E_title, source_E_hist, nullptr,
       1., chi2, ndof, p_value, "test4.pdf", &pdf);
     #endif
 
@@ -609,7 +609,8 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
   INFO("Checking sampling of Hauser-Feshbach decays");
   {
-    // Create a Particle object representing a compound 40K* nucleus
+    // Create a Particle object representing a compound 40K* ion
+    // with net charge +1
     const auto& mt = marley::MassTable::Instance();
     double mass = mt.get_atomic_mass(PDG_40K)
       - mt.get_particle_mass(marley_utils::ELECTRON);
@@ -619,7 +620,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
     // Now create a HauserFeshbachDecay object that can be used to decay it
     marley::HauserFeshbachDecay hfd(compound_nuc, HF_Exi, HF_twoJi, HF_Pi, gen);
-    MARLEY_LOG_INFO() << hfd;
+    MARLEY_LOG_DEBUG() << hfd;
 
     // **** First, check the MC branching ratios to different final particles
     // against the underlying discrete distribution
@@ -719,69 +720,129 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
       total_width, chi2, ndof, p_value, "test5.pdf", nullptr, &bin_labels);
     #endif
 
+    CHECK( passed );
+
     //// **** Now test differential decay widths
 
-    //// Test each continuum exit channel separately
-    //for ( const auto& ec : hfd.exit_channels() ) {
+    // Test each continuum exit channel separately
+    for ( const auto& ec : hfd.exit_channels() ) {
 
-    //  // Skip discrete exit channels, which are sampled using a discrete
-    //  // distribution
-    //  if ( !ec-is_continuum() ) continue;
+      // Skip discrete exit channels, which are sampled using a discrete
+      // distribution (and have already been included in the previous test)
+      if ( !ec->is_continuum() ) continue;
 
-    //  int pdg_code = 0;
-    //  const auto& cec = dynamic_cast<const marley::ContinuumExitChannel&>( *ec );
-    //  if ( cec.emits_fragment() ) {
-    //    const auto& fcec = dynamic_cast<const marley::FragmentContinuumExitChannel&>( cec );
-    //    double dummy;
-    //    Ps.push_back( fcec.Epdf_(dummy, Ex) );
-    //    pdg_code = fcec.get_fragment().get_pid();
-    //  }
-    //  else {
-    //    const auto& gcec = dynamic_cast<const marley::GammaContinuumExitChannel&>( cec );
-    //    Ps.push_back( gcec.Epdf_(Ex) );
-    //    pdg_code = marley_utils::PHOTON;
-    //  }
-    //}
+      const auto& cec = dynamic_cast<const marley::ContinuumExitChannel&>(*ec);
 
-    //int counter = 0;
-    //for (auto& gr : graphs) {
-    //  double Emin = gr->GetX()[0];
-    //  double Emax = gr->GetX()[ gr->GetN() - 1 ];
-    //  double Estep = (Emax - Emin) / 1000.;
-    //  std::function<double(double)> func = [gr](double x) -> double { return gr->Eval(x); };
-    //  marley::ChebyshevInterpolatingFunction cif(func, Emin, Emax, 64);
+      // Get the excitation energy bounds of the continuum
+      double Ex_min = cec.Emin_;
+      double Ex_max = cec.Emax_;
 
-    //  double ymax = TMath::MaxElement(gr->GetN(),gr->GetY());
+      // Get the total width for this exit channel
+      double width = cec.width();
 
-    //  TH1D* temp_hist = new TH1D(std::to_string(counter).c_str(), "Ex distribution; Ex (MeV); counts", 80,
-    //    Emin, Emax);
-    //  for (int k = 0; k < 40000; ++k) {
-    //    //temp_hist->Fill( gen.inverse_transform_sample(func, Emin, Emax) );
-    //    double max = std::numeric_limits<double>::quiet_NaN();
-    //    temp_hist->Fill( gen.rejection_sample(func, Emin, Emax, max) );
-    //  }
-    //  temp_hist->Scale( cif.integral() / ((Emax - Emin) / 80) / temp_hist->Integral() );
+      std::function<double(double)> decay_pdf;
 
-    //  std::vector<double> mEs;
-    //  std::vector<double> mPs;
-    //  for (double Ex = Emin; Ex <= Emax; Ex += Estep) {
-    //    mEs.push_back( Ex );
-    //    mPs.push_back( cif.evaluate(Ex) );
-    //  }
-    //  TGraph* m = new TGraph(mEs.size(), mEs.data(), mPs.data());
-    //  m->SetLineColor(kRed);
-    //  m->SetLineWidth(3);
-    //  m->SetLineStyle(2);
+      // Mass of the initial (pre-decay) nucleus
+      double mi = compound_nuc.mass();
 
-    //  new TCanvas;
-    //  gr->SetLineWidth(2);
-    //  gr->Draw();
-    //  m->Draw("same");
-    //  temp_hist->SetLineColor(kBlue);
-    //  temp_hist->SetLineWidth(2);
-    //  temp_hist->Draw("same");
+      // Ground-state mass of the final (post-decay) nucleus
+      double mf_gs = cec.gs_residue_.mass();
 
-    //  ++counter;
-    //}
+      // Mass and PDG code of the emitted fragment (or gamma-ray)
+      double m_frag;
+      int pdg_frag = cec.emitted_particle_pdg();
+
+      if ( cec.emits_fragment() ) {
+        const auto& fcec = dynamic_cast<const
+          marley::FragmentContinuumExitChannel&>( cec );
+
+        decay_pdf = [&fcec](double Ex) -> double {
+          double dummy;
+          return fcec.Epdf_(dummy, Ex);
+        };
+
+        m_frag = fcec.get_fragment().get_mass();
+      }
+      else {
+        const auto& gcec = dynamic_cast<const
+          marley::GammaContinuumExitChannel&>( cec );
+
+        decay_pdf = [&gcec](double Ex) -> double { return gcec.Epdf_(Ex); };
+
+        m_frag = 0.; // photons are massless
+      }
+
+      // Use fragment energy instead of excitation energy as the variable on
+      // the x-axis. This is more intuitive, even though we're actually
+      // sampling excitation energy.
+      double KE_frag_min = (mi*mi - std::pow(mf_gs + Ex_max, 2) + m_frag*m_frag)
+        / (2. * mi) - m_frag;
+      double KE_frag_max = (mi*mi - std::pow(mf_gs + Ex_min, 2) + m_frag*m_frag)
+        / (2. * mi) - m_frag;
+
+      // Differential decay width that uses the fragment (or gamma) CM frame
+      // kinetic energy as the independent variable
+      std::function<double(double)> ddw = [=, &decay_pdf](double KE_fr)
+        -> double
+      {
+        // Final nucleus excitation energy
+        double Exf = marley_utils::real_sqrt(mi*mi + m_frag*m_frag
+          - 2.*mi*(KE_fr + m_frag)) - mf_gs;
+
+        // Final nucleus mass
+        double mf = mf_gs + Exf;
+
+        return width * ( mi / mf ) * decay_pdf(Exf);
+      };
+
+      double ddw_norm = marley_utils::num_integrate(ddw, KE_frag_min,
+        KE_frag_max);
+
+      // Also make a corresponding PDF normalized to unity
+      std::function<double(double)> ddw_pdf = [&ddw, ddw_norm](double KE_fr)
+        -> double { return ddw(KE_fr) / ddw_norm; };
+
+      // We're ready. Do some decays and record the fragment CM frame kinetic
+      // energy each time in a histogram.
+      Histogram hf_decay_hist(10, KE_frag_min, KE_frag_max);
+
+      double dummy_Ex;
+      int dummy_twoJf;
+      marley::Parity dummy_P;
+      marley::Particle fragment, final_nucleus;
+      for ( int e = 0; e < 5000; ++e ) {
+
+        // TODO: use initial instead of dummy values here
+        // TODO: finish decay. The exit channel just gets
+        // the two final masses ready. HauserFeshbachDecay
+        // then samples angles and calls marley_kinematics::two_body_decay()
+        // in order to set the particle momenta, etc. You could alternatively
+        // just calculate the one quantity that you need (fragment CM KE)
+        MARLEY_LOG_INFO() << "Decay " << e;
+        cec.do_decay(dummy_Ex, dummy_twoJf, dummy_P,
+          fragment, final_nucleus, gen);
+        double KE_frag_CM = fragment.kinetic_energy();
+        hf_decay_hist.fill( KE_frag_CM );
+      }
+
+      // Test the event histogram for agreement with the differential decay
+      // width
+      auto expected_bin_counts = hf_decay_hist.chi2_test(ddw_pdf, passed, chi2,
+        ndof, p_value);
+
+      // If we've built the tests against ROOT, then make a plot
+      #ifdef USE_ROOT
+      std::string fragment_symbol = pdg_to_bin_label.at( pdg_frag );
+      std::string ddw_title("MARLEY differential decay width;"
+        "d#Gamma_{" + fragment_symbol + "}/dT_{" + fragment_symbol
+        + "; CM frame kinetic energy T_{" + fragment_symbol + "} (MeV)");
+
+      make_plots(ddw_title, hf_decay_hist, nullptr, width, chi2, ndof,
+        p_value, "test" + fragment_symbol + ".pdf", &ddw);
+      #endif
+
+      CHECK( passed );
+
+    } // loop over continuum exit channels
   }
 }

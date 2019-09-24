@@ -453,6 +453,7 @@ double marley::Generator::inverse_transform_sample(
   if ( prob == 0. ) return xmin;
   else if ( prob == 1. ) return xmax;
 
+  /// @todo Remove hard-coded number of points here
   marley::ChebyshevInterpolatingFunction func(f, xmin, xmax, 64);
   auto cdf = func.cdf();
   double norm = cdf.evaluate( xmax );
