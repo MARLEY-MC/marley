@@ -535,6 +535,11 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
       const auto& cec = dynamic_cast<const marley::ContinuumExitChannel&>(*ec);
 
+      // Skip sampling a final nuclear spin-parity value during calls
+      // to marley::ContinuumExitChannel::do_decay(), since all we care about
+      // for this test is the final nuclear excitation energy
+      cec.set_skip_jpi_sampling( true );
+
       // Get the excitation energy bounds of the continuum
       double Ex_min = cec.Emin_;
       double Ex_max = cec.Emax_;

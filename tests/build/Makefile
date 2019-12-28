@@ -1,7 +1,3 @@
-ifndef MARLEY
-  $(error The MARLEY environment variable is not set)
-endif
-
 TEST_EXECUTABLE = test_marley
 
 INCLUDE_DIR = $(MARLEY)/include
@@ -13,6 +9,11 @@ CXXFLAGS ?= -O3 -std=c++14
 all: $(TEST_EXECUTABLE)
 
 # TODO: reduce code duplication between this Makefile and the main one
+ifneq ($(MAKECMDGOALS),clean)
+
+  ifndef MARLEY
+    $(error The MARLEY environment variable is not set)
+  endif
 
   # Use g++ as the default compiler
   CXX ?= g++
@@ -88,6 +89,7 @@ Please ensure that the gsl-config executable is on your PATH and try again.
     $(info Ignoring any ROOT installations that may be present.)
     $(info MARLEY tests will be built without ROOT support.)
   endif
+endif
 
 MARLEY_LIBS := -lMARLEY
 ifeq ($(USE_ROOT),yes)

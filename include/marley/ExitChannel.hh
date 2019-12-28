@@ -178,6 +178,13 @@ namespace marley {
 
       inline virtual bool is_continuum() const final override { return true; }
 
+      /// @brief Sets the flag that will skip sampling of a final-state
+      /// nuclear spin-parity value in do_decay()
+      /// @details The skipping functionality should only be used for testing
+      /// purposes!
+      inline void set_skip_jpi_sampling(bool skip_it) const
+        { skip_jpi_sampling_ = skip_it; }
+
       /// @brief A spin-parity value with its corresponding partial decay width
       /// @details This struct is used to sample final-state nuclear
       /// spin-parities in classes derived from ContinuumExitChannel
@@ -201,6 +208,10 @@ namespace marley {
       /// @brief Table of possible final-state spin-parities together
       /// with their partial decay widths
       mutable std::vector<SpinParityWidth> jpi_widths_table_;
+
+      /// @brief Flag that allows skipping the sampling of a final
+      /// nuclear spin-parity (useful only for testing purposes)
+      mutable bool skip_jpi_sampling_ = false;
   };
 
   /// @brief %Fragment emission ExitChannel that leads to the unbound continuum

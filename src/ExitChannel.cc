@@ -51,7 +51,12 @@ void marley::FragmentContinuumExitChannel::do_decay(double& Ex,
   // Chebyshev polynomial approximant to the CDF
   Ex = gen.inverse_transform_sample( *Ecdf_, Emin_, Emax_ );
 
-  sample_spin_parity(two_J, Pi, gen, Ex, total_KE_CM_frame_);
+  // Sample a final nuclear spin-parity, unless the user has
+  // explicitly turned this off (presumably in unit tests
+  // where we only care about the final excitation energy).
+  if ( !skip_jpi_sampling_ ) {
+    sample_spin_parity(two_J, Pi, gen, Ex, total_KE_CM_frame_);
+  }
 
   emitted_particle = marley::Particle(fragment_.get_pid(),
     fragment_.get_mass());
@@ -161,7 +166,12 @@ void marley::GammaContinuumExitChannel::do_decay(double& Ex, int& two_J,
   int Z = marley_utils::get_particle_Z(nuc_pid);
   int A = marley_utils::get_particle_A(nuc_pid);
 
-  sample_spin_parity(Z, A, two_J, Pi, Exi, Ex, gen);
+  // Sample a final nuclear spin-parity, unless the user has
+  // explicitly turned this off (presumably in unit tests
+  // where we only care about the final excitation energy).
+  if ( !skip_jpi_sampling_ ) {
+    sample_spin_parity(Z, A, two_J, Pi, Exi, Ex, gen);
+  }
 
   emitted_particle = marley::Particle(marley_utils::PHOTON, 0.);
   residual_nucleus = gs_residue_;
