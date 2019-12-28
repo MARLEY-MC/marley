@@ -18,6 +18,8 @@
 namespace {
   constexpr std::array<double, 3>
     DEFAULT_INCIDENT_NEUTRINO_DIRECTION = { 0., 0., 1.};
+
+  constexpr size_t DEFAULT_N_CHEBYSHEV = 64u;
 }
 
 // The default constructor uses the system time as the seed and a
@@ -195,7 +197,7 @@ double marley::Generator::uniform_random_double(double min, double max,
 /// interest for MARLEY are less than 1e-40 cm^2), MARLEY normalizes all
 /// probability density functions to unity before using rejection sampling.
 /// @todo Check the convergence explanation for the first step.
-double marley::Generator::rejection_sample(std::function<double(double)> f,
+double marley::Generator::rejection_sample(const std::function<double(double)>& f,
   double xmin, double xmax, double& fmax, double safety_factor,
   double max_search_tolerance)
 {
@@ -443,19 +445,34 @@ void marley::Generator::set_weight_flux(bool should_we_weight) {
 }
 
 double marley::Generator::inverse_transform_sample(
-  std::function<double(double)> f, double xmin, double xmax,
+  const std::function<double(double)>& f, double xmin, double xmax,
   double bisection_tolerance)
 {
-  // First, sample a probability value uniformly on [0, 1]
+  // Build an approximate CDF corresponding to the integral of the input PDF.
+  // Use a polynomial approximant at Chebyshev points to do it.
+  /// @todo Remove hard-coded number of points here
+  marley::ChebyshevInterpolatingFunction func(f, xmin, xmax,
+    DEFAULT_N_CHEBYSHEV);
+  auto cdf = func.cdf();
+
+  // Now that we have a CDF to use for sampling, delegate the rest of the
+  // action to the overloaded version of this function.
+  return this->inverse_transform_sample(cdf, xmin, xmax, bisection_tolerance);
+}
+
+double marley::Generator::inverse_transform_sample(
+  const marley::ChebyshevInterpolatingFunction& cdf, double xmin, double xmax,
+  double bisection_tolerance)
+{
+  // Sample a probability value uniformly on [0, 1]
   double prob = uniform_random_double(0., 1., true);
 
   // If we chose an endpoint, we're done, so just return the appropriate one
   if ( prob == 0. ) return xmin;
   else if ( prob == 1. ) return xmax;
 
-  /// @todo Remove hard-coded number of points here
-  marley::ChebyshevInterpolatingFunction func(f, xmin, xmax, 64);
-  auto cdf = func.cdf();
+  // A properly normalized CDF should evaluate to unity at x = xmax. We enforce
+  // this here so that the user doesn't have to do it in advance.
   double norm = cdf.evaluate( xmax );
 
   // Find the x value corresponding to the sampled probability via bisection

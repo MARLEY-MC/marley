@@ -804,15 +804,16 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
       // We're ready. Do some decays and record the fragment CM frame kinetic
       // energy each time in a histogram.
-      Histogram hf_decay_hist(10, KE_frag_min, KE_frag_max);
+      Histogram hf_decay_hist(20, KE_frag_min, KE_frag_max);
 
-      double dummy_Ex;
-      int dummy_twoJf;
-      marley::Parity dummy_P;
-      marley::Particle fragment, final_nucleus;
-      for ( int e = 0; e < 5000; ++e ) {
+      for ( int e = 0; e < 10000; ++e ) {
 
-        // TODO: use initial instead of dummy values here
+        // Reset Ex, Jf, and Pf to the initial values for the decay
+        double dummy_Ex = HF_Exi;
+        int dummy_twoJf = HF_twoJi;
+        marley::Parity dummy_P = HF_Pi;
+        marley::Particle fragment, final_nucleus;
+
         // TODO: finish decay. The exit channel just gets
         // the two final masses ready. HauserFeshbachDecay
         // then samples angles and calls marley_kinematics::two_body_decay()
@@ -821,7 +822,9 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
         MARLEY_LOG_INFO() << "Decay " << e;
         cec.do_decay(dummy_Ex, dummy_twoJf, dummy_P,
           fragment, final_nucleus, gen);
-        double KE_frag_CM = fragment.kinetic_energy();
+        double E_frag_CM = ( mi*mi - std::pow(final_nucleus.mass(), 2)
+          + std::pow(fragment.mass(), 2) ) / ( 2. * mi );
+        double KE_frag_CM = E_frag_CM - fragment.mass();
         hf_decay_hist.fill( KE_frag_CM );
       }
 
@@ -834,8 +837,8 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
       #ifdef USE_ROOT
       std::string fragment_symbol = pdg_to_bin_label.at( pdg_frag );
       std::string ddw_title("MARLEY differential decay width;"
-        "d#Gamma_{" + fragment_symbol + "}/dT_{" + fragment_symbol
-        + "; CM frame kinetic energy T_{" + fragment_symbol + "} (MeV)");
+        "CM frame kinetic energy T_{" + fragment_symbol + "} (MeV);"
+        "d#Gamma_{" + fragment_symbol + "}/dT_{" + fragment_symbol + "}");
 
       make_plots(ddw_title, hf_decay_hist, nullptr, width, chi2, ndof,
         p_value, "test" + fragment_symbol + ".pdf", &ddw);

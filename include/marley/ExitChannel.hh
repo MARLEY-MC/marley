@@ -252,7 +252,7 @@ namespace marley {
       /// The return value is a probability density (MeV<sup> -1</sup>)
       /// for sampling the final-state nuclear excitation energy.
       std::function<double(double&, double)> Epdf_;
-      const marley::Fragment& fragment_; ///< Emitted Fragment
+      const marley::Fragment& fragment_; ///< Emitted fragment
   };
 
   /// @brief %Gamma emission exit channel that leads to the unbound continuum
