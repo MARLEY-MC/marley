@@ -28,6 +28,7 @@
 #include "marley/Generator.hh"
 #include "marley/HauserFeshbachDecay.hh"
 #include "marley/JSON.hh"
+#include "marley/FileManager.hh"
 #include "marley/Logger.hh"
 #include "marley/Reaction.hh"
 #include "marley/marley_kinematics.hh"
@@ -211,8 +212,13 @@ void make_plots(const std::string& hist_title,
 // *** Tests for MC sampling of physics quantities ***
 TEST_CASE( "Events match their underlying distributions", "[physics]" )
 {
+  // Find the configuration file to use for these tests
+  const auto& fm = marley::FileManager::Instance();
+  std::string test_data_dir = fm.marley_dir() + "/data/tests/";
+
+  std::string config_file_name = fm.find_file( "test.js", test_data_dir );
+
   // Configure the generator
-  std::string config_file_name("test.js");
   #ifdef USE_ROOT
     marley::RootJSONConfig config( config_file_name );
   #else
@@ -440,8 +446,6 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     // Do a bunch of decays, and record which particle (gamma or fragment)
     // gets emitted each time
     for (int e = 0; e < NUM_EVENTS; ++e) {
-      double dummy_Exf;
-      int dummy_twoJf;
       marley::Parity dummy_Pf;
       marley::Particle emitted_particle;
       marley::Particle final_nucleus;

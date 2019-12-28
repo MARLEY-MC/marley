@@ -41,15 +41,16 @@ marley::FileManager::FileManager() {
     " Please set it (e.g., by sourcing the setup_marley.sh script) and"
     " try again.");
 
+  marley_dir_ = std::string( mar );
+
   // If the MARLEY_SEARCH_PATH enviornment variable is set, use that
   // instead of the default search path
   char* msp = std::getenv("MARLEY_SEARCH_PATH");
   if ( msp ) default_search_path_ = std::string( msp );
   else {
-    std::string marley_dir( mar );
-    default_search_path_ = marley_dir + "/data";
-    default_search_path_ += ':' + marley_dir + "/data/react";
-    default_search_path_ += ':' + marley_dir + "/data/structure";
+    default_search_path_ = marley_dir_ + "/data";
+    default_search_path_ += ':' + marley_dir_ + "/data/react";
+    default_search_path_ += ':' + marley_dir_ + "/data/structure";
   }
 
   MARLEY_LOG_DEBUG() << "MARLEY search path set to \""

@@ -82,6 +82,9 @@ namespace marley {
         const std::string& search_path
         = FileManager::default_search_path_) const;
 
+      /// @brief Returns the path to the root MARLEY folder
+      inline std::string marley_dir() const { return marley_dir_; }
+
     protected:
 
       /// @brief Create the singleton FileManager object
@@ -103,6 +106,10 @@ namespace marley {
 
       /// @brief By default, use this search path when looking for files
       static std::string default_search_path_;
+
+      /// @brief Stores the value of the MARLEY environment variable
+      /// (which points to the root folder of the source code distribution)
+      std::string marley_dir_;
   };
 
 }
