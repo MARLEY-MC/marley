@@ -691,22 +691,24 @@ namespace marley {
 
     JSON parse_next(std::istream&);
 
-    void issue_parse_warning(char found_char, const std::string& message)
+    void issue_parse_error(char found_char, const std::string& message)
     {
-      std::string warning(message);
+      std::string msg(message);
       if (found_char == std::ifstream::traits_type::eof())
-        warning += "end-of-file";
-      else warning += std::string("\'") + found_char + '\'';
-      MARLEY_LOG_WARNING() << warning;
+        msg += "end-of-file";
+      else msg += std::string("\'") + found_char + '\'';
+      //MARLEY_LOG_WARNING() << msg;
+      throw marley::Error( msg );
     }
 
-    void issue_parse_warning(const std::string& found_str,
+    void issue_parse_error(const std::string& found_str,
       const std::string& message, const std::istream& is)
     {
-      std::string warning(message);
-      if (!is) warning += "end-of-file";
-      else warning += '\'' + found_str + '\'';
-      MARLEY_LOG_WARNING() << warning;
+      std::string msg(message);
+      if (!is) msg += "end-of-file";
+      else msg += '\'' + found_str + '\'';
+      //MARLEY_LOG_WARNING() << msg;
+      throw marley::Error( msg );
     }
 
     // Skips single-line comments // and multi-line comments /* */
@@ -791,7 +793,7 @@ namespace marley {
 
         char next = get_next_char(in);
         if ( next != ':' ) {
-          issue_parse_warning(next, "JSON object: Expected colon, found ");
+          issue_parse_error(next, "JSON object: Expected colon, found ");
           break;
         }
 
@@ -803,7 +805,7 @@ namespace marley {
         if ( next == ',' ) continue;
         else if ( next == '}' ) break;
         else {
-          issue_parse_warning(next, "JSON object: Expected comma, found ");
+          issue_parse_error(next, "JSON object: Expected comma, found ");
           break;
         }
       }
@@ -830,7 +832,7 @@ namespace marley {
         if (next == ',') continue;
         else if (next == ']') break;
         else {
-          issue_parse_warning(next, "JSON array: Expected ',' or ']'"
+          issue_parse_error(next, "JSON array: Expected ',' or ']'"
             ", found ");
           return JSON::make(JSON::DataType::Array);
         }
@@ -860,7 +862,7 @@ namespace marley {
                 if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')
                   || (c >= 'A' && c <= 'F')) val += c;
                 else {
-                  issue_parse_warning(c, "JSON string: Expected hex character"
+                  issue_parse_error(c, "JSON string: Expected hex character"
                     " in unicode escape, found ");
                   return JSON::make(JSON::DataType::String);
                 }
@@ -901,7 +903,7 @@ namespace marley {
           if ( c >= '0' && c <= '9' )
             exp_str += c;
           else if ( !std::isspace( c ) && c != ',' && c != ']' && c != '}' ) {
-            issue_parse_warning(c, "JSON number: Expected a number for"
+            issue_parse_error(c, "JSON number: Expected a number for"
               " exponent, found ");
             return JSON::make(JSON::DataType::Null);
           }
@@ -911,7 +913,7 @@ namespace marley {
         exp = std::stol( exp_str );
       }
       else if ( !std::isspace( c ) && c != ',' && c != ']' && c != '}' ) {
-        issue_parse_warning(c, "JSON number: unexpected character ");
+        issue_parse_error(c, "JSON number: unexpected character ");
         return JSON::make(JSON::DataType::Null);
       }
       in.putback(c);
@@ -943,7 +945,7 @@ namespace marley {
         while (in.good() && !std::isspace(in.peek())) s += in.get();
         marley_utils::trim_inplace(s);
 
-        issue_parse_warning(s, "JSON bool: Expected 'true' or 'false', found ",
+        issue_parse_error(s, "JSON bool: Expected 'true' or 'false', found ",
           in);
         return JSON::make(JSON::DataType::Null);
       }
@@ -955,7 +957,7 @@ namespace marley {
       std::string s(1, 'n');
       for (size_t i = 0; i < 3; ++i) s += in.get();
       if ( s != "null") {
-        issue_parse_warning("JSON null: Expected 'null', found ", s, in);
+        issue_parse_error("JSON null: Expected 'null', found ", s, in);
         return JSON::make(JSON::DataType::Null);
       }
       return null;
@@ -974,11 +976,11 @@ namespace marley {
           if ((value <= '9' && value >= '0') || value == '-')
             return parse_number(in, value);
       }
-      // Exit gracefully if there was a problem, but complain a bit.
-      if (!in) MARLEY_LOG_WARNING() << "Unexpected end of JSON configuration"
-        << " file found\n";
-      else MARLEY_LOG_WARNING() << "JSON parse: Unknown starting character '"
-        << value << "'\n";
+      // Complain and throw an error if there was a problem
+      if (!in) throw marley::Error("Unexpected end of JSON configuration"
+        " file found\n");
+      else throw marley::Error(std::string("JSON parse:")
+        + " Unknown starting character '" + value + "'\n");
       return JSON();
     }
   }
@@ -995,7 +997,7 @@ namespace marley {
   inline JSON JSON::load(std::istream& in) {
     char first = get_next_char(in);
     if (first != '{') {
-      MARLEY_LOG_WARNING() << "Missing '{' at beginning of JSON object";
+      throw marley::Error("Missing '{' at beginning of JSON object");
       in.putback(first);
       return parse_object(in);
     }
