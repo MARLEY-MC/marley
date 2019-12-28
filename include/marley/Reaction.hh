@@ -70,6 +70,9 @@ namespace marley {
       /// @brief Get the projectile PDG code
       inline int pdg_a() const { return pdg_a_; }
 
+      /// @brief Get the target PDG code
+      inline int pdg_b() const { return pdg_b_; }
+
       /// @brief Get the minimum lab-frame kinetic energy (MeV) of the
       /// projectile that allows this reaction to proceed via a transition to
       /// the residue's ground state

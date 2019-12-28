@@ -44,10 +44,15 @@ constexpr int NUM_EVENTS = 100000;
 // The number of bins to use when histogramming events
 constexpr int NUM_ENERGY_BINS = 50;
 constexpr int NUM_COS_BINS = 5;
+constexpr int NUM_TF_BINS = 100;
 
 // Cosine range for histograms
 constexpr double COS_MIN = -1.;
 constexpr double COS_MAX = 1.;
+
+// Nuclear recoil kinetic energy range for histograms (MeV)
+constexpr double TF_MIN = 0.;
+constexpr double TF_MAX = 0.15;
 
 // PDG code for a 40K nucleus
 constexpr int PDG_40K = 1000190400;
@@ -236,6 +241,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
   // for testing
   marley::tests::Histogram energy_hist( NUM_ENERGY_BINS, E_min, E_max );
   marley::tests::Histogram cos_hist( NUM_COS_BINS, COS_MIN, COS_MAX );
+  marley::tests::Histogram cevns_hist( NUM_TF_BINS, TF_MIN, TF_MAX );
 
   //std::ifstream ev_file("events.ascii");
   //marley::Event ev;
@@ -255,6 +261,8 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
     // Store the neutrino energy
     energy_hist.fill( ev.projectile().kinetic_energy() );
+
+    cevns_hist.fill( ev.residue().kinetic_energy() );
 
     // Calculate the boost parameters needed to go from the lab frame
     // to the CM frame.
@@ -658,5 +666,109 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
       CHECK( passed );
 
     } // loop over continuum exit channels
+  }
+
+  INFO("Checking CEvNS differential cross section");
+  {
+    // NOTE: right now, this test assumes that only a single
+    // reaction is in use, and that it is CEvNS
+    // TODO: make this treatment more general
+
+    const auto* cevns_react = dynamic_cast<const marley::NuclearReaction*>(
+      gen.get_reactions().front().get() );
+    assert( cevns_react );
+
+    constexpr double gV2 = 1.;
+    double QW2 = std::pow( cevns_react->weak_nuclear_charge(), 2 );
+
+    const auto& mt = marley::MassTable::Instance();
+    // Projectile mass
+    double ma = mt.get_particle_mass( cevns_react->pdg_a() );
+    // Nuclear target mass
+    double mb = mt.get_atomic_mass( cevns_react->pdg_b() );
+
+    // Differential cross section with respect to lab-frame recoil kinetic
+    // energy of the struck nucleus (Tf_lab) at fixed projectile kinetic
+    // energy (KEa)
+    std::function<double(double, double)> cevns_diff_xsec = [ma, mb, QW2, gV2](double KEa,
+      double Tf_lab) -> double
+    {
+      // Mandelstam s
+      double s = std::pow(ma + mb, 2) + 2.*mb*KEa;
+      double sqrt_s = marley_utils::real_sqrt( s );
+
+      // Target CM frame total energy
+      double Eb_CM = ( s - ma*ma + mb*mb ) / (2. * marley_utils::real_sqrt(s) );
+      double Eb_CM2 = std::pow(Eb_CM, 2);
+
+      // Projectile CM frame total energy
+      double Ea_CM = std::max(0., sqrt_s - Eb_CM);
+      double Ea_CM2 = std::pow(Ea_CM, 2);
+
+      // Maximum lab-frame nuclear recoil kinetic energy
+      double Tf_lab_max = 2.*Ea_CM2 / mb;
+
+      if ( Tf_lab_max <= 0. ) return 0.;
+      if ( Tf_lab > Tf_lab_max ) return 0.;
+
+      double xsec = marley_utils::GF2 * QW2 * gV2 * mb / (4. * marley_utils::pi);
+
+      xsec *= ( Eb_CM2 / s ) * ( 1. - Tf_lab / Tf_lab_max );
+
+      return xsec;
+    };
+
+    // Flux-averaged differential cross section
+    std::function<double(double)> flux_avg_cevns_diff_xsec
+      = [&gen, &cevns_diff_xsec](double Tf_lab)
+    {
+      auto& source = const_cast<marley::NeutrinoSource&>( gen.get_source() );
+      double E_min = source.get_Emin();
+      double E_max = source.get_Emax();
+
+      // Compute the flux-averaged differential cross section in MeV^(-3)
+      double result = marley_utils::num_integrate(
+        [Tf_lab, &source, &cevns_diff_xsec](double KEa) -> double
+        { return source.pdf(KEa) * cevns_diff_xsec(KEa, Tf_lab); },
+        E_min, E_max);
+
+      // Convert to (10^(-40) cm^2)
+      result *= marley_utils::hbar_c2 * marley_utils::fm2_to_minus40_cm2;
+      return result;
+    };
+
+    double cevns_pdf_norm = marley_utils::num_integrate(flux_avg_cevns_diff_xsec,
+      TF_MIN, TF_MAX);
+
+    // Flux-averaged total cross section (10^(-40) cm^2)
+    double flux_avg_xsec = gen.flux_averaged_total_xs()
+      * marley_utils::hbar_c2 * marley_utils::fm2_to_minus40_cm2;
+
+    // Integrating over energy and then angle should give the same
+    // flux-averaged total cross section as integrating over angle
+    // and then energy
+    CHECK( cevns_pdf_norm == Approx(flux_avg_xsec) );
+
+    std::function<double(double)> cevns_pdf = [&flux_avg_cevns_diff_xsec,
+      cevns_pdf_norm](double Tf_lab) -> double
+    {
+      return flux_avg_cevns_diff_xsec(Tf_lab) / cevns_pdf_norm;
+    };
+
+    auto expected_bin_counts = cevns_hist.chi2_test(cevns_pdf, passed, chi2,
+      ndof, p_value);
+
+    // If we've built the tests against ROOT, then make a plot
+    #ifdef USE_ROOT
+    std::string cevns_title("MARLEY CEvNS differential cross section;"
+      "lab-frame nuclear recoil kinetic energy T_{f} (MeV);"
+      " #left[d#sigma/dT_{f}#right]_{flux} (10^{-40} cm^{2} / MeV)");
+
+    make_plots(cevns_title, cevns_hist, nullptr, /* &expected_bin_counts, */
+      flux_avg_xsec, chi2, ndof, p_value, "test_cevns.pdf",
+      &flux_avg_cevns_diff_xsec);
+    #endif
+
+    CHECK( passed );
   }
 }
