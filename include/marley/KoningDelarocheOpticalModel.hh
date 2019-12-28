@@ -115,14 +115,6 @@ namespace marley {
 
       // Threshold for abs(U - Vc) used to find a suitable matching radius for
       // computing transmission coefficients.
-      // WARNING: This value should be chosen carefully.  Since the Numerov
-      // method used for computing the fragment wavefunctions is only accurate
-      // to order h^4 (where h is the step size used), choosing this threshold
-      // to be comparable to or smaller than h^4 may cause numerical problems.
-      // A value of h^3 seems to work pretty well. You may be able to get away
-      // with a higher threshold, but check to make sure the transmission
-      // coefficients aren't significantly affected before adopting a higher
-      // value.
       static constexpr double MATCHING_RADIUS_THRESHOLD = 1e-3;
 
       /// @brief Step size (fm) for integration of the Schr&ouml;dinger

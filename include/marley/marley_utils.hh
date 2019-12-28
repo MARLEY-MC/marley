@@ -161,6 +161,17 @@ namespace marley_utils {
   // due to roundoff error and return zero in such cases rather than NaN.
   double real_sqrt(double num);
 
+  // A function template that will raise a number to an integer power.
+  // We can usually use std::pow for this sort of thing (and, unlike this
+  // approach, fractional powers are also supported by that one). However, since
+  // std::pow is not constexpr, this is a workaround.
+  // This function was taken from from https://tinyurl.com/constexpr-pow.
+  template <typename T> constexpr T ipow(T num, unsigned int pow)
+  {
+    return ( pow >= sizeof(unsigned int)*8 ) ? 0 :
+      pow == 0 ? 1 : num * ipow(num, pow - 1);
+  }
+
   // Compute the complex gamma function using the Lanczos approximation
   std::complex<double> gamma(std::complex<double> z);
 

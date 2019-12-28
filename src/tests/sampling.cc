@@ -58,8 +58,8 @@ constexpr double TF_MAX = 0.15;
 constexpr int PDG_40K = 1000190400;
 // Excitation energy, 2*spin, and parity values to use for testing
 // Hauser-Feshbach continuum decay sampling
-constexpr double HF_Exi = 33.; // MeV
-constexpr int HF_twoJi = 6; // Ji = 3
+constexpr double HF_Exi = 27.; // MeV
+constexpr int HF_twoJi = 2; // Ji = 1
 const auto HF_Pi = marley::Parity( true ); // positive parity
 
 #ifdef USE_ROOT
