@@ -1,6 +1,11 @@
 #pragma once
+
+// standard library includes
+#include <memory>
 #include <vector>
 
+// MARLEY includes
+#include "marley/ChebyshevInterpolatingFunction.hh"
 #include "marley/Fragment.hh"
 #include "marley/Generator.hh"
 #include "marley/IteratorToPointerMember.hh"
@@ -253,6 +258,15 @@ namespace marley {
       /// for sampling the final-state nuclear excitation energy.
       std::function<double(double&, double)> Epdf_;
       const marley::Fragment& fragment_; ///< Emitted fragment
+
+      /// @brief Chebyshev polynomial interpolant to the cumulative
+      /// density function for the final-state nuclear excitation energy
+      /// @details This pointer will be initialized lazily during the
+      /// first call to do_decay()
+      mutable std::unique_ptr<marley::ChebyshevInterpolatingFunction> Ecdf_;
+
+      /// @brief Temporary storage for the total CM frame kinetic energy
+      mutable double total_KE_CM_frame_;
   };
 
   /// @brief %Gamma emission exit channel that leads to the unbound continuum
@@ -318,5 +332,11 @@ namespace marley {
       /// the density of nuclear levels in the continuum
       double store_gamma_jpi_width(double Exf, int twoJf, marley::Parity Pi,
         double tcE, double tcM, int mpol, marley::LevelDensityModel& ldm) const;
+
+      /// @brief Chebyshev polynomial interpolant to the cumulative
+      /// density function for the final-state nuclear excitation energy
+      /// @details This pointer will be initialized lazily during the
+      /// first call to do_decay()
+      mutable std::unique_ptr<marley::ChebyshevInterpolatingFunction> Ecdf_;
   };
 }

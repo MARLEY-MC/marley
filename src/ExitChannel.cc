@@ -33,11 +33,25 @@ void marley::FragmentContinuumExitChannel::do_decay(double& Ex,
   marley::Particle& residual_nucleus, marley::Generator& gen)
   const
 {
-  double total_KE_CM_frame;
-  Ex = gen.inverse_transform_sample([&total_KE_CM_frame, this](double ex)
-    -> double { return this->Epdf_(total_KE_CM_frame, ex); }, Emin_, Emax_);
+  // If we haven't built a CDF for sampling the final nuclear excitation
+  // energy yet, then build it before continuing
+  if ( !Ecdf_ ) {
+    // Build a polynomial approximant (at Chebyshev points) to the PDF for the
+    // final nuclear excitation energy
+    marley::ChebyshevInterpolatingFunction pdf_cheb([this](double ex)
+      -> double { return this->Epdf_(this->total_KE_CM_frame_, ex); },
+      Emin_, Emax_, marley::DEFAULT_N_CHEBYSHEV);
 
-  sample_spin_parity(two_J, Pi, gen, Ex, total_KE_CM_frame);
+    // Store the cumulative density function for possible re-use
+    Ecdf_ = std::make_unique<marley::ChebyshevInterpolatingFunction>(
+      pdf_cheb.cdf() );
+  }
+
+  // Sample a final nuclear excitation energy using the
+  // Chebyshev polynomial approximant to the CDF
+  Ex = gen.inverse_transform_sample( *Ecdf_, Emin_, Emax_ );
+
+  sample_spin_parity(two_J, Pi, gen, Ex, total_KE_CM_frame_);
 
   emitted_particle = marley::Particle(fragment_.get_pid(),
     fragment_.get_mass());
@@ -127,8 +141,21 @@ void marley::GammaContinuumExitChannel::do_decay(double& Ex, int& two_J,
   marley::Particle& residual_nucleus, marley::Generator& gen)
   const
 {
+  // If we haven't built a CDF for sampling the final nuclear excitation
+  // energy yet, then build it before continuing
+  if ( !Ecdf_ ) {
+    // Build a polynomial approximant (at Chebyshev points) to the PDF for the
+    // final nuclear excitation energy
+    marley::ChebyshevInterpolatingFunction pdf_cheb(Epdf_, Emin_,
+      Emax_, marley::DEFAULT_N_CHEBYSHEV);
+
+    // Store the cumulative density function for possible re-use
+    Ecdf_ = std::make_unique<marley::ChebyshevInterpolatingFunction>(
+      pdf_cheb.cdf() );
+  }
+
   double Exi = Ex;
-  Ex = gen.inverse_transform_sample(Epdf_, Emin_, Emax_);
+  Ex = gen.inverse_transform_sample( *Ecdf_, Emin_, Emax_ );
 
   int nuc_pid = residual_nucleus.pdg_code();
   int Z = marley_utils::get_particle_Z(nuc_pid);

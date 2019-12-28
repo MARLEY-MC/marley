@@ -18,8 +18,6 @@
 namespace {
   constexpr std::array<double, 3>
     DEFAULT_INCIDENT_NEUTRINO_DIRECTION = { 0., 0., 1.};
-
-  constexpr size_t DEFAULT_N_CHEBYSHEV = 64u;
 }
 
 // The default constructor uses the system time as the seed and a

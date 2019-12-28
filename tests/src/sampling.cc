@@ -52,8 +52,8 @@ constexpr double COS_MAX = 1.;
 constexpr int PDG_40K = 1000190400;
 // Excitation energy, 2*spin, and parity values to use for testing
 // Hauser-Feshbach continuum decay sampling
-constexpr double HF_Exi = 57.; // MeV
-constexpr int HF_twoJi = 12; // Ji = 6
+constexpr double HF_Exi = 33.; // MeV
+constexpr int HF_twoJi = 6; // Ji = 3
 const auto HF_Pi = marley::Parity( true ); // positive parity
 
 #ifdef USE_ROOT
@@ -606,9 +606,9 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
       // We're ready. Do some decays and record the fragment CM frame kinetic
       // energy each time in a histogram.
-      marley::tests::Histogram hf_decay_hist(20, KE_frag_min, KE_frag_max);
+      marley::tests::Histogram hf_decay_hist(50, KE_frag_min, KE_frag_max);
 
-      for ( int e = 0; e < 10000; ++e ) {
+      for ( int e = 0; e < 50000; ++e ) {
 
         // Reset Ex, Jf, and Pf to the initial values for the decay
         double dummy_Ex = HF_Exi;
@@ -621,7 +621,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
         // then samples angles and calls marley_kinematics::two_body_decay()
         // in order to set the particle momenta, etc. You could alternatively
         // just calculate the one quantity that you need (fragment CM KE)
-        MARLEY_LOG_INFO() << "Decay " << e;
+        if ( e % 1000 == 0 ) MARLEY_LOG_INFO() << "Decay " << e;
         cec.do_decay(dummy_Ex, dummy_twoJf, dummy_P,
           fragment, final_nucleus, gen);
         double E_frag_CM = ( mi*mi - std::pow(final_nucleus.mass(), 2)

@@ -6,11 +6,15 @@
 
 namespace marley {
 
+  // Default Chebyshev grid size to use (when not using adaptive sizing)
+  constexpr size_t DEFAULT_N_CHEBYSHEV = 64u;
+
   /// @brief Approximate representation of a 1D continuous function
   class ChebyshevInterpolatingFunction {
 
     public:
 
+      // N = 0 triggers adaptive grid sizing
       ChebyshevInterpolatingFunction(const std::function<double(double)>& func,
         double x_min, double x_max, size_t N = 0);
 
