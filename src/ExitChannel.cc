@@ -70,6 +70,9 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
   marley::Parity& Pi, marley::Generator& gen, double Exf,
   double total_KE_CM_frame) const
 {
+  MARLEY_LOG_DEBUG() << "Sampling spin-parity for fragment emission to the"
+    << " continuum";
+
   // Clear any previous table entries of spin-parities and decay widths
   jpi_widths_table_.clear();
 
@@ -106,9 +109,17 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
         // TODO: since only the spin distribution changes in the twoJf loop,
         // you can optimize this by precomputing most of the level density
         // and the multiplying here by the appropriate spin distribution.
-        double width = om.transmission_coefficient(total_KE_CM_frame,
-          fragment_.get_pid(), two_j, l, two_s)
-          * ldm.level_density(Exf, twoJf, Pf);
+        double T = om.transmission_coefficient(total_KE_CM_frame,
+          fragment_.get_pid(), two_j, l, two_s);
+
+        double rho = ldm.level_density(Exf, twoJf, Pf);
+
+        double width = T * rho;
+
+        MARLEY_LOG_DEBUG() << "fragment pdg = " << fragment_.get_pid()
+          << ", two_j = " << two_j << ", l = " << l << ", two_s = " << two_s
+          << ", total_KE_CM_frame = " << total_KE_CM_frame
+          << "width = " << width << ", T = " << T << ", rho = " << rho;
 
         // Store the computed decay width for sampling
         continuum_width += width;

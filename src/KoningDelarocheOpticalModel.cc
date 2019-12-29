@@ -290,7 +290,18 @@ double marley::KoningDelarocheOpticalModel::transmission_coefficient(
   // If we have a ±inf or NaN in one of the components of S, then set the
   // transmission coefficient to zero
   if ( !S_is_finite ) return 0.;
-  // Otherwise, compute it normally
+
+  // To guard against numerical issues that can make the norm of the S-matrix
+  // element creep above unity, explicitly enforce that it lies on the interval
+  // [0, 1].
+  // TODO: revisit this, perhaps add a warning message?
+  double norm_S = std::norm(S);
+  if ( norm_S < 0. || norm_S > 1.0000001 ) {
+    MARLEY_LOG_DEBUG() << "Invalid S-matrix norm = " << norm_S << '\n';
+  }
+  norm_S = std::min(1., std::max(0., norm_S));
+
+  // We can now compute the transmission coefficient in the usual way
   return 1.0 - std::norm(S);
 }
 
