@@ -134,12 +134,12 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
 
   // Sample a final spin and parity
   const auto begin = marley::IteratorToMember<
-    std::vector<SpinParityWidth>::const_iterator, SpinParityWidth,
+    std::vector<SpinParityWidth>::const_iterator,
     const double>(jpi_widths_table_.cbegin(),
     &SpinParityWidth::width);
 
   const auto end = marley::IteratorToMember<
-    std::vector<SpinParityWidth>::const_iterator, SpinParityWidth,
+    std::vector<SpinParityWidth>::const_iterator,
     const double>(jpi_widths_table_.cend(),
     &SpinParityWidth::width);
 
@@ -255,12 +255,12 @@ void marley::GammaContinuumExitChannel::sample_spin_parity(int Z, int A,
 
   // Sample a final spin and parity
   const auto begin = marley::IteratorToMember<
-    std::vector<SpinParityWidth>::const_iterator, SpinParityWidth,
+    std::vector<SpinParityWidth>::const_iterator,
     const double>(jpi_widths_table_.cbegin(),
     &SpinParityWidth::width);
 
   const auto end = marley::IteratorToMember<
-    std::vector<SpinParityWidth>::const_iterator, SpinParityWidth,
+    std::vector<SpinParityWidth>::const_iterator,
     const double>(jpi_widths_table_.cend(),
     &SpinParityWidth::width);
 

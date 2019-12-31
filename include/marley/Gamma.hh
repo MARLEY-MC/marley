@@ -41,8 +41,8 @@ namespace marley {
       /// @details This function is used to load the std::discrete_distribution
       /// in the starting Level object with the intensities of the gammas that
       /// it owns without redundant storage.
-      template<typename It> inline static marley::IteratorToMember<It,
-        marley::Gamma, double> make_intensity_iterator(It it);
+      template<typename It> inline static marley::IteratorToMember<It, double>
+        make_intensity_iterator(It it);
 
     protected:
 
@@ -69,10 +69,10 @@ namespace marley {
   inline double Gamma::relative_intensity() const
     { return relative_intensity_; }
 
-  template<typename It> inline marley::IteratorToMember<It,
-    marley::Gamma, double> Gamma::make_intensity_iterator(It it)
+  template<typename It> inline marley::IteratorToMember<It, double>
+    Gamma::make_intensity_iterator(It it)
   {
-    return marley::IteratorToMember<It, marley::Gamma, double>(it,
+    return marley::IteratorToMember<It, double>(it,
       &marley::Gamma::relative_intensity_);
   }
 }

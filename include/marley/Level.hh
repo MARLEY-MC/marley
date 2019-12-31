@@ -75,7 +75,7 @@ namespace marley {
       /// vector of std::unique_ptr<marley::Level> objects that it owns sorted
       /// in order of increasing excitation energy.
       template<typename It> inline static marley::IteratorToPointerMember<It,
-        marley::Level, double> make_energy_iterator(It it);
+        double> make_energy_iterator(It it);
 
     private:
 
@@ -117,9 +117,9 @@ namespace marley {
   inline bool Level::has_gammas() const { return !gammas_.empty(); }
 
   template<typename It> inline marley::IteratorToPointerMember<It,
-    marley::Level, double> Level::make_energy_iterator(It it)
+    double> Level::make_energy_iterator(It it)
   {
-    return marley::IteratorToPointerMember<It, marley::Level, double>(it,
+    return marley::IteratorToPointerMember<It, double>(it,
       &marley::Level::energy_);
   }
 }

@@ -9,19 +9,15 @@ namespace marley {
   /// <a href="http://collaboration.cmc.ec.gc.ca/science/rpn/biblio/ddj/Website/articles/CUJ/2001/0108/becker/list2.htm">
   /// code</a>.
   /// @tparam It type of the original iterator
-  /// @tparam T type pointed to by original iterator
-  /// @tparam R type of the member we want to point to
-  template<
-    typename It,
-    typename T,
-    typename R
-    >
-  class IteratorToMember
+  /// @tparam R type of the class member we want to point to
+  template< typename It, typename R > class IteratorToMember
   {
 
   public:
 
     // Some typedefs
+    /// @brief Type pointed to by original iterator
+    typedef typename std::iterator_traits<It>::value_type T;
     typedef typename std::iterator_traits<It>::iterator_category
       iterator_category;
     typedef typename std::iterator_traits<It>::difference_type
@@ -54,13 +50,13 @@ namespace marley {
     IteratorToMember operator-(difference_type n) const;
 
     inline difference_type
-      operator-(const IteratorToMember<It, T, R>& rhs) const
+      operator-(const IteratorToMember<It, R>& rhs) const
       { return m_it - rhs.m_it; }
 
-    bool operator==(const IteratorToMember<It, T, R>& rhs) const
+    bool operator==(const IteratorToMember<It, R>& rhs) const
       { return m_it == rhs.m_it; }
 
-    bool operator!=(const IteratorToMember<It, T, R>& rhs) const
+    bool operator!=(const IteratorToMember<It, R>& rhs) const
       { return m_it != rhs.m_it; }
 
     It m_it;
@@ -71,80 +67,81 @@ namespace marley {
   };
 
   // Member function operators
-  template<typename It, typename T, typename R>
-    inline typename IteratorToMember<It, T, R>::reference
-    IteratorToMember<It, T, R>::operator*() const
+  template<typename It, typename R>
+    inline typename IteratorToMember<It, R>::reference
+    IteratorToMember<It, R>::operator*() const
     { return (*m_it).*m_memptr; }
 
-  template<typename It, typename T, typename R>
-    inline typename IteratorToMember<It, T, R>::pointer
-    IteratorToMember<It, T, R>::operator->() const
+  template<typename It, typename R>
+    inline typename IteratorToMember<It, R>::pointer
+    IteratorToMember<It, R>::operator->() const
     { return &((*m_it).*m_memptr); }
 
-  template<typename It, typename T, typename R>
-    inline typename IteratorToMember<It, T, R>::reference
-    IteratorToMember<It, T, R>::operator[](difference_type n) const
+  template<typename It, typename R>
+    inline typename IteratorToMember<It, R>::reference
+    IteratorToMember<It, R>::operator[](difference_type n) const
     { return m_it[n].*m_memptr; }
 
   // Prefix operator++
-  template<typename It, typename T, typename R>
-    inline IteratorToMember<It, T, R>&
-    IteratorToMember<It, T, R>::operator++()
+  template<typename It, typename R>
+    inline IteratorToMember<It, R>&
+    IteratorToMember<It, R>::operator++()
     { ++m_it; return *this; }
 
   // Prefix operator--
-  template<typename It, typename T, typename R>
-    inline IteratorToMember<It, T, R>&
-    IteratorToMember<It, T, R>::operator--()
+  template<typename It, typename R>
+    inline IteratorToMember<It, R>&
+    IteratorToMember<It, R>::operator--()
     { --m_it; return *this; }
 
-  template<typename It, typename T, typename R>
-    inline IteratorToMember<It, T, R>&
-    IteratorToMember<It, T, R>::operator+=(difference_type n)
+  template<typename It, typename R>
+    inline IteratorToMember<It, R>&
+    IteratorToMember<It, R>::operator+=(difference_type n)
     { m_it += n; return *this; }
 
-  template<typename It, typename T, typename R>
-    inline IteratorToMember<It, T, R>&
-    IteratorToMember<It, T, R>::operator-=(difference_type n)
+  template<typename It, typename R>
+    inline IteratorToMember<It, R>&
+    IteratorToMember<It, R>::operator-=(difference_type n)
     { m_it -= n; return *this; }
 
-  template<typename It, typename T, typename R>
-    inline IteratorToMember<It, T, R>
-    IteratorToMember<It, T, R>::operator+(difference_type n) const
-    { return IteratorToMember<It, T, R>(m_it + n, m_memptr); }
+  template<typename It, typename R>
+    inline IteratorToMember<It, R>
+    IteratorToMember<It, R>::operator+(difference_type n) const
+    { return IteratorToMember<It, R>(m_it + n, m_memptr); }
 
-  template<typename It, typename T, typename R>
-    inline IteratorToMember<It, T, R>
-    IteratorToMember<It, T, R>::operator-(difference_type n) const
-    { return IteratorToMember<It, T, R>(m_it - n, m_memptr); }
+  template<typename It, typename R>
+    inline IteratorToMember<It, R>
+    IteratorToMember<It, R>::operator-(difference_type n) const
+    { return IteratorToMember<It, R>(m_it - n, m_memptr); }
 
   /// @brief Postfix operator++ (dummy argument)
   /// @note The standard behavior for this operator is to return the
   /// un-incremented value while incrementing the operand. See discussion
   /// <a href="http://stackoverflow.com/a/3846374/4081973">here</a>.
-  template<typename It, typename T, typename R>
-    inline IteratorToMember<It, T, R>
-    IteratorToMember<It, T, R>::operator++(int)
+  template<typename It, typename R>
+    inline IteratorToMember<It, R>
+    IteratorToMember<It, R>::operator++(int)
     {
-      auto result = IteratorToMember<It, T, R>(*this);
+      auto result = IteratorToMember<It, R>(*this);
       ++m_it;
       return result;
     }
 
   /// @brief Postfix operator-- (see note about the postfix operator++)
-  template<typename It, typename T, typename R>
-    inline IteratorToMember<It, T, R>
-    IteratorToMember<It, T, R>::operator--(int)
+  template<typename It, typename R>
+    inline IteratorToMember<It, R>
+    IteratorToMember<It, R>::operator--(int)
     {
-      auto result = IteratorToMember<It, T, R>(*this);
+      auto result = IteratorToMember<It, R>(*this);
       --m_it;
       return result;
     }
 
   /// @brief Make function for convenient construction.
-  template<typename It, typename T, typename R>
-    IteratorToMember<It, T, R>
-    make_IteratorToMember(It it, R T::* memptr)
-    { return IteratorToMember<It, T, R>(it, memptr); }
+  template<typename It, typename R>
+    IteratorToMember<It, R>
+    make_IteratorToMember(It it, R std::iterator_traits<It>
+      ::value_type::* memptr)
+    { return IteratorToMember<It, R>(it, memptr); }
 
 }

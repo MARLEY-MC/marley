@@ -53,10 +53,9 @@ namespace marley {
       /// @details This is used to load a std::discrete_distribution with decay
       /// widths for sampling without redundant storage.
       template<typename It> static inline
-        marley::IteratorToPointerMember<It, marley::ExitChannel, double>
-        make_width_iterator(It it)
+        marley::IteratorToPointerMember<It, double> make_width_iterator(It it)
       {
-        return marley::IteratorToPointerMember<It, marley::ExitChannel,
+        return marley::IteratorToPointerMember<It,
           double>(it, &marley::ExitChannel::width_);
       }
 
