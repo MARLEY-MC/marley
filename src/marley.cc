@@ -770,7 +770,7 @@ namespace {
     std::cout << "MARLEY (Model of Argon Reaction Low Energy Yields) "
       << marley_utils::MARLEY_VERSION << '\n';
 
-    std::cout << "Copyright (C) 2016-2019 Steven Gardiner\n";
+    std::cout << "Copyright (C) 2016-2020 Steven Gardiner\n";
     std::cout << "License: GNU GPL version 3 "
       << "<http://opensource.org/licenses/GPL-3.0>\n";
     std::cout << "This is free software: you are free to change and"
