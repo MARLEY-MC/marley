@@ -738,7 +738,16 @@ namespace {
         /// @todo Consider other ways of handling this
         if (format_ == Format::ASCII || format_ == Format::HEPEVT) {
           bool at_start_of_file = stream_.tellp() == 0;
-          if ( at_start_of_file ) stream_ << avg_tot_xsec << '\n';
+          if ( !at_start_of_file ) return;
+
+          // Use the same trick as in marley::Event::print() to preserve
+          // full numerical precision in the output text
+          std::ostringstream temp;
+          temp << std::scientific;
+          temp.precision(std::numeric_limits<double>::max_digits10);
+
+          temp << avg_tot_xsec;
+          stream_ << temp.str() << '\n';
         }
       }
 
