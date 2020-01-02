@@ -110,11 +110,11 @@ namespace marley {
 
       /// @brief Write a
       /// <a href="http://home.fnal.gov/~mrenna/lutp0613man2/node49.html">
-      /// HEPEvt</a> record for this event to a std::ostream. Use the spacetime
+      /// HEPEVT</a> record for this event to a std::ostream. Use the spacetime
       /// origin (t = 0 mm/c, x = 0 mm, y = 0 mm, z = 0 mm) as the initial
       /// position 4-vector for all particles.
-      /// @param event_num The event number to use in the output HEPEvt record
-      /// @param out The std::ostream to which the HEPEvt record will be written
+      /// @param event_num The event number to use in the output HEPEVT record
+      /// @param out The std::ostream to which the HEPEVT record will be written
       /// @todo Alter marley::Event::write_hepevt() so that the user can specify
       /// a vertex position 4-vector to use.
       void write_hepevt(size_t event_num, std::ostream& out) const;
@@ -149,7 +149,7 @@ namespace marley {
     private:
 
       /// @brief Helper function for write_hepevt()
-      /// @param p Particle to write to the HEPEvt record
+      /// @param p Particle to write to the HEPEVT record
       /// @param os std::ostream being written to
       /// @param track whether the particle should be marked for future
       /// tracking in a simulation (true) or not (false).

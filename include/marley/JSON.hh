@@ -1,4 +1,4 @@
-// Based on https://github.com/lefticus/SimpleJSON
+// Based on https://github.com/nbsdx/SimpleJSON
 #pragma once
 
 // standard library includes

@@ -210,7 +210,7 @@ void marley::Event::read(std::istream& in) {
   }
 }
 
-// Function that dumps a marley::Particle to an output stream in HEPEvt format.
+// Function that dumps a marley::Particle to an output stream in HEPEVT format.
 // This is a private helper function for the publicly-accessible write_hepevt.
 void marley::Event::dump_hepevt_particle(const marley::Particle& p,
   std::ostream& os, bool track) const
@@ -218,12 +218,12 @@ void marley::Event::dump_hepevt_particle(const marley::Particle& p,
   // Print the flag that indicates whether the particle should be tracked
   // (i.e., it is a final particle) or not
   if (track) os << "1 ";
-  else os << "0 ";
+  else os << "3 ";
 
   // TODO: improve this entry to give the user more control over the vertex
   // location and to reflect the parent-daughter relationships between
   // particles.
-  // Factors of 1000. are used to convert MeV to GeV for the HEPEvt format
+  // Factors of 1000. are used to convert MeV to GeV for the HEPEVT format
   os << p.pdg_code() << " 0 0 0 0 " << p.px() / 1000.
     << ' ' << p.py() / 1000. << ' ' << p.pz() / 1000.
     << ' ' << p.total_energy() / 1000. << ' ' << p.mass() / 1000.
@@ -247,7 +247,7 @@ void marley::Event::write_hepevt(size_t event_num, std::ostream& out) const {
   for (const auto i : initial_particles_) dump_hepevt_particle(*i, temp, false);
   for (const auto f : final_particles_) dump_hepevt_particle(*f, temp, true);
 
-  // Output the finished HEPEvt format event to the "out" stream
+  // Output the finished HEPEVT format event to the "out" stream
   out << temp.str();
 }
 
