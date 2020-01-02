@@ -157,6 +157,25 @@ namespace marley_utils {
   /// @return String representing the given neutrino type
   std::string neutrino_pdg_to_string(int pdg);
 
+  /// @brief Checks whether the input PDG code corresponds to
+  /// a standard model (anti)lepton
+  /// @param[in] pdg PDG code of the particle of interest
+  inline bool is_lepton( int pdg ) {
+    int abs_pdg = std::abs( pdg );
+    bool is_a_lepton = ( abs_pdg >= ELECTRON && abs_pdg <= TAU_NEUTRINO );
+    return is_a_lepton;
+  }
+
+  /// @brief Checks whether the input PDG code represents
+  /// an ion
+  /// @details Note that antimatter ions will not be recognized
+  /// as such by this function
+  /// @param[in] pdg PDG code of the particle of interest
+  inline bool is_ion( int pdg ) {
+    bool is_an_ion = ( pdg > 1000000000 && pdg < 2000000000 );
+    return is_an_ion;
+  }
+
   // Take the square root of a number. Assume that a negative argument is
   // due to roundoff error and return zero in such cases rather than NaN.
   double real_sqrt(double num);
