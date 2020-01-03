@@ -67,7 +67,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
   OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
   OBJECTS := $(filter-out marley.o marley_root.o, $(OBJECTS))
   OBJECTS := $(filter-out marsum.o RootJSONConfig.o, $(OBJECTS))
-  OBJECTS := $(filter-out OutputFile.o RootOutputFile.o, $(OBJECTS))
+  OBJECTS := $(filter-out RootOutputFile.o, $(OBJECTS))
 
   # Get information about the GNU Scientific Library installation
   # (required as of MARLEY v1.1.0)
@@ -137,8 +137,15 @@ Please ensure that the gsl-config executable is on your PATH and try again.
         marley/Event.hh marley/marley_linkdef.hh
       USE_ROOT = yes
       ROOT_OBJ_DICT = marley_root_dict.o
+
+      # If we're linking against ROOT, then we need to move the
+      # OutputFile.o object from the MARLEY library to the MARLEY_ROOT
+      # library
+      OBJECTS := $(filter-out OutputFile.o, $(OBJECTS))
+
       ROOT_SHARED_LIB_LDFLAGS := -l$(ROOT_SHARED_LIB_NAME)
-      ROOT_SHARED_LIB_OBJECTS = marley_root.o RootJSONConfig.o $(ROOT_OBJ_DICT)
+      ROOT_SHARED_LIB_OBJECTS = marley_root.o RootJSONConfig.o
+      ROOT_SHARED_LIB_OBJECTS += OutputFile.o RootOutputFile.o $(ROOT_OBJ_DICT)
   
 $(ROOT_OBJ_DICT):
 	$(RM) marley_root_dict*.*
@@ -199,11 +206,10 @@ marsum: $(MARLEY_LIBS) marsum.o
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marsum.o
 
-marley: $(MARLEY_LIBS) marley.o $(MAYBE_MARSUM) OutputFile.o $(MAYBE_ROOTOUTPUTFILE)
+marley: $(MARLEY_LIBS) marley.o $(MAYBE_MARSUM)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
-	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o \
-	  OutputFile.o $(MAYBE_ROOTOUTPUTFILE)
+	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
 
 $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \

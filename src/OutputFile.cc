@@ -4,9 +4,6 @@
 
 #ifdef USE_ROOT
   #include "marley/RootJSONConfig.hh"
-
-  #include "TInterpreter.h"
-  #include "TParameter.h"
 #endif
 
 marley::OutputFile::OutputFile(const std::string& name,
@@ -35,6 +32,18 @@ marley::OutputFile::OutputFile(const std::string& name,
   }
   else throw marley::Error("Invalid output mode \"" + mode
     + "\" given in an output file specification");
+}
+
+std::unique_ptr<marley::Generator> marley::OutputFile::restore_generator(
+  const marley::JSON& config)
+{
+  #ifdef USE_ROOT
+    marley::RootJSONConfig jc( config );
+  #else
+    marley::JSONConfig jc( config );
+  #endif
+  auto gen = std::make_unique<marley::Generator>( jc.create_generator() );
+  return gen;
 }
 
 marley::TextOutputFile::TextOutputFile(const std::string& name,

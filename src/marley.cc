@@ -218,22 +218,6 @@ namespace {
 
 }
 
-// Define marley::OutputFile::restore_generator() here since that class
-// (and its derived classes) are only used in the code for the marley
-// command-line executable. This allows conditional linking to ROOT
-// as needed without forcing libMARLEY to link to ROOT when it is present.
-std::unique_ptr<marley::Generator> marley::OutputFile::restore_generator(
-  const marley::JSON& config)
-{
-  #ifdef USE_ROOT
-    marley::RootJSONConfig jc( config );
-  #else
-    marley::JSONConfig jc( config );
-  #endif
-  auto gen = std::make_unique<marley::Generator>( jc.create_generator() );
-  return gen;
-}
-
 int main(int argc, char* argv[]) {
 
   std::streambuf* cout_default_buf = std::cout.rdbuf();

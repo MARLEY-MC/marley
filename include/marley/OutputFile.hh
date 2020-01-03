@@ -65,8 +65,6 @@ namespace marley {
       /// @brief Helper function for resume() that instantiates a
       /// marley::Generator object given the previous JSON configuration
       /// object
-      /// @details This function is defined in marley.cc to allow
-      /// for condition linking to ROOT as needed
       std::unique_ptr<marley::Generator> restore_generator(
         const marley::JSON& config);
 
