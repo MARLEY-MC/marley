@@ -116,7 +116,14 @@ namespace marley {
       #ifndef __MAKECINT__
       /// @brief Create a JSON representation of this Particle
       marley::JSON to_json() const;
+
+      /// @brief Replaces the existing object contents with new ones
+      /// loaded from a JSON representation of a Particle
+      void from_json(const marley::JSON& json);
       #endif
+
+      /// @brief Resets all data members to zero
+      void clear();
 
     protected:
 

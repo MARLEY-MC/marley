@@ -461,3 +461,54 @@ bool marley::Event::read_hepevt(std::istream& in)
   // Everything was read in successfully. We're done!
   return true;
 }
+
+void marley::Event::from_json(const marley::JSON& json) {
+
+  // Remove any existing contents from this event
+  this->clear();
+
+  if ( !json.has_key("Ex") ) throw marley::Error("Missing"
+    " nuclear excitation energy key in input JSON-format event");
+
+  bool ok = false;
+  const auto& temp_Ex = json.at("Ex");
+  Ex_ = temp_Ex.to_double( ok );
+  if ( !ok ) throw marley::Error("Invalid nuclear excitation energy"
+    + temp_Ex.to_string() + " encountered in input JSON-format event");
+
+  // Retrieve and load the array of initial particles
+  // TODO: reduce code duplication in this function
+  if ( !json.has_key("initial_particles") ) throw marley::Error("Missing"
+    " initial particle array in input JSON-format event");
+
+  const auto& temp_ip = json.at("initial_particles");
+  if ( !temp_ip.is_array() ) throw marley::Error("Invalid initial"
+    " particle array " + temp_ip.to_string() + " encountered in input"
+    " JSON-format event");
+
+  for ( const auto& p_object : temp_ip.array_range() ) {
+    if ( !p_object.is_object() ) throw marley::Error("Invalid particle"
+      " object " + p_object.to_string() + " encountered while parsing a"
+      " JSON-format particle array");
+    initial_particles_.push_back( new marley::Particle );
+    initial_particles_.back()->from_json( p_object );
+  }
+
+  // Retrieve and load the array of final particles
+  if ( !json.has_key("final_particles") ) throw marley::Error("Missing"
+    " final particle array in input JSON-format event");
+
+  const auto& temp_fp = json.at("final_particles");
+  if ( !temp_fp.is_array() ) throw marley::Error("Invalid final"
+    " particle array " + temp_fp.to_string() + " encountered in input"
+    " JSON-format event");
+
+  for ( const auto& p_object : temp_fp.array_range() ) {
+    if ( !p_object.is_object() ) throw marley::Error("Invalid particle"
+      " object " + p_object.to_string() + " encountered while parsing a"
+      " JSON-format particle array");
+    final_particles_.push_back( new marley::Particle );
+    final_particles_.back()->from_json( p_object );
+  }
+
+}

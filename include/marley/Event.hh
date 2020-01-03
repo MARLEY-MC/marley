@@ -172,6 +172,10 @@ namespace marley {
       #ifndef __MAKECINT__
       /// @brief Create a JSON representation of this event
       marley::JSON to_json() const;
+
+      /// @brief Replace the existing event contents with those read
+      /// from a JSON representation
+      void from_json(const marley::JSON& json);
       #endif
 
     protected:
