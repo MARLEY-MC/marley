@@ -60,6 +60,13 @@ namespace marley {
       /// at the beginning of the output stream.
       virtual void write_flux_avg_tot_xsec(double avg_tot_xsec) = 0;
 
+      // Add more formats to the enum class as needed. This should include
+      // every event format that MARLEY knows how to write. The "ASCII" format
+      // is MARLEY's native format for textual input and output of
+      // marley::Event objects (via the << and >> operators on std::ostream and
+      // std::istream objects).
+      enum class Format { ROOT, HEPEVT, JSON, ASCII };
+
     protected:
 
       /// @brief Helper function for resume() that instantiates a
@@ -83,13 +90,6 @@ namespace marley {
       /// generator state and configuration to the output file.
       virtual void write_generator_state(const marley::JSON& json_config,
         const marley::Generator& gen, const long num_events) = 0;
-
-      // Add more formats to the enum class as needed. This should include
-      // every event format that MARLEY knows how to write. The "ASCII" format
-      // is MARLEY's native format for textual input and output of
-      // marley::Event objects (via the << and >> operators on std::ostream and
-      // std::istream objects).
-      enum class Format { ROOT, HEPEVT, JSON, ASCII };
 
       // Modes to use when writing output to files that are not initially empty
       // OVERWRITE = removes any previous contents of the file, then writes new
