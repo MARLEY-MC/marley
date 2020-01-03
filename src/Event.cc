@@ -437,9 +437,18 @@ bool marley::Event::read_hepevt(std::istream& in)
   // zero net charge in the initial state.
   this->target().set_charge( 0 );
 
-  // We'll also assume that the nuclear residue continues to have the same net
-  // charge as the pre-de-excitation ion
-  this->residue().set_charge( Qf_ion );
+  // Get the nuclear residue net electric charge by summing all final-state
+  // ions besides the residue itself. The difference between this sum and the
+  // pre-de-excitation ion charge is the charge that should be used.
+  int sum_Q_final_ions = 0;
+  for ( size_t f = 0u; f < final_particles_.size(); ++f ) {
+    if ( f == RESIDUE_INDEX ) continue; // skip the residue
+
+    const auto& fp = final_particles_.at( f );
+    int pdg_f = fp->pdg_code();
+    if ( marley_utils::is_ion(pdg_f) ) sum_Q_final_ions += fp->charge();
+  }
+  this->residue().set_charge( Qf_ion - sum_Q_final_ions );
 
   // For lepton-nucleus scattering, the initial 2->2 reaction doesn't change the
   // nuclear mass number A. The appropriate proton number Z can be deduced based
