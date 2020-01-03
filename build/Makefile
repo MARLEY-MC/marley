@@ -67,6 +67,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
   OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
   OBJECTS := $(filter-out marley.o marley_root.o, $(OBJECTS))
   OBJECTS := $(filter-out marsum.o RootJSONConfig.o, $(OBJECTS))
+  OBJECTS := $(filter-out OutputFile.o RootOutputFile.o, $(OBJECTS))
 
   # Get information about the GNU Scientific Library installation
   # (required as of MARLEY v1.1.0)
@@ -107,6 +108,7 @@ Please ensure that the gsl-config executable is on your PATH and try again.
       $(info MARLEY will be built with ROOT support.)
       override CXXFLAGS += -DUSE_ROOT
       MAYBE_MARSUM = marsum
+      MAYBE_ROOTOUTPUTFILE = RootOutputFile.o
       ROOT_CXXFLAGS := $(shell $(ROOTCONFIG) --cflags)
 
       # If ROOT was built with C++17 support, switch to building
@@ -136,8 +138,7 @@ Please ensure that the gsl-config executable is on your PATH and try again.
       USE_ROOT = yes
       ROOT_OBJ_DICT = marley_root_dict.o
       ROOT_SHARED_LIB_LDFLAGS := -l$(ROOT_SHARED_LIB_NAME)
-      ROOT_SHARED_LIB_OBJECTS = marley_root.o
-      ROOT_SHARED_LIB_OBJECTS += RootJSONConfig.o $(ROOT_OBJ_DICT)
+      ROOT_SHARED_LIB_OBJECTS = marley_root.o RootJSONConfig.o $(ROOT_OBJ_DICT)
   
 $(ROOT_OBJ_DICT):
 	$(RM) marley_root_dict*.*
@@ -198,10 +199,11 @@ marsum: $(MARLEY_LIBS) marsum.o
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marsum.o
 
-marley: $(MARLEY_LIBS) marley.o $(MAYBE_MARSUM)
+marley: $(MARLEY_LIBS) marley.o $(MAYBE_MARSUM) OutputFile.o $(MAYBE_ROOTOUTPUTFILE)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
-	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
+	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o \
+	  OutputFile.o $(MAYBE_ROOTOUTPUTFILE)
 
 $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \

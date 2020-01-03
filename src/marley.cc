@@ -1,6 +1,5 @@
 #include <chrono>
 #include <csignal>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -12,6 +11,7 @@
 
 #ifdef USE_ROOT
   #include "marley/RootJSONConfig.hh"
+  #include "marley/RootOutputFile.hh"
 #else
   #include "marley/JSONConfig.hh"
 #endif
@@ -19,6 +19,7 @@
 #include "marley/Generator.hh"
 #include "marley/Event.hh"
 #include "marley/Logger.hh"
+#include "marley/OutputFile.hh"
 
 #ifdef USE_ROOT
   #include "TFile.h"
@@ -75,684 +76,6 @@ namespace {
     return temp_stream.str();
   }
 
-  // Helper class used to parse the output file specifications from the
-  // configuration file and deliver output to the files.
-  class OutputFile {
-
-    public:
-
-      OutputFile(const std::string& name, const std::string& format,
-        const std::string& mode, bool force = false) : name_(name),
-        force_(force)
-      {
-        if (format == "root") format_ = Format::ROOT;
-        else if (format == "hepevt") format_ = Format::HEPEVT;
-        else if (format == "json") format_ = Format::JSON;
-        else if (format == "ascii") format_ = Format::ASCII;
-        else throw marley::Error("Invalid output file format \"" + format
-          + "\" given in an output file specification");
-
-        if (mode == "overwrite") mode_ = Mode::OVERWRITE;
-        else if (mode == "append") {
-          if (format_ == Format::HEPEVT || format_ == Format::ASCII)
-            mode_ = Mode::APPEND;
-          else throw marley::Error("The output mode \"" + mode + "\" is not"
-            " allowed for the file format \"" + format + '\"');
-        }
-        else if (mode == "resume") {
-          if (format_ == Format::ROOT || format_ == Format::JSON)
-            mode_ = Mode::RESUME;
-          else throw marley::Error("The output mode \"" + mode + "\" is not"
-            " allowed for the file format \"" + format + '\"');
-        }
-        else throw marley::Error("Invalid output mode \"" + mode
-          + "\" given in an output file specification");
-      }
-
-      virtual ~OutputFile() = default;
-
-      const std::string& name() const { return name_; }
-
-      // Load a marley::Generator object whose configuration and state was
-      // saved to the metadata in a ROOT or JSON format file.
-      // Returns true if the generator is successfully restored using the file's
-      // saved metadata, or false otherwise. The parameter num_previous_events
-      // is loaded with the number of events saved in the file.
-      virtual bool resume(std::unique_ptr<marley::Generator>& gen,
-        long& num_previous_events) = 0;
-
-      // Closes the output file, performing any necessary cleanup. Also saves
-      // information about the generator configuration and state to those
-      // output file formats that support it.
-      virtual void close(const marley::JSON& json_config,
-        const marley::Generator& gen, const long num_events) = 0;
-
-      virtual int_fast64_t bytes_written() = 0;
-
-      // Write a new marley::Event to this output file
-      virtual void write_event(const marley::Event* event) = 0;
-
-      bool mode_is_resume() const { return mode_ == Mode::RESUME; }
-
-      // If needed (for HEPEvt and ascii formats), write the
-      // flux-averaged total cross section to the file. Only do this
-      // if we're at the beginning of the stream.
-      virtual void write_flux_avg_tot_xsec(double avg_tot_xsec) = 0;
-
-    protected:
-
-      // Checks that a given file exists (and is readable)
-      bool check_if_file_exists(const std::string& filename) {
-        std::ifstream test_stream( filename );
-        return  test_stream.good();
-      }
-
-      // Opens the output file for writing, making whatever preparations are
-      // necessary before the first call to write_event()
-      virtual void open() = 0;
-
-      // For the file formats that support it, writes metadata containing the
-      // generator state and configuration to the output file.
-      virtual void write_generator_state(const marley::JSON& json_config,
-        const marley::Generator& gen, const long num_events) = 0;
-
-      // Add more formats to the enum class as needed. This should include
-      // every event format that MARLEY knows how to write. The "ASCII" format
-      // is MARLEY's native format for textual input and output of
-      // marley::Event objects (via the << and >> operators on std::ostream and
-      // std::istream objects).
-      enum class Format { ROOT, HEPEVT, JSON, ASCII };
-
-      // Modes to use when writing output files.
-      // OVERWRITE = removes any previous contents of the file, then writes new
-      //   events in the requested format. This mode is allowed for all output
-      //   formats.
-      // APPEND = adds new events to the end of the file without altering any
-      //   previous contents. This mode is only allowed for formats that don't
-      //   save metadata (random number generator state, etc.) to the file,
-      //   i.e., the HEPEVT and ASCII formats.
-      // RESUME = uses saved metadata in a file to restore a previous MARLEY
-      //   configuration (including the random number generator state), then
-      //   appends new events after those currently saved in the file. This
-      //   mode is only allowed for output formats that include such metadata,
-      //   i.e., the ROOT and JSON formats.
-      enum class Mode { OVERWRITE, APPEND, RESUME };
-
-      std::string name_; // Name of the file to receive output
-      Format format_;
-      Mode mode_;
-
-      // Whether to force the current output mode without prompting the user.
-      // Currently only used when setting the OVERWRITE output mode.
-      bool force_;
-  };
-
-  #ifdef USE_ROOT
-    class RootOutputFile : public OutputFile {
-      public:
-
-        RootOutputFile(const std::string& name, const std::string& format,
-          const std::string& mode, bool force = false)
-          : OutputFile(name, format, mode, force)
-        {
-          load_marley_headers();
-          open();
-        }
-
-        virtual ~RootOutputFile() = default;
-
-        int_fast64_t bytes_written() override {
-          return file_->GetBytesWritten();
-        }
-
-        // This function is a no-op for the ROOT format (we will take
-        // care of saving this information when we write the generator
-        // state variables)
-        inline virtual void write_flux_avg_tot_xsec(double /*avg_tot_xsec*/)
-          override {}
-
-      private:
-
-        virtual void open() override {
-          bool file_exists = check_if_file_exists(name_);
-
-          std::string tfile_open_mode("recreate");
-          if (mode_ == Mode::OVERWRITE && file_exists && !force_) {
-            bool overwrite = marley_utils::prompt_yes_no(
-              "Overwrite ROOT file " + name_);
-            if (!overwrite) {
-              MARLEY_LOG_INFO() << "Cancelling overwrite of ROOT file \""
-                << name_ << '\"';
-              tfile_open_mode = std::string("update");
-              mode_ = Mode::RESUME;
-            }
-          }
-          else if (mode_ == Mode::RESUME) {
-            if (!file_exists) throw marley::Error("Cannot resume run. Could"
-              " not open the ROOT file \"" + name_ + '\"');
-            else tfile_open_mode = std::string("update");
-          }
-          else if (mode_ == Mode::APPEND) throw marley::Error("Cannot use the"
-            " \"append\" mode with the ROOT output format");
-
-          file_ = std::make_unique<TFile>(name_.c_str(),
-            tfile_open_mode.c_str());
-
-          // Check if there was a problem opening the file (e.g., pre-existing
-          // file that has the wrong format, etc.). If so, complain and quit.
-          if (file_->IsZombie()) throw marley::Error("Invalid format or other"
-            " error encountered while opening the ROOT file \"" + name_ + '\"');
-
-          if (mode_ == Mode::OVERWRITE) {
-            // Create a ROOT tree to store the events
-            tree_ = new TTree("MARLEY_event_tree",
-              "Neutrino events generated by MARLEY");
-
-            // We create a branch to store the events here, but set the branch
-            // address to nullptr. This will be fixed later when write_event()
-            // is called.
-            tree_->Branch("event", "marley::Event", nullptr);
-          }
-
-          else if (mode_ == Mode::RESUME) {
-            file_->GetObject("MARLEY_event_tree", tree_);
-            if (!tree_) throw marley::Error("Cannot resume run. Could not find"
-              " a valid MARLEY event tree in the ROOT file \"" + name_ + '\"');
-
-            MARLEY_LOG_INFO() << "Continuing previous run from ROOT file \""
-              << name_ << "\"\nwhich contains " << tree_->GetEntries()
-              << " events.";
-
-            // Get previous RNG seed from the ROOT file
-            std::string* seed = nullptr;
-            file_->GetObject("MARLEY_seed", seed);
-
-            if (!seed) MARLEY_LOG_WARNING() << "Unable to read"
-              << " random number generator seed saved to the ROOT file from"
-              << " the previous run.";
-            else MARLEY_LOG_INFO() << "The previous run was initialized using"
-              << " the random number generator seed " << *seed;
-          }
-
-          else throw marley::Error("Unrecognized file mode encountered in"
-            " RootOutputFile::open()");
-        }
-
-        void load_marley_headers() {
-          // Current (24 July 2016) versions of ROOT 6 require runtime loading
-          // of headers for custom classes in order to use dictionaries
-          // correctly. If we're running ROOT 6+, do the loading here, and give
-          // the user guidance if there are any problems.
-          // TODO: see if you can use the -inlineInputHeader to include the
-          // headers in the libMARLEY_ROOT library and then load them at
-          // runtime from there. This isn't very well documented, so your early
-          // efforts at doing this didn't work out.
-          static bool already_loaded = false;
-          if (!already_loaded) {
-            already_loaded = true;
-            if (gROOT->GetVersionInt() >= 60000) {
-              MARLEY_LOG_INFO() << "ROOT 6 or greater detected. Loading class"
-                << " information\nfrom headers \"marley/Particle.hh\""
-                << " and \"marley/Event.hh\"\n";
-              TInterpreter::EErrorCode* ec = new TInterpreter::EErrorCode();
-              gInterpreter->ProcessLine("#include \"marley/Particle.hh\"", ec);
-              if (*ec != 0) throw marley::Error("Error loading MARLEY header"
-                " Particle.hh. For MARLEY headers stored in /path/to/include/"
-                "marley/, please add /path/to/include to your"
-                " ROOT_INCLUDE_PATH environment variable and try again.");
-              gInterpreter->ProcessLine("#include \"marley/Event.hh\"");
-              if (*ec != 0) throw marley::Error("Error loading MARLEY header"
-                " Event.hh. For MARLEY headers stored in"
-                " /path/to/include/marley/, please add /path/to/include to"
-                " your ROOT_INCLUDE_PATH environment variable and try again.");
-            }
-          }
-        }
-
-        // Write the internal state string of the random number generator to
-        // disk, as well as the generator's JSON configuration. This will allow
-        // MARLEY to resume event generation from where it left off with no
-        // loss of consistency. This trick is based on
-        // http://tinyurl.com/hb7rqsj
-        void write_generator_state(const marley::JSON& json_config,
-          const marley::Generator& gen, const long /*num_events*/) override
-        {
-          // Use std::string objects to store MARLEY configuration and
-          // random number generator state information to the ROOT file.
-          // You can retrieve these strings using the TFile::GetObject()
-          // function (see elsewhere in this file for an example).
-          file_->cd();
-          std::string config( json_config.dump_string() );
-          std::string state( gen.get_state_string() );
-          std::string seed( std::to_string(gen.get_seed()) );
-
-          TParameter<double> avg_tot_xsec("MARLEY_flux_avg_xsec",
-            gen.flux_averaged_total_xs());
-
-          file_->WriteObject(&config, "MARLEY_config", "WriteDelete");
-          file_->WriteObject(&state, "MARLEY_state", "WriteDelete");
-          file_->WriteObject(&seed, "MARLEY_seed", "WriteDelete");
-          file_->WriteTObject(&avg_tot_xsec, "MARLEY_flux_avg_xsec",
-            "WriteDelete");
-        }
-
-        // Clean up once we're done with the ROOT file. Save some information
-        // about the current generator configuration as we clean things up.
-        virtual void close(const marley::JSON& json_config,
-          const marley::Generator& gen, const long dummy) override
-        {
-
-          // Write the event tree to the ROOT file, replacing the previous
-          // version if one exists. Avoid data loss by not deleting the
-          // previous version until the new version is completely written to
-          // disk.
-          file_->cd();
-          tree_->Write(tree_->GetName(), TTree::kWriteDelete);
-
-          // Save the current state of the generator to the ROOT file in case
-          // we want to resume a run later
-          write_generator_state(json_config, gen, dummy);
-
-          file_->Close();
-        }
-
-        virtual bool resume(std::unique_ptr<marley::Generator>& gen,
-          long& num_previous_events) override
-        {
-          if (mode_ != Mode::RESUME) {
-            throw marley::Error("Cannot call Output"
-              "File::resume() for an output mode other than"
-              " \"resume\"");
-            return false;
-          }
-
-          std::string* conf = nullptr;
-          file_->GetObject("MARLEY_config", conf);
-          if (!conf) {
-            throw marley::Error("Cannot resume run. Failed to load"
-              " JSON configuration from the ROOT file \"" + name_ + '\"');
-            return false;
-          }
-
-          marley::JSON config = marley::JSON::load(*conf);
-
-          std::string* state = nullptr;
-          file_->GetObject("MARLEY_state", state);
-          if (!state) {
-            throw marley::Error("Cannot resume run. Failed to load"
-              " random number generator state string from the ROOT file \""
-              + name_ + '\"');
-            return false;
-          }
-
-          marley::RootJSONConfig jc(config);
-          gen = std::make_unique<marley::Generator>(jc.create_generator());
-          gen->seed_using_state_string(*state);
-
-          if (!tree_) throw marley::Error("Cannot resume run. Error"
-            " accessing the MARLEY event tree stored in the ROOT file \""
-            + name_ + '\"');
-
-          num_previous_events = tree_->GetEntries();
-
-          return true;
-        }
-
-        virtual void write_event(const marley::Event* event) override {
-          if (!event) throw marley::Error("Null pointer passed to"
-            " RootOutputFile::write_event()");
-          tree_->SetBranchAddress("event", &event);
-          tree_->Fill();
-        }
-
-        // TFile object that will be used to access the ROOT file
-        std::unique_ptr<TFile> file_ = nullptr;
-
-        // This is a bare pointer, but ROOT will associate it with file_, so we
-        // don't want to delete it ourselves or let a smart pointer do it.
-        TTree* tree_ = nullptr;
-    };
-  #endif
-
-  class TextOutputFile : public OutputFile {
-    private:
-
-      // Formats the beginning of a JSON output file properly based on the
-      // current indent level. Writes the result to a std::ostream.
-      void start_json_output(bool start_array) {
-        if (format_ != Format::JSON) throw marley::Error("TextOutputFile"
-          "::start_json_output() called for a non-JSON file format");
-
-        stream_ << '{';
-        if (indent_ >= 0) {
-          stream_ << '\n';
-          for (int k = 0; k < indent_; ++k) stream_ << ' ';
-        }
-        stream_ << "\"events\"";
-        if (indent_ >= 0) stream_ << ' ';
-        stream_ << ':';
-        if (indent_ >= 0) stream_ << ' ';
-
-        if (!start_array) return;
-
-        stream_ << '[';
-        if (indent_ >= 0) {
-          stream_ << '\n';
-          for (int k = 0; k < 2*indent_; ++k) stream_ << ' ';
-        }
-      }
-
-      // Stream used to read and write from the output file as needed
-      std::fstream stream_;
-
-      // Flag used to see if we need a comma in front of the current
-      // JSON event or not. Unused by the other formats.
-      bool needs_comma_ = false;
-
-      // Indent level used when writing JSON files. Unused by other
-      // formats.
-      int indent_ = -1; // -1 gives the most compact JSON file possible
-
-      // Storage for the number of bytes written to disk
-      int_fast64_t byte_count_ = 0;
-
-    public:
-
-      TextOutputFile(const std::string& name, const std::string& format,
-        const std::string& mode, bool force = false, int indent = -1)
-        : OutputFile(name, format, mode, force), indent_(indent)
-      {
-        open();
-      }
-
-      virtual ~TextOutputFile() = default;
-
-      void set_indent(int indent) { indent_ = indent; }
-
-      virtual void open() override {
-        bool file_exists = check_if_file_exists(name_);
-
-        auto open_mode_flag = std::ios::out | std::ios::trunc;
-
-        if (mode_ == Mode::OVERWRITE && file_exists && !force_) {
-          bool overwrite = marley_utils::prompt_yes_no("Overwrite file "
-            + name_);
-          if (!overwrite) {
-            MARLEY_LOG_INFO() << "Cancelling overwrite of output file \""
-              << name_ << '\"';
-            open_mode_flag = std::ios::app | std::ios::out;
-            if (format_ == Format::JSON) mode_ = Mode::RESUME;
-            else mode_ = Mode::APPEND;
-          }
-        }
-
-        if (mode_ == Mode::RESUME) {
-          if (format_ != Format::JSON) throw marley::Error("The"
-            " \"resume\" mode may only be used with the ROOT and JSON output"
-            " formats");
-          if (!file_exists) throw marley::Error("Cannot resume run. Could"
-            " not open the JSON file \"" + name_ + '\"');
-          else open_mode_flag = std::ios::app | std::ios::out;
-        }
-        else if (mode_ == Mode::APPEND)
-          open_mode_flag = std::ios::app | std::ios::out;
-        else if (mode_ != Mode::OVERWRITE)
-          throw marley::Error("Unrecognized file mode encountered in"
-            " TextOutputFile::open()");
-
-        stream_.open(name_, open_mode_flag);
-
-        // Get the event array started if we're writing a fresh JSON file
-        if (format_ == Format::JSON && mode_ == Mode::OVERWRITE) {
-          start_json_output(true);
-        }
-
-      }
-
-      // TODO: consider a better way of doing this
-      // Returns true if the generator was successfully restored from the
-      // saved metadata, or false otherwise.
-      virtual bool resume(std::unique_ptr<marley::Generator>& gen,
-        long& num_previous_events) override
-      {
-
-        if (mode_ != Mode::RESUME) {
-          throw marley::Error("Cannot call TextOutput"
-            "File::resume() for an output mode other than \"resume\"");
-          return false;
-        }
-
-        if (format_ != Format::JSON) {
-          throw marley::Error("Cannot call"
-            " TextOutputFile::resume() for an output format other"
-            " than \"json\"");
-          return false;
-        }
-
-        MARLEY_LOG_INFO() << "Continuing previous run from JSON file "
-          << name_;
-
-        // Get the JSON objects from the file
-        stream_.close();
-        stream_.open(name_, std::ios::in);
-        marley::JSON temp_json = marley::JSON::load(stream_);
-        stream_.close();
-
-        if (!temp_json.has_key("gen_state")) {
-          throw marley::Error("Missing generator configuration in JSON"
-            " file \"" + name_ + "\": could not restore previous state");
-          return false;
-        }
-        const marley::JSON& gen_state = temp_json.at("gen_state");
-
-        if (!gen_state.has_key("config")) {
-          throw marley::Error("Failed to load previous configuration from"
-            " the JSON file \"" + name_ + '\"');
-          return false;
-        }
-        const marley::JSON& config = gen_state.at("config");
-
-        if (!gen_state.has_key("generator_state_string")) {
-          throw marley::Error("Failed to load previous generator state from"
-            " the JSON file \"" + name_ + '\"');
-          return false;
-        }
-        std::string state_string
-          = gen_state.at("generator_state_string").to_string();
-
-        if (!gen_state.has_key("seed")) {
-          throw marley::Error("Failed to load previous random number"
-            " generator seed from the JSON file \"" + name_ + '\"');
-          return false;
-        }
-        std::string seed = gen_state.at("seed").to_string();
-
-        bool count_ok = true;
-        if (!gen_state.has_key("event_count")) count_ok = false;
-        else num_previous_events = gen_state.at(
-          "event_count").to_long(count_ok);
-
-        if (!count_ok) {
-          throw marley::Error("Failed to load previous event count"
-            " from the JSON file \"" + name_ + '\"');
-          return false;
-        }
-
-        #ifdef USE_ROOT
-          marley::RootJSONConfig jc(config);
-        #else
-          marley::JSONConfig jc(config);
-        #endif
-        gen = std::make_unique<marley::Generator>(jc.create_generator());
-        gen->seed_using_state_string(state_string);
-
-        MARLEY_LOG_INFO() << "The previous run was initialized using"
-          << " the random number generator seed " << seed;
-
-        // We've loaded all the metadata we need, so erase the file,
-        // and write out all the previous events to it again.
-        stream_.open(name_, std::ios::out | std::ios::trunc);
-
-        start_json_output(true);
-
-        const auto& evt_array = temp_json.at("events").array_range();
-
-        // Pretty-print the events one-by-one as needed
-        auto begin = evt_array.begin();
-        auto end = evt_array.end();
-
-        for (auto iter = begin; iter != end; ++iter) {
-          if (iter != begin) stream_ << ',';
-          if (indent_ < 0) stream_ << iter->dump_string();
-          else {
-            stream_ << '\n';
-            for (int i = 0; i < 2*indent_; ++i) stream_ << ' ';
-            iter->print(stream_, indent_, true, 2*indent_);
-          }
-        }
-
-        // Unless the event array is empty, add a comma before continuing
-        // to write events to the file
-        if (begin != end) needs_comma_ = true;
-        else needs_comma_ = false;
-
-        // Close the file and re-open it, this time appending to the end
-        stream_.close();
-        stream_.open(name_, std::ios::out | std::ios::app);
-
-        return true;
-      }
-
-      int_fast64_t bytes_written() override {
-        // If the stream is open, then update the byte count. Otherwise, just
-        // use the saved value.
-        if (stream_.is_open()) {
-          stream_.flush();
-          byte_count_ = static_cast<int_fast64_t>(stream_.tellp());
-        }
-        return byte_count_;
-      }
-
-      // Write a new marley::Event to this output file
-      virtual void write_event(const marley::Event* event) override
-      {
-        if (!event) throw marley::Error("Null pointer passed to"
-          " TextOutputFile::write_event()");
-
-        switch (format_) {
-          case Format::ASCII:
-            stream_ << *event;
-            break;
-          case Format::JSON:
-            if (needs_comma_) {
-              stream_ << ',';
-              if (indent_ > 0) {
-                stream_ << '\n';
-                for (int k = 0; k < 2*indent_; ++k) stream_ << ' ';
-              }
-            }
-            else needs_comma_ = true;
-            if (indent_ == -1) stream_ << event->to_json();
-            else {
-              event->to_json().print(stream_, indent_, true, 2*indent_);
-            }
-            break;
-          case Format::HEPEVT:
-            // TODO: fix event number here
-            event->write_hepevt(0, stream_);
-            break;
-          case Format::ROOT:
-            throw marley::Error("ROOT format encountered in TextOutputFile::"
-              "write_event()");
-            break;
-          default:
-            throw marley::Error("Invalid format value encountered in"
-              " TextOutputFile::write_event()");
-        }
-      }
-
-      void write_generator_state(const marley::JSON& json_config,
-        const marley::Generator& gen, const long num_events) override
-      {
-        if (format_ != Format::JSON) throw marley::Error("TextOutputFile::"
-          "write_generator_state() should only be used with the JSON format");
-
-        stream_ << ',';
-        if (indent_ > 0) {
-          stream_ << '\n';
-          for (int k = 0; k < indent_; ++k) stream_ << ' ';
-        }
-        stream_ << "\"gen_state\"";
-        if (indent_ > 0) stream_ << ' ';
-        stream_ << ':';
-        if (indent_ > 0) stream_ << ' ';
-
-        marley::JSON temp = marley::JSON::object();
-
-        temp["config"] = json_config;
-        temp["generator_state_string"] = gen.get_state_string();
-        temp["seed"] = std::to_string(gen.get_seed());
-        temp["event_count"] = num_events;
-        temp["flux_avg_xsec"] = gen.flux_averaged_total_xs();
-
-        if (indent_ < 0) stream_ << temp.dump_string();
-        else temp.print(stream_, indent_, true, indent_);
-      }
-
-      virtual void close(const marley::JSON& json_config,
-        const marley::Generator& gen, const long num_events) override
-      {
-        if (format_ == Format::JSON) {
-          // End the JSON array of event objects
-          if (indent_ > 0) {
-            stream_ << '\n';
-            for (int k = 0; k < indent_; ++k) stream_ << ' ';
-          }
-          stream_ << ']';
-
-          // Save the current state of the generator to the JSON file in case
-          // we want to resume a run later
-          write_generator_state(json_config, gen, num_events);
-
-          // Terminate the JSON file with a closing curly brace
-          if (indent_ > 0) stream_ << '\n';
-          stream_ << '}';
-        }
-
-        stream_.close();
-      }
-
-      // This function is a no-op for the JSON format (we will write the
-      // flux-averaged cross section to the output file when saving the
-      // generator state)
-      inline virtual void write_flux_avg_tot_xsec(double avg_tot_xsec)
-        override
-      {
-        // If we're at the beginning of a HEPEvt or ascii format file, write
-        // the flux-averaged total cross section before the events. This will
-        // be written upon closing the file in the case of the JSON output
-        // format. If we're not at the start of the file, don't bother.
-        // We probably are appending to an existing file. We'll have to trust
-        // the user not to mix events with different flux-averaged cross sections
-        // in these file formats.
-        /// @todo Consider other ways of handling this
-        if (format_ == Format::ASCII || format_ == Format::HEPEVT) {
-          bool at_start_of_file = stream_.tellp() == 0;
-          if ( !at_start_of_file ) return;
-
-          // Use the same trick as in marley::Event::print() to preserve
-          // full numerical precision in the output text
-          std::ostringstream temp;
-          temp << std::scientific;
-          temp.precision(std::numeric_limits<double>::max_digits10);
-
-          temp << avg_tot_xsec;
-          stream_ << temp.str() << '\n';
-        }
-      }
-
-  };
-
   void print_help(std::string executable_name) {
     constexpr char help_message1[] = "Usage: ";
     constexpr char help_message2[] = " [OPTION...] CONFIG_FILE\n"
@@ -799,7 +122,7 @@ namespace {
   // screen when this executable is running
   std::string makeStatusLines(long ev_count, long num_events, long num_old_events,
     std::chrono::system_clock::time_point start_time_point,
-    const std::vector<std::unique_ptr<OutputFile> >& output_files)
+    const std::vector<std::unique_ptr<marley::OutputFile> >& output_files)
   {
     std::ostringstream temp_oss;
     // Print a status message showing the current number of events
@@ -856,7 +179,7 @@ namespace {
       StatusInserter(std::streambuf* dest, const long& ev_count,
         const long& num_events, const long& num_old_events,
         const std::chrono::system_clock::time_point& start_time_point,
-        const std::vector<std::unique_ptr<OutputFile> >& output_files)
+        const std::vector<std::unique_ptr<marley::OutputFile> >& output_files)
         : std::streambuf(), myDest_( dest ), myIsAtStartOfLine_(true),
         do_status_(true), ev_count_( ev_count ), num_events_( num_events ),
         num_old_events_( num_old_events ), start_time_point_( start_time_point ),
@@ -872,7 +195,7 @@ namespace {
       const long& num_events_;
       const long& num_old_events_;
       const std::chrono::system_clock::time_point& start_time_point_;
-      const std::vector<std::unique_ptr<OutputFile> >& output_files_;
+      const std::vector<std::unique_ptr<marley::OutputFile> >& output_files_;
 
       int overflow( int ch ) override {
         int retval = 0;
@@ -893,6 +216,22 @@ namespace {
       }
   };
 
+}
+
+// Define marley::OutputFile::restore_generator() here since that class
+// (and its derived classes) are only used in the code for the marley
+// command-line executable. This allows conditional linking to ROOT
+// as needed without forcing libMARLEY to link to ROOT when it is present.
+std::unique_ptr<marley::Generator> marley::OutputFile::restore_generator(
+  const marley::JSON& config)
+{
+  #ifdef USE_ROOT
+    marley::RootJSONConfig jc( config );
+  #else
+    marley::JSONConfig jc( config );
+  #endif
+  auto gen = std::make_unique<marley::Generator>( jc.create_generator() );
+  return gen;
 }
 
 int main(int argc, char* argv[]) {
@@ -976,7 +315,7 @@ int main(int argc, char* argv[]) {
     // if we're doing a continuation run.
     long num_events = ex_set.get_long("events", 1e3);
 
-    std::vector<std::unique_ptr<OutputFile> > output_files;
+    std::vector<std::unique_ptr<marley::OutputFile> > output_files;
 
     if (ex_set.has_key("output")) {
       marley::JSON output_set = ex_set.at("output");
@@ -1015,11 +354,11 @@ int main(int argc, char* argv[]) {
 
         #ifdef USE_ROOT
           if (format == "root") output_files.push_back(
-            std::make_unique<RootOutputFile>(filename, format, mode, force));
-          else output_files.push_back(std::make_unique<TextOutputFile>(
+            std::make_unique<marley::RootOutputFile>(filename, format, mode, force));
+          else output_files.push_back(std::make_unique<marley::TextOutputFile>(
             filename, format, mode, force, indent));
         #else
-          output_files.push_back(std::make_unique<TextOutputFile>(filename,
+          output_files.push_back(std::make_unique<marley::TextOutputFile>(filename,
             format, mode, force, indent));
         #endif
       }
@@ -1027,7 +366,7 @@ int main(int argc, char* argv[]) {
     else {
       // If the user didn't specify anything for the output key, then
       // by default write to a single JSON-format file.
-      output_files.push_back(std::make_unique<TextOutputFile>("events.json",
+      output_files.push_back(std::make_unique<marley::TextOutputFile>("events.json",
         "json", "overwrite", false));
     }
 
