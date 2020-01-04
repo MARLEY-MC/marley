@@ -1,0 +1,2 @@
+#!/bin/sh
+root ${MARLEY}/examples/macros/setup_marley.C $@

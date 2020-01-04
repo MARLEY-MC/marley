@@ -115,7 +115,7 @@ Please ensure that the gsl-config executable is on your PATH and try again.
       $(info Found ROOT version $(ROOT_VERSION) in $(ROOT))
       $(info MARLEY will be built with ROOT support.)
       override CXXFLAGS += -DUSE_ROOT
-      MAYBE_MARSUM = marsum
+      MAYBE_MARSUM = marsum marroot
       ROOT_CXXFLAGS := $(shell $(ROOTCONFIG) --cflags)
 
       # If ROOT was built with C++17 support, switch to building
@@ -214,6 +214,9 @@ marsum: $(MARLEY_LIBS) marsum.o
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marsum.o
 
+marroot: $(MARLEY_LIBS)
+	cp $(SRC_DIR)/scripts/marroot .
+
 marley: $(MARLEY_LIBS) marley.o $(MAYBE_MARSUM)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
@@ -228,7 +231,7 @@ $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 
 clean:
 	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
-	$(RM) -rf *.dSYM marsum $(TEST_EXECUTABLE)
+	$(RM) -rf *.dSYM marsum marroot $(TEST_EXECUTABLE)
 
 install: marley
 	mkdir -p $(DESTDIR)$(bindir)
@@ -248,6 +251,7 @@ install: marley
 uninstall:
 	$(RM) $(DESTDIR)$(bindir)/marley
 	$(RM) $(DESTDIR)$(bindir)/marsum
+	$(RM) $(DESTDIR)$(bindir)/marroot
 	$(RM) $(DESTDIR)$(libdir)/$(SHARED_LIB)
 	$(RM) $(DESTDIR)$(libdir)/$(ROOT_SHARED_LIB)
 	$(RM) $(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm
