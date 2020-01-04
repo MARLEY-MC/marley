@@ -1,14 +1,13 @@
 // Example MARLEY configuration file
-// S. Gardiner <sjgardiner@ucdavis.edu>
-// Revised 22 September 2018 for version 1.1.0
+// Steven Gardiner <gardiner@fnal.gov>
+// Revised 3 January 2020 for version 1.2.0
 //
 // INTRODUCTION
 //
-// Starting with version 1.0.0, the MARLEY command-line executable
-// is configured using a JSON-like file format. While the file
-// format is quite similar to standard JSON (see http://www.json.org/
-// for a full description), MARLEY configuration files differ from
-// JSON files in the following ways:
+// The MARLEY command-line executable is configured using a JSON-like file
+// format. While the file format is quite similar to standard JSON (see
+// http://www.json.org/ for a full description), MARLEY configuration files
+// differ from JSON files in the following ways:
 //
 //   - Single-word keys (no whitespace) may be given without surrounding
 //     double quotes
@@ -17,15 +16,18 @@
 //
 //   - A trailing comma is allowed at the end of JSON objects and arrays
 //
-//  The JSON parser included with MARLEY attempts to be as permissive as
-//  possible. It will usually accept input even if there are some minor
-//  formatting mistakes (e.g., a missing opening curly brace).
+//  The JSON parser included with MARLEY will print an error message
+//  if parsing the job configuration file fails. This message will
+//  provide some (hopefully useful) guidance in troubleshooting
+//  formatting mistakes. To simplify writing their own configuration files,
+//  users are encouraged to copy the examples (particularly
+//  "examples/COPY_ME.js") and modify them to suit their needs.
 //
 //  A file extension of ".js" is recommended for MARLEY configuration files
 //  because typical syntax highlighting settings for Javascript work well with
 //  the configuration file format.
 //
-{  // An opening curly brace begins the configuration file content
+{ // An opening curly brace begins the configuration file content
 
   // RANDOM NUMBER SEED (optional)
   //
@@ -37,58 +39,47 @@
   // Unix epoch as its random number seed.
   seed: 123456,
 
-  // NUCLEAR STRUCTURE DATA (optional, *strongly* recommended)
-  //
-  // The generator uses discrete nuclear level data and gamma-ray branching
-  // ratios to simulate nuclear de-excitations. The nuclear structure data
-  // included with MARLEY were taken with attribution from the TALYS nuclear
-  // reaction code (see structure/README.md for more information) and
-  // reformatted.
-  //
-  // The "structure" JSON array contains a list of nuclear structure data files
-  // that should be used during the simulation. Paths must be included unless
-  // the data files are stored in the current working directory. Relative paths
-  // are assumed to be specified relative to the current working directory.
-  // MARLEY configuration files currently do not support the use of environment
-  // variables, bash globs, etc.
-  //
-  // MARLEY will load and use data for all nuclides present in each file given
-  // in this list. If MARLEY creates a final-state nucleus
-  // for which no nuclear structure data are available, the code will
-  // use simple gamma-ray models to simulate bound-state de-excitations.
-  //
-  // The three files shown in this example contain all of the structure data
-  // currently recommended for use with MARLEY.
-  structure: [ "../structure/z019",
-               "../structure/z018",
-               "../structure/z017", ],
-
   // REACTION DATA (required)
   //
   // The generator uses tables of nuclear matrix elements to compute neutrino
   // reaction cross sections. Each entry in the "reactions" JSON array is the
   // name of a data file that contains a set of nuclear matrix elements to use
   // when calculating cross sections for a particular reaction channel (e.g.,
-  // charged current ve, charged current anti-ve, neutral current, elastic
-  // scattering on atomic electrons). Although multiple nuclear matrix element
-  // tables may be available for a particular channel (corresponding to
-  // different data evaluations) the user should ensure that only one
-  // reaction data file for each desired reaction channel is used.
+  // neutrino charged current, antineutrino charged current, neutral current,
+  // elastic scattering on atomic electrons). Note that the file names must be
+  // simple strings; MARLEY configuration files currently do not support the
+  // use of environment variables, bash globs, etc.
+
+  // Although multiple nuclear matrix element tables may be available for a
+  // particular channel (corresponding to different data evaluations) only
+  // the first reaction data file listed in the array for each desired reaction
+  // channel is used.
   //
-  // In MARLEY v1.2.0, the only available channel is charged current ve,
+  // In MARLEY v1.2.0, the only available channel is neutrino charged current,
   // and there are three available tables of evaluated nuclear matrix elements
   // for this channel:
   //
-  //   - react/ve40ArCC_Bhattacharya2009.react
-  //   - react/ve40ArCC_Bhattacharya1998.react
-  //   - react/ve40ArCC_Liu1998.react
+  //   - ve40ArCC_Bhattacharya2009.react
+  //   - ve40ArCC_Bhattacharya1998.react
+  //   - ve40ArCC_Liu1998.react
   //
   // See each of these files for details about their respective nuclear
   // matrix element evaluations.
   //
+  // The full path to one these data files does not need to be given in the
+  // "reactions" JSON array. After searching in the working directory,
+  // MARLEY's default behavior is to search for input data files in
+  // the directories ${MARLEY}/data, ${MARLEY}/data/react/,
+  // and ${MARLEY}/data/structure/, where ${MARLEY} is the value of the
+  // MARLEY environment variable (typically set by the setup_marley.sh shell
+  // script). The list of search directories beyond the working directory
+  // can be changed from the default by setting the MARLEY_SEARCH_PATH
+  // environment variable to a ':'-separated list of directories.
+  //
   // Unless a particular reaction channel is represented by a data file given
-  // in this list, it will not be included in the MARLEY simulation.
-  reactions: [ "../react/ve40ArCC_Bhattacharya2009.react" ],
+  // in the "reactions" JSON array, it will not be included in the MARLEY
+  // simulation.
+  reactions: [ "ve40ArCC_Bhattacharya2009.react" ],
 
   // NEUTRINO SOURCE SPECIFICATION (required)
   //
@@ -135,7 +126,6 @@
   //
   //   ROOT neutrino spectrum probability     "tgraph"
   //   density function (TGraph)
-  //
   //
   // All of the source types also require the use of the "neutrino" key,
   // which specifies the species of neutrino emitted by the source. Valid
@@ -270,10 +260,7 @@
   // 0.0, z = 1.0 will be assumed.
   //
   // In this example, incident neutrinos travel in the +z direction.
-  direction: { x: 0.0,
-               y: 0.0,
-               z: 1.0
-             },
+  direction: { x: 0.0, y: 0.0, z: 1.0 },
 
   // LOGGER CONFIGURATION (optional)
   //
@@ -324,7 +311,6 @@
     //
     // If this key is omitted, a value of 1000 will be assumed.
     events: 10000,
-
 
     // EVENT OUTPUT (optional)
     //
@@ -393,5 +379,34 @@
     //
     output: [ { file: "events.ascii", format: "ascii", mode: "overwrite" } ],
   },
+
+  // NUCLEAR STRUCTURE DATA (optional)
+  //
+  // The generator uses discrete nuclear level data and gamma-ray branching
+  // ratios to simulate nuclear de-excitations. The nuclear structure data
+  // included with MARLEY are largely taken from the TALYS nuclear
+  // reaction code (see ${MARLEY}/data/structure/README.md for more
+  // information) and reformatted.
+  //
+  // The "structure" JSON array contains a list of nuclear structure data files
+  // to be used during the simulation. MARLEY searches for these using
+  // the same procedure as for the reaction matrix element data files.
+  //
+  // MARLEY will load and use data for all nuclides present in each file given
+  // in this list. If MARLEY creates a final-state nucleus
+  // for which no nuclear structure data are available, the code will
+  // use simple gamma-ray models to simulate bound-state de-excitations.
+  //
+  // If the structure key is omitted from the configuration file, then MARLEY
+  // will default to loading structure data from all files in the directory
+  // ${MARLEY}/data/structure/ (where ${MARLEY} is the value of the MARLEY
+  // envrionment variable).
+  //
+  // Omitting the structure key and thereby using the official set of
+  // MARLEY structure data files is *strongly* recommended. Expert users
+  // with recommendations for improving the existing set of nuclear structure
+  // data files are encouraged to send feedback via email
+  // (support@marleygen.org)
+  // structure: [ "z017", "z018", "z019", ],
 
 } // A closing curly brace should appear at the end of the file
