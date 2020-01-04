@@ -254,8 +254,9 @@ void marley::TextOutputFile::write_event(const marley::Event* event) {
       }
       break;
     case Format::HEPEVT:
-      // TODO: fix event number here
-      event->write_hepevt(0, stream_);
+      // TODO: consider incrementing event numbers each time instead of
+      // just writing a zero
+      event->write_hepevt(0, flux_avg_tot_xsec_, stream_);
       break;
     case Format::ROOT:
       throw marley::Error("ROOT format encountered in TextOutputFile::"
@@ -321,7 +322,7 @@ void marley::TextOutputFile::close(const marley::JSON& json_config,
 
 void marley::TextOutputFile::write_flux_avg_tot_xsec(double avg_tot_xsec)
 {
-  // If we're at the beginning of a HEPEVT or ascii format file, write
+  // If we're at the beginning of an ASCII-format file, write
   // the flux-averaged total cross section before the events. This will
   // be written upon closing the file in the case of the JSON output
   // format. If we're not at the start of the file, don't bother.
@@ -329,7 +330,7 @@ void marley::TextOutputFile::write_flux_avg_tot_xsec(double avg_tot_xsec)
   // the user not to mix events with different flux-averaged cross sections
   // in these file formats.
   /// @todo Consider other ways of handling this
-  if (format_ == Format::ASCII || format_ == Format::HEPEVT) {
+  if (format_ == Format::ASCII) {
     bool at_start_of_file = stream_.tellp() == 0;
     if ( !at_start_of_file ) return;
 
@@ -342,4 +343,7 @@ void marley::TextOutputFile::write_flux_avg_tot_xsec(double avg_tot_xsec)
     temp << avg_tot_xsec;
     stream_ << temp.str() << '\n';
   }
+
+  // Store the value for later (it is needed for the HEPEVT format)
+  flux_avg_tot_xsec_ = avg_tot_xsec;
 }

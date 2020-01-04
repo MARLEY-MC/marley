@@ -66,7 +66,7 @@ bool marley::EventFileReader::deduce_file_format() {
   // format.
   in_ = std::ifstream( file_name_ );
   try {
-    if ( temp_event.read_hepevt(in_) ) {
+    if ( temp_event.read_hepevt(in_, &flux_avg_tot_xs_) ) {
       format_ = marley::OutputFile::Format::HEPEVT;
       // Return to the start of the file so that we don't skip the first event
       in_.seekg(0);
@@ -93,8 +93,7 @@ void marley::EventFileReader::initialize() {
       break;
 
     case marley::OutputFile::Format::HEPEVT:
-      // TODO: add flux-averaged xsec extraction here
-      // (right now it's not included in the HEPEVT output)
+      // No further preparation is needed to read the HEPEVT format
       break;
 
     case marley::OutputFile::Format::JSON: {
@@ -155,7 +154,7 @@ bool marley::EventFileReader::next_event( marley::Event& ev )
       break;
 
     case marley::OutputFile::Format::HEPEVT:
-      if ( ev.read_hepevt(in_) ) return true;
+      if ( ev.read_hepevt(in_, &flux_avg_tot_xs_) ) return true;
       break;
 
     case marley::OutputFile::Format::JSON:

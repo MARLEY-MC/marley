@@ -143,21 +143,15 @@ namespace marley {
       int pdg_code_ = 0;
 
       /// @brief mass (MeV)
-      /// @note We precompute the particle mass (as opposed to obtaining
-      /// it from the momentum 4-vector) for speed and to avoid roundoff errors.
-      /// @todo Refactor the Particle class to ensure that the mass,
-      /// 3-momentum, and total energy are always consistent with each other.
-      /// MARLEY enforces this by using the Particle class carefully, but
-      /// consistency should be guaranteed in the Particle class internals.
       double mass_ = 0.;
 
       /// @brief Electric charge (net charge in the case of atoms) expressed as
       /// an integer multiple of the proton charge
       /// @details This class member allows a marley::Particle to represent an
       /// atom or ion.  The charge_ data member was added because the 2014 PDG
-      /// codes do not include a prescription for representing ionization states
-      /// of atoms.
-      /// @todo add error handling for cases where a marley::Particle is
+      /// codes do not include a prescription for representing ionization
+      /// states of atoms.
+      /// @todo Add error handling for cases where a marley::Particle is
       /// constructed with a charge that is inappropriate.
       int charge_ = 0;
   };

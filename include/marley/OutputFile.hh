@@ -129,12 +129,17 @@ namespace marley {
       // JSON event or not. Unused by the other formats.
       bool needs_comma_ = false;
 
-      // Indent level used when writing JSON files. Unused by other
-      // formats.
+      /// @brief Indent level used when writing JSON files. Unused by other
+      /// formats.
       int indent_ = -1; // -1 gives the most compact JSON file possible
 
-      // Storage for the number of bytes written to disk
+      /// @brief Storage for the number of bytes written to disk
       int_fast64_t byte_count_ = 0;
+
+      /// @brief Persistent storage for the flux-averaged total cross
+      /// section value (needed for the HEPEVT output format, which includes
+      /// it in every event)
+      double flux_avg_tot_xsec_ = 0.;
 
     public:
 

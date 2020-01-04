@@ -250,12 +250,10 @@ void marley::Event::read(std::istream& in) {
 // Function that dumps a marley::Particle to an output stream in HEPEVT format.
 // This is a private helper function for the publicly-accessible write_hepevt.
 void marley::Event::dump_hepevt_particle(const marley::Particle& p,
-  std::ostream& os, bool track) const
+  std::ostream& os, int status) const
 {
-  // Print the flag that indicates whether the particle should be tracked
-  // (i.e., it is a final particle) or not
-  if (track) os << HEPEVT_FINAL_STATE_STATUS_CODE << ' ';
-  else os << HEPEVT_INITIAL_STATE_STATUS_CODE << ' ';
+  // Print the status code to begin the particle entry in the HEPEVT record
+  os << status << ' ';
 
   // TODO: improve this entry to give the user more control over the vertex
   // location and to reflect the parent-daughter relationships between
@@ -269,20 +267,42 @@ void marley::Event::dump_hepevt_particle(const marley::Particle& p,
     << " 0. 0. 0. 0." << '\n';
 }
 
-void marley::Event::write_hepevt(size_t event_num, std::ostream& out) const {
-
+void marley::Event::write_hepevt(size_t event_num, double flux_avg_tot_xsec,
+  std::ostream& out) const
+{
   // Use an temporary ostringstream object so that we can ensure all
   // floating-point values are output with full precision without disturbing
   // the user's settings in the "out" stream.
   std::ostringstream temp;
-  temp.precision(std::numeric_limits<double>::max_digits10);
+  temp.precision( std::numeric_limits<double>::max_digits10 );
   temp << std::scientific;
 
-  size_t num_particles = initial_particles_.size() + final_particles_.size();
+  // Create a dummy particle that encodes extra MARLEY-specific information in
+  // the HEPEVT format. Preserve MARLEY natural units for these quantities
+  // (MeV) by pre-multiplying by the conversion factor used in
+  // dump_hepevt_particle()
+  marley::Particle dummy_particle;
+  dummy_particle.set_total_energy( Ex_ * GEV_TO_MEV );
+  dummy_particle.set_mass( flux_avg_tot_xsec * GEV_TO_MEV );
+
+  // Add one to the total particle count so that our dummy particle will be
+  // included correctly
+  size_t num_particles = 1 + initial_particles_.size()
+    + final_particles_.size();
+
+  // Write the HEPEVT header line to the event record
   temp << event_num  << ' ' << num_particles << '\n';
 
-  for (const auto i : initial_particles_) dump_hepevt_particle(*i, temp, false);
-  for (const auto f : final_particles_) dump_hepevt_particle(*f, temp, true);
+  // Write the initial particles to the event record
+  for (const auto i : initial_particles_) dump_hepevt_particle(*i, temp,
+    HEPEVT_INITIAL_STATE_STATUS_CODE);
+
+  // Write our dummy particle to the event record
+  dump_hepevt_particle( dummy_particle, temp, HEPEVT_MARLEY_INFO_STATUS_CODE );
+
+  // Write the final particles to the event record
+  for (const auto f : final_particles_) dump_hepevt_particle(*f, temp,
+    HEPEVT_FINAL_STATE_STATUS_CODE);
 
   // Output the finished HEPEVT format event to the "out" stream
   out << temp.str();
@@ -309,8 +329,14 @@ marley::JSON marley::Event::to_json() const {
 // state was still good at the end of the attempt to read the HEPEVT record.
 // This can be used as a while loop condition when reading in multiple HEPEVT
 // records.
-bool marley::Event::read_hepevt(std::istream& in)
+bool marley::Event::read_hepevt(std::istream& in, double* flux_avg_tot_xsec)
 {
+  // If flux_avg_tot_xsec is not null, then clear any previous value there
+  // before continuing. It will be loaded with a new value below if we
+  // find a dummy particle encoding extra MARLEY-specific information in
+  // the input HEPEVT record.
+  if ( flux_avg_tot_xsec ) *flux_avg_tot_xsec = 0.;
+
   // Remove any pre-existing contents in this event
   this->clear();
 
@@ -373,7 +399,22 @@ bool marley::Event::read_hepevt(std::istream& in)
     if ( !in ) throw marley::Error("Parse error while reading  particle #"
       + std::to_string(p) + " from a HEPEVT-format event record");
 
-    // If the particle has a status code other than the two recognized by
+    // If the particle has this status code, it is a dummy particle that
+    // contains MARLEY-specific information
+    if ( status_code == HEPEVT_MARLEY_INFO_STATUS_CODE ) {
+      // The dummy particle total energy stores the nuclear excitation energy.
+      // This value can be reconstructed (with some effort) from the
+      // particle four-vectors, but just storing it is a lot easier.
+      Ex_ = Etot;
+      // The dummy particle mass stores the flux-averaged total cross section.
+      // If the user passed something other than a nullptr as the
+      // flux_avg_tot_xsec argument to this function, then load it
+      // with this value, which is not normally stored in the marley::Event
+      // itself.
+      if ( flux_avg_tot_xsec ) *flux_avg_tot_xsec = M;
+    }
+
+    // If the particle has a status code other than the two used by
     // MARLEY, then don't bother to record the particle in the event object
     if ( status_code != HEPEVT_INITIAL_STATE_STATUS_CODE
       && status_code != HEPEVT_FINAL_STATE_STATUS_CODE ) continue;
@@ -415,8 +456,8 @@ bool marley::Event::read_hepevt(std::istream& in)
     }
   }
 
-  // Check that the event satisfies the criteria needed to compute a
-  // nuclear excitation energy value Ex_
+  // Check that the event satisfies the criteria needed for a reasonable
+  // marley::Event
   if ( initial_state_particles != 2u ) throw marley::Error(
     std::to_string(initial_state_particles) + " initial-state particles"
     " encountered while reading HEPEVT input");
@@ -448,35 +489,17 @@ bool marley::Event::read_hepevt(std::istream& in)
     std::iter_swap( begin_fp + RESIDUE_INDEX, begin_fp + largest_final_ion_idx );
   }
 
-  // Everything is now in place except for the nuclear excitation energy.
-  // We'll invoke 4-momentum conservation to compute it. First, we'll
-  // determine the 4-momentum components of the hadronic system immediately
-  // following the initial 2->2 scattering reaction:
-  double Etot_had = this->projectile().total_energy()
-    + this->target().total_energy() - this->ejectile().total_energy();
-  double px_had = this->projectile().px() + this->target().px()
-    - this->ejectile().px();
-  double py_had = this->projectile().py() + this->target().py()
-    - this->ejectile().py();
-  double pz_had = this->projectile().pz() + this->target().pz()
-    - this->ejectile().pz();
-
-  // Assuming that the hadronic system is on-shell allows us to compute
-  // its invariant mass:
-  double M_had = marley_utils::real_sqrt( Etot_had*Etot_had - px_had*px_had
-    - py_had*py_had - pz_had*pz_had );
-
-  // The only thing left to do is to determine the ground-state mass of the
-  // final ion before de-excitation. We can determine the correct ionization
-  // state by invoking conservation of electric charge and looking at the final
-  // lepton charge:
-  int Qf_ion = -this->ejectile().charge();
-
   // The marley::Particle constructor that we used above assumes that all ion
   // PDG codes passed to it represent fully ionized particles. Here we will
   // override this behavior and assume instead that the target atom has
   // zero net charge in the initial state.
   this->target().set_charge( 0 );
+
+  // Determine the correct ionization state immediately following the prompt
+  // 2->2 scattering reaction. Do this by assuming that the target atom is
+  // neutral (see above). This implies that the final ion charge must be equal
+  // and opposite to that of the final lepton.
+  int Qf_ion = -this->ejectile().charge();
 
   // Get the nuclear residue net electric charge by summing all final-state
   // ions besides the residue itself. The difference between this sum and the
@@ -490,23 +513,6 @@ bool marley::Event::read_hepevt(std::istream& in)
     if ( marley_utils::is_ion(pdg_f) ) sum_Q_final_ions += fp->charge();
   }
   this->residue().set_charge( Qf_ion - sum_Q_final_ions );
-
-  // For lepton-nucleus scattering, the initial 2->2 reaction doesn't change the
-  // nuclear mass number A. The appropriate proton number Z can be deduced based
-  // on the ionization state:
-  int Zi = marley_utils::get_particle_Z( this->target().pdg_code() );
-  int A = marley_utils::get_particle_A( this->target().pdg_code() );
-  int Zf = Zi + Qf_ion;
-
-  // We're now ready to compute the ground-state mass of the final ion
-  // (neglecting electron binding energies just as we do elsewhere in MARLEY)
-  const auto& mt = marley::MassTable::Instance();
-  double Mhad_gs = mt.get_atomic_mass( Zf, A ) - Qf_ion*mt.get_particle_mass(
-    marley_utils::ELECTRON );
-
-  // The difference between the invariant mass and the ground-state mass is
-  // the nuclear excitation energy. Store it in the event object.
-  Ex_ = M_had - Mhad_gs;
 
   // Everything was read in successfully. We're done!
   return true;

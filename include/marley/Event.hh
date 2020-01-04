@@ -6,10 +6,14 @@
 
 namespace marley {
 
-  // Status codes to use when dumping the initial and
-  // final state particles to HEPEVT format
+  // TODO: Make these into an enum at some point
+  /// @brief HEPEVT status code for initial-state particles
   constexpr int HEPEVT_INITIAL_STATE_STATUS_CODE = 3;
+  /// @brief HEPEVT status code for final-state particles
   constexpr int HEPEVT_FINAL_STATE_STATUS_CODE = 1;
+  /// @brief HEPEVT status code for a dummy particle that
+  /// encodes MARLEY-specific information in a HEPEVT record
+  constexpr int HEPEVT_MARLEY_INFO_STATUS_CODE = 11;
 
   #ifndef __MAKECINT__
   // Forward declare the JSON class so that we can define a function that
@@ -118,11 +122,17 @@ namespace marley {
       /// HEPEVT</a> record for this event to a std::ostream. Use the spacetime
       /// origin (t = 0 mm/c, x = 0 mm, y = 0 mm, z = 0 mm) as the initial
       /// position 4-vector for all particles.
-      /// @param event_num The event number to use in the output HEPEVT record
-      /// @param out The std::ostream to which the HEPEVT record will be written
-      /// @todo Alter marley::Event::write_hepevt() so that the user can specify
-      /// a vertex position 4-vector to use.
-      void write_hepevt(size_t event_num, std::ostream& out) const;
+      /// @param[in] flux_avg_tot_xsec The flux-averaged total reaction
+      /// cross section (MeV<sup> -2</sup>) to include in the output HEPEVT
+      /// record
+      /// @param[in] event_num The event number to use in the output HEPEVT
+      /// record
+      /// @param[out] The std::ostream to which the HEPEVT record will be
+      /// written
+      /// @todo Alter marley::Event::write_hepevt() so that the user can
+      /// specify a vertex position 4-vector to use.
+      void write_hepevt(size_t event_num, double flux_avg_tot_xsec,
+        std::ostream& out) const;
 
       /// @brief Print this event to a std::ostream
       /// @param out The std::ostream to which this event will be written
@@ -142,28 +152,18 @@ namespace marley {
       ///   - There is not exactly one particle with status code
       ///     HEPEVT_INITIAL_STATE_STATUS_CODE that is an ion
       ///     (a particle for which marley_utils::is_ion() returns true)
-      ///   - More than one lepton (a particle for which marley_utils::is_lepton()
-      ///     returns true) appears in the event with status code
-      ///     HEPEVT_FINAL_STATE_STATUS_CODE
+      ///   - More than one lepton (a particle for which
+      ///     marley_utils::is_lepton() returns true) appears in the event
+      ///     with status code HEPEVT_FINAL_STATE_STATUS_CODE
       ///   - Zero of the particles with status code
       ///     HEPEVT_FINAL_STATE_STATUS_CODE are ions
-      /// When reconstructing the nuclear excitation energy Ex_ from the
-      /// HEPEVT event record, it is assumed that the outgoing hadronic system
-      /// immediately following the initial 2->2 scatter is on the mass shell,
-      /// that (anti)neutrino-nucleus charged-current
-      /// interactions produce an ion with (-1) +1 net charge, and that
-      /// energy conservation between the two-particle initial state and
-      /// the multi-particle final state is respected in the event record.
-      /// Note also that, due to numerical roundoff, the value
-      /// of Ex_ will not be preserved to full precision when making the event format
-      /// conversions ASCII -> HEPEVT -> ASCII.
       /// @return True if the input stream was in a good state after attempting
-      /// to read in the full HEPEVT record, or false otherwise. This behavior is
-      /// designed to enable the return value of this function to be used as a while
-      /// loop condition when reading in multiple HEPEVT records from an input stream.
-      /// If the return value is false, the event object contents will have been cleared
-      /// by this function.
-      bool read_hepevt(std::istream& in);
+      /// to read in the full HEPEVT record, or false otherwise. This
+      /// behavior is designed to enable the return value of this function to
+      /// be used as a while loop condition when reading in multiple HEPEVT
+      /// records from an input stream. If the return value is false, the event
+      /// object contents will have been cleared by this function.
+      bool read_hepevt(std::istream& in, double* flux_avg_tot_xsec = nullptr);
 
       /// @brief Deletes all particles from the event and resets
       /// the nuclear excitation energy to zero
@@ -191,16 +191,16 @@ namespace marley {
       /// excited states.
       double Ex_;
 
-    private:
-
       /// @brief Helper function for write_hepevt()
       /// @param p Particle to write to the HEPEVT record
       /// @param os std::ostream being written to
-      /// @param track whether the particle should be marked for future
-      /// tracking in a simulation (true) or not (false).
+      /// @param status Integer status code to use for this particle
+      /// in the HEPEVT output
       void dump_hepevt_particle(const marley::Particle& p, std::ostream& os,
-        bool track = true) const;
+        int status) const;
 
+      /// @brief Deletes all owned Particle objects and clears the
+      /// vectors of initial and final particles
       void delete_particles();
   };
 
