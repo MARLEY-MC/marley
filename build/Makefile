@@ -75,7 +75,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
   OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
   OBJECTS := $(filter-out marley.o marley_root.o, $(OBJECTS))
   OBJECTS := $(filter-out marsum.o RootJSONConfig.o, $(OBJECTS))
-  OBJECTS := $(filter-out RootOutputFile.o OutputFileReader.o, $(OBJECTS))
+  OBJECTS := $(filter-out RootOutputFile.o RootEventFileReader.o, $(OBJECTS))
 
   # Get information about the GNU Scientific Library installation
   # (required as of MARLEY v1.1.0)
@@ -153,7 +153,7 @@ Please ensure that the gsl-config executable is on your PATH and try again.
       ROOT_SHARED_LIB_LDFLAGS := -l$(ROOT_SHARED_LIB_NAME)
       ROOT_SHARED_LIB_OBJECTS = marley_root.o RootJSONConfig.o
       ROOT_SHARED_LIB_OBJECTS += OutputFile.o RootOutputFile.o
-      ROOT_SHARED_LIB_OBJECTS += OutputFileReader.o $(ROOT_OBJ_DICT)
+      ROOT_SHARED_LIB_OBJECTS += RootEventFileReader.o $(ROOT_OBJ_DICT)
   
 $(ROOT_OBJ_DICT):
 	$(RM) marley_root_dict*.*

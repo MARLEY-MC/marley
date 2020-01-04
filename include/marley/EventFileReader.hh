@@ -10,12 +10,14 @@
 namespace marley {
 
   /// @brief Object that parses MARLEY output files written in any of the
-  /// available formats
-  class TextOutputFileReader {
+  /// available formats, except for ROOT format
+  /// @details For a version of this class that can also handle ROOT-format
+  /// output files, see the RootEventFileReader class
+  class EventFileReader {
 
     public:
 
-      TextOutputFileReader( const std::string& file_name );
+      EventFileReader( const std::string& file_name );
 
       /// @brief Read the next MARLEY event record from the file
       /// @param ev Reference to the object that will be filled with
@@ -35,7 +37,7 @@ namespace marley {
       }
 
       /// @brief Stream operator for reading in the next event
-      inline TextOutputFileReader& operator>>( marley::Event& ev ) {
+      inline EventFileReader& operator>>( marley::Event& ev ) {
         next_event( ev );
         return *this;
       }
@@ -87,7 +89,7 @@ namespace marley {
       virtual void initialize();
 
       /// @brief This function should be called at the beginning of all public
-      /// member functions of TextOutputFileReader that interact with data in
+      /// member functions of EventFileReader that interact with data in
       /// the file
       /// @details It provides necessary initialization as a workaround to
       /// calling virtual functions in the constructor

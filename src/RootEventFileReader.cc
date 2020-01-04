@@ -5,17 +5,17 @@
 #include "TParameter.h"
 
 // MARLEY includes
-#include "marley/OutputFileReader.hh"
+#include "marley/RootEventFileReader.hh"
 
-marley::OutputFileReader::OutputFileReader(const std::string& file_name)
-  : marley::TextOutputFileReader(file_name)
+marley::RootEventFileReader::RootEventFileReader(const std::string& file_name)
+  : marley::EventFileReader(file_name)
 {
 }
 
-bool marley::OutputFileReader::deduce_file_format() {
+bool marley::RootEventFileReader::deduce_file_format() {
 
-  // First delegate simpler format checks to TextOutputFileReader
-  bool set_format_already =  marley::TextOutputFileReader::deduce_file_format();
+  // First delegate simpler format checks to EventFileReader
+  bool set_format_already =  marley::EventFileReader::deduce_file_format();
   if ( set_format_already ) return true;
 
   // Check if the file is in ROOT format. Before doing so, completely suppress
@@ -38,7 +38,7 @@ bool marley::OutputFileReader::deduce_file_format() {
   else return false;
 }
 
-void marley::OutputFileReader::initialize() {
+void marley::RootEventFileReader::initialize() {
 
   if ( format_ == marley::OutputFile::Format::ROOT ) {
 
@@ -59,10 +59,10 @@ void marley::OutputFileReader::initialize() {
 
     delete temp_param;
   }
-  else return marley::TextOutputFileReader::initialize();
+  else return marley::EventFileReader::initialize();
 }
 
-bool marley::OutputFileReader::next_event( marley::Event& ev )
+bool marley::RootEventFileReader::next_event( marley::Event& ev )
 {
   this->ensure_initialized();
 
@@ -77,12 +77,12 @@ bool marley::OutputFileReader::next_event( marley::Event& ev )
     ev = marley::Event();
     return false;
   }
-  else return marley::TextOutputFileReader::next_event( ev );
+  else return marley::EventFileReader::next_event( ev );
 }
 
-marley::OutputFileReader::operator bool() const {
+marley::RootEventFileReader::operator bool() const {
   if ( format_ == marley::OutputFile::Format::ROOT ) {
     return ( tfile_ && ttree_ && event_num_ < ttree_->GetEntries() );
   }
-  else return marley::TextOutputFileReader::operator bool();
+  else return marley::EventFileReader::operator bool();
 }

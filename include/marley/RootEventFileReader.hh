@@ -4,7 +4,7 @@
 
 #include "marley/Event.hh"
 #include "marley/Error.hh"
-#include "marley/TextOutputFileReader.hh"
+#include "marley/EventFileReader.hh"
 
 #include "TFile.h"
 #include "TTree.h"
@@ -13,11 +13,11 @@ namespace marley {
 
   /// @brief Object that parses MARLEY output files written in any of the
   /// available formats, including ROOT format
-  class OutputFileReader : public TextOutputFileReader {
+  class RootEventFileReader : public EventFileReader {
 
     public:
 
-      OutputFileReader( const std::string& file_name );
+      RootEventFileReader( const std::string& file_name );
 
       virtual bool next_event(marley::Event& ev) override;
 

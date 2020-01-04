@@ -1,10 +1,10 @@
 // MARLEY includes
 #include "marley/FileManager.hh"
-#include "marley/TextOutputFileReader.hh"
+#include "marley/EventFileReader.hh"
 
 #include <iterator>
 
-marley::TextOutputFileReader::TextOutputFileReader(
+marley::EventFileReader::EventFileReader(
   const std::string& file_name) : file_name_(file_name),
   json_event_array_(),
   json_event_array_wrapper_( json_event_array_.array_range() ),
@@ -15,7 +15,7 @@ marley::TextOutputFileReader::TextOutputFileReader(
 // Try to read an event from the file using each possible format. If we
 // succeed, set the appropriate format code and return true. If all fail,
 // return false.
-bool marley::TextOutputFileReader::deduce_file_format() {
+bool marley::EventFileReader::deduce_file_format() {
 
   // Before we bother to check anything else, see if the file exists and is
   // readable. Skip the MARLEY search path in this case (the event file should
@@ -85,7 +85,7 @@ bool marley::TextOutputFileReader::deduce_file_format() {
   return false;
 }
 
-void marley::TextOutputFileReader::initialize() {
+void marley::EventFileReader::initialize() {
   switch ( format_ ) {
 
     case marley::OutputFile::Format::ASCII:
@@ -133,18 +133,18 @@ void marley::TextOutputFileReader::initialize() {
 
     default:
       throw marley::Error("Unrecognized file format encountered in"
-        " marley::TextOutputFileReader::initialize()");
+        " marley::EventFileReader::initialize()");
   }
 }
 
-bool marley::TextOutputFileReader::next_event( marley::Event& ev )
+bool marley::EventFileReader::next_event( marley::Event& ev )
 {
   this->ensure_initialized();
   switch ( format_ ) {
 
     case marley::OutputFile::Format::ROOT:
       MARLEY_LOG_WARNING() << "Cannot read from ROOT file."
-        << "Please use the marley::OutputFileReader class and build"
+        << "Please use the marley::EventFileReader class and build"
         << " MARLEY with ROOT support.";
       return false;
       break;
@@ -168,14 +168,14 @@ bool marley::TextOutputFileReader::next_event( marley::Event& ev )
 
     default:
       throw marley::Error("Unrecognized file format encountered in"
-        " marley::TextOutputFileReader::next_event()");
+        " marley::EventFileReader::next_event()");
   }
 
   ev = marley::Event();
   return false;
 }
 
-marley::TextOutputFileReader::operator bool() const {
+marley::EventFileReader::operator bool() const {
 
   switch ( format_ ) {
 
@@ -194,13 +194,13 @@ marley::TextOutputFileReader::operator bool() const {
 
     default:
       throw marley::Error("Unrecognized file format encountered in"
-        " marley::TextOutputFileReader::operator bool()");
+        " marley::EventFileReader::operator bool()");
   }
 
   return false;
 }
 
-void marley::TextOutputFileReader::ensure_initialized() {
+void marley::EventFileReader::ensure_initialized() {
   if ( !initialized_ ) {
     if ( !this->deduce_file_format() ) throw marley::Error("Could not"
       " read MARLEY events from the file \"" + file_name_ + '\"');
