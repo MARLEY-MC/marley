@@ -4,4 +4,4 @@ if [ -z ${MARLEY+x} ]; then
   echo "Please set it by sourcing the setup_marley.sh script."
   exit 1
 fi
-root ${MARLEY}/examples/macros/setup_marley.C $@
+root ${MARLEY}/src/scripts/setup_marley.C $@
