@@ -94,7 +94,14 @@ marley::JSONConfig::JSONConfig(const marley::JSON& json) : json_(json)
 
 marley::JSONConfig::JSONConfig(const std::string& json_filename)
 {
+  // First update the Logger settings so we can have default logging
+  // up and running when we parse the JSON configuration
+  update_logger_settings();
+
+  // Parse the config file
   json_ = marley::JSON::load_file( json_filename );
+
+  // Now update the logger settings based on the file contents
   update_logger_settings();
 }
 
@@ -202,6 +209,13 @@ marley::Generator marley::JSONConfig::create_generator() const
   // same time). An exception will be thrown if no neutrinos can interact.
   gen.dont_normalize_E_pdf_ = false;
   gen.normalize_E_pdf();
+
+  // Now we're all ready to go. Log the flux-averaged total cross section
+  // value before returning the fully-configured generator.
+  double avg_tot_xs = gen.flux_averaged_total_xs(); // MeV^(-2)
+  MARLEY_LOG_INFO() << "Flux-averaged total cross section: "
+    << marley_utils::hbar_c2 * avg_tot_xs * marley_utils::fm2_to_minus40_cm2
+    << " * 10^(-40) cm^2";
 
   return gen;
 }

@@ -227,11 +227,17 @@ $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) -o $@ $(TEST_OBJECTS)
 
+marg4: $(MARLEY_LIBS)
+	$(RM) -f ../examples/marg4/build/marg4
+	cd ../examples/marg4/build && $(MAKE)
+	cp ../examples/marg4/build/marg4 .
+	$(RM) -f ../examples/marg4/build/marg4
+
 .PHONY: clean install uninstall
 
 clean:
 	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
-	$(RM) -rf *.dSYM marsum mroot $(TEST_EXECUTABLE)
+	$(RM) -rf *.dSYM marsum mroot $(TEST_EXECUTABLE) marg4
 
 install: marley
 	mkdir -p $(DESTDIR)$(bindir)
