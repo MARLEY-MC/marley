@@ -8,31 +8,46 @@
 #endif
 
 // ROOT includes
-#include "TChain.h"
 #include "TFile.h"
 #include "TTree.h"
 
 // MARLEY includes
 #include "marley/marley_utils.hh"
 #include "marley/Event.hh"
+#include "marley/RootEventFileReader.hh"
 #include "marley/Particle.hh"
+
+namespace {
+  // Index of the first final-state particle that is not the
+  // ejectile or residue (first de-excitation product).
+  // TODO: Make this easier to maintain. If you change the layout of
+  // marley::Event, this will break.
+  constexpr size_t FIRST_PROD_IDX = 2u;
+}
 
 int main(int argc, char* argv[]) {
 
-  // If the user has not supplied any command-line
-  // arguments, display the standard help message
-  // and exit
+  // If the user has not supplied any command-line arguments, display the
+  // standard help message and exit
   if (argc <= 2) {
     std::cout << "Usage: " << argv[0] << " OUTPUT_FILE INPUT_FILE...\n";
     return 0;
   }
 
   // Temporary storage for output TTree branch variables
-  double nu_E, nu_KE, nu_px, nu_py, nu_pz;
-  int nu_pdg, target_pdg, num_final;
+  double Ex; // nuclear excitation energy
+  double flux_avg_tot_xsec; // flux-averaged total cross section
+  double Ev, KEv, pxv, pyv, pzv; // projectile
+  double Mt; // target mass
+  double El, KEl, pxl, pyl, pzl; // ejectile
+  double Er, KEr, pxr, pyr, pzr; // residue (after de-excitations)
+  int pdgv, pdgt, pdgl, pdgr; // PDG codes
+  int np; // number of de-excitation products (final-state particles other
+          // than the ejectile and residue)
+
+  // Inpormation about each of the other final-state particles
   std::vector<int> PDGs;
   std::vector<double> Es, KEs, pXs, pYs, pZs;
-  double Ex;
 
   // Check whether the output file exists and warn the user before
   // overwriting it if it does
@@ -46,83 +61,133 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  TFile out_tfile(argv[1], "recreate");
-  TTree* out_tree = new TTree("summary_tree", "MARLEY summary tree");
-  out_tree->Branch("nu_pdg", &nu_pdg, "nu_pdg/I");
-  out_tree->Branch("target_pdg", &target_pdg, "target_pdg/I");
-  out_tree->Branch("nu_E", &nu_E, "nu_E/D");
-  out_tree->Branch("nu_KE", &nu_KE, "nu_KE/D");
-  out_tree->Branch("nu_px", &nu_px, "nu_px/D");
-  out_tree->Branch("nu_py", &nu_py, "nu_py/D");
-  out_tree->Branch("nu_pz", &nu_pz, "nu_pz/D");
+  TFile out_tfile( argv[1], "recreate" );
+  TTree* out_tree = new TTree("mst", "MARLEY summary tree");
+
+  // projectile branches
+  out_tree->Branch("pdgv", &pdgv, "pdgv/I");
+  out_tree->Branch("Ev", &Ev, "Ev/D");
+  out_tree->Branch("KEv", &KEv, "KEv/D");
+  out_tree->Branch("pxv", &pxv, "pxv/D");
+  out_tree->Branch("pyv", &pyv, "pyv/D");
+  out_tree->Branch("pzv", &pzv, "pzv/D");
+
+  // target branches
+  out_tree->Branch("pdgt", &pdgt, "pdgt/I");
+  out_tree->Branch("Mt", &Mt, "Mt/D");
+
+  // ejectile branches
+  out_tree->Branch("pdgl", &pdgl, "pdgl/I");
+  out_tree->Branch("El", &El, "El/D");
+  out_tree->Branch("KEl", &KEl, "KEl/D");
+  out_tree->Branch("pxl", &pxl, "pxl/D");
+  out_tree->Branch("pyl", &pyl, "pyl/D");
+  out_tree->Branch("pzl", &pzl, "pzl/D");
+
+  // residue branches
+  out_tree->Branch("pdgr", &pdgr, "pdgr/I");
+  out_tree->Branch("Er", &Er, "Er/D");
+  out_tree->Branch("KEr", &KEr, "KEr/D");
+  out_tree->Branch("pxr", &pxr, "pxr/D");
+  out_tree->Branch("pyr", &pyr, "pyr/D");
+  out_tree->Branch("pzr", &pzr, "pzr/D");
+
+  // Nuclear excitation energy branch
   out_tree->Branch("Ex", &Ex, "Ex/D");
-  out_tree->Branch("num_final", &num_final, "num_final/I");
-  out_tree->Branch("pdg", PDGs.data(), "pdg[num_final]/I");
-  out_tree->Branch("E",  Es.data(), "E[num_final]/D");
-  out_tree->Branch("KE", KEs.data(), "KE[num_final]/D");
-  out_tree->Branch("px", pXs.data(), "px[num_final]/D");
-  out_tree->Branch("py", pYs.data(), "py[num_final]/D");
-  out_tree->Branch("pz", pZs.data(), "pz[num_final]/D");
+
+  // De-excitation products (final-state particles other than the
+  // ejectile and ground-state residue)
+  out_tree->Branch("np", &np, "np/I");
+  out_tree->Branch("pdgp", PDGs.data(), "pdgp[np]/I");
+  out_tree->Branch("Ep",  Es.data(), "Ep[np]/D");
+  out_tree->Branch("KEp", KEs.data(), "KEp[np]/D");
+  out_tree->Branch("pxp", pXs.data(), "pxp[np]/D");
+  out_tree->Branch("pyp", pYs.data(), "pyp[np]/D");
+  out_tree->Branch("pzp", pZs.data(), "pzp[np]/D");
+
+  // Flux-averaged total cross section
+  out_tree->Branch("xsec", &flux_avg_tot_xsec, "xsec/D");
 
   // Prepare to read the input file(s)
-  marley::Event* ev = nullptr;
-  TChain in_chain("MARLEY_event_tree");
   std::vector<std::string> input_file_names;
-  for (int i = 2; i < argc; ++i) {
-    in_chain.Add( argv[i] );
-  }
-  in_chain.SetBranchAddress("event", &ev);
+  for ( int i = 2; i < argc; ++i ) input_file_names.push_back( argv[i] );
 
-  // Event loop
-  // Don't use TChain::GetEntries() because it can be slow for large chains
-  int entry = 0;
-  while ( true ) {
-    int local_entry = in_chain.LoadTree( entry );
-    if ( local_entry < 0 ) break;
-    in_chain.GetEntry( entry );
+  // File loop
+  for ( const auto& file_name : input_file_names ) {
 
-    if ( entry % 1000 == 0 ) std::cout << "Entry " << entry << '\n';
+    // Open the current file for reading
+    marley::RootEventFileReader refr( file_name );
+    std::cout << "Opened file \"" << file_name << "\"\n";
 
-    PDGs.clear();
-    Es.clear();
-    KEs.clear();
-    pXs.clear();
-    pYs.clear();
-    pZs.clear();
+    // Temporary object to use for reading in saved events
+    marley::Event ev;
 
-    nu_pdg = ev->projectile().pdg_code();
-    nu_E = ev->projectile().total_energy();
-    nu_KE = ev->projectile().kinetic_energy();
-    nu_px = ev->projectile().px();
-    nu_py = ev->projectile().py();
-    nu_pz = ev->projectile().pz();
+    // Event loop
+    int event_num = 0;
+    while ( refr >> ev ) {
 
-    target_pdg = ev->target().pdg_code();
-    Ex = ev->Ex();
+      if ( event_num % 1000 == 0 ) std::cout << "Event " << event_num << '\n';
 
-    num_final = ev->get_final_particles().size();
-    for ( const auto& fp : ev->get_final_particles() ) {
-      PDGs.push_back( fp->pdg_code() );
-      Es.push_back( fp->total_energy() );
-      KEs.push_back( fp->kinetic_energy() );
-      pXs.push_back( fp->px() );
-      pYs.push_back( fp->py() );
-      pZs.push_back( fp->pz() );
-    }
+      PDGs.clear();
+      Es.clear();
+      KEs.clear();
+      pXs.clear();
+      pYs.clear();
+      pZs.clear();
 
-    // Update the branch addresses (manipulating the vectors may have
-    // invalidated them)
-    out_tree->SetBranchAddress("pdg", PDGs.data());
-    out_tree->SetBranchAddress("E",  Es.data());
-    out_tree->SetBranchAddress("KE", KEs.data());
-    out_tree->SetBranchAddress("px", pXs.data());
-    out_tree->SetBranchAddress("py", pYs.data());
-    out_tree->SetBranchAddress("pz", pZs.data());
+      pdgv = ev.projectile().pdg_code();
+      Ev = ev.projectile().total_energy();
+      KEv = ev.projectile().kinetic_energy();
+      pxv = ev.projectile().px();
+      pyv = ev.projectile().py();
+      pzv = ev.projectile().pz();
 
-    out_tree->Fill();
+      pdgt = ev.target().pdg_code();
+      Mt = ev.target().mass();
 
-    ++entry;
-  }
+      pdgl = ev.ejectile().pdg_code();
+      El = ev.ejectile().total_energy();
+      KEl = ev.ejectile().kinetic_energy();
+      pxl = ev.ejectile().px();
+      pyl = ev.ejectile().py();
+      pzl = ev.ejectile().pz();
+
+      pdgr = ev.residue().pdg_code();
+      Er = ev.residue().total_energy();
+      KEr = ev.residue().kinetic_energy();
+      pxr = ev.residue().px();
+      pyr = ev.residue().py();
+      pzr = ev.residue().pz();
+
+      Ex = ev.Ex();
+      flux_avg_tot_xsec = refr.flux_averaged_xsec();
+
+      const auto& fparts = ev.get_final_particles();
+      np = fparts.size() - FIRST_PROD_IDX;
+      for ( size_t j = FIRST_PROD_IDX; j < fparts.size(); ++j ) {
+        const auto* fp = fparts.at( j );
+        PDGs.push_back( fp->pdg_code() );
+        Es.push_back( fp->total_energy() );
+        KEs.push_back( fp->kinetic_energy() );
+        pXs.push_back( fp->px() );
+        pYs.push_back( fp->py() );
+        pZs.push_back( fp->pz() );
+      }
+
+      // Update the branch addresses (manipulating the vectors may have
+      // invalidated them)
+      out_tree->SetBranchAddress("pdgp", PDGs.data());
+      out_tree->SetBranchAddress("Ep",  Es.data());
+      out_tree->SetBranchAddress("KEp", KEs.data());
+      out_tree->SetBranchAddress("pxp", pXs.data());
+      out_tree->SetBranchAddress("pyp", pYs.data());
+      out_tree->SetBranchAddress("pzp", pZs.data());
+
+      out_tree->Fill();
+
+      ++event_num;
+    } // event loop
+  } // file loop
 
   out_tree->Write();
   out_tfile.Close();

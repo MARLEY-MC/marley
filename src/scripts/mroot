@@ -1,2 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+if [ -z ${MARLEY+x} ]; then
+  echo "The MARLEY environment variable is unset."
+  echo "Please set it by sourcing the setup_marley.sh script."
+  exit 1
+fi
 root ${MARLEY}/examples/macros/setup_marley.C $@

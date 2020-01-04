@@ -1,8 +1,6 @@
 #include <iostream>
 #include <string>
 
-const double Ex_IAS = 4.384;
-
 void ecos_plot(const std::string& filename) {
 
   TFile* file = new TFile(filename.c_str(), "read");
@@ -34,7 +32,7 @@ void ecos_plot(const std::string& filename) {
     double norm_pe = e.momentum_magnitude();
 
     double cos_theta = pnu_dot_pe / (norm_pnu * norm_pe);
-    /*if (ev.Ex() == Ex_IAS)*/ e_cos_theta_vec.push_back(cos_theta);
+    e_cos_theta_vec.push_back(cos_theta);
 
     if (i % 1000 == 0) std::cout << "Event " << i << '\n';
   }

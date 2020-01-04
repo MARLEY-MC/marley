@@ -1,32 +1,19 @@
-This directory contains several example ROOT macros that can be used to
-analyze MARLEY events at the 4-vector level. Brief descriptions of each
-of these macros are given below. To use these macros, you will need
-to build the MARLEY shared library for ROOT support (libMARLEY_ROOT.so on
-Linux systems) and load it into the ROOT interpreter. To load the
-libMARLEY_ROOT library, open ROOT and execute the setup_marley.C
-macro (provided in this directory) like this:
+# Example ROOT macros
 
-  .x setup_marley.C
+This directory contains several example ROOT macros that can be used to plot
+truth information from MARLEY events.  To use these macros, you will need to
+build MARLEY against an installation of ROOT. This will be handled by the
+standard Makefile (${MARLEY}/build/Makefile) automatically if the root-config
+executable is visible on the system PATH.
 
-If ROOT cannot find the library, then you'll need to add the directory that
-contains libMARLEY_ROOT.so to your LD_LIBRARY_PATH environment variable (or
-equivalent on non-Linux systems) and try again.
+Once MARLEY has been linked to ROOT successfully, running the mroot script
+(located in ${MARLEY}/build/ following a successful build) will start the ROOT
+interpreter and load class dictionaries needed to interpret marley::Event
+objects written to a ROOT TTree. All of the macros below are designed to be
+run from within an mroot session.
 
-ROOT 6 note: starting with version 6 of ROOT, the precompiled dictionary
-dynamic libraries do not contain some of the information present in the
-headers. This will prevent the macros described below from working correctly
-unless the headers are made visible to ROOT. The MARLEY headers should be
-installed in a directory of the form /path/to/include/marley. To make ROOT 6
-aware of their existence, execute
-
-  gInterpreter->AddIncludePath("/path/to/include")
-
-where /path/to/include is the parent of a directory called "marley" that
-contains the MARLEY headers Particle.hh and Event.hh. After you execute
-this command, the setup_marley.C macro should work normally. If you prefer,
-rather than using the gInterpreter command shown above, you may also append
-the path to the MARLEY header files to the environment variable
-ROOT_INCLUDE_PATH before running setup_marley.C.
+Brief descriptions of each of the example macros, together with the syntax
+needed to run them within the mroot interpreter, are given below.
 
 ecos_plot.C
 -----------
