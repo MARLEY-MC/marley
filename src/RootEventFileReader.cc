@@ -67,10 +67,10 @@ bool marley::RootEventFileReader::next_event( marley::Event& ev )
   this->ensure_initialized();
 
   if ( format_ == marley::OutputFile::Format::ROOT ) {
+    ++event_num_;
     if ( event_num_ < ttree_->GetEntries() ) {
       ttree_->GetEntry( event_num_ );
       ev = *event_;
-      ++event_num_;
       return true;
     }
 

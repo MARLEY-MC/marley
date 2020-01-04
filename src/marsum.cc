@@ -189,6 +189,7 @@ int main(int argc, char* argv[]) {
     } // event loop
   } // file loop
 
+  out_tfile.cd();
   out_tree->Write();
   out_tfile.Close();
   return 0;

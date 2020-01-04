@@ -39,7 +39,10 @@ namespace marley {
       /// anywhere
       marley::Event* event_ptr_;
 
-      long event_num_ = 0; ///< The index of the next TTree entry to be read
+      /// @brief The index of the last TTree entry that was read
+      /// @details If no events have been read from the TTree yet, then
+      /// this variable will have the value -1
+      long event_num_ = -1;
 
       virtual bool deduce_file_format() override;
       virtual void initialize() override;
