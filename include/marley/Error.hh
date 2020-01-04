@@ -18,15 +18,24 @@ namespace marley {
       /// @param message
       /// An error message to display if the exception is not caught
       inline explicit Error(const char* message) : msg_(message)
-        { MARLEY_LOG_ERROR() << msg_; }
+        { if (log_them_) MARLEY_LOG_ERROR() << msg_; }
       /// @param message
       /// An error message to display if the exception is not caught
       inline explicit Error(const std::string& message) : msg_(message)
-        { MARLEY_LOG_ERROR() << msg_; }
+        { if (log_them_) MARLEY_LOG_ERROR() << msg_; }
       inline virtual ~Error() {}
       /// Method called by the C++ standard library to display the error message
       inline virtual const char* what() const noexcept { return msg_.c_str(); }
+      /// Sets whether or not error messages should be printed to the Logger
+      inline static void set_logging_status(bool do_log) { log_them_ = do_log; }
+      /// Returns whether or not error messages will be printed to the Logger
+      inline static bool logging_status() { return log_them_; }
+
     protected:
+
       std::string msg_; //< error message
+
+      /// @brief If true, marley::Error messages will be printed to the Logger
+      static bool log_them_;
   };
 }

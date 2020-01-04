@@ -1,4 +1,5 @@
 #pragma once
+#include <deque>
 #include <string>
 
 #include "marley/Event.hh"
@@ -22,57 +23,75 @@ namespace marley {
       /// @return True if reading the next event was successful, or false
       /// otherwise. This behavior is designed to be used as a while loop
       /// condition for iterating over events in the output file
-      bool next_event( marley::Event& ev );
+      virtual bool next_event( marley::Event& ev );
 
-      inline double flux_averaged_xsec() const { return flux_avg_tot_xs_; }
+      /// @brief Returns the flux-averaged total cross section
+      /// (MeV<sup> -2</sup>) used to produce the events in the file
+      /// @details For file formats which do not include this information,
+      /// this function will return zero
+      inline double flux_averaged_xsec() {
+        this->ensure_initialized();
+        return flux_avg_tot_xs_;
+      }
+
+      /// @brief Stream operator for reading in the next event
+      inline TextOutputFileReader& operator>>( marley::Event& ev ) {
+        next_event( ev );
+        return *this;
+      }
+
+      /// @brief Implicit boolean conversion allows the state of the
+      /// input stream (or ROOT file) to be tested for readiness to
+      /// read in another event
+      virtual operator bool() const;
 
     protected:
 
+      /// @brief Name of the file (with any needed path specification) to be
+      /// read
       std::string file_name_;
+
+      /// @brief Format of the output file being read
+      /// @details This format will be determined automatically by
+      /// deduce_file_format() and does not need to be specified by the user
       OutputFile::Format format_;
 
+      /// @brief Input stream used to read from textual output formats
       std::ifstream in_;
 
-      marley::JSON json_;
+      /// @brief Used to parse events from JSON-format files
+      marley::JSON json_event_array_;
+      /// @brief Used to iterate over events from JSON-format files
+      marley::JSON::JSONWrapper< std::deque< marley::JSON > >
+        json_event_array_wrapper_;
+      /// @brief Iterator to the next JSON event in json_event_array
+      std::deque<marley::JSON>::iterator json_event_iter_;
 
-      //json_config_ = json_.at("gen_state").at("config");
-      //seed_ = json_.at("gen_state").at("seed").to_long();
-      //state_string_ = json_.at("gen_state").at("generator_state_string")
-      //  .to_string();
-
-      //std::string* temp_str = nullptr;
-      //tfile_->GetObject( "MARLEY_config", temp_str );
-      //if ( !temp_str ) throw marley::Error("Failed to load JSON configuration"
-      //  " from the ROOT file \"" + file_name_ + '\"');
-
-      //json_config_.load( *temp_str );
-
-      //delete temp_str;
-      //tfile_->GetObject( "MARLEY_state", temp_str );
-      //if ( !temp_str ) throw marley::Error("Failed to load the generator state"
-      //  " string from the ROOT file \"" + file_name_ + '\"');
-
-      //state_string_ = *temp_str;
-
-      //delete temp_str;
-      //tfile_->GetObject( "MARLEY_seed", temp_str );
-      //if ( !temp_str ) throw marley::Error("Failed to load the random number"
-      //  " seed from the ROOT file \"" + file_name_ + '\"');
-
-      //std::stringstream temp_ss( *temp_str );
-      //temp_ss >> seed_;
-
-      //delete temp_str;
-
+      /// @brief Flux-averaged total cross section
+      /// (MeV<sup> -2</sup>) used to produce the events in the file,
+      /// or zero if that information is not included in a particular
+      /// format
       double flux_avg_tot_xs_ = 0.;
 
-      void deduce_file_format();
-      void initialize();
+      /// @brief Flag that indicates whether initialize() has been called or not
+      /// @details To avoid problems with using virtual functions in the constructor,
+      /// we defer nearly all of the initialization to the first call to
+      /// one of the other public member functions.
+      bool initialized_ = false;
 
-      inline virtual bool deduce_root_format() { return false; }
-      inline virtual void initialize_root_format() {}
-      virtual bool next_event_root_format( marley::Event& ev );
+      /// @brief Helper function that auto-detects which of the available output
+      /// formats is appropriate for the requested file
+      virtual bool deduce_file_format();
+
+      /// @brief Prepares the file for reading the events
+      virtual void initialize();
+
+      /// @brief This function should be called at the beginning of all public
+      /// member functions of TextOutputFileReader that interact with data in
+      /// the file
+      /// @details It provides necessary initialization as a workaround to
+      /// calling virtual functions in the constructor
+      void ensure_initialized();
   };
-
 
 }

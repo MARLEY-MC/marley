@@ -201,22 +201,48 @@ void marley::Event::print(std::ostream& out) const {
 void marley::Event::read(std::istream& in) {
   this->clear();
 
-  size_t num_initial;
-  size_t num_final;
+  int num_initial;
+  int num_final;
 
   in >> num_initial >> num_final >> Ex_;
 
-  initial_particles_.resize(num_initial);
-  final_particles_.resize(num_final);
+  // If reading the event header line failed for some
+  // reason, just return without trying to do anything else.
+  if ( !in ) return;
 
-  for (size_t i = 0; i < num_initial; ++i) {
+  // If we have invalid numbers of particles in either the initial or final
+  // state (there need to be at least two in each and we can't fill memory when
+  // allocating space for them) then complain by throwing an error
+  if ( num_initial < 2 || static_cast<size_t>(num_initial)
+    > initial_particles_.max_size() )
+  {
+    throw marley::Error("Invalid number of initial state particles ("
+      + std::to_string(num_initial) + ") encountered in marley::Event::read()");
+  }
+  else if ( num_final < 2 || static_cast<size_t>(num_final)
+    > final_particles_.max_size() )
+  {
+    throw marley::Error("Invalid number of final state particles ("
+      + std::to_string(num_final) + ") encountered in marley::Event::read()");
+  }
+
+  initial_particles_.resize( num_initial );
+  final_particles_.resize( num_final );
+
+  for (int i = 0; i < num_initial; ++i) {
     marley::Particle* p = new marley::Particle;
     in >> *p;
+    if ( !in ) throw marley::Error("Parse error while reading initial"
+      " particle #" + std::to_string(i) + " from an ASCII-format event"
+      " record");
     initial_particles_.at(i) = p;
   }
-  for (size_t f = 0; f < num_final; ++f) {
+  for (int f = 0; f < num_final; ++f) {
     marley::Particle* p = new marley::Particle;
     in >> *p;
+    if ( !in ) throw marley::Error("Parse error while reading final"
+      " particle #" + std::to_string(f) + " from an ASCII-format event"
+      " record");
     final_particles_.at(f) = p;
   }
 }
@@ -308,6 +334,20 @@ bool marley::Event::read_hepevt(std::istream& in)
   int num_particles; // Total number of particles stored in the event
   in >> event_num  >> num_particles;
 
+  // If reading the first line failed for some
+  // reason, just return without trying to do anything else.
+  if ( !in ) return false;
+
+  // If the number of particles in the event is negative or extremely
+  // huge (so that it would overload memory) then throw a marley::Error
+  if ( num_particles < 0 || static_cast<size_t>(num_particles)
+    > initial_particles_.max_size() )
+  {
+    throw marley::Error("Invalid number of particles ("
+      + std::to_string(num_particles) + ") encountered in marley::"
+      "Event::read_hepevt()");
+  }
+
   // Dummy variables used to skip HEPEVT fields that MARLEY doesn't
   // care about (e.g., the particle production vertex 4-position)
   int dummy_int;
@@ -329,6 +369,9 @@ bool marley::Event::read_hepevt(std::istream& in)
 
     // Skip the VHEP1 through VHEP4 fields (production vertex 4-position)
     for ( int j = 0; j < 4; ++j ) in >> dummy_double;
+
+    if ( !in ) throw marley::Error("Parse error while reading  particle #"
+      + std::to_string(p) + " from a HEPEVT-format event record");
 
     // If the particle has a status code other than the two recognized by
     // MARLEY, then don't bother to record the particle in the event object
@@ -371,8 +414,6 @@ bool marley::Event::read_hepevt(std::istream& in)
       }
     }
   }
-
-  if ( !in ) return false;
 
   // Check that the event satisfies the criteria needed to compute a
   // nuclear excitation energy value Ex_
