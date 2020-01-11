@@ -1,3 +1,15 @@
+/// @copyright Copyright (C) 2016-2020 Steven Gardiner
+/// @license GNU General Public License, version 3
+//
+// This file is part of MARLEY (Model of Argon Reaction Low Energy Yields)
+//
+// MARLEY is free software: you can redistribute it and/or modify it under the
+// terms of version 3 of the GNU General Public License as published by the
+// Free Software Foundation.
+//
+// For the full text of the license please see ${MARLEY}/LICENSE or
+// visit http://opensource.org/licenses/GPL-3.0
+
 #pragma once
 #include <algorithm>
 #include <cmath>
@@ -62,14 +74,14 @@ namespace marley {
       /// <tr><th>Method<th>Description
       /// <tr><td>Zero<td> @f$y = 0@f$
       /// <tr><td>Endpoint<td> @f$y = \begin{cases} y_\text{left} &
-      /// x < x_\text{left} \newline y_\text{right} & x > x_\text{right}
+      /// x < x_\text{left} \\ y_\text{right} & x > x_\text{right}
       /// \end{cases}@f$
       /// <tr><td>Continue<td>
       /// Use the usual InterpolationMethod formula with<br>
       /// @f$y = \begin{cases}
       /// y_1 = y_\text{left} \text{ and }
       /// y_2 = y_{\text{left}+1} &
-      /// x < x_\text{left} \newline
+      /// x < x_\text{left} \\
       /// y_1 = y_{\text{right}-1} \text{ and }
       /// y_2 = y_\text{right} &
       /// x > x_\text{right}
