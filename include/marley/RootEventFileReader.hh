@@ -19,6 +19,8 @@ namespace marley {
 
       RootEventFileReader( const std::string& file_name );
 
+      virtual ~RootEventFileReader() = default;
+
       virtual bool next_event(marley::Event& ev) override;
 
       virtual operator bool() const override;

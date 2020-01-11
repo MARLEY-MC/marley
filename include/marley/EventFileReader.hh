@@ -1,13 +1,15 @@
 #pragma once
 #include <deque>
+#include <fstream>
 #include <string>
 
-#include "marley/Event.hh"
-#include "marley/Error.hh"
 #include "marley/JSON.hh"
 #include "marley/OutputFile.hh"
 
 namespace marley {
+
+  // Forward-declare the Event class
+  class Event;
 
   /// @brief Object that parses MARLEY output files written in any of the
   /// available formats, except for ROOT format
@@ -18,6 +20,8 @@ namespace marley {
     public:
 
       EventFileReader( const std::string& file_name );
+
+      virtual ~EventFileReader() = default;
 
       /// @brief Read the next MARLEY event record from the file
       /// @param ev Reference to the object that will be filled with

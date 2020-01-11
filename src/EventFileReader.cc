@@ -1,8 +1,11 @@
+// Standard library includes
+#include <iterator>
+
 // MARLEY includes
+#include "marley/Error.hh"
+#include "marley/Event.hh"
 #include "marley/FileManager.hh"
 #include "marley/EventFileReader.hh"
-
-#include <iterator>
 
 marley::EventFileReader::EventFileReader(
   const std::string& file_name) : file_name_(file_name),

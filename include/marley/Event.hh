@@ -1,7 +1,10 @@
 #pragma once
+
+// Standard library includes
 #include <string>
 #include <vector>
 
+// MARLEY includes
 #include "marley/Particle.hh"
 
 namespace marley {

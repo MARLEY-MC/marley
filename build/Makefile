@@ -76,6 +76,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
   OBJECTS := $(filter-out marley.o marley_root.o, $(OBJECTS))
   OBJECTS := $(filter-out marsum.o RootJSONConfig.o, $(OBJECTS))
   OBJECTS := $(filter-out RootOutputFile.o RootEventFileReader.o, $(OBJECTS))
+  OBJECTS := $(filter-out R5EFR.o, $(OBJECTS))
 
   # Get information about the GNU Scientific Library installation
   # (required as of MARLEY v1.1.0)
@@ -141,7 +142,7 @@ Please ensure that the gsl-config executable is on your PATH and try again.
         ROOT_LDFLAGS += -rdynamic
       endif
       ROOT_DICT_INCLUDES := -I$(INCLUDE_DIR) marley/Particle.hh \
-        marley/Event.hh marley/marley_linkdef.hh
+        marley/Event.hh marley/R5EFR.hh marley/marley_linkdef.hh
       USE_ROOT = yes
       ROOT_OBJ_DICT = marley_root_dict.o
 
@@ -153,7 +154,7 @@ Please ensure that the gsl-config executable is on your PATH and try again.
       ROOT_SHARED_LIB_LDFLAGS := -l$(ROOT_SHARED_LIB_NAME)
       ROOT_SHARED_LIB_OBJECTS = marley_root.o RootJSONConfig.o
       ROOT_SHARED_LIB_OBJECTS += OutputFile.o RootOutputFile.o
-      ROOT_SHARED_LIB_OBJECTS += RootEventFileReader.o $(ROOT_OBJ_DICT)
+      ROOT_SHARED_LIB_OBJECTS += RootEventFileReader.o R5EFR.o $(ROOT_OBJ_DICT)
   
 $(ROOT_OBJ_DICT):
 	$(RM) marley_root_dict*.*

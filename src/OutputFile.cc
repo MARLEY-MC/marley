@@ -1,5 +1,7 @@
-#include "marley/JSONConfig.hh"
+// MARLEY includes
 #include "marley/Generator.hh"
+#include "marley/Error.hh"
+#include "marley/JSONConfig.hh"
 #include "marley/OutputFile.hh"
 
 #ifdef USE_ROOT

@@ -4,9 +4,6 @@
 #include <fstream>
 #include <string>
 
-// MARLEY includes
-#include "marley/Error.hh"
-
 namespace marley {
 
   class Generator;
