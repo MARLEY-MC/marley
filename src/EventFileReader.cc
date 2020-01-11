@@ -50,7 +50,8 @@ bool marley::EventFileReader::deduce_file_format() {
   // If we can read in a marley::Event from the file via the input stream
   // operator, then assume that the file is in ASCII format
   // Reopen the file to reset the state flags and the stream cursor position
-  in_ = std::ifstream( file_name_ );
+  in_.clear();
+  in_.seekg(0);
   try {
     if ( in_ >> flux_avg_tot_xs_ >> temp_event ) {
       format_ = marley::OutputFile::Format::ASCII;
@@ -64,7 +65,8 @@ bool marley::EventFileReader::deduce_file_format() {
 
   // Now try reading in a marley::Event assuming that the file is in HEPEVT
   // format.
-  in_ = std::ifstream( file_name_ );
+  in_.clear();
+  in_.seekg(0);
   try {
     if ( temp_event.read_hepevt(in_, &flux_avg_tot_xs_) ) {
       format_ = marley::OutputFile::Format::HEPEVT;

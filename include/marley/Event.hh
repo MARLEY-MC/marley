@@ -6,6 +6,7 @@
 
 namespace marley {
 
+  #ifndef __MAKECINT__
   // TODO: Make these into an enum at some point
   /// @brief HEPEVT status code for initial-state particles
   constexpr int HEPEVT_INITIAL_STATE_STATUS_CODE = 3;
@@ -15,7 +16,6 @@ namespace marley {
   /// encodes MARLEY-specific information in a HEPEVT record
   constexpr int HEPEVT_MARLEY_INFO_STATUS_CODE = 11;
 
-  #ifndef __MAKECINT__
   // Forward declare the JSON class so that we can define a function that
   // creates a JSON representation of a Event. Hide the JSON class from
   // rootcint so that we won't have issues using marley::Event objects with
