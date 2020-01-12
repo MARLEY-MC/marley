@@ -122,6 +122,26 @@ namespace marley {
       /// @brief Get a non-const reference to the vector of final particles
       inline std::vector<marley::Particle*>& get_final_particles();
 
+      /// @brief Returns the number of initial particles in the Event
+      inline size_t initial_particle_count() const;
+
+      /// @brief Returns the number of final particles in the Event
+      inline size_t final_particle_count() const;
+
+      /// @brief Returns a const reference to the initial particle with the
+      /// given index
+      /// @param[in] idx Index of the desired particle
+      /// @throws std::out_of_range if idx is greater than or
+      /// equal to the size of the vector of initial particles
+      inline const marley::Particle& initial_particle( size_t idx ) const;
+
+      /// @brief Returns a const reference to the final particle with the
+      /// given index
+      /// @param[in] idx Index of the desired particle
+      /// @throws std::out_of_range if idx is greater than or
+      /// equal to the size of the vector of final particles
+      inline const marley::Particle& final_particle( size_t idx ) const;
+
       /// @brief Get the excitation energy of the residue just after the
       /// initial two-body reaction
       inline double Ex() const;
@@ -233,6 +253,21 @@ namespace marley {
 
   inline std::vector<marley::Particle*>& Event::get_final_particles()
     { return final_particles_; }
+
+  inline size_t Event::initial_particle_count() const
+    { return initial_particles_.size(); }
+
+  inline size_t Event::final_particle_count() const
+    { return final_particles_.size(); }
+
+  inline const marley::Particle& Event::initial_particle( size_t idx ) const {
+    return *initial_particles_.at( idx );
+  }
+
+  inline const marley::Particle& Event::final_particle( size_t idx ) const {
+    return *final_particles_.at( idx );
+  }
+
 }
 
 inline std::ostream& operator<<(std::ostream& out, const marley::Event& e) {

@@ -14,12 +14,12 @@ void fp_spect(const std::string& file_name, int pdg) {
 
     if (num_events % 1000 == 0) std::cout << "Event " << num_events << '\n';
 
-    const std::vector<marley::Particle*>& finals = ev.get_final_particles();
+    size_t num_finals = ev.final_particle_count();
 
-    for (size_t j = 0u; j < finals.size(); ++j) {
-      const marley::Particle* fp = finals.at(j);
-      if ( fp->pdg_code() == pdg ) {
-        KE_vec.push_back( fp->kinetic_energy() );
+    for (size_t f = 0u; f < num_finals; ++f) {
+      const marley::Particle& fp = ev.final_particle( f );
+      if ( fp.pdg_code() == pdg ) {
+        KE_vec.push_back( fp.kinetic_energy() );
       }
     }
 

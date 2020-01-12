@@ -2,18 +2,18 @@
 #include <iostream>
 #include <string>
 
-// Histogram settings
-const int NUM_BINS = 110;
-const double E_MIN = 0.; // MeV
-const double E_MAX = 55.; // MeV
-const double BIN_WIDTH = ( E_MAX - E_MIN ) / NUM_BINS;
-
-// PDG codes
-const int NEUTRON = 2112;
-const int ELECTRON = 11;
-const int ALPHA = 1000020040;
-
 void reco_spectrum(const std::string& filename) {
+
+  // Histogram settings
+  const int NUM_BINS = 110;
+  const double E_MIN = 0.; // MeV
+  const double E_MAX = 55.; // MeV
+  const double BIN_WIDTH = ( E_MAX - E_MIN ) / NUM_BINS;
+
+  // PDG codes
+  const int NEUTRON = 2112;
+  const int ELECTRON = 11;
+  const int ALPHA = 1000020040;
 
   // Difference between ground-state masses of 40K and 40Ar
   const double Q_ground_state = 1.5044; // MeV
@@ -52,13 +52,13 @@ void reco_spectrum(const std::string& filename) {
 
     marley::Particle* fp = NULL;
 
-    const std::vector<marley::Particle*>& finals = ev.get_final_particles();
-    for (size_t j = 0; j < finals.size(); ++j) {
-      const marley::Particle* fp = finals.at(j);
-      int pdg = fp->pdg_code();
-      if ( pdg != NEUTRON ) KE += fp->kinetic_energy();
+    size_t num_finals = ev.final_particle_count();
+    for ( size_t f = 0; f < num_finals; ++f ) {
+      const marley::Particle& fp = ev.final_particle( f );
+      int pdg = fp.pdg_code();
+      if ( pdg != NEUTRON ) KE += fp.kinetic_energy();
       if ( pdg == ELECTRON ) {
-        double KE_e_plus_Qgs = fp->kinetic_energy() + Q_ground_state; // e- KE + Q_gs
+        double KE_e_plus_Qgs = fp.kinetic_energy() + Q_ground_state; // e- KE + Q_gs
         eq_Es->Fill( KE_e_plus_Qgs );
       }
       if ( pdg > ALPHA ) {

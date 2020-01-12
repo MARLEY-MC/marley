@@ -1,12 +1,12 @@
 #include <iostream>
 #include <string>
 
-const int NUM_BINS = 100;
-const double E_MIN = 0.;
-const double E_MAX = 60.;
-const double BIN_WIDTH = ( E_MAX - E_MIN ) / NUM_BINS;
-
 void nu_spect(const std::string& file_name) {
+
+  const int NUM_BINS = 100;
+  const double E_MIN = 0.;
+  const double E_MAX = 60.;
+  const double BIN_WIDTH = ( E_MAX - E_MIN ) / NUM_BINS;
 
   TH1D* Ev_hist = new TH1D("Ev_hist", "reacting neutrino spectrum;"
     "neutrino energy E_{#nu} (MeV); #left[ d#sigma/dE_{#nu} #right]_{flux}"

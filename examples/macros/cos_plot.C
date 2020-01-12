@@ -1,12 +1,12 @@
 #include <iostream>
 #include <string>
 
-const int NUM_BINS = 10;
-const double COS_MIN = -1.;
-const double COS_MAX = 1.;
-const double BIN_WIDTH = ( COS_MAX - COS_MIN ) / NUM_BINS;
-
 void cos_plot(const std::string& file_name) {
+
+  const int NUM_BINS = 10;
+  const double COS_MIN = -1.;
+  const double COS_MAX = 1.;
+  const double BIN_WIDTH = ( COS_MAX - COS_MIN ) / NUM_BINS;
 
   TH1D* cos_theta_hist = new TH1D("cos_theta_hist",
     "scattering cosine distribution; cos#theta; #left[ d#sigma"
