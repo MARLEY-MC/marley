@@ -3,22 +3,40 @@
 ## Introduction
 
 MARLEY (Model of Argon Reaction Low Energy Yields) is a Monte Carlo event
-generator for tens-of-MeV neutrino-nucleus interactions in liquid argon. The
-current version includes matrix element evaluations for the charged-current
-reaction
-&nu;<sub>e</sub>&nbsp;+&nbsp;<sup>40</sup>Ar&nbsp;&rarr;&nbsp;e<sup>&minus;
-</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>*</sup> only.
-With some additional matrix element evaluations, MARLEY could be expanded to
-include more reactions and more target nuclei. Users interested in creating
-reaction matrix element evaluations for new reactions or new nuclear targets
-are encouraged to contact the MARLEY development team
-(<support@marleygen.org>).
+generator for tens-of-MeV neutrino-nucleus interactions. The current version
+includes evaluated nuclear matrix elements for the charged-current reaction
+<p align="center">&nu;<sub>e</sub>&nbsp;+&nbsp;<sup>40</sup>Ar&nbsp;&rarr;
+&nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup></p>
+only. With the addition of new matrix elements, MARLEY could be expanded to
+include more reactions and more target nuclei. Users interested in contributing
+new nuclear matrix element calculations are encouraged to contact the author.
 
-## Licensing
+## Copyright and License
 
-MARLEY is distributed under the terms of version 3 of the
-[GNU General Public License](http://opensource.org/licenses/GPL-3.0).
-Please see the LICENSE file for details.
+Copyright &copy; 2016-2020 Steven Gardiner <gardiner@fnal.gov>
+
+MARLEY is distributed under the terms of version 3 of the [GNU General Public
+License](http://www.gnu.org/licenses/gpl-3.0-standalone.html) ("GPLv3") as
+published by the Free Software Foundation. For the full text of that license,
+please see the [COPYING](COPYING) file.
+
+As a matter of professional courtesy, MARLEY users are also requested to follow
+the [MCnet Guidelines](https://www.montecarlonet.org/GUIDELINES) for Event
+Generator Authors and Users. Nevertheless, these guidelines are not legally
+binding and do not limit your rights guaranteed under the GPLv3. See the
+[GUIDELINES](GUIDELINES) file for more details.
+
+## Citing MARLEY
+
+If you refer to MARLEY in academic work, please __always cite__ the following
+reference:
+
+S. Gardiner, [Nuclear Effects in Neutrino
+Detection](https://search.proquest.com/docview/2194284425), PhD thesis,
+University of California, Davis (2018).
+
+For convenience, a BibTeX citation for this thesis is given in the CITATION.bib
+file.
 
 ## Getting Started
 
@@ -33,7 +51,7 @@ given here describe the ordinary build procedure.
 There are three prerequisites needed to build MARLEY:
 
 - A C++14-compliant compiler. The following compilers are officially supported:
-  * g++ >= 4.9
+  * g++ >= 4.9.3
   * clang++ >= 3.4
 
 - [GNU Make](https://www.gnu.org/software/make/)
@@ -47,7 +65,7 @@ through the standard package manager. On Mac OSX, installing GSL may be done
 using [homebrew](https://brew.sh/).
 
 Building MARLEY on Windows has not yet been attempted. Please contact the
-developers (<support@marleygen.org>) if you are interested in building the code
+author (<gardiner@fnal.gov>) if you are interested in building the code
 on Windows.
 
 ### Building MARLEY
