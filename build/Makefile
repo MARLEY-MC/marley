@@ -20,6 +20,38 @@ else
   SHARED_LIB_SUFFIX=so
 endif
 
+# If the VERSION file exists, use its contents as the
+# MARLEY version number. The VERSION file should only
+# be added to the source tree in tagged releases.
+ifneq (,$(wildcard ../VERSION))
+  MARLEY_VERSION := $(shell cat ../VERSION)
+
+  # Define a link to a tarball on GitHub for the current tagged release
+  TARBALL_LINK = "<a href=\"https://github.com/sjgardiner/marley/$\
+    archive/v$(MARLEY_VERSION).tar.gz\">here</a> or"
+
+  VERSION_PREFIX="v"
+
+else
+
+  # Just link to the repository in the doxygen documentation if we're not
+  # working with a tagged release
+  TARBALL_LINK = ""
+
+  # Check if git is available on the system path. Use it to
+  # get a hash to use as the MARLEY version number. If it's
+  # not available, then just use the string "UNKNOWN"
+  GIT := $(shell command -v git 2> /dev/null)
+  ifndef GIT
+    MARLEY_VERSION := UNKNOWN
+  else
+    MARLEY_VERSION := $(shell git rev-parse --short HEAD)
+  endif
+endif
+
+# Define the MARLEY_VERSION preprocessor macro
+override CXXFLAGS += -DMARLEY_VERSION="\"$(MARLEY_VERSION)\""
+
 SHARED_LIB_NAME := MARLEY
 SHARED_LIB := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
 ROOT_SHARED_LIB_NAME := MARLEY_ROOT
@@ -234,11 +266,18 @@ marg4: $(MARLEY_LIBS)
 	cp ../examples/marg4/build/marg4 .
 	$(RM) -f ../examples/marg4/build/marg4
 
-.PHONY: clean install uninstall
+.PHONY: docs clean install uninstall
+
+docs:
+	export MARLEY_VERSION=$(VERSION_PREFIX)$(MARLEY_VERSION) \
+	export TARBALL_LINK=$(TARBALL_LINK) \
+	&& cd .. \
+	&& doxygen && cd build
 
 clean:
 	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
 	$(RM) -rf *.dSYM marsum mroot $(TEST_EXECUTABLE) marg4
+	$(RM) -rf ../doxygen/html/*
 
 install: marley
 	mkdir -p $(DESTDIR)$(bindir)

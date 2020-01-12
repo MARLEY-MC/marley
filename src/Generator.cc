@@ -65,7 +65,7 @@ void marley::Generator::print_logo() {
       << "\nDon't worry about a thing,\n'Cause every little thing"
       << " gonna be all right.\n-- Bob, \"Three Little Birds\"\n\n"
       << "Model of Argon Reaction Low Energy Yields\n"
-      << "version " << marley_utils::MARLEY_VERSION << '\n';
+      << "version " << MARLEY_VERSION << '\n';
     printed_logo = true;
   }
 }

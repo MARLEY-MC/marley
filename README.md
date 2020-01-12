@@ -82,15 +82,18 @@ make
 
 If the build is successful, then executing
 ```
-./marley --version
+./marley
 ```
 
 should produce the following output:
 ```
-MARLEY (Model of Argon Reaction Low Energy Yields) 1.2.0
-Copyright (C) 2016-2020 Steven Gardiner
-License: GNU GPL version 3 <http://opensource.org/licenses/GPL-3.0>
-This is free software: you are free to change and redistribute it.
+Usage: marley [OPTION...] CONFIG_FILE
+
+  -h, --help     Print this help message
+  -v, --version  Print version and exit
+
+MARLEY home page: <http://www.marleygen.org>
+E-mail bug reports to: <support@marleygen.org>
 ```
 
 ### Generating events

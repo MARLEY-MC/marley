@@ -3,9 +3,10 @@
 
 set -o errexit -o nounset
 
-if [ "$TRAVIS_BRANCH" != "master" ]
+# Only deploy for release tags of the form vX.Y.Z
+if [[ $TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
 then
-  echo "This commit was made against the $TRAVIS_BRANCH and not the master! No deploy!"
+  echo "This commit is not a tagged release. No deploy!"
   exit 0
 fi
 
@@ -21,7 +22,7 @@ cd doxygen/html
 
 git init
 git config user.name "Steven Gardiner"
-git config user.email "sjgardiner@ucdavis.edu"
+git config user.email "gardiner@fnal.gov"
 
 git remote add upstream "https://$GH_TOKEN@github.com/sjgardiner/marley.git"
 git fetch upstream

@@ -1,8 +1,3 @@
-// Nonstandard but widely-supported (see
-// http://en.wikipedia.org/wiki/Pragma_once) preprocessor directive that
-// prevents this file from being included multiple times.  Consider changing to
-// an include guard (http://en.wikipedia.org/wiki/Include_guard) if desired by
-// project collaborators.
 /// @copyright Copyright (C) 2016-2020 Steven Gardiner
 /// @license GNU General Public License, version 3
 //
@@ -15,6 +10,10 @@
 // For the full text of the license please see ${MARLEY}/LICENSE or
 // visit http://opensource.org/licenses/GPL-3.0
 
+// Nonstandard but widely-supported (see
+// http://en.wikipedia.org/wiki/Pragma_once) preprocessor directive that
+// prevents this file from being included multiple times. Another option is an
+// include guard (http://en.wikipedia.org/wiki/Include_guard).
 #pragma once
 
 #include <algorithm>
@@ -30,9 +29,6 @@
 #include <unordered_map>
 
 namespace marley_utils {
-
-  // MARLEY version string
-  constexpr const char* MARLEY_VERSION = "1.2.0";
 
   // Frequently used particle IDs
   constexpr int PHOTON = 22;
