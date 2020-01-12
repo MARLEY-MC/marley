@@ -17,6 +17,6 @@ script:
   - cd build
   - make CXX=g++-4.9
 after_success:
-  - cd ..
-  - doxygen
+  - make docs
+  - cd ../doxygen
   - bash deploy.sh

@@ -271,8 +271,8 @@ marg4: $(MARLEY_LIBS)
 docs:
 	export MARLEY_VERSION=$(VERSION_PREFIX)$(MARLEY_VERSION) \
 	export TARBALL_LINK=$(TARBALL_LINK) \
-	&& cd .. \
-	&& doxygen && cd build
+	&& cd ../doxygen \
+	&& doxygen && cd ../build
 
 clean:
 	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
