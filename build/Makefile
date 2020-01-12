@@ -43,7 +43,7 @@ else
   # not available, then just use the string "UNKNOWN"
   GIT := $(shell command -v git 2> /dev/null)
   ifndef GIT
-    MARLEY_VERSION := UNKNOWN
+    MARLEY_VERSION := unknown version
   else
     MARLEY_VERSION := $(shell git rev-parse --short HEAD)
   endif
