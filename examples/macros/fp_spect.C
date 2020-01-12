@@ -56,7 +56,7 @@ void fp_spect(const std::string& file_name, int pdg) {
   KEs->SetStats(false);
   KEs->SetLineColor(kBlue);
   KEs->SetLineWidth(2);
-  KEs->Draw();
+  KEs->Draw("hist");
 
   std::cout << "Found " << KE_vec.size() << " particles with"
     << " pdg = " << pdg << " in " << num_events << " events\n";

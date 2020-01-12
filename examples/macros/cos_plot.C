@@ -21,8 +21,8 @@ void cos_plot(const std::string& file_name) {
 
     if ( num_events % 1000 == 0 ) std::cout << "Event " << num_events << '\n';
 
-    const marley::Particle& nu = ev->projectile();
-    const marley::Particle& e = ev->ejectile();
+    const marley::Particle& nu = ev.projectile();
+    const marley::Particle& e = ev.ejectile();
 
     double pnu_dot_pe = nu.px() * e.px() + nu.py() * e.py()
       + nu.pz() * e.pz();
@@ -50,5 +50,5 @@ void cos_plot(const std::string& file_name) {
   cos_theta_hist->SetStats( false );
   cos_theta_hist->SetLineColor( kBlue );
   cos_theta_hist->SetLineWidth( 2 );
-  cos_theta_hist->Draw();
+  cos_theta_hist->Draw("hist");
 }

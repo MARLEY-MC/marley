@@ -27,6 +27,7 @@ void Ex(const std::string& filename) {
 
   TH1D* Ex_hist = new TH1D("Ex_hist", "Nuclear excitation energies;"
     " E_{x} (MeV); events", 100, Ex_max*1.1, 0.);
+  Ex_hist->SetDirectory(NULL);
 
   for ( size_t j = 0u; j < Ex_values.size(); ++j ) {
     Ex_hist->Fill( Ex_values.at(j) );
@@ -40,6 +41,6 @@ void Ex(const std::string& filename) {
   Ex_hist->SetLineWidth( 2 );
   Ex_hist->GetXaxis()->SetTitleOffset(1.2);
   Ex_hist->GetYaxis()->SetTitleOffset(1.2);
-  Ex_hist->Draw();
+  Ex_hist->Draw("hist");
 
 }

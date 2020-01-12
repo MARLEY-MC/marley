@@ -110,14 +110,14 @@ void reco_spectrum(const std::string& filename) {
 
   reco_Es->SetLineColor(kBlue);
   reco_Es->SetLineWidth(2);
-  reco_Es->Draw();
+  reco_Es->Draw("hist");
   reco_Es->GetYaxis()->SetRangeUser(0., ymax);
   true_Es->SetLineColor(kBlack);
   true_Es->SetLineWidth(2);
-  true_Es->Draw("same");
+  true_Es->Draw("hist same");
   eq_Es->SetLineColor(kRed);
   eq_Es->SetLineWidth(2);
-  eq_Es->Draw("same");
+  eq_Es->Draw("hist same");
 
   legend->Draw();
 

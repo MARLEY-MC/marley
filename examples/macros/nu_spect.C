@@ -42,6 +42,6 @@ void nu_spect(const std::string& file_name) {
   Ev_hist->GetYaxis()->SetTitleOffset(1.2);
   Ev_hist->SetLineColor(kBlue);
   Ev_hist->SetLineWidth(2);
-  Ev_hist->Draw();
+  Ev_hist->Draw("hist");
 
 }
