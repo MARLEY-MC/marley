@@ -29,12 +29,12 @@ void print_event_info(const marley::Event& e, const size_t num) {
 
 void print_events(const std::string& file_name) {
 
-  marley::R5EFR efr( file_name );
+  marley::MacroEventFileReader reader( file_name );
   marley::Event ev;
 
   int e = 0;
 
-  while ( efr >> ev ) {
+  while ( reader >> ev ) {
     print_event_info( ev, e );
     ++e;
   }

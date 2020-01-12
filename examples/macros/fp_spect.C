@@ -3,14 +3,14 @@
 
 void fp_spect(const std::string& file_name, int pdg) {
 
-  marley::R5EFR efr( file_name );
+  marley::MacroEventFileReader reader( file_name );
   marley::Event ev;
 
   long num_events = 0;
 
   std::vector<double> KE_vec;
 
-  while ( efr >> ev ) {
+  while ( reader >> ev ) {
 
     if (num_events % 1000 == 0) std::cout << "Event " << num_events << '\n';
 

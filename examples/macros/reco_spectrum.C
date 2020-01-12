@@ -39,12 +39,12 @@ void reco_spectrum(const std::string& filename) {
   size_t one_p_count = 0;
   size_t other_count = 0;
 
-  marley::R5EFR efr( filename );
+  marley::MacroEventFileReader reader( filename );
   marley::Event ev;
 
   long num_events = 0;
 
-  while ( efr >> ev ) {
+  while ( reader >> ev ) {
 
     if (num_events % 1000 == 0) std::cout << "Event " << num_events << '\n';
 
@@ -85,7 +85,7 @@ void reco_spectrum(const std::string& filename) {
 
   // Normalize the event histograms so that they represent
   // differential cross sections
-  double xsec = efr.flux_averaged_xsec(); // 10^{-42} cm^2
+  double xsec = reader.flux_averaged_xsec(); // 10^{-42} cm^2
   double scale_factor = xsec / event_count / BIN_WIDTH;
   true_Es->Scale( scale_factor );
   reco_Es->Scale( scale_factor );

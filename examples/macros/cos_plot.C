@@ -13,11 +13,11 @@ void cos_plot(const std::string& file_name) {
     "/dcos#theta #right]_{flux} (10^{-42} cm^{2})", NUM_BINS,
     COS_MIN, COS_MAX);
 
-  marley::R5EFR efr( file_name );
+  marley::MacroEventFileReader reader( file_name );
   marley::Event ev;
 
   int num_events = 0;
-  while ( efr >> ev ) {
+  while ( reader >> ev ) {
 
     if ( num_events % 1000 == 0 ) std::cout << "Event " << num_events << '\n';
 
@@ -37,7 +37,7 @@ void cos_plot(const std::string& file_name) {
     ++num_events;
   }
 
-  double xsec = efr.flux_averaged_xsec();
+  double xsec = reader.flux_averaged_xsec();
   double scale_factor = xsec / BIN_WIDTH / num_events;
 
   cos_theta_hist->Scale( scale_factor );

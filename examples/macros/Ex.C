@@ -8,12 +8,12 @@ void Ex(const std::string& filename) {
 
   std::vector<double> Ex_values;
 
-  marley::R5EFR efr( filename );
+  marley::MacroEventFileReader reader( filename );
   marley::Event ev;
 
   int counter = 0;
 
-  while ( efr >> ev ) {
+  while ( reader >> ev ) {
 
     if (counter % 1000 == 0) std::cout << "Event " << counter << '\n';
 

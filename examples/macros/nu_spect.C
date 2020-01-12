@@ -12,12 +12,12 @@ void nu_spect(const std::string& file_name) {
     "neutrino energy E_{#nu} (MeV); #left[ d#sigma/dE_{#nu} #right]_{flux}"
     " (10^{-42} cm^{2} / MeV)", NUM_BINS, E_MIN, E_MAX);
 
-  marley::R5EFR efr( file_name );
+  marley::MacroEventFileReader reader( file_name );
   marley::Event ev;
 
   long num_events = 0;
 
-  while ( efr >> ev ) {
+  while ( reader >> ev ) {
 
     if (num_events % 1000 == 0) std::cout << "Event " << num_events << '\n';
 
@@ -27,7 +27,7 @@ void nu_spect(const std::string& file_name) {
 
   }
 
-  double xsec = efr.flux_averaged_xsec();
+  double xsec = reader.flux_averaged_xsec();
   double scale_factor = xsec / num_events / BIN_WIDTH;
 
   Ev_hist->Scale( scale_factor );

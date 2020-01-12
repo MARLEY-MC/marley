@@ -12,7 +12,7 @@
 
 // MARLEY includes
 #include "marley/Event.hh"
-#include "marley/R5EFR.hh"
+#include "marley/MacroEventFileReader.hh"
 #include "marley/RootEventFileReader.hh"
 
 namespace {
@@ -24,26 +24,26 @@ namespace {
 }
 
 
-marley::R5EFR::R5EFR( const std::string& file_name ) {
+marley::MacroEventFileReader::MacroEventFileReader( const std::string& file_name ) {
   event_file_reader_ = new marley::RootEventFileReader( file_name );
 }
 
-marley::R5EFR::~R5EFR() {
+marley::MacroEventFileReader::~MacroEventFileReader() {
   auto* efr = get_refr_pointer( event_file_reader_ );
   if ( efr ) delete efr;
 }
 
-bool marley::R5EFR::next_event(marley::Event& ev) {
+bool marley::MacroEventFileReader::next_event(marley::Event& ev) {
   auto* efr = get_refr_pointer( event_file_reader_ );
   return efr->next_event( ev );
 }
 
-marley::R5EFR::operator bool() const {
+marley::MacroEventFileReader::operator bool() const {
   auto* efr = get_refr_pointer( event_file_reader_ );
   return static_cast<bool>( *efr );
 }
 
-double marley::R5EFR::flux_averaged_xsec( bool natural_units ) const {
+double marley::MacroEventFileReader::flux_averaged_xsec( bool natural_units ) const {
   auto* efr = get_refr_pointer( event_file_reader_ );
   return efr->flux_averaged_xsec( natural_units );
 }
