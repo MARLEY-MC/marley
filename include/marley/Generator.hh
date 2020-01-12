@@ -41,6 +41,9 @@ namespace marley {
 
     public:
 
+      /// @brief Create a Generator using default settings
+      Generator();
+
       /// @brief Create an Event using the NeutrinoSource, Reaction, and
       /// StructureDatabase objects owned by this Generator
       marley::Event create_event();
@@ -196,9 +199,6 @@ namespace marley {
       double flux_averaged_total_xs() const;
 
     private:
-
-      /// @brief Create a Generator using default settings
-      Generator();
 
       /// @brief Create a Generator using default settings except for
       /// a given initial seed

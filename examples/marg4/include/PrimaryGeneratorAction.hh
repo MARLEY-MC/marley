@@ -1,8 +1,5 @@
 #pragma once
 
-// standard library includes
-#include <memory>
-
 // Geant4 includes
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "G4ParticleGun.hh"
@@ -21,6 +18,6 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
     virtual void GeneratePrimaries(G4Event*) override;
 
   protected:
-    // Pointer to the MARLEY event generator object
-    std::unique_ptr<marley::Generator> marley_generator_;
+    // MARLEY event generator object
+    marley::Generator marley_generator_;
 };

@@ -33,7 +33,7 @@ namespace {
 }
 
 // The default constructor uses the system time as the seed and a
-// default-constructured monoenergetic neutrion source. No reactions are
+// default-constructured monoenergetic neutrino source. No reactions are
 // defined, so the user must call add_reaction() at least once before using a
 // default-constructed Generator.
 marley::Generator::Generator()

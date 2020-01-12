@@ -23,8 +23,7 @@
 #include "PrimaryGeneratorAction.hh"
 
 PrimaryGeneratorAction::PrimaryGeneratorAction(
-  const std::string& config_file_name) : G4VUserPrimaryGeneratorAction(),
-  marley_generator_(nullptr)
+  const std::string& config_file_name) : G4VUserPrimaryGeneratorAction()
 {
   // Create a new generator object using the settings from the configuration
   // file
@@ -34,15 +33,14 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(
   marley::JSONConfig config( config_file_name );
   #endif
 
-  marley_generator_= std::make_unique<marley::Generator>(
-    config.create_generator() );
+  marley_generator_= config.create_generator();
 }
 
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
   G4PrimaryVertex* vertex = new G4PrimaryVertex(0., 0., 0., 0.); // x,y,z,t0
 
-  marley::Event ev = marley_generator_->create_event();
+  marley::Event ev = marley_generator_.create_event();
 
   //std::cout << ev << '\n';
 

@@ -97,6 +97,9 @@ marley::Logger::Logger(bool log_enabled) : enabled_(log_enabled),
   // add_stream(), the Logger will always write warning and error messages to
   // stderr.
   add_stream(std::cerr, LogLevel::WARNING);
+
+  // By default, also add std::cout at the info level
+  add_stream(std::cout, LogLevel::INFO);
 }
 
 marley::Logger& marley::Logger::Instance() {
