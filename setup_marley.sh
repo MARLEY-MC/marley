@@ -20,7 +20,7 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${THIS_DIRECTORY}/build
 fi
 
-# For using MARLEY classes in ROOT
+# For using MARLEY classes in ROOT 6
 export ROOT_INCLUDE_PATH=${THIS_DIRECTORY}/include
 
 # For building external software against MARLEY

@@ -38,6 +38,8 @@ namespace marley {
         return *this;
       }
 
+      double flux_averaged_xsec( bool natural_units = false ) const;
+
     protected:
 
       void* event_file_reader_;

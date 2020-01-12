@@ -27,26 +27,15 @@ void print_event_info(const marley::Event& e, const size_t num) {
   }
 }
 
-void print_events(const char* filename) {
+void print_events(const std::string& file_name) {
 
-  TFile* file = new TFile(filename, "read");
-  TTree* tree = NULL;
-  file->GetObject("MARLEY_event_tree", tree);
-  if (!tree) {
-    std::cout << "MARLEY event tree not found" << '\n';
-    return;
-  }
+  marley::R5EFR efr( file_name );
+  marley::Event ev;
 
-  marley::Event* ev = new marley::Event;
-  tree->SetBranchAddress("event", &ev);
+  int e = 0;
 
-  marley::Particle* fp = NULL;
-
-  size_t num_entries = tree->GetEntries();
-  for (size_t i = 0; i < num_entries; ++i) {
-
-    tree->GetEntry(i);
-
-    print_event_info(*ev, i);
+  while ( efr >> ev ) {
+    print_event_info( ev, e );
+    ++e;
   }
 }

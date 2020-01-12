@@ -225,3 +225,11 @@ void marley::EventFileReader::ensure_initialized() {
     initialized_ = true;
   }
 }
+
+double marley::EventFileReader::flux_averaged_xsec( bool natural_units ) {
+  this->ensure_initialized();
+  if ( natural_units ) return flux_avg_tot_xs_;
+  double result = flux_avg_tot_xs_ * marley_utils::hbar_c2
+    * marley_utils::fm2_to_minus40_cm2 * 1e2; // 10^{-42} cm^2
+  return result;
+}

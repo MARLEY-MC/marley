@@ -1,58 +1,47 @@
 #include <iostream>
 #include <string>
 
-void nu_spect(const std::string& filename) {
+const int NUM_BINS = 100;
+const double E_MIN = 0.;
+const double E_MAX = 60.;
+const double BIN_WIDTH = ( E_MAX - E_MIN ) / NUM_BINS;
 
-  TFile* file = new TFile(filename.c_str(), "read");
-  TTree* tree = NULL;
-  file->GetObject("MARLEY_event_tree", tree);
-  if (!tree) {
-    std::cout << "MARLEY event tree not found" << '\n';
-    return;
+void nu_spect(const std::string& file_name) {
+
+  TH1D* Ev_hist = new TH1D("Ev_hist", "reacting neutrino spectrum;"
+    "neutrino energy E_{#nu} (MeV); #left[ d#sigma/dE_{#nu} #right]_{flux}"
+    " (10^{-42} cm^{2} / MeV)", NUM_BINS, E_MIN, E_MAX);
+
+  marley::R5EFR efr( file_name );
+  marley::Event ev;
+
+  long num_events = 0;
+
+  while ( efr >> ev ) {
+
+    if (num_events % 1000 == 0) std::cout << "Event " << num_events << '\n';
+
+    Ev_hist->Fill( ev.projectile().total_energy() );
+
+    ++num_events;
+
   }
 
-  marley::Event* ev = new marley::Event;
-  tree->SetBranchAddress("event", &ev);
+  double xsec = efr.flux_averaged_xsec();
+  double scale_factor = xsec / num_events / BIN_WIDTH;
 
-  size_t num_events = tree->GetEntries();
-
-  std::vector<double> E_vec;
-
-  for (size_t i = 0; i < num_events; ++i) {
-
-    tree->GetEntry(i);
-
-    E_vec.push_back(ev->projectile().total_energy());
-
-    if (i % 1000 == 0) std::cout << "Event " << i << '\n';
-  }
-
-  double E_max = -1e30;
-  double E_min = 1e30;
-  for (size_t k = 0; k < E_vec.size(); ++k) {
-    double e = E_vec.at(k);
-    if (e > E_max) E_max = e;
-    else if (e < E_min) E_min = e;
-  }
-
-  TString title_str;
-
-  TH1D* Es = new TH1D("nu_Es", "reacting neutrino spectrum", 100,
-    E_max, E_min);
-
-  for (size_t j = 0; j < E_vec.size(); ++j) {
-    Es->Fill(E_vec.at(j));
-  }
+  Ev_hist->Scale( scale_factor );
 
   TCanvas* c = new TCanvas;
   c->cd();
 
   gStyle->SetOptStat();
 
-  Es->SetStats(true);
-  Es->SetLineColor(kBlue);
-  Es->SetLineWidth(2);
-  Es->Draw();
+  Ev_hist->SetStats(false);
+  Ev_hist->GetXaxis()->SetTitleOffset(1.2);
+  Ev_hist->GetYaxis()->SetTitleOffset(1.2);
+  Ev_hist->SetLineColor(kBlue);
+  Ev_hist->SetLineWidth(2);
+  Ev_hist->Draw();
 
-  //c->SaveAs("nu_Es.pdf");
 }

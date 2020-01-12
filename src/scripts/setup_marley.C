@@ -36,5 +36,11 @@ void setup_marley() {
       << " /path/to/include/marley/, please add /path/to/include"
       << " to your ROOT_INCLUDE_PATH environment variable and"
       << " try again.\n";
+    gInterpreter->ProcessLine("#include \"marley/R5EFR.hh\"", ec);
+    if (*ec != 0) std::cout << "Error loading"
+      << " MARLEY header R5EFR.hh. For MARLEY headers stored in"
+      << " /path/to/include/marley/, please add /path/to/include"
+      << " to your ROOT_INCLUDE_PATH environment variable and"
+      << " try again.\n";
   }
 }

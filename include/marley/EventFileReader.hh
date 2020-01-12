@@ -36,7 +36,7 @@ namespace marley {
       virtual ~EventFileReader() = default;
 
       /// @brief Read the next MARLEY event record from the file
-      /// @param ev Reference to the object that will be filled with
+      /// @param[out] ev Reference to the object that will be filled with
       /// the next event record
       /// @return True if reading the next event was successful, or false
       /// otherwise. This behavior is designed to be used as a while loop
@@ -44,13 +44,14 @@ namespace marley {
       virtual bool next_event( marley::Event& ev );
 
       /// @brief Returns the flux-averaged total cross section
-      /// (MeV<sup> -2</sup>) used to produce the events in the file
+      /// used to produce the events in the file
       /// @details For file formats which do not include this information,
       /// this function will return zero
-      inline double flux_averaged_xsec() {
-        this->ensure_initialized();
-        return flux_avg_tot_xs_;
-      }
+      /// @param[in] natural_units If true, then this function will
+      /// return the flux-averaged total cross section in natural units
+      /// (MeV<sup> -2</sup>). If false (default), then 10<sup>-42</sup>
+      /// cm<sup>2</sup> will be used.
+      double flux_averaged_xsec( bool natural_units = false );
 
       /// @brief Stream operator for reading in the next event
       inline EventFileReader& operator>>( marley::Event& ev ) {
