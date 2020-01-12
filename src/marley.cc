@@ -235,6 +235,10 @@ int main(int argc, char* argv[]) {
   std::streambuf* cout_default_buf = std::cout.rdbuf();
   std::streambuf* cerr_default_buf = std::cerr.rdbuf();
 
+  // Disable automatic logging of marley::Error objects.
+  // We will handle this manually below in the catch block.
+  marley::Error::set_logging_status( false );
+
   try {
 
     // Initialize the logger. Use a default log level of INFO. This will
@@ -481,7 +485,7 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  catch (const marley::Error& error) {
+  catch ( const std::exception& error ) {
     // Restore the old std::streambuf for std::cout
     std::cout.rdbuf( cout_default_buf );
     std::cerr.rdbuf( cerr_default_buf );
@@ -489,9 +493,12 @@ int main(int argc, char* argv[]) {
     // Flush the Logger, then rethrow the error for the system to handle.
     // This will probably result in std::terminate() being called.
     auto& log = marley::Logger::Instance();
-    log.newline();
     log.flush();
-    //throw error;
+
+    // We've flushed the logger, so we can now print the exception's error
+    // message without messing up the logger output.
+    MARLEY_LOG_ERROR() << error.what();
+    throw error;
   }
 
   // We shouldn't ever get here unless there was an error

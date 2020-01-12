@@ -164,6 +164,18 @@ marley::Generator marley::JSONConfig::create_generator() const
   prepare_neutrino_source(gen);
   prepare_reactions(gen);
 
+  // Skip the rest of initialization if we've disabled all reactions.
+  // This can be used to partially initialize the Generator in unusual
+  // situations.
+  if ( json_.has_key("reactions") ) {
+    const auto& reactions = json_.at("reactions");
+    if ( reactions.is_null() ) {
+      MARLEY_LOG_INFO() << "Null reactions array detected."
+        << " Initialization of reactions will be skipped.";
+      return gen;
+    }
+  }
+
   // Now that the reactions and source are both prepared, check that a neutrino
   // from the source can interact via at least one of the enabled reactions
   bool found_matching_pdg = false;
@@ -268,6 +280,12 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
   if ( json_.has_key("reactions") ) {
 
     const marley::JSON& rs = json_.at("reactions");
+
+    // If the reactions key has a null value, skip trying
+    // to load any reaction data. This can be used in unusual
+    // situations when we don't actually want to simulate any
+    // reactions.
+    if ( rs.is_null() ) return;
 
     if ( rs.is_array() ) {
 
@@ -517,6 +535,14 @@ void marley::JSONConfig::prepare_neutrino_source(marley::Generator& gen) const
   // specification
   if ( !json_.has_key("source") ) return;
   const marley::JSON& source_spec = json_.at("source");
+
+  // If the neutrino source key has a null value, just return without doing
+  // anything else
+  if ( source_spec.is_null() ) {
+    MARLEY_LOG_INFO() << "Null source specification detected. Skipping"
+      << " neutrino source configuration.";
+    return;
+  }
 
   // Complain if the user didn't specify a source type
   if ( !source_spec.has_key("type") ) {
