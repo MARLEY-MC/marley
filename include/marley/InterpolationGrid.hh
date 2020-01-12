@@ -81,8 +81,7 @@ namespace marley {
       /// @f$y = \begin{cases}
       /// y_1 = y_\text{left} \text{ and }
       /// y_2 = y_{\text{left}+1} &
-      /// x < x_\text{left} \\
-      /// y_1 = y_{\text{right}-1} \text{ and }
+      /// x < x_\text{left} \\ y_1 = y_{\text{right}-1} \text{ and }
       /// y_2 = y_\text{right} &
       /// x > x_\text{right}
       /// \end{cases}@f$<br>where
