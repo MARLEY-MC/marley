@@ -20,10 +20,10 @@
 #include "marley/Error.hh"
 #include "marley/Event.hh"
 #include "marley/Generator.hh"
-#include "marley/HauserFeshbachDecay.hh"
 #include "marley/Level.hh"
 #include "marley/Logger.hh"
 #include "marley/MatrixElement.hh"
+#include "marley/NucleusDecayer.hh"
 #include "marley/Reaction.hh"
 
 using ME_Type = marley::MatrixElement::TransitionType;
@@ -261,69 +261,9 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   marley::Event event = make_event_object(KEa, pc_cm, cos_theta_c_cm, phi_c_cm,
     Ec_cm, Ed_cm, E_level);
 
-  // Get a reference to the residue so that we can handle its de-excitation
-  marley::Particle& residue = event.residue();
-
-  bool continuum = (plevel == nullptr);
-  int Z = Zf_;
-  int A = Af_;
-  // Load the initial excitation energy into Ex.  This variable will be changed
-  // during every step of the Hauser-Feshbach decay cascade.
-  double Ex = E_level;
-
-  if ( continuum ) {
-
-    double cutoff = CONTINUUM_GS_CUTOFF;
-
-    // Load the initial twoJ and parity values into twoJ and P.  These
-    // variables will be changed during every step of the Hauser-Feshbach decay
-    // cascade.
-    // Right now, matrix element types are represented with 0 <-> Fermi, 1 <->
-    // Gamow-Teller.  Since the transitions are from the 40Ar ground state (Jpi
-    // = 0+), these also correspond to the 40K* state spins.
-    /// @todo Come up with a better way of determining the Jpi values that will
-    /// work for forbidden transition operators.
-    int twoJ;
-    if ( sampled_matrix_el.type() == ME_Type::FERMI) twoJ = 0;
-    else if ( sampled_matrix_el.type() == ME_Type::GAMOW_TELLER) twoJ = 2;
-    else throw marley::Error("Unrecognized matrix element type encountered"
-      " during a continuum decay in marley::NuclearReaction::create_event()");
-
-    // Fermi transition gives 0+ -> 0+, GT transition gives 0+ -> 1+
-    /// @todo handle target nuclei that are not initially 0+
-    /// @todo include possibility of negative parity here.
-    marley::Parity P(true); // positive parity
-    marley::Particle first, second;
-
-    // The selected level is unbound, so handle its de-excitation using
-    // the Hauser-Feshbach statistical model.
-    while ( continuum && Ex > cutoff ) {
-      marley::HauserFeshbachDecay hfd(residue, Ex, twoJ, P, gen);
-      MARLEY_LOG_DEBUG() << hfd;
-      continuum = hfd.do_decay(Ex, twoJ, P, first, second);
-
-      MARLEY_LOG_DEBUG() << "Hauser-Feshbach decay to " << first.pdg_code()
-        << " and " << second.pdg_code();
-      MARLEY_LOG_DEBUG() << second.pdg_code() << " is at Ex = " << Ex << " MeV.";
-
-      residue = second;
-      Z = marley_utils::get_particle_Z(residue.pdg_code());
-      A = marley_utils::get_particle_A(residue.pdg_code());
-      event.add_final_particle(first);
-    }
-  }
-
-  if ( !continuum ) {
-    // Either the selected initial level was bound (so it will only decay via
-    // gamma emission) or the Hauser-Feshbach decay process has now accessed a
-    // bound level in the residual nucleus. In either case, use gamma-ray decay
-    // scheme data to sample the de-excitation gammas and add them to this
-    // event's final particle list.
-    marley::DecayScheme* dec_scheme
-      = gen.get_structure_db().get_decay_scheme(Z, A);
-    dec_scheme->do_cascade(*dec_scheme->get_pointer_to_closest_level(Ex),
-      event, gen, residue.charge());
-  }
+  // Apply a de-excitation cascade as needed to the nuclear residue
+  marley::NucleusDecayer nd;
+  nd.deexcite_residue( event, sampled_matrix_el, gen );
 
   // Return the completed event object
   return event;
