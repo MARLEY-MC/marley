@@ -12,6 +12,9 @@
 
 #pragma once
 
+// Standard library includes
+#include <ostream>
+
 namespace marley {
 
   /// @brief Type-safe representation of a parity value (either +1 or -1)

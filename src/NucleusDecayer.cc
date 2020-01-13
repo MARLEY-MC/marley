@@ -172,35 +172,8 @@ void marley::NucleusDecayer::deexcite_residue( marley::Event& event,
 
   bool continuum = ( plevel == nullptr );
 
-  int twoJ = 0;
-  marley::Parity P;
-
-  if ( !continuum ) {
-    twoJ = plevel->twoJ();
-    P = plevel->parity();
-  }
-  else {
-    // The accessed nuclear level is in the unbound continuum
-
-    // Load the initial twoJ and parity values into twoJ and P.  These
-    // variables will be changed during every step of the Hauser-Feshbach decay
-    // cascade.
-    // Right now, matrix element types are represented with 0 <-> Fermi, 1 <->
-    // Gamow-Teller.  Since the transitions are from the 40Ar ground state (Jpi
-    // = 0+), these also correspond to the 40K* state spins.
-    /// @todo Come up with a better way of determining the Jpi values that will
-    /// work for forbidden transition operators.
-    if ( matrix_el.type() == ME_Type::FERMI) twoJ = 0;
-    else if ( matrix_el.type() == ME_Type::GAMOW_TELLER) twoJ = 2;
-    else throw marley::Error( "Unrecognized matrix element type encountered"
-      " during a continuum decay in marley::NucleusDecayer"
-      "::deexcite_residue()" );
-
-    // Fermi transition gives 0+ --> 0+, GT transition gives 0+ --> 1+
-    /// @todo handle target nuclei that are not initially 0+
-    /// @todo include possibility of negative parity here.
-    P = marley::Parity( true ); // positive parity
-  }
+  int twoJ = event.twoJ();
+  marley::Parity P = event.parity();
 
   // We now have all the information we need to start the cascade, so do it by
   // delegating to an overloaded version of this function.

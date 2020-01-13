@@ -87,7 +87,7 @@ namespace marley_utils {
 
   // Consistent value of pi to use throughout all of MARLEY
   constexpr double pi = M_PI;
-  constexpr double two_pi = 2*pi;
+  constexpr double two_pi = 2.*pi;
   const double sqrt_two_pi = std::sqrt(pi);
   constexpr double half_pi = pi/2.0;
 

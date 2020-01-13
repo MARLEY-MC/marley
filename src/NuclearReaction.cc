@@ -38,6 +38,8 @@ namespace {
   // further de-excitations.
   /// @todo Make this configurable?
   constexpr double CONTINUUM_GS_CUTOFF = 0.001; // MeV
+
+  constexpr int BOGUS_TWO_J_VALUE = -99999;
 }
 
 marley::NuclearReaction::NuclearReaction(ProcType pt, int pdg_a, int pdg_b,
@@ -254,12 +256,32 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 
   // Sample a CM frame azimuthal scattering angle (phi) uniformly on [0, 2*pi).
   // We can do this because the matrix elements are azimuthally invariant
-  double phi_c_cm = gen.uniform_random_double(0., 2.*marley_utils::pi, false);
+  double phi_c_cm = gen.uniform_random_double(0., marley_utils::two_pi, false);
 
-  // Create the preliminary event object (after 2-2 scattering, but before
+  // Load the initial residue twoJ and parity values into twoJ and P. These
+  // variables are included in the event record and used by NucleusDecayer
+  // to start the Hauser-Feshbach decay cascade.
+  // Right now, matrix element types are represented with 0 <-> Fermi, 1 <->
+  // Gamow-Teller.  Since the transitions are from the 40Ar ground state (Jpi
+  // = 0+), these also correspond to the 40K* state spins.
+  /// @todo Come up with a better way of determining the Jpi values that will
+  /// work for forbidden transition operators.
+  int twoJ = BOGUS_TWO_J_VALUE;
+  if ( sampled_matrix_el.type() == ME_Type::FERMI ) twoJ = 0;
+  else if ( sampled_matrix_el.type() == ME_Type::GAMOW_TELLER ) twoJ = 2;
+  else throw marley::Error( "Unrecognized matrix element type encountered"
+    " during a continuum decay in marley::NucleusDecayer"
+    "::deexcite_residue()" );
+
+  // Fermi transition gives 0+ --> 0+, GT transition gives 0+ --> 1+
+  /// @todo handle target nuclei that are not initially 0+
+  /// @todo include possibility of negative parity here.
+  marley::Parity P( true ); // positive parity
+
+  // Create the preliminary event object (after 2-->2 scattering, but before
   // de-excitation of the residual nucleus)
   marley::Event event = make_event_object(KEa, pc_cm, cos_theta_c_cm, phi_c_cm,
-    Ec_cm, Ed_cm, E_level);
+    Ec_cm, Ed_cm, E_level, twoJ, P);
 
   // Apply a de-excitation cascade as needed to the nuclear residue
   marley::NucleusDecayer nd;
@@ -479,10 +501,10 @@ double marley::NuclearReaction::sample_cos_theta_c_cm(
 
 marley::Event marley::NuclearReaction::make_event_object(double KEa,
   double pc_cm, double cos_theta_c_cm, double phi_c_cm, double Ec_cm,
-  double Ed_cm, double E_level) const
+  double Ed_cm, double E_level, int twoJ, const marley::Parity& P) const
 {
   marley::Event event = marley::Reaction::make_event_object(KEa, pc_cm,
-    cos_theta_c_cm, phi_c_cm, Ec_cm, Ed_cm, E_level);
+    cos_theta_c_cm, phi_c_cm, Ec_cm, Ed_cm, E_level, twoJ, P);
 
   // Assume that the target is a neutral atom (q_b = 0)
   event.target().set_charge(0);

@@ -17,6 +17,7 @@
 #include <vector>
 
 // MARLEY includes
+#include "marley/Parity.hh"
 #include "marley/Particle.hh"
 
 namespace marley {
@@ -74,7 +75,8 @@ namespace marley {
       /// reaction
       Event(const marley::Particle& a,
         const marley::Particle& b, const marley::Particle& c,
-        const marley::Particle& d, double Ex = 0.);
+        const marley::Particle& d, double Ex, int twoJ,
+        const marley::Parity& P);
 
       // Destructor
       ~Event();
@@ -145,6 +147,14 @@ namespace marley {
       /// @brief Get the excitation energy of the residue just after the
       /// initial two-body reaction
       inline double Ex() const;
+
+      /// @brief Get two times the spin of the residue just after the
+      /// initial two-body reaction
+      inline int twoJ() const;
+
+      /// @brief Get the intrinsic parity of the residue just after the
+      /// initial two-body reaction
+      inline marley::Parity parity() const;
 
       /// @brief Add a Particle to the vector of initial particles
       void add_initial_particle(const marley::Particle& p);
@@ -221,18 +231,31 @@ namespace marley {
       /// @brief Vector of pointers to each of the final state particles
       std::vector<marley::Particle*> final_particles_;
 
-      /// @brief Excitation energy (MeV) of the residue
+      /// @brief Excitation energy (MeV) of the residue immediately after the
+      /// two-two scattering reaction
       /// @note The Ex_ class member is always zero for residues that have no
       /// excited states.
       double Ex_;
+
+      /// @brief Two times the spin of the residue immediately after the
+      /// two-two scattering reaction
+      int twoJ_;
+
+      /// @brief The parity of the residue immediately after the two-two
+      /// scattering reaction
+      Parity parity_;
 
       /// @brief Helper function for write_hepevt()
       /// @param p Particle to write to the HEPEVT record
       /// @param os std::ostream being written to
       /// @param status Integer status code to use for this particle
       /// in the HEPEVT output
+      /// @param jmohep1 Index of the first mother for this particle
+      /// (used only for a "MARLEY info" dummy particle at the moment)
+      /// @param jmohep2 Index of the second mother for this particle
+      /// (used only for a "MARLEY info" dummy particle at the moment)
       void dump_hepevt_particle(const marley::Particle& p, std::ostream& os,
-        int status) const;
+        int status, int jmohep1 = 0, int jmohep2 = 0) const;
 
       /// @brief Deletes all owned Particle objects and clears the
       /// vectors of initial and final particles
@@ -241,6 +264,8 @@ namespace marley {
 
   // Inline function definitions
   inline double Event::Ex() const { return Ex_; }
+  inline int Event::twoJ() const { return twoJ_; }
+  inline marley::Parity Event::parity() const { return parity_; }
 
   inline const std::vector<marley::Particle*>& Event::get_initial_particles()
     const { return initial_particles_; }

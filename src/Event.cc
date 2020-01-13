@@ -37,21 +37,24 @@ namespace {
   constexpr double GEV_TO_MEV = 1000.;
 }
 
-// Creates an empty 2->2 scattering event with dummy initial and final
-// particles and residue (particle d) excitation energy Ex.
+// Creates an empty 2-->2 scattering event with dummy initial and final
+// particles. The residue (particle d) has excitation energy Ex and
+// spin-parity 0+.
 marley::Event::Event(double Ex)
   : initial_particles_{new marley::Particle(), new marley::Particle()},
   final_particles_{new marley::Particle(), new marley::Particle()},
-  Ex_(Ex) {}
+  Ex_(Ex), twoJ_(0), parity_(true) {}
 
-// Creates an 2->2 scattering event with given initial (a & b) and final
-// (c & d) particles. The residue (particle d) has excitation energy Ex
-// immediately following the 2->2 reaction.
+// Creates an 2-->2 scattering event with given initial (a & b) and final
+// (c & d) particles. The residue (particle d) has excitation energy Ex,
+// spin twoJ divided by two, and parity P immediately following the 2-->2
+// reaction.
 marley::Event::Event(const marley::Particle& a, const marley::Particle& b,
-  const marley::Particle& c, const marley::Particle& d, double Ex)
+  const marley::Particle& c, const marley::Particle& d, double Ex, int twoJ,
+  const marley::Parity& P)
   : initial_particles_{new marley::Particle(a), new marley::Particle(b)},
   final_particles_{new marley::Particle(c), new marley::Particle(d)},
-  Ex_(Ex) {}
+  Ex_(Ex), twoJ_(twoJ), parity_(P) {}
 
 // Destructor
 marley::Event::~Event() {
@@ -62,7 +65,8 @@ marley::Event::~Event() {
 marley::Event::Event(const marley::Event& other_event)
   : initial_particles_(other_event.initial_particles_.size()),
   final_particles_(other_event.final_particles_.size()),
-  Ex_(other_event.Ex_)
+  Ex_(other_event.Ex_), twoJ_(other_event.twoJ_),
+  parity_(other_event.parity_)
 {
   for (size_t i = 0; i < other_event.initial_particles_.size(); ++i) {
     initial_particles_[i] = new marley::Particle(
@@ -79,7 +83,8 @@ marley::Event::Event(const marley::Event& other_event)
 marley::Event::Event(marley::Event&& other_event)
   : initial_particles_(other_event.initial_particles_.size()),
   final_particles_(other_event.final_particles_.size()),
-  Ex_(other_event.Ex_)
+  Ex_(other_event.Ex_), twoJ_(other_event.twoJ_),
+  parity_(other_event.parity_)
 {
   other_event.Ex_ = 0.;
   for (size_t i = 0; i < other_event.initial_particles_.size(); ++i) {
@@ -95,6 +100,8 @@ marley::Event::Event(marley::Event&& other_event)
 // Copy assignment operator
 marley::Event& marley::Event::operator=(const marley::Event& other_event) {
   Ex_ = other_event.Ex_;
+  twoJ_ = other_event.twoJ_;
+  parity_ = other_event.parity_;
 
   // Delete the old particle objects owned by this event
   this->delete_particles();
@@ -119,6 +126,12 @@ marley::Event& marley::Event::operator=(marley::Event&& other_event) {
 
   Ex_ = other_event.Ex_;
   other_event.Ex_ = 0.;
+
+  twoJ_ = other_event.twoJ_;
+  other_event.twoJ_ = 0;
+
+  parity_ = other_event.parity_;
+  other_event.parity_ = marley::Parity( true );
 
   // Delete the old particle objects owned by this event
   this->delete_particles();
@@ -184,6 +197,8 @@ void marley::Event::add_final_particle(const marley::Particle& p)
 void marley::Event::clear() {
   this->delete_particles();
   Ex_ = 0.;
+  twoJ_ = 0;
+  parity_ = marley::Parity( true );
 }
 
 void marley::Event::delete_particles() {
@@ -202,7 +217,7 @@ void marley::Event::print(std::ostream& out) const {
   temp.precision(std::numeric_limits<double>::max_digits10);
 
   temp << initial_particles_.size() << ' ' << final_particles_.size()
-    << ' ' << Ex_ << '\n';
+    << ' ' << Ex_ << ' ' << twoJ_ << ' ' << parity_ << '\n';
 
   for (const auto i : initial_particles_) temp << *i << '\n';
   for (const auto f : final_particles_) temp << *f << '\n';
@@ -216,7 +231,7 @@ void marley::Event::read(std::istream& in) {
   int num_initial;
   int num_final;
 
-  in >> num_initial >> num_final >> Ex_;
+  in >> num_initial >> num_final >> Ex_ >> twoJ_ >> parity_;
 
   // If reading the event header line failed for some
   // reason, just return without trying to do anything else.
@@ -262,7 +277,7 @@ void marley::Event::read(std::istream& in) {
 // Function that dumps a marley::Particle to an output stream in HEPEVT format.
 // This is a private helper function for the publicly-accessible write_hepevt.
 void marley::Event::dump_hepevt_particle(const marley::Particle& p,
-  std::ostream& os, int status) const
+  std::ostream& os, int status, int jmohep1, int jmohep2) const
 {
   // Print the status code to begin the particle entry in the HEPEVT record
   os << status << ' ';
@@ -271,11 +286,12 @@ void marley::Event::dump_hepevt_particle(const marley::Particle& p,
   // location and to reflect the parent-daughter relationships between
   // particles.
   // Convert from MARLEY natural units (MeV) to GeV for the HEPEVT format
-  os << p.pdg_code() << " 0 0 0 0 " << p.px() / GEV_TO_MEV
-    << ' ' << p.py() / GEV_TO_MEV << ' ' << p.pz() / GEV_TO_MEV
-    << ' ' << p.total_energy() / GEV_TO_MEV << ' ' << p.mass() / GEV_TO_MEV
-    // Spacetime origin is currently used as the initial position 4-vector for
-    // all particles
+  os << p.pdg_code() << ' ' << jmohep1 << ' ' << jmohep2 << " 0 0 "
+    << p.px() / GEV_TO_MEV << ' ' << p.py() / GEV_TO_MEV
+    << ' ' << p.pz() / GEV_TO_MEV << ' ' << p.total_energy() / GEV_TO_MEV
+    << ' ' << p.mass() / GEV_TO_MEV
+    // The spacetime origin is currently used as the initial position 4-vector
+    // for all particles
     << " 0. 0. 0. 0." << '\n';
 }
 
@@ -310,7 +326,10 @@ void marley::Event::write_hepevt(size_t event_num, double flux_avg_tot_xsec,
     HEPEVT_INITIAL_STATE_STATUS_CODE);
 
   // Write our dummy particle to the event record
-  dump_hepevt_particle( dummy_particle, temp, HEPEVT_MARLEY_INFO_STATUS_CODE );
+  // We use the jmohep1 slot to record the twoJ_ data member and the jmohep2
+  // slot to record the parity_ data member (both as integers)
+  dump_hepevt_particle( dummy_particle, temp, HEPEVT_MARLEY_INFO_STATUS_CODE,
+    twoJ_, static_cast<int>(parity_) );
 
   // Write the final particles to the event record
   for (const auto f : final_particles_) dump_hepevt_particle(*f, temp,
@@ -324,6 +343,8 @@ marley::JSON marley::Event::to_json() const {
   marley::JSON event = marley::JSON::object();
 
   event["Ex"] = Ex_;
+  event["twoJ"] = twoJ_;
+  event["parity"] = static_cast<int>( parity_ );
   event["initial_particles"] = marley::JSON::array();
   event["final_particles"] = marley::JSON::array();
 
@@ -393,14 +414,13 @@ bool marley::Event::read_hepevt(std::istream& in, double* flux_avg_tot_xsec)
 
   // Fields that we do care about
   double Etot, px, py, pz, M;
-  int status_code, pdg;
+  int status_code, pdg, jmohep1, jmohep2;
   for ( int p = 0; p < num_particles; ++p ) {
 
-    in >> status_code >> pdg;
+    in >> status_code >> pdg >> jmohep1 >> jmohep2;
 
-    // Skip JMOHEP1, JMOHEP2, JDAHEP1, JDAHEP2 fields
-    // (mother and daughter indices)
-    for ( int j = 0; j < 4; ++j ) in >> dummy_int;
+    // Skip the JDAHEP1 and JDAHEP2 fields (daughter indices)
+    for ( int j = 0; j < 2; ++j ) in >> dummy_int;
 
     // Read in the particle 4-momentum and mass.
     in >> px >> py >> pz >> Etot >> M;
@@ -424,6 +444,12 @@ bool marley::Event::read_hepevt(std::istream& in, double* flux_avg_tot_xsec)
       // with this value, which is not normally stored in the marley::Event
       // itself.
       if ( flux_avg_tot_xsec ) *flux_avg_tot_xsec = M;
+      // The JMOHEP1 field contains two times the residue spin immediately
+      // following the initial two-two scattering reaction
+      twoJ_ = jmohep1;
+      // The JMOHEP2 field contains an integer representation of the residue
+      // parity immediately following the initial two-two scattering reaction
+      parity_ = jmohep2;
     }
 
     // If the particle has a status code other than the two used by
@@ -508,7 +534,7 @@ bool marley::Event::read_hepevt(std::istream& in, double* flux_avg_tot_xsec)
   this->target().set_charge( 0 );
 
   // Determine the correct ionization state immediately following the prompt
-  // 2->2 scattering reaction. Do this by assuming that the target atom is
+  // 2-->2 scattering reaction. Do this by assuming that the target atom is
   // neutral (see above). This implies that the final ion charge must be equal
   // and opposite to that of the final lepton.
   int Qf_ion = -this->ejectile().charge();
@@ -532,6 +558,8 @@ bool marley::Event::read_hepevt(std::istream& in, double* flux_avg_tot_xsec)
 
 void marley::Event::from_json(const marley::JSON& json) {
 
+  // TODO: reduce code duplication in this function
+
   // Remove any existing contents from this event
   this->clear();
 
@@ -544,8 +572,22 @@ void marley::Event::from_json(const marley::JSON& json) {
   if ( !ok ) throw marley::Error("Invalid nuclear excitation energy"
     + temp_Ex.to_string() + " encountered in input JSON-format event");
 
+  if ( !json.has_key("twoJ") ) throw marley::Error("Missing"
+    " twoJ key in input JSON-format event");
+
+  ok = false;
+  const auto& temp_twoJ = json.at("twoJ");
+  twoJ_ = temp_twoJ.to_long( ok );
+  if ( !ok ) throw marley::Error("Invalid \"twoJ\" value"
+    + temp_twoJ.to_string() + " encountered in input JSON-format event");
+
+  ok = false;
+  const auto& temp_parity = json.at("parity");
+  parity_ = temp_parity.to_long( ok );
+  if ( !ok ) throw marley::Error("Invalid parity value"
+    + temp_parity.to_string() + " encountered in input JSON-format event");
+
   // Retrieve and load the array of initial particles
-  // TODO: reduce code duplication in this function
   if ( !json.has_key("initial_particles") ) throw marley::Error("Missing"
     " initial particle array in input JSON-format event");
 

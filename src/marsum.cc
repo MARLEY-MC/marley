@@ -48,6 +48,10 @@ int main(int argc, char* argv[]) {
 
   // Temporary storage for output TTree branch variables
   double Ex; // nuclear excitation energy
+  int twoJ; // two times the residue spin immediately after the two-two
+            // scattering reaction
+  int par; // integer representation of the intrinsic parity of the
+           // residue immediately following the two-two reaction
   double flux_avg_tot_xsec; // flux-averaged total cross section
   double Ev, KEv, pxv, pyv, pzv; // projectile
   double Mt; // target mass
@@ -106,6 +110,10 @@ int main(int argc, char* argv[]) {
 
   // Nuclear excitation energy branch
   out_tree->Branch("Ex", &Ex, "Ex/D");
+
+  // Spin and parity branches
+  out_tree->Branch("twoJ", &twoJ, "twoJ/I");
+  out_tree->Branch("parity", &par, "parity/I");
 
   // De-excitation products (final-state particles other than the
   // ejectile and ground-state residue)
@@ -172,6 +180,8 @@ int main(int argc, char* argv[]) {
       pzr = ev.residue().pz();
 
       Ex = ev.Ex();
+      twoJ = ev.twoJ();
+      par = static_cast<int>( ev.parity() );
       flux_avg_tot_xsec = refr.flux_averaged_xsec();
 
       const auto& fparts = ev.get_final_particles();

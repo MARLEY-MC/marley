@@ -208,5 +208,7 @@ marley::Event marley::ElectronReaction::create_event(int pdg_a, double KEa,
   double phi_c_cm = gen.uniform_random_double(0., 2.*marley_utils::pi, false);
 
   // Create and return the completed event object
-  return make_event_object(KEa, pc_cm, cos_theta_c_cm, phi_c_cm, Ec_cm, Ed_cm);
+  // Note: electrons have spin 1/2 and positive intrinsic parity
+  return make_event_object( KEa, pc_cm, cos_theta_c_cm, phi_c_cm, Ec_cm, Ed_cm,
+    0., 1, marley::Parity(true) );
 }

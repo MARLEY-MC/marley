@@ -148,7 +148,8 @@ namespace marley {
       /// Helper function used by NuclearReaction::create_event()
       virtual marley::Event make_event_object(double KEa,
         double pc_cm, double cos_theta_c_cm, double phi_c_cm, double Ec_cm,
-        double Ed_cm, double E_level = 0.) const override;
+        double Ed_cm, double E_level, int twoJ, const marley::Parity& P)
+        const override;
 
       /// @brief Samples a polar angle cosine for the ejectile using
       /// the relevant portion of the reaction nuclear matrix element

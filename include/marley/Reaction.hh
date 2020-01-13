@@ -144,9 +144,12 @@ namespace marley {
       /// @param Ec_cm Ejectile total energy (MeV) in the CM frame
       /// @param Ed_cm Residue total energy (MeV) in the CM frame
       /// @param E_level Residue excitation energy (MeV)
+      /// @param twoJ Two times the residue spin
+      /// @param P Intrinsic parity of the residue
       virtual marley::Event make_event_object(double KEa,
         double pc_cm, double cos_theta_c_cm, double phi_c_cm,
-        double Ec_cm, double Ed_cm, double E_level = 0.) const;
+        double Ec_cm, double Ed_cm, double E_level, int twoJ,
+        const marley::Parity& P) const;
 
       /// Returns a vector of PDG codes for projectiles that participate
       /// in a particular ProcessType
