@@ -7,7 +7,7 @@
 // terms of version 3 of the GNU General Public License as published by the
 // Free Software Foundation.
 //
-// For the full text of the license please see \${MARLEY}/LICENSE or
+// For the full text of the license please see ${MARLEY}/LICENSE or
 // visit http://opensource.org/licenses/GPL-3.0
 
 // Standard library includes
