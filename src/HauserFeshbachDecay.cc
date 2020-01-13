@@ -417,17 +417,6 @@ double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
   return continuum_width;
 }
 
-double marley::HauserFeshbachDecay::get_fragment_emission_threshold(
-  const int Zi, const int Ai, const marley::Fragment& f)
-{
-  const marley::MassTable& mt = marley::MassTable::Instance();
-
-  // Separation energy for the fragment
-  double Sa = mt.get_fragment_separation_energy(Zi, Ai, f.get_pid());
-
-  return Sa;
-}
-
 void marley::HauserFeshbachDecay::print(std::ostream& out) const {
 
   // Needed to print results in conventional units

@@ -12,13 +12,12 @@
 
 #pragma once
 #include <unordered_map>
-#include <vector>
-
-#include "marley/Error.hh"
-#include "marley/JSON.hh"
-#include "marley/marley_utils.hh"
 
 namespace marley {
+
+  // Forward-declare some classes
+  class Fragment;
+  class JSON;
 
   /// @brief Singleton lookup table for particle and atomic masses
   class MassTable {
@@ -112,6 +111,22 @@ namespace marley {
       /// @param A Mass number
       /// @return Atomic mass (MeV)
       double liquid_drop_model_atomic_mass(int Z, int A) const;
+
+      /// @brief Get the approximate excitation energy threshold for emission
+      /// of a particular nuclear fragment
+      /// @param Zi Proton number of the initial nucleus
+      /// @param Ai Mass number of the initial nucleus
+      /// @param f Fragment to be emitted
+      double fragment_emission_threshold(const int Zi, const int Ai,
+        const marley::Fragment& f) const;
+
+      /// @brief Computes the lowest excitation energy at which one of the
+      /// nuclear fragments considered by the HauserFeshbachDecay class may be
+      /// emitted
+      /// @param Zi Proton number of the initial nucleus
+      /// @param Ai Mass number of the initial nucleus
+      /// @param f Fragment to be emitted
+      double unbound_threshold(const int Zi, const int Ai) const;
 
     protected:
 

@@ -59,14 +59,6 @@ namespace marley {
       /// that will be considered when simulating compound nucleus decays
       inline static const std::vector<marley::Fragment>& get_fragments();
 
-      /// @brief Get the approximate threshold for emission of a nuclear
-      /// fragment
-      /// @param Zi Atomic number of the initial nucleus
-      /// @param Ai Mass number of the initial nucleus
-      /// @param f Fragment to be emitted
-      static double get_fragment_emission_threshold(const int Zi, const int Ai,
-        const marley::Fragment& f);
-
       /// @brief Maximum value of the orbital angular momentum to use when
       /// considering compound nucleus decays to the continuum of nuclear
       /// levels

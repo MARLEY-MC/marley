@@ -12,6 +12,7 @@
 
 #include "marley/marley_utils.hh"
 #include "marley/BackshiftedFermiGasModel.hh"
+#include "marley/Error.hh"
 #include "marley/KoningDelarocheOpticalModel.hh"
 #include "marley/Logger.hh"
 #include "marley/StandardLorentzianModel.hh"

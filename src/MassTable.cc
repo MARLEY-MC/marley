@@ -10,7 +10,12 @@
 // For the full text of the license please see ${MARLEY}/LICENSE or
 // visit http://opensource.org/licenses/GPL-3.0
 
+// MARLEY includes
+#include "marley/Error.hh"
+#include "marley/Fragment.hh"
 #include "marley/FileManager.hh"
+#include "marley/HauserFeshbachDecay.hh"
+#include "marley/JSON.hh"
 #include "marley/MassTable.hh"
 #include "marley/marley_utils.hh"
 
@@ -242,6 +247,37 @@ double marley::MassTable::liquid_drop_model_mass_excess(int Z, int A) const {
   else if (!z_odd && !n_odd) delta_LDM = -11/std::sqrt(A);
 
   return Mn * N + MH * Z + Evol + Esur + Ecoul + delta_LDM;
+}
+
+double marley::MassTable::fragment_emission_threshold(const int Zi,
+  const int Ai, const marley::Fragment& f) const
+{
+  // Separation energy for the fragment
+  double Sa = this->get_fragment_separation_energy( Zi, Ai, f.get_pid() );
+  return Sa;
+}
+
+// Returns the smallest nuclear fragment emission threshold (separation energy)
+// for a particular initial nucleus. All nuclear fragments recognized by the
+// HauserFeshbach decay class are considered.
+double marley::MassTable::unbound_threshold(const int Zi, const int Ai) const
+{
+  // Before looking up the separation energies, start by setting the unbound
+  // threshold to infinity.
+  double unbound_threshold = std::numeric_limits<double>::max();
+  MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << '\n';
+
+  // Loop over each available nuclear fragment. If it has a smaller separation
+  // energy than the current value of unbound_threshold, update the stored value
+  for ( const auto& f : marley::HauserFeshbachDecay::get_fragments() ) {
+    double thresh = this->fragment_emission_threshold(Zi, Ai, f);
+    MARLEY_LOG_DEBUG() << f.get_pid() << " emission threshold = "
+      << thresh << '\n';
+    if ( thresh < unbound_threshold ) unbound_threshold = thresh;
+    MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << '\n';
+  }
+
+  return unbound_threshold;
 }
 
 void marley::MassTable::assign_masses(const marley::JSON& obj_array,

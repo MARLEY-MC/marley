@@ -10,8 +10,10 @@
 // For the full text of the license please see ${MARLEY}/LICENSE or
 // visit http://opensource.org/licenses/GPL-3.0
 
-#include "marley/marley_kinematics.hh"
-#include "marley/marley_utils.hh"
+// Standard library includes
+#include <map>
+
+// MARLEY includes
 #include "marley/ElectronReaction.hh"
 #include "marley/HauserFeshbachDecay.hh"
 #include "marley/Logger.hh"
@@ -19,12 +21,15 @@
 #include "marley/NuclearReaction.hh"
 #include "marley/Reaction.hh"
 #include "marley/StructureDatabase.hh"
+#include "marley/marley_kinematics.hh"
+#include "marley/marley_utils.hh"
 
-using namespace marley_utils;
 using ProcType = marley::Reaction::ProcessType;
 using ME_Type = marley::MatrixElement::TransitionType;
 
 namespace {
+
+  using namespace marley_utils;
 
   std::map<ProcType, std::string> proc_type_to_string_map {
     { ProcType::NeutrinoCC, "\u03BD CC" },
@@ -80,23 +85,13 @@ namespace {
         + std::to_string(scheme_pdg) + " with a reaction object that has"
         " PDG code " + std::to_string(pdg_d));
 
-    // Use the smallest nuclear fragment emission threshold to check for unbound
-    // levels. Before looking them up, start by setting the unbound threshold to
-    // infinity.
-    double unbound_threshold = std::numeric_limits<double>::max();
-    MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << '\n';
-
+    // Use the smallest nuclear fragment emission threshold to check for
+    // unbound levels.
     int Ad = marley_utils::get_particle_A( pdg_d );
     int Zd = marley_utils::get_particle_Z( pdg_d );
 
-    for ( const auto& f : marley::HauserFeshbachDecay::get_fragments() ) {
-      double thresh = marley::HauserFeshbachDecay
-        ::get_fragment_emission_threshold(Zd, Ad, f);
-      MARLEY_LOG_DEBUG() << f.get_pid() << " emission threshold = " << thresh
-        << '\n';
-      if (thresh < unbound_threshold) unbound_threshold = thresh;
-      MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << '\n';
-    }
+    const auto& mt = marley::MassTable::Instance();
+    double unbound_threshold = mt.unbound_threshold( Zd, Ad );
 
     // Cycle through each of the level energies given in the reaction dataset.
     for ( auto& mat_el : matrix_elements ) {
