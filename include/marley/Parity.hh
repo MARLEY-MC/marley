@@ -11,9 +11,6 @@
 // visit http://opensource.org/licenses/GPL-3.0
 
 #pragma once
-#include <string>
-
-#include "marley/Error.hh"
 
 namespace marley {
 
@@ -34,12 +31,7 @@ namespace marley {
       /// @brief Create a Parity object from an integer
       /// @details If an int value other than +1 or -1 is passed to this
       /// constructor, a marley::Error will be thrown.
-      inline explicit Parity(int i) {
-        if (i == 1) is_positive_ = true;
-        else if (i == -1) is_positive_ = false;
-        else throw marley::Error(std::string("Invalid parity ")
-          + std::to_string(i) + " passed to constructor of marley::Parity");
-      }
+      explicit Parity(int i);
 
       /// @brief Convert the Parity object to a bool (true for +1, false for -1)
       inline explicit operator bool() const { return is_positive_; }
@@ -58,16 +50,7 @@ namespace marley {
       /// @brief Assigns a parity value using an integer
       /// @details If an int value other than +1 or -1 is used, a marley::Error
       /// will be thrown.
-      inline marley::Parity& operator=(const int& i) {
-        // Do the assignment
-        if (i == 1) is_positive_ = true;
-        else if (i == -1) is_positive_ = false;
-        else throw marley::Error(std::string("Invalid parity ")
-          + std::to_string(i) + " assigned to variable of type marley::Parity");
-
-        // Return the existing object
-        return *this;
-      }
+      marley::Parity& operator=(const int& i);
 
       inline bool operator==(const marley::Parity& p) const
       {
@@ -123,17 +106,4 @@ inline std::ostream& operator<<(std::ostream& out, const marley::Parity& p)
   return out;
 }
 
-inline std::istream& operator>> (std::istream& in,
-  marley::Parity& p)
-{
-  char c;
-  in >> c;
-
-  if (c == '+') p = marley::Parity(true);
-  else if (c == '-') p = marley::Parity(false);
-  else throw marley::Error(std::string("Invalid parity \"")
-    + c + "\" assigned via the >> operator to"
-    + " a variable of type marley::Parity");
-
-  return in;
-}
+std::istream& operator>> (std::istream& in, marley::Parity& p);
