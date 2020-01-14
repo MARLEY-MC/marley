@@ -183,6 +183,13 @@ namespace marley {
       /// @param out The std::ostream to which this event will be written
       void print(std::ostream& out) const;
 
+      /// @brief Print this event to a std::ostream in an annotated format
+      /// easily readable by humans
+      /// @param out The std::ostream to which this event will be written
+      /// @param num An optional event number that will be printed with
+      /// the rest of the event. If num is negative, then it will be skipped.
+      void print_human_readable(std::ostream& out, int num = -1) const;
+
       /// @brief Read in this event from a std::istream. Any previous contents
       /// of this event will be deleted
       /// @param in The std::istream from which this event will be read

@@ -1,5 +1,9 @@
 #include <iostream>
 
+// These functions largely duplicate code that also exists
+// in marley::Event::print_human_readable(). They are included
+// here as an example of code that accesses all data members
+// of the Particle and Event objects.
 void print_particle_info(const marley::Particle& p) {
   std::cout << "  particle with PDG code = " << p.pdg_code()
     << " has total energy " << p.total_energy() << " MeV,"
@@ -16,10 +20,11 @@ void print_event_info(const marley::Event& e, const size_t num) {
     << " final particles. ***" << '\n';
 
   int twoJ = e.twoJ();
-  int J = twoJ / 2;
+  bool twoJ_is_odd = ( twoJ % 2 == 1 );
   std::cout << "The residual nucleus initially had excitation energy "
-    << e.Ex() << " MeV and spin-parity " << J;
-  if ( twoJ % 2 == 1 ) std::cout << "/2";
+    << e.Ex() << " MeV and spin-parity ";
+  if ( twoJ_is_odd ) std::cout << twoJ << "/2";
+  else std::cout << twoJ / 2;
   std::cout << e.parity() << '\n';
 
   std::cout << "Initial particles" << '\n';

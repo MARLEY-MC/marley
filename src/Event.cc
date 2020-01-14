@@ -35,6 +35,17 @@ namespace {
   // Conversion factor for converting GeV to MeV (the latter of which
   // is used in MARLEY natural units)
   constexpr double GEV_TO_MEV = 1000.;
+
+  // Helper function for Event::print_human_readable()
+  void print_particle_info( std::ostream& out, const marley::Particle& p ) {
+    out << "  particle with PDG code = " << p.pdg_code()
+      << " has total energy " << p.total_energy() << " MeV,"
+      << '\n' << "    3-momentum = (" << p.px() << " MeV, " << p.py()
+      << " MeV, " << p.pz() << " MeV)," << '\n'
+      << "    mass = " << p.mass() << " MeV, and charge = "
+      << p.charge() << " times the proton charge." << '\n';
+  }
+
 }
 
 // Creates an empty 2-->2 scattering event with dummy initial and final
@@ -621,4 +632,30 @@ void marley::Event::from_json(const marley::JSON& json) {
     final_particles_.back()->from_json( p_object );
   }
 
+}
+
+void marley::Event::print_human_readable(std::ostream& out, int num) const {
+  out << "\n*** MARLEY Event ";
+  if ( num >= 0 ) out << num << ' ';
+  out << "has " << this->get_initial_particles().size()
+    << " initial particles and " << this->get_final_particles().size()
+    << " final particles. ***" << '\n';
+
+  int twoJ = this->twoJ();
+  bool twoJ_is_odd = ( twoJ % 2 == 1 );
+  out << "The residual nucleus initially had excitation energy "
+    << this->Ex() << " MeV and spin-parity ";
+  if ( twoJ_is_odd ) out << twoJ << "/2";
+  else out << twoJ / 2;
+  out << this->parity() << '\n';
+
+  out << "Initial particles" << '\n';
+  marley::Particle* p = NULL;
+  for (size_t i = 0u; i < this->get_initial_particles().size(); ++i) {
+    print_particle_info( out, *this->get_initial_particles().at(i) );
+  }
+  out << "Final particles" << '\n';
+  for (size_t i = 0u; i < this->get_final_particles().size(); ++i) {
+    print_particle_info( out, *this->get_final_particles().at(i) );
+  }
 }
