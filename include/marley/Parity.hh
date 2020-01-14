@@ -88,6 +88,9 @@ namespace marley {
         else return '-';
       }
 
+      /// @brief Assign a value to this Parity object from a char
+      void from_char(const char c);
+
     protected:
 
       /// @brief Boolean representation of the parity value that is true when

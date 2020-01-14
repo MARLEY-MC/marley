@@ -10,22 +10,22 @@
 // For the full text of the license please see ${MARLEY}/LICENSE or
 // visit http://opensource.org/licenses/GPL-3.0
 
+// MARLEY includes
+#include "marley/EventProcessor.hh"
+
 namespace marley {
 
-  // Forward-declare some needed classes
-  class Event;
-  class Generator;
-  class Level;
-  class MatrixElement;
-
   /// @brief EventProcessor that handles nuclear de-excitations
-  class NucleusDecayer {
+  class NucleusDecayer : public EventProcessor {
 
     public:
 
       inline NucleusDecayer() {}
 
-      void deexcite_residue( marley::Event& event, marley::Generator& gen );
+      inline virtual ~NucleusDecayer() = default;
+
+      virtual void process_event( marley::Event& event,
+        marley::Generator& gen ) override;
   };
 
 }

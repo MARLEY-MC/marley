@@ -270,11 +270,8 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   marley::Event event = make_event_object(KEa, pc_cm, cos_theta_c_cm, phi_c_cm,
     Ec_cm, Ed_cm, E_level, twoJ, P);
 
-  // Apply a de-excitation cascade as needed to the nuclear residue
-  marley::NucleusDecayer nd;
-  nd.deexcite_residue( event, gen );
-
-  // Return the completed event object
+  // Return the preliminary event object (to be processed later by the
+  // NucleusDecayer class)
   return event;
 }
 

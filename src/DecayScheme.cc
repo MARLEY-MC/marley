@@ -395,29 +395,26 @@ void marley::DecayScheme::print(std::ostream& out) const {
 
 void marley::DecayScheme::read_from_stream(std::istream& in) {
 
-  try {
-    levels_.clear();
+  levels_.clear();
 
-    size_t num_levels;
-    in >> Z_ >> A_ >> num_levels;
+  int num_levels;
+  in >> Z_ >> A_ >> num_levels;
 
-    double energy, ri;
-    int two_j;
-    marley::Parity pi;
-    size_t num_gammas;
-    size_t level_f_idx;
+  // If we had trouble parsing the decay scheme header, then
+  // just return the stream without doing anything else.
+  if ( !in ) return;
 
-    for (size_t i = 0; i < num_levels; ++i) {
-      in >> energy >> two_j >> pi >> num_gammas;
-      marley::Level& l = add_level(marley::Level(energy, two_j, pi));
-      for (size_t j = 0; j < num_gammas; ++j) {
-        in >> energy >> ri >> level_f_idx;
-        l.add_gamma(energy, ri, levels_.at(level_f_idx).get());
-      }
+  double energy, ri;
+  int two_j, num_gammas, level_f_idx;
+  marley::Parity pi;
+
+  for ( int i = 0; i < num_levels; ++i ) {
+    in >> energy >> two_j >> pi >> num_gammas;
+    marley::Level& l = add_level( marley::Level(energy, two_j, pi) );
+    for ( int j = 0; j < num_gammas; ++j ) {
+      in >> energy >> ri >> level_f_idx;
+      l.add_gamma( energy, ri, levels_.at(level_f_idx).get() );
     }
-  }
-  catch ( const marley::Error& ) {
-    in.setstate( std::ios_base::failbit );
   }
 }
 

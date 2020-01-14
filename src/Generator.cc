@@ -20,10 +20,8 @@
 #include "marley/Error.hh"
 #include "marley/Generator.hh"
 #include "marley/Logger.hh"
-#include "marley/NuclearReaction.hh"
-#include "marley/GammaStrengthFunctionModel.hh"
-#include "marley/LevelDensityModel.hh"
-#include "marley/OpticalModel.hh"
+#include "marley/NucleusDecayer.hh"
+#include "marley/Reaction.hh"
 #include "marley/StructureDatabase.hh"
 #include "marley/marley_utils.hh"
 
@@ -71,10 +69,27 @@ void marley::Generator::print_logo() {
 }
 
 marley::Event marley::Generator::create_event() {
+
+  // (1) Select a reacting neutrino energy and reaction using the
+  // flux-weighted total cross section(s)
   double E_nu;
-  marley::Reaction& r = sample_reaction(E_nu);
-  marley::Event ev = r.create_event(source_->get_pid(), E_nu, *this);
-  if (need_to_rotate_events_) rotate_event(ev);
+  marley::Reaction& r = sample_reaction( E_nu );
+
+  // (2) Create the prompt two-two scattering event using the
+  // sampled reaction object
+  marley::Event ev = r.create_event( source_->get_pid(), E_nu, *this );
+
+  // (3) If needed, de-excite the final-state residue
+  marley::NucleusDecayer nd;
+  nd.process_event( ev, *this );
+
+  // (4) If the projectile is not traveling along the +z direction, then
+  // rotate the event to match the desired coordinate system
+  /// @todo Refactor the rotation code to use the EventProcessor interface
+  /// rather than handling it directly in the Generator class
+  if ( need_to_rotate_events_ ) rotate_event( ev );
+
+  // Return the completed event object
   return ev;
 }
 
@@ -529,4 +544,3 @@ double marley::Generator::flux_averaged_total_xs() const {
   }
   return avg_total_xs;
 }
-

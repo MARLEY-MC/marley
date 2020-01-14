@@ -11,7 +11,9 @@
 // visit http://opensource.org/licenses/GPL-3.0
 
 #pragma once
+#include <memory>
 #include <string>
+#include <vector>
 
 #include "marley/Event.hh"
 #include "marley/MassTable.hh"

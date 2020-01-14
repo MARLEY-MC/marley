@@ -38,14 +38,21 @@ marley::Parity& marley::Parity::operator=( const int& i ) {
   return *this;
 }
 
+void marley::Parity::from_char( const char c ) {
+  if ( c == '+' ) is_positive_ = true;
+  else if ( c == '-' ) is_positive_ = false;
+  else throw marley::Error( std::string("Invalid parity character \"") + c
+    + "\" encountered in marley::Parity::from_char()" );
+}
+
 std::istream& operator>>(std::istream& in, marley::Parity& p) {
+  // Read in the next non-whitespace character
   char c;
-  in >> c;
+  in >> std::ws >> c;
 
-  if (c == '+') p = marley::Parity(true);
-  else if (c == '-') p = marley::Parity(false);
-  else throw marley::Error( std::string("Invalid parity \"") + c + "\" assigned"
-    " via the >> operator to a variable of type marley::Parity" );
+  // If we suceeded in reading one, then convert it to a parity value
+  if ( in ) p.from_char( c );
 
+  // Either way, return the input stream
   return in;
 }

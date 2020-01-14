@@ -24,21 +24,22 @@
 using ME_Type = marley::MatrixElement::TransitionType;
 
 namespace {
-  // In cases where no discrete level data are available, a continuum level density
-  // is used all the way down to the ground state. To avoid asymptotically approaching
-  // Ex = 0 in these cases, the de-excitation cascade will end once the excitation energy of
-  // the residual nucleus falls below this (small) value. Excitation energies below this
-  // value are considered "close enough" to the ground state for MARLEY not to worry about
-  // further de-excitations.
+  // In cases where no discrete level data are available, a continuum level
+  // density is used all the way down to the ground state. To avoid
+  // asymptotically approaching Ex = 0 in these cases, the de-excitation cascade
+  // will end once the excitation energy of the residual nucleus falls below
+  // this (small) value. Excitation energies below this value are considered
+  // "close enough" to the ground state for MARLEY not to worry about further
+  // de-excitations.
   /// @todo Make this configurable?
   constexpr double CONTINUUM_GS_CUTOFF = 0.001; // MeV
 
-  /// @brief The size of a tolerable discrepancy (in MeV) between the excitation energy
-  /// stored in the event record and other (hopefully consistent) versions of it
+  // The size of a tolerable discrepancy (in MeV) between the excitation energy
+  // stored in the event record and other (hopefully consistent) versions of it
   constexpr double EX_TOLERANCE = 1e-5; // MeV
 }
 
-void marley::NucleusDecayer::deexcite_residue( marley::Event& event,
+void marley::NucleusDecayer::process_event( marley::Event& event,
   marley::Generator& gen )
 {
   // Get the residue excitation energy from the event. These values represent
