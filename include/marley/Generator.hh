@@ -191,6 +191,10 @@ namespace marley {
       /// what you are doing.
       void set_weight_flux(bool should_we_weight );
 
+      /// @brief Sets the value of the do_deexcitations flag.
+      /// @details This should almost always be true. Use only if you
+      /// know what you are doing.
+      inline void set_do_deexcitations( bool do_them );
 
       /// @brief Computes the flux-averaged total cross section for all
       /// enabled neutrino reactions
@@ -280,6 +284,12 @@ namespace marley {
       /// @brief Helper object that rotates events as needed to achieve
       /// the configured projectile direction
       marley::ProjectileDirectionRotator rotator_;
+
+      /// @brief Flag that controls whether de-excitations are applied
+      /// after two-two scatters are simulated
+      /// @details This should be set to true except under unusual
+      /// circumstances
+      bool do_deexcitations_ = true;
   };
 
   // Inline function definitions
@@ -290,4 +300,7 @@ namespace marley {
 
   inline const std::array<double, 3>& Generator::neutrino_direction()
     { return rotator_.projectile_direction(); }
+
+  inline void Generator::set_do_deexcitations( bool do_them )
+    { do_deexcitations_ = do_them; }
 }

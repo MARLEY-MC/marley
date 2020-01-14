@@ -72,8 +72,10 @@ marley::Event marley::Generator::create_event() {
   marley::Event ev = r.create_event( source_->get_pid(), E_nu, *this );
 
   // (3) If needed, de-excite the final-state residue
-  marley::NucleusDecayer nd;
-  nd.process_event( ev, *this );
+  if ( do_deexcitations_ ) {
+    marley::NucleusDecayer nd;
+    nd.process_event( ev, *this );
+  }
 
   // (4) If needed, rotate the event to match the desired projectile direction
   rotator_.process_event( ev, *this );
@@ -86,7 +88,7 @@ void marley::Generator::seed_using_state_string(
   const std::string& state_string)
 {
   // TODO: add error handling here (check that state_string is valid)
-  std::stringstream strstr(state_string);
+  std::stringstream strstr( state_string );
   strstr >> rand_gen_;
 }
 

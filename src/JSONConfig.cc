@@ -164,6 +164,16 @@ marley::Generator marley::JSONConfig::create_generator() const
   prepare_neutrino_source(gen);
   prepare_reactions(gen);
 
+  // If the user has disabled nuclear de-excitations, then set the
+  // flag appropriately.
+  if ( json_.has_key("do_deexcitations") ) {
+    const auto& do_deex = json_.at("do_deexcitations");
+    if ( do_deex.is_bool() ) {
+      bool deexcite_or_not = do_deex.to_bool();
+      gen.set_do_deexcitations( deexcite_or_not );
+    }
+  }
+
   // Skip the rest of initialization if we've disabled all reactions.
   // This can be used to partially initialize the Generator in unusual
   // situations.
