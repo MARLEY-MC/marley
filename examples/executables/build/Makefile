@@ -21,7 +21,7 @@ endif
 CXX = g++
 CXXFLAGS += -Wall -Wextra -Wpedantic -Wcast-align
 
-all: marprint martxs mardxs marjoin
+all: marprint mardumpxs mardxs marjoin
 debug: all
 
 MARLEY_LIBS := -L$(MARLEY_LIB) -lMARLEY
@@ -41,8 +41,8 @@ OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
 marprint: marprint.o
 	$(CXX) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) $(ROOT_LIBS) marprint.o
 
-martxs: martxs.o
-	$(CXX) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) $(ROOT_LIBS) martxs.o
+mardumpxs: mardumpxs.o
+	$(CXX) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) $(ROOT_LIBS) mardumpxs.o
 
 mardxs: mardxs.o
 	$(CXX) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) $(ROOT_LIBS) mardxs.o
@@ -53,4 +53,4 @@ marjoin: marjoin.o
 .PHONY: clean
 
 clean:
-	$(RM) *.o marprint martxs mardxs marjoin
+	$(RM) *.o marprint mardumpxs mardxs marjoin

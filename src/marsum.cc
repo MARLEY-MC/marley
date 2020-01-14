@@ -39,7 +39,7 @@ namespace {
 
 int main(int argc, char* argv[]) {
 
-  // If the user has not supplied any command-line arguments, display the
+  // If the user has not supplied enough command-line arguments, display the
   // standard help message and exit
   if (argc <= 2) {
     std::cout << "Usage: " << argv[0] << " OUTPUT_FILE INPUT_FILE...\n";
