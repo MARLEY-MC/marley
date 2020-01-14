@@ -205,7 +205,7 @@ marley::Event marley::ElectronReaction::create_event(int pdg_a, double KEa,
   // Sample a CM frame azimuthal scattering angle (phi) uniformly on [0, 2*pi).
   // We can do this because the differential cross section is independent of
   // the azimuthal angle.
-  double phi_c_cm = gen.uniform_random_double(0., 2.*marley_utils::pi, false);
+  double phi_c_cm = gen.uniform_random_double(0., marley_utils::two_pi, false);
 
   // Create and return the completed event object
   // Note: electrons have spin 1/2 and positive intrinsic parity

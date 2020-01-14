@@ -23,6 +23,7 @@
 #include "marley/LevelDensityModel.hh"
 #include "marley/OpticalModel.hh"
 #include "marley/Parity.hh"
+#include "marley/ProjectileDirectionRotator.hh"
 #include "marley/RotationMatrix.hh"
 #include "marley/StructureDatabase.hh"
 #include "marley/marley_utils.hh"
@@ -179,7 +180,7 @@ namespace marley {
       /// @note The dir_vec passed to this function does not need to be
       /// normalized, but it must have at least one nonzero element or a
       /// marley::Error will be thrown.
-      void set_neutrino_direction(const std::array<double, 3> dir_vec);
+      void set_neutrino_direction(const std::array<double, 3>& dir_vec);
 
       /// @brief Gets the direction of the incident neutrinos that is used when
       /// generating events
@@ -208,15 +209,6 @@ namespace marley {
       /// @brief Helper function that updates the normalization factor to
       /// use in E_pdf()
       void normalize_E_pdf();
-
-      /// @brief Rotates all Particle 3-vectors in a generated Event based
-      /// on the incident neutrino direction
-      /// @details All Reaction objects currently generate events assuming that
-      /// the incident neutrino travels in the +z direction in the lab frame.
-      /// The Generator then adjusts this (if needed) using a rotation matrix
-      /// just before the finished event is returned by create_event().
-      /// @param[in,out] ev Event whose Particle 3-vectors will be rotated
-      void rotate_event(marley::Event& ev);
 
       /// @brief Print the MARLEY logo (called once during construction of
       /// the first Generator object) to any active Logger streams
@@ -253,18 +245,6 @@ namespace marley {
       /// @brief Discrete distribution used for Reaction sampling
       std::discrete_distribution<size_t> r_index_dist_;
 
-      /// @brief Rotation matrix used to update events based on the current
-      /// incident neutrino direction
-      marley::RotationMatrix rotation_matrix_;
-
-      /// @brief Three-vector that points in the direction of the incident
-      /// neutrinos
-      std::array<double, 3> dir_vec_;
-
-      /// @brief Boolean value that indicates whether Event objects need
-      /// to be rotated (true) or not (false)
-      bool need_to_rotate_events_ = false;
-
       /// @brief Whether the generator should weight the incident
       /// neutrino spectrum by the reaction cross section(s)
       /// @details Don't change this unless you understand what you
@@ -296,6 +276,10 @@ namespace marley {
       /// normalization of E_pdf() during construction of a Generator
       /// object
       bool dont_normalize_E_pdf_ = false;
+
+      /// @brief Helper object that rotates events as needed to achieve
+      /// the configured projectile direction
+      marley::ProjectileDirectionRotator rotator_;
   };
 
   // Inline function definitions
@@ -305,5 +289,5 @@ namespace marley {
     Generator::get_reactions() const { return reactions_; }
 
   inline const std::array<double, 3>& Generator::neutrino_direction()
-    { return dir_vec_; }
+    { return rotator_.projectile_direction(); }
 }

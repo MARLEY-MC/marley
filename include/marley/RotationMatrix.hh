@@ -1,5 +1,21 @@
+/// @copyright Copyright (C) 2016-2020 Steven Gardiner
+/// @license GNU General Public License, version 3
+//
+// This file is part of MARLEY (Model of Argon Reaction Low Energy Yields)
+//
+// MARLEY is free software: you can redistribute it and/or modify it under the
+// terms of version 3 of the GNU General Public License as published by the
+// Free Software Foundation.
+//
+// For the full text of the license please see ${MARLEY}/LICENSE or
+// visit http://opensource.org/licenses/GPL-3.0
+
+#pragma once
+
+// Standard library includes
 #include <array>
 
+// MARLEY includes
 #include "marley/Particle.hh"
 
 namespace marley {
@@ -20,12 +36,11 @@ namespace marley {
       /// from_vec into the 3-vector to_vec
       RotationMatrix(const ThreeVector& from_vec, const ThreeVector& to_vec);
 
-      /// @brief Returns a copy of the 3-vector v normalized to have unit
-      /// magnitude
-      static ThreeVector normalize(const ThreeVector& v);
-
       /// @brief Create a rotated copy of the 3-vector v
       ThreeVector rotate_copy(const ThreeVector& v);
+
+      // Returns a copy of the 3-vector v normalized to have unit magnitude
+      static ThreeVector normalize(const ThreeVector& v);
 
       /// @brief Rotate a 3-vector v in place
       void rotate_inplace(ThreeVector& v);

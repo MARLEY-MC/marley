@@ -14,7 +14,6 @@
 #include <cmath>
 #include <limits>
 #include <string>
-#include <thread>
 
 #include "marley/ChebyshevInterpolatingFunction.hh"
 #include "marley/Error.hh"
@@ -25,22 +24,16 @@
 #include "marley/StructureDatabase.hh"
 #include "marley/marley_utils.hh"
 
-namespace {
-  constexpr std::array<double, 3>
-    DEFAULT_INCIDENT_NEUTRINO_DIRECTION = { 0., 0., 1.};
-}
-
 // The default constructor uses the system time as the seed and a
 // default-constructured monoenergetic neutrino source. No reactions are
 // defined, so the user must call add_reaction() at least once before using a
 // default-constructed Generator.
 marley::Generator::Generator()
-  : seed_(std::chrono::system_clock::now().time_since_epoch().count()),
+  : seed_( std::chrono::system_clock::now().time_since_epoch().count() ),
   source_(new marley::MonoNeutrinoSource),
-  structure_db_(new marley::StructureDatabase), dir_vec_{0., 0., 1}
+  structure_db_(new marley::StructureDatabase)
 {
   print_logo();
-
   reseed(seed_);
 }
 
@@ -48,17 +41,16 @@ marley::Generator::Generator()
 // a specific initial seed.
 marley::Generator::Generator(uint_fast64_t seed)
   : seed_(seed), source_(new marley::MonoNeutrinoSource),
-  structure_db_(new marley::StructureDatabase), dir_vec_{0., 0., 1.}
+  structure_db_(new marley::StructureDatabase)
 {
   print_logo();
-
   reseed(seed_);
 }
 
 // Print the MARLEY logo to the logger stream(s) if you haven't already.
 void marley::Generator::print_logo() {
   static bool printed_logo = false;
-  if (!printed_logo) {
+  if ( !printed_logo ) {
     MARLEY_LOG_INFO() << '\n' << marley_utils::marley_logo
       << "\nDon't worry about a thing,\n'Cause every little thing"
       << " gonna be all right.\n-- Bob, \"Three Little Birds\"\n\n"
@@ -83,11 +75,8 @@ marley::Event marley::Generator::create_event() {
   marley::NucleusDecayer nd;
   nd.process_event( ev, *this );
 
-  // (4) If the projectile is not traveling along the +z direction, then
-  // rotate the event to match the desired coordinate system
-  /// @todo Refactor the rotation code to use the EventProcessor interface
-  /// rather than handling it directly in the Generator class
-  if ( need_to_rotate_events_ ) rotate_event( ev );
+  // (4) If needed, rotate the event to match the desired projectile direction
+  rotator_.process_event( ev, *this );
 
   // Return the completed event object
   return ev;
@@ -417,52 +406,20 @@ marley::StructureDatabase& marley::Generator::get_structure_db() {
     + " structure_db_ == nullptr.");
 }
 
-void marley::Generator::rotate_event(marley::Event& ev) {
-
-  // Rotate the initial particles
-  for (auto* p : ev.get_initial_particles())
-    rotation_matrix_.rotate_particle_inplace(*p);
-
-  // Rotate the final particles
-  for (auto* p : ev.get_final_particles())
-    rotation_matrix_.rotate_particle_inplace(*p);
-}
-
 void marley::Generator::set_neutrino_direction(
-  const std::array<double, 3> dir_vec)
+  const std::array<double, 3>& dir_vec)
 {
+  rotator_.set_projectile_direction( dir_vec );
 
-  static constexpr std::array<double, 3> null_three_vector = { 0., 0., 0. };
-
-  if (dir_vec == null_three_vector)
-    throw marley::Error(std::string("Null vector")
-      + " passed to marley::Generator::set_neutrino_direction()");
-
-  // Get the new incident neutrino direction vector
-  dir_vec_ = marley::RotationMatrix::normalize(dir_vec);
+  const auto& normalized_dir_vec = rotator_.projectile_direction();
 
   // Print a log message announcing the change of direction
   std::string dir_msg("Incident neutrino direction: (");
-  for (size_t i = 0; i < 3; ++i) {
-    dir_msg += std::to_string(dir_vec_[i]);
-    if (i < 2) dir_msg += ", ";
+  for ( size_t i = 0; i < 3; ++i ) {
+    dir_msg += std::to_string( normalized_dir_vec[i] );
+    if ( i < 2 ) dir_msg += ", ";
   }
   MARLEY_LOG_INFO() << dir_msg << ')';
-
-  // Get the default incident neutrino direction
-  std::array<double, 3> nu_default_dir = marley::RotationMatrix::normalize(
-    DEFAULT_INCIDENT_NEUTRINO_DIRECTION);
-
-  // Update the rotation matrix and the event rotation flag as needed
-  if (dir_vec_ != nu_default_dir)
-  {
-    need_to_rotate_events_ = true;
-    rotation_matrix_ = marley::RotationMatrix(nu_default_dir, dir_vec_);
-  }
-  else {
-    need_to_rotate_events_ = false;
-    rotation_matrix_ = marley::RotationMatrix(); // identity matrix
-  }
 }
 
 void marley::Generator::set_weight_flux(bool should_we_weight) {
