@@ -1,3 +1,21 @@
+void load_marley_header( const std::string& header_file_name ) {
+
+  TInterpreter::EErrorCode* ec = new TInterpreter::EErrorCode();
+
+  std::string include_statement = "#include \"marley/"
+    + header_file_name + '\"';
+
+  gInterpreter->ProcessLine( include_statement.c_str(), ec );
+  if ( *ec != 0 ) {
+    std::cout << "Error loading MARLEY header " << header_file_name
+      << ". For MARLEY headers stored in /path/to/include/marley/,"
+      << " please add /path/to/include to your ROOT_INCLUDE_PATH"
+      << " environment variable and try again.\n";
+  }
+
+  delete ec;
+}
+
 void setup_marley() {
 
   int return_code = 0;
@@ -23,24 +41,9 @@ void setup_marley() {
   // Include the appropriate headers if we're using ROOT 6+.
   if (gROOT->GetVersionInt() >= 60000) {
     std::cout << "ROOT 6 or greater detected. Including MARLEY headers...\n";
-    TInterpreter::EErrorCode* ec = new TInterpreter::EErrorCode();
-    gInterpreter->ProcessLine("#include \"marley/Particle.hh\"", ec);
-    if (*ec != 0) std::cout << "Error loading"
-      << " MARLEY header Particle.hh. For MARLEY headers stored in"
-      << " /path/to/include/marley/, please add /path/to/include"
-      << " to your ROOT_INCLUDE_PATH environment variable and"
-      << " try again.\n";
-    gInterpreter->ProcessLine("#include \"marley/Event.hh\"", ec);
-    if (*ec != 0) std::cout << "Error loading"
-      << " MARLEY header Event.hh. For MARLEY headers stored in"
-      << " /path/to/include/marley/, please add /path/to/include"
-      << " to your ROOT_INCLUDE_PATH environment variable and"
-      << " try again.\n";
-    gInterpreter->ProcessLine("#include \"marley/MacroEventFileReader.hh\"", ec);
-    if (*ec != 0) std::cout << "Error loading"
-      << " MARLEY header MacroEventFileReader.hh. For MARLEY headers stored in"
-      << " /path/to/include/marley/, please add /path/to/include"
-      << " to your ROOT_INCLUDE_PATH environment variable and"
-      << " try again.\n";
+    load_marley_header( "Particle.hh" );
+    load_marley_header( "Event.hh" );
+    load_marley_header( "MacroEventFileReader.hh" );
+    load_marley_header( "Parity.hh" );
   }
 }

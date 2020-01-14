@@ -14,8 +14,14 @@ void print_event_info(const marley::Event& e, const size_t num) {
     << e.get_initial_particles().size()
     << " initial particles and " << e.get_final_particles().size()
     << " final particles. ***" << '\n';
+
+  int twoJ = e.twoJ();
+  int J = twoJ / 2;
   std::cout << "The residual nucleus initially had excitation energy "
-    << e.Ex() << " MeV." << '\n';
+    << e.Ex() << " MeV and spin-parity " << J;
+  if ( twoJ % 2 == 1 ) std::cout << "/2";
+  std::cout << e.parity() << '\n';
+
   std::cout << "Initial particles" << '\n';
   marley::Particle* p = NULL;
   for (size_t i = 0; i < e.get_initial_particles().size(); ++i) {

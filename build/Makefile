@@ -174,7 +174,8 @@ Please ensure that the gsl-config executable is on your PATH and try again.
         ROOT_LDFLAGS += -rdynamic
       endif
       ROOT_DICT_INCLUDES := -I$(INCLUDE_DIR) marley/Particle.hh \
-        marley/Event.hh marley/MacroEventFileReader.hh marley/marley_linkdef.hh
+        marley/Event.hh marley/MacroEventFileReader.hh marley/Parity.hh \
+        marley/marley_linkdef.hh
       USE_ROOT = yes
       ROOT_OBJ_DICT = marley_root_dict.o
 

@@ -15,8 +15,12 @@
 #pragma link C++ operators std::vector<marley::Particle>::const_iterator;
 #pragma link C++ operators std::vector<marley::Particle>::reverse_iterator;
 
+#pragma link C++ class marley::Parity+;
 #pragma link C++ class marley::Event+;
 #pragma link C++ class marley::MacroEventFileReader+;
+
+#pragma link C++ function operator<<(std::ostream&, const marley::Parity&);
+#pragma link C++ function operator>>(std::istream&, marley::Parity&);
 
 #pragma link C++ function operator<<(std::ostream&, const marley::Particle&);
 #pragma link C++ function operator>>(std::istream&, marley::Particle&);

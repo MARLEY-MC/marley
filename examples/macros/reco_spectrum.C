@@ -50,8 +50,6 @@ void reco_spectrum(const std::string& filename) {
 
     double KE = 0.;
 
-    marley::Particle* fp = NULL;
-
     size_t num_finals = ev.final_particle_count();
     for ( size_t f = 0; f < num_finals; ++f ) {
       const marley::Particle& fp = ev.final_particle( f );
