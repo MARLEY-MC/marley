@@ -30,15 +30,6 @@ using ME_Type = marley::MatrixElement::TransitionType;
 using ProcType = marley::Reaction::ProcessType;
 
 namespace {
-  // In cases where no discrete level data are available, a continuum level density
-  // is used all the way down to the ground state. To avoid asymptotically approaching
-  // Ex = 0 in these cases, the de-excitation cascade will end once the excitation energy of
-  // the residual nucleus falls below this (small) value. Excitation energies below this
-  // value are considered "close enough" to the ground state for MARLEY not to worry about
-  // further de-excitations.
-  /// @todo Make this configurable?
-  constexpr double CONTINUUM_GS_CUTOFF = 0.001; // MeV
-
   constexpr int BOGUS_TWO_J_VALUE = -99999;
 }
 
@@ -230,10 +221,6 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 
   const auto& sampled_matrix_el = matrix_elements_->at( me_index );
 
-  // Get a pointer to the selected level (this will be nullptr
-  // if the transition is to the unbound continuum)
-  const marley::Level* plevel = sampled_matrix_el.level();
-
   // Get the energy of the selected level.
   double E_level = sampled_matrix_el.level_energy();
 
@@ -285,7 +272,7 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 
   // Apply a de-excitation cascade as needed to the nuclear residue
   marley::NucleusDecayer nd;
-  nd.deexcite_residue( event, sampled_matrix_el, gen );
+  nd.deexcite_residue( event, gen );
 
   // Return the completed event object
   return event;

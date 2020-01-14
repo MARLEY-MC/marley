@@ -87,11 +87,8 @@ namespace {
 
     // Use the smallest nuclear fragment emission threshold to check for
     // unbound levels.
-    int Ad = marley_utils::get_particle_A( pdg_d );
-    int Zd = marley_utils::get_particle_Z( pdg_d );
-
     const auto& mt = marley::MassTable::Instance();
-    double unbound_threshold = mt.unbound_threshold( Zd, Ad );
+    double unbound_threshold = mt.unbound_threshold( pdg_d );
 
     // Cycle through each of the level energies given in the reaction dataset.
     for ( auto& mat_el : matrix_elements ) {

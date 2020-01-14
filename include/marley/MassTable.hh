@@ -125,8 +125,13 @@ namespace marley {
       /// emitted
       /// @param Zi Proton number of the initial nucleus
       /// @param Ai Mass number of the initial nucleus
-      /// @param f Fragment to be emitted
       double unbound_threshold(const int Zi, const int Ai) const;
+
+      /// @brief Computes the lowest excitation energy at which one of the
+      /// nuclear fragments considered by the HauserFeshbachDecay class may be
+      /// emitted
+      /// @param initial_nucleus_pdg PDG code of the initial nucleus
+      double unbound_threshold(const int initial_nucleus_pdg) const;
 
     protected:
 

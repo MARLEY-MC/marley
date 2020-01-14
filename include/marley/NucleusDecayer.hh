@@ -25,11 +25,7 @@ namespace marley {
 
       inline NucleusDecayer() {}
 
-      void deexcite_residue( marley::Event& event, const marley::Level* plevel,
-        int twoJ, marley::Parity P, marley::Generator& gen );
-
-      void deexcite_residue( marley::Event& event,
-        const marley::MatrixElement& matrix_el, marley::Generator& gen );
+      void deexcite_residue( marley::Event& event, marley::Generator& gen );
   };
 
 }

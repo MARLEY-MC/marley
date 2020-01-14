@@ -280,6 +280,13 @@ double marley::MassTable::unbound_threshold(const int Zi, const int Ai) const
   return unbound_threshold;
 }
 
+double marley::MassTable::unbound_threshold(const int initial_nucleus_pdg) const
+{
+  int Zi = marley_utils::get_particle_Z( initial_nucleus_pdg );
+  int Ai = marley_utils::get_particle_A( initial_nucleus_pdg );
+  return this->unbound_threshold( Zi, Ai );
+}
+
 void marley::MassTable::assign_masses(const marley::JSON& obj_array,
   const std::string& array_key, std::unordered_map<int, double>& map_to_use)
 {

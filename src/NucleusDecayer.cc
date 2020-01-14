@@ -19,6 +19,7 @@
 #include "marley/Logger.hh"
 #include "marley/MatrixElement.hh"
 #include "marley/NucleusDecayer.hh"
+#include "marley/Parity.hh"
 
 using ME_Type = marley::MatrixElement::TransitionType;
 
@@ -38,13 +39,13 @@ namespace {
 }
 
 void marley::NucleusDecayer::deexcite_residue( marley::Event& event,
-  const marley::Level* plevel, int twoJ, marley::Parity P,
   marley::Generator& gen )
 {
-  // Get the excitation energy from the event. If the discrete level
-  // pointer is not null, check that its excitation energy is consistent
-  // with the one stored in the event record.
+  // Get the residue excitation energy from the event. These values represent
+  // its state immediately following the initial two-two scattering reaction.
   double Ex = event.Ex();
+  int twoJ = event.twoJ();
+  marley::Parity P = event.parity();
 
   // If the initial two-two scatter left the residue in its ground state,
   // there's nothing for us to do. Just return without comment.
@@ -59,22 +60,22 @@ void marley::NucleusDecayer::deexcite_residue( marley::Event& event,
   // check that the residue mass is consistent with the excitation energy
   // stored in the event record (and thus was never decayed).
   const auto& mt = marley::MassTable::Instance();
-  int residue_pdg = event.residue().pdg_code();
+  int initial_residue_pdg = event.residue().pdg_code();
   int qIon = event.residue().charge();
 
   // Check that the residue PDG code makes sense. If it's not a nucleus,
   // warn the user and refuse to do the cascade.
-  if ( !marley_utils::is_ion(residue_pdg) ) {
-    MARLEY_LOG_WARNING() << "Unrecognized nuclear PDG code " << residue_pdg
-      << " encountered in marley::NucleusDecayer::deexcite_residue(). The"
-      << " de-excitation cascade will be skipped";
+  if ( !marley_utils::is_ion(initial_residue_pdg) ) {
+    MARLEY_LOG_WARNING() << "Unrecognized nuclear PDG code "
+      << initial_residue_pdg << " encountered in marley::NucleusDecayer::"
+      << "deexcite_residue(). The de-excitation cascade will be skipped";
     return;
   }
 
   double residue_mass = event.residue().mass();
 
   // Ground-state residue mass
-  double gs_residue_mass = mt.get_atomic_mass( residue_pdg )
+  double gs_residue_mass = mt.get_atomic_mass( initial_residue_pdg )
     - qIon*mt.get_particle_mass( marley_utils::ELECTRON );
 
   double expected_residue_mass = gs_residue_mass + Ex;
@@ -91,42 +92,41 @@ void marley::NucleusDecayer::deexcite_residue( marley::Event& event,
     // If we get here, then the residue is not in its ground state but also
     // not in the initial excited state given in the event record. Something
     // went wrong with a partial application of a de-excitation cascade.
-    // Throw an error rather than trying to figure out how to do the right thing.
+    // Throw an error rather than trying to figure out how to do the right
+    // thing.
     /// @todo Revisit this
     throw marley::Error("Partially de-excited nuclear remnant encountered"
         " in marley::NucleusDecay::deexcite_residue().");
   }
 
-  // If we've accessed a discrete nuclear level, make sure that its excitation
-  // energy matches that in the event record. If it doesn't, complain by
-  // throwing an error.
-  if ( plevel ) {
-    double Ex_level = plevel->energy();
-    if ( std::abs(Ex - Ex_level) > EX_TOLERANCE ) throw marley::Error(
-      "Excitation energy mismatch encountered in marley::NucleusDecayer::"
-      "deexcite_residue(). Event has Ex = " + std::to_string(Ex) + " MeV"
-      " while the initial discrete level has " + std::to_string(Ex_level)
-      + " MeV");
-  }
+  // Decide whether we need to start the de-excitation cascade from a discrete
+  // nuclear level or from the continuum. Do this by comparing the excitation
+  // energy from the event record to the "unbound threshold" for the residue.
+  // If we're above the unbound threshold, do a continuum decay. Also start
+  // with a continuum decay if no discrete level data are available for the
+  // residue.
+  auto* ds = gen.get_structure_db().get_decay_scheme( initial_residue_pdg );
+  double unbound_threshold = mt.unbound_threshold( initial_residue_pdg );
 
-  // We've passed all the checks. Now decide whether we need to start out
-  // with a continuum or discrete decay.
-  bool continuum = ( plevel == nullptr );
+  // If Reaction::set_level_ptrs() changes, you'll want to change this too.
+  // TODO: find a better way of keeping the two pieces of code in sync
+  bool continuum = ( Ex > unbound_threshold ) || ( !ds );
 
-  int initial_nucleus_pdg = event.residue().pdg_code();
-  int Z = marley_utils::get_particle_Z( initial_nucleus_pdg );
-  int A = marley_utils::get_particle_A( initial_nucleus_pdg );
+  // Keep track of whether the cascade was started from the continuum
+  // or not. If it was started from a discrete level, we'll double-check that
+  // discrete level's excitation energy below.
+  bool started_from_continuum = continuum;
+
+  // Get a non-const reference to the nuclear residue. We'll use it to
+  // update the event record during each step of the Hauser-Feshbach
+  // cascade.
+  marley::Particle& residue = event.residue();
 
   if ( continuum ) {
 
     // Dummy particles used for temporary storage of binary decay products
     // during the de-excitation cascade
     marley::Particle first, second;
-
-    // Get a non-const reference to the nuclear residue. We'll use it to
-    // update the event record during each step of the Hauser-Feshbach
-    // cascade.
-    marley::Particle& residue = event.residue();
 
     // The selected level is unbound, so handle its de-excitation using
     // the Hauser-Feshbach statistical model.
@@ -143,8 +143,6 @@ void marley::NucleusDecayer::deexcite_residue( marley::Event& event,
         << Ex << " MeV.";
 
       residue = second;
-      Z = marley_utils::get_particle_Z( residue.pdg_code() );
-      A = marley_utils::get_particle_A( residue.pdg_code() );
       event.add_final_particle( first );
     }
   }
@@ -155,27 +153,31 @@ void marley::NucleusDecayer::deexcite_residue( marley::Event& event,
     // bound level in the residual nucleus. In either case, use gamma-ray decay
     // scheme data to sample the de-excitation gammas and add them to this
     // event's final particle list.
-    marley::DecayScheme* dec_scheme
-      = gen.get_structure_db().get_decay_scheme( Z, A );
-    dec_scheme->do_cascade( *dec_scheme->get_pointer_to_closest_level(Ex),
-      event, gen, event.residue().charge() );
+    marley::DecayScheme* dec_scheme = gen.get_structure_db()
+      .get_decay_scheme( residue.pdg_code() );
+
+    // Start the gamma cascade from this discrete level
+    marley::Level* lev = dec_scheme->get_pointer_to_closest_level( Ex );
+
+    // If we get a null level pointer from the decay scheme, complain
+    if ( !lev ) throw marley::Error("Null nuclear level pointer encountered"
+      " in marley::NucleusDecayer::deexcite_residue()");
+
+    // If we did not simulate any continuum decays before getting to this
+    // point, then double-check that the excitation energy from the event
+    // record and the initial level are consistent. If they're not, complain
+    // by throwing an error.
+    if ( !started_from_continuum ) {
+      double Ex_level = lev->energy();
+      if ( std::abs(Ex - Ex_level) > EX_TOLERANCE ) {
+        throw marley::Error("Excitation energy mismatch encountered in"
+          " marley::NucleusDecayer::deexcite_residue(). Event has Ex = "
+          + std::to_string(Ex) + " MeV while the initial discrete level has "
+          + std::to_string(Ex_level) + " MeV");
+      }
+    }
+
+    dec_scheme->do_cascade( *lev, event, gen, residue.charge() );
   }
 
-}
-
-void marley::NucleusDecayer::deexcite_residue( marley::Event& event,
-  const marley::MatrixElement& matrix_el, marley::Generator& gen )
-{
-  // Get a pointer to the selected starting nuclear level
-  // (will be nullptr if we're in the continuum)
-  const marley::Level* plevel = matrix_el.level();
-
-  bool continuum = ( plevel == nullptr );
-
-  int twoJ = event.twoJ();
-  marley::Parity P = event.parity();
-
-  // We now have all the information we need to start the cascade, so do it by
-  // delegating to an overloaded version of this function.
-  this->deexcite_residue( event, plevel, twoJ, P, gen );
 }
