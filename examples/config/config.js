@@ -63,16 +63,16 @@
   //   - ve40ArCC_Bhattacharya1998.react
   //   - ve40ArCC_Liu1998.react
   //
-  // See each of these files for details about their respective nuclear
-  // matrix element evaluations.
+  // See each of these files (in data/react/)for details about their respective
+  // nuclear matrix element evaluations.
   //
   // The full path to one these data files does not need to be given in the
   // "reactions" JSON array. After searching in the working directory,
   // MARLEY's default behavior is to search for input data files in
   // the directories ${MARLEY}/data, ${MARLEY}/data/react/,
   // and ${MARLEY}/data/structure/, where ${MARLEY} is the value of the
-  // MARLEY environment variable (typically set by the setup_marley.sh shell
-  // script). The list of search directories beyond the working directory
+  // MARLEY environment variable (typically set by sourcing the setup_marley.sh
+  // bash script). The list of search directories beyond the working directory
   // can be changed from the default by setting the MARLEY_SEARCH_PATH
   // environment variable to a ':'-separated list of directories.
   //
@@ -103,8 +103,7 @@
   //                                          "fermi_dirac"
   //
   //
-  //   Pinched Fermi-Dirac spectrum           "bf", "beta", "beta-fit"
-  //   with pinching parameter beta
+  //   "Beta-fit" spectrum                    "bf", "beta", "beta-fit"
   //   (see, e.g.,
   //   http://arxiv.org/abs/1511.00806)
   //
@@ -241,12 +240,12 @@
   // In this example configuration file, we've chosen a Fermi-Dirac source.
   //
   source: {
-   type: "fermi-dirac",
-   neutrino: "ve",       // The source produces electron neutrinos
-   Emin: 0,              // Minimum neutrino energy (MeV)
-   Emax: 60,             // Maximum neutrino energy (MeV)
-   temperature: 3.5,     // Temperature (MeV)
-   eta: 0                // Pinching parameter (dimensionless, default 0)
+    type: "fermi-dirac",
+    neutrino: "ve",       // The source produces electron neutrinos
+    Emin: 0,              // Minimum neutrino energy (MeV)
+    Emax: 60,             // Maximum neutrino energy (MeV)
+    temperature: 3.5,     // Temperature (MeV)
+    eta: 0                // Pinching parameter (dimensionless, default 0)
   },
 
   // INCIDENT NEUTRINO DIRECTION (optional)

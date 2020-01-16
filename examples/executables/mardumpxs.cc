@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
   // If the user has not supplied enough command-line arguments, display the
   // standard help message and exit
   if (argc <= 2) {
-    std::cout << "Usage: " << argv[0] << " OUTPUT_FILE CONFIG_FILE...\n";
+    std::cout << "Usage: " << argv[0] << " OUTPUT_FILE CONFIG_FILE\n";
     return 1;
   }
 
