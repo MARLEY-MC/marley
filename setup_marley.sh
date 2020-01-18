@@ -10,18 +10,18 @@ THIS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export MARLEY=${THIS_DIRECTORY}
 
 # For running MARLEY
-export PATH=$PATH:${THIS_DIRECTORY}/build
+export PATH=${PATH}:${THIS_DIRECTORY}/build
 
-if [ "$(uname)" == "Darwin" ]; then
+if [ "$(uname)" = "Darwin" ]; then
   # Mac OS X platform
   export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:${THIS_DIRECTORY}/build
-elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-  # GNU/Linux platform
+else
+  # Assume a GNU/Linux platform
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${THIS_DIRECTORY}/build
 fi
 
 # For using MARLEY classes in ROOT 6
-export ROOT_INCLUDE_PATH=${THIS_DIRECTORY}/include
+export ROOT_INCLUDE_PATH=${ROOT_INCLUDE_PATH}:${THIS_DIRECTORY}/include
 
 # For building external software against MARLEY
 export CPLUS_INCLUDE_PATH=${CPLUS_INCLUDE_PATH}:${THIS_DIRECTORY}/include
