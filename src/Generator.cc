@@ -7,7 +7,7 @@
 // terms of version 3 of the GNU General Public License as published by the
 // Free Software Foundation.
 //
-// For the full text of the license please see ${MARLEY}/LICENSE or
+// For the full text of the license please see ${MARLEY}/COPYING or
 // visit http://opensource.org/licenses/GPL-3.0
 
 #include <chrono>
@@ -338,7 +338,7 @@ marley::Reaction& marley::Generator::sample_reaction(double& E) {
   }
 
   // The total cross section values have already been updated by the final call
-  // to E_pdg during rejection sampling, so we can now sample a reaction type
+  // to E_pdf() during rejection sampling, so we can now sample a reaction type
   // using our discrete distribution object.
   std::discrete_distribution<size_t>::param_type
     params(total_xs_values_.begin(), total_xs_values_.end());
