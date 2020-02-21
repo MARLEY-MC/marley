@@ -27,7 +27,7 @@ ifneq (,$(wildcard ../VERSION))
   MARLEY_VERSION := $(shell cat ../VERSION)
 
   # Define a link to a tarball on GitHub for the current tagged release
-  TARBALL_LINK = "<a href=\"https://github.com/sjgardiner/marley/$\
+  TARBALL_LINK = "<a href=\"https://github.com/MARLEY-MC/marley/$\
     archive/v$(MARLEY_VERSION).tar.gz\">here</a> or"
 
   VERSION_PREFIX="v"

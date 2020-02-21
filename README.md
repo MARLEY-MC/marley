@@ -141,7 +141,7 @@ a few other helpful environment variables.
 * **Steven Gardiner** - [sjgardiner](https://github.com/sjgardiner)
 
 See also the list of
-[contributors](https://github.com/sjgardiner/marley/contributors) who
+[contributors](https://github.com/MARLEY-MC/marley/contributors) who
 participated in this project.
 
 ## Website

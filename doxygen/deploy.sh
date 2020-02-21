@@ -24,7 +24,7 @@ git init
 git config user.name "Steven Gardiner"
 git config user.email "gardiner@fnal.gov"
 
-git remote add upstream "https://$GH_TOKEN@github.com/sjgardiner/marley.git"
+git remote add upstream "https://$GH_TOKEN@github.com/MARLEY-MC/marley.git"
 git fetch upstream
 git reset upstream/gh-pages
 
