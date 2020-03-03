@@ -82,6 +82,8 @@ void marley::FragmentContinuumExitChannel::sample_spin_parity(int& twoJ,
   marley::Parity& Pi, marley::Generator& gen, double Exf,
   double total_KE_CM_frame) const
 {
+  // TODO: reduce code duplication between this function and
+  // HauserFeshbachDecay::fragment_continuum_partial_width()
   MARLEY_LOG_DEBUG() << "Sampling spin-parity for fragment emission to the"
     << " continuum";
 
@@ -208,6 +210,8 @@ void marley::GammaContinuumExitChannel::sample_spin_parity(int Z, int A,
   int& twoJ, marley::Parity& Pi, double Exi, double Exf, marley::Generator& gen)
   const
 {
+  // TODO: reduce code duplication between this function and
+  // HauserFeshbachDecay::gamma_continuum_partial_width()
   using TrType = marley::GammaStrengthFunctionModel::TransitionType;
 
   // Clear any previous table entries of spin-parities and decay widths

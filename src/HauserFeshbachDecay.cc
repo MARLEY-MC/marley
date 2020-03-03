@@ -407,7 +407,7 @@ double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
       {
         continuum_width += om.transmission_coefficient(total_KE_CM_frame,
           frag.get_pid(), two_j, l, two_s)
-          * ldm.level_density(Exf, twoJf);
+          * ldm.level_density(Exf, twoJf, Pf);
           // TODO: since only the spin distribution changes in the twoJf loop,
           // you can optimize this by precomputing most of the level density
           // and the multiplying here by the appropriate spin distribution
