@@ -14,9 +14,9 @@
 #include "marley/Error.hh"
 #include "marley/Fragment.hh"
 #include "marley/FileManager.hh"
-#include "marley/HauserFeshbachDecay.hh"
 #include "marley/JSON.hh"
 #include "marley/MassTable.hh"
+#include "marley/StructureDatabase.hh"
 #include "marley/marley_utils.hh"
 
 // Initialize the static data file name
@@ -190,6 +190,14 @@ double marley::MassTable::get_atomic_mass(int Z, int A, bool theory_ok) const {
   return mass;
 }
 
+double marley::MassTable::get_fragment_separation_energy(int nuc_pdg,
+  int frag_pdg, bool theory_ok) const
+{
+  int Zi = marley_utils::get_particle_Z( nuc_pdg );
+  int Ai = marley_utils::get_particle_A( nuc_pdg );
+  return this->get_fragment_separation_energy( Zi, Ai, frag_pdg, theory_ok );
+}
+
 double marley::MassTable::get_fragment_separation_energy(int Z, int A, int pid,
   bool theory_ok) const
 {
@@ -259,7 +267,7 @@ double marley::MassTable::fragment_emission_threshold(const int Zi,
 
 // Returns the smallest nuclear fragment emission threshold (separation energy)
 // for a particular initial nucleus. All nuclear fragments recognized by the
-// HauserFeshbach decay class are considered.
+// StructureDatabase class are considered.
 double marley::MassTable::unbound_threshold(const int Zi, const int Ai) const
 {
   // Before looking up the separation energies, start by setting the unbound
@@ -269,8 +277,9 @@ double marley::MassTable::unbound_threshold(const int Zi, const int Ai) const
 
   // Loop over each available nuclear fragment. If it has a smaller separation
   // energy than the current value of unbound_threshold, update the stored value
-  for ( const auto& f : marley::HauserFeshbachDecay::get_fragments() ) {
-    double thresh = this->fragment_emission_threshold(Zi, Ai, f);
+  for ( const auto& pair : marley::StructureDatabase::fragments() ) {
+    const marley::Fragment& f = pair.second;
+    double thresh = this->fragment_emission_threshold( Zi, Ai, f );
     MARLEY_LOG_DEBUG() << f.get_pid() << " emission threshold = "
       << thresh << '\n';
     if ( thresh < unbound_threshold ) unbound_threshold = thresh;

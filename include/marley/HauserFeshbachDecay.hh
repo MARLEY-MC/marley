@@ -55,10 +55,6 @@ namespace marley {
       bool do_decay(double& Exf, int& twoJf, marley::Parity& Pf,
         marley::Particle& emitted_particle, marley::Particle& residual_nucleus);
 
-      /// @brief Get a const reference to the table of Fragment objects
-      /// that will be considered when simulating compound nucleus decays
-      inline static const std::vector<marley::Fragment>& get_fragments();
-
       /// @brief Maximum value of the orbital angular momentum to use when
       /// considering compound nucleus decays to the continuum of nuclear
       /// levels
@@ -127,19 +123,11 @@ namespace marley {
       /// is omitted for speed)
       double total_width_ = 0.;
 
-      /// @brief Table of nuclear fragments that will be considered when
-      /// computing branching ratios for nuclear de-excitations
-      /// @hideinitializer
-      static const std::vector<marley::Fragment> fragments_;
-
       /// @brief Table of exit channels used for sampling decays
       std::vector<std::unique_ptr<marley::ExitChannel> > exit_channels_;
   };
 
   // Inline function definitions
-  inline const std::vector<marley::Fragment>&
-    HauserFeshbachDecay::get_fragments() { return fragments_; }
-
   inline std::vector<std::unique_ptr<marley::ExitChannel> >&
     HauserFeshbachDecay::exit_channels() { return exit_channels_; }
 

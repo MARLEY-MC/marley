@@ -19,46 +19,6 @@
 #include "marley/MassTable.hh"
 #include "marley/HauserFeshbachDecay.hh"
 
-using TrType = marley::GammaStrengthFunctionModel::TransitionType;
-
-namespace {
-
-  // Helper function for
-  // marley::HauserFeshbachDecay::gamma_continuum_partial_width(). It doesn't
-  // really need access to any class members to do its job, so we've hidden it
-  // in an anonymous namespace rather than including it as a private member.
-  double gamma_cpw_helper(marley::LevelDensityModel& ldm,
-    marley::GammaStrengthFunctionModel& gsfm, marley::Parity Pi, int mpol,
-    double e_gamma, double Exf, int twoJf)
-  {
-    double tcE = gsfm.transmission_coefficient(TrType::electric, mpol, e_gamma);
-    double tcM = gsfm.transmission_coefficient(TrType::magnetic, mpol, e_gamma);
-
-    // Final parity for the electric transition will match
-    // the initial parity for even multipolarities
-    auto PfE = Pi;
-    bool mpol_is_odd = mpol % 2;
-    if (mpol_is_odd) !PfE;
-
-    double rhoE = ldm.level_density(Exf, twoJf, PfE);
-    // The magnetic transition corresponds to the opposite parity
-    double rhoM = ldm.level_density(Exf, twoJf, -PfE);
-    return (tcE * rhoE) + (tcM * rhoM);
-  }
-}
-
-// Table of nuclear fragments that will be considered when computing
-// branching ratios for nuclear de-excitations. Spin-parity values are taken
-// from nuclear ground states listed in the 10/2014 release of ENSDF.
-const std::vector<marley::Fragment> marley::HauserFeshbachDecay::fragments_ = {
-  marley::Fragment(marley_utils::NEUTRON, 1, marley::Parity(1)),
-  marley::Fragment(marley_utils::PROTON, 1, marley::Parity(1)),
-  marley::Fragment(marley_utils::DEUTERON, 2, marley::Parity(1)),
-  marley::Fragment(marley_utils::TRITON, 1, marley::Parity(1)),
-  marley::Fragment(marley_utils::HELION, 1, marley::Parity(1)),
-  marley::Fragment(marley_utils::ALPHA, 0, marley::Parity(1)),
-};
-
 marley::HauserFeshbachDecay::HauserFeshbachDecay(const marley::Particle&
   compound_nucleus, double Exi, int twoJi, marley::Parity Pi,
   marley::Generator& gen) : compound_nucleus_(compound_nucleus), Exi_(Exi),
@@ -72,31 +32,25 @@ void marley::HauserFeshbachDecay::build_exit_channels()
   // Remove any pre-existing ExitChannel objects, just in case
   exit_channels_.clear();
 
-  const marley::MassTable& mt = marley::MassTable::Instance();
-
-  static const double me = mt.get_particle_mass(marley_utils::ELECTRON);
-
-  int pid_initial = compound_nucleus_.pdg_code();
-  int Zi = marley_utils::get_particle_Z(pid_initial);
-  int Ai = marley_utils::get_particle_A(pid_initial);
+  int pdgi = compound_nucleus_.pdg_code();
+  int Zi = marley_utils::get_particle_Z( pdgi );
+  int Ai = marley_utils::get_particle_A( pdgi );
   int qi = compound_nucleus_.charge(); // Get net charge of initial ion
-  double Mi = compound_nucleus_.mass(); // initial mass
-  double Migs = Mi - Exi_; // initial ground-state mass
 
-  // Get the overall normalization factor for the exit channel
-  // partial widths. This isn't strictly needed for MC sampling,
-  // but it's helpful to work with physically meaningful units
-  // when possible.
-  marley::LevelDensityModel& ldm
-    = gen_.get_structure_db().get_level_density_model(Zi, Ai);
-  double two_pi_rho = marley_utils::two_pi
-    * ldm.level_density(Exi_, twoJi_, Pi_);
+  // Get the initial nuclear level density (MeV^{-1}) in the vicinity of the
+  // initial nuclear level. This will be used to apply an overall normalization
+  // factor when computing exit channel decay widths. This isn't strictly
+  // needed for MC sampling, but it's helpful to work with physically
+  // meaningful units when possible.
+  auto& db = gen_.get_structure_db();
+  marley::LevelDensityModel& ldm = db.get_level_density_model( Zi, Ai );
+  double rho_i = ldm.level_density(Exi_, twoJi_, Pi_);
 
   total_width_ = 0.; // total compound nucleus decay width
 
-  marley::StructureDatabase& db = gen_.get_structure_db();
+  for ( const auto& pair : db.fragments() ) {
 
-  for (const auto& f : fragments_) {
+    const marley::Fragment& f = pair.second;
 
     // Get information about the current fragment
     int two_s = f.get_two_s(); // spin
@@ -113,10 +67,8 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     // Approximate the ground state mass of the ion formed when the fragment f
     // is emitted by adding (Za - qi) electron masses to the atomic mass for
     // the final nucleus.
-    double Mfgs_ion = mt.get_atomic_mass(pid_final) + (Za - qi)*me;
-
-    // Get fragment separation energy without a redundant mass table lookup
-    double Sa = Mfgs_ion + Ma - Migs;
+    const auto& mt = marley::MassTable::Instance();
+    double Sa = mt.get_fragment_separation_energy( Zi, Ai, fragment_pid );
 
     // Get discrete level data (if any) and models for the final nucleus
     marley::DecayScheme* ds = db.get_decay_scheme(pid_final);
@@ -131,7 +83,7 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     // Check if emission of this fragment is energetically allowed. If we're
     // exactly at threshold, still refuse to emit the fragment to avoid
     // numerical problems.
-    if (Exf_max <= 0.) continue;
+    if ( Exf_max <= 0. ) continue;
 
     // Let the continuum go down to 0 MeV unless there is a decay scheme object
     // available for the final nuclide (we'll check this in a second).
@@ -158,43 +110,15 @@ void marley::HauserFeshbachDecay::build_exit_channels()
       // coefficient and add it to the total.
       for (const auto& level : levels) {
         double Exf = level->energy();
-        if (Exf < Exf_max) {
-          double discrete_width = 0.;
-          double total_KE_CM_frame = Exf_max - Exf;
-          int twoJf = level->twoJ();
-          marley::Parity Pf = level->parity();
-          for (int two_j = std::abs(twoJi_ - twoJf); two_j <= twoJi_ + twoJf;
-            two_j += 2)
-          {
-            int j_plus_s = (two_j + two_s) / 2;
-            // TODO: consider adding a check that l does not exceed its maximum
-            // value l_max that is also used as a cutoff for transmission
-            // coefficient calculations in the continuum.
-            // For each new iteration, increment l and flip the overall final
-            // state parity
-            int l = std::abs(two_j - two_s) / 2;
-            bool l_is_odd = l % 2;
-            marley::Parity P_final_state = Pf * Pa * marley::Parity(!l_is_odd);
-            for (; l <= j_plus_s; ++l, !P_final_state)
-            {
-              // Add to the total transmission coefficient if parity is
-              // conserved
-              if (Pi_ == P_final_state) discrete_width
-                += om.transmission_coefficient(total_KE_CM_frame, fragment_pid, two_j, l,
-                two_s);
-            }
-          }
-
-          // Apply the normalization factor to get a width in MeV
-          discrete_width /= two_pi_rho;
+        if (Exf < Exf_max)  {
 
           // Store information for this decay channel
-	  exit_channels_.push_back(
-            std::make_unique<marley::FragmentDiscreteExitChannel>(
-            discrete_width, *level, marley::Particle(pid_final, Mfgs_ion + Exf,
-            qi - f.get_Z()), f));
+	  auto ec = std::make_unique<marley::FragmentDiscreteExitChannel>(
+            pdgi, qi, Exi_, twoJi_, Pi_, rho_i, db, *level, f );
 
-          total_width_ += discrete_width;
+          total_width_ += ec->width();
+
+          exit_channels_.push_back( std::move(ec) );
         }
         else break;
       }
@@ -202,59 +126,27 @@ void marley::HauserFeshbachDecay::build_exit_channels()
 
     // If transitions to the energy continuum are possible, include the
     // continuum in the decay channels
-    if (Exf_max > E_c_min) {
+    if ( Exf_max > E_c_min ) {
 
-      marley::LevelDensityModel& ldm = db.get_level_density_model(Zf, Af);
+      // Create an ExitChannel object to handle decays to the continuum
+      auto ec = std::make_unique<marley::FragmentContinuumExitChannel>(
+        pdgi, qi, Exi_, twoJi_, Pi_, rho_i, db, E_c_min, f );
 
-      // Create a function object for the continuum partial width member
-      // function that takes a single argument.
-      std::function<double(double)> cpw = [=, &om, &ldm](double Exf) -> double {
-        double total_KE_CM_frame = Exf_max - Exf;
-        return fragment_continuum_partial_width(om, ldm, f, total_KE_CM_frame,
-          Exf);
-      };
+      total_width_ += ec->width();
 
-      // Numerically integrate using the call wrapper, the integration bounds,
-      // and the number of subintervals
-      double continuum_width = marley_utils::num_integrate(cpw, E_c_min,
-        Exf_max);
-
-      // Create a normalized probability density function to use for sampling a
-      // final excitation energy from the continuum for this exit channel.
-      std::function<double(double&, double)> pdf
-        = [=, &f, &om, &ldm](double& total_KE_CM_frame, double Exf) -> double {
-        total_KE_CM_frame = Exf_max - Exf;
-        return fragment_continuum_partial_width(om, ldm, f, total_KE_CM_frame,
-          Exf) / continuum_width;
-      };
-
-      // Apply the normalization factor to get a width in MeV. We do this after
-      // making the PDF since the function fragment_continuum_partial_width()
-      // doesn't include this overall factor
-      continuum_width /= two_pi_rho;
-
-      // Store information for this decay channel
-      exit_channels_.push_back(
-        std::make_unique<marley::FragmentContinuumExitChannel>(continuum_width,
-        E_c_min, Exf_max, pdf, f, marley::Particle(pid_final, Mfgs_ion,
-        qi - f.get_Z())));
-
-      total_width_ += continuum_width;
+      exit_channels_.push_back( std::move(ec) );
     }
   }
 
-  marley::DecayScheme* ds = db.get_decay_scheme(pid_initial);
+  marley::DecayScheme* ds = db.get_decay_scheme( pdgi );
 
-  marley::GammaStrengthFunctionModel&
-    gsfm = db.get_gamma_strength_function_model(Zi, Ai);
-
-  // Let the continuum go down to 0 MeV unless there is a decay scheme object
-  // available for the final nuclide (we'll check this in a second).
+  // For gamma-ray emission, let the continuum go down to Ex = 0 MeV unless
+  // there is a decay scheme object available (we'll check this in a second).
   double E_c_min = 0.;
 
   // If discrete level data is available for this nuclide, get gamma decay
   // widths for each accessible level
-  if (ds) {
+  if ( ds ) {
 
     // Loop over the final discrete nuclear levels in order of increasing
     // energy until the new level energy exceeds the maximum value. For each
@@ -265,25 +157,17 @@ void marley::HauserFeshbachDecay::build_exit_channels()
     // Use the maximum discrete level energy from the decay scheme object as
     // the lower bound for the continuum.
     // TODO: consider whether this is the best approach
-    if (levels.size() > 0) E_c_min = levels.back()->energy();
+    if ( levels.size() > 0 ) E_c_min = levels.back()->energy();
 
     for (const auto& level_f : levels) {
       double Exf = level_f->energy();
       if (Exf < Exi_) {
-        double discrete_width = gsfm.transmission_coefficient(Exi_, twoJi_,
-          Pi_, *level_f.get());
+        auto ec = std::make_unique<marley::GammaDiscreteExitChannel>( pdgi, qi,
+          Exi_, twoJi_, Pi_, rho_i, db, *level_f );
 
-        // Apply the normalization factor to get a width in MeV
-        discrete_width /= two_pi_rho;
+        total_width_ += ec->width();
 
-        // Store information for this decay channel if it is allowed
-        if (discrete_width > 0.) {
-          exit_channels_.push_back(
-            std::make_unique<marley::GammaDiscreteExitChannel>(discrete_width,
-            *level_f, marley::Particle(pid_initial, Migs + Exf, qi)));
-
-          total_width_ += discrete_width;
-        }
+        exit_channels_.push_back( std::move(ec) );
       }
       else break;
     }
@@ -291,34 +175,16 @@ void marley::HauserFeshbachDecay::build_exit_channels()
 
   // If gamma transitions to the energy continuum are possible, include them
   // in the possible decay channels
-  if (Exi_ > E_c_min) {
+  if ( Exi_ > E_c_min ) {
 
-    marley::LevelDensityModel& ldm = db.get_level_density_model(Zi, Ai);
+    // Create an exit channel object to handle gamma-ray emission into the
+    // continuum
+    auto ec = std::make_unique<marley::GammaContinuumExitChannel>( pdgi, qi,
+      Exi_, twoJi_, Pi_, rho_i, db, E_c_min );
 
-    // Numerically integrate the continuum width up to the initial excitation
-    // energy
-    double continuum_width = marley_utils::num_integrate(
-      [&ldm, &gsfm, this](double Exf)
-      -> double { return gamma_continuum_partial_width(ldm, gsfm, Exf); },
-      E_c_min, Exi_);
+    total_width_ += ec->width();
 
-    // Normalized probability density used for sampling a final excitation
-    // energy in the continuum
-    std::function<double(double)> pdf = [=, &ldm, &gsfm](double Exf)
-      -> double { return gamma_continuum_partial_width(ldm, gsfm, Exf)
-      / continuum_width; };
-
-    // Apply the normalization factor to get a width in MeV. We do this
-    // after making the PDF since the function gamma_continuum_partial_width()
-    // doesn't include this overall factor
-    continuum_width /= two_pi_rho;
-
-    // Store information for this decay channel
-    exit_channels_.push_back(
-      std::make_unique<marley::GammaContinuumExitChannel>(continuum_width,
-      E_c_min, Exi_, pdf, marley::Particle(pid_initial, Migs, qi)));
-
-    total_width_ += continuum_width;
+    exit_channels_.push_back( std::move(ec) );
   }
 }
 
@@ -331,9 +197,10 @@ bool marley::HauserFeshbachDecay::do_decay(double& Exf, int& twoJf,
 
   // TODO: consider changing this to a more realistic model
   // instead of isotropic emissions
-  double cos_theta_emitted_particle = gen_.uniform_random_double(-1., 1., true);
-  double phi_emitted_particle = gen_.uniform_random_double(0.,
-    marley_utils::two_pi, false);
+  double cos_theta_emitted_particle
+    = gen_.uniform_random_double( -1., 1., true );
+  double phi_emitted_particle
+    = gen_.uniform_random_double( 0., marley_utils::two_pi, false );
 
   // Handle the kinematics calculations for this decay and update the
   // final-state particle objects
@@ -342,79 +209,6 @@ bool marley::HauserFeshbachDecay::do_decay(double& Exf, int& twoJf,
 
   bool discrete_level = !ec->is_continuum();
   return !discrete_level;
-}
-
-double marley::HauserFeshbachDecay::gamma_continuum_partial_width(
-  marley::LevelDensityModel& ldm, marley::GammaStrengthFunctionModel& gsfm,
-  double Exf)
-{
-  double continuum_width = 0.;
-  // Approximate the gamma energy by the energy difference between the two
-  // levels
-  // TODO: consider adding a nuclear recoil correction here
-  double e_gamma = Exi_ - Exf;
-  bool initial_spin_is_zero = twoJi_ == 0;
-
-  for (int l = 0; l <= l_max_; ++l) {
-    int two_l = 2*l;
-    int twoJf = twoJi_ + two_l;
-
-    // Determine the multipolarity being considered in this trip through the
-    // loop based on the value of the orbital angular momentum l.
-    int mpol = ((l == 0) ? 1 : l);
-
-    // Consider both transition types (equivalently, both final parities).
-    // Check for Ji = 0 to Jf = 0 transitions, which are not allowed by angular
-    // momentum conservation.
-    if (!initial_spin_is_zero) {
-      continuum_width += gamma_cpw_helper(ldm, gsfm, Pi_, mpol, e_gamma,
-        Exf, twoJf);
-      // Consider the other possible final spin value for this multipolarity if
-      // it is allowed (Jf = Ji - l is positive)
-      twoJf = twoJi_ - two_l;
-      if (twoJf >= 0) continuum_width += gamma_cpw_helper(ldm, gsfm, Pi_, mpol,
-        e_gamma, Exf, twoJf);
-    }
-    else if (twoJf > 0) continuum_width += gamma_cpw_helper(ldm, gsfm, Pi_,
-      mpol, e_gamma, Exf, twoJf);
-  }
-  return continuum_width;
-}
-
-double marley::HauserFeshbachDecay::fragment_continuum_partial_width(
-  marley::OpticalModel& om, marley::LevelDensityModel& ldm,
-  const marley::Fragment& frag, double total_KE_CM_frame, double Exf)
-{
-  int two_s = frag.get_two_s();
-  marley::Parity Pa = frag.get_parity();
-  double continuum_width = 0.;
-  // Final nuclear state parity
-  marley::Parity Pf;
-  // The orbital parity starts as (-1)^0 = 1. Rather than applying parity
-  // conservation each time, just find the final state parity Pf for l = 0.
-  // Then we can safely flip Pf without further thought for each new l value in
-  // the loop.
-  if (Pi_ == Pa) Pf = 1;
-  else Pf = -1;
-  // For each new iteration, increment l and flip the final-state parity
-  for (int l = 0; l <= l_max_; ++l, !Pf) {
-    int two_l = 2*l;
-    for (int two_j = std::abs(two_l - two_s);
-      two_j <= two_l + two_s; two_j += 2)
-    {
-      for (int twoJf = std::abs(twoJi_ - two_j);
-        twoJf <= twoJi_ + two_j; twoJf += 2)
-      {
-        continuum_width += om.transmission_coefficient(total_KE_CM_frame,
-          frag.get_pid(), two_j, l, two_s)
-          * ldm.level_density(Exf, twoJf, Pf);
-          // TODO: since only the spin distribution changes in the twoJf loop,
-          // you can optimize this by precomputing most of the level density
-          // and the multiplying here by the appropriate spin distribution
-      }
-    }
-  }
-  return continuum_width;
 }
 
 void marley::HauserFeshbachDecay::print(std::ostream& out) const {
@@ -432,32 +226,20 @@ void marley::HauserFeshbachDecay::print(std::ostream& out) const {
     double width = ec->width();
     bool continuum = ec->is_continuum();
     bool frag = ec->emits_fragment();
-    if (continuum) {
-      if (frag) {
-        const auto* fcec
-          = dynamic_cast<marley::FragmentContinuumExitChannel*>(ec.get());
-        if (fcec) out << "  "
-          << marley_utils::particle_symbols.at(fcec->get_fragment().get_pid())
-          << " emission to the continuum width = " << width << " MeV\n";
-      }
-      else out << "  gamma-ray emission to the continuum width = "
-        << width << " MeV\n";
-    }
-    else if (frag) {
-      const auto* fdec
-        = dynamic_cast<marley::FragmentDiscreteExitChannel*>(ec.get());
-      if (fdec) out << "  "
-        << marley_utils::particle_symbols.at(fdec->get_fragment().get_pid())
-        << " emission to level at " << fdec->get_final_level().energy()
-        << " MeV width = " << width << " MeV\n";
-    }
+    int pdg = ec->emitted_particle_pdg();
+    std::string symbol = marley_utils::particle_symbols.at( pdg );
+    out << "  ";
+    if ( frag ) out << symbol;
+    else out << "gamma-ray";
+    if ( continuum ) out << " emission to the continuum width = ";
     else {
-      const auto* gdec
-        = dynamic_cast<marley::GammaDiscreteExitChannel*>(ec.get());
-      if (gdec) out << "  gamma-ray emission to level at "
-        << gdec->get_final_level().energy() << " MeV width = "
-        << width << " MeV\n";
+      auto* dec = dynamic_cast< marley::DiscreteExitChannel* >( ec.get() );
+      if ( !dec ) throw marley::Error( "Dynamic cast failed in marley::"
+        "HauserFeshbachDecay::print()" );
+      out << " emission to level at " << dec->get_final_level().energy()
+        << " MeV width = ";
     }
+    out << width << " MeV\n";
   }
 }
 
@@ -471,13 +253,13 @@ const std::unique_ptr<marley::ExitChannel>&
   // Sample an exit channel using a std::discrete distribution and a table of
   // partial decay widths
   const auto widths_begin
-    = marley::ExitChannel::make_width_iterator(exit_channels_.cbegin());
+    = marley::ExitChannel::make_width_iterator( exit_channels_.cbegin() );
   const auto widths_end
-    = marley::ExitChannel::make_width_iterator(exit_channels_.cend());
+    = marley::ExitChannel::make_width_iterator( exit_channels_.cend() );
 
   std::discrete_distribution<size_t> exit_channel_dist(widths_begin,
     widths_end);
-  size_t exit_channel_index = gen_.sample_from_distribution(exit_channel_dist);
+  size_t exit_channel_index = gen_.sample_from_distribution( exit_channel_dist );
 
   const auto& ec = exit_channels_.at( exit_channel_index );
   return ec;

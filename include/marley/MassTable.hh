@@ -77,6 +77,18 @@ namespace marley {
       double get_fragment_separation_energy(int Z, int A, int pdg,
         bool theory_ok = true) const;
 
+      /// @brief Get the separation energy for emission of a nuclear fragment
+      /// from a nucleus
+      /// @param nuc_pdg PDG code for the mother nucleus
+      /// @param frag_pdg PDG code for the emitted nuclear fragment
+      /// @param theory_ok Whether to calculate a theoretical mass using
+      /// the liquid drop model if an experimental mass cannot be found.
+      /// If theory_ok is false, then a marley::Error will be thrown
+      /// if an experimental mass cannot be found.
+      /// @return Separation energy (MeV)
+      double get_fragment_separation_energy(int nuc_pdg, int frag_pdg,
+        bool theory_ok = true) const;
+
       /// @brief Get the binding energy of a nucleus
       /// @param Z Atomic number
       /// @param A Mass number

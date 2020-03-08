@@ -33,8 +33,24 @@ namespace marley {
 
     public:
 
-      /// @param width Partial decay width (MeV)
-      ExitChannel(double width) : width_(width) {}
+      /// @param pdgi PDG code for the initial nucleus
+      /// @param qi Net charge (in units of the elementary charge) of the
+      /// initial atom or ion
+      /// @param Exi Initial nuclear excitation energy @f$ E_x @f$ (MeV)
+      /// @param twoJi Two times the initial nuclear spin @f$ J @f$
+      /// @param Pi Initial nuclear parity @f$ \Pi @f$
+      /// @param rho_i Initial nuclear level density @f$ \rho(E_x, J, \Pi) @f$
+      /// in the vicinity of the initial level (MeV<sup> -1</sup>). This
+      /// value will be used to compute an overall normalization factor
+      /// for decay widths in this exit channel.
+      /// @param sdb Reference to the StructureDatabase that will be used
+      /// in decay width calculations by this ExitChannel object
+      ExitChannel(int pdgi, int qi, double Exi, int twoJi, marley::Parity Pi,
+        double rho_i, marley::StructureDatabase& sdb ) : pdgi_( pdgi ),
+        qi_( qi ), Exi_( Exi ), twoJi_( twoJi ), Pi_( Pi ), sdb_( sdb )
+      {
+        one_over_two_pi_rho_i_ = std::pow( 2. * marley_utils::pi * rho_i, -1 );
+      }
 
       virtual ~ExitChannel() = default;
 
@@ -42,22 +58,20 @@ namespace marley {
       /// continuum of nuclear levels or false otherwise
       virtual bool is_continuum() const = 0;
 
-      /// @brief Returns true if this decay channel involves fragment emission
+      /// @brief Returns true if this channel involves fragment emission
       /// or false if it involves gamma-ray emission.
       virtual bool emits_fragment() const = 0;
 
       /// @brief Simulates a nuclear decay into this channel
-      /// @details The excitation energy, spin, and parity values are loaded
-      /// with their final values as this function returns.
-      /// @param[in,out] Ex The nuclear excitation energy
-      /// @param[in,out] two_J Two times the nuclear spin
-      /// @param[in,out] Pi The nuclear parity
+      /// @param[out] Exf The final nuclear excitation energy
+      /// @param[out] two_Jf Two times the final nuclear spin
+      /// @param[out] Pf The final nuclear parity
       /// @param[out] emitted_particle Particle emitted in the de-excitation
       /// @param[out] residual_nucleus Final-state nucleus after particle
       /// emission
       /// @param gen Generator to use for random sampling
-      virtual void do_decay(double& Ex, int& two_J,
-        marley::Parity& Pi, marley::Particle& emitted_particle,
+      virtual void do_decay(double& Exf, int& two_Jf,
+        marley::Parity& Pf, marley::Particle& emitted_particle,
         marley::Particle& residual_nucleus, marley::Generator& gen) const = 0;
 
       /// @brief Convert an iterator that points to an ExitChannel object into
@@ -71,121 +85,153 @@ namespace marley {
           double>(it, &marley::ExitChannel::width_);
       }
 
-      /// @brief Get the partial decay width to this channel
+      /// @brief Get the total decay width into this channel (MeV)
       inline double width() const { return width_; }
 
       /// @brief Returns the PDG code for the particle (gamma-ray or nuclear
       /// fragment) emitted by decays into this ExitChannel
       virtual int emitted_particle_pdg() const = 0;
 
+      /// @brief Returns the PDG code for the final nucleus
+      virtual int final_nucleus_pdg() const = 0;
+
     protected:
 
-      /// @brief Partial decay width (MeV)
+      /// Helper function that initializes the width_ member variable upon
+      /// construction
+      virtual void compute_total_width() = 0;
+
+      /// @brief Helper function that prepares Particle objects representing
+      /// the products of the two-body decay
+      /// @param[out] emitted_particle Particle emitted in the binary decay
+      /// @param[out] residual_nucleus Particle representing the daughter
+      /// nucleus
+      /// @param[in] Exf Excitation energy of the daughter nucleus
+      virtual void prepare_products(marley::Particle& emitted_particle,
+        marley::Particle& residual_nucleus, double Exf) const;
+
+      /// PDG code for the initial nucleus
+      int pdgi_;
+
+      /// Net charge (in units of the elementary charge) of the initial atom
+      /// or ion
+      int qi_;
+
+      /// Initial nuclear excitation energy @f$ E_x @f$ (MeV)
+      double Exi_;
+
+      /// Two times the initial nuclear spin @f$ J @f$
+      int twoJi_;
+
+      /// Initial nuclear parity @f$ \Pi @f$
+      marley::Parity Pi_;
+
+      /// Normalization factor needed so that the decay widths have correct units
+      /// @details This factor is equal to @f$ \left[ 2\pi\rho(E_x, J, \Pi)
+      /// \right]^{-1} @f$ where @f$\rho@f$ is the initial nuclear level density
+      /// (MeV<sup> -1</sup>) in the vicinity of the initial nuclear level. This
+      /// level has excitation energy @f$ E_x @f$, total spin @f$ J @f$, and
+      /// parity @f$ \Pi @f$.
+      double one_over_two_pi_rho_i_;
+
+      /// Total decay width into this channel (MeV)
       double width_;
+
+      /// StructureDatabase to use in calculations
+      marley::StructureDatabase& sdb_;
   };
 
   /// @brief Abstract base class for ExitChannel objects that lead to
   /// discrete nuclear levels in the final state
-  class DiscreteExitChannel : public ExitChannel {
+  class DiscreteExitChannel : virtual public ExitChannel {
     public:
 
-      /// @param width Partial decay width (MeV)
       /// @param[in] flev Reference to the final-state nuclear level
-      /// @param residue Particle object to use as the final-state nucleus
-      DiscreteExitChannel(double width, marley::Level& flev,
-        marley::Particle residue) : ExitChannel(width), final_level_(flev),
-        residue_(residue) {}
+      DiscreteExitChannel( const marley::Level& flev ) : final_level_( flev ) {}
+
+      virtual void do_decay(double& Ex, int& two_J,
+        marley::Parity& Pi, marley::Particle& emitted_particle,
+        marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
+        const final override;
 
       inline virtual bool is_continuum() const final override { return false; }
 
       /// @brief Get a const reference to the final-state nuclear level
       inline const marley::Level& get_final_level() const
         { return final_level_; }
-      /// @brief Get a non-const reference to the final-state nuclear level
-      inline marley::Level& get_final_level() { return final_level_; }
 
     protected:
+
       /// @brief Reference to the final-state nuclear level
-      marley::Level& final_level_;
-      /// @brief Residual nucleus Particle object
-      marley::Particle residue_;
+      const marley::Level& final_level_;
   };
 
-  /// @brief %Fragment emission ExitChannel that leads to a discrete nuclear
-  /// level in the final state
-  class FragmentDiscreteExitChannel : public DiscreteExitChannel {
-
+  /// @brief Abstract base class for ExitChannel objects that represent
+  /// emission of a nuclear fragment
+  class FragmentExitChannel : virtual public ExitChannel {
     public:
 
-      /// @param width Partial decay width (MeV)
-      /// @param[in] flev Reference to the final-state nuclear level
-      /// @param residue Particle object to use as the final-state nucleus
-      /// @param frag Reference to the emitted Fragment
-      FragmentDiscreteExitChannel(double width, marley::Level& flev,
-        marley::Particle residue, const marley::Fragment& frag)
-        : DiscreteExitChannel(width, flev, residue), fragment_(frag) {}
+      /// @param fragment Fragment emitted in this exit channel
+      FragmentExitChannel(const marley::Fragment& fragment)
+        : fragment_pdg_( fragment.get_pid() ) {}
 
-      inline virtual bool emits_fragment() const final override { return true; }
+      virtual int emitted_particle_pdg() const final override
+        { return fragment_pdg_; }
 
-      /// @brief Get a reference to the emitted Fragment
-      inline const marley::Fragment& get_fragment() const { return fragment_; }
+      virtual bool emits_fragment() const final override
+        { return true; }
 
-      inline virtual int emitted_particle_pdg() const final override
-        { return fragment_.get_pid(); }
-
-      virtual void do_decay(double& Ex, int& two_J,
-        marley::Parity& Pi, marley::Particle& emitted_particle,
-        marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
-        const override;
+      virtual int final_nucleus_pdg() const final override;
 
     protected:
 
-      /// @brief Fragment emitted by this exit channel
-      const marley::Fragment& fragment_;
+      /// @brief Helper function that returns that maximum possible excitation
+      /// energy for the daughter nucleus after emission of the fragment
+      double max_Exf() const;
+
+      /// @brief PDG code identifying the emitted fragment
+      int fragment_pdg_;
   };
 
-  /// @brief %Gamma emission exit channel that leads to a discrete nuclear
-  /// level in the final state
-  class GammaDiscreteExitChannel : public DiscreteExitChannel {
-
+  /// @brief Abstract base class for ExitChannel objects that represent
+  /// emission of a gamma-ray
+  class GammaExitChannel : virtual public ExitChannel {
     public:
 
-      /// @param width Partial decay width (MeV)
-      /// @param[in] flev Reference to the final-state nuclear level
-      /// @param residue Particle object to use as the final-state nucleus
-      GammaDiscreteExitChannel(double width, marley::Level& flev,
-        marley::Particle residue) : DiscreteExitChannel(width, flev, residue) {}
+      GammaExitChannel() {}
 
-      inline virtual bool emits_fragment() const final override
-        { return false; }
-
-      inline virtual int emitted_particle_pdg() const final override
+      virtual int emitted_particle_pdg() const final override
         { return marley_utils::PHOTON; }
 
-      virtual void do_decay(double& Ex, int& two_J,
-        marley::Parity& Pi, marley::Particle& emitted_particle,
-        marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
-        const override;
-  };
+      virtual bool emits_fragment() const final override
+        { return false; }
 
+      inline virtual int final_nucleus_pdg() const final override
+        { return pdgi_; }
+  };
 
   /// @brief Abstract base class for ExitChannel objects that lead to the
   /// unbound continuum in the final state
-  class ContinuumExitChannel : public ExitChannel
+  class ContinuumExitChannel : virtual public ExitChannel
   {
     public:
 
-      /// @param width Partial decay width (MeV)
-      /// @param Emin Minimum accessible nuclear excitation energy (MeV)
-      /// @param Emax Minimum accessible nuclear excitation energy (MeV)
-      /// @param gs_residue Residual nucleus Particle object whose mass
-      /// corresponds to the ground state
-      /// @note Calls to do_decay() for this channel will use the mass of the
-      /// gs_residue Particle and the sampled excitation energy to determine
-      /// the mass of the final-state nucleus
-      ContinuumExitChannel(double width, double Emin, double Emax,
-        marley::Particle gs_residue) : marley::ExitChannel(width),
-        Emin_(Emin), Emax_(Emax), gs_residue_(gs_residue) {}
+      /// @param Ec_min Minimum accessible nuclear excitation energy in the
+      /// continuum. Below this value, only discrete nuclear levels are
+      /// assumed to be present.
+      ContinuumExitChannel(double Ec_min) : E_c_min_( Ec_min ) {}
+
+      /// Helper function that initializes the width_ member variable upon
+      /// construction
+      virtual void compute_total_width() final override;
+
+      virtual void do_decay(double& Ex, int& two_J,
+        marley::Parity& Pi, marley::Particle& emitted_particle,
+        marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
+        const final override;
+
+      virtual double differential_width( double Exf,
+        bool store_jpi_widths = false ) const = 0;
 
       inline virtual bool is_continuum() const final override { return true; }
 
@@ -205,160 +251,138 @@ namespace marley {
         /// @param p Nuclear parity
         /// @param w Partial decay width (MeV) for the given spin-parity
         SpinParityWidth(int twoJ, marley::Parity p, double w)
-          : twoJf(twoJ), Pf(p), width(w) {}
+          : twoJf(twoJ), Pf(p), diff_width(w) {}
 
         int twoJf; ///< Final nuclear spin
         marley::Parity Pf; ///< Final nuclear parity
-        double width; ///< Partial decay width (MeV)
+        double diff_width; ///< Partial differential decay width (MeV)
       };
 
-      double Emin_; ///< Minimum accessible nuclear excitation energy (MeV)
-      double Emax_; ///< Maximum accessible nuclear excitation energy (MeV)
-      marley::Particle gs_residue_; ///< Ground-state residual nucleus
+      /// Minimum accessible nuclear excitation energy (MeV) in the continuum
+      double E_c_min_;
 
       /// @brief Table of possible final-state spin-parities together
-      /// with their partial decay widths
+      /// with their partial differential decay widths
       mutable std::vector<SpinParityWidth> jpi_widths_table_;
 
       /// @brief Flag that allows skipping the sampling of a final
       /// nuclear spin-parity (useful only for testing purposes)
       mutable bool skip_jpi_sampling_ = false;
-  };
-
-  /// @brief %Fragment emission ExitChannel that leads to the unbound continuum
-  /// in the final state
-  class FragmentContinuumExitChannel : public ContinuumExitChannel
-  {
-    public:
-
-      /// @param width Partial decay width (MeV)
-      /// @param Emin Minimum accessible nuclear excitation energy (MeV)
-      /// @param Emax Minimum accessible nuclear excitation energy (MeV)
-      /// @param Epdf std::function describing the final-state nuclear
-      /// excitation energy distribution
-      /// @param frag Reference to the emitted Fragment
-      /// @param gs_residue Residual nucleus Particle object whose mass
-      /// corresponds to the ground state
-      /// @note Calls to do_decay() for this channel will use the mass of the
-      /// gs_residue Particle and the sampled excitation energy to determine
-      /// the mass of the final-state nucleus
-      FragmentContinuumExitChannel(double width, double Emin, double Emax,
-        std::function<double(double&, double)> Epdf,
-        const marley::Fragment& frag, marley::Particle gs_residue)
-        : marley::ContinuumExitChannel(width, Emin, Emax, gs_residue),
-        Epdf_(Epdf), fragment_(frag) {}
-
-      inline virtual bool emits_fragment() const final override { return true; }
-
-      /// @brief Get a reference to the emitted Fragment
-      inline const marley::Fragment& get_fragment() const { return fragment_; }
-
-      inline virtual int emitted_particle_pdg() const final override
-        { return fragment_.get_pid(); }
-
-      /// @brief Sample a final-state spin and parity for the residual nucleus
-      /// @param[out] twoJ Two times the final-state nuclear spin
-      /// @param[out] Pi The final-state nuclear parity
-      /// @param gen Reference to the Generator object to use for random
-      /// sampling
-      /// @param Exf The final-state nuclear excitation energy
-      /// @param Ea The final-state fragment kinetic energy
-      void sample_spin_parity(int& twoJ, marley::Parity& Pi,
-        marley::Generator& gen, double Exf, double Ea) const;
-
-      virtual void do_decay(double& Ex, int& two_J,
-        marley::Parity& Pi, marley::Particle& emitted_particle,
-        marley::Particle& residual_nucleus, marley::Generator& gen)
-        const override;
-
-      /// @brief Probability density function describing the distribution
-      /// of final-state nuclear excitation energies within the continuum.
-      /// @details The first argument is a reference to a double that will
-      /// be loaded with the final-state fragment kinetic energy (MeV).
-      /// The second is the final-state nuclear excitation energy (MeV).
-      /// The return value is a probability density (MeV<sup> -1</sup>)
-      /// for sampling the final-state nuclear excitation energy.
-      std::function<double(double&, double)> Epdf_;
-      const marley::Fragment& fragment_; ///< Emitted fragment
 
       /// @brief Chebyshev polynomial interpolant to the cumulative
       /// density function for the final-state nuclear excitation energy
       /// @details This pointer will be initialized lazily during the
       /// first call to do_decay()
-      mutable std::unique_ptr<marley::ChebyshevInterpolatingFunction> Ecdf_;
+      mutable std::unique_ptr<marley::ChebyshevInterpolatingFunction> Exf_cdf_;
 
-      /// @brief Temporary storage for the total CM frame kinetic energy
-      mutable double total_KE_CM_frame_;
+      double sample_Exf(marley::Generator& gen) const;
+
+      void sample_spin_parity(double Exf, int& two_Jf, marley::Parity& Pf,
+        marley::Generator& gen) const;
+
+      /// @brief Returns the maximum accessible excitation energy to be
+      /// used when integrating over the continuum
+      virtual double E_c_max() const = 0;
+  };
+
+  /// @brief %Fragment emission ExitChannel that leads to a discrete nuclear
+  /// level in the final state
+  class FragmentDiscreteExitChannel : public DiscreteExitChannel,
+    public FragmentExitChannel
+  {
+    public:
+
+      /// @copydoc marley::ExitChannel::ExitChannel()
+      /// @copydoc marley::DiscreteExitChannel( const marley::Level& )
+      /// @copydoc marley::FragmentExitChannel( const marley::Fragment& )
+      FragmentDiscreteExitChannel(int pdgi, int qi, double Exi, int twoJi,
+        marley::Parity Pi, double rho_i, marley::StructureDatabase& sdb,
+        const marley::Level& flev, const marley::Fragment& frag)
+        : ExitChannel( pdgi, qi, Exi, twoJi, Pi, rho_i, sdb ),
+        DiscreteExitChannel( flev ), FragmentExitChannel( frag )
+      {
+        this->compute_total_width();
+      }
+
+      virtual void compute_total_width() final override;
+  };
+
+  /// @brief %Gamma emission exit channel that leads to a discrete nuclear
+  /// level in the final state
+  class GammaDiscreteExitChannel : public DiscreteExitChannel,
+    public GammaExitChannel
+  {
+    public:
+
+      /// @copydoc marley::ExitChannel::ExitChannel()
+      /// @copydoc marley::DiscreteExitChannel( const marley::Level& )
+      /// @copydoc marley::GammaExitChannel()
+      GammaDiscreteExitChannel(int pdgi, int qi, double Exi, int twoJi,
+        marley::Parity Pi, double rho_i, marley::StructureDatabase& sdb,
+        const marley::Level& flev) : ExitChannel( pdgi, qi, Exi, twoJi, Pi,
+        rho_i, sdb ), DiscreteExitChannel( flev ), GammaExitChannel()
+      {
+        this->compute_total_width();
+      }
+
+      virtual void compute_total_width() final override;
+  };
+
+
+  /// @brief %Fragment emission ExitChannel that leads to the unbound continuum
+  /// in the final state
+  class FragmentContinuumExitChannel : public ContinuumExitChannel,
+    public FragmentExitChannel
+  {
+    public:
+
+      /// @copydoc marley::ExitChannel::ExitChannel()
+      /// @copydoc marley::ContinuumExitChannel( double )
+      /// @copydoc marley::FragmentExitChannel( const marley::Fragment& )
+      FragmentContinuumExitChannel(int pdgi, int qi, double Exi, int twoJi,
+        marley::Parity Pi, double rho_i, marley::StructureDatabase& sdb,
+        double Ec_min, const marley::Fragment& frag)
+        : ExitChannel( pdgi, qi, Exi, twoJi, Pi, rho_i, sdb ),
+        ContinuumExitChannel( Ec_min ), FragmentExitChannel( frag )
+      {
+        this->compute_total_width();
+      }
+
+      virtual double differential_width( double Exf,
+        bool store_jpi_widths = false ) const final override;
+
+      inline virtual double E_c_max() const final override
+        { return this->max_Exf(); }
   };
 
   /// @brief %Gamma emission exit channel that leads to the unbound continuum
   /// in the final state
-  class GammaContinuumExitChannel : public ContinuumExitChannel
+  class GammaContinuumExitChannel : public ContinuumExitChannel,
+    public GammaExitChannel
   {
     public:
 
-      /// @param width Partial decay width (MeV)
-      /// @param Emin Minimum accessible nuclear excitation energy (MeV)
-      /// @param Emax Minimum accessible nuclear excitation energy (MeV)
-      /// @param Epdf std::function describing the final-state nuclear
-      /// excitation energy distribution
-      /// @param gs_residue Residual nucleus Particle object whose mass
-      /// corresponds to the ground state
-      /// @note Calls to do_decay() for this channel will use the mass of the
-      /// gs_residue Particle and the sampled excitation energy to determine
-      /// the mass of the final-state nucleus
-      GammaContinuumExitChannel(double width, double Emin, double Emax,
-        std::function<double(double)> Epdf, marley::Particle gs_residue)
-        : marley::ContinuumExitChannel(width, Emin, Emax, gs_residue),
-        Epdf_(Epdf) {}
+      /// @copydoc marley::ExitChannel::ExitChannel()
+      /// @copydoc marley::ContinuumExitChannel( double )
+      /// @copydoc marley::GammaExitChannel()
+      GammaContinuumExitChannel(int pdgi, int qi, double Exi, int twoJi,
+        marley::Parity Pi, double rho_i, marley::StructureDatabase& sdb,
+        double Ec_min) : ExitChannel( pdgi, qi, Exi, twoJi, Pi, rho_i, sdb ),
+        ContinuumExitChannel( Ec_min ), GammaExitChannel()
+      {
+        this->compute_total_width();
+      }
 
-      inline virtual bool emits_fragment() const final override
-        { return false; }
+      virtual double differential_width( double Exf,
+        bool store_jpi_widths = false ) const final override;
 
-      inline virtual int emitted_particle_pdg() const final override
-        { return marley_utils::PHOTON; }
+      inline virtual double E_c_max() const final override
+        { return Exi_; }
 
-      /// @brief Sample a final-state spin and parity for the residual nucleus
-      /// @param Z Atomic number
-      /// @param A Mass number
-      /// @param[out] twoJ Two times the final-state nuclear spin
-      /// @param[out] Pi The final-state nuclear parity
-      /// @param Exi The initial nuclear excitation energy
-      /// @param Exf The final nuclear excitation energy
-      /// @param gen Reference to the Generator object to use for random
-      /// sampling
-      void sample_spin_parity(int Z, int A, int& twoJ, marley::Parity& Pi,
-        double Exi, double Exf, marley::Generator& gen) const;
+    protected:
 
-      virtual void do_decay(double& Ex, int& two_J,
-        marley::Parity& Pi, marley::Particle& emitted_particle,
-        marley::Particle& residual_nucleus, marley::Generator& gen)
-        const override;
-
-      /// @brief Probability density function describing the distribution
-      /// of final-state nuclear excitation energies within the continuum.
-      /// @details The argument is the final-state nuclear excitation energy
-      /// (MeV). The return value is a probability density (MeV<sup> -1</sup>)
-      /// for sampling the final-state nuclear excitation energy.
-      std::function<double(double)> Epdf_;
-
-      /// @brief Helper function for building the table of final spin-parities
-      /// and widths
-      /// @param Exf Final nuclear excitation energy
-      /// @param twoJf Two times the final nuclear spin
-      /// @param Pi Final nuclear parity
-      /// @param tcE Electric &gamma;-ray transition transmission coefficient
-      /// @param tcM Magnetic &gamma;-ray transition transmission coefficient
-      /// @param mpol Multipolarity of the transition
-      /// @param ldm Reference to a LevelDensityModel object representing
-      /// the density of nuclear levels in the continuum
       double store_gamma_jpi_width(double Exf, int twoJf, marley::Parity Pi,
-        double tcE, double tcM, int mpol, marley::LevelDensityModel& ldm) const;
-
-      /// @brief Chebyshev polynomial interpolant to the cumulative
-      /// density function for the final-state nuclear excitation energy
-      /// @details This pointer will be initialized lazily during the
-      /// first call to do_decay()
-      mutable std::unique_ptr<marley::ChebyshevInterpolatingFunction> Ecdf_;
+        double tcE, double tcM, int mpol, marley::LevelDensityModel& ldm,
+        bool store_jpi_widths) const;
   };
 }

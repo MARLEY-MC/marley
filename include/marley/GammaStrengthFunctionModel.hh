@@ -65,7 +65,7 @@ namespace marley {
       /// requested transition is impossible (e.g., nuclear spin changes by
       /// half, initial and final spins are both zero)
       static TransitionType determine_transition_type(int twoJi,
-        marley::Parity Pi, marley::Level& level_f, int& l);
+        marley::Parity Pi, const marley::Level& level_f, int& l);
 
       /// @brief Determines whether a given electromagnetic transition between
       /// two nuclear states corresponds to electric or magnetic multipole
@@ -77,8 +77,8 @@ namespace marley {
       /// @note This function returns TransitionType::unphysical if the
       /// requested transition is impossible (e.g., nuclear spin changes by
       /// half, initial and final spins are both zero)
-      static TransitionType determine_transition_type(marley::Level& level_i,
-        marley::Level& level_f, int& l);
+      static TransitionType determine_transition_type(const marley::Level& level_i,
+        const marley::Level& level_f, int& l);
 
       /// @brief Returns the gamma-ray strength function
       /// (MeV<sup> &ndash;2@f$\ell@f$&ndash;1</sup>) for the requested gamma
@@ -111,7 +111,7 @@ namespace marley {
       /// @param Pi Initial nuclear parity
       /// @param[in] level_f Reference to the final nuclear Level
       double transmission_coefficient(double Exi, int twoJ,
-        marley::Parity Pi, marley::Level& level_f);
+        marley::Parity Pi, const marley::Level& level_f);
 
     protected:
 

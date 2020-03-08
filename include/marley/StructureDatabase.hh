@@ -11,6 +11,7 @@
 // visit http://opensource.org/licenses/GPL-3.0
 
 #pragma once
+#include <map>
 #include <memory>
 #include <set>
 #include <string>
@@ -21,6 +22,7 @@
 namespace marley {
 
   class GammaStrengthFunctionModel;
+  class Fragment;
   class LevelDensityModel;
   class OpticalModel;
 
@@ -116,12 +118,35 @@ namespace marley {
       marley::GammaStrengthFunctionModel& get_gamma_strength_function_model(
         const int Z, const int A);
 
+      /// @brief Retrieves a gamma-ray strength function model object from the
+      /// database, creating it if one did not already exist
+      /// @param nuc_pdg PDG code for the nuclide of interest
+      marley::GammaStrengthFunctionModel& get_gamma_strength_function_model(
+        const int nuc_pdg);
+
       /// Retrieves a const reference to the table of DecayScheme objects
       inline const std::unordered_map<int,
         std::unique_ptr<marley::DecayScheme> >& decay_schemes() const
       {
         return decay_scheme_table_;
       }
+
+      /// Retrieves a const reference to the table of Fragment objects
+      static inline const std::map<int, marley::Fragment>& fragments()
+        { return fragment_table_; }
+
+      /// @brief Retrieves nuclear fragment data from the database
+      /// @param fragment_pdg PDG code for the desired fragment
+      /// @return Pointer to the requested Fragment object, or nullptr
+      /// if it could not be found
+      static const marley::Fragment* get_fragment(const int fragment_pdg);
+
+      /// @brief Retrieves nuclear fragment data from the database
+      /// @param Z Fragment proton number
+      /// @param A Fragment mass number
+      /// @return Pointer to the requested Fragment object, or nullptr if
+      /// it could not be found
+      static const marley::Fragment* get_fragment(const int Z, const int A);
 
     private:
 
@@ -146,5 +171,10 @@ namespace marley {
       /// strength function models.
       std::unordered_map<int, std::unique_ptr<
         marley::GammaStrengthFunctionModel> > gamma_strength_function_table_;
+
+      /// @brief Lookup table for nuclear fragments that will be considered
+      /// when modeling de-excitations in the unbound continuum
+      static const std::map<int, marley::Fragment> fragment_table_;
   };
+
 }

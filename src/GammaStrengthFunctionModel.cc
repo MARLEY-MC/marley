@@ -29,7 +29,7 @@ void marley::GammaStrengthFunctionModel::check_multipolarity(int l) {
 }
 
 TrType marley::GammaStrengthFunctionModel::determine_transition_type(
-  int twoJi, marley::Parity Pi, marley::Level& level_f, int& l)
+  int twoJi, marley::Parity Pi, const marley::Level& level_f, int& l)
 {
   int twoJf = level_f.twoJ();
   marley::Parity Pf = level_f.parity();
@@ -38,7 +38,7 @@ TrType marley::GammaStrengthFunctionModel::determine_transition_type(
 }
 
 TrType marley::GammaStrengthFunctionModel::determine_transition_type(
-  marley::Level& level_i, marley::Level& level_f, int& l)
+  const marley::Level& level_i, const marley::Level& level_f, int& l)
 {
   int twoJi = level_i.twoJ();
   marley::Parity Pi = level_i.parity();
@@ -100,7 +100,7 @@ TrType marley::GammaStrengthFunctionModel::determine_transition_type(
 }
 
 double marley::GammaStrengthFunctionModel::transmission_coefficient(double Exi,
-  int twoJi, marley::Parity Pi, marley::Level& level_f)
+  int twoJi, marley::Parity Pi, const marley::Level& level_f)
 {
   double Exf = level_f.energy();
   int twoJf = level_f.twoJ();

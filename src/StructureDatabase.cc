@@ -13,10 +13,25 @@
 #include "marley/marley_utils.hh"
 #include "marley/BackshiftedFermiGasModel.hh"
 #include "marley/Error.hh"
+#include "marley/Fragment.hh"
 #include "marley/KoningDelarocheOpticalModel.hh"
 #include "marley/Logger.hh"
 #include "marley/StandardLorentzianModel.hh"
 #include "marley/StructureDatabase.hh"
+
+// Table of nuclear fragments that will be considered when simulating nuclear
+// de-excitations from the unbound continuum. Spin-parity values are taken from
+// nuclear ground states listed in the 10/2014 release of ENSDF.
+const std::map<int, marley::Fragment >
+  marley::StructureDatabase::fragment_table_ =
+{
+  { marley_utils::NEUTRON,  marley::Fragment( marley_utils::NEUTRON,  1, Parity(1) ) },
+  { marley_utils::PROTON,   marley::Fragment( marley_utils::PROTON,   1, Parity(1) ) },
+  { marley_utils::DEUTERON, marley::Fragment( marley_utils::DEUTERON, 2, Parity(1) ) },
+  { marley_utils::TRITON,   marley::Fragment( marley_utils::TRITON,   1, Parity(1) ) },
+  { marley_utils::HELION,   marley::Fragment( marley_utils::HELION,   1, Parity(1) ) },
+  { marley_utils::ALPHA,    marley::Fragment( marley_utils::ALPHA,    0, Parity(1) ) },
+};
 
 marley::StructureDatabase::StructureDatabase() {}
 
@@ -170,6 +185,15 @@ marley::LevelDensityModel& marley::StructureDatabase::get_level_density_model(
 }
 
 marley::GammaStrengthFunctionModel&
+  marley::StructureDatabase::get_gamma_strength_function_model(
+  const int nuc_pdg)
+{
+  int Z = marley_utils::get_particle_Z( nuc_pdg );
+  int A = marley_utils::get_particle_A( nuc_pdg );
+  return this->get_gamma_strength_function_model( Z, A );
+}
+
+marley::GammaStrengthFunctionModel&
   marley::StructureDatabase::get_gamma_strength_function_model(const int Z,
   const int A)
 {
@@ -197,4 +221,19 @@ void marley::StructureDatabase::remove_decay_scheme(int pdg)
 
 void marley::StructureDatabase::clear() {
   decay_scheme_table_.clear();
+}
+
+const marley::Fragment* marley::StructureDatabase::get_fragment(
+  const int fragment_pdg)
+{
+  auto iter = fragment_table_.find( fragment_pdg );
+  if ( iter == fragment_table_.end() ) return nullptr;
+  else return &iter->second;
+}
+
+const marley::Fragment* marley::StructureDatabase::get_fragment(
+  const int Z, const int A)
+{
+  int fragment_pdg = marley_utils::get_nucleus_pid( Z, A );
+  return get_fragment( fragment_pdg );
 }
