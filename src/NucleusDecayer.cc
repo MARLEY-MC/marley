@@ -133,10 +133,12 @@ void marley::NucleusDecayer::process_event( marley::Event& event,
     // the Hauser-Feshbach statistical model.
     while ( continuum && Ex > CONTINUUM_GS_CUTOFF ) {
 
-      marley::HauserFeshbachDecay hfd( residue, Ex, twoJ, P, gen );
+      auto& sdb = gen.get_structure_db();
+
+      marley::HauserFeshbachDecay hfd( residue, Ex, twoJ, P, sdb );
       MARLEY_LOG_DEBUG() << hfd;
 
-      continuum = hfd.do_decay(Ex, twoJ, P, first, second);
+      continuum = hfd.do_decay( Ex, twoJ, P, first, second, gen );
 
       MARLEY_LOG_DEBUG() << "Hauser-Feshbach decay to " << first.pdg_code()
         << " and " << second.pdg_code();
