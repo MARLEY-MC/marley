@@ -237,7 +237,11 @@ namespace marley {
       /// @param Ec_min Minimum accessible nuclear excitation energy in the
       /// continuum. Below this value, only discrete nuclear levels are
       /// assumed to be present.
-      ContinuumExitChannel(double Ec_min) : E_c_min_( Ec_min ) {}
+      /// @param lmax The maximum value of the orbital angular momentum
+      /// (multipolarity) @f$ \ell @f$ to consider when computing differential
+      /// decay widths for fragment (gamma-ray) emission to the continuum
+      ContinuumExitChannel(double Ec_min, int lmax) : E_c_min_( Ec_min ),
+        l_max_( lmax ) {}
 
       /// Helper function that initializes the width_ member variable upon
       /// construction
@@ -278,6 +282,10 @@ namespace marley {
 
       /// Minimum accessible nuclear excitation energy (MeV) in the continuum
       double E_c_min_;
+
+      /// Maximum orbital angular momentum (multipolarity) to consider when
+      /// computing differential fragment (gamma-ray) decay widths
+      int l_max_;
 
       /// @brief Table of possible final-state spin-parities together
       /// with their partial differential decay widths
@@ -355,13 +363,14 @@ namespace marley {
     public:
 
       /// @copydoc marley::ExitChannel::ExitChannel()
-      /// @copydoc marley::ContinuumExitChannel( double )
+      /// @copydoc marley::ContinuumExitChannel( double, int )
       /// @copydoc marley::FragmentExitChannel( const marley::Fragment& )
       FragmentContinuumExitChannel(int pdgi, int qi, double Exi, int twoJi,
         marley::Parity Pi, double rho_i, marley::StructureDatabase& sdb,
         double Ec_min, const marley::Fragment& frag)
         : ExitChannel( pdgi, qi, Exi, twoJi, Pi, rho_i, sdb ),
-        ContinuumExitChannel( Ec_min ), FragmentExitChannel( frag )
+        ContinuumExitChannel( Ec_min, sdb.get_fragment_l_max() ),
+        FragmentExitChannel( frag )
       {
         this->compute_total_width();
       }
@@ -381,12 +390,13 @@ namespace marley {
     public:
 
       /// @copydoc marley::ExitChannel::ExitChannel()
-      /// @copydoc marley::ContinuumExitChannel( double )
+      /// @copydoc marley::ContinuumExitChannel( double, int )
       /// @copydoc marley::GammaExitChannel()
       GammaContinuumExitChannel(int pdgi, int qi, double Exi, int twoJi,
         marley::Parity Pi, double rho_i, marley::StructureDatabase& sdb,
         double Ec_min) : ExitChannel( pdgi, qi, Exi, twoJi, Pi, rho_i, sdb ),
-        ContinuumExitChannel( Ec_min ), GammaExitChannel()
+        ContinuumExitChannel( Ec_min, sdb.get_gamma_l_max() ),
+        GammaExitChannel()
       {
         this->compute_total_width();
       }

@@ -148,6 +148,22 @@ namespace marley {
       /// it could not be found
       static const marley::Fragment* get_fragment(const int Z, const int A);
 
+      /// @brief Returns the maximum orbital angular momentum to consider
+      /// when simulating fragment emission to the continuum
+      inline int get_fragment_l_max() const { return fragment_l_max_; }
+
+      /// @brief Returns the maximum multipolarity to consider
+      /// when simulating gamma-ray emission to the continuum
+      inline int get_gamma_l_max() const { return gamma_l_max_; }
+
+      /// @brief Sets the maximum orbital angular momentum to consider
+      /// when simulating fragment emission to the continuum
+      inline void set_fragment_l_max( int ell ) { fragment_l_max_ = ell; }
+
+      /// @brief Sets the maximum multipolarity to consider when simulating
+      /// gamma-ray emission to the continuum
+      inline void set_gamma_l_max( int ell ) { gamma_l_max_ = ell; }
+
     private:
 
       /// @brief Lookup table for marley::DecayScheme objects.
@@ -175,6 +191,22 @@ namespace marley {
       /// @brief Lookup table for nuclear fragments that will be considered
       /// when modeling de-excitations in the unbound continuum
       static const std::map<int, marley::Fragment> fragment_table_;
+
+      /// @brief Default value of fragment_l_max_
+      static constexpr int DEFAULT_FRAGMENT_L_MAX = 5;
+
+      /// @brief Default value of gamma_l_max_
+      static constexpr int DEFAULT_GAMMA_L_MAX = DEFAULT_FRAGMENT_L_MAX;
+
+      /// @brief Maximum orbital angular momentum @f$ \ell @f$ to consider
+      /// when computing differential widths (via a FragmentContinuumExitChannel
+      /// object) for decays to the unbound continuum via fragment emission
+      int fragment_l_max_ = DEFAULT_FRAGMENT_L_MAX;
+
+      /// @brief Maximum multipolarity @f$ \ell @f$ to consider
+      /// when computing differential widths (via a GammaContinuumExitChannel
+      /// object) for decays to the unbound continuum via gamma-ray emission
+      int gamma_l_max_ = DEFAULT_GAMMA_L_MAX;
   };
 
 }

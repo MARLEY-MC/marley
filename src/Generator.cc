@@ -212,7 +212,6 @@ double marley::Generator::uniform_random_double(double min, double max,
 /// (say, max_search_tolerance = 1e-8, while many neutrino cross sections of
 /// interest for MARLEY are less than 1e-40 cm^2), MARLEY normalizes all
 /// probability density functions to unity before using rejection sampling.
-/// @todo Check the convergence explanation for the first step.
 double marley::Generator::rejection_sample(const std::function<double(double)>& f,
   double xmin, double xmax, double& fmax, double safety_factor,
   double max_search_tolerance)

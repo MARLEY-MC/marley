@@ -366,6 +366,43 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
 
 void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
 {
+  // If the user specified a non-default value of either the
+  // maximum orbital angular momentum or the maximum multipolarity
+  // to consider when simulating decays to the continuum, set
+  // the appropriate member variable of the StructureDatabase
+  // object owned by the Generator
+
+  auto& sdb = gen.get_structure_db();
+
+  std::string flmax_key( "fragment_lmax" );
+  if ( json_.has_key(flmax_key) ) {
+    bool ok;
+    const marley::JSON& flmax_json = json_.at( flmax_key );
+    int f_lmax = flmax_json.to_long( ok );
+    if ( !ok ) handle_json_error( flmax_key.c_str(), flmax_json );
+
+    if ( f_lmax < 0 ) throw marley::Error( "Negative value of "
+      + flmax_key + " = " + std::to_string(f_lmax) + " encountered in"
+      " marley::JSONConfig::prepare_structure()" );
+
+    sdb.set_fragment_l_max( f_lmax );
+  }
+
+  // TODO: reduce code duplication here
+  std::string glmax_key( "gamma_lmax" );
+  if ( json_.has_key(glmax_key) ) {
+    bool ok;
+    const marley::JSON& glmax_json = json_.at( glmax_key );
+    int g_lmax = glmax_json.to_long( ok );
+    if ( !ok ) handle_json_error( glmax_key.c_str(), glmax_json );
+
+    if ( g_lmax < 1 ) throw marley::Error( "Nonpositive value of "
+      + glmax_key + " = " + std::to_string(g_lmax) + " encountered in"
+      " marley::JSONConfig::prepare_structure()" );
+
+    sdb.set_gamma_l_max( g_lmax );
+  }
+
   // Copy of the structure portion of the JSON configuration.
   // If the user didn't provide one, we'll build the default
   // one ourselves.
@@ -435,9 +472,8 @@ void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
     }
 
     // Load data for all nuclides in the structure data file.
-    auto& sdb = gen.get_structure_db();
-
     int file_nuclide_count = 0;
+
     if ( format == marley::DecayScheme::FileFormat::talys ) {
       // TALYS format data
       std::set<int> nucleus_PDGs = sdb.find_all_nuclides(filename);

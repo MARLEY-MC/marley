@@ -51,13 +51,6 @@ namespace marley {
         marley::Particle& emitted_particle, marley::Particle& residual_nucleus,
         marley::Generator& gen );
 
-      /// @brief Maximum value of the orbital angular momentum to use when
-      /// considering compound nucleus decays to the continuum of nuclear
-      /// levels
-      /// @todo Make this a user-controlled value specified in the configuration
-      /// file
-      static constexpr int l_max_ = 5;
-
       /// @brief Print information about the possible decay channels to a
       /// std::ostream
       void print( std::ostream& out ) const;

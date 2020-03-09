@@ -110,7 +110,7 @@ namespace marley {
 
       /// @brief Get a const reference to the vector of Reaction objects
       /// owned by this Generator
-      inline const std::vector<std::unique_ptr<marley::Reaction> >&
+      inline const std::vector< std::unique_ptr<marley::Reaction> >&
         get_reactions() const;
 
       /// @brief Take ownership of a new Reaction
@@ -150,8 +150,8 @@ namespace marley {
       /// @brief Sample from an arbitrary probability distribution (defined
       /// here as any object that implements an operator()(std::mt19937_64&)
       /// function)
-      /// @detail This template function
-      //  Based on a trick given at https://stackoverflow.com/a/9154394/4081973
+      /// @detail This template function is based on
+      /// https://stackoverflow.com/a/9154394/4081973
       template <class RandomNumberDistribution>
         inline auto sample_from_distribution(RandomNumberDistribution& rnd)
         -> decltype( std::declval<RandomNumberDistribution&>().operator()(

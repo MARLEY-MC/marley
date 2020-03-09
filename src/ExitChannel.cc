@@ -12,7 +12,8 @@
 
 #include "marley/marley_utils.hh"
 #include "marley/ExitChannel.hh"
-#include "marley/HauserFeshbachDecay.hh"
+#include "marley/GammaStrengthFunctionModel.hh"
+#include "marley/LevelDensityModel.hh"
 #include "marley/Logger.hh"
 #include "marley/OpticalModel.hh"
 #include "marley/marley_kinematics.hh"
@@ -107,9 +108,7 @@ void marley::FragmentDiscreteExitChannel::compute_total_width() {
     two_j += 2)
   {
     int j_plus_s = (two_j + two_s) / 2;
-    // TODO: consider adding a check that l does not exceed its maximum
-    // value l_max that is also used as a cutoff for transmission
-    // coefficient calculations in the continuum.
+
     // For each new iteration, increment l and flip the overall final
     // state parity
     int l = std::abs(two_j - two_s) / 2;
@@ -244,7 +243,7 @@ double marley::FragmentContinuumExitChannel::differential_width( double Exf,
   if (Pi_ == Pa) Pf = 1;
   else Pf = -1;
   // For each new iteration, increment l and flip the final-state parity
-  for (int l = 0; l <= marley::HauserFeshbachDecay::l_max_; ++l, !Pf) {
+  for (int l = 0; l <= l_max_; ++l, !Pf) {
     int two_l = 2*l;
     for (int two_j = std::abs(two_l - two_s);
       two_j <= two_l + two_s; two_j += 2)
@@ -329,7 +328,7 @@ double marley::GammaContinuumExitChannel::differential_width( double Exf,
 
   // Sum over multipolarities. There is no monopole radiation, so
   // the sum begins at mpol = 1.
-  for ( int mpol = 1; mpol <= marley::HauserFeshbachDecay::l_max_; ++mpol ) {
+  for ( int mpol = 1; mpol <= l_max_; ++mpol ) {
 
     int two_mpol = 2 * mpol;
 
