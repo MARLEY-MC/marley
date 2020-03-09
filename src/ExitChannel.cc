@@ -15,6 +15,8 @@
 #include "marley/HauserFeshbachDecay.hh"
 #include "marley/OpticalModel.hh"
 
+using TrType = marley::GammaStrengthFunctionModel::TransitionType;
+
 int marley::FragmentExitChannel::final_nucleus_pdg() const {
   int Zi = marley_utils::get_particle_Z( pdgi_ );
   int Ai = marley_utils::get_particle_A( pdgi_ );
@@ -42,8 +44,7 @@ void marley::FragmentDiscreteExitChannel::compute_total_width() {
   marley::OpticalModel& om = sdb_.get_optical_model( remnant_pdg );
 
   // Get information about the emitted fragment
-  const marley::Fragment& f = *marley::StructureDatabase
-    ::get_fragment( fragment_pdg_ );
+  const marley::Fragment& f = *sdb_.get_fragment( fragment_pdg_ );
 
   int two_s = f.get_two_s(); // two times the fragment spin
   marley::Parity Pa = f.get_parity(); // intrinsic parity
@@ -99,22 +100,72 @@ void marley::FragmentDiscreteExitChannel::compute_total_width() {
   }
 }
 
+double marley::GammaExitChannel::gamma_energy( double Exf ) const {
+  // Approximate the gamma energy by the excitation energy difference between
+  // the initial and final nuclear states
+  // TODO: consider adding a nuclear recoil correction here
+  double E_gamma = Exi_ - Exf;
+  return E_gamma;
+}
+
+
+TrType marley::GammaExitChannel::get_transition_type( int mpol,
+  marley::Parity Pf ) const
+{
+  // Electric transitions satisfy the parity relation Pi = (-1)^{\ell} * Pf,
+  // where Pi (Pf) are the initial (final) nuclear parities and \ell is the
+  // multipolarity of the transition. Magnetic transitions satisfy
+  // Pi = (-1)^{\ell + 1} * Pf. We choose the appropriate transition type
+  // here based on these rules.
+  bool mpol_is_odd = mpol % 2;
+  marley::Parity P_final_state = Pf * marley::Parity( !mpol_is_odd );
+  TrType type = ( Pi_ == P_final_state ) ? TrType::electric : TrType::magnetic;
+  return type;
+}
+
 void marley::GammaDiscreteExitChannel::compute_total_width() {
 
+  // Retrieve the gamma strength function model used to compute transmission
+  // coefficients
   marley::GammaStrengthFunctionModel& gsfm
     = sdb_.get_gamma_strength_function_model( pdgi_ );
 
+  // Get properties of the final nuclear level
   double Exf = final_level_.energy();
+  int twoJf = final_level_.twoJ();
+  marley::Parity Pf = final_level_.parity();
+
+  // Initialize the total width to zero, just in case.
+  width_ = 0.;
+
   if ( Exf >= Exi_ ) {
-    // TODO: do warning
-    width_ = 0.;
+    // TODO: do warning, width already set to zero
     return;
   }
 
-  // TODO: refactor this to do the multipolarity sum right
-  // TODO: add caching of terms by Xl pair
-  width_ = one_over_two_pi_rho_i_ * gsfm.transmission_coefficient( Exi_,
-    twoJi_, Pi_, final_level_ );
+  // Compute the energy of the emitted gamma-ray
+  double E_gamma = this->gamma_energy( Exf );
+
+  // Initialize the multipolarity for the start of the loop.
+  // There is no monopole radiation, so the minimum allowed value is one.
+  int start_mpol = std::max( 1, std::abs(twoJi_ - twoJf) / 2 );
+  int end_mpol = ( twoJi_ + twoJf ) / 2;
+
+  // Sum contributions to the decay width from different multipolarities
+  for ( int mpol = start_mpol; mpol <= end_mpol; ++mpol ) {
+
+    // Use the multipolarity and final-state nuclear parity to determine
+    // whether the current partial width represents an electric or magnetic
+    // transition
+    TrType type = this->get_transition_type( mpol, Pf );
+
+    double term = one_over_two_pi_rho_i_ * gsfm.transmission_coefficient( type,
+      mpol, E_gamma );
+
+    // TODO: add caching of terms by Xl pair
+
+    width_ += term;
+  }
 }
 
 double marley::FragmentContinuumExitChannel::differential_width( double Exf,
@@ -142,8 +193,7 @@ double marley::FragmentContinuumExitChannel::differential_width( double Exf,
   double diff_width = 0.;
 
   // Get information about the emitted fragment
-  const marley::Fragment& f = *marley::StructureDatabase
-    ::get_fragment( fragment_pdg_ );
+  const marley::Fragment& f = *sdb_.get_fragment( fragment_pdg_ );
 
   int two_s = f.get_two_s(); // two times the fragment spin
   marley::Parity Pa = f.get_parity(); // intrinsic parity
@@ -211,11 +261,9 @@ void marley::ContinuumExitChannel::compute_total_width() {
 double marley::GammaContinuumExitChannel::differential_width( double Exf,
   bool store_jpi_widths ) const
 {
-  using TrType = marley::GammaStrengthFunctionModel::TransitionType;
-
   if ( store_jpi_widths ) jpi_widths_table_.clear();
 
-  marley::LevelDensityModel& ldm = sdb_.get_level_density_model( pdgi_ );
+  auto& ldm = sdb_.get_level_density_model( pdgi_ );
   auto& gsfm = sdb_.get_gamma_strength_function_model( pdgi_ );
 
   // Initialize the return value to zero
@@ -228,46 +276,44 @@ double marley::GammaContinuumExitChannel::differential_width( double Exf,
     return diff_width;
   }
 
-  // Approximate the gamma energy by the energy difference between the two
-  // levels
-  // TODO: consider adding a nuclear recoil correction here
-  double E_gamma = Exi_ - Exf;
-  bool initial_spin_is_zero = twoJi_ == 0;
+  // Compute the energy of the emitted gamma-ray
+  double E_gamma = this->gamma_energy( Exf );
 
-  // TODO: revisit and correct the sums here
-  for (int l = 0; l <= marley::HauserFeshbachDecay::l_max_; ++l) {
-    int two_l = 2*l;
-    int twoJf = twoJi_ + two_l;
-    // Determine the multipolarity being considered in this trip through the
-    // loop based on the value of the orbital angular momentum l.
-    int mpol = ( (l == 0) ? 1 : l );
-    // Consider both transition types (equivalently, both final parities). Check
-    // for Ji = 0 to Jf = 0 transitions, which are not allowed by angular
-    // momentum conservation.
-    if ( !initial_spin_is_zero || (twoJf > 0) ) {
+  // Array containing both possible parity values. It is used in
+  // the loop below.
+  constexpr std::array<marley::Parity, 2>
+    parities = { marley::Parity(true), marley::Parity(false) };
 
-      double tcE = gsfm.transmission_coefficient(TrType::electric, mpol,
-        E_gamma);
-      double tcM = gsfm.transmission_coefficient(TrType::magnetic, mpol,
-        E_gamma);
+  // Sum over multipolarities. There is no monopole radiation, so
+  // the sum begins at mpol = 1.
+  for ( int mpol = 1; mpol <= marley::HauserFeshbachDecay::l_max_; ++mpol ) {
 
-      if ( !initial_spin_is_zero ) {
+    int two_mpol = 2 * mpol;
 
-        diff_width += store_gamma_jpi_width(Exf, twoJf, Pi_, tcE, tcM,
-          mpol, ldm, store_jpi_widths);
+    for ( int twoJf = std::abs(twoJi_ - two_mpol); twoJf <= twoJi_ + two_mpol;
+      twoJf += 2 )
+    {
+      for ( const auto& Pf : parities ) {
 
-	// Consider the other possible final spin value for this multipolarity
-	// if it is allowed (Jf = Ji - l is positive)
-        twoJf = twoJi_ - two_l;
-        if ( twoJf >= 0 ) diff_width += store_gamma_jpi_width(Exf, twoJf,
-          Pi_, tcE, tcM, mpol, ldm, store_jpi_widths);
+        // Use the multipolarity and final-state nuclear parity to determine
+        // whether the current partial differential width represents an
+        // electric or magnetic transition
+        TrType type = this->get_transition_type( mpol, Pf );
+
+        double Txl = gsfm.transmission_coefficient( type, mpol, E_gamma );
+        double rho_f = ldm.level_density(Exf, twoJf, Pf);
+
+        double term = one_over_two_pi_rho_i_ * Txl * rho_f;
+
+        if ( store_jpi_widths ) {
+          jpi_widths_table_.emplace_back( twoJf, Pf, term );
+          // TODO: include Xl in cached values
+        }
+
+        diff_width += term;
       }
-      // twoJf > 0 but twoJi == 0
-      else diff_width += store_gamma_jpi_width(Exf, twoJf, Pi_, tcE,
-        tcM, mpol, ldm, store_jpi_widths);
     }
   }
-
   return diff_width;
 }
 
@@ -385,37 +431,4 @@ void marley::ContinuumExitChannel::sample_spin_parity(double Exf, int& twoJ,
   const SpinParityWidth& Jpi = jpi_widths_table_.at( jpi_index );
   twoJ = Jpi.twoJf;
   Pi = Jpi.Pf;
-}
-
-// Helper function used when sampling continuum spin-parities for gamma-ray
-// transitions
-double marley::GammaContinuumExitChannel::store_gamma_jpi_width(double Exf,
-  int twoJf, marley::Parity Pi, double tcE, double tcM, int mpol,
-  marley::LevelDensityModel& ldm, bool store_jpi_widths) const
-{
-  marley::Parity Pf;
-  double combined_width = 0.;
-
-  // Electric transitions represent a parity flip for odd multipolarities
-  if (mpol % 2) Pf = -Pi;
-  else Pf = Pi;
-  double rho = ldm.level_density(Exf, twoJf, Pf);
-
-  // Compute and store information for the electric transition
-  double width = one_over_two_pi_rho_i_ * tcE * rho;
-  combined_width += width;
-
-  if ( store_jpi_widths ) jpi_widths_table_.emplace_back(twoJf, Pf, width);
-
-  // Magnetic transitions have opposite final parity from electric
-  // transitions of the same multipolarity
-  !Pf;
-  // Compute and store information for the magnetic transition
-  rho = ldm.level_density(Exf, twoJf, Pf);
-  width = one_over_two_pi_rho_i_ * tcM * rho;
-  combined_width += width;
-
-  if ( store_jpi_widths ) jpi_widths_table_.emplace_back(twoJf, Pf, width);
-
-  return combined_width;
 }

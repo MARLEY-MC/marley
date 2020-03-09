@@ -23,12 +23,12 @@ namespace marley {
     public:
 
       /// @brief Default constructor chooses positive parity
-      inline Parity() : is_positive_(true) {}
+      constexpr Parity() : is_positive_(true) {}
 
       /// @brief Create a Parity object from a boolean value
       /// @param is_positive Boolean parameter that is true for +1,
       /// or false for -1.
-      inline explicit Parity(bool is_positive)
+      constexpr explicit Parity(bool is_positive)
         : is_positive_(is_positive) {}
 
       /// @brief Create a Parity object from an integer
@@ -37,10 +37,10 @@ namespace marley {
       explicit Parity(int i);
 
       /// @brief Convert the Parity object to a bool (true for +1, false for -1)
-      inline explicit operator bool() const { return is_positive_; }
+      constexpr explicit operator bool() const { return is_positive_; }
 
       /// @brief Creates a copy of the Parity object with a flipped value
-      inline marley::Parity operator-() const {
+      constexpr marley::Parity operator-() const {
         return marley::Parity(!is_positive_);
       }
 
@@ -77,7 +77,7 @@ namespace marley {
       }
 
       // Allows explicit casts of marley::Parity to int
-      inline explicit operator int() const {
+      inline constexpr explicit operator int() const {
         if (is_positive_) return 1;
         else return -1;
       }

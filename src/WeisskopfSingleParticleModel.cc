@@ -21,10 +21,10 @@ using TrType = marley::GammaStrengthFunctionModel::TransitionType;
 marley::WeisskopfSingleParticleModel::WeisskopfSingleParticleModel(int Z,
   int A, double D0) : marley::GammaStrengthFunctionModel(Z, A), D0_(D0)
 {
-  if (D0_ <= 0.) throw marley::Error(std::string("Invalid")
-    + " level spacing parameter " + std::to_string(D0_)
+  if (D0_ <= 0.) throw marley::Error("Invalid"
+    " level spacing parameter " + std::to_string(D0_)
     + " MeV passed to the constructor of"
-    + " marley::WeisskopfGammaStrengthFunctionModel.");
+    " marley::WeisskopfGammaStrengthFunctionModel.");
 }
 
 // Computes the partial decay width for a gamma transition under the Weisskopf
@@ -74,8 +74,8 @@ double marley::WeisskopfSingleParticleModel::strength_function(TrType type,
   }
 
   // @todo Improve error message
-  else throw marley::Error(std::string("Invalid transition type")
-    + " given for Weisskopf gamma-ray strength function calculation");
+  else throw marley::Error( "Invalid transition type"
+    " given for Weisskopf gamma-ray strength function calculation" );
 }
 
 double marley::WeisskopfSingleParticleModel::transmission_coefficient(

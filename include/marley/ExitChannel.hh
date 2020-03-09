@@ -208,6 +208,17 @@ namespace marley {
 
       inline virtual int final_nucleus_pdg() const final override
         { return pdgi_; }
+
+    protected:
+
+      // Returns the gamma-ray energy corresponding to a particular
+      // final nuclear excitation energy
+      // @param Exf Final nuclear excitation energy (MeV)
+      // @return Energy of the gamma-ray emitted in this exit channel (MeV)
+      double gamma_energy( double Exf ) const;
+
+      marley::GammaStrengthFunctionModel::TransitionType get_transition_type(
+        int mpol, marley::Parity Pf ) const;
   };
 
   /// @brief Abstract base class for ExitChannel objects that lead to the
@@ -378,11 +389,5 @@ namespace marley {
 
       inline virtual double E_c_max() const final override
         { return Exi_; }
-
-    protected:
-
-      double store_gamma_jpi_width(double Exf, int twoJf, marley::Parity Pi,
-        double tcE, double tcM, int mpol, marley::LevelDensityModel& ldm,
-        bool store_jpi_widths) const;
   };
 }

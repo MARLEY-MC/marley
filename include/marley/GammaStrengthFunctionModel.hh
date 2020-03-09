@@ -38,48 +38,6 @@ namespace marley {
       /// (electric vs. magnetic multipole radiation)
       enum class TransitionType { electric, magnetic, unphysical };
 
-      /// @brief Determines whether a given electromagnetic transition between
-      /// two nuclear states corresponds to electric or magnetic multipole
-      /// radiation.
-      /// @param twoJi Two times the initial nuclear spin
-      /// @param Pi Initial parity
-      /// @param twoJf Two times the final nuclear spin
-      /// @param Pf Final parity
-      /// @param[out] l Multipolarity of the transition (@f$\ell@f$ = 1 &hArr;
-      /// dipole, @f$\ell@f$ = 2 &hArr; quadrupole, &hellip;)
-      /// @note This function returns TransitionType::unphysical if the
-      /// requested transition is impossible (e.g., nuclear spin changes by
-      /// half, initial and final spins are both zero)
-      static TransitionType determine_transition_type(int twoJi,
-        marley::Parity Pi, int twoJf, marley::Parity Pf, int& l);
-
-      /// @brief Determines whether a given electromagnetic transition between
-      /// two nuclear states corresponds to electric or magnetic multipole
-      /// radiation.
-      /// @param twoJi Two times the initial nuclear spin
-      /// @param Pi Initial parity
-      /// @param[in] level_f Reference to the final nuclear Level
-      /// @param[out] l Multipolarity of the transition (@f$\ell@f$ = 1 &hArr;
-      /// dipole, @f$\ell@f$ = 2 &hArr; quadrupole, &hellip;)
-      /// @note This function returns TransitionType::unphysical if the
-      /// requested transition is impossible (e.g., nuclear spin changes by
-      /// half, initial and final spins are both zero)
-      static TransitionType determine_transition_type(int twoJi,
-        marley::Parity Pi, const marley::Level& level_f, int& l);
-
-      /// @brief Determines whether a given electromagnetic transition between
-      /// two nuclear states corresponds to electric or magnetic multipole
-      /// radiation.
-      /// @param[in] level_i Reference to the initial nuclear Level
-      /// @param[in] level_f Reference to the final nuclear Level
-      /// @param[out] l Multipolarity of the transition (@f$\ell@f$ = 1 &hArr;
-      /// dipole, @f$\ell@f$ = 2 &hArr; quadrupole, &hellip;)
-      /// @note This function returns TransitionType::unphysical if the
-      /// requested transition is impossible (e.g., nuclear spin changes by
-      /// half, initial and final spins are both zero)
-      static TransitionType determine_transition_type(const marley::Level& level_i,
-        const marley::Level& level_f, int& l);
-
       /// @brief Returns the gamma-ray strength function
       /// (MeV<sup> &ndash;2@f$\ell@f$&ndash;1</sup>) for the requested gamma
       /// energy and multipolarity
@@ -103,15 +61,6 @@ namespace marley {
       /// @param e_gamma Gamma-ray energy (MeV)
       virtual double transmission_coefficient(TransitionType type, int l,
         double e_gamma) = 0;
-
-      /// @brief Returns the gamma-ray transmission coefficient (dimensionless)
-      /// for a transition from a given initial state to a final discrete Level
-      /// @param Exi Initial nuclear excitation energy
-      /// @param twoJ Two times the initial nuclear spin
-      /// @param Pi Initial nuclear parity
-      /// @param[in] level_f Reference to the final nuclear Level
-      double transmission_coefficient(double Exi, int twoJ,
-        marley::Parity Pi, const marley::Level& level_f);
 
     protected:
 
