@@ -13,7 +13,39 @@
 #include "marley/marley_utils.hh"
 #include "marley/ExitChannel.hh"
 #include "marley/HauserFeshbachDecay.hh"
+#include "marley/Logger.hh"
 #include "marley/OpticalModel.hh"
+
+namespace {
+
+  // Helper function that issues a warning when the final nuclear excitation
+  // energy exceeds the energetically accessible maximum value
+  void issue_Exf_warning( double Exf, double Exf_max ) {
+    MARLEY_LOG_WARNING() << "Final nuclear excitation energy Exf = "
+      << Exf << " MeV exceeds the maximum accessible value of " << Exf_max
+      << " MeV. The decay width for this exit channel will be set to zero.";
+  }
+
+  // Helper function that issues a warning when the final nuclear excitation
+  // energy lies outside the accessible continuum
+  void issue_Exf_continuum_warning( double Exf, double E_c_min,
+    double E_c_max )
+  {
+    MARLEY_LOG_WARNING() << "Final nuclear excitation energy Exf = "
+      << Exf << " MeV lies outside the accessible continuum [ " << E_c_min
+      << " MeV, " << E_c_max << " MeV ]. The differential decay width"
+      << " will be set to zero.";
+  }
+
+  // Helper function that throws an error in response to invalid excitation
+  // energy continuum bounds
+  void throw_continuum_bounds_error( double E_c_min, double E_c_max ) {
+    throw marley::Error( "Invalid continuum excitation energy bounds "
+      " E_c_min = " + std::to_string(E_c_min) + " MeV and E_c_max = "
+      + std::to_string(E_c_max) + " MeV encountered" );
+  }
+
+}
 
 using TrType = marley::GammaStrengthFunctionModel::TransitionType;
 
@@ -56,14 +88,13 @@ void marley::FragmentDiscreteExitChannel::compute_total_width() {
   // Excitation energy of the final nuclear level
   double Exf = final_level_.energy();
 
-  if ( Exf >= Exf_max ) {
-    // TODO: do warning
-    width_ = 0.;
-    return;
-  }
-
   // Initialize the total decay width to zero, just in case
   width_ = 0.;
+
+  if ( Exf >= Exf_max ) {
+    issue_Exf_warning( Exf, Exf_max );
+    return;
+  }
 
   // Total kinetic energy in the CM frame immediately after the binary decay
   double total_KE_CM_frame = Exf_max - Exf;
@@ -88,9 +119,11 @@ void marley::FragmentDiscreteExitChannel::compute_total_width() {
       // The current term in the sum only contributes to the total decay
       // width if parity is conserved
       if ( Pi_ == P_final_state ) {
-        double partial_width = one_over_two_pi_rho_i_
-          * om.transmission_coefficient( total_KE_CM_frame, fragment_pdg_,
-          two_j, l, two_s );
+
+        double Tlj = om.transmission_coefficient( total_KE_CM_frame,
+          fragment_pdg_, two_j, l, two_s );
+
+        double partial_width = one_over_two_pi_rho_i_ * Tlj;
 
         width_ += partial_width;
 
@@ -139,7 +172,7 @@ void marley::GammaDiscreteExitChannel::compute_total_width() {
   width_ = 0.;
 
   if ( Exf >= Exi_ ) {
-    // TODO: do warning, width already set to zero
+    issue_Exf_warning( Exf, Exi_ );
     return;
   }
 
@@ -159,8 +192,9 @@ void marley::GammaDiscreteExitChannel::compute_total_width() {
     // transition
     TrType type = this->get_transition_type( mpol, Pf );
 
-    double term = one_over_two_pi_rho_i_ * gsfm.transmission_coefficient( type,
-      mpol, E_gamma );
+    double TXl = gsfm.transmission_coefficient( type, mpol, E_gamma );
+
+    double term = one_over_two_pi_rho_i_ * TXl;
 
     // TODO: add caching of terms by Xl pair
 
@@ -177,20 +211,22 @@ double marley::FragmentContinuumExitChannel::differential_width( double Exf,
   marley::OpticalModel& om = sdb_.get_optical_model( remnant_pdg );
   marley::LevelDensityModel& ldm = sdb_.get_level_density_model( remnant_pdg );
 
+  // Get the maximum accessible final excitation energy
   double Exf_max = this->max_Exf();
+
+  // Initialize the return value to zero
+  double diff_width = 0.;
+
+  if ( Exf_max < E_c_min_ ) throw_continuum_bounds_error( E_c_min_, Exf_max );
 
   // Check that Exf lies within the continuum
   if ( Exf < E_c_min_ || Exf > Exf_max ) {
-    // If it doesn't just return zero
-    // TODO: do warning
-    // TODO: check that Exf_max > E_c_min
+    // If it doesn't, complain and return zero
+    issue_Exf_continuum_warning( Exf, E_c_min_, Exf_max );
     return 0.;
   }
 
   double total_KE_CM_frame = Exf_max - Exf;
-
-  // Initialize the return value to zero
-  double diff_width = 0.;
 
   // Get information about the emitted fragment
   const marley::Fragment& f = *sdb_.get_fragment( fragment_pdg_ );
@@ -215,18 +251,18 @@ double marley::FragmentContinuumExitChannel::differential_width( double Exf,
       for (int twoJf = std::abs(twoJi_ - two_j);
         twoJf <= twoJi_ + two_j; twoJf += 2)
       {
-        // TODO: since only the spin distribution changes in the twoJf loop,
-        // you can optimize this by precomputing most of the level density
-        // and the multiplying here by the appropriate spin distribution
-        double term = one_over_two_pi_rho_i_ * om.transmission_coefficient(
-          total_KE_CM_frame, fragment_pdg_, two_j, l, two_s )
-          * ldm.level_density( Exf, twoJf, Pf );
+        double Tlj = om.transmission_coefficient( total_KE_CM_frame,
+          fragment_pdg_, two_j, l, two_s );
+
+        double rho_f = ldm.level_density( Exf, twoJf, Pf );
+
+        double term = one_over_two_pi_rho_i_ * Tlj * rho_f;
 
         diff_width += term;
 
         if ( store_jpi_widths ) {
           jpi_widths_table_.emplace_back( twoJf, Pf, term );
-          // TODO: optionally cache term by (l, two_j, twoJf)
+          // TODO: include (l, two_j) in cached term
         }
       }
     }
@@ -236,10 +272,13 @@ double marley::FragmentContinuumExitChannel::differential_width( double Exf,
 
 void marley::ContinuumExitChannel::compute_total_width() {
 
+  // Initialize the total width to zero
+  width_ = 0.;
+
   double Ec_max = this->E_c_max();
-  if ( Ec_max <= E_c_min_ ) {
-    // TODO: do warning
-    width_ = 0.;
+
+  if ( Ec_max < E_c_min_ ) {
+    throw_continuum_bounds_error( E_c_min_, Ec_max );
     return;
   }
 
@@ -269,11 +308,14 @@ double marley::GammaContinuumExitChannel::differential_width( double Exf,
   // Initialize the return value to zero
   double diff_width = 0.;
 
-  // Check that Exf lies within the continuum. If it
-  // doesn't, then just return zero.
+  // Check that the continuum bounds make sense
+  if ( Exi_ < E_c_min_ ) throw_continuum_bounds_error( E_c_min_, Exi_ );
+
+  // Check that Exf lies within the continuum
   if ( Exf < E_c_min_ || Exf > Exi_ ) {
-    // TODO: do warning
-    return diff_width;
+    // If it doesn't, complain and return zero
+    issue_Exf_continuum_warning( Exf, E_c_min_, Exi_ );
+    return 0.;
   }
 
   // Compute the energy of the emitted gamma-ray
@@ -393,7 +435,7 @@ void marley::ContinuumExitChannel::do_decay(double& Exf, int& two_Jf,
   // where we only care about the final excitation energy).
   if ( !skip_jpi_sampling_ ) sample_spin_parity(Exf, two_Jf, Pf, gen);
 
-  // TODO: sample a sub-jpi variable set (e.g., l + j)
+  // TODO: sample a sub-Jpi variable set (e.g., l + j)
 
   this->prepare_products( emitted_particle, residual_nucleus, Exf );
 }
