@@ -11,21 +11,11 @@
 // visit http://opensource.org/licenses/GPL-3.0
 
 #pragma once
-#include <cmath>
 #include <memory>
 #include <ostream>
-#include <unordered_map>
 
-#include "marley/marley_utils.hh"
 #include "marley/ExitChannel.hh"
-#include "marley/Fragment.hh"
-#include "marley/GammaStrengthFunctionModel.hh"
-#include "marley/Level.hh"
-#include "marley/LevelDensityModel.hh"
-#include "marley/MassTable.hh"
-#include "marley/OpticalModel.hh"
 #include "marley/Parity.hh"
-#include "marley/StructureDatabase.hh"
 
 namespace marley {
 
@@ -68,12 +58,12 @@ namespace marley {
 
       /// @brief Get a non-const reference to the owned vector of ExitChannel
       /// pointers
-      inline std::vector<std::unique_ptr<marley::ExitChannel> >&
+      inline std::vector< std::unique_ptr<marley::ExitChannel> >&
         exit_channels();
 
       /// @brief Get a const reference to the owned vector of ExitChannel
       /// pointers
-      inline const std::vector<std::unique_ptr<marley::ExitChannel> >&
+      inline const std::vector< std::unique_ptr<marley::ExitChannel> >&
         exit_channels() const;
 
       /// @brief Helper function for do_decay(). Samples an ExitChannel
@@ -87,26 +77,6 @@ namespace marley {
       /// possible decay modes
       void build_exit_channels();
 
-      /// @brief Helper function used when computing the partial decay width
-      /// for emission of a nuclear fragment to the continuum of nuclear levels
-      double fragment_continuum_partial_width(marley::OpticalModel& om,
-        marley::LevelDensityModel& ldm, const marley::Fragment& frag,
-        double fragment_KE, double Exf);
-
-      /// @brief Helper function used when computing the partial decay
-      /// width for gamma emission to the continuum of nuclear levels
-      double gamma_continuum_partial_width(marley::LevelDensityModel& ldm,
-        marley::GammaStrengthFunctionModel& gsfm, double Exf);
-
-      /// @brief Mass of a charged pion (MeV)
-      /// @hideinitializer
-      static constexpr double mpiplus_ = 139.57018;
-
-      /// @brief Squared charged pion Compton wavelength (fm)
-      /// @hideinitializer
-      static constexpr double lambda_piplus2_ = (marley_utils::hbar_c
-        / mpiplus_) * (marley_utils::hbar_c / mpiplus_);
-
       /// @brief Particle object that represents the compound nucleus before it
       /// decays
       const marley::Particle& compound_nucleus_;
@@ -118,9 +88,7 @@ namespace marley {
       /// models and simulating statistical decays
       marley::Generator& gen_;
 
-      /// @brief Total decay width for the compound nucleus (times an overall
-      /// factor of @f$2\pi\rho(Ex_\text{i},J_\text{i},\Pi_\text{i})@f$ which
-      /// is omitted for speed)
+      /// @brief Total decay width (MeV) for the compound nucleus
       double total_width_ = 0.;
 
       /// @brief Table of exit channels used for sampling decays
@@ -136,8 +104,8 @@ namespace marley {
 }
 
 /// @brief Operator for printing HauserFeshbachDecay objects to a std::ostream
-inline std::ostream& operator<<(std::ostream& out,
-  const marley::HauserFeshbachDecay& hfd)
+inline std::ostream& operator<<( std::ostream& out,
+  const marley::HauserFeshbachDecay& hfd )
 {
   hfd.print(out);
   return out;

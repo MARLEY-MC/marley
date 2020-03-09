@@ -12,12 +12,11 @@
 
 #include <memory>
 
-#include "marley/marley_utils.hh"
 #include "marley/ExitChannel.hh"
 #include "marley/Generator.hh"
-#include "marley/marley_kinematics.hh"
 #include "marley/MassTable.hh"
 #include "marley/HauserFeshbachDecay.hh"
+#include "marley/marley_utils.hh"
 
 marley::HauserFeshbachDecay::HauserFeshbachDecay(const marley::Particle&
   compound_nucleus, double Exi, int twoJi, marley::Parity Pi,
@@ -193,19 +192,8 @@ bool marley::HauserFeshbachDecay::do_decay(double& Exf, int& twoJf,
   marley::Particle& residual_nucleus)
 {
   const auto& ec = this->sample_exit_channel();
-  ec->do_decay(Exf, twoJf, Pf, emitted_particle, residual_nucleus, gen_);
-
-  // TODO: consider changing this to a more realistic model
-  // instead of isotropic emissions
-  double cos_theta_emitted_particle
-    = gen_.uniform_random_double( -1., 1., true );
-  double phi_emitted_particle
-    = gen_.uniform_random_double( 0., marley_utils::two_pi, false );
-
-  // Handle the kinematics calculations for this decay and update the
-  // final-state particle objects
-  marley_kinematics::two_body_decay(compound_nucleus_, emitted_particle,
-    residual_nucleus, cos_theta_emitted_particle, phi_emitted_particle);
+  ec->do_decay(Exf, twoJf, Pf, compound_nucleus_, emitted_particle,
+    residual_nucleus, gen_);
 
   bool discrete_level = !ec->is_continuum();
   return !discrete_level;

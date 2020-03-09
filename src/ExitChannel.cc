@@ -15,6 +15,7 @@
 #include "marley/HauserFeshbachDecay.hh"
 #include "marley/Logger.hh"
 #include "marley/OpticalModel.hh"
+#include "marley/marley_kinematics.hh"
 
 namespace {
 
@@ -360,19 +361,20 @@ double marley::GammaContinuumExitChannel::differential_width( double Exf,
 }
 
 void marley::DiscreteExitChannel::do_decay(double& Exf, int& two_Jf,
-  marley::Parity& Pf, marley::Particle& emitted_particle,
-  marley::Particle& residual_nucleus, marley::Generator& /*unused*/)
-  const
+  marley::Parity& Pf, const marley::Particle& compound_nucleus,
+  marley::Particle& emitted_particle, marley::Particle& residual_nucleus,
+  marley::Generator& gen) const
 {
   Exf = final_level_.energy();
   two_Jf = final_level_.twoJ();
   Pf = final_level_.parity();
-  this->prepare_products( emitted_particle, residual_nucleus, Exf );
+  this->prepare_products( compound_nucleus, emitted_particle,
+    residual_nucleus, Exf, gen );
 }
 
 void marley::ExitChannel::prepare_products(
-  marley::Particle& emitted_particle, marley::Particle& residual_nucleus,
-  double Exf) const
+  const marley::Particle& compound_nucleus, marley::Particle& emitted_particle,
+  marley::Particle& residual_nucleus, double Exf, marley::Generator& gen) const
 {
   const auto& mt = marley::MassTable::Instance();
   int ep_pdg = this->emitted_particle_pdg();
@@ -395,6 +397,20 @@ void marley::ExitChannel::prepare_products(
   double Mfgs_ion = mt.get_atomic_mass( remnant_pdg ) - qf*me;
 
   residual_nucleus = marley::Particle( remnant_pdg, Mfgs_ion + Exf, qf );
+
+  // Now that the PDG codes, masses, and net charges of the binary decay
+  // products have been set, choose a direction for the emitted particle.
+  // TODO: Consider changing this to a more realistic model instead of
+  // isotropic emissions.
+  double cos_theta_emitted_particle
+    = gen.uniform_random_double( -1., 1., true );
+  double phi_emitted_particle
+    = gen.uniform_random_double( 0., marley_utils::two_pi, false );
+
+  // Handle the kinematics calculations for this decay. Load the
+  // final-state particle objects with their full 4-momenta.
+  marley_kinematics::two_body_decay( compound_nucleus, emitted_particle,
+    residual_nucleus, cos_theta_emitted_particle, phi_emitted_particle );
 }
 
 double marley::ContinuumExitChannel::sample_Exf(marley::Generator& gen) const
@@ -424,9 +440,9 @@ double marley::ContinuumExitChannel::sample_Exf(marley::Generator& gen) const
 }
 
 void marley::ContinuumExitChannel::do_decay(double& Exf, int& two_Jf,
-  marley::Parity& Pf, marley::Particle& emitted_particle,
-  marley::Particle& residual_nucleus, marley::Generator& gen)
-  const
+  marley::Parity& Pf, const marley::Particle& compound_nucleus,
+  marley::Particle& emitted_particle, marley::Particle& residual_nucleus,
+  marley::Generator& gen) const
 {
   Exf = this->sample_Exf( gen );
 
@@ -437,7 +453,8 @@ void marley::ContinuumExitChannel::do_decay(double& Exf, int& two_Jf,
 
   // TODO: sample a sub-Jpi variable set (e.g., l + j)
 
-  this->prepare_products( emitted_particle, residual_nucleus, Exf );
+  this->prepare_products( compound_nucleus, emitted_particle,
+    residual_nucleus, Exf, gen );
 }
 
 void marley::ContinuumExitChannel::sample_spin_parity(double Exf, int& twoJ,
