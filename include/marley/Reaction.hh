@@ -17,6 +17,7 @@
 
 #include "marley/Event.hh"
 #include "marley/MassTable.hh"
+#include "marley/TargetAtom.hh"
 
 namespace marley {
 
@@ -92,9 +93,15 @@ namespace marley {
       /// the residue's ground state
       virtual double threshold_kinetic_energy() const = 0;
 
+      /// @brief Returns the target atom involved in this reaction
+      /// @details For nuclear reactions, this is identical to the pdg_b_
+      /// member variable. For electron reactions, it is distinct (since particle
+      /// b is the initial struck electron).
+      virtual marley::TargetAtom atomic_target() const = 0;
+
       /// Factory method called by JSONConfig to build
       /// Reaction objects given a file with matrix element data
-      static std::vector<std::unique_ptr<Reaction> >
+      static std::vector< std::unique_ptr<Reaction> >
         load_from_file(const std::string& filename,
         marley::StructureDatabase& db);
 

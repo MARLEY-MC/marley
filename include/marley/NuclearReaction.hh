@@ -47,6 +47,9 @@ namespace marley {
         int pdg_d, int q_d,
         const std::shared_ptr<std::vector<marley::MatrixElement> >& mat_els);
 
+      inline virtual marley::TargetAtom atomic_target() const override final
+        { return marley::TargetAtom( pdg_b_ ); }
+
       /// Produces a two-two scattering Event that proceeds via this reaction
       virtual marley::Event create_event(int particle_id_a,
         double KEa, marley::Generator& gen) const override;

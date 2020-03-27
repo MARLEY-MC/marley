@@ -320,12 +320,12 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
               " on the MARLEY search path.");
           }
 
-          auto nuc_reacts = marley::NuclearReaction::load_from_file(
+          auto reacts = marley::Reaction::load_from_file(
             full_file_name, gen.get_structure_db());
 
-          // All of the NuclearReaction objects loaded from a single file
+          // All of the Reaction objects loaded from a single file
           // will have the same process type, so just save the first one
-          auto temp_pt = nuc_reacts.front()->process_type();
+          auto temp_pt = reacts.front()->process_type();
 
           // If we have a duplicate, warn the user that we'll ignore it
           auto begin = loaded_proc_types.cbegin();
@@ -346,7 +346,7 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
           }
 
           // Transfer ownership of the new reactions to the generator
-          for ( auto& nr : nuc_reacts ) gen.add_reaction( std::move(nr) );
+          for ( auto& rct : reacts ) gen.add_reaction( std::move(rct) );
         }
 
         return;

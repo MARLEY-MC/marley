@@ -9,6 +9,10 @@
 # expressions equivalent to those in C. Giunti & C. Kim, "Fundamentals of
 # Neutrino Physics and Astrophysics," Oxford University Press (2007).
 #
-# ProcessType code and nuclear target PDG code
-3 1000180400
-# No nuclear matrix elements are needed in this case
+# ProcessType code
+3
+# No nuclear matrix elements are needed in this case. Instead, one need only
+# provide a list of atomic PDG codes for which this process should be enabled
+#
+# 40Ar
+1000180400

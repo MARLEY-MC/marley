@@ -22,7 +22,8 @@ namespace {
 
 }
 
-marley::ElectronReaction::ElectronReaction(int pdg_a, unsigned int target_Z)
+marley::ElectronReaction::ElectronReaction(int pdg_a, int target_atom_pdg)
+  : atom_( target_atom_pdg )
 {
   process_type_ = ProcessType::NuElectronElastic;
 
@@ -36,9 +37,6 @@ marley::ElectronReaction::ElectronReaction(int pdg_a, unsigned int target_Z)
     + " + " + marley_utils::get_particle_symbol( pdg_b_ );
   description_ += " --> " + marley_utils::get_particle_symbol( pdg_c_ );
   description_ += " + " + marley_utils::get_particle_symbol( pdg_d_ );
-
-  // How many electrons are in the target atom?
-  Z_atom_ = target_Z;
 
   const auto& mt = marley::MassTable::Instance();
   ma_ = mt.get_particle_mass( pdg_a_ );
@@ -108,7 +106,7 @@ double marley::ElectronReaction::total_xs(int pdg_a, double KEa) const {
   // Multiply the single-electron cross section by the number of electrons
   // present in this atom
   /// @todo Take into account effects of electron binding energy
-  xs *= Z_atom_;
+  xs *= atom_.Z();
   return xs;
 }
 
@@ -141,7 +139,7 @@ double marley::ElectronReaction::diff_xs(int pdg_a, double KEa,
   // Multiply the single-electron cross section by the number of electrons
   // present in this atom
   /// @todo Take into account effects of electron binding energy
-  diff_xsec *= Z_atom_;
+  diff_xsec *= atom_.Z();
 
   return diff_xsec;
 }

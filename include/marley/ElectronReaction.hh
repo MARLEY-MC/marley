@@ -33,7 +33,10 @@ namespace marley {
 
     public:
 
-      ElectronReaction(int pdg_a, unsigned int target_Z);
+      ElectronReaction(int pdg_a, int target_atom_pdg);
+
+      inline virtual marley::TargetAtom atomic_target() const override final
+        { return atom_; }
 
       // Total reaction cross section (in MeV^(-2)) for an incident
       // projectile with lab-frame kinetic energy Ea
@@ -52,8 +55,8 @@ namespace marley {
 
     private:
 
-      // Atomic number of the atom used as the target by this reaction
-      unsigned int Z_atom_;
+      // Atomic target involved in this reaction
+      marley::TargetAtom atom_;
 
       // Coupling constants to use for cross section calculations (updated
       // each time based on the projectile's particle ID)

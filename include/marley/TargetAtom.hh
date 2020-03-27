@@ -65,6 +65,9 @@ namespace marley {
       /// @brief Returns the mass number of the target atom
       int A() const;
 
+      /// @brief Returns the nuclear PDG code of the target atom
+      inline int pdg() const { return pdg_; }
+
     protected:
 
       /// @brief Helper function for the constructors. Checks the atom's PDG

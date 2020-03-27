@@ -263,27 +263,33 @@ std::vector<std::unique_ptr<marley::Reaction> >
   // Read in the ProcessType code and the target PDG code
   std::istringstream iss( line );
   int integer_proc_type;
-  int pdg_b;
-  iss >> integer_proc_type >> pdg_b;
+  iss >> integer_proc_type;
 
   auto proc_type = static_cast<ProcType>( integer_proc_type );
 
   // For neutrino-electron elastic scattering, we won't have a table of
-  // matrix elements. Just make Reaction objects for each of the possible
+  // matrix elements. Instead, a table of atomic target PDG codes appears.
+  // Make Reaction objects for each atomic target for each of the possible
   // projectiles (every neutrino species) and return the result.
   if ( proc_type == ProcessType::NuElectronElastic ) {
 
-    int target_Z = marley_utils::get_particle_Z( pdg_b );
-
-    for ( const int& pdg_a : get_projectiles(proc_type) ) {
-      loaded_reactions.emplace_back(
-        std::make_unique<marley::ElectronReaction>(pdg_a, target_Z));
+    // Loop over target atoms
+    int target_pdg;
+    while ( iss >> target_pdg ) {
+      // Loop over neutrino species
+      for ( const int& pdg_a : get_projectiles(proc_type) ) {
+        loaded_reactions.emplace_back(
+          std::make_unique<marley::ElectronReaction>(pdg_a, target_pdg) );
+      }
     }
 
     return loaded_reactions;
   }
 
-  // For nuclear reaction modes, we proceed to read in the matrix elements
+  // For nuclear reaction modes, there is a single target nucleus PDG code
+  // per file. After parsing it, we proceed to read in the matrix elements.
+  int pdg_b;
+  iss >> pdg_b;
 
   // Read in all of the level energy (MeV), squared matrix element (B(F) or
   // B(GT) strength), and matrix element type identifier (0 represents B(F), 1
