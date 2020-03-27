@@ -17,14 +17,19 @@
 #include <sstream>
 #include <vector>
 
-// Forward declare the HauserFeshbachDecay class and its operator<< so that
-// we can stream it to the Logger
+// Forward declare some MARLEY classes and their operator<< functions so that
+// we can stream them to the Logger
 namespace marley {
   class HauserFeshbachDecay;
+  class Target;
+  class TargetAtom;
 }
 
 inline std::ostream& operator<<(std::ostream& out,
   const marley::HauserFeshbachDecay& hfd);
+
+std::ostream& operator<<(std::ostream& out, const marley::Target& t);
+std::ostream& operator<<(std::ostream& out, const marley::TargetAtom& ta);
 
 namespace marley {
 

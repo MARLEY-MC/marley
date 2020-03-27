@@ -123,15 +123,15 @@ void marley::Generator::normalize_E_pdf() {
 
   // Treat monoenergetic sources differently since they can cause
   // problems for the standard numerical integration check
-  if (source_->get_Emin() == source_->get_Emax()) {
+  if ( source_->get_Emin() == source_->get_Emax() ) {
     // Set the normalization factor back to one. It's used
     // in the call to E_pdf() below, so we need to do this before
     // we assign it a different value.
     norm_ = 1.0; //
     // Now norm_ is assigned to be the product of the total cross section times
     // the source PDF at energy Emin
-    norm_ = E_pdf(source_->get_Emin());
-    if (norm_ <= 0. || std::isnan(norm_)) {
+    norm_ = E_pdf( source_->get_Emin() );
+    if ( norm_ <= 0. || std::isnan(norm_) ) {
       throw marley::Error("The total cross section for all defined reactions"
         " is <= 0 or NaN for the neutrino energy defined in a monoenergetic"
         " source. Please verify that your neutrino source produces particles"
@@ -148,15 +148,15 @@ void marley::Generator::normalize_E_pdf() {
 
     // Update the normalization factor for use with the reacting neutrino
     // energy probability density function
-    norm_ = marley_utils::num_integrate([this](double E)
+    norm_ = marley_utils::num_integrate( [this](double E)
       -> double { return this->E_pdf(E); }, source_->get_Emin(),
-      source_->get_Emax());
+      source_->get_Emax() );
 
-    if (norm_ <= 0. || std::isnan(norm_)) {
-      throw marley::Error(std::string("The integral of the")
-        + " cross-section-weighted neutrino flux is <= 0 or NaN. Please verify"
-        + " that your neutrino source spectrum produces significant flux"
-        + " above the reaction threshold(s).");
+    if ( norm_ <= 0. || std::isnan(norm_) ) {
+      throw marley::Error( "The integral of the cross-section-weighted"
+        " neutrino flux is <= 0 or NaN. Please verify that your neutrino"
+        " source spectrum produces significant flux above the reaction"
+        " threshold(s)." );
     }
   }
 }
@@ -177,21 +177,21 @@ double marley::Generator::uniform_random_double(double min, double max,
 
   double max_to_use;
 
-  if (inclusive) { // sample from [min, max]
+  if ( inclusive ) { // sample from [min, max]
 
     // Find the double value that comes immediately after max. This allows us
     // to sample uniformly on [min, max] rather than [min,max). This trick
     // comes from http://tinyurl.com/n3ocg3p.
-    max_to_use = std::nextafter(max, std::numeric_limits<double>::max());
+    max_to_use = std::nextafter( max, std::numeric_limits<double>::max() );
   }
   else { // sample from [min, max)
     max_to_use = max;
   }
 
-  std::uniform_real_distribution<double>::param_type params(min, max_to_use);
+  std::uniform_real_distribution<double>::param_type params( min, max_to_use );
 
   // Sample a random double from this distribution
-  return udist(rand_gen_, params);
+  return udist( rand_gen_, params );
 }
 
 /// @details The rejection method used by this function consists of the
@@ -261,12 +261,36 @@ double marley::Generator::rejection_sample(const std::function<double(double)>& 
 }
 
 double marley::Generator::E_pdf(double E) {
+
+  // Initialize the return value to zero
   double pdf = 0.;
+
   // Sum all of the reaction total cross sections, saving
-  // each individual value along the way.
-  for (size_t j = 0, s = reactions_.size(); j < s; ++j) {
-    double tot_xs = reactions_.at(j)->total_xs(source_->get_pid(), E);
-    total_xs_values_.at(j) = tot_xs;
+  // each individual value along the way. Take weighting
+  // by atom fraction in the target material into account.
+  for ( size_t j = 0, s = reactions_.size(); j < s; ++j ) {
+
+    // Get the current reaction
+    const auto& react = reactions_.at( j );
+
+    // Compute the total cross section for the current reaction for a single
+    // target atom
+    double tot_xs = react->total_xs( source_->get_pid(), E );
+
+    // If the target_ member has not been initialized, don't bother doing any
+    // weighting by atom fraction (equivalent to a weight of unity for all
+    // target atoms)
+    if ( target_ ) {
+      // If it has been configured, then apply the appropriate atom fraction
+      // weight from the target as appropriate.
+      tot_xs *= target_->atom_fraction( react->atomic_target() );
+    }
+
+    // Cache the atom-fraction-weighted total cross section for sampling a
+    // reaction mode later
+    total_xs_values_.at( j ) = tot_xs;
+
+    // Add the weighted total cross section value to the total
     pdf += tot_xs;
   }
 
@@ -336,20 +360,19 @@ marley::Reaction& marley::Generator::sample_reaction(double& E) {
     }
   }
 
-  // The total cross section values have already been updated by the final call
-  // to E_pdf() during rejection sampling, so we can now sample a reaction type
-  // using our discrete distribution object.
+  // The atom-fraction-weighted total cross section values have already been
+  // updated by the final call to E_pdf() during rejection sampling, so we can
+  // now sample a reaction type using our discrete distribution object.
   std::discrete_distribution<size_t>::param_type
-    params(total_xs_values_.begin(), total_xs_values_.end());
-  size_t r_index = r_index_dist_(rand_gen_, params);
-  return *reactions_.at(r_index);
+    params( total_xs_values_.begin(), total_xs_values_.end() );
+  size_t r_index = r_index_dist_( rand_gen_, params );
+  return *reactions_.at( r_index );
 }
 
 const marley::NeutrinoSource& marley::Generator::get_source() {
-  if (source_) return *source_;
-  else throw marley::Error(std::string("Error")
-    + " in marley::Generator::get_source(). The member variable source_ =="
-    + " nullptr.");
+  if ( source_ ) return *source_;
+  else throw marley::Error( "Error in marley::Generator::get_source()."
+    " The member variable source_ == nullptr." );
 }
 
 void marley::Generator::set_source(
@@ -377,10 +400,10 @@ void marley::Generator::add_reaction(std::unique_ptr<marley::Reaction> reaction)
 
     // Transfer ownership to a new unique_ptr in the reactions vector, leaving
     // the original empty
-    reactions_.push_back(std::move(reaction));
+    reactions_.push_back( std::move(reaction) );
 
     // Add a new entry in the reaction cross sections vector
-    total_xs_values_.push_back(0.);
+    total_xs_values_.push_back( 0. );
 
     // TODO: consider adding a check to see whether source_ is non-null.
     // Right now, this shouldn't be possible, but an explicit check might
@@ -401,10 +424,9 @@ void marley::Generator::clear_reactions() {
 }
 
 marley::StructureDatabase& marley::Generator::get_structure_db() {
-  if (structure_db_) return *structure_db_;
-  else throw marley::Error(std::string("Error")
-    + " in marley::Generator::get_structure_db(). The member variable"
-    + " structure_db_ == nullptr.");
+  if ( structure_db_ ) return *structure_db_;
+  else throw marley::Error( "Error in marley::Generator::get_structure_db()."
+    " The member variable structure_db_ == nullptr." );
 }
 
 void marley::Generator::set_neutrino_direction(
@@ -490,7 +512,7 @@ double marley::Generator::flux_averaged_total_xs() const {
   double Emin = source_->get_Emin();
   double Emax = source_->get_Emax();
   if ( Emin == Emax ) {
-    avg_total_xs = norm_ / source_->pdf(Emin);
+    avg_total_xs = norm_ / source_->pdf( Emin );
   }
   else {
     double source_norm = marley_utils::num_integrate(

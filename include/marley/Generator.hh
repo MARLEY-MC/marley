@@ -26,6 +26,7 @@
 #include "marley/ProjectileDirectionRotator.hh"
 #include "marley/RotationMatrix.hh"
 #include "marley/StructureDatabase.hh"
+#include "marley/Target.hh"
 #include "marley/marley_utils.hh"
 
 namespace marley {
@@ -45,8 +46,8 @@ namespace marley {
       /// @brief Create a Generator using default settings
       Generator();
 
-      /// @brief Create an Event using the NeutrinoSource, Reaction, and
-      /// StructureDatabase objects owned by this Generator
+      /// @brief Create an Event using the NeutrinoSource, Target, Reaction,
+      /// and StructureDatabase objects owned by this Generator
       marley::Event create_event();
 
       /// @brief Get the seed used to initialize this Generator
@@ -233,12 +234,16 @@ namespace marley {
       /// @brief NeutrinoSource used to sample reacting neutrino energies
       std::unique_ptr<marley::NeutrinoSource> source_;
 
+      /// @brief Representation of the neutrino target material (may be
+      /// composite)
+      std::unique_ptr<marley::Target> target_;
+
       /// @brief StructureDatabase used to simulate nuclear de-excitations
       /// when creating Event objects
       std::unique_ptr<marley::StructureDatabase> structure_db_;
 
       /// @brief Reaction(s) used to sample reacting neutrino energies
-      std::vector<std::unique_ptr<marley::Reaction> > reactions_;
+      std::vector< std::unique_ptr<marley::Reaction> > reactions_;
 
       /// @brief Total cross section values to use as weights for sampling a
       /// Reaction in sample_reaction()

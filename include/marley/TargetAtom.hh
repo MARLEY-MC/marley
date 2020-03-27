@@ -24,7 +24,7 @@ namespace marley {
     public:
 
       /// @brief Create a TargetAtom object from an integer PDG code
-      /// @param pdg Particle Data group code for the atomic species
+      /// @param pdg Particle Data Group code for the atomic species
       explicit TargetAtom( int pdg );
 
       /// @brief Create a TargetAtom object from a proton number (Z)
