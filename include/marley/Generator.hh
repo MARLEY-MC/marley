@@ -153,6 +153,12 @@ namespace marley {
       /// @param source A pointer to the new Target to use
       void set_target(std::unique_ptr<marley::Target> target);
 
+      /// @brief Get a const reference to the Target owned by this
+      /// Generator
+      /// @details Throws a marley::Error if this Generator does not own a
+      /// Target object.
+      const marley::Target& get_target();
+
       /// @brief Sample from an arbitrary probability distribution (defined
       /// here as any object that implements an operator()(std::mt19937_64&)
       /// function)

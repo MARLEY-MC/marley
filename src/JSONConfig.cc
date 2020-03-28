@@ -69,9 +69,9 @@ namespace {
 
     const marley::JSON& vec = spec.at(name);
 
-    if (!vec.is_array()) throw marley::Error(std::string("The value given")
-      + " for the " + name + " key for a " + description + " source should"
-      + " be an array.");
+    if ( !vec.is_array() ) throw marley::Error( std::string("The")
+      + " value given for the " + name + " key for a " + description
+      + " source should be an array." );
 
     std::vector<double> result;
 
@@ -81,9 +81,9 @@ namespace {
       for (const auto& el : elements) {
         double dub = el.to_double(ok);
         if (ok) result.push_back(dub);
-        else throw marley::Error(std::string("Invalid array entry '")
+        else throw marley::Error( "Invalid array entry '"
           + el.dump_string() + "' given for the " + name + " key for a "
-          + description + " source specification.");
+          + description + " source specification." );
       }
     }
 
@@ -203,7 +203,11 @@ marley::Generator marley::JSONConfig::create_generator() const
   // messages describing the reactions that are active.
   MARLEY_LOG_INFO() << "Generator configuration complete. Active reactions:";
   for ( const auto& r : gen.get_reactions() ) {
-    if ( r->pdg_a() == source_pdg ) {
+
+    const marley::TargetAtom ta = r->atomic_target();
+    double atom_frac = gen.get_target().atom_fraction( ta );
+
+    if ( r->pdg_a() == source_pdg && atom_frac > 0. ) {
 
       std::string proc_type_str;
       if ( r->process_type() == ProcType::NeutrinoCC
@@ -445,7 +449,7 @@ void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
   // that
   else st = json_.at("structure");
 
-  if (!st.is_array()) return;
+  if ( !st.is_array() ) return;
   auto structure = st.array_range();
 
   for (const auto& s : structure) {
@@ -791,9 +795,67 @@ void marley::JSONConfig::prepare_target( marley::Generator& gen ) const {
       atom_fractions.push_back( 1. );
     }
   }
-  //else {
-  //  // TODO: finish this
-  //}
+  else {
+    // If the user has specified a target composition explicitly, parse the
+    // JSON object used to define it.
+    const auto& tgt_spec = json_.at( "target" );
+    if ( !tgt_spec.is_object() ) throw marley::Error( "Invalid neutrino target"
+      " specification " + tgt_spec.dump_string() );
+
+    if ( !tgt_spec.has_key("nuclides") ) throw marley::Error( "Missing \""
+      "nuclides\" key in the neutrino target specification "
+      + tgt_spec.dump_string() );
+
+    const auto& n_spec = tgt_spec.at( "nuclides" );
+
+    if ( !n_spec.is_array() ) throw marley::Error( "Invalid \"nuclides\""
+      " array given in the neutrino target specification "
+      + tgt_spec.dump_string() );
+
+    if ( !tgt_spec.has_key("atom_fractions") ) throw marley::Error( "Missing \""
+      "atom_fractions\" key in the neutrino target specification "
+      + tgt_spec.dump_string() );
+
+    const auto& af_spec = tgt_spec.at( "atom_fractions" );
+
+    if ( !af_spec.is_array() ) throw marley::Error( "Invalid"
+      " \"atom_fractions\" array given in the neutrino target specification "
+      + tgt_spec.dump_string() );
+
+    // Check that the two arrays used to specify the target are of equal length
+    int num_nuclides = n_spec.length();
+    if ( num_nuclides != af_spec.length() ) throw marley::Error(
+      "Arrays of unequal length specified for the \"nuclides\" and \"atom"
+      "_fractions\" keys in the neutrino target specification "
+      + tgt_spec.dump_string() );
+
+    // Check that at least one target atom is listed
+    if ( num_nuclides < 1 ) throw marley::Error( "At least one target nuclide"
+      " must be included in the neutrino target specification" );
+
+    // Loop over each of the target atoms. Parse their information and add them
+    // to the vectors that will be used to initialize the Target object.
+    for ( int n = 0; n < num_nuclides; ++n ) {
+      const auto& nuc = n_spec.at( n );
+      bool ok = false;
+      int nuc_pdg = nuc.to_long( ok );
+      if ( ok ) atoms.emplace_back( nuc_pdg );
+      // TODO: add support for string parsing
+      //else if ( nuc.is_string() ) {
+      //}
+      else throw marley::Error( "Invalid target nuclide specifier "
+        + nuc.dump_string() );
+
+      // Parse and store the atom fraction. We already check for sane values
+      // while initializing the Target object itself, so just make sure that the
+      // conversion to a double worked out all right.
+      const auto& frac_spec = af_spec.at( n );
+      double frac = frac_spec.to_double( ok );
+      if ( ok ) atom_fractions.push_back( frac );
+      else throw marley::Error( "Invalid atom fraction "
+        + frac_spec.dump_string() );
+    }
+  }
 
   // We're done. Create the new Target object and move it into the Generator.
   auto target = std::make_unique< marley::Target >( atoms, atom_fractions );
@@ -841,7 +903,7 @@ void marley::JSONConfig::update_logger_settings() const {
   else {
     const marley::JSON& log_config = json_.at("log");
 
-    if (!log_config.is_array()) {
+    if ( !log_config.is_array() ) {
       throw marley::Error(std::string("The configuration given")
         + " for the \"log\" key should be an array of JSON objects.");
     }

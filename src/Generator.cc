@@ -375,6 +375,12 @@ const marley::NeutrinoSource& marley::Generator::get_source() {
     " The member variable source_ == nullptr." );
 }
 
+const marley::Target& marley::Generator::get_target() {
+  if ( target_ ) return *target_;
+  else throw marley::Error( "Error in marley::Generator::get_target()."
+    " The member variable target_ == nullptr." );
+}
+
 void marley::Generator::set_source(
   std::unique_ptr<marley::NeutrinoSource> source)
 {

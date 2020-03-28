@@ -108,7 +108,15 @@ void marley::Target::print( std::ostream& out ) const {
   for ( const auto& pair : atom_fractions_ ) {
     const auto& nuc = pair.first;
     const auto& frac = pair.second;
-    out << nuc << " = " << frac;
+    std::string A_str = std::to_string( nuc.A() );
+    marley_utils::pad_left_inplace( A_str, 3 );
+
+    auto it = marley_utils::element_symbols.find( nuc.Z() );
+    std::string symb = "??";
+    if ( it != marley_utils::element_symbols.end() ) symb = it->second;
+    marley_utils::pad_right_inplace( symb, 2 );
+
+    out << A_str << symb << " = " << frac;
     // Add a newline to all but the last entry
     if ( count < num_atom_types ) out << '\n';
     ++count;
