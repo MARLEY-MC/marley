@@ -148,6 +148,11 @@ namespace marley {
       /// @param source A pointer to the new NeutrinoSource to use
       void set_source(std::unique_ptr<marley::NeutrinoSource> source);
 
+      /// @brief Take ownership of a new Target, replacing any
+      /// existing target owned by this Generator
+      /// @param source A pointer to the new Target to use
+      void set_target(std::unique_ptr<marley::Target> target);
+
       /// @brief Sample from an arbitrary probability distribution (defined
       /// here as any object that implements an operator()(std::mt19937_64&)
       /// function)

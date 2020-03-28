@@ -524,3 +524,20 @@ double marley::Generator::flux_averaged_total_xs() const {
   }
   return avg_total_xs;
 }
+
+void marley::Generator::set_target( std::unique_ptr<marley::Target> target )
+{
+  // If we're passed a nullptr, then don't bother to do anything
+  if ( target ) {
+    // Transfer ownership of the neutrino target to the generator, leaving
+    // the std::unique_ptr passed to this function null afterwards.
+    target_.reset( target.release() );
+
+    // Don't bother to renormalize if there are no reactions defined yet
+    if ( reactions_.empty() ) return;
+
+    // Update the neutrino energy probability density function based on the
+    // new target composition
+    this->normalize_E_pdf();
+  }
+}

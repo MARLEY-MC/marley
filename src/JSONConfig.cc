@@ -159,10 +159,11 @@ marley::Generator marley::JSONConfig::create_generator() const
   gen.dont_normalize_E_pdf_ = true;
 
   // Use the JSON settings to update the generator's parameters
-  prepare_direction(gen);
-  prepare_structure(gen);
-  prepare_neutrino_source(gen);
-  prepare_reactions(gen);
+  prepare_direction( gen );
+  prepare_structure( gen );
+  prepare_neutrino_source( gen );
+  prepare_reactions( gen );
+  prepare_target( gen );
 
   // If the user has disabled nuclear de-excitations, then set the
   // flag appropriately.
@@ -749,8 +750,57 @@ void marley::JSONConfig::prepare_neutrino_source(marley::Generator& gen) const
   }
 
   // Load the generator with the new source object
-  gen.set_source(std::move(source));
+  gen.set_source( std::move(source) );
 
+}
+
+void marley::JSONConfig::prepare_target( marley::Generator& gen ) const {
+
+  // Temporary storage for the list of target atoms and their atom fractions
+  // in the possibly-composite neutrino target
+  std::vector<marley::TargetAtom> atoms;
+  std::vector<double> atom_fractions;
+
+  // In the absence of a user-specified target, create one automatically from
+  // the configured reactions. Each unique target atom involved in at least
+  // one reaction will be included with equal weight.
+  if ( !json_.has_key("target") ) {
+
+    // If there aren't any configured reactions, just return without
+    // configuring the target at all. This only happens in unusual
+    // situations.
+    const auto& reactions = gen.get_reactions();
+    if ( reactions.empty() ) return;
+
+    // Otherwise, store the set of target atoms involved in at least
+    // one reaction
+    std::set< marley::TargetAtom > temp_atom_set;
+    for ( const auto& react : reactions ) {
+      temp_atom_set.insert( react->atomic_target() );
+    }
+
+    // Add each target atom with equal weight to the target configuration
+    for ( const auto& atom : temp_atom_set ) {
+      atoms.push_back( atom );
+      // This will be renormalized appropriately by the Target object itself
+      atom_fractions.push_back( 1. );
+    }
+  }
+  //else {
+  //  // TODO: finish this
+  //}
+
+  // We're done. Create the new Target object and move it into the Generator.
+  auto target = std::make_unique< marley::Target >( atoms, atom_fractions );
+  if ( target->has_single_nuclide() ) {
+    const marley::TargetAtom& ta = target->atom_fraction_map().cbegin()->first;
+    MARLEY_LOG_INFO() << "Configured pure " << ta << " neutrino target";
+  }
+  else {
+    MARLEY_LOG_INFO() << "Configured composite neutrino target with the"
+      << " following nuclide fractions:\n" << *target;
+  }
+  gen.set_target( std::move(target) );
 }
 
 std::string marley::JSONConfig::source_get(const char* name,

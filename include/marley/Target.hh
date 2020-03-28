@@ -57,8 +57,17 @@ namespace marley {
       /// will return false if its atom fraction is exactly zero
       bool contains( const marley::TargetAtom& atom ) const;
 
+      /// @brief Returns true if the target consists of a single kind of
+      /// target atom, or false otherwise
+      inline bool has_single_nuclide() const
+        { return (atom_fractions_.size() == 1u); }
+
       /// @brief Print a textual representation of the Target to a std::ostream
       void print( std::ostream& out ) const;
+
+      /// @brief Get read-only access to the map of atom fractions
+      inline const std::map< marley::TargetAtom, double >& atom_fraction_map()
+        const { return atom_fractions_; }
 
     protected:
 

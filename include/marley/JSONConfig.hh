@@ -34,10 +34,11 @@ namespace marley {
 
       marley::Generator create_generator() const;
 
-      void prepare_direction(marley::Generator& gen) const;
-      void prepare_neutrino_source(marley::Generator& gen) const;
-      void prepare_reactions(marley::Generator& gen) const;
-      void prepare_structure(marley::Generator& gen) const;
+      void prepare_direction( marley::Generator& gen ) const;
+      void prepare_neutrino_source( marley::Generator& gen ) const;
+      void prepare_reactions( marley::Generator& gen ) const;
+      void prepare_structure( marley::Generator& gen ) const;
+      void prepare_target( marley::Generator& gen ) const;
 
       void update_logger_settings() const;
 

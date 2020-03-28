@@ -103,9 +103,14 @@ bool marley::Target::contains( const marley::TargetAtom& atom ) const {
 }
 
 void marley::Target::print( std::ostream& out ) const {
+  size_t num_atom_types = atom_fractions_.size();
+  size_t count = 1;
   for ( const auto& pair : atom_fractions_ ) {
     const auto& nuc = pair.first;
     const auto& frac = pair.second;
-    out << nuc << ": " << frac << '\n';
+    out << nuc << " = " << frac;
+    // Add a newline to all but the last entry
+    if ( count < num_atom_types ) out << '\n';
+    ++count;
   }
 }
