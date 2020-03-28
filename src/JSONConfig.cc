@@ -248,7 +248,7 @@ marley::Generator marley::JSONConfig::create_generator() const
   // Now we're all ready to go. Log the flux-averaged total cross section
   // value before returning the fully-configured generator.
   double avg_tot_xs = gen.flux_averaged_total_xs(); // MeV^(-2)
-  MARLEY_LOG_INFO() << "Flux-averaged total cross section: "
+  MARLEY_LOG_INFO() << "Flux-averaged total cross section per atom: "
     << marley_utils::hbar_c2 * avg_tot_xs * marley_utils::fm2_to_minus40_cm2
     << " * 10^(-40) cm^2";
 
@@ -303,10 +303,10 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
       auto reactions = rs.array_range();
       if ( reactions.begin() != reactions.end() ) {
 
-        // Create a vector to cache the ProcessType values for
-        // reactions that have been loaded. Complain if there is
-        // duplication.
-        std::vector<ProcType> loaded_proc_types;
+        // Create a temporary vector to cache the (TargetAtom, ProcessType)
+        // pairs for which reactions have already been loaded. Complain if
+        // there is duplication.
+        std::vector< std::pair<marley::TargetAtom, ProcType> > loaded_proc_types;
 
         for (const auto& r : reactions) {
 
@@ -324,26 +324,31 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
           auto reacts = marley::Reaction::load_from_file(
             full_file_name, gen.get_structure_db());
 
-          // All of the Reaction objects loaded from a single file
-          // will have the same process type, so just save the first one
+          // All of the Reaction objects loaded from a single file will have
+          // the same process type and atomic target, so just save this
+          // information from the first one
+          auto temp_atom = reacts.front()->atomic_target();
           auto temp_pt = reacts.front()->process_type();
+          std::pair<marley::TargetAtom, ProcType> temp_pair(temp_atom, temp_pt);
 
           // If we have a duplicate, warn the user that we'll ignore it
           auto begin = loaded_proc_types.cbegin();
           auto end = loaded_proc_types.cend();
-          if ( std::find(begin, end, temp_pt) != end ) {
-            MARLEY_LOG_WARNING() << "Reaction matrix elements for the "
-              << marley::Reaction::proc_type_to_string(temp_pt) << " process"
-              " were already loaded. To avoid duplication, those in "
-              << full_file_name << " will be ignored.";
+          if ( std::find(begin, end, temp_pair) != end ) {
+            MARLEY_LOG_WARNING() << "Reaction settings for the "
+              << marley::Reaction::proc_type_to_string( temp_pt )
+              << " process on " << temp_atom << " were already loaded."
+              << " To avoid duplication, those in " << full_file_name
+              << " will be ignored.";
             continue;
           }
           // Otherwise, save the process type for later checks of this kind
           else {
             MARLEY_LOG_INFO() << "Loaded "
               << marley::Reaction::proc_type_to_string(temp_pt)
-              << " reaction data from " << full_file_name;
-            loaded_proc_types.push_back( temp_pt );
+              << " reaction data for " << temp_atom << " from "
+              << full_file_name;
+            loaded_proc_types.push_back( temp_pair );
           }
 
           // Transfer ownership of the new reactions to the generator
