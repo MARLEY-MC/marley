@@ -141,7 +141,7 @@ namespace marley {
       /// Generator
       /// @details Throws a marley::Error if this Generator does not own a
       /// NeutrinoSource object.
-      const marley::NeutrinoSource& get_source();
+      const marley::NeutrinoSource& get_source() const;
 
       /// @brief Take ownership of a new NeutrinoSource, replacing any
       /// existing source owned by this Generator
@@ -157,7 +157,7 @@ namespace marley {
       /// Generator
       /// @details Throws a marley::Error if this Generator does not own a
       /// Target object.
-      const marley::Target& get_target();
+      const marley::Target& get_target() const;
 
       /// @brief Sample from an arbitrary probability distribution (defined
       /// here as any object that implements an operator()(std::mt19937_64&)
@@ -209,11 +209,39 @@ namespace marley {
       inline void set_do_deexcitations( bool do_them );
 
       /// @brief Computes the flux-averaged total cross section for all
-      /// enabled neutrino reactions
-      /// @details If flux weighting is disabled (via a call to set_weight_flux())
-      /// then this function will return zero
+      /// enabled neutrino reactions, taking target atom fractions into
+      /// account as appropriate
+      /// @details If flux weighting is disabled (via a call to
+      /// set_weight_flux()) then this function will return zero
       /// @return Total cross section (MeV<sup> -2</sup>)
       double flux_averaged_total_xs() const;
+
+      /// @brief Computes the total cross section at fixed energy for all
+      /// configured reactions involving a particular target atom.
+      /// @details Atom fractions in the owned Target are ignored by this
+      /// function.
+      /// @note This function is not used as part of the normal MARLEY
+      /// workflow. It serves as part of an API that enables MARLEY to
+      /// be interfaced with an external flux driver.
+      /// @param pdg_a The PDG code for the projectile
+      /// @param KEa The kinetic energy of the projectile (MeV)
+      /// @param pdg_atom The nuclear PDG code for the atomic target
+      /// @return Total cross section (MeV<sup> -2</sup>)
+      double total_xs(int pdg_a, double KEa, int pdg_atom) const;
+
+      /// @brief Creates an event object for a fixed projectile species,
+      /// kinetic energy, and atomic target
+      /// @details If no energetically-accessible reaction is available for
+      /// the given input parameters, then a marley::Error will be thrown.
+      /// @note This function is not used as part of the normal MARLEY
+      /// workflow. It serves as part of an API that enables MARLEY to
+      /// be interfaced with an external flux driver.
+      /// @param pdg_a The PDG code for the projectile
+      /// @param KEa The kinetic energy of the projectile (MeV)
+      /// @param pdg_atom The nuclear PDG code for the atomic target
+      /// @param dir_vec Direction three-vector of the projectile
+      marley::Event create_event( int pdg_a, double KEa, int pdg_atom,
+        const std::array<double, 3>& dir_vec );
 
     private:
 
@@ -306,6 +334,28 @@ namespace marley {
       /// @details This should be set to true except under unusual
       /// circumstances
       bool do_deexcitations_ = true;
+
+      /// @brief Computes the total cross section at fixed energy for all
+      /// configured reactions involving a particular target atom.
+      /// @details Atom fractions in the owned Target are ignored by this
+      /// function.
+      /// @note This function is not used as part of the normal MARLEY
+      /// workflow. It serves as part of an API that enables MARLEY to
+      /// be interfaced with an external flux driver.
+      /// @note Null pointer values for index_vec and/or xsec_vec are valid
+      /// and will disable storage of the relevant information
+      /// @param pdg_a The PDG code for the projectile
+      /// @param KEa The kinetic energy of the projectile (MeV)
+      /// @param pdg_atom The nuclear PDG code for the atomic target
+      /// @param index_vec Pointer to a vector that will be loaded
+      /// with the indices of all reactions that can handle the
+      /// input initial state
+      /// @param xsec_vec Pointer to a vector that will be loaded
+      /// with the total cross sections of all reactions that can handle the
+      /// input initial state
+      /// @return Total cross section (MeV<sup> -2</sup>)
+      double total_xs(int pdg_a, double KEa, int pdg_atom,
+        std::vector<size_t>* index_vec, std::vector<double>* xsec_vec) const;
   };
 
   // Inline function definitions

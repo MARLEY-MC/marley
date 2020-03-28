@@ -369,13 +369,13 @@ marley::Reaction& marley::Generator::sample_reaction(double& E) {
   return *reactions_.at( r_index );
 }
 
-const marley::NeutrinoSource& marley::Generator::get_source() {
+const marley::NeutrinoSource& marley::Generator::get_source() const {
   if ( source_ ) return *source_;
   else throw marley::Error( "Error in marley::Generator::get_source()."
     " The member variable source_ == nullptr." );
 }
 
-const marley::Target& marley::Generator::get_target() {
+const marley::Target& marley::Generator::get_target() const {
   if ( target_ ) return *target_;
   else throw marley::Error( "Error in marley::Generator::get_target()."
     " The member variable target_ == nullptr." );
@@ -546,4 +546,88 @@ void marley::Generator::set_target( std::unique_ptr<marley::Target> target )
     // new target composition
     this->normalize_E_pdf();
   }
+}
+
+double marley::Generator::total_xs( int pdg_a, double KEa, int pdg_atom) const
+{
+  return this->total_xs( pdg_a, KEa, pdg_atom, nullptr, nullptr );
+}
+
+double marley::Generator::total_xs( int pdg_a, double KEa, int pdg_atom,
+  std::vector<size_t>* index_vec, std::vector<double>* xsec_vec ) const
+{
+  double xsec_sum = 0.;
+
+  if ( index_vec ) index_vec->clear();
+  if ( xsec_vec ) xsec_vec->clear();
+
+  for ( size_t j = 0u; j < reactions_.size(); ++j ) {
+
+    const auto& r = reactions_.at( j );
+
+    // Skip reactions which involve a different target atom
+    if ( pdg_atom != r->atomic_target().pdg() ) continue;
+
+    // Skip reactions which involve a different projectile
+    if ( pdg_a != r->pdg_a() ) continue;
+
+    // If the cross section is non-vanishing, store information about it
+    // (as appropriate) and add it to the sum
+    double xsec = r->total_xs( pdg_a, KEa );
+    if ( xsec > 0. ) {
+      xsec_sum += xsec;
+      if ( index_vec ) index_vec->push_back( j );
+      if ( xsec_vec ) xsec_vec->push_back( xsec );
+    }
+
+  }
+
+  return xsec_sum;
+}
+
+
+marley::Event marley::Generator::create_event( int pdg_a, double KEa,
+  int pdg_atom, const std::array<double, 3>& dir_vec )
+{
+  // (1) Sample a reaction mode from all configured reactions that can handle
+  // the given initial-state parameters
+  std::vector<size_t> indices;
+  std::vector<double> xsecs;
+  double tot_xsec = this->total_xs( pdg_a, KEa, pdg_atom, &indices, &xsecs );
+
+  if ( xsecs.empty() || tot_xsec <= 0. ) throw marley::Error(
+    "Cannot create an event for a projectile with kinetic energy = "
+    + std::to_string(KEa) + " MeV and PDG code " + std::to_string(pdg_a)
+    + " striking an atom with PDG code " + std::to_string(pdg_atom)
+    + ". The total cross section vanishes for all configured reactions" );
+
+  // The total cross section values and indices in the full reactions_ vector
+  // have already been loaded into temporary vectors, so we can immediately use
+  // those to sample a reaction using a discrete distribution.
+  std::discrete_distribution<size_t> react_dist( xsecs.begin(), xsecs.end() );
+  size_t sampled_index = react_dist( rand_gen_ );
+  auto& r = reactions_.at( indices.at(sampled_index) );
+
+  // (2) Create the prompt two-two scattering event using the sampled reaction
+  // object
+  marley::Event ev = r->create_event( pdg_a, KEa, *this );
+
+  // Do the usual post-processing
+
+  // (3) If needed, de-excite the final-state residue
+  if ( do_deexcitations_ ) {
+    marley::NucleusDecayer nd;
+    nd.process_event( ev, *this );
+  }
+
+  // (4) If needed, rotate the event to match the desired projectile direction
+  // Set the incident neutrino direction for this event
+  static marley::ProjectileDirectionRotator my_rotator;
+  my_rotator.set_projectile_direction( dir_vec );
+
+  // Rotate the coordinate system of the event if needed
+  my_rotator.process_event( ev, *this );
+
+  // Return the completed event object
+  return ev;
 }
