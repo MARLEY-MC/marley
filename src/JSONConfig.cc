@@ -29,6 +29,7 @@
 
 using InterpMethod = marley::InterpolationGrid<double>::InterpolationMethod;
 using ProcType = marley::Reaction::ProcessType;
+using CMode = marley::NuclearReaction::CoulombMode;
 
 // anonymous namespace for helper functions, etc.
 namespace {
@@ -186,6 +187,30 @@ marley::Generator marley::JSONConfig::create_generator() const
       return gen;
     }
   }
+
+  // Set the method to use for computing Coulomb corrections in all reactions.
+  // If the user gave an explicit setting for this, use that.
+  // Otherwise, interpolate between the Fermi function and the modified
+  // effective momentum approximation.
+  CMode coulomb_mode = CMode::FERMI_AND_MEMA; // Default method
+  if ( json_.has_key("coulomb_mode") ) {
+    const auto& cmode = json_.at( "coulomb_mode" );
+    if ( !cmode.is_string() ) throw marley::Error("Invalid Coulomb mode"
+      " specification " + cmode.dump_string() );
+    std::string my_mode = cmode.to_string();
+    coulomb_mode = marley::NuclearReaction
+      ::coulomb_mode_from_string( my_mode );
+  }
+
+  // Update the Coulomb mode setting for all configured nuclear reactions
+  for ( auto& react : gen.reactions_ ) {
+    auto* nr = dynamic_cast< marley::NuclearReaction* >( react.get() );
+    if ( nr ) nr->set_coulomb_mode( coulomb_mode );
+  }
+
+  std::string cmode_str = marley::NuclearReaction
+    ::string_from_coulomb_mode( coulomb_mode );
+  MARLEY_LOG_INFO() << "Configured Coulomb correction method: " << cmode_str;
 
   // Now that the reactions and source are both prepared, check that a neutrino
   // from the source can interact via at least one of the enabled reactions
