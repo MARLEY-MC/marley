@@ -12,6 +12,7 @@
 
 #pragma once
 #include <functional>
+#include <map>
 #include <memory>
 #include <regex>
 #include <string>
@@ -46,6 +47,11 @@ namespace marley {
       NuclearReaction(ProcessType pt, int pdg_a, int pdg_b, int pdg_c,
         int pdg_d, int q_d,
         const std::shared_ptr<std::vector<marley::MatrixElement> >& mat_els);
+
+      /// @brief Enumerated type used to set the method for handling Coulomb
+      /// corrections for CC nuclear reactions
+      enum class CoulombMode { NO_CORRECTION, FERMI_FUNCTION, EMA, MEMA,
+        FERMI_AND_EMA, FERMI_AND_MEMA };
 
       inline virtual marley::TargetAtom atomic_target() const override final
         { return marley::TargetAtom( pdg_b_ ); }
@@ -131,9 +137,11 @@ namespace marley {
       /// momentum approximation. See J. Engel, Phys. Rev. C 57, 2004 (1998)
       /// @param beta_rel_cd The relative speed of the final particles c and d
       /// (dimensionless)
-      /// @param ok Flag that is set to false if subtracting the Coulomb
+      /// @param[out] ok Flag that is set to false if subtracting the Coulomb
       /// potential pulls the event below threshold
-      double ema_factor(double beta_rel_cd, bool& ok) const;
+      /// @param modified_ema If true, the modified EMA correction factor will
+      /// be returned instead of that specified by the original EMA
+      double ema_factor(double beta_rel_cd, bool& ok, bool modified_ema) const;
 
       /// Computes the weak nuclear charge @f$ Q_W = N - (1
       /// - 4\sin^2\theta_W)Z @f$ for the target nucleus
@@ -146,7 +154,26 @@ namespace marley {
       inline const std::vector<marley::MatrixElement>& matrix_elements() const
         { return *matrix_elements_; }
 
+      /// Return the method used by this reaction for handling Coulomb
+      /// corrections
+      inline CoulombMode coulomb_mode() const
+        { return coulomb_mode_; }
+
+      /// Set the method for handling Coulomb corrections for this reaction
+      inline void set_coulomb_mode( CoulombMode mode )
+        { coulomb_mode_ = mode; }
+
+      /// Convert a string to a CoulombMode value
+      static CoulombMode coulomb_mode_from_string( const std::string& str );
+
+      /// Convert a CoulombMode value to a string
+      static std::string string_from_coulomb_mode( CoulombMode mode );
+
     protected:
+
+      /// Helper map used by the methods to convert a CoulombMode value
+      /// to and from a std::string
+      static std::map<CoulombMode, std::string> coulomb_mode_string_map_;
 
       /// Helper function used by NuclearReaction::create_event()
       virtual marley::Event make_event_object(double KEa,
@@ -203,9 +230,13 @@ namespace marley {
       /// all final-state particles are at rest in the CM frame)
       double KEa_threshold_;
 
+      /// @brief The method to use when computing Coulomb corrections (if needed)
+      /// for this reaction
+      CoulombMode coulomb_mode_ = CoulombMode::FERMI_AND_MEMA;
+
       /// @brief Matrix elements representing all of the possible nuclear
       /// transitions that may be caused by this reaction
-      std::shared_ptr<std::vector<marley::MatrixElement> > matrix_elements_;
+      std::shared_ptr< std::vector<marley::MatrixElement> > matrix_elements_;
   };
 
 }

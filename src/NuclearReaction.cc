@@ -28,9 +28,34 @@
 
 using ME_Type = marley::MatrixElement::TransitionType;
 using ProcType = marley::Reaction::ProcessType;
+using CMode = marley::NuclearReaction::CoulombMode;
+
+std::map< CMode, std::string > marley::NuclearReaction
+  ::coulomb_mode_string_map_ =
+{
+  { CMode::NO_CORRECTION, "none" },
+  { CMode::FERMI_FUNCTION, "Fermi" },
+  { CMode::EMA, "EMA" },
+  { CMode::MEMA, "MEMA" },
+  { CMode::FERMI_AND_EMA, "Fermi-EMA" },
+  { CMode::FERMI_AND_MEMA, "Fermi-MEMA" },
+};
 
 namespace {
   constexpr int BOGUS_TWO_J_VALUE = -99999;
+
+  // Helper function that computes an approximate nuclear radius in natural
+  // units (1/MeV)
+  double nuclear_radius_natural_units(int A) {
+    // First compute the approximate nuclear radius in fm
+    double R = marley_utils::r0 * std::pow(A, marley_utils::ONE_THIRD);
+
+    // Convert to natural units (MeV^(-1))
+    double R_nat = R / marley_utils::hbar_c;
+
+    return R_nat;
+  }
+
 }
 
 marley::NuclearReaction::NuclearReaction(ProcType pt, int pdg_a, int pdg_b,
@@ -101,12 +126,10 @@ double marley::NuclearReaction::fermi_function(double beta_c) const {
 
   double s = std::sqrt(1. - std::pow(marley_utils::alpha * Zf_, 2));
 
-  // Estimate the nuclear radius using r_n = r_0*A^(1/3)
-  double r_n = marley_utils::r0 * std::pow(Af_, marley_utils::ONE_THIRD);
+  // Estimate the nuclear radius (in MeV^(-1))
+  double rho = nuclear_radius_natural_units( Af_ );
 
-  // Convert the estimated nuclear radius to natural units (MeV^(-1))
-  double rho = r_n / marley_utils::hbar_c;
-
+  // Sommerfeld parameter
   double eta = marley_utils::alpha * Zf_ / beta_c;
 
   // Adjust the value of eta if the light product from this reaction is
@@ -499,43 +522,78 @@ marley::Event marley::NuclearReaction::make_event_object(double KEa,
   return event;
 }
 
-/// @todo: add MEMA for muons, warning for taus
 double marley::NuclearReaction::coulomb_correction_factor(double beta_rel_cd)
   const
 {
+  // Don't do anything if Coulomb corrections are switched off
+  if ( coulomb_mode_ == CoulombMode::NO_CORRECTION ) return 1.;
+
   // Fermi function approach to the Coulomb correction
-  double fermi_func = fermi_function(beta_rel_cd);
+  double fermi_func = fermi_function( beta_rel_cd );
+
+  // Unconditionally return the value of the Fermi function if the user
+  // has configured things this way
+  if ( coulomb_mode_ == CoulombMode::FERMI_FUNCTION ) return fermi_func;
+
+  bool use_mema = false;
+  if ( coulomb_mode_ == CoulombMode::MEMA
+    || coulomb_mode_ == CoulombMode::FERMI_AND_MEMA )
+  {
+    use_mema = true;
+  }
 
   // Effective momentum approximation for the Coulomb correction
   bool EMA_ok = false;
-  double factor_EMA = ema_factor(beta_rel_cd, EMA_ok);
+  double factor_EMA = ema_factor( beta_rel_cd, EMA_ok, use_mema );
 
-  // If the effective momentum approximation is invalid because subtracting
-  // off the Coulomb potential brings the reaction below threshold, then
-  // just use the Fermi function
+  if ( coulomb_mode_ == CoulombMode::EMA || coulomb_mode_ == CoulombMode::MEMA ) {
+    if ( EMA_ok ) return factor_EMA;
+    else {
+      std::string model_name( "EMA" );
+      if ( coulomb_mode_ == CoulombMode::MEMA ) model_name = "MEMA";
+      throw marley::Error( "Invalid " + model_name + " factor encountered"
+        " in marley::NuclearReaction::coulomb_correction_factor()" );
+    }
+  }
+
+  if ( coulomb_mode_ != CoulombMode::FERMI_AND_EMA
+    && coulomb_mode_ != CoulombMode::FERMI_AND_MEMA )
+  {
+    throw marley::Error( "Unrecognized Coulomb correction mode encountered"
+      " in marley::NuclearReaction::coulomb_correction_factor()" );
+  }
+
+  // If we've gotten this far, then we're interpolating between the Fermi
+  // function and the (M)EMA correction factor. If the (modified) effective
+  // momentum approximation is invalid because subtracting off the Coulomb
+  // potential brings the reaction below threshold, then just use the Fermi
+  // function
   if ( !EMA_ok ) return fermi_func;
 
-  // Otherwise, choose the larger of the two factors for antineutrinos, and the
-  // smaller of the two factors for neutrinos
-  bool is_antineutrino = pdg_a_ < 0;
+  // Otherwise, choose the approach that yields the smaller correction (i.e., the
+  // correction factor that is closest to unity).
+  double diff_Fermi = std::abs( fermi_func - 1. );
+  double diff_EMA = std::abs( factor_EMA - 1. );
 
-  double correction_factor = 1.;
-  if ( is_antineutrino ) {
-    correction_factor = std::max( fermi_func, factor_EMA );
-  }
-  else {
-    correction_factor = std::min( fermi_func, factor_EMA );
-  }
-
-  return correction_factor;
+  if ( diff_Fermi < diff_EMA ) return fermi_func;
+  else return factor_EMA;
 }
 
 // Effective momentum approximation for the Coulomb correction factor
-double marley::NuclearReaction::ema_factor(double beta_rel_cd, bool& ok) const
+double marley::NuclearReaction::ema_factor(double beta_rel_cd, bool& ok,
+  bool modified_ema) const
 {
   // If particle c has a positive PDG code, then it is a negatively-charged
   // lepton
   bool minus_c = (pdg_c_ > 0);
+
+  // Approximate nuclear radius (MeV^(-1))
+  double R_nuc = nuclear_radius_natural_units( Af_ );
+
+  // Approximate Coulomb potential
+  double Vc = ( -3. * Zf_ * marley_utils::alpha ) / ( 2. * R_nuc );
+  // Adjust if needed for a final-state charged antilepton
+  if ( !minus_c ) Vc *= -1;
 
   // Like the Fermi function, this approximation uses a static nuclear Coulomb
   // potential (a sphere at the origin). Typically nuclear recoil is neglected,
@@ -543,8 +601,7 @@ double marley::NuclearReaction::ema_factor(double beta_rel_cd, bool& ok) const
   // MARLEY's case, we do this by calculating it in the rest frame of the final
   // nucleus ("FNR" frame). We already have the relative speed of the final
   // nucleus and outgoing lepton, so this is easy.
-  double gamma_rel_cd = std::pow(
-    1. - std::pow(beta_rel_cd, 2), -marley_utils::ONE_HALF);
+  double gamma_rel_cd = std::pow( 1. - std::pow(beta_rel_cd, 2), -0.5 );
 
   // Check for numerical errors from the square root
   if ( !std::isfinite(gamma_rel_cd) ) {
@@ -555,10 +612,8 @@ double marley::NuclearReaction::ema_factor(double beta_rel_cd, bool& ok) const
   // Total energy of the outgoing lepton in the FNR frame
   double E_c_FNR = gamma_rel_cd * mc_;
 
-  // Approximate Coulomb potential
-  double Vc = -3.*Zf_*marley_utils::alpha / (2. * marley_utils::r0
-    * std::pow(Af_, marley_utils::ONE_THIRD));
-  if ( !minus_c ) Vc *= -1;
+  // Lepton momentum in FNR frame
+  double p_c_FNR = beta_rel_cd * E_c_FNR;
 
   // Effective FNR frame total energy
   double E_c_FNR_eff = E_c_FNR - Vc;
@@ -567,19 +622,20 @@ double marley::NuclearReaction::ema_factor(double beta_rel_cd, bool& ok) const
   // below the lepton mass, then the expression for the effective momentum
   // will give an imaginary value. Signal this by setting the "ok" flag to
   // false.
-  ok = (E_c_FNR_eff >= mc_);
-
-  // Lepton momentum in FNR frame
-  double p_c_FNR = marley_utils::real_sqrt( std::pow(E_c_FNR, 2) - mc_*mc_ );
+  ok = ( E_c_FNR_eff >= mc_ );
 
   // Effective momentum in FNR frame
   double p_c_FNR_eff = marley_utils::real_sqrt(
     std::pow(E_c_FNR_eff, 2) - mc_*mc_ );
 
-  // Coulomb correction factor
-  double f_EMA2 = std::pow(p_c_FNR_eff / p_c_FNR, 2);
+  // Coulomb correction factor for the original EMA
+  double F_EMA = std::pow( p_c_FNR_eff / p_c_FNR, 2 );
 
-  return f_EMA2;
+  // Coulomb correction factor for the modified EMA
+  double F_MEMA = ( p_c_FNR_eff * E_c_FNR_eff ) / ( p_c_FNR * E_c_FNR );
+
+  if ( modified_ema ) return F_MEMA;
+  else return F_EMA;
 }
 
 // Factor that appears in the cross section for coherent elastic
@@ -609,4 +665,23 @@ void marley::NuclearReaction::set_description() {
   }
   if ( has_excited_state ) description_ += '*';
   else description_ += " (g.s.)";
+}
+
+// Convert a string to a CoulombMode value
+CMode marley::NuclearReaction::coulomb_mode_from_string(
+  const std::string& str )
+{
+  for ( const auto& pair : coulomb_mode_string_map_ ) {
+    if ( str == pair.second ) return pair.first;
+  }
+  throw marley::Error( "The string \"" + str + "\" was not recognized"
+    " as a valid Coloumb mode setting" );
+}
+
+// Convert a CoulombMode value to a string
+std::string marley::NuclearReaction::string_from_coulomb_mode( CMode mode ) {
+  auto it = coulomb_mode_string_map_.find( mode );
+  if ( it != coulomb_mode_string_map_.end() ) return it->second;
+  else throw marley::Error( "Unrecognized CoulombMode value encountered in"
+    " marley::NuclearReaction::string_from_coulomb_mode()" );
 }
