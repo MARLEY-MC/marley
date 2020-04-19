@@ -132,8 +132,10 @@ namespace marley {
       }
 
       /// Retrieves a const reference to the table of Fragment objects
-      static inline const std::map<int, marley::Fragment>& fragments()
-        { return fragment_table_; }
+      static inline const std::map<int, marley::Fragment>& fragments() {
+        if ( !initialized_gs_spin_parity_table_ ) initialize_jpi_table();
+        return fragment_table_;
+      }
 
       /// @brief Retrieves nuclear fragment data from the database
       /// @param fragment_pdg PDG code for the desired fragment
@@ -164,6 +166,21 @@ namespace marley {
       /// gamma-ray emission to the continuum
       inline void set_gamma_l_max( int ell ) { gamma_l_max_ = ell; }
 
+      /// @brief Looks up the ground-state spin-parity for a particular nuclide
+      /// @param[in] nuc_pdg PDG code for the nuclide of interest
+      /// @param[out] twoJ Two times the ground-state nuclear spin
+      /// @param[out] Pi Ground-state nuclear parity
+      static void get_gs_spin_parity(int nuc_pdg, int& twoJ,
+        marley::Parity& Pi);
+
+      /// @brief Looks up the ground-state spin-parity for a particular nuclide
+      /// @param[in] Z Proton number for the nuclide of interest
+      /// @param[in] A Mass number for the nuclide of interest
+      /// @param[out] twoJ Two times the ground-state nuclear spin
+      /// @param[out] Pi Ground-state nuclear parity
+      static void get_gs_spin_parity(const int Z, const int A, int& twoJ,
+        marley::Parity& Pi);
+
     private:
 
       /// @brief Lookup table for marley::DecayScheme objects.
@@ -190,7 +207,7 @@ namespace marley {
 
       /// @brief Lookup table for nuclear fragments that will be considered
       /// when modeling de-excitations in the unbound continuum
-      static const std::map<int, marley::Fragment> fragment_table_;
+      static std::map<int, marley::Fragment> fragment_table_;
 
       /// @brief Default value of fragment_l_max_
       static constexpr int DEFAULT_FRAGMENT_L_MAX = 5;
@@ -207,6 +224,21 @@ namespace marley {
       /// when computing differential widths (via a GammaContinuumExitChannel
       /// object) for decays to the unbound continuum via gamma-ray emission
       int gamma_l_max_ = DEFAULT_GAMMA_L_MAX;
+
+      /// @brief Flag that indicates whether the ground-state spin-parities
+      /// have already been loaded from the relevant data file
+      static bool initialized_gs_spin_parity_table_;
+
+      /// @brief Name of the data file which will be used to read in the
+      /// ground-state nuclear spin-parity values
+      static const std::string jpi_data_file_name_;
+
+      /// @brief Lookup table for ground-state nuclear spin-parities
+      static std::map< int, std::pair<int, marley::Parity> > jpi_table_;
+
+      /// @brief Helper function that initializes the table of ground-state
+      /// nuclear spin-parities
+      static void initialize_jpi_table();
   };
 
 }

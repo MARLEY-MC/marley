@@ -65,7 +65,7 @@ namespace {
   // Helper function that assigns Level pointers to MatrixElement objects
   // that represent transitions to discrete nuclear levels
   void set_level_ptrs(std::vector<marley::MatrixElement>& matrix_elements,
-    int pdg_d, marley::StructureDatabase& db)
+    int pdg_b, int pdg_d, marley::StructureDatabase& db)
   {
     // If discrete level data are available for the residual nucleus, use them
     // to assign values to the level pointers and refine the level energies. If
@@ -79,16 +79,23 @@ namespace {
     // reaction is for the correct nuclide. If the PDG code in the decay
     // scheme object does not match the one we'd expect for this reaction's
     // final state nucleus, complain
-    int scheme_pdg = marley_utils::get_nucleus_pid(ds->Z(), ds->A());
-    if ( pdg_d != scheme_pdg ) throw marley::Error("Nuclear data mismatch:"
+    int scheme_pdg = marley_utils::get_nucleus_pid( ds->Z(), ds->A() );
+    if ( pdg_d != scheme_pdg ) throw marley::Error( "Nuclear data mismatch:"
         " attempted to associate a decay scheme object that has PDG code "
         + std::to_string(scheme_pdg) + " with a reaction object that has"
-        " PDG code " + std::to_string(pdg_d));
+        " PDG code " + std::to_string(pdg_d) );
 
     // Use the smallest nuclear fragment emission threshold to check for
     // unbound levels.
     const auto& mt = marley::MassTable::Instance();
     double unbound_threshold = mt.unbound_threshold( pdg_d );
+
+    // Get the spin-parity of the ground state of the initial nucleus.
+    // This will be used below to check the matchups between MatrixElement and
+    // Level objects based on spin-parity selection rules.
+    int twoJi;
+    marley::Parity Pi;
+    marley::StructureDatabase::get_gs_spin_parity( pdg_b, twoJi, Pi );
 
     // Cycle through each of the level energies given in the reaction dataset.
     for ( auto& mat_el : matrix_elements ) {
@@ -115,6 +122,45 @@ namespace {
       MARLEY_LOG_DEBUG() << "reaction level at " << en
         << " MeV was matched to the decay scheme level at "
         << plevel->energy() << " MeV";
+
+      // Print a warning if the spin-parity of the matched level does not
+      // satisfy the expected selection rules for a transition from the nuclear
+      // ground state
+
+      // Retrieve the final nuclear spin (multiplied by two) and parity
+      int twoJf = plevel->twoJ();
+      marley::Parity Pf = plevel->parity();
+
+      // Check the relevant selection rules
+      bool rules_ok = true;
+      ME_Type mtype = mat_el.type();
+      if ( mtype == ME_Type::FERMI ) {
+        if ( twoJi != twoJf || Pi != Pf ) rules_ok = false;
+      }
+      else if ( mtype == ME_Type::GAMOW_TELLER ) {
+        if ( Pi != Pf ) rules_ok = false;
+        int twoJf_min = std::abs( twoJi - 2 );
+        int twoJf_max = twoJi + 2;
+        if ( twoJf < twoJf_min || twoJf > twoJf_max ) rules_ok = false;
+      }
+
+      // Print a warning message if there was a problem
+      if ( !rules_ok ) {
+
+        // Use TargetAtom objects for easy printing of the nuclear symbols
+        marley::TargetAtom nuc_b( pdg_b );
+        marley::TargetAtom nuc_d( pdg_d );
+
+        std::string mtype_str;
+        if ( mtype == ME_Type::FERMI ) mtype_str = "Fermi";
+        else mtype_str = "Gamow-Teller";
+
+        MARLEY_LOG_WARNING() << "The tabulated " << nuc_d << " level at "
+          << plevel->energy() << " MeV does not satisfy the selection rules"
+          << " for a " << mtype_str << " transition from the " << nuc_b
+          << " ground state.\n  2Ji, Pi = " << twoJi << ", " << Pi
+          << "\n  2Jf, Pf = " << twoJf << ", " << Pf;
+      }
 
       // Complain if there are duplicates (if there are duplicates, we'll have
       // two different B(F) + B(GT) values for the same level object)
@@ -377,7 +423,7 @@ std::vector<std::unique_ptr<marley::Reaction> >
   // Now that we know the PDG code for the final nucleus, look up discrete
   // level data for it. Set the level pointers for matrix elements representing
   // transitions to discrete nuclear levels
-  set_level_ptrs( *matrix_elements, pdg_d, db );
+  set_level_ptrs( *matrix_elements, pdg_b, pdg_d, db );
 
   // Now loop over the projectile PDG codes that can participate in the
   // scattering process of interest. For each one, decide what the ejectile

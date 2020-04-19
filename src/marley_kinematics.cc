@@ -36,7 +36,7 @@ void marley_kinematics::rotate_momentum_vector(double x, double y, double z,
   marley::Particle& particle_to_rotate)
 {
   // Get the magnitude of the vector pointing in the desired direction
-  double r = std::sqrt(std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2));
+  double r = std::sqrt( std::pow(x, 2) + std::pow(y, 2) + std::pow(z, 2) );
 
   // Get magnitude of the particle's momentum
   double rp = particle_to_rotate.momentum_magnitude();
@@ -48,9 +48,9 @@ void marley_kinematics::rotate_momentum_vector(double x, double y, double z,
   double new_py = y * ratio;
   double new_pz = z * ratio;
 
-  particle_to_rotate.set_px(new_px);
-  particle_to_rotate.set_py(new_py);
-  particle_to_rotate.set_pz(new_pz);
+  particle_to_rotate.set_px( new_px );
+  particle_to_rotate.set_py( new_py );
+  particle_to_rotate.set_pz( new_pz );
 }
 
 // Lorentz boost a particle, replacing its energy and momentum with the boosted
@@ -61,10 +61,10 @@ void marley_kinematics::lorentz_boost(double beta_x, double beta_y,
   double beta2 = get_beta2(beta_x, beta_y, beta_z);
 
   // If beta is zero in all directions, then we don't need to do the boost at all
-  if (beta2 == 0) return;
+  if ( beta2 == 0. ) return;
 
   // Calculate the Lorentz factor based on the boost velocity
-  double gamma = 1 / std::sqrt(1 - beta2);
+  double gamma = 1. / std::sqrt( 1. - beta2 );
 
   double E = particle_to_boost.total_energy();
   double px = particle_to_boost.px();
@@ -76,23 +76,23 @@ void marley_kinematics::lorentz_boost(double beta_x, double beta_y,
   // we use here are based on
   // https://en.wikipedia.org/wiki/Lorentz_transformation#Boost_in_any_direction)
   double beta_dot_p = beta_x * px + beta_y * py + beta_z * pz;
-  double factor = (gamma - 1) * beta_dot_p / beta2;
+  double factor = ( gamma - 1. ) * beta_dot_p / beta2;
 
-  double new_E = gamma * (E - beta_dot_p);
+  double new_E = gamma * ( E - beta_dot_p );
 
   // The new energy could conceivably dip slightly below the mass
   // of the particle due to roundoff errors. If this is the case,
   // set it to the particle mass.
   if (new_E < m) new_E = m;
 
-  double new_px = (-gamma * E + factor) * beta_x + px;
-  double new_py = (-gamma * E + factor) * beta_y + py;
-  double new_pz = (-gamma * E + factor) * beta_z + pz;
+  double new_px = ( -gamma * E + factor ) * beta_x + px;
+  double new_py = ( -gamma * E + factor ) * beta_y + py;
+  double new_pz = ( -gamma * E + factor ) * beta_z + pz;
 
-  particle_to_boost.set_total_energy(new_E);
-  particle_to_boost.set_px(new_px);
-  particle_to_boost.set_py(new_py);
-  particle_to_boost.set_pz(new_pz);
+  particle_to_boost.set_total_energy( new_E );
+  particle_to_boost.set_px( new_px );
+  particle_to_boost.set_py( new_py );
+  particle_to_boost.set_pz( new_pz );
 }
 
 // Right now, this function assumes that the coordinate axes in the lab
@@ -116,27 +116,28 @@ void marley_kinematics::two_body_decay(const marley::Particle& initial_particle,
   if (M < mfirst + msecond) throw marley::Error(std::string("A two-body")
     + " decay was requested that is not kinematically allowed.");
 
-  double M2 = std::pow(M, 2);
-  double mfirst2 = std::pow(mfirst, 2);
-  double msecond2 = std::pow(msecond, 2);
+  double M2 = std::pow( M, 2 );
+  double mfirst2 = std::pow( mfirst, 2 );
+  double msecond2 = std::pow( msecond, 2 );
 
   // Compute the energies for the decay products in the rest
   // frame of the initial particle
-  double Efirst = (M2 - msecond2 + mfirst2) / (2 * M);
-  double Esecond = M - Efirst; // M - Efirst == (M2 - mfirst2 + msecond2) / (2 * M)
+  double Efirst = ( M2 - msecond2 + mfirst2 ) / ( 2 * M );
+  // M - Efirst == (M2 - mfirst2 + msecond2) / (2 * M)
+  double Esecond = M - Efirst;
 
   // Avoid roundoff issues by not allowing the energies to dip below
   // the particle masses
-  if (Efirst < mfirst) Efirst = mfirst;
-  if (Esecond < msecond) Esecond = msecond;
+  if ( Efirst < mfirst ) Efirst = mfirst;
+  if ( Esecond < msecond ) Esecond = msecond;
 
   // Compute the 3-momenta for the decay products, still in the initial
   // particle's rest frame
-  double pfirst = marley_utils::real_sqrt(std::pow(Efirst, 2) - mfirst2);
-  double sin_theta_first = marley_utils::real_sqrt(1
-    - std::pow(cos_theta_first, 2));
-  double p1x = pfirst * sin_theta_first * std::cos(phi_first);
-  double p1y = pfirst * sin_theta_first * std::sin(phi_first);
+  double pfirst = marley_utils::real_sqrt( std::pow(Efirst, 2) - mfirst2 );
+  double sin_theta_first = marley_utils::real_sqrt( 1.
+    - std::pow(cos_theta_first, 2) );
+  double p1x = pfirst * sin_theta_first * std::cos( phi_first );
+  double p1y = pfirst * sin_theta_first * std::sin( phi_first );
   double p1z = pfirst * cos_theta_first;
 
   // Conservation of 3-momenta tells us that, in the rest frame of the
@@ -147,15 +148,15 @@ void marley_kinematics::two_body_decay(const marley::Particle& initial_particle,
 
   // Now that we have this information, load it into the product
   // particles.
-  first_product.set_total_energy(Efirst);
-  first_product.set_px(p1x);
-  first_product.set_py(p1y);
-  first_product.set_pz(p1z);
+  first_product.set_total_energy( Efirst );
+  first_product.set_px( p1x );
+  first_product.set_py( p1y );
+  first_product.set_pz( p1z );
 
-  second_product.set_total_energy(Esecond);
-  second_product.set_px(p2x);
-  second_product.set_py(p2y);
-  second_product.set_pz(p2z);
+  second_product.set_total_energy( Esecond );
+  second_product.set_px( p2x );
+  second_product.set_py( p2y );
+  second_product.set_pz( p2z );
 
   // Compute the parameters needed to boost these particles
   // from the initial particle's rest frame into the lab frame
@@ -173,8 +174,8 @@ void marley_kinematics::two_body_decay(const marley::Particle& initial_particle,
 
   // Boost both products to the lab frame by replacing their
   // energies and momenta with the boosted versions
-  lorentz_boost(beta_x, beta_y, beta_z, first_product);
-  lorentz_boost(beta_x, beta_y, beta_z, second_product);
+  lorentz_boost( beta_x, beta_y, beta_z, first_product );
+  lorentz_boost( beta_x, beta_y, beta_z, second_product );
 }
 
 // Get the square of the total energy of two particles in their center of

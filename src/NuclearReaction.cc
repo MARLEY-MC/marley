@@ -235,12 +235,12 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 
   // Create a list of parameters used to supply the weights to our discrete
   // level sampling distribution
-  std::discrete_distribution<size_t>::param_type params(level_weights.begin(),
-    level_weights.end());
+  std::discrete_distribution<size_t>::param_type params( level_weights.begin(),
+    level_weights.end() );
 
   // Sample a matrix_element using our discrete distribution and the
   // current set of weights
-  size_t me_index = gen.sample_from_distribution(ldist, params);
+  size_t me_index = gen.sample_from_distribution( ldist, params );
 
   const auto& sampled_matrix_el = matrix_elements_->at( me_index );
 
@@ -255,18 +255,19 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   // of the ejectile's CM frame 3-momentum, and the residue's CM frame total
   // energy.
   double s, Ec_cm, pc_cm, Ed_cm;
-  two_two_scatter(KEa, s, Ec_cm, pc_cm, Ed_cm);
+  two_two_scatter( KEa, s, Ec_cm, pc_cm, Ed_cm );
 
   // Determine the CM frame velocity of the ejectile
   double beta_c_cm = pc_cm / Ec_cm;
 
   // Sample a CM frame scattering cosine for the ejectile.
-  double cos_theta_c_cm = sample_cos_theta_c_cm(sampled_matrix_el,
-    beta_c_cm, gen);
+  double cos_theta_c_cm = sample_cos_theta_c_cm( sampled_matrix_el,
+    beta_c_cm, gen );
 
   // Sample a CM frame azimuthal scattering angle (phi) uniformly on [0, 2*pi).
   // We can do this because the matrix elements are azimuthally invariant
-  double phi_c_cm = gen.uniform_random_double(0., marley_utils::two_pi, false);
+  double phi_c_cm = gen.uniform_random_double( 0.,
+    marley_utils::two_pi, false );
 
   // Load the initial residue twoJ and parity values into twoJ and P. These
   // variables are included in the event record and used by NucleusDecayer
@@ -290,8 +291,8 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 
   // Create the preliminary event object (after 2-->2 scattering, but before
   // de-excitation of the residual nucleus)
-  marley::Event event = make_event_object(KEa, pc_cm, cos_theta_c_cm, phi_c_cm,
-    Ec_cm, Ed_cm, E_level, twoJ, P);
+  marley::Event event = make_event_object( KEa, pc_cm, cos_theta_c_cm, phi_c_cm,
+    Ec_cm, Ed_cm, E_level, twoJ, P );
 
   // Return the preliminary event object (to be processed later by the
   // NucleusDecayer class)

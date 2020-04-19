@@ -13,25 +13,28 @@
 #include "marley/marley_utils.hh"
 #include "marley/BackshiftedFermiGasModel.hh"
 #include "marley/Error.hh"
+#include "marley/FileManager.hh"
 #include "marley/Fragment.hh"
 #include "marley/KoningDelarocheOpticalModel.hh"
 #include "marley/Logger.hh"
 #include "marley/StandardLorentzianModel.hh"
 #include "marley/StructureDatabase.hh"
 
-// Table of nuclear fragments that will be considered when simulating nuclear
-// de-excitations from the unbound continuum. Spin-parity values are taken from
-// nuclear ground states listed in the 10/2014 release of ENSDF.
-const std::map<int, marley::Fragment >
-  marley::StructureDatabase::fragment_table_ =
-{
-  { marley_utils::NEUTRON,  marley::Fragment( marley_utils::NEUTRON,  1, Parity(1) ) },
-  { marley_utils::PROTON,   marley::Fragment( marley_utils::PROTON,   1, Parity(1) ) },
-  { marley_utils::DEUTERON, marley::Fragment( marley_utils::DEUTERON, 2, Parity(1) ) },
-  { marley_utils::TRITON,   marley::Fragment( marley_utils::TRITON,   1, Parity(1) ) },
-  { marley_utils::HELION,   marley::Fragment( marley_utils::HELION,   1, Parity(1) ) },
-  { marley_utils::ALPHA,    marley::Fragment( marley_utils::ALPHA,    0, Parity(1) ) },
-};
+// Define static data members of the StructureDatabase class
+
+std::map< int, std::pair<int, marley::Parity> >
+  marley::StructureDatabase::jpi_table_;
+
+std::map<int, marley::Fragment> marley::StructureDatabase::fragment_table_;
+
+// Name of the data file which will be used to read in the ground-state nuclear
+// spin-parity values
+const std::string marley::StructureDatabase
+  ::jpi_data_file_name_ = "gs_spin_parity_table.txt";
+
+// Flag indicating whether the ground-state spin-parity data file has already
+// been loaded
+bool marley::StructureDatabase::initialized_gs_spin_parity_table_ = false;
 
 marley::StructureDatabase::StructureDatabase() {}
 
@@ -226,6 +229,9 @@ void marley::StructureDatabase::clear() {
 const marley::Fragment* marley::StructureDatabase::get_fragment(
   const int fragment_pdg)
 {
+  // Before retrieving the fragment, make sure we've loaded the
+  // necessary data tables
+  if ( !initialized_gs_spin_parity_table_ ) initialize_jpi_table();
   auto iter = fragment_table_.find( fragment_pdg );
   if ( iter == fragment_table_.end() ) return nullptr;
   else return &iter->second;
@@ -236,4 +242,81 @@ const marley::Fragment* marley::StructureDatabase::get_fragment(
 {
   int fragment_pdg = marley_utils::get_nucleus_pid( Z, A );
   return get_fragment( fragment_pdg );
+}
+
+void marley::StructureDatabase::get_gs_spin_parity(
+  const int Z, const int A, int& twoJ, marley::Parity& Pi)
+{
+  int nuc_pdg = marley_utils::get_nucleus_pid( Z, A );
+  return get_gs_spin_parity( nuc_pdg, twoJ, Pi );
+}
+
+void marley::StructureDatabase::get_gs_spin_parity(int nuc_pdg,
+  int& twoJ, marley::Parity& Pi)
+{
+  if ( !initialized_gs_spin_parity_table_ ) initialize_jpi_table();
+  auto iter = jpi_table_.find( nuc_pdg );
+  if ( iter == jpi_table_.end() ) throw marley::Error( "Unrecognized"
+    " nuclear PDG code " + std::to_string(nuc_pdg) + " passed to"
+    " marley::StructureDatabase::get_gs_spin_parity()" );
+  auto pair = iter->second;
+  twoJ = pair.first;
+  Pi = pair.second;
+}
+
+void marley::StructureDatabase::initialize_jpi_table() {
+
+  // Instantiate the file manager and use it to find
+  // the data file containing the ground-state spin-parities
+  // for many nuclei
+  const auto& fm = marley::FileManager::Instance();
+  std::string full_jpi_file_name
+    = fm.find_file( jpi_data_file_name_ );
+
+  if ( full_jpi_file_name.empty() ) {
+    throw marley::Error( "Could not find the MARLEY nuclear ground-state"
+      " spin-parity data file " + jpi_data_file_name_ + ". Please ensure that"
+      " the folder containing it is on the MARLEY search path."
+      " If needed, the folder can be appended to the MARLEY_SEARCH_PATH"
+      " environment variable." );
+  }
+
+  MARLEY_LOG_INFO() << "Loading ground-state nuclear spin-parities from "
+    << full_jpi_file_name;
+
+  std::ifstream table_file( full_jpi_file_name );
+  int nuc_pdg, twoJ;
+  marley::Parity Pi;
+  while ( table_file >> nuc_pdg >> twoJ >> Pi ) {
+    MARLEY_LOG_DEBUG() << "Nucleus with PDG code " << nuc_pdg
+      << " has spin-parity " << static_cast<double>( twoJ ) / 2.
+      << Pi;
+    jpi_table_[ nuc_pdg ] = std::pair<int, marley::Parity>( twoJ, Pi );
+  }
+
+  // Set the flag saying we've initialized the table of ground-state spin-parities.
+  // This will avoid duplicate attempts at initialization.
+  initialized_gs_spin_parity_table_ = true;
+
+  // Also initialize the table of nuclear fragment properties now that we have
+  // the needed information
+  using namespace marley_utils;
+  constexpr std::array< int, 6 > FRAGMENTS_TO_CONSIDER =
+    { NEUTRON, PROTON,  DEUTERON, TRITON,  HELION,  ALPHA };
+
+  for ( int f_pdg : FRAGMENTS_TO_CONSIDER ) {
+    // Temporary storage
+    int f_twoJ;
+    marley::Parity f_Pi;
+
+    // Look up the spin-parity of the nuclear fragment (assumed to be emitted in
+    // its ground state) in the data table
+    marley::StructureDatabase::get_gs_spin_parity( f_pdg, f_twoJ, f_Pi );
+
+    // Create a new entry in the table of nuclear fragments that should be
+    // considered during unbound nuclear de-excitations
+    marley::StructureDatabase::fragment_table_.emplace(
+      std::make_pair( f_pdg, marley::Fragment(f_pdg, f_twoJ, f_Pi) ));
+  }
+
 }
