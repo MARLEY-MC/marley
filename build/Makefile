@@ -20,11 +20,11 @@ else
   SHARED_LIB_SUFFIX=so
 endif
 
-# If the VERSION file exists, use its contents as the
-# MARLEY version number. The VERSION file should only
+# If the .VERSION file exists, use its contents as the
+# MARLEY version number. The .VERSION file should only
 # be added to the source tree in tagged releases.
-ifneq (,$(wildcard ../VERSION))
-  MARLEY_VERSION := $(shell cat ../VERSION)
+ifneq (,$(wildcard ../.VERSION))
+  MARLEY_VERSION := $(shell cat ../.VERSION)
 
   # Define a link to a tarball on GitHub for the current tagged release
   TARBALL_LINK = "<a href=\"https://github.com/MARLEY-MC/marley/$\
