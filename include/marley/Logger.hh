@@ -21,13 +21,15 @@
 // we can stream them to the Logger
 namespace marley {
   class HauserFeshbachDecay;
+  class Parity;
   class Target;
   class TargetAtom;
 }
 
-inline std::ostream& operator<<(std::ostream& out,
+std::ostream& operator<<(std::ostream& out,
   const marley::HauserFeshbachDecay& hfd);
 
+std::ostream& operator<<(std::ostream& out, const marley::Parity& p);
 std::ostream& operator<<(std::ostream& out, const marley::Target& t);
 std::ostream& operator<<(std::ostream& out, const marley::TargetAtom& ta);
 

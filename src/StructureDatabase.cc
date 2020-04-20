@@ -10,6 +10,10 @@
 // For the full text of the license please see ${MARLEY}/COPYING or
 // visit http://opensource.org/licenses/GPL-3.0
 
+// Standard library includes
+#include <array>
+
+// MARLEY includes
 #include "marley/marley_utils.hh"
 #include "marley/BackshiftedFermiGasModel.hh"
 #include "marley/Error.hh"
