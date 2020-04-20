@@ -28,9 +28,10 @@ namespace marley {
 
   /// @brief Container for nuclear structure information organized by nuclide
   /// @details Currently, the StructureDatabase object can hold nuclear
-  /// discrete level data (DecayScheme objects), optical models
-  /// (OpticalModel objects), and level density models (LevelDensityModel
-  /// objects)
+  /// discrete level data (DecayScheme objects), optical models (OpticalModel
+  /// objects), @f$\gamma@f$-ray strength function models
+  /// (GammaStrengthFunctionModel objects), and level density models
+  /// (LevelDensityModel objects)
   class StructureDatabase {
 
     public:
