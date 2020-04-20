@@ -151,6 +151,15 @@ namespace marley {
         return pdf;
       }
 
+      /// @brief Returns a string representation of the transition type for
+      /// this matrix element
+      inline std::string type_str() const {
+        if ( type_ == TransitionType::FERMI ) return "Fermi";
+        else if ( type_ == TransitionType::GAMOW_TELLER ) return "Gamow-Teller";
+        else throw marley::Error( "Unrecognized transition type encountered"
+          " in marley::MatrixElement::type_str()" );
+      }
+
     protected:
 
       /// @brief Energy (MeV) of the final-state nuclear level accessed by this

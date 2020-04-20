@@ -151,15 +151,13 @@ namespace {
         marley::TargetAtom nuc_b( pdg_b );
         marley::TargetAtom nuc_d( pdg_d );
 
-        std::string mtype_str;
-        if ( mtype == ME_Type::FERMI ) mtype_str = "Fermi";
-        else mtype_str = "Gamow-Teller";
-
         MARLEY_LOG_WARNING() << "The tabulated " << nuc_d << " level at "
           << plevel->energy() << " MeV does not satisfy the selection rules"
-          << " for a " << mtype_str << " transition from the " << nuc_b
-          << " ground state.\n  2Ji, Pi = " << twoJi << ", " << Pi
-          << "\n  2Jf, Pf = " << twoJf << ", " << Pf;
+          << " for a " << mat_el.type_str() << " transition from the " << nuc_b
+          << " ground state.\n Initial J\u03C0 = "
+          << static_cast<double>( twoJi ) / 2. << Pi
+          << "\n   Final J\u03C0 = " << static_cast<double>( twoJf ) / 2.
+          << Pf;
       }
 
       // Complain if there are duplicates (if there are duplicates, we'll have

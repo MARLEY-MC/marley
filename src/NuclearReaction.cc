@@ -173,14 +173,14 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
 {
   // Check that the projectile supplied to this event is correct. If not, alert
   // the user that this event does not use the requested projectile.
-  if (pdg_a != pdg_a_) throw marley::Error(std::string("Could")
+  if ( pdg_a != pdg_a_ ) throw marley::Error(std::string("Could")
     + " not create this event. The requested projectile particle ID, "
     + std::to_string(pdg_a) + ", does not match the projectile"
     + " particle ID, " + std::to_string(pdg_a_) + ", in the reaction dataset.");
 
   // Sample a final residue energy level. First, check to make sure the given
   // projectile energy is above threshold for this reaction.
-  if (KEa < KEa_threshold_) throw std::range_error(std::string("Could")
+  if ( KEa < KEa_threshold_ ) throw std::range_error(std::string("Could")
     + " not create this event. Projectile kinetic energy " + std::to_string(KEa)
     + " MeV is below the threshold value " + std::to_string(KEa_threshold_)
     + " MeV.");
@@ -272,22 +272,84 @@ marley::Event marley::NuclearReaction::create_event(int pdg_a, double KEa,
   // Load the initial residue twoJ and parity values into twoJ and P. These
   // variables are included in the event record and used by NucleusDecayer
   // to start the Hauser-Feshbach decay cascade.
-  // Right now, matrix element types are represented with 0 <-> Fermi, 1 <->
-  // Gamow-Teller.  Since the transitions are from the 40Ar ground state (Jpi
-  // = 0+), these also correspond to the 40K* state spins.
-  /// @todo Come up with a better way of determining the Jpi values that will
-  /// work for forbidden transition operators.
   int twoJ = BOGUS_TWO_J_VALUE;
-  if ( sampled_matrix_el.type() == ME_Type::FERMI ) twoJ = 0;
-  else if ( sampled_matrix_el.type() == ME_Type::GAMOW_TELLER ) twoJ = 2;
-  else throw marley::Error( "Unrecognized matrix element type encountered"
-    " during a continuum decay in marley::NucleusDecayer"
-    "::deexcite_residue()" );
+  marley::Parity P; // defaults to positive parity
 
-  // Fermi transition gives 0+ --> 0+, GT transition gives 0+ --> 1+
-  /// @todo handle target nuclei that are not initially 0+
-  /// @todo include possibility of negative parity here.
-  marley::Parity P( true ); // positive parity
+  // Get access to the nuclear structure database owned by the Generator
+  auto& sdb = gen.get_structure_db();
+
+  // Retrieve the ground-state spin-parity of the initial nucleus
+  int twoJ_gs;
+  marley::Parity P_gs;
+
+  sdb.get_gs_spin_parity( pdg_b_, twoJ_gs, P_gs );
+
+  // For transitions to discrete nuclear levels, all we need to do is retrieve
+  // these values directly from the Level object
+  const marley::Level* final_lev = sampled_matrix_el.level();
+  if ( final_lev ) {
+    twoJ = final_lev->twoJ();
+    P = final_lev->parity();
+  }
+  // For transitions to the continuum, we rely on the spin-parity selection
+  // rules to determine suitable values of twoJ and P. In cases where more than
+  // one value is allowed, assume equipartition, and sample a spin-parity based
+  // on the relative nuclear level densities at the excitation energy of
+  // interest.
+  /// @todo Revisit the equipartition assumption made here in favor of
+  /// something better motivated.
+  else {
+
+    // For a Fermi transition, the final spin-parity is always the same as the
+    // initial one
+    if ( sampled_matrix_el.type() == ME_Type::FERMI ) {
+      twoJ = twoJ_gs;
+      P = P_gs;
+    }
+    else if ( sampled_matrix_el.type() == ME_Type::GAMOW_TELLER ) {
+      // For a Gamow-Teller transition, the final parity is the same as the
+      // initial parity
+      P = P_gs;
+
+      // For a spin-zero initial state, take a shortcut: the final spin will
+      // always be one.
+      if ( twoJ_gs == 0 ) twoJ = 2;
+      else {
+
+        // For an initial state with a non-zero spin, make a vector storing
+        // all of the spin values allowed by the GT selection rules.
+        // Sample an allowed value assuming equipartition of spin. Use the
+        // relative final nuclear level densities as sampling weights.
+
+        std::vector<int> allowed_twoJs;
+        std::vector<double> ld_weights;
+
+        auto& ldm = sdb.get_level_density_model( pdg_d_ );
+
+        for ( int myTwoJ = std::abs(twoJ_gs - 2); myTwoJ <= twoJ_gs + 2;
+          myTwoJ += 2 )
+        {
+          allowed_twoJs.push_back( myTwoJ );
+          ld_weights.push_back( ldm.level_density(E_level, myTwoJ, P) );
+        }
+
+        std::discrete_distribution<size_t> my_twoJ_dist( ld_weights.begin(),
+          ld_weights.end() );
+
+        size_t my_index = gen.sample_from_distribution( my_twoJ_dist );
+        twoJ = allowed_twoJs.at( my_index );
+      }
+    }
+    else throw marley::Error( "Unrecognized matrix element type encountered"
+      " in marley::NuclearReaction::create_event()" );
+  }
+
+  MARLEY_LOG_DEBUG() << "Sampled a " << sampled_matrix_el.type_str()
+    << " transition from the " << marley::TargetAtom( pdg_b_ )
+    << " ground state (with spin-parity " << static_cast<double>( twoJ_gs ) / 2.
+    << P_gs << ") to the " << marley::TargetAtom( pdg_d_ )
+    << " level with Ex = " << E_level << " MeV and spin-parity "
+    << static_cast<double>( twoJ ) / 2. << P;
 
   // Create the preliminary event object (after 2-->2 scattering, but before
   // de-excitation of the residual nucleus)
