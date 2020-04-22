@@ -47,6 +47,8 @@ namespace {
       + std::to_string(E_c_max) + " MeV encountered" );
   }
 
+  // Used to avoid round-off problems in comparisons of floating-point numbers
+  constexpr double TINY_OFFSET = 1e-6;
 }
 
 using TrType = marley::GammaStrengthFunctionModel::TransitionType;
@@ -220,7 +222,7 @@ double marley::FragmentContinuumExitChannel::differential_width( double Exf,
   if ( Exf_max < E_c_min_ ) throw_continuum_bounds_error( E_c_min_, Exf_max );
 
   // Check that Exf lies within the continuum
-  if ( Exf < E_c_min_ || Exf > Exf_max ) {
+  if ( Exf < (E_c_min_ - TINY_OFFSET) || Exf > Exf_max ) {
     // If it doesn't, complain and return zero
     issue_Exf_continuum_warning( Exf, E_c_min_, Exf_max );
     return 0.;
@@ -312,7 +314,7 @@ double marley::GammaContinuumExitChannel::differential_width( double Exf,
   if ( Exi_ < E_c_min_ ) throw_continuum_bounds_error( E_c_min_, Exi_ );
 
   // Check that Exf lies within the continuum
-  if ( Exf < E_c_min_ || Exf > Exi_ ) {
+  if ( Exf < (E_c_min_ - TINY_OFFSET) || Exf > Exi_ ) {
     // If it doesn't, complain and return zero
     issue_Exf_continuum_warning( Exf, E_c_min_, Exi_ );
     return 0.;
