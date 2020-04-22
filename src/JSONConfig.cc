@@ -246,7 +246,7 @@ marley::Generator marley::JSONConfig::create_generator() const
       }
       else if ( r->process_type() == ProcType::NuElectronElastic )
       {
-        proc_type_str = "ES";
+        proc_type_str = "ES on " + ta.to_string();
       }
       else throw marley::Error("Unrecognized process type encountered in"
         " marley::JSONConfig::prepare_reactions()");
@@ -352,6 +352,11 @@ void marley::JSONConfig::prepare_reactions(marley::Generator& gen) const {
 
           auto reacts = marley::Reaction::load_from_file(
             full_file_name, gen.get_structure_db());
+
+          if ( reacts.empty() ) throw marley::Error( "Failed to load"
+            " any reactions from the file " + full_file_name + ". Please"
+            " check that it is readable and conforms to the correct input"
+            " format." );
 
           // All of the Reaction objects loaded from a single file will have
           // the same process type and atomic target, so just save this

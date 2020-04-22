@@ -280,12 +280,12 @@ const std::vector<int>& marley::Reaction::get_projectiles(ProcType pt) {
   return proc_type_to_nu_pdg.at( pt );
 }
 
-std::vector<std::unique_ptr<marley::Reaction> >
+std::vector< std::unique_ptr<marley::Reaction> >
   marley::Reaction::load_from_file(const std::string& filename,
   marley::StructureDatabase& db)
 {
   // Create an empty vector to start
-  std::vector<std::unique_ptr<marley::Reaction> > loaded_reactions;
+  std::vector< std::unique_ptr<marley::Reaction> > loaded_reactions;
 
   std::regex rx_comment("#.*"); // Matches comment lines
 
@@ -302,7 +302,7 @@ std::vector<std::unique_ptr<marley::Reaction> >
   std::string line;
 
   /// @todo Add error handling for parsing problems
-  line = marley_utils::get_next_line(file_in, rx_comment, false);
+  line = marley_utils::get_next_line( file_in, rx_comment, false );
 
   // Read in the ProcessType code and the target PDG code
   std::istringstream iss( line );
@@ -317,15 +317,20 @@ std::vector<std::unique_ptr<marley::Reaction> >
   // projectiles (every neutrino species) and return the result.
   if ( proc_type == ProcessType::NuElectronElastic ) {
 
-    // Loop over target atoms
-    int target_pdg;
-    while ( iss >> target_pdg ) {
-      // Loop over neutrino species
-      for ( const int& pdg_a : get_projectiles(proc_type) ) {
-        loaded_reactions.emplace_back(
-          std::make_unique<marley::ElectronReaction>(pdg_a, target_pdg) );
+    do {
+      // Loop over target atoms
+      int target_pdg;
+      while ( iss >> target_pdg ) {
+        // Loop over neutrino species
+        for ( const int& pdg_a : get_projectiles(proc_type) ) {
+          loaded_reactions.emplace_back(
+            std::make_unique<marley::ElectronReaction>(pdg_a, target_pdg) );
+        }
       }
-    }
+
+      line = marley_utils::get_next_line( file_in, rx_comment, false );
+      iss = std::istringstream( line );
+    } while ( !line.empty() );
 
     return loaded_reactions;
   }
