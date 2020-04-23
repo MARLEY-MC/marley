@@ -38,6 +38,10 @@ University of California, Davis (2018).
 For convenience, a BibTeX citation for this thesis is given in the CITATION.bib
 file.
 
+If you use the default nuclear structure data files (strongly recommended) for
+published calculations, please also give proper attribution to the developers
+of the TALYS nuclear code (see data/structure/README.md for more information).
+
 ## Getting Started
 
 MARLEY may be built as an ordinary command-line executable, or it may be built
