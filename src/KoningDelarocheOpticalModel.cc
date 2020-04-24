@@ -314,7 +314,7 @@ double marley::KoningDelarocheOpticalModel::transmission_coefficient(
   norm_S = std::min(1., std::max(0., norm_S));
 
   // We can now compute the transmission coefficient in the usual way
-  return 1.0 - std::norm(S);
+  return 1.0 - norm_S;
 }
 
 std::complex<double>
