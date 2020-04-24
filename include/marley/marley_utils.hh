@@ -133,6 +133,7 @@ namespace marley_utils {
   // nucleus with atomic number Z and mass number A
   inline int get_nucleus_pid(int Z, int A) {
     if (Z == 0 && A == 1) return NEUTRON;
+    else if (Z == 1 && A == 1) return PROTON;
     else return 10000*Z + 10*A + 1000000000;
   }
 

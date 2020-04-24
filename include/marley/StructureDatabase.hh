@@ -230,6 +230,17 @@ namespace marley {
       /// have already been loaded from the relevant data file
       static bool initialized_gs_spin_parity_table_;
 
+      /// @brief Name of the file used as an index for nuclear structure data
+      const std::string structure_index_filename_ = "nuclide_index.txt";
+
+      /// @brief Flag that indicates whether the index to the structure
+      /// data files has been loaded or not
+      bool loaded_structure_index_ = false;
+
+      /// @brief Lookup table for decay scheme data files. Keys are nuclide
+      /// PDG codes, values are data file names
+      std::map< int, std::string > decay_scheme_filenames_;
+
       /// @brief Name of the data file which will be used to read in the
       /// ground-state nuclear spin-parity values
       static const std::string jpi_data_file_name_;
@@ -240,6 +251,10 @@ namespace marley {
       /// @brief Helper function that initializes the table of ground-state
       /// nuclear spin-parities
       static void initialize_jpi_table();
+
+      /// @brief Helper function that initializes the file index for
+      /// loading nuclear structure data
+      void load_structure_index();
   };
 
 }

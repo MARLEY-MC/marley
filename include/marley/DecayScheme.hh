@@ -36,6 +36,8 @@ namespace marley {
       /// allowed.
       enum class FileFormat { native, talys };
 
+      inline DecayScheme() : Z_(0), A_(0) {}
+
       /// @brief Create a DecayScheme without any levels
       /// @param Z Atomic number of the desired nuclide
       /// @param A Mass number of the desired nuclide
@@ -102,13 +104,16 @@ namespace marley {
       /// DecayScheme object
       void print_report(std::ostream& ostr = std::cout) const;
 
+      /// @brief Returns the nuclear PDG code corresponding to Z and A
+      int pdg() const;
+
     protected:
 
       int Z_; ///< Atomic number
       int A_; ///< Mass number
 
       /// @brief Level objects owned by this DecayScheme
-      std::vector<std::unique_ptr<marley::Level> > levels_;
+      std::vector< std::unique_ptr<marley::Level> > levels_;
 
       /// @brief Get the index of the first level whose energy
       /// is not less than Ex

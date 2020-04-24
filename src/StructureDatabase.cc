@@ -23,6 +23,7 @@
 #include "marley/Logger.hh"
 #include "marley/StandardLorentzianModel.hh"
 #include "marley/StructureDatabase.hh"
+#include "marley/TargetAtom.hh"
 
 // Define static data members of the StructureDatabase class
 
@@ -118,16 +119,68 @@ std::set<int> marley::StructureDatabase::find_all_nuclides(
 marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(
   const int particle_id)
 {
-  auto iter = decay_scheme_table_.find(particle_id);
-  if (iter == decay_scheme_table_.end()) return nullptr;
-  else return iter->second.get();
+  // If we already have the DecayScheme object stored in the lookup table,
+  // then just retrieve it
+  auto iter = decay_scheme_table_.find( particle_id );
+  if ( iter != decay_scheme_table_.end() ) return iter->second.get();
+  // If not, see if a data file for it is listed in the index
+  else {
+
+    marley::TargetAtom ta_requested( particle_id );
+    MARLEY_LOG_DEBUG() << "Looking up structure data for " << ta_requested;
+
+    if ( !loaded_structure_index_ ) this->load_structure_index();
+    auto ds_file_iter = decay_scheme_filenames_.find( particle_id );
+
+    // If not, then just give up and return a null pointer
+    if ( ds_file_iter == decay_scheme_filenames_.end() ) return nullptr;
+
+    // If a file is available, load all of the decay schemes present in it
+    // and add them to the lookup table. If we find the one we're looking
+    // for, return a pointer to it. Otherwise, print a warning, give up,
+    // and return a null pointer.
+    std::string ds_file_name = ds_file_iter->second;
+    auto& fm = marley::FileManager::Instance();
+    std::string full_ds_file_name = fm.find_file( ds_file_name );
+    std::ifstream ds_data_file( full_ds_file_name );
+    bool found_it = false;
+    auto temp_ds = std::make_unique< marley::DecayScheme >();
+    int loaded_nuclide_count = 0;
+    while ( ds_data_file >> *temp_ds ) {
+      int ds_pdg = temp_ds->pdg();
+      if ( particle_id == ds_pdg ) found_it = true;
+      this->add_decay_scheme( ds_pdg, temp_ds );
+      marley::TargetAtom ta( ds_pdg );
+      MARLEY_LOG_DEBUG() << "Added decay scheme for " << ta << " from "
+        << full_ds_file_name;
+      ++loaded_nuclide_count;
+      temp_ds = std::make_unique< marley::DecayScheme >();
+    }
+    if ( !found_it ) {
+      MARLEY_LOG_WARNING() << "Failed to load nuclear structure"
+        << " data for " << ta_requested << " from the"
+        << " file " << ds_file_name;
+      // Make a nullptr entry in the lookup table to avoid duplicate attempts
+      // to load the missing data
+      decay_scheme_table_[ particle_id ] = nullptr;
+    }
+    if ( loaded_nuclide_count > 0 ) {
+      MARLEY_LOG_INFO() << "Loaded structure data for "
+        << loaded_nuclide_count << " nuclides from the file "
+        << full_ds_file_name;
+    }
+
+    // Return the pointer to the newly-loaded DecayScheme (or nullptr
+    // if it could not be loaded) via recursion
+    return this->get_decay_scheme( particle_id );
+  }
 }
 
 marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(const int Z,
   const int A)
 {
   int particle_id = marley_utils::get_nucleus_pid(Z, A);
-  return get_decay_scheme(particle_id);
+  return get_decay_scheme( particle_id );
 }
 
 marley::OpticalModel& marley::StructureDatabase::get_optical_model(
@@ -223,7 +276,7 @@ void marley::StructureDatabase::remove_decay_scheme(int pdg)
 {
   // Remove the decay scheme with this PDG code if it exists in the database.
   // If it doesn't, do nothing.
-  decay_scheme_table_.erase(pdg);
+  decay_scheme_table_.erase( pdg );
 }
 
 void marley::StructureDatabase::clear() {
@@ -323,4 +376,36 @@ void marley::StructureDatabase::initialize_jpi_table() {
       std::make_pair( f_pdg, marley::Fragment(f_pdg, f_twoJ, f_Pi) ));
   }
 
+}
+
+void marley::StructureDatabase::load_structure_index() {
+
+  // Instantiate the file manager and use it to find
+  // the index to the decay scheme data files
+  const auto& fm = marley::FileManager::Instance();
+  std::string full_index_file_name = fm.find_file( structure_index_filename_ );
+
+  if ( full_index_file_name.empty() ) {
+    throw marley::Error( "Could not find the MARLEY structure data index file "
+      + structure_index_filename_ + ". Please ensure that"
+      " the folder containing it is on the MARLEY search path."
+      " If needed, the folder can be appended to the MARLEY_SEARCH_PATH"
+      " environment variable." );
+  }
+
+  MARLEY_LOG_INFO() << "Loaded structure data index from "
+    << full_index_file_name;
+
+  std::ifstream index_file( full_index_file_name );
+  int nuc_pdg;
+  std::string data_file_name;
+  while ( index_file >> nuc_pdg >> data_file_name ) {
+    MARLEY_LOG_DEBUG() << "Nucleus with PDG code " << nuc_pdg
+      << " has a tabulated decay scheme in the file " << data_file_name;
+    decay_scheme_filenames_[ nuc_pdg ] = data_file_name;
+  }
+
+  // Avoid duplicate loading of the structure index by setting the
+  // "already loaded" flag
+  loaded_structure_index_ = true;
 }
