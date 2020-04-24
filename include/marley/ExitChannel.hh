@@ -280,6 +280,20 @@ namespace marley {
         double diff_width; ///< Partial differential decay width (MeV)
       };
 
+      double sample_Exf(marley::Generator& gen) const;
+
+      void sample_spin_parity(double Exf, int& two_Jf, marley::Parity& Pf,
+        marley::Generator& gen) const;
+
+      /// @brief Returns the minimum excitation energy bound for the continuum
+      inline double E_c_min() const { return E_c_min_; }
+
+      /// @brief Returns the maximum accessible excitation energy to be
+      /// used when integrating over the continuum
+      virtual double E_c_max() const = 0;
+
+    protected:
+
       /// Minimum accessible nuclear excitation energy (MeV) in the continuum
       double E_c_min_;
 
@@ -300,15 +314,6 @@ namespace marley {
       /// @details This pointer will be initialized lazily during the
       /// first call to do_decay()
       mutable std::unique_ptr<marley::ChebyshevInterpolatingFunction> Exf_cdf_;
-
-      double sample_Exf(marley::Generator& gen) const;
-
-      void sample_spin_parity(double Exf, int& two_Jf, marley::Parity& Pf,
-        marley::Generator& gen) const;
-
-      /// @brief Returns the maximum accessible excitation energy to be
-      /// used when integrating over the continuum
-      virtual double E_c_max() const = 0;
   };
 
   /// @brief %Fragment emission ExitChannel that leads to a discrete nuclear

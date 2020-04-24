@@ -438,16 +438,19 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
   INFO("Checking sampling of Hauser-Feshbach decays");
   {
     // Create a Particle object representing a compound 40K* ion
-    // with net charge +1
+    // with net charge qi = +1
+    const int qi = 1;
     const auto& mt = marley::MassTable::Instance();
-    double mass = mt.get_atomic_mass(PDG_40K)
-      - mt.get_particle_mass(marley_utils::ELECTRON);
+    const double me = mt.get_particle_mass( marley_utils::ELECTRON );
+    double mass = mt.get_atomic_mass( PDG_40K ) - qi*me;
     mass += HF_Exi;
 
-    marley::Particle compound_nuc(PDG_40K, mass, 0., 0., 0., mass, 1);
+    marley::Particle compound_nuc( PDG_40K, mass, 0., 0., 0., mass, 1 );
 
     // Now create a HauserFeshbachDecay object that can be used to decay it
-    marley::HauserFeshbachDecay hfd(compound_nuc, HF_Exi, HF_twoJi, HF_Pi, gen);
+    auto& sdb = gen.get_structure_db();
+    marley::HauserFeshbachDecay hfd( compound_nuc, HF_Exi, HF_twoJi, HF_Pi,
+      sdb );
     MARLEY_LOG_DEBUG() << hfd;
 
     // **** First, check the MC branching ratios to different final particles
@@ -459,17 +462,17 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
     // Loop over the possible fragments that can be emitted, and set their
     // counts to zero initially
-    for ( const auto& f : marley::HauserFeshbachDecay::get_fragments() ) {
-      pdg_to_num_events[ f.get_pid() ] = 0;
+    for ( const auto& pair : sdb.fragments() ) {
+      pdg_to_num_events[ pair.first ] = 0;
     }
 
     // Do a bunch of decays, and record which particle (gamma or fragment)
     // gets emitted each time
-    for (int e = 0; e < NUM_EVENTS; ++e) {
+    for ( int e = 0; e < NUM_EVENTS; ++e ) {
       marley::Parity dummy_Pf;
       marley::Particle emitted_particle;
       marley::Particle final_nucleus;
-      const auto& exit_channel = hfd.sample_exit_channel();
+      const auto& exit_channel = hfd.sample_exit_channel( gen );
 
       int emitted_pdg = exit_channel->emitted_particle_pdg();
 
@@ -559,49 +562,36 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
       const auto& cec = dynamic_cast<const marley::ContinuumExitChannel&>(*ec);
 
+      double width = cec.width();
+
       // Skip sampling a final nuclear spin-parity value during calls
       // to marley::ContinuumExitChannel::do_decay(), since all we care about
       // for this test is the final nuclear excitation energy
       cec.set_skip_jpi_sampling( true );
 
       // Get the excitation energy bounds of the continuum
-      double Ex_min = cec.Emin_;
-      double Ex_max = cec.Emax_;
-
-      // Get the total width for this exit channel
-      double width = cec.width();
-
-      std::function<double(double)> decay_pdf;
+      double Ex_min = cec.E_c_min();
+      double Ex_max = cec.E_c_max();
 
       // Mass of the initial (pre-decay) nucleus
       double mi = compound_nuc.mass();
 
-      // Ground-state mass of the final (post-decay) nucleus
-      double mf_gs = cec.gs_residue_.mass();
+      // Proton number of the emitted particle
+      int ep_Z = marley_utils::get_particle_Z( cec.emitted_particle_pdg() );
+
+      // Final ion charge after particle emission
+      int qf = qi - ep_Z;
+
+      int remnant_pdg = cec.final_nucleus_pdg();
+
+      // Approximate the ground state mass of the ion formed when the fragment is
+      // emitted by subtracting qf electron masses from the atomic mass for the
+      // final nuclide.
+      double mf_gs = mt.get_atomic_mass( remnant_pdg ) - qf*me;
 
       // Mass and PDG code of the emitted fragment (or gamma-ray)
-      double m_frag;
       int pdg_frag = cec.emitted_particle_pdg();
-
-      if ( cec.emits_fragment() ) {
-        const auto& fcec = dynamic_cast<const
-          marley::FragmentContinuumExitChannel&>( cec );
-
-        decay_pdf = [&fcec](double Ex) -> double {
-          double dummy;
-          return fcec.Epdf_(dummy, Ex);
-        };
-
-        m_frag = fcec.get_fragment().get_mass();
-      }
-      else {
-        const auto& gcec = dynamic_cast<const
-          marley::GammaContinuumExitChannel&>( cec );
-
-        decay_pdf = [&gcec](double Ex) -> double { return gcec.Epdf_(Ex); };
-
-        m_frag = 0.; // photons are massless
-      }
+      double m_frag = mt.get_particle_mass( pdg_frag );
 
       // Use fragment energy instead of excitation energy as the variable on
       // the x-axis. This is more intuitive, even though we're actually
@@ -613,7 +603,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
       // Differential decay width that uses the fragment (or gamma) CM frame
       // kinetic energy as the independent variable
-      std::function<double(double)> ddw = [=, &decay_pdf](double KE_fr)
+      std::function<double(double)> ddw = [=, &cec](double KE_fr)
         -> double
       {
         // Final nucleus excitation energy
@@ -623,7 +613,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
         // Final nucleus mass
         double mf = mf_gs + Exf;
 
-        return width * ( mi / mf ) * decay_pdf(Exf);
+        return ( mi / mf ) * cec.differential_width( Exf );
       };
 
       double ddw_norm = marley_utils::num_integrate(ddw, KE_frag_min,
@@ -652,7 +642,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
         // just calculate the one quantity that you need (fragment CM KE)
         if ( e % 1000 == 0 ) MARLEY_LOG_INFO() << "Decay " << e;
         cec.do_decay(dummy_Ex, dummy_twoJf, dummy_P,
-          fragment, final_nucleus, gen);
+          compound_nuc, fragment, final_nucleus, gen);
         double E_frag_CM = ( mi*mi - std::pow(final_nucleus.mass(), 2)
           + std::pow(fragment.mass(), 2) ) / ( 2. * mi );
         double KE_frag_CM = E_frag_CM - fragment.mass();
