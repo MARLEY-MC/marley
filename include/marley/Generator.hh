@@ -243,6 +243,10 @@ namespace marley {
       marley::Event create_event( int pdg_a, double KEa, int pdg_atom,
         const std::array<double, 3>& dir_vec );
 
+      /// @brief Provides access to the owned ProjectileDirectionRotator
+      inline marley::ProjectileDirectionRotator& get_rotator()
+        { return rotator_; }
+
     private:
 
       /// @brief Create a Generator using default settings except for

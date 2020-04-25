@@ -173,6 +173,9 @@ marley::Generator marley::JSONConfig::create_generator() const
     if ( do_deex.is_bool() ) {
       bool deexcite_or_not = do_deex.to_bool();
       gen.set_do_deexcitations( deexcite_or_not );
+      if ( !deexcite_or_not ) {
+        MARLEY_LOG_INFO() << "Nuclear de-excitations will not be simulated";
+      }
     }
   }
 
@@ -287,29 +290,49 @@ marley::Generator marley::JSONConfig::create_generator() const
 //------------------------------------------------------------------------------
 void marley::JSONConfig::prepare_direction(marley::Generator& gen) const {
   // Get the incident neutrino direction if the user has specified one
-  if (json_.has_key("direction")) {
+  if ( json_.has_key("direction") ) {
 
     const marley::JSON& direction = json_.at("direction");
     bool ok;
 
-    std::array<double, 3> dir_vec = gen.neutrino_direction();
+    // The usual use case is for the user to specify the components
+    // of a direction 3-vector using a JSON object
+    if ( direction.is_object() ) {
 
-    if (direction.has_key("x")) {
-      dir_vec.at(0) = direction.at("x").to_double(ok);
-      if (!ok) handle_json_error("direction.x", direction.at("x"));
+      std::array<double, 3> dir_vec = gen.neutrino_direction();
+
+      if ( direction.has_key("x") ) {
+        dir_vec.at(0) = direction.at( "x" ).to_double( ok );
+        if ( !ok ) handle_json_error( "direction.x", direction.at("x") );
+      }
+
+      if ( direction.has_key("y") ) {
+        dir_vec.at(1) = direction.at( "y" ).to_double( ok );
+        if ( !ok ) handle_json_error( "direction.y", direction.at("y") );
+      }
+
+      if ( direction.has_key("z") ) {
+        dir_vec.at(2) = direction.at( "z" ).to_double( ok );
+        if ( !ok ) handle_json_error( "direction.z", direction.at("z") );
+      }
+
+      gen.set_neutrino_direction( dir_vec );
     }
 
-    if (direction.has_key("y")) {
-      dir_vec.at(1) = direction.at("y").to_double(ok);
-      if (!ok) handle_json_error("direction.y", direction.at("y"));
-    }
+    // The user may also request sampling of an isotropic projectile direction
+    // for every event by associating the string value "isotropic" with the
+    // direction key in the job configuration file
+    else if ( direction.is_string() && direction.to_string() == "isotropic" ) {
+      gen.get_rotator().set_randomize_directions( true );
 
-    if (direction.has_key("z")) {
-      dir_vec.at(2) = direction.at("z").to_double(ok);
-      if (!ok) handle_json_error("direction.z", direction.at("z"));
+      MARLEY_LOG_INFO() << "Projectile directions will be sampled"
+        << " isotropically";
     }
-
-    gen.set_neutrino_direction(dir_vec);
+    else {
+      throw marley::Error( "Unrecognized value "
+        + direction.dump_string() + " given for the job configuration file"
+        " key \"direction\"" );
+    }
   }
 }
 
@@ -426,6 +449,9 @@ void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
       " marley::JSONConfig::prepare_structure()" );
 
     sdb.set_fragment_l_max( f_lmax );
+
+    MARLEY_LOG_INFO() << "Orbital angular momentum cutoff for fragment"
+      << " differential decay widths set to l_max = " << f_lmax;
   }
 
   // TODO: reduce code duplication here
@@ -441,6 +467,9 @@ void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
       " marley::JSONConfig::prepare_structure()" );
 
     sdb.set_gamma_l_max( g_lmax );
+
+    MARLEY_LOG_INFO() << "Multipolarity cutoff for gamma-ray"
+      << " differential decay widths set to l_max = " << g_lmax;
   }
 
 }

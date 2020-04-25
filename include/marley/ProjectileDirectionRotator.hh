@@ -46,6 +46,10 @@ namespace marley {
         last_pdir_ = dir_vec_;
       }
 
+      ThreeVector sample_isotropic_direction( marley::Generator& gen ) const;
+
+      void set_randomize_directions( bool do_sampling );
+
     protected:
 
       /// @brief 3-vector that points in the desired direction of the
@@ -64,6 +68,11 @@ namespace marley {
       /// @brief Helper function that does the coordinate system rotation
       /// @param[in,out] ev Event whose Particle 3-vectors will be rotated
       void rotate_event( marley::Event& ev );
+
+      /// @brief Flag that indicates whether the (rotated) projectile
+      /// direction should be sampled isotropically for each event
+      /// (true) or kept fixed across all events (false)
+      bool randomize_projectile_direction_ = false;
   };
 
 }
