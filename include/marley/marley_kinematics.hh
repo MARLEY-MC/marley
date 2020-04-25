@@ -26,12 +26,26 @@ namespace marley_kinematics {
   void lorentz_boost(double beta_x, double beta_y, double beta_z,
     marley::Particle& particle_to_boost);
 
-  // Load two product particles with the appropriate lab-frame energies and
-  // momenta based on a decay of an initial particle (whose energy and momentum
-  // are assumed to be given in the lab frame). The direction cosine for the
-  // polar angle of the first particle and the azimuthal angle of the first
-  // particle (both as measured in the rest frame of the initial particle) must
-  // also be given as input.
+  /// @brief Handles kinematic calculations needed to decay an initial
+  /// particle into two final particles
+  /// @details This function load two product Particle objects with the
+  /// appropriate lab-frame energies and momenta (assuming they are produced on
+  /// the mass shell) based on a decay of an initial particle (whose energy and
+  /// momentum are assumed to be given in the lab frame). The direction cosine
+  /// for the polar angle of the first particle and the azimuthal angle of the
+  /// first particle (both as measured in the rest frame of the initial
+  /// particle) must also be given as input. The two product Particle
+  /// objects are expected to have their mass_ member variables set before
+  /// this function is called.
+  /// @param[in] initial_particle The mother particle that will decay
+  /// into the two daughter particles
+  /// @param[inout] first_product The first of the two daughter particles
+  /// @param[inout] second_product The second of the two daughter particles
+  /// @param[in] cos_theta_first The cosine of the polar emission angle for
+  /// the first daughter particle (as measured in the rest frame of the
+  /// mother particle)
+  /// @param[in phi_first The azimuthal emission angle for the first daughter
+  /// particle (as measured in the rest frame of the mother particle)
   void two_body_decay(const marley::Particle& initial_particle,
     marley::Particle& first_product, marley::Particle& second_product,
     double cos_theta_first, double phi_first);
