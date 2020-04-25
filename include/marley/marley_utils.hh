@@ -380,13 +380,13 @@ namespace marley_utils {
 
   // Generalized std::chrono::duration helper types
   template <typename repType> using
-    seconds = std::chrono::duration<repType>;
+    seconds = std::chrono::duration< repType >;
   template <typename repType> using
-    minutes = std::chrono::duration<repType, std::ratio<60>>;
+    minutes = std::chrono::duration< repType, std::ratio<60> >;
   template <typename repType> using
-    hours = std::chrono::duration<repType, std::ratio<3600>>;
+    hours = std::chrono::duration< repType, std::ratio<3600> >;
   template <typename repType> using
-    days = std::chrono::duration<repType, std::ratio<86400>>;
+    days = std::chrono::duration< repType, std::ratio<86400> >;
 
   // This function is a generalized version of code taken from the accepted answer at
   // http://stackoverflow.com/questions/15957805/extract-year-month-day-etc-from-stdchronotime-point-in-c

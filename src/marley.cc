@@ -136,29 +136,38 @@ namespace {
   // screen when this executable is running
   std::string makeStatusLines(long ev_count, long num_events, long num_old_events,
     std::chrono::system_clock::time_point start_time_point,
-    const std::vector<std::unique_ptr<marley::OutputFile> >& output_files)
+    const std::vector< std::unique_ptr<marley::OutputFile> >& output_files)
   {
-    std::ostringstream temp_oss;
-    // Print a status message showing the current number of events
-    temp_oss << "\nEvent Count = " << ev_count << "/" << num_events
-      << " (" << format_number(ev_count*100
-        / static_cast<double>(num_events))
-      << "% complete)\033[K\n";
-
-    // Print timing information
     std::chrono::system_clock::time_point current_time_point
       = std::chrono::system_clock::now();
+
+    // Compute the average event generation rate (events / s) up to this point
+    auto elapsed_time = std::chrono::duration_cast<
+      marley_utils::seconds<double> >( current_time_point - start_time_point );
+    long events_since_start = ev_count - num_old_events;
+    double elapsed_seconds = elapsed_time.count();
+    double avg_event_rate = events_since_start / elapsed_seconds;
+
+    std::ostringstream temp_oss;
+    // Print a status message showing the current number of events
+    double percent_complete = static_cast<double>( ev_count )
+      / num_events * 100.;
+    temp_oss << "\nEvent Count = " << ev_count << "/" << num_events
+      << " (" << format_number( percent_complete ) << "% complete, "
+      << format_number( avg_event_rate ) << " events / s)\033[K\n";
+
+    // Print timing information
     temp_oss << "Elapsed time: "
       << marley_utils::elapsed_time_string(start_time_point,
       current_time_point) << " (Estimated total run time: ";
 
-    marley_utils::seconds<float> estimated_total_time =
+    marley_utils::seconds<double> estimated_total_time =
       (current_time_point - start_time_point)
-      * (static_cast<float>(num_events - num_old_events)
+      * (static_cast<double>(num_events - num_old_events)
       / (ev_count - num_old_events));
 
     temp_oss << marley_utils::duration_to_string
-      <marley_utils::seconds<float>>(estimated_total_time)
+      < marley_utils::seconds<double> >( estimated_total_time )
       << ")\033[K\n";
 
     for (const auto& file : output_files) {
@@ -169,7 +178,7 @@ namespace {
 
     std::time_t estimated_end_time = std::chrono::system_clock::to_time_t(
       start_time_point + std::chrono::duration_cast
-      <std::chrono::system_clock::duration>(estimated_total_time));
+      <std::chrono::system_clock::duration>( estimated_total_time ));
 
     temp_oss << "MARLEY is estimated to terminate on "
       << put_time(std::localtime(&estimated_end_time), "%c %Z") << '\n';
