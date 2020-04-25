@@ -62,6 +62,8 @@ void signal_handler(int)
 
 namespace {
 
+  constexpr int DEFAULT_STATUS_UPDATE_INTERVAL = 100;
+
   // Show a number using one decimal digit without scientific notation.
   // Used to print certain numbers in this way without affecting the settings
   // currently in use for std::cout.
@@ -315,9 +317,28 @@ int main(int argc, char* argv[]) {
     // if we're doing a continuation run.
     long num_events = ex_set.get_long("events", 1e3);
 
+    // Update the status messages at the bottom of the screen
+    // after this many events have been generated. The user may
+    // set a non-default value from the job configuration file.
+    int status_update_interval = DEFAULT_STATUS_UPDATE_INTERVAL;
+    if ( ex_set.has_key("status_update_interval") ) {
+      const auto& sui = ex_set.at( "status_update_interval" );
+
+      bool ok;
+      int sui_value = sui.to_long( ok );
+
+      // Check for settings that are not positive integers
+      if ( !ok || sui_value < 1 ) {
+        throw marley::Error( "Invalid value " + sui.dump_string()
+          + " given for the \"status_update_interval\" key in the"
+          " job configuration file" );
+      }
+      else status_update_interval = sui_value;
+    }
+
     std::vector<std::unique_ptr<marley::OutputFile> > output_files;
 
-    if (ex_set.has_key("output")) {
+    if ( ex_set.has_key("output") ) {
       marley::JSON output_set = ex_set.at("output");
       if (!output_set.is_array()) throw marley::Error("The"
         " \"output\" key in the executable settings must have a value that"
@@ -439,10 +460,11 @@ int main(int argc, char* argv[]) {
         file->write_event(event.get());
       }
 
-      // Print status messages about simulation progress after every 100
-      // events have been generated
-      if ((ev_count - num_old_events) % 100 == 1 || ev_count == num_events) {
-
+      // Print status messages about simulation progress after every
+      // status_update_interval events have been generated
+      if ( (ev_count - num_old_events) % status_update_interval == 1
+        || ev_count == num_events || status_update_interval == 1 )
+      {
         // Temporarily disable the auto-printing of the status lines by
         // the StatusInserter class. This will avoid duplication of the
         // information.
