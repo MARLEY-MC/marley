@@ -379,33 +379,4 @@
     output: [ { file: "events.ascii", format: "ascii", mode: "overwrite" } ],
   },
 
-  // NUCLEAR STRUCTURE DATA (optional)
-  //
-  // The generator uses discrete nuclear level data and gamma-ray branching
-  // ratios to simulate nuclear de-excitations. The nuclear structure data
-  // included with MARLEY are largely taken from the TALYS nuclear
-  // reaction code (see ${MARLEY}/data/structure/README.md for more
-  // information) and reformatted.
-  //
-  // The "structure" JSON array contains a list of nuclear structure data files
-  // to be used during the simulation. MARLEY searches for these using
-  // the same procedure as for the reaction matrix element data files.
-  //
-  // MARLEY will load and use data for all nuclides present in each file given
-  // in this list. If MARLEY creates a final-state nucleus
-  // for which no nuclear structure data are available, the code will
-  // use simple gamma-ray models to simulate bound-state de-excitations.
-  //
-  // If the structure key is omitted from the configuration file, then MARLEY
-  // will default to loading structure data from all files in the directory
-  // ${MARLEY}/data/structure/ (where ${MARLEY} is the value of the MARLEY
-  // envrionment variable).
-  //
-  // Omitting the structure key and thereby using the official set of
-  // MARLEY structure data files is *strongly* recommended. Expert users
-  // with recommendations for improving the existing set of nuclear structure
-  // data files are encouraged to send feedback via email
-  // (support@marleygen.org)
-  // structure: [ "z017", "z018", "z019", ],
-
 } // A closing curly brace should appear at the end of the file
