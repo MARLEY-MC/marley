@@ -395,9 +395,9 @@ int main(int argc, char* argv[]) {
     }
     else {
       // If the user didn't specify anything for the output key, then
-      // by default write to a single JSON-format file.
-      output_files.push_back(std::make_unique<marley::TextOutputFile>("events.json",
-        "json", "overwrite", false));
+      // by default write to a single ASCII-format file.
+      output_files.push_back(std::make_unique<marley::TextOutputFile>("events.ascii",
+        "ascii", "overwrite", false));
     }
 
     // This std::unique_ptr to a Generator object will be initialized below
