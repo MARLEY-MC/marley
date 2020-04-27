@@ -53,6 +53,9 @@ namespace marley {
       inline virtual double threshold_kinetic_energy() const override
         { return KEa_threshold_; }
 
+      inline double g1() const { return g1_; }
+      inline double g2() const { return g2_; }
+
     private:
 
       // Atomic target involved in this reaction
