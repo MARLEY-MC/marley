@@ -1,4 +1,4 @@
-# MARLEY reaction data for (anti)neutrino-electron elastic scattering
+# MARLEY reaction input file for (anti)neutrino-electron elastic scattering
 # Prepared 23 September 2019 by Steven Gardiner
 #
 # Particle IDs conform to the 2017 revision of the
@@ -12,7 +12,8 @@
 # ProcessType code
 3
 # No nuclear matrix elements are needed in this case. Instead, one need only
-# provide a list of atomic PDG codes for which this process should be enabled
+# provide a whitespace-delimited list of atomic PDG codes for which this
+# process should be enabled.
 #
 # 40Ar
 1000180400

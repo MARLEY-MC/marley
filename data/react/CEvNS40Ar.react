@@ -1,4 +1,4 @@
-# MARLEY reaction data for coherent elastic neutrino-nucleus
+# MARLEY reaction input file for coherent elastic neutrino-nucleus
 # scattering (CEvNS) on 40Ar
 # Prepared 17 September 2019 by Steven Gardiner
 #
@@ -6,13 +6,15 @@
 # Particle Data Group Monte Carlo Particle Numbering Scheme
 # (see http://pdg.lbl.gov/2018/reviews/rpp2018-rev-monte-carlo-numbering.pdf)
 #
-# This file is intended to be used for testing the extension of MARLEY to NC
-# scattering with a simple case. Under the alowed approximation, the NC B(F)
-# matrix element only participates in ground-state-to-ground-state transitions
+# This file is intended for testing the extension of MARLEY to NC scattering
+# with a simple case. Under the allowed approximation, the NC B(F) matrix
+# element only participates in ground-state-to-ground-state transitions
 # (CEvNS). B(GT) values (which give rise to inelastic NC reactions) are omitted
 # from this file for now.
 #
 # ProcessType code and nuclear target PDG code
 2 1000180400
-# B(F) value is just gV^2 = 1
+# With the factor Q_W / 2 factored out (as is done in the current MARLEY
+# implementation), the NC B(F) value is just gV^2 = 1 for a spin-zero
+# target nucleus.
 0.000000 1.00  0
