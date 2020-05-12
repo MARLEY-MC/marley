@@ -529,7 +529,7 @@ int main(int argc, char* argv[]) {
     // We've flushed the logger, so we can now print the exception's error
     // message without messing up the logger output.
     MARLEY_LOG_ERROR() << error.what();
-    throw error;
+    //throw error;
   }
 
   // We shouldn't ever get here unless there was an error

@@ -1,12 +1,12 @@
-// Example MARLEY configuration file
+// Example MARLEY job configuration file
 // Steven Gardiner <gardiner@fnal.gov>
-// Revised 3 January 2020 for version 1.2.0
+// Revised 11 May 2020 for version 1.2.0
 //
 // INTRODUCTION
 //
 // The MARLEY command-line executable is configured using a JSON-like file
 // format. While the file format is quite similar to standard JSON (see
-// http://www.json.org/ for a full description), MARLEY configuration files
+// http://www.json.org/ for a full description), MARLEY job configuration files
 // differ from JSON files in the following ways:
 //
 //   - Single-word keys (no whitespace) may be given without surrounding
@@ -24,7 +24,7 @@
 //  "examples/COPY_ME.js") and modify them to suit their needs.
 //
 //  A file extension of ".js" is recommended for MARLEY configuration files
-//  because typical syntax highlighting settings for Javascript work well with
+//  because typical syntax highlighting settings for JavaScript work well with
 //  the configuration file format.
 //
 { // An opening curly brace begins the configuration file content
@@ -39,47 +39,104 @@
   // Unix epoch as its random number seed.
   seed: 123456,
 
-  // REACTION DATA (required)
+  // INCIDENT NEUTRINO DIRECTION (optional)
   //
-  // The generator uses tables of nuclear matrix elements to compute neutrino
-  // reaction cross sections. Each entry in the "reactions" JSON array is the
-  // name of a data file that contains a set of nuclear matrix elements to use
-  // when calculating cross sections for a particular reaction channel (e.g.,
-  // neutrino charged current, antineutrino charged current, neutral current,
-  // elastic scattering on atomic electrons). Note that the file names must be
-  // simple strings; MARLEY configuration files currently do not support the
-  // use of environment variables, bash globs, etc.
+  // The "direction" JSON object stores a 3-vector that represents the
+  // direction of the incident neutrinos. Note that this vector does not need
+  // to be normalized to unity, but at least one element *must* be nonzero.
+  //
+  // The "x", "y", and "z" keys give the Cartesian components of the direction
+  // 3-vector. If the "direction" JSON object is omitted, then x = 0.0, y =
+  // 0.0, z = 1.0 will be assumed.
+  //
+  // An isotropic neutrino direction may be randomly sampled for each event by
+  // using the following configuration:
+  //
+  // direction: "isotropic",
+  //
+  // In this example, incident neutrinos travel in the +z direction.
+  direction: { x: 0.0, y: 0.0, z: 1.0 },
 
-  // Although multiple nuclear matrix element tables may be available for a
-  // particular channel (corresponding to different data evaluations) only
-  // the first reaction data file listed in the array for each desired reaction
-  // channel is used.
+  // TARGET SPECIFICATION (optional)
   //
-  // In MARLEY v1.2.0, the only available channel is neutrino charged current,
-  // and there are three available tables of evaluated nuclear matrix elements
-  // for this channel:
+  // The nuclidic composition of the material illuminated by the incident
+  // neutrinos in a MARLEY simulation may be specified using the "target"
+  // JSON object. This object defines two arrays, which must have equal sizes.
+  // The "nuclides" array contains one or more nuclear PDG codes with one entry
+  // per distinct nuclide present in the target material. The "atom_fractions"
+  // array, as its name suggests, contains the corresponding atom fractions.
+  // Elements of the "atom_fractions" array will automatically be normalized
+  // to sum to unity if this is not done already by the user. Negative
+  // elements in this array will trigger an error message from MARLEY.
+  //
+  // If the "target" object is omitted from the job configuration file,
+  // then every nuclide that appears in the initial state of at least one
+  // configured reaction (see the REACTION INPUT FILES(S) section below)
+  // will be assumed to be present with equal abundance.
+  target: {
+    nuclides: [ 1000180400 ],
+    atom_fractions: [ 1.0 ],
+  },
+
+  // REACTION INPUT FILE(S) (required)
+  //
+  // For simulating neutrino-nucleus reactions, MARLEY relies on tables of
+  // precomputed nuclear matrix elements to compute neutrino reaction cross
+  // sections. The nuclear matrix elements to use in any particular simulation
+  // job are specified using a JSON array stored under the "reactions" key.
+  // Each entry in the array is the name of a data file that contains a set of
+  // nuclear matrix elements to use when calculating cross sections for a
+  // particular scattering mode on a particular target nuclide. Note that the
+  // file names must be simple strings; MARLEY configuration files currently do
+  // not support the use of environment variables, bash globs, etc.
+
+  // MARLEY also uses an input file to configure neutrino-electron
+  // elastic scattering (ES) reactions. In this case, the file provides a list
+  // of the nuclides for which the ES process should be simulated.
+
+  // Although multiple reaction input files may be available for a particular
+  // process, only a single configuration is allowed for any particular
+  // combination of target nucleus and scattering mode. Conflicting
+  // configurations will be ignored in favor of the one that appears in the
+  // first relevant reaction input file listed in the "reactions" array.
+  //
+  // In MARLEY v1.2.0, the main process available to be simulated is
+  // charged-current scattering of electron neutrinos on 40Ar.
+  // There are three available reaction input files (stored in the
+  // folder data/react/) for this process
   //
   //   - ve40ArCC_Bhattacharya2009.react
   //   - ve40ArCC_Bhattacharya1998.react
   //   - ve40ArCC_Liu1998.react
   //
-  // See each of these files (in data/react/)for details about their respective
-  // nuclear matrix element evaluations.
+  // See each of these files for details about their respective nuclear matrix
+  // element evaluations.
   //
-  // The full path to one these data files does not need to be given in the
-  // "reactions" JSON array. After searching in the working directory,
-  // MARLEY's default behavior is to search for input data files in
-  // the directories ${MARLEY}/data, ${MARLEY}/data/react/,
-  // and ${MARLEY}/data/structure/, where ${MARLEY} is the value of the
-  // MARLEY environment variable (typically set by sourcing the setup_marley.sh
-  // bash script). The list of search directories beyond the working directory
-  // can be changed from the default by setting the MARLEY_SEARCH_PATH
-  // environment variable to a ':'-separated list of directories.
+  // Two other reaction input files are currently included in the official MARLEY
+  // source code distribution:
+  //
+  //   - ES.react: Enables simulation of neutrino-electron elastic scattering
+  //               on a 40Ar atomic target
+  //
+  //   - CEvNS40Ar.react: Enables simulation of coherent elastic neutrino-nucleus
+  //                      scattering on a 40Ar target. The q^2 dependence of the
+  //                      nuclear form factor is neglected.
+  //
+  // The full path to the file does not need to be given in each element of the
+  // "reactions" JSON array. After searching in the working directory, MARLEY's
+  // default behavior is to search for reaction input files in the directories
+  // ${MARLEY}/data, ${MARLEY}/data/react/, and ${MARLEY}/data/structure/,
+  // where ${MARLEY} is the value of the MARLEY environment variable (typically
+  // set by sourcing the setup_marley.sh bash script). The list of search
+  // directories beyond the working directory can be changed from the default
+  // by setting the MARLEY_SEARCH_PATH environment variable to a ':'-separated
+  // list of directories.
   //
   // Unless a particular reaction channel is represented by a data file given
   // in the "reactions" JSON array, it will not be included in the MARLEY
   // simulation.
-  reactions: [ "ve40ArCC_Bhattacharya2009.react" ],
+  //
+  reactions: [ "ve40ArCC_Bhattacharya2009.react", "ES.react" ],
 
   // NEUTRINO SOURCE SPECIFICATION (required)
   //
@@ -99,32 +156,29 @@
   //   Spectrum description                   Allowed "type" values
   //   --------------------                   ---------------------
   //
-  //   Fermi-Dirac spectrum                   "fd", "fermi-dirac",
+  //   Fermi-Dirac                            "fd", "fermi-dirac",
   //                                          "fermi_dirac"
   //
   //
-  //   "Beta-fit" spectrum                    "bf", "beta", "beta-fit"
+  //   "Beta-fit"                             "bf", "beta", "beta-fit"
   //   (see, e.g.,
   //   http://arxiv.org/abs/1511.00806)
   //
-  //   Monoenergetic source                   "mono", "monoenergetic"
+  //   Monoenergetic                          "mono", "monoenergetic"
   //
-  //   Muon decay at rest source              "dar", "decay-at-rest"
+  //   Muon decay-at-rest                     "dar", "decay-at-rest"
   //   (ve and vu only)
   //
-  //   User-defined neutrino spectrum         "hist", "histogram"
-  //   histogram
+  //   User-defined histogram                 "hist", "histogram"
   //
-  //   User-defined neutrino spectrum         "grid"
-  //   probability density function
-  //   described by an interpolating
-  //   function on a set of grid points
+  //   User-defined probability               "grid"
+  //   density function evaluated via
+  //   interpolation on a set of grid
+  //   points
   //
-  //   ROOT neutrino spectrum histogram       "th1"
-  //   (TH1)
+  //   ROOT TH1                               "th1"
   //
-  //   ROOT neutrino spectrum probability     "tgraph"
-  //   density function (TGraph)
+  //   ROOT TGraph                            "tgraph"
   //
   // All of the source types also require the use of the "neutrino" key,
   // which specifies the species of neutrino emitted by the source. Valid
@@ -149,7 +203,7 @@
   //    Emin: 0,           // Minimum neutrino energy (MeV)
   //    Emax: 60,          // Maximum neutrino energy (MeV)
   //    temperature: 3.5,  // Temperature (MeV)
-  //    eta: 0             // Pinching parameter (dimensionless, default 0)
+  //    eta: 4             // Pinching parameter (dimensionless, default 0)
   //  },
   //
   // "BETA FIT"
@@ -171,7 +225,7 @@
   //    energy: 10,        // Neutrino energy (MeV)
   //  },
   //
-  //  MUON DECAY AT REST
+  //  MUON DECAY-AT-REST
   //
   //  source: {
   //    type: "decay-at-rest",
@@ -237,79 +291,31 @@
   //  },
   //
   //
-  // In this example configuration file, we've chosen a Fermi-Dirac source.
+  // In this example configuration file, we've chosen a monoenergetic source.
   //
   source: {
-    type: "fermi-dirac",
-    neutrino: "ve",       // The source produces electron neutrinos
-    Emin: 0,              // Minimum neutrino energy (MeV)
-    Emax: 60,             // Maximum neutrino energy (MeV)
-    temperature: 3.5,     // Temperature (MeV)
-    eta: 0                // Pinching parameter (dimensionless, default 0)
+    neutrino: "ve",        // The source produces electron neutrinos
+    type: "monoenergetic",
+    energy: 15.0,          // MeV
   },
-
-  // INCIDENT NEUTRINO DIRECTION (optional)
-  //
-  // The "direction" JSON object stores a 3-vector that represents the
-  // direction of the incident neutrinos. Note that this vector does not need
-  // to be normalized to unity, but at least one element *must* be nonzero.
-  //
-  // The "x", "y", and "z" keys give the Cartesian components of the direction
-  // 3-vector. If the "direction" JSON object is omitted, then x = 0.0, y =
-  // 0.0, z = 1.0 will be assumed.
-  //
-  // In this example, incident neutrinos travel in the +z direction.
-  direction: { x: 0.0, y: 0.0, z: 1.0 },
-
-  // LOGGER CONFIGURATION (optional)
-  //
-  // The "log" JSON array contains a list of JSON objects representing
-  // one or more output streams that MARLEY should use to output diagnostic
-  // messages while generating events.
-  //
-  // Each entry is a JSON object with the following keys:
-  //
-  //   - file: The name of a file to receive logger output. If the value
-  //           is set to "stdout" or "stderr", then the corresponding stream
-  //           will be used instead of a file on disk.
-  //
-  //   - level: The logging level that should be used as a threshold for
-  //            writing to the stream. Valid values (in order of increasing
-  //            severity) are "debug", "info", "warning", "error", and
-  //            "disabled". Only  messages that are at least as severe as the
-  //            given logging level will be written to the stream. If this key
-  //            is omitted, a value of "info" will be assumed. A value of
-  //            "disabled" suppresses all output from MARLEY to the stream.
-  //
-  //   - overwrite: Boolean value indicating whether any previously existing
-  //                content in this stream should be erased by MARLEY (true)
-  //                or not (false). This key is ignored when using stdout or
-  //                stderr. If this key is omitted, a value of false is
-  //                assumed.
-  //
-  // If the "log" key is omitted, MARLEY assumes a value of
-  // [ { file: "stdout", level: "info" } ]
-  //
-  log: [ { file: "stdout", level: "info" },
-         { file: "marley.log", level: "info", overwrite: true } ],
 
   // EXECUTABLE SETTINGS (optional)
   //
   // The entries within the executable_settings JSON object are used to
   // control the marley command-line executable. They are ignored if
-  // the configuration file is used to initialize MARLEY outside of that
+  // the job configuration file is used to initialize MARLEY outside of that
   // context (e.g., within a Geant4 application that links to the MARLEY
   // shared libraries).
   executable_settings: {
 
     // EVENT COUNT (optional)
     //
-    // Generate 1e4 events (the JSON parser expects this entry to be an
-    // integer literal, so scientific notation is not currently allowed for the
-    // value).
+    // Specifies the number of events to produce before terminating the
+    // program. The JSON parser expects this entry to be an integer literal, so
+    // scientific notation is not currently allowed.
     //
     // If this key is omitted, a value of 1000 will be assumed.
-    events: 10000,
+    events: 100000,
 
     // EVENT OUTPUT (optional)
     //
@@ -372,11 +378,43 @@
     //             TTree. This format is only available if MARLEY has been
     //             built with ROOT support.
     //
-    // If this key is omitted, then a value of
-    // [ { file: "events.json", format: "json", mode: "overwrite" } ]
-    // is assumed.
+    // If this key is omitted, then the following configuration
+    // is assumed:
+    //
+    // output: [ { file: "events.ascii", format: "ascii", mode: "overwrite" } ]
     //
     output: [ { file: "events.ascii", format: "ascii", mode: "overwrite" } ],
   },
+
+  // LOGGER CONFIGURATION (optional)
+  //
+  // The "log" JSON array contains a list of JSON objects representing
+  // one or more output streams that MARLEY should use to output diagnostic
+  // messages while generating events.
+  //
+  // Each entry is a JSON object with the following keys:
+  //
+  //   - file: The name of a file to receive logger output. If the value
+  //           is set to "stdout" or "stderr", then the corresponding stream
+  //           will be used instead of a file on disk.
+  //
+  //   - level: The logging level that should be used as a threshold for
+  //            writing to the stream. Valid values (in order of increasing
+  //            severity) are "debug", "info", "warning", "error", and
+  //            "disabled". Only  messages that are at least as severe as the
+  //            given logging level will be written to the stream. If this key
+  //            is omitted, a value of "info" will be assumed. A value of
+  //            "disabled" suppresses all output from MARLEY to the stream.
+  //
+  //   - overwrite: Boolean value indicating whether any previously existing
+  //                content in this stream should be erased by MARLEY (true)
+  //                or not (false). This key is ignored when using stdout or
+  //                stderr. If this key is omitted, a value of false is
+  //                assumed.
+  //
+  // If the "log" key is omitted (as it is in this file), MARLEY assumes the
+  // following configuration:
+  //
+  // log: [ { file: "stdout", level: "info" } ]
 
 } // A closing curly brace should appear at the end of the file

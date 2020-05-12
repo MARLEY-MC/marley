@@ -49,13 +49,13 @@ marley::FileManager::FileManager() {
 
   // Check whether the MARLEY environment variable is set
   char* mar = std::getenv("MARLEY");
-  if ( !mar ) throw marley::Error("The MARLEY enviornment variable is not set."
+  if ( !mar ) throw marley::Error("The MARLEY environment variable is not set."
     " Please set it (e.g., by sourcing the setup_marley.sh script) and"
     " try again.");
 
   marley_dir_ = std::string( mar );
 
-  // If the MARLEY_SEARCH_PATH enviornment variable is set, use that
+  // If the MARLEY_SEARCH_PATH environment variable is set, use that
   // instead of the default search path
   char* msp = std::getenv("MARLEY_SEARCH_PATH");
   if ( msp ) default_search_path_ = std::string( msp );

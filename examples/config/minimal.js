@@ -4,6 +4,6 @@
   source: {
     type: "mono",
     neutrino: "ve",
-    energy: 10.0,
+    energy: 35.0,
   },
 }

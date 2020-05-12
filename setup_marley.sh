@@ -13,7 +13,7 @@ export MARLEY=${THIS_DIRECTORY}
 export PATH=${PATH}:${THIS_DIRECTORY}/build
 
 if [ "$(uname)" = "Darwin" ]; then
-  # Mac OS X platform
+  # macOS platform
   export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:${THIS_DIRECTORY}/build
 else
   # Assume a GNU/Linux platform

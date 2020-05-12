@@ -4,12 +4,12 @@
 
 MARLEY (Model of Argon Reaction Low Energy Yields) is a Monte Carlo event
 generator for tens-of-MeV neutrino-nucleus interactions. The current version
-includes evaluated nuclear matrix elements for the charged-current reaction
-<p align="center">&nu;<sub>e</sub>&nbsp;+&nbsp;<sup>40</sup>Ar&nbsp;&rarr;
-&nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup></p>
-only. With the addition of new matrix elements, MARLEY could be expanded to
-include more reactions and more target nuclei. Users interested in contributing
-new nuclear matrix element calculations are encouraged to contact the author.
+primarily focuses on simulations of the charged-current reaction <p
+align="center">&nu;<sub>e</sub>&nbsp;+&nbsp;<sup>40</sup>Ar&nbsp;&rarr;
+&nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup></p>.
+Preparation of new reaction input files will allow MARLEY to simulate
+additional reactions on more target nuclei. Users interested in extending the
+functionality of MARLEY in this way are encouraged to contact the author.
 
 ## Copyright and License
 
@@ -44,12 +44,9 @@ of the TALYS nuclear code (see data/structure/README.md for more information).
 
 ## Getting Started
 
-MARLEY may be built as an ordinary command-line executable, or it may be built
-as product for the relocatable ups tool developed by
-[Fermilab](https://fnal.gov). Those interested in doing the latter should
-consult the [ups-specific
-repository](https://github.com/sjgardiner/marley-ups-build). The instructions
-given here describe the ordinary build procedure.
+MARLEY is regularly tested on both Linux and macOS platforms and is expected to
+work in any Unix-like environment in which the prerequisites are installed.
+Building and running MARLEY on Windows is not currently supported.
 
 ### Prerequisites
 There are three prerequisites needed to build MARLEY:
@@ -65,12 +62,8 @@ There are three prerequisites needed to build MARLEY:
 the `gsl-config` executable is available on the system `PATH`.
 
 On Linux machines, all three of these prerequisites will likely be available
-through the standard package manager. On Mac OSX, installing GSL may be done
-using [homebrew](https://brew.sh/).
-
-Building MARLEY on Windows has not yet been attempted. Please contact the
-author (<gardiner@fnal.gov>) if you are interested in building the code
-on Windows.
+through the standard package manager. On macOS, installing GSL may be done
+using [Homebrew](https://brew.sh/).
 
 ### Building MARLEY
 
@@ -102,8 +95,8 @@ E-mail bug reports to: <support@marleygen.org>
 
 ### Generating events
 
-The command-line executable allows the user to configure MARLEY via
-JSON-like configuration files. To generate events using an
+The marley command-line executable allows the user to adjust simulation
+parameters via JSON-like configuration files. To generate events using an
 example configuration file, execute
 ```
 ./marley ../examples/config.js
