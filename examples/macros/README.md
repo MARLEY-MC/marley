@@ -3,11 +3,11 @@
 This directory contains several example ROOT macros that can be used to plot
 truth information from MARLEY events.  To use these macros, you will need to
 build MARLEY against an installation of ROOT. This will be handled by the
-standard Makefile (${MARLEY}/build/Makefile) automatically if the root-config
+standard Makefile (build/Makefile) automatically if the root-config
 executable is visible on the system PATH.
 
 Once MARLEY has been linked to ROOT successfully, running the mroot script
-(located in ${MARLEY}/build/ following a successful build) will start the ROOT
+(located in build/ following a successful build) will start the ROOT
 interpreter and load class dictionaries needed to interpret marley::Event
 objects. All of the macros below are designed to be run from within an mroot
 session. The input file may contain MARLEY events in any of the four standard
@@ -69,7 +69,10 @@ Usage:
 reco_spectrum.C
 ---------------
 
-Plots the flux-averaged differential cross section with respect to the true
+This macro is intended for use with a sample of events involving CC electron
+neutrino scattering on 40Ar only.
+
+It plots the flux-averaged differential cross section with respect to the true
 neutrino energy (black) and two reconstructed neutrino energies. The "reco 1"
 neutrino energy (blue) is calculated from the sum of the true kinetic energies
 of all final-state particles excluding neutrons. The "reco 2" neutrino energy
