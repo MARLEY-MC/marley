@@ -631,3 +631,34 @@ marley::Event marley::Generator::create_event( int pdg_a, double KEa,
   // Return the completed event object
   return ev;
 }
+
+// Compute the abundance-weighted total reaction cross section at fixed
+// projectile kinetic energy
+double marley::Generator::total_xs( int pdg_a, double KEa ) const {
+
+  // Initialize the return value to zero
+  double tot_xsec = 0.;
+
+  // Sum all of the reaction total cross sections. Take weighting by atom
+  // fraction in the target material into account.
+  for ( const auto& react : reactions_ ) {
+
+    // Compute the total cross section for the current reaction for a single
+    // target atom
+    double xsec = react->total_xs( pdg_a, KEa );
+
+    // If the target_ member has not been initialized, don't bother doing any
+    // weighting by atom fraction (equivalent to a weight of unity for all
+    // target atoms)
+    if ( target_ ) {
+      // If it has been configured, then apply the appropriate atom fraction
+      // weight from the target as appropriate.
+      xsec *= target_->atom_fraction( react->atomic_target() );
+    }
+
+    // Add the weighted total cross section value to the total
+    tot_xsec += xsec;
+  }
+
+  return tot_xsec;
+}

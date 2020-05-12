@@ -125,18 +125,16 @@ int main(int argc, char* argv[]) {
 
   // Ready for the dump now
   // Energies are dumped in units of MeV
-  // Cross section values are dumped in units of 10^(-42) cm^2
+  // Cross section values are dumped in units of 10^(-42) cm^2 / atom
   for ( int s = 0; s < num_steps; ++s ) {
 
     // Update the projectile energy for this step
     KE += delta_KE_step;
 
     // Compute the total cross section at this projectile
-    // energy (summed over all active reactions)
-    double xsec = 0.;
-    for ( const auto& react : gen.get_reactions() ) {
-      xsec += react->total_xs( projectile_pdg, KE );
-    }
+    // energy (summed over all active reactions and weighted
+    // by nuclide abundance in the target material)
+    double xsec = gen.total_xs( projectile_pdg, KE );
 
     // Convert the total cross section from MARLEY natural units (MeV^{-2}) to
     // conventional units (10^{-42} cm^2)
@@ -147,8 +145,8 @@ int main(int argc, char* argv[]) {
     out_file << KE << ' ' << xsec << '\n';
 
     // Also write these quantities to the Logger
-    MARLEY_LOG_INFO() << "KE = " << KE << " MeV, total xsec = "
-      << xsec << " \u00D7 10^{-42} cm^2";
+    MARLEY_LOG_INFO() << "KE = " << KE << " MeV, abundance-weighted total xsec = "
+      << xsec << " \u00D7 10^{-42} cm^2 / atom";
   }
 
   return 0;

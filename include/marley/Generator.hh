@@ -226,8 +226,21 @@ namespace marley {
       /// @param pdg_a The PDG code for the projectile
       /// @param KEa The kinetic energy of the projectile (MeV)
       /// @param pdg_atom The nuclear PDG code for the atomic target
-      /// @return Total cross section (MeV<sup> -2</sup>)
+      /// @return Total cross section (MeV<sup> -2</sup> / atom)
       double total_xs(int pdg_a, double KEa, int pdg_atom) const;
+
+      /// @brief Computes the abundance-weighted total cross section at fixed
+      /// energy for all configured reactions
+      /// @details Atom fractions in the owned Target are used to perform
+      /// the weighting by nuclide abundance
+      /// @note This function is not used as part of the normal MARLEY
+      /// workflow. It exposes the abundance-weighted total cross section
+      /// for use by the mardumpxs command-line tool
+      /// (see examples/executables/mardumpxs.cc)
+      /// @param pdg_a The PDG code for the projectile
+      /// @param KEa The kinetic energy of the projectile (MeV)
+      /// @return Abundance-weighted total cross section (MeV<sup> -2</sup> / atom)
+      double total_xs(int pdg_a, double KEa) const;
 
       /// @brief Creates an event object for a fixed projectile species,
       /// kinetic energy, and atomic target
