@@ -10,9 +10,53 @@
   #include "marley/EventFileReader.hh"
 #endif
 
+// These functions largely duplicate code that also exists
+// in marley::Event::print_human_readable(). They are included
+// here as an example of code that accesses all data members
+// of the Particle and Event objects.
+void print_particle_info( const marley::Particle& p ) {
+  std::cout << "  particle with PDG code = " << p.pdg_code()
+    << " has total energy " << p.total_energy() << " MeV,"
+    << '\n' << "    3-momentum = (" << p.px() << " MeV, " << p.py()
+    << " MeV, " << p.pz() << " MeV)," << '\n'
+    << "    mass = " << p.mass() << " MeV, and charge = "
+    << p.charge() << " times the proton charge." << '\n';
+}
+
+void print_event_info(const marley::Event& e, const size_t num) {
+
+  const std::vector< marley::Particle* > initials = e.get_initial_particles();
+  const std::vector< marley::Particle* > finals = e.get_final_particles();
+
+  size_t num_initial = initials.size();
+  size_t num_final = finals.size();
+
+  std::cout << "\n*** Event " << num << " has "
+    << num_initial << " initial particles and "
+    << num_final << " final particles. ***" << '\n';
+
+  int twoJ = e.twoJ();
+  bool twoJ_is_odd = ( twoJ % 2 == 1 );
+  std::cout << "The residual nucleus initially had excitation energy "
+    << e.Ex() << " MeV and spin-parity ";
+  if ( twoJ_is_odd ) std::cout << twoJ << "/2";
+  else std::cout << twoJ / 2;
+  std::cout << e.parity() << '\n';
+
+  std::cout << "Initial particles" << '\n';
+  for ( const auto* particle_i : initials ) {
+    print_particle_info( *particle_i );
+  }
+
+  std::cout << "Final particles" << '\n';
+  for ( const auto* particle_f : finals ) {
+    print_particle_info( *particle_f );
+  }
+}
+
 // Prints events from an input file in a human-readable format. This function
 // also updates an overall event number as it works through the file.
-void print_events(const std::string& file_name, int& ev_num) {
+void print_all_events(const std::string& file_name, int& ev_num) {
 
   #ifdef USE_ROOT
     marley::RootEventFileReader reader( file_name );
@@ -23,7 +67,7 @@ void print_events(const std::string& file_name, int& ev_num) {
   marley::Event ev;
 
   while ( reader >> ev ) {
-    ev.print_human_readable( std::cout, ev_num );
+    print_event_info( ev, ev_num );
     ++ev_num;
   }
 }
@@ -42,7 +86,7 @@ int main(int argc, char* argv[]) {
 
   int event_number = 0;
   for ( const auto& file_name : file_names ) {
-    print_events( file_name, event_number );
+    print_all_events( file_name, event_number );
   }
 
   return 0;
