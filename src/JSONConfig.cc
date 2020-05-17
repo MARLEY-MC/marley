@@ -205,15 +205,29 @@ marley::Generator marley::JSONConfig::create_generator() const
       ::coulomb_mode_from_string( my_mode );
   }
 
-  // Update the Coulomb mode setting for all configured nuclear reactions
+  // Update the Coulomb mode setting for all configured nuclear reactions.
+  // Set a flag indicating whether at least one of them was a CC reaction.
+  // We will only bother to print the logging message below if one such
+  // reaction was found.
+  bool found_cc = false;
   for ( auto& react : gen.reactions_ ) {
+
+    ProcType pt = react->process_type();
+    if ( pt == ProcType::NeutrinoCC || pt == ProcType::AntiNeutrinoCC ) {
+      found_cc = true;
+    }
+
     auto* nr = dynamic_cast< marley::NuclearReaction* >( react.get() );
     if ( nr ) nr->set_coulomb_mode( coulomb_mode );
   }
 
-  std::string cmode_str = marley::NuclearReaction
-    ::string_from_coulomb_mode( coulomb_mode );
-  MARLEY_LOG_INFO() << "Configured Coulomb correction method: " << cmode_str;
+  // If a CC reaction is configured, then print a logging message indicating
+  // which Coulomb correction method is active. Otherwise, don't bother.
+  if ( found_cc ) {
+    std::string cmode_str = marley::NuclearReaction
+      ::string_from_coulomb_mode( coulomb_mode );
+    MARLEY_LOG_INFO() << "Configured Coulomb correction method: " << cmode_str;
+  }
 
   // Now that the reactions and source are both prepared, check that a neutrino
   // from the source can interact via at least one of the enabled reactions
