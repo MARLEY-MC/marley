@@ -267,6 +267,18 @@ marg4: $(MARLEY_LIBS)
 	cp ../examples/marg4/build/marg4 .
 	$(RM) -f ../examples/marg4/build/marg4
 
+marprint: $(MARLEY_LIBS)
+	$(RM) -f ../examples/executables/build/marprint
+	cd ../examples/executables/build && $(MAKE) marprint
+	cp ../examples/executables/build/marprint .
+	$(RM) -f ../examples/executables/build/marprint
+
+mardumpxs: $(MARLEY_LIBS)
+	$(RM) -f ../examples/executables/build/mardumpxs
+	cd ../examples/executables/build && $(MAKE) mardumpxs
+	cp ../examples/executables/build/mardumpxs .
+	$(RM) -f ../examples/executables/build/mardumpxs
+
 .PHONY: docs clean install uninstall
 
 docs:
@@ -278,7 +290,7 @@ docs:
 clean:
 	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
 	$(RM) -rf *.dSYM marsum mroot $(TEST_EXECUTABLE) marg4
-	$(RM) -rf ../doxygen/html/*
+	$(RM) -rf marprint mardumpxs ../doxygen/html/*
 
 install: marley
 	mkdir -p $(DESTDIR)$(bindir)

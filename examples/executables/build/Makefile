@@ -24,6 +24,9 @@ CXXFLAGS += -Wall -Wextra -Wpedantic -Wcast-align
 all: marprint mardumpxs
 debug: all
 
+# Always link against the MARLEY shared library. If the MARLEY_ROOT shared
+# library is present in the build/ folder, then link against it. Also enable
+# ROOT-dependent features by defining the USE_ROOT preprocessor macro.
 MARLEY_LIBS := -L$(MARLEY_LIB) -lMARLEY
 ifneq (,$(wildcard $(MARLEY)/build/libMARLEY_ROOT*))
   MARLEY_LIBS += -lMARLEY_ROOT
@@ -47,4 +50,4 @@ mardumpxs: mardumpxs.o
 .PHONY: clean
 
 clean:
-	$(RM) *.o marprint mardumpxs mardxs marjoin
+	$(RM) *.o marprint mardumpxs
