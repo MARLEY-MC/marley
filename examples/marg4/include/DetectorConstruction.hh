@@ -2,7 +2,6 @@
 #pragma once
 
 #include "G4VUserDetectorConstruction.hh"
-#include "globals.hh"
 
 class G4PhysicalVolume;
 

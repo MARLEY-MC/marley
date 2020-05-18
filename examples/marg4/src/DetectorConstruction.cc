@@ -8,7 +8,7 @@
 #include "G4SubtractionSolid.hh"
 #include "G4PVPlacement.hh"
 
-// My includes
+// marg4 includes
 #include "DetectorConstruction.hh"
 
 DetectorConstruction::DetectorConstruction()

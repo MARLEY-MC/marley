@@ -1,19 +1,20 @@
 #pragma once
 
+// Standard library includes
+#include <string>
+
 // Geant4 includes
 #include "G4VUserPrimaryGeneratorAction.hh"
-#include "G4ParticleGun.hh"
-#include "globals.hh"
 
 // MARLEY includes
 #include "marley/Generator.hh"
 
 class G4Event;
 
-class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
+class MarleyPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 {
   public:
-    PrimaryGeneratorAction(const std::string& config_file_name);
+    MarleyPrimaryGeneratorAction(const std::string& config_file_name);
 
     virtual void GeneratePrimaries(G4Event*) override;
 

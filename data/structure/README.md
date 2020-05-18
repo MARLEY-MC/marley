@@ -25,7 +25,7 @@ to the TALYS developers. This can be done by citing the following reference:
 A.J. Koning, S. Hilaire and M.C. Duijvestijn, "TALYS-1.0", Proceedings of the
 International Conference on Nuclear Data for Science and Technology, April
 22-27, 2007, Nice, France, editors O. Bersillon, F. Gunsing, E. Bauge, R. Jacqmin,
-and S.Leray, EDP Sciences, 2008, p. 211-214.
+and S. Leray, EDP Sciences, 2008, pp. 211-214.
 
 For convenience, a BibTeX-format citation for the reference above is provided
 in the file TALYS-CITATION.bib

@@ -1,21 +1,18 @@
+// Standard library includes
 #include <memory>
 
-#include "G4RunManager.hh"
-#include "G4UImanager.hh"
-
+// Geant4 includes
 #include "G4PhysListFactory.hh"
+#include "G4RunManager.hh"
 #include "G4VModularPhysicsList.hh"
 
+// marg4 includes
 #include "DetectorConstruction.hh"
-#include "PrimaryGeneratorAction.hh"
+#include "MarleyPrimaryGeneratorAction.hh"
 #include "EventAction.hh"
-#include "SteppingAction.hh"
-#include "TrackingAction.hh"
-
-#include "G4UnitsTable.hh"
-#include "G4SystemOfUnits.hh"
 
 namespace {
+
   // Retrieves the desired number of events from the first command
   // line argument. Based on https://stackoverflow.com/a/2797823/4081973
   // Returns true if everything went well, or false if there was a problem
@@ -44,10 +41,11 @@ namespace {
 
     return true;
   }
+
 }
 
 
-int main(int argc, char* argv[]) {
+int main( int argc, char* argv[] ) {
 
   if ( argc <= 2 ) {
     std::cout << "Usage: example NUM_EVENTS MARLEY_CONFIG_FILE\n";
@@ -67,37 +65,35 @@ int main(int argc, char* argv[]) {
   // ** Set mandatory initialization classes **
   // Define the geometry for the simulation
   DetectorConstruction* det = new DetectorConstruction();
-  rm->SetUserInitialization(det);
+  rm->SetUserInitialization( det );
 
-  // Set up the QGSP_BIC_HP physics list
+  // Set up the built-in QGSP_BIC_HP physics list
   // Note: High-precision tracking of neutrons is set up by standard
   // physics lists with the "_HP" suffix. Transport of neutrons generated
   // by MARLEY will not be trustworthy unless the high-precision tracking
   // is enabled.
   G4PhysListFactory factory;
-  G4VModularPhysicsList* refList = factory.GetReferencePhysList("QGSP_BIC_HP");
-  rm->SetUserInitialization(refList);
+  G4VModularPhysicsList* refList
+    = factory.GetReferencePhysList( "QGSP_BIC_HP" );
+  rm->SetUserInitialization( refList );
 
   // ** Set user actions **
 
   // The primary generator action interfaces with MARLEY
-  PrimaryGeneratorAction* pga = new PrimaryGeneratorAction(config_file_name);
-  rm->SetUserAction(pga);
+  MarleyPrimaryGeneratorAction* mpga
+    = new MarleyPrimaryGeneratorAction( config_file_name );
+  rm->SetUserAction( mpga );
 
-  TrackingAction* ta = new TrackingAction;
-  rm->SetUserAction(ta);
-
-  SteppingAction* sa = new SteppingAction();
-  rm->SetUserAction(sa);
-
+  // The event action prints the current event number at the beginning of
+  // every hundredth event without doing anything else.
   EventAction* eva = new EventAction;
-  rm->SetUserAction(eva);
+  rm->SetUserAction( eva );
 
   rm->Initialize();
 
   std::cout << "Simulating " << num_events << " events . . .\n";
 
-  rm->BeamOn(num_events);
+  rm->BeamOn( num_events );
 
   return 0;
 }
