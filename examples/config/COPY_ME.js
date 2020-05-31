@@ -1,4 +1,5 @@
-// Use this example job configuration file as a starting point for your own files.
+// Use this example job configuration file as a starting point for your own
+// files.
 {
   seed: 123456, // Random number seed (omit to use time since Unix epoch)
 

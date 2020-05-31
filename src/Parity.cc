@@ -1,3 +1,4 @@
+/// @file
 /// @copyright Copyright (C) 2016-2020 Steven Gardiner
 /// @license GNU General Public License, version 3
 //
@@ -7,8 +8,11 @@
 // terms of version 3 of the GNU General Public License as published by the
 // Free Software Foundation.
 //
-// For the full text of the license please see ${MARLEY}/COPYING or
+// For the full text of the license please see COPYING or
 // visit http://opensource.org/licenses/GPL-3.0
+//
+// Please respect the MCnet academic usage guidelines. See GUIDELINES
+// or visit https://www.montecarlonet.org/GUIDELINES for details.
 
 // Standard library includes
 #include <string>

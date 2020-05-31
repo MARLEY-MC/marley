@@ -112,15 +112,16 @@
   // See each of these files for details about their respective nuclear matrix
   // element evaluations.
   //
-  // Two other reaction input files are currently included in the official MARLEY
-  // source code distribution:
+  // Two other reaction input files are currently included in the official
+  // MARLEY source code distribution:
   //
   //   - ES.react: Enables simulation of neutrino-electron elastic scattering
   //               on a 40Ar atomic target
   //
-  //   - CEvNS40Ar.react: Enables simulation of coherent elastic neutrino-nucleus
-  //                      scattering on a 40Ar target. The q^2 dependence of the
-  //                      nuclear form factor is neglected.
+  //   - CEvNS40Ar.react: Enables simulation of coherent elastic
+  //                      neutrino-nucleus scattering on a 40Ar target. The
+  //                      q^2 dependence of the nuclear form factor is
+  //                      neglected.
   //
   // The full path to the file does not need to be given in each element of the
   // "reactions" JSON array. After searching in the working directory, MARLEY's
@@ -311,8 +312,8 @@
     // EVENT COUNT (optional)
     //
     // Specifies the number of events to produce before terminating the
-    // program. The JSON parser expects this entry to be an integer literal, so
-    // scientific notation is not currently allowed.
+    // program. The JSON parser expects this entry to be an integer literal,
+    // so scientific notation is not currently allowed.
     //
     // If this key is omitted, a value of 1000 will be assumed.
     events: 100000,
