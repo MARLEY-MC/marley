@@ -214,10 +214,13 @@ namespace marley {
         typename std::enable_if<std::is_floating_point<T>::value>::type* = 0)
         : data_(static_cast<double>(f)), type_(DataType::Floating) {}
 
-      template <typename T> JSON(T s,
-        typename std::enable_if<std::is_convertible<T,
-        std::string>::value>::type* = 0) : data_(std::string(s)),
-        type_(DataType::String) {}
+      explicit JSON(const std::string& s)
+        : data_(s), type_(DataType::String) {}
+
+      //template <typename T> JSON(T s,
+      //  typename std::enable_if<std::is_convertible<T,
+      //  std::string>::value>::type* = 0) : data_(std::string(s)),
+      //  type_(DataType::String) {}
 
       JSON(std::nullptr_t) : data_(), type_(DataType::Null) {}
 
