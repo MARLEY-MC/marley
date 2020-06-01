@@ -1,0 +1,123 @@
+#!/bin/bash
+#
+# Script that reports helpful information for building C++ applications
+# against the MARLEY libraries
+#
+# Revised 1 June 2020 by Steven Gardiner <gardiner@fnal.gov>
+
+# If the MARLEY environment variable is set, then use it to form
+# the subdirectory names. If not, then deduce the right value from
+# the location of this script (presumably the build/ folder)
+if [ -z "$MARLEY" ]; then
+  topdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+else
+  topdir=${MARLEY}
+fi
+
+bindir=${topdir}/build
+datadir=${topdir}/data
+incdir=${topdir}/include
+libdir=${topdir}/build
+srcdir=${topdir}/src
+
+## Variable names surrounded by @@ will be replaced with appropriate
+## values at build time. See build/Makefile for details.
+version=@@VERSION@@
+git_rev=@@GIT_REVISION@@
+cxx_std=@@CXX_STD@@
+
+# Add the "USE_ROOT" preprocessor macro definition to the
+# compiler flags if ROOT support is enabled
+use_root=@@USE_ROOT@@
+root_flag=""
+if [ "$use_root" = "yes" ]; then
+  root_flag="-DUSE_ROOT"
+fi
+
+cflags="-std=${cxx_std} ${root_flag}"
+
+# Set up the linker commands for the MARLEY shared libraries. If ROOT support
+# is enabled, then include the extra library containing the needed
+# dictionaries.
+libs="-L${libdir} -lMARLEY"
+if [ "$use_root" = "yes" ]; then
+  libs="${libs} -lMARLEY_ROOT"
+fi
+
+# If no command-line arguments are given to this script, then print a usage
+# message
+usage_msg="Usage: marley-config [--cflags] [--bindir] [--datadir] [--libs]"
+usage_msg="${usage_msg} [--libdir] [--incdir] [--srcdir] [--topdir]"
+usage_msg="${usage_msg} [--version] [--git-revision] [--help]"
+
+if [ $# -eq 0 ]; then
+  echo "${usage_msg}"
+  exit 1
+fi
+
+# If any of the command-line arguments is "--help", then print the help message
+for arg in "$@"; do
+  if [ "$arg" = "--help" ]; then
+    echo "Usage: marley-config [options]"
+    echo ""
+    echo "  --cflags          Print compiler flags and header path"
+    echo "  --bindir          Print the executable directory"
+    echo "  --datadir         Print the data directory"
+    echo "  --libs            Print MARLEY libraries"
+    echo "  --libdir          Print the library directory"
+    echo "  --incdir          Print the header directory"
+    echo "  --srcdir          Print the source code directory"
+    echo "  --topdir          Print the top-level MARLEY directory"
+    echo "  --version         Print the MARLEY version"
+    echo "  --git-revision    Print the MARLEY git revision number"
+    echo "  --help            Print this message"
+    exit 2
+  fi
+done
+
+# Define an empty variable that will hold the printed output of the script
+out=""
+
+# Loop over the command-line arguments and append the requested information
+# to the output
+for arg in "$@"; do
+  case $arg in
+    --cflags)
+      out="$out $cflags"
+    ;;
+    --bindir)
+      out="$out $bindir"
+    ;;
+    --datadir)
+      out="$out $datadir"
+    ;;
+    --libs)
+      out="$out $libs"
+    ;;
+    --libdir)
+      out="$out $libdir"
+    ;;
+    --incdir)
+      out="$out $incdir"
+    ;;
+    --srcdir)
+      out="$out $srcdir"
+    ;;
+    --topdir)
+      out="$out $topdir"
+    ;;
+    --version)
+      out="$out $version"
+    ;;
+    --git-revision)
+      out="$out $git_rev"
+    ;;
+    *)
+      echo "Unknown argument \"${arg}\"!"
+      echo ${usage_msg}
+      exit 3
+  esac
+done
+
+# Print the completed output to the screen
+echo $out

@@ -1,13 +1,22 @@
-INCLUDE_DIR = ../include
-SRC_DIR = ../src
+# Names of various MARLEY directories
+TOP_DIR = $(shell cd .. && pwd)
+BUILD_DIR = $(TOP_DIR)/build
+DATA_DIR = $(TOP_DIR)/data
+INCLUDE_DIR = $(TOP_DIR)/include
+SRC_DIR = $(TOP_DIR)/src
+
+# Default version of the C++ standard to use for compilation
+CXX_STD="c++14"
+
+UNKNOWN_REV=unknown version
 
 # If the target is "debug", then include debugging information and build the
 # marley executable with optimization turned off
 ifeq ($(MAKECMDGOALS),debug)
-  CXXFLAGS ?= -O0 -g -std=c++14
+  CXXFLAGS ?= -O0 -g -std=$(CXX_STD)
 else
 # Otherwise, use full optimization and do not include debugging info
-  CXXFLAGS ?= -O3 -std=c++14
+  CXXFLAGS ?= -O3 -std=$(CXX_STD)
 endif
 
 UNAME_S := $(shell uname -s)
@@ -18,6 +27,25 @@ else ifeq ($(UNAME_S),Linux)
 else
   $(warning Unrecognized operating system encountered.)
   SHARED_LIB_SUFFIX=so
+endif
+
+# If available, use git to determine the hash of the current version
+# of MARLEY. If not, set it to the string "unknown version"
+
+# Check if git is available on the system path.
+GIT := $(shell command -v git 2> /dev/null)
+
+ifndef GIT
+  GIT_REVISION := $(UNKNOWN_REV)
+else
+  # Also check that we're inside of a folder managed by a git repository. If
+  # we're not, then git rev-parse won't work
+  GIT_REVPARSE_CODE = $(shell git rev-parse 2> /dev/null && echo "$$?")
+  ifeq ($(GIT_REVPARSE_CODE),0)
+    GIT_REVISION := $(shell git rev-parse --short HEAD)
+  else
+    GIT_REVISION := $(UNKNOWN_REV)
+  endif
 endif
 
 # If the .VERSION file exists, use its contents as the
@@ -38,15 +66,9 @@ else
   # working with a tagged release
   TARBALL_LINK = ""
 
-  # Check if git is available on the system path. Use it to
-  # get a hash to use as the MARLEY version number. If it's
-  # not available, then just use the string "UNKNOWN"
-  GIT := $(shell command -v git 2> /dev/null)
-  ifndef GIT
-    MARLEY_VERSION := unknown version
-  else
-    MARLEY_VERSION := $(shell git rev-parse --short HEAD)
-  endif
+  # Also use the git revision as the version number in this case
+  MARLEY_VERSION := $(GIT_REVISION)
+
 endif
 
 # Define the MARLEY_VERSION preprocessor macro
@@ -142,7 +164,7 @@ Please ensure that the gsl-config executable is on your PATH and try again.
       $(info WARNING: Could not find a valid ROOT installation.)
       $(info MARLEY will be built without ROOT support.)
       USE_ROOT = no
-      CXXFLAGS += -std=c++14
+      CXXFLAGS += -std=$(CXX_STD)
     else
       ROOT_VERSION := $(shell $(ROOTCONFIG) --version)
       $(info Found ROOT version $(ROOT_VERSION) in $(ROOT))
@@ -157,14 +179,17 @@ Please ensure that the gsl-config executable is on your PATH and try again.
       # Later -std options take precedence, so just tack on
       # a new one to keep things simple.
       ifneq (, $(findstring c++1z, $(ROOT_CXXFLAGS)))
-        override CXXFLAGS += -std=c++1z
+        override CXX_STD = c++1z
+        override CXXFLAGS += -std=$(CXX_STD)
       endif
       ifneq (, $(findstring c++17, $(ROOT_CXXFLAGS)))
-        override CXXFLAGS += -std=c++17
+        override CXX_STD = c++17
+        override CXXFLAGS += -std=$(CXX_STD)
       endif
       # Do the same thing for C++2a
       ifneq (, $(findstring c++2a, $(ROOT_CXXFLAGS)))
-        override CXXFLAGS += -std=c++2a
+        override CXX_STD = c++2a
+        override CXXFLAGS += -std=$(CXX_STD)
       endif
 
       ROOT_LDFLAGS := $(shell $(ROOTCONFIG) --ldflags)
@@ -251,7 +276,19 @@ marsum: $(MARLEY_LIBS) marsum.o
 mroot: $(MARLEY_LIBS)
 	cp $(SRC_DIR)/scripts/mroot .
 
-marley: $(MARLEY_LIBS) marley.o $(MAYBE_MARSUM)
+# We use a temporary backup file here so that the invocation of sed is
+# compatible with both the GNU/Linux and BSD/macOS versions.
+# See https://stackoverflow.com/a/22084103/4081973 for details.
+marley-config: $(MARLEY_LIBS)
+	$(RM) marley-config
+	cp $(SRC_DIR)/scripts/marley-config.in marley-config
+	sed -i.bak -e '/^##/d' -e "s/@@VERSION@@/\"$(MARLEY_VERSION)\"/g" \
+	  -e "s/@@GIT_REVISION@@/\"$(GIT_REVISION)\"/g" \
+	  -e "s/@@CXX_STD@@/\"$(CXX_STD)\"/g" \
+	  -e "s/@@USE_ROOT@@/\"$(USE_ROOT)\"/g" marley-config
+	$(RM) marley-config.bak
+
+marley: $(MARLEY_LIBS) marley.o marley-config $(MAYBE_MARSUM)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
@@ -290,7 +327,7 @@ docs:
 clean:
 	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
 	$(RM) -rf *.dSYM marsum mroot $(TEST_EXECUTABLE) marg4
-	$(RM) -rf marprint mardumpxs ../doxygen/html/*
+	$(RM) -rf marprint mardumpxs marley-config ../doxygen/html/*
 
 install: marley
 	mkdir -p $(DESTDIR)$(bindir)
