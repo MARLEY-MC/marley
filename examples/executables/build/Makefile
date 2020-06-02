@@ -4,48 +4,47 @@ SRC_DIR = ..
 ifndef MARLEY
   $(error The MARLEY environment variable is not set. Please source the \
      setup_marley.sh script and try again.)
+else
+  MARCONF := $(shell command -v marley-config 2> /dev/null)
+  ifndef MARCONF
+    $(error The marley-config script is not present on the system PATH. \
+        Please ensure that MARLEY has been fully built and try again.)
+  endif
 endif
-
-MARLEY_INC = $(MARLEY)/include
-MARLEY_LIB = $(MARLEY)/build
 
 # If the target is "debug", then include debugging information and build the
 # example programs with optimization turned off
 ifeq ($(MAKECMDGOALS),debug)
-  CXXFLAGS ?= -O0 -g -std=c++14
+  CXXFLAGS ?= -O0 -g
 else
 # Otherwise, use full optimization and do not include debugging info
-  CXXFLAGS ?= -O3 -std=c++14
+  CXXFLAGS ?= -O3
 endif
 
+# Use GCC as the default compiler. Enable a few useful warnings.
 CXX = g++
 CXXFLAGS += -Wall -Wextra -Wpedantic -Wcast-align
 
 all: marprint mardumpxs
 debug: all
 
-# Always link against the MARLEY shared library. If the MARLEY_ROOT shared
-# library is present in the build/ folder, then link against it. Also enable
-# ROOT-dependent features by defining the USE_ROOT preprocessor macro.
-MARLEY_LIBS := -L$(MARLEY_LIB) -lMARLEY
-ifneq (,$(wildcard $(MARLEY)/build/libMARLEY_ROOT*))
-  MARLEY_LIBS += -lMARLEY_ROOT
-  override CXXFLAGS += -DUSE_ROOT $(shell root-config --cflags)
-  ROOT_LIBS = $(shell root-config --libs)
-endif
+# Use the marley-config script to get the MARLEY compiler flags and
+# library names.
+override CXXFLAGS += $(shell marley-config --cflags)
+MARLEY_LIBS = $(shell marley-config --libs)
 
 OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
 
 .INTERMEDIATE: $(OBJECTS)
 
 %.o: $(SRC_DIR)/%.cc
-	$(CXX) $(CXXFLAGS) -I$(INCLUDE_DIR) -I$(MARLEY_INC) -o $@ -c $^
+	$(CXX) $(CXXFLAGS) -I$(INCLUDE_DIR) -o $@ -c $^
 
 marprint: marprint.o
-	$(CXX) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) $(ROOT_LIBS) marprint.o
+	$(CXX) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) marprint.o
 
 mardumpxs: mardumpxs.o
-	$(CXX) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) $(ROOT_LIBS) mardumpxs.o
+	$(CXX) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) mardumpxs.o
 
 .PHONY: clean
 

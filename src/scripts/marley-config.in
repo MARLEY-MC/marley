@@ -3,6 +3,9 @@
 # Script that reports helpful information for building C++ applications
 # against the MARLEY libraries
 #
+# Note that, when MARLEY is built against ROOT, availability of the
+# root-config script on the system PATH is assumed
+#
 # Revised 1 June 2020 by Steven Gardiner <gardiner@fnal.gov>
 
 # If the MARLEY environment variable is set, then use it to form
@@ -29,12 +32,12 @@ cxx_std=@@CXX_STD@@
 # Add the "USE_ROOT" preprocessor macro definition to the
 # compiler flags if ROOT support is enabled
 use_root=@@USE_ROOT@@
-root_flag=""
 if [ "$use_root" = "yes" ]; then
-  root_flag="-DUSE_ROOT"
+  root_cflags=$(root-config --cflags)
+  root_cflags="${root_cflags} -DUSE_ROOT"
 fi
 
-cflags="-std=${cxx_std} ${root_flag}"
+cflags="${root_cflags} -std=${cxx_std} -I${incdir}"
 
 # Set up the linker commands for the MARLEY shared libraries. If ROOT support
 # is enabled, then include the extra library containing the needed
@@ -42,13 +45,15 @@ cflags="-std=${cxx_std} ${root_flag}"
 libs="-L${libdir} -lMARLEY"
 if [ "$use_root" = "yes" ]; then
   libs="${libs} -lMARLEY_ROOT"
+  root_libs=$(root-config --libs)
+  libs="${libs} ${root_libs}"
 fi
 
 # If no command-line arguments are given to this script, then print a usage
 # message
-usage_msg="Usage: marley-config [--cflags] [--bindir] [--datadir] [--libs]"
-usage_msg="${usage_msg} [--libdir] [--incdir] [--srcdir] [--topdir]"
-usage_msg="${usage_msg} [--version] [--git-revision] [--help]"
+usage_msg="Usage: marley-config [--bindir] [--cflags] [--cxx-std] [--datadir]"
+usage_msg="${usage_msg} [--libs] [--libdir] [--incdir] [--srcdir] [--topdir]"
+usage_msg="${usage_msg} [--use-root] [--version] [--git-revision] [--help]"
 
 if [ $# -eq 0 ]; then
   echo "${usage_msg}"
@@ -61,6 +66,7 @@ for arg in "$@"; do
     echo "Usage: marley-config [options]"
     echo ""
     echo "  --cflags          Print compiler flags and header path"
+    echo "  --cxx-std         Print the C++ standard used when building MARLEY"
     echo "  --bindir          Print the executable directory"
     echo "  --datadir         Print the data directory"
     echo "  --libs            Print MARLEY libraries"
@@ -68,6 +74,7 @@ for arg in "$@"; do
     echo "  --incdir          Print the header directory"
     echo "  --srcdir          Print the source code directory"
     echo "  --topdir          Print the top-level MARLEY directory"
+    echo "  --use-root        Print whether or not ROOT support is enabled"
     echo "  --version         Print the MARLEY version"
     echo "  --git-revision    Print the MARLEY git revision number"
     echo "  --help            Print this message"
@@ -84,6 +91,9 @@ for arg in "$@"; do
   case $arg in
     --cflags)
       out="$out $cflags"
+    ;;
+    --cxx-std)
+      out="$out $cxx_std"
     ;;
     --bindir)
       out="$out $bindir"
@@ -105,6 +115,9 @@ for arg in "$@"; do
     ;;
     --topdir)
       out="$out $topdir"
+    ;;
+    --use-root)
+      out="$out $use_root"
     ;;
     --version)
       out="$out $version"
