@@ -249,7 +249,7 @@ double marley::Generator::rejection_sample(const std::function<double(double)>& 
     if ( val > fmax ) {
 
       MARLEY_LOG_WARNING() << "PDF value f(x) = "
-      << val << " at x = " << x << " exceeded the estimated maximum "
+      << val << " at x = " << x << " exceeded the estimated maximum"
       << " fmax = " << fmax << " during rejection sampling.";
 
       fmax = val * safety_factor;
@@ -349,7 +349,7 @@ marley::Reaction& marley::Generator::sample_reaction(double& E) {
         << "This may occur when, e.g., an incident neutrino flux"
         << " is used that includes multiple sharp peaks.\n"
         << "To avoid biasing the energy distribution, please rerun the simulation"
-        << " after adding the following line to the MARLEY JSON configuration"
+        << " after adding the following line to the MARLEY job configuration"
         << " file:\n"
         << "    energy_pdf_max: " << E_pdf_max_ << ",\n"
         << "If this error message persists after raising energy_pdf_max to a"
@@ -359,8 +359,8 @@ marley::Reaction& marley::Generator::sample_reaction(double& E) {
     }
     else {
       MARLEY_LOG_ERROR() << "The maximum PDF value for sampling reacting neutrino"
-       << " energies was exceeded again. The new estimated maximum is\n"
-       << "    energy_pdf_max: " << E_pdf_max_;
+       << " energies was exceeded again. The new estimated maximum is"
+       << "\n    energy_pdf_max: " << E_pdf_max_ << ',';
     }
   }
 
