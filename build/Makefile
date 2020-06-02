@@ -299,22 +299,22 @@ $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 	  $(GSL_LDFLAGS) -o $@ $(TEST_OBJECTS)
 
 marg4: $(MARLEY_LIBS)
-	$(RM) -f ../examples/marg4/build/marg4
+	$(RM) ../examples/marg4/build/marg4
 	cd ../examples/marg4/build && $(MAKE)
 	cp ../examples/marg4/build/marg4 .
-	$(RM) -f ../examples/marg4/build/marg4
+	$(RM) ../examples/marg4/build/marg4
 
 marprint: $(MARLEY_LIBS)
-	$(RM) -f ../examples/executables/build/marprint
+	$(RM) ../examples/executables/build/marprint
 	cd ../examples/executables/build && $(MAKE) marprint
 	cp ../examples/executables/build/marprint .
-	$(RM) -f ../examples/executables/build/marprint
+	$(RM) ../examples/executables/build/marprint
 
 mardumpxs: $(MARLEY_LIBS)
-	$(RM) -f ../examples/executables/build/mardumpxs
+	$(RM) ../examples/executables/build/mardumpxs
 	cd ../examples/executables/build && $(MAKE) mardumpxs
 	cp ../examples/executables/build/mardumpxs .
-	$(RM) -f ../examples/executables/build/mardumpxs
+	$(RM) ../examples/executables/build/mardumpxs
 
 .PHONY: docs clean install uninstall
 

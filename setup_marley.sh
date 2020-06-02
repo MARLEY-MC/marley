@@ -22,7 +22,3 @@ fi
 
 # For using MARLEY classes in ROOT 6
 export ROOT_INCLUDE_PATH=${ROOT_INCLUDE_PATH}:${THIS_DIRECTORY}/include
-
-# For building external software against MARLEY
-export CPLUS_INCLUDE_PATH=${CPLUS_INCLUDE_PATH}:${THIS_DIRECTORY}/include
-export LIBRARY_PATH=${LIBRARY_PATH}:${THIS_DIRECTORY}/build
