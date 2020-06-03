@@ -321,7 +321,7 @@
     // EVENT OUTPUT (optional)
     //
     // The "output" JSON array contains a list of JSON objects representing
-    // one or more output streams that will receive the events generated
+    // zero or more output streams that will receive the events generated
     // by the marley command-line executable
     //
     // Each entry is a JSON object with the following keys:
