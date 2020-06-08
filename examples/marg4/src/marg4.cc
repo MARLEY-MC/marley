@@ -64,7 +64,7 @@ namespace {
 int main( int argc, char* argv[] ) {
 
   if ( argc <= 2 ) {
-    std::cout << "Usage: example NUM_EVENTS MARLEY_CONFIG_FILE\n";
+    std::cout << "Usage: marg4 NUM_EVENTS MARLEY_CONFIG_FILE\n";
     return 1;
   }
 
