@@ -40,12 +40,25 @@ ifndef GIT
 else
   # Also check that we're inside of a folder managed by a git repository. If
   # we're not, then git rev-parse won't work
-  GIT_REVPARSE_CODE = $(shell git rev-parse 2> /dev/null && echo "$$?")
+  GIT_REVPARSE_CODE := $(shell git rev-parse 2> /dev/null && echo "$$?")
   ifeq ($(GIT_REVPARSE_CODE),0)
+
     GIT_REVISION := $(shell git rev-parse --short HEAD)
+
+    # Verify that the working tree and index are identical to HEAD. If they
+    # are not (because there are uncommitted changes to at least one tracked
+    # file), then append "-dirty" to the git revision variable.
+    GIT_DIFF_INDEX_CODE := $(shell git diff-index --quiet HEAD \
+      2> /dev/null && echo "$$?")
+
+    ifneq ($(GIT_DIFF_INDEX_CODE),0)
+      GIT_REVISION := $(GIT_REVISION)-dirty
+    endif
+
   else
     GIT_REVISION := $(UNKNOWN_REV)
   endif
+
 endif
 
 # If the .VERSION file exists, use its contents as the
