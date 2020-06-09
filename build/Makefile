@@ -230,6 +230,7 @@ $(ROOT_SHARED_LIB): $(SHARED_LIB) $(ROOT_SHARED_LIB_OBJECTS)
   else
     $(info Ignoring any ROOT installations that may be present.)
     $(info MARLEY will be built without ROOT support.)
+    USE_ROOT = no
   endif
 endif
 endif
