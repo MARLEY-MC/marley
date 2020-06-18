@@ -1,0 +1,6 @@
+*
+!.gitignore
+!README.md
+!efr.cc
+!evgen.cc
+!mass_40Ar.cc
