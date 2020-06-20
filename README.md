@@ -1,12 +1,16 @@
 # MARLEY (Model of Argon Reaction Low Energy Yields)
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3901933.svg)](https://doi.org/10.5281/zenodo.3901933)
+
 ## Introduction
 
 MARLEY (Model of Argon Reaction Low Energy Yields) is a Monte Carlo event
 generator for tens-of-MeV neutrino-nucleus interactions. The current version
 primarily focuses on simulations of the charged-current reaction <p
 align="center">&nu;<sub>e</sub>&nbsp;+&nbsp;<sup>40</sup>Ar&nbsp;&rarr;
-&nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup></p>.
+&nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup>.</p>
 Preparation of new reaction input files will allow MARLEY to simulate
 additional reactions on more target nuclei. Users interested in extending the
 functionality of MARLEY in this way are encouraged to contact the author.
@@ -32,15 +36,26 @@ If you refer to MARLEY in academic work, please __always cite__ the following
 reference:
 
 S. Gardiner, [Nuclear Effects in Neutrino
-Detection](https://search.proquest.com/docview/2194284425), PhD thesis,
+Detection](http://old.inspirehep.net/record/1802074/), PhD thesis,
 University of California, Davis (2018).
 
-For convenience, a BibTeX citation for this thesis is given in the CITATION.bib
+Providing a citation for the MARLEY code itself is also encouraged and
+appreciated. To maximize reproducibility of published calculations, such
+citations should include the digital object identifier (DOI) associated with
+the code release that was used. The DOIs for recent versions of MARLEY are
+listed on the GitHub [releases
+webpage](https://github.com/MARLEY-MC/marley/releases) and in the right-hand
+column of the Zenodo "concept DOI"
+[webpage](https://doi.org/10.5281/zenodo.3901933).
+
+For convenience, recommended [BibTeX](http://www.bibtex.org/) citations to use
+for the latest MARLEY release are given in the [CITATION.bib](CITATION.bib)
 file.
 
 If you use the default nuclear structure data files (strongly recommended) for
 published calculations, please also give proper attribution to the developers
-of the TALYS nuclear code (see data/structure/README.md for more information).
+of the TALYS nuclear code (see
+[data/structure/README.md](data/structure/README.md) for more information).
 
 ## Getting Started
 
@@ -52,12 +67,14 @@ Building and running MARLEY on Windows is not currently supported.
 There are three prerequisites needed to build MARLEY:
 
 - A C++14-compliant compiler. The following compilers are officially supported:
+
   * g++ >= 4.9.3
   * clang++ >= 3.4
 
 - [GNU Make](https://www.gnu.org/software/make/)
 
 - The [GNU Scientific Library](https://www.gnu.org/software/gsl/) (GSL)
+
   * MARLEY's Makefile verifies that GSL is installed by checking that
 the `gsl-config` executable is available on the system `PATH`.
 
@@ -67,21 +84,18 @@ using [Homebrew](https://brew.sh/).
 
 ### Building MARLEY
 
-To build the code, enter the build subfolder
+To build the code, enter the `build/` folder
 ```
 cd build
 ```
-
 and then run GNU make
 ```
 make
 ```
-
 If the build is successful, then executing
 ```
 ./marley
 ```
-
 should produce the following output:
 ```
 Usage: marley [OPTION...] CONFIG_FILE
@@ -93,45 +107,45 @@ MARLEY home page: <http://www.marleygen.org>
 E-mail bug reports to: <support@marleygen.org>
 ```
 
+### Configuring the runtime environment
+
+The `marley` executable relies on the system environment variable `MARLEY`
+to store the full path to the root folder of the source code. This variable
+may be set automatically by executing ("sourcing") the `setup_marley.sh`
+Bash script using the `source` command. From within the `build/` folder,
+for example, one may source the setup script via
+```
+source ../setup_marley.sh
+```
+If generation of events is attempted without setting the `MARLEY` environment
+variable first, then MARLEY will halt after printing the error message
+```
+[ERROR]: The MARLEY environment variable is not set. Please set it (e.g., by sourcing the setup_marley.sh script) and try again.
+```
+For user convenience, the `setup_marley.sh` script also adds the `build/`
+folder to the system `PATH` and to either `LD_LIBRARY_PATH` (Linux) or
+`DYLD_LIBRARY_PATH` (macOS).
+
 ### Generating events
 
-The marley command-line executable allows the user to adjust simulation
+The `marley` command-line executable allows the user to adjust simulation
 parameters via JSON-like configuration files. To generate events using an
-example configuration file, execute
+example configuration file, execute the following command from within the
+`build/` folder after sourcing the `setup_marley.sh` script:
 ```
-./marley ../examples/config.js
+marley ../examples/config.js
 ```
 
 The program will display the MARLEY logo and diagnostic messages as
 it runs the simulation. When the program terminates, two new files will
 be present in the `build/` folder:
-  - `events.ascii` contains the generated events in MARLEY's native format
+  - `events.ascii` contains the generated events in MARLEY's native ASCII format
   - `marley.log` contains logging messages from the simulation
   
 The example configuration file (`examples/config.js`) is heavily commented, and
 reading it serves as a good next step for new users. When you are ready to
 start writing your own configuration files, editing a copy of
-`examples/COPY_ME.js` is recommended. That file contains settings similar to
-those in `examples/config.js`, but it omits the long comments so that
-it may be easily modified.
-
-To use the command-line executable from outside the `build/` folder, one may optionally
-run
-```
-sudo make install
-```
-to copy the `marley` executable and other files to standard system locations (e.g.,
-`/usr/bin`). The installation can be removed automatically by invoking
-```
-sudo make uninstall
-```
-from the `build/` folder. For users that prefer a local installation, the `setup_marley.sh`
-bash script has also been provided. Running
-```
-source setup_marley.sh
-```
-from the root MARLEY folder will add `build/` to the system `PATH`. It will also set up
-a few other helpful environment variables.
+`examples/COPY_ME.js` is recommended.
 
 ## Developers
 
