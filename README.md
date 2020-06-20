@@ -133,7 +133,7 @@ parameters via JSON-like configuration files. To generate events using an
 example configuration file, execute the following command from within the
 `build/` folder after sourcing the `setup_marley.sh` script:
 ```
-marley ../examples/config.js
+marley ../examples/config/annotated.js
 ```
 
 The program will display the MARLEY logo and diagnostic messages as
