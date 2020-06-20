@@ -1,21 +1,69 @@
 # doxygen and g++-4.9 install trick taken from
 # https://amodernstory.com/2015/07/27/upgrading-travisci-build-scripts/
 language: cpp
+
+os:
+  - linux
+  - osx
+
 compiler:
-# - clang
+  - clang
   - gcc
+
 addons:
   apt:
     sources:
-      - ubuntu-toolchain-r-test
-      - george-edison55-precise-backports 
+      - george-edison55-precise-backports
     packages:
       - doxygen
-      - g++-4.9
       - libgsl0-dev
+
+matrix:
+  fast_finish: true
+  include:
+
+    # GCC 4.9.4 tests on Linux (xenial)
+    - os: linux
+    - compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - george-edison55-precise-backports
+          packages:
+            - g++-4.9
+            - doxygen
+            - libgsl0-dev
+      env:
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+    # Clang 3.5.2 tests on Linux (xenial)
+    - os: linux
+    - compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - george-edison55-precise-backports
+          packages:
+            - clang-3.5
+            - doxygen
+            - libgsl0-dev
+      env:
+        - MATRIX_EVAL="CC=clang-3.5 && CXX=clang++-3.5"
+
+# Choose the correct compiler versions from the build matrix
+before_install:
+  - eval "${MATRIX_EVAL}"
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install doxygen gsl; fi
+
+# Build script
 script:
   - cd build
-  - make CXX=g++-4.9
+  - make
+
+# Deploy successful build of a tagged release to GitHub pages
 after_success:
   - make docs
   - cd ../doxygen

@@ -37,6 +37,9 @@ namespace marley {
 
     public:
 
+      /// @note This line keeps old versions (4.9.3) of GCC happy
+      ExitChannel() = default;
+
       /// @param pdgi PDG code for the initial nucleus
       /// @param qi Net charge (in units of the elementary charge) of the
       /// initial atom or ion
@@ -51,7 +54,7 @@ namespace marley {
       /// in decay width calculations by this ExitChannel object
       ExitChannel(int pdgi, int qi, double Exi, int twoJi, marley::Parity Pi,
         double rho_i, marley::StructureDatabase& sdb ) : pdgi_( pdgi ),
-        qi_( qi ), Exi_( Exi ), twoJi_( twoJi ), Pi_( Pi ), sdb_( sdb )
+        qi_( qi ), Exi_( Exi ), twoJi_( twoJi ), Pi_( Pi ), sdb_( &sdb )
       {
         one_over_two_pi_rho_i_ = std::pow( 2. * marley_utils::pi * rho_i, -1 );
       }
@@ -149,7 +152,7 @@ namespace marley {
       double width_;
 
       /// StructureDatabase to use in calculations
-      marley::StructureDatabase& sdb_;
+      marley::StructureDatabase* sdb_;
   };
 
   /// @brief Abstract base class for ExitChannel objects that lead to

@@ -6,7 +6,7 @@ INCLUDE_DIR = $(TOP_DIR)/include
 SRC_DIR = $(TOP_DIR)/src
 
 # Default version of the C++ standard to use for compilation
-CXX_STD="c++14"
+CXX_STD=c++14
 
 UNKNOWN_REV=unknown version
 

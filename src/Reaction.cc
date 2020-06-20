@@ -333,7 +333,14 @@ std::vector< std::unique_ptr<marley::Reaction> >
       }
 
       line = marley_utils::get_next_line( file_in, rx_comment, false );
-      iss = std::istringstream( line );
+      /// @todo This can be done more cleanly via
+      /// iss = std::istringstream( line );
+      /// However, GCC 4 does not include the move constructor for string
+      /// streams. This was fixed for GCC 5. Change this line after MARLEY
+      /// drops support for GCC < 5. See https://stackoverflow.com/a/27152585
+      /// and https://stackoverflow.com/q/7623650 for more details.
+      iss.str( line );
+      iss.clear();
     } while ( !line.empty() );
 
     return loaded_reactions;

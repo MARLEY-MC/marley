@@ -81,10 +81,10 @@ double marley::FragmentExitChannel::max_Exf() const {
 void marley::FragmentDiscreteExitChannel::compute_total_width() {
 
   int remnant_pdg = this->final_nucleus_pdg();
-  marley::OpticalModel& om = sdb_.get_optical_model( remnant_pdg );
+  marley::OpticalModel& om = sdb_->get_optical_model( remnant_pdg );
 
   // Get information about the emitted fragment
-  const marley::Fragment& f = *sdb_.get_fragment( fragment_pdg_ );
+  const marley::Fragment& f = *sdb_->get_fragment( fragment_pdg_ );
 
   int two_s = f.get_two_s(); // two times the fragment spin
   marley::Parity Pa = f.get_parity(); // intrinsic parity
@@ -167,7 +167,7 @@ void marley::GammaDiscreteExitChannel::compute_total_width() {
   // Retrieve the gamma strength function model used to compute transmission
   // coefficients
   marley::GammaStrengthFunctionModel& gsfm
-    = sdb_.get_gamma_strength_function_model( pdgi_ );
+    = sdb_->get_gamma_strength_function_model( pdgi_ );
 
   // Get properties of the final nuclear level
   double Exf = final_level_.energy();
@@ -214,8 +214,8 @@ double marley::FragmentContinuumExitChannel::differential_width( double Exf,
   if ( store_jpi_widths ) jpi_widths_table_.clear();
 
   int remnant_pdg = this->final_nucleus_pdg();
-  marley::OpticalModel& om = sdb_.get_optical_model( remnant_pdg );
-  marley::LevelDensityModel& ldm = sdb_.get_level_density_model( remnant_pdg );
+  marley::OpticalModel& om = sdb_->get_optical_model( remnant_pdg );
+  marley::LevelDensityModel& ldm = sdb_->get_level_density_model( remnant_pdg );
 
   // Get the maximum accessible final excitation energy
   double Exf_max = this->max_Exf();
@@ -235,7 +235,7 @@ double marley::FragmentContinuumExitChannel::differential_width( double Exf,
   double total_KE_CM_frame = Exf_max - Exf;
 
   // Get information about the emitted fragment
-  const marley::Fragment& f = *sdb_.get_fragment( fragment_pdg_ );
+  const marley::Fragment& f = *sdb_->get_fragment( fragment_pdg_ );
 
   int two_s = f.get_two_s(); // two times the fragment spin
   marley::Parity Pa = f.get_parity(); // intrinsic parity
@@ -308,8 +308,8 @@ double marley::GammaContinuumExitChannel::differential_width( double Exf,
 {
   if ( store_jpi_widths ) jpi_widths_table_.clear();
 
-  auto& ldm = sdb_.get_level_density_model( pdgi_ );
-  auto& gsfm = sdb_.get_gamma_strength_function_model( pdgi_ );
+  auto& ldm = sdb_->get_level_density_model( pdgi_ );
+  auto& gsfm = sdb_->get_gamma_strength_function_model( pdgi_ );
 
   // Initialize the return value to zero
   double diff_width = 0.;

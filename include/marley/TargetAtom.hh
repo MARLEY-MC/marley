@@ -38,7 +38,13 @@ namespace marley {
       explicit TargetAtom( int Z, int A );
 
       /// @brief Convert the TargetAtom object to an integer PDG code
-      inline constexpr explicit operator int() const { return pdg_; }
+      /// @todo Make this "constexpr" eventually. There is a bug in GCC before
+      /// version 7.2 that doesn't respect the C++14 standard. Clang 3.6
+      /// correctly recognizes use of "constexpr" for this function as valid.
+      /// See https://stackoverflow.com/a/36489493 for more details. For now,
+      /// we'll drop "constexpr" to preserve compatibility with old versions of
+      /// GCC.
+      inline explicit operator int() const { return pdg_; }
 
       /// @brief Two TargetAtom objects are considered equal if their
       /// nuclear PDG codes match

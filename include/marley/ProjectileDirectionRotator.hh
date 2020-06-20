@@ -58,12 +58,12 @@ namespace marley {
 
       /// @brief 3-vector that points in the desired direction of the
       /// projectile
-      ThreeVector dir_vec_ = { 0., 0., 1. };
+      ThreeVector dir_vec_ = {{ 0., 0., 1. }};
 
       /// @brief Stores the direction 3-vector for the last projectile
       /// that triggered a recalculation of the rotation matrix.
       /// @details Using this information avoids unnecessary recalculations
-      ThreeVector last_pdir_ = { 0., 0., 1. };
+      ThreeVector last_pdir_ = {{ 0., 0., 1. }};
 
       /// @brief RotationMatrix used to rotate the coordinate system
       /// of the input Event

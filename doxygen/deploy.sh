@@ -4,7 +4,7 @@
 set -o errexit -o nounset
 
 # Only deploy for release tags of the form vX.Y.Z
-if [[ $TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+if [[ ! "$TRAVIS_TAG" =~ "^v[0-9]+\.[0-9]+\.[0-9]+$" ]]
 then
   echo "This commit is not a tagged release. No deploy!"
   exit 0
@@ -18,7 +18,7 @@ fi
 
 rev=$(git rev-parse --short HEAD)
 
-cd doxygen/html
+cd html
 
 git init
 git config user.name "Steven Gardiner"

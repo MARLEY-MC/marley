@@ -1,8 +1,6 @@
 # MARLEY (Model of Argon Reaction Low Energy Yields)
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3901933.svg)](https://doi.org/10.5281/zenodo.3901933)
+[![Build Status](https://travis-ci.org/MARLEY-MC/marley.svg?branch=master)](https://travis-ci.org/MARLEY-MC/marley) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3901933.svg)](https://doi.org/10.5281/zenodo.3901933)
 
 ## Introduction
 
@@ -68,8 +66,8 @@ There are three prerequisites needed to build MARLEY:
 
 - A C++14-compliant compiler. The following compilers are officially supported:
 
-  * g++ >= 4.9.3
-  * clang++ >= 3.4
+  * g++ >= 4.9.4
+  * clang++ >= 3.5.2
 
 - [GNU Make](https://www.gnu.org/software/make/)
 

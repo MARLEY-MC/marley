@@ -81,7 +81,9 @@ namespace marley {
       }
 
       // Allows explicit casts of marley::Parity to int
-      inline constexpr explicit operator int() const {
+      /// @todo See comments for marley::TargetAtom::operator int().
+      /// A similar situation occurs for this function.
+      inline explicit operator int() const {
         if (is_positive_) return 1;
         else return -1;
       }
