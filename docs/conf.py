@@ -8,10 +8,15 @@ project = u'MARLEY'
 copyright = u'2016-2020 Steven Gardiner'
 master_doc = 'index'
 templates_path = [ '_templates' ]
-extensions = [ 'sphinxcontrib.bibtex', 'sphinxcontrib.newsfeed' ]
+extensions = [ 'sphinxcontrib.bibtex', 'sphinxcontrib.newsfeed',
+  'sphinx.ext.todo' ]
 source_suffix = '.rst'
 version = '1.2.0'
 exclude_patterns = ['_build']
+
+# TODO notes
+
+todo_include_todos = True
 
 # -- HTML theme settings ------------------------------------------------
 

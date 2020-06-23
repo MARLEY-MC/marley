@@ -27,7 +27,7 @@ functionality of MARLEY in this way are encouraged to contact the author.
 
 .. overview-end
 
-.. copyright-start
+.. copyright-start-1
 
 Copyright and License
 ---------------------
@@ -41,22 +41,23 @@ License <http://www.gnu.org/licenses/gpl-3.0-standalone.html>`__ ("GPLv3") as
 published by the Free Software Foundation. For the full text of that license,
 please see the `COPYING <COPYING>`__ file.
 
+.. copyright-start-2
 As a matter of professional courtesy, MARLEY users are also requested to follow
 the `MCnet Guidelines <https://www.montecarlonet.org/GUIDELINES>`__ for Event
 Generator Authors and Users. Nevertheless, these guidelines are not legally
-binding and do not limit your rights guaranteed under the GPLv3. See the
-`GUIDELINES <GUIDELINES>`__ file for more details.
-
-.. copyright-end
+binding and do not limit your rights guaranteed under the GPLv3.
+See the `GUIDELINES <GUIDELINES>`__ file for more details.
 
 Citing MARLEY
 -------------
+
+.. citing-start
 
 If you refer to MARLEY in academic work, please **always cite** the following
 reference:
 
 S. Gardiner, `Nuclear Effects in Neutrino
-Detection <http://old.inspirehep.net/record/1802074/>`__, PhD thesis,
+Detection <http://doi.org/10.5281/zenodo.3903986>`__, PhD thesis,
 University of California, Davis (2018).
 
 Providing a citation for the MARLEY code itself is also encouraged and
@@ -71,6 +72,8 @@ of the Zenodo "concept DOI" `webpage
 For convenience, recommended `BibTeX <http://www.bibtex.org/>`__ citations to
 use for the latest MARLEY release are given in the `CITATION.bib
 <CITATION.bib>`__ file.
+
+.. citing-end
 
 If you use the default nuclear structure data files (strongly recommended) for
 published calculations, please also give proper attribution to the developers
