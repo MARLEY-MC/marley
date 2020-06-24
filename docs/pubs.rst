@@ -13,7 +13,8 @@ Examples of the latter category include
 
 User contributions to this list are strongly encouraged. If you have written a
 publication, thesis, etc. in which MARLEY is used, please `send me
-<./contact.html>`_ a citation (`BibTeX <http://www.bibtex.org>`_ format
+<mailto:support@marleygen.org?cc=gardiner@fnal.gov&subject=Citation %20 for %20
+MARLEY %20 bibliography>`_ a citation (`BibTeX <http://www.bibtex.org>`_ format
 preferred) to advertise on this page. If your work is not openly accessible
 online, please also include a copy or preprint of the document together with
 the citation.

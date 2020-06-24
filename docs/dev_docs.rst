@@ -8,9 +8,7 @@
    An alternative you can consider is putting raw HTML in the toctree
    itself, see, e.g., https://stackoverflow.com/a/61506452/4081973
 
-.. raw:: html
-
-  <meta http-equiv="refresh" content="0; url=./_static/doxygen/index.html" />
+.. <meta http-equiv="refresh" content="0; url=./_static/doxygen/index.html" />
 
 =======================
 Developer documentation

@@ -10,27 +10,47 @@ Introduction
 
 .. overview-start
 
+.. |gamma| unicode:: 0x3B3 .. lowercase gamma
+
 **MARLEY** (Model of Argon Reaction Low Energy Yields) is a Monte Carlo event
 generator for tens-of-MeV neutrino-nucleus interactions. The current version
-primarily focuses on simulations of the charged-current reaction
+computes inclusive neutrino-nucleus cross sections employing the *allowed
+approximation*: the nuclear matrix elements are evaluated while neglecting
+Fermi motion and applying the long-wavelength (zero momentum transfer) limit.
+De-excitations of the final-state nucleus emerging from the primary interaction
+are simulated using a combination of tabulated |gamma|-ray decay schemes and an
+original implementation of the Hauser-Feshbach statistical model.
+
+Input files are provided with the code that are suitable for simulating the
+charged-current process
 
 |ve40ArCC|
 
-Preparation of new reaction input files will allow MARLEY to simulate
-additional reactions on more target nuclei. Users interested in extending the
-functionality of MARLEY in this way are encouraged to contact the author.
+coherent elastic neutrino-nucleus scattering (CEvNS) on spin-zero target
+nuclei, and neutrino-electron elastic scattering on any atomic target.
+Inclusion of additional reactions and targets is planned for the future.
+
+MARLEY follows an open-source development model and welcomes contributions
+of new input files and code improvements from the community. A partial list
+of potential projects for future MARLEY development is available
+on the developer documentation webpage.
+
+The material presented here focuses on the practical aspects of MARLEY:
+installing the code, configuring and running simulations, and analyzing the
+output events. For more details on the MARLEY physics models, please see the
+references in the online bibliography.
 
 .. |ve40ArCC| raw:: html
 
    <p align="center">&nu;<sub>e</sub>&nbsp;+&nbsp;<sup>40</sup>Ar&nbsp;&rarr;
-   &nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup>.</p>
+   &nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup>,</p>
 
 .. overview-end
 
-.. copyright-start-1
-
 Copyright and License
 ---------------------
+
+.. copyright-start-1
 
 .. |copy| unicode:: 0xA9 .. copyright sign
 
@@ -95,12 +115,14 @@ There are three prerequisites needed to build MARLEY:
 
 .. class:: open
 
+.. |gte| unicode:: 0x2265 .. greater than or equal to sign
+
 *  A C++14-compliant compiler. The following compilers are officially
    supported:
 
-   -  `GNU Compiler Collection <https://gcc.gnu.org>`__ (GCC) >= 4.9.4
+   -  `GNU Compiler Collection <https://gcc.gnu.org>`__ (GCC) |gte| 4.9.4
 
-   -  `Clang <https://clang.llvm.org>`__ >= 3.5.2
+   -  `Clang <https://clang.llvm.org>`__ |gte| 3.5.2
 
 *  `GNU Make <https://www.gnu.org/software/make/>`__
 
