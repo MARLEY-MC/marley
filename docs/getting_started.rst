@@ -2,33 +2,21 @@
 Getting started
 ===============
 
-This is some text
+.. include:: ../README.rst
+   :start-after: getting-started-start1
+   :end-before: getting-started-end1
 
-Section II
-----------
+.. include:: ../README.rst
+   :start-after: getting-started-start2
+   :end-before: getting-started-end2
 
-More
+Obtaining the code
+~~~~~~~~~~~~~~~~~~
 
-.. note::
+Also see `foo <dev_docs.html#code-checkout>`__
 
-  Praesent elit mi, pretium nec pellentesque eget, ultricies
-  euismod turpis.
+.. rst-class:: open
 
-
-Sub section
-~~~~~~~~~~~
-
-more
-
-Section III
------------
-
-List:
-
-- one
-- two
-- three
-
-.. warning::
-
-    Stuff
+.. include:: ../README.rst
+   :start-after: getting-started-start3
+   :end-before: getting-started-end3

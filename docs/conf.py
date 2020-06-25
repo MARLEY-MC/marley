@@ -3,7 +3,6 @@ import sys, os, subprocess
 from sphinx.highlighting import lexers
 from pygments.lexers.web import PhpLexer
 
-
 project = u'MARLEY'
 copyright = u'2016-2020 Steven Gardiner'
 master_doc = 'index'
@@ -13,6 +12,8 @@ extensions = [ 'sphinxcontrib.bibtex', 'sphinxcontrib.newsfeed',
 source_suffix = '.rst'
 version = '1.2.0'
 exclude_patterns = ['_build']
+
+highlight_language = 'none'
 
 # TODO notes
 

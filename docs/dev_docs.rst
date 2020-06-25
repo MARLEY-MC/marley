@@ -51,11 +51,13 @@ Regular contributors to MARLEY may be invited to join the core development team
 and be given write access to the official repository. Core developers are
 responsible for reviewing and approving pull requests submitted from forks.
 
+.. _code-checkout:
+
 Checking out the source code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A development copy of the source code may be obtained according to the following
-steps. They need only be executed once.
+A development copy of the MARLEY source code may be obtained according to the
+following steps. They need only be executed once.
 
 1. Visit the `webpage <https://github.com/MARLEY-MC/marley>`__ for the official
    repository

@@ -103,6 +103,8 @@ of the TALYS nuclear code (see `data/structure/README.md
 Getting Started
 ---------------
 
+.. getting-started-start1
+
 MARLEY is regularly `tested <https://travis-ci.org/github/MARLEY-MC/marley>`__
 on both Linux and macOS platforms and is expected to work in any Unix-like
 environment in which the prerequisites are installed. Building and running
@@ -113,7 +115,11 @@ Prerequisites
 
 There are three prerequisites needed to build MARLEY:
 
+.. getting-started-end1
+
 .. class:: open
+
+.. getting-started-start2
 
 .. |gte| unicode:: 0x2265 .. greater than or equal to sign
 
@@ -134,7 +140,15 @@ There are three prerequisites needed to build MARLEY:
 
 On Linux machines, all three of these prerequisites will likely be available
 through the standard package manager. On macOS, installing GSL may be done
-using `Homebrew <https://brew.sh/>`__.
+using `Homebrew <https://brew.sh/>`__:
+
+::
+
+  brew install gsl
+
+.. getting-started-end2
+
+.. getting-started-start3
 
 Building MARLEY
 ~~~~~~~~~~~~~~~
@@ -169,8 +183,8 @@ should produce the following output:
     MARLEY home page: <http://www.marleygen.org>
     E-mail bug reports to: <support@marleygen.org>
 
-Configuring the runtime environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Setting up the runtime environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``marley`` executable relies on the system environment variable ``MARLEY``
 to store the full path to the root folder of the source code. This variable may
@@ -197,33 +211,38 @@ folder to the system ``PATH`` and to either ``LD_LIBRARY_PATH`` (Linux) or
 Generating events
 ~~~~~~~~~~~~~~~~~
 
-The ``marley`` command-line executable allows the user to adjust simulation
-parameters via JSON-like configuration files. To generate events using an
-example configuration file, execute the following command from within the
-``build/`` folder after sourcing the ``setup_marley.sh`` script:
+The ``marley`` executable allows the user to adjust simulation parameters via
+job configuration files written in a `JSON
+<https://www.json.org/json-en.html>`__-like format. The name of the
+configuration file to use appears as the first (and only) command-line
+argument:
+
+::
+
+  marley CONFIG_FILE
+
+To generate events using an example configuration file, execute the following
+command from within the ``build/`` folder after sourcing the
+``setup_marley.sh`` script:
 
 ::
 
     marley ../examples/config/annotated.js
 
 The program will display the MARLEY logo and diagnostic messages as it runs the
-simulation. When the program terminates, two new files will be present in the
-``build/`` folder:
+simulation. When the program terminates, a new file named ``events.ascii`` will
+be present in the ``build/`` folder. This file contains the generated events
+in MARLEY's native ASCII output format.
 
-.. class:: open
+The ``annotated.js`` configuration file mentioned above is heavily commented
+with explanations of the most commonly-used input parameters. Reading it serves
+as a good next step for new users. When you are ready to start writing your own
+configuration files, editing a copy of ``examples/COPY_ME.js`` is recommended.
 
-* ``events.ascii`` contains the generated events in MARLEY's native
-  ASCII format
+.. getting-started-end3
 
-* ``marley.log`` contains logging messages from the simulation
-
-The example configuration file (``examples/config.js``) is heavily commented,
-and reading it serves as a good next step for new users. When you are ready to
-start writing your own configuration files, editing a copy of
-``examples/COPY_ME.js`` is recommended.
-
-Developers
-----------
+Core Developers
+---------------
 
 .. class:: open
 
@@ -236,8 +255,8 @@ project.
 Website
 -------
 
-`Doxygen <https://www.doxygen.org>`__ documentation for the latest version of
-MARLEY may be found on the official webpage at http://www.marleygen.org/.
+Further documentation for the latest version of MARLEY may be found on the
+official webpage at http://www.marleygen.org/.
 
 Acknowledgements
 ----------------
