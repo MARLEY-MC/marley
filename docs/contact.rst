@@ -2,8 +2,8 @@
 Contact
 =======
 
-Correspondence addressed specifically to the current developer(s) of MARLEY may
-be sent to support@marleygen.org.
+Correspondence addressed specifically to the current core developer(s) of MARLEY
+may be sent to support@marleygen.org.
 
 Mailing list
 ------------
@@ -30,7 +30,8 @@ line with the text
 
    SUBSCRIBE MARLEY-USERS your name
 
-where ``your name`` should be replaced with your actual name.
+where ``your name`` should be replaced with your actual name. Subscribers are
+allowed to send email messages to the list.
 
 You may also `unsubscribe <mailto:LISTSERV@FNAL.GOV?body=SIGNOFF %20
 MARLEY-USERS>`_ from the list by sending an email to |FNAL-LISTSERV|.
