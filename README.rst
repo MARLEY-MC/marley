@@ -13,13 +13,14 @@ Introduction
 .. |gamma| unicode:: 0x3B3 .. lowercase gamma
 
 **MARLEY** (Model of Argon Reaction Low Energy Yields) is a Monte Carlo event
-generator for tens-of-MeV neutrino-nucleus interactions. The current version
-computes inclusive neutrino-nucleus cross sections employing the *allowed
-approximation*: the nuclear matrix elements are evaluated while neglecting
-Fermi motion and applying the long-wavelength (zero momentum transfer) limit.
-De-excitations of the final-state nucleus emerging from the primary interaction
-are simulated using a combination of tabulated |gamma|-ray decay schemes and an
-original implementation of the Hauser-Feshbach statistical model.
+generator for neutrino-nucleus interactions at energies of tens-of-MeV and
+below. The current version computes inclusive neutrino-nucleus cross sections
+employing the *allowed approximation*: the nuclear matrix elements are
+evaluated while neglecting Fermi motion and applying the long-wavelength (zero
+momentum transfer) limit. De-excitations of the final-state nucleus emerging
+from the primary interaction are simulated using a combination of tabulated
+|gamma|-ray decay schemes and an original implementation of the Hauser-Feshbach
+statistical model.
 
 Input files are provided with the code that are suitable for simulating the
 charged-current process

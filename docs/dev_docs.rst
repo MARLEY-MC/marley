@@ -152,6 +152,7 @@ code that is "correct, beautiful, [and] fast (`in that order
   if doing so improves code readability.
 * Use two spaces for each level of indentation. Never use tabs.
 * Prefer multiple ``//`` comments to a single ``/* */`` comment block
+* All MARLEY classes are defined within the ``marley`` namespace
 
 As described in the :ref:`meta-doc` section, Doxygen comments should be used in
 header files to document class methods and member variables. See `this section
@@ -190,6 +191,9 @@ MARLEY release. Congratulations and thanks for your hard work!
 
 API and meta documentation
 --------------------------
+
+.. Consider linking to separate Doxygen pages for the official master branch
+   and for tagged releases. GCC does this (see https://tinyurl.com/gcc-api)
 
 As a convenient reference for developers, a set of webpages that provide API
 documentation for the MARLEY C++ classes, source files, etc. is available `here
@@ -234,6 +238,7 @@ may be used to install Sphinx and its extensions via the commands
 
   brew install sphinx-doc
   pip3 install guzzle-sphinx-theme sphinxcontrib-bibtex sphinxcontrib-newsfeed
+  pip3 install cloud_sptheme
 
 After these components have been installed, one may build the MARLEY webpages
 by navigating to the ``docs/`` folder and using the Makefile:
