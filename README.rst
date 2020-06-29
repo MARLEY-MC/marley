@@ -136,7 +136,7 @@ There are three prerequisites needed to build MARLEY:
 *  `GNU Scientific Library <https://www.gnu.org/software/gsl/>`__ (GSL)
 
    - MARLEY's `Makefile <build/Makefile>`__ verifies that GSL is installed by
-     checking that the ``gsl-config`` executable is available on the system
+     checking that the ``gsl-config`` script is available on the system
      ``PATH``.
 
 On Linux machines, all three of these prerequisites will likely be available
@@ -146,6 +146,14 @@ using `Homebrew <https://brew.sh/>`__:
 ::
 
   brew install gsl
+
+Although it is not required in order to build or use MARLEY, the popular `ROOT
+<https://root.cern.ch>`__ data analysis framework provides convenient tools for
+plotting and analyzing simulation results. Users who wish to use the optional
+interface between the two codes should ensure that ROOT is installed before
+building MARLEY. At build time, the optional MARLEY interface to ROOT is
+enabled automatically if the ``root-config`` script is present on the system
+``PATH``.
 
 .. getting-started-end2
 
