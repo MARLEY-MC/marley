@@ -352,10 +352,10 @@
     //
     //   - indent: Integer value used only for the "json" format. Gives the
     //             number of spaces that should be used as a tab stop when
-    //             pretty-printing the JSON output. A value of 0 will result
-    //             in the most compact output file, while nonzero values
-    //             will be more human-readable. If this key is omitted, a
-    //             value of 1 is assumed.
+    //             pretty-printing the JSON output. If this key is omitted, all
+    //             unnecessary whitespace will be suppressed. This default
+    //             behavior results in the most compact JSON-format output
+    //             files.
     //
     // The allowed output file formats are
     //
