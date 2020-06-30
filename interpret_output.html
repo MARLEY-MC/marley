@@ -1,0 +1,679 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Licensed under the Apache 2.0 License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/open-sans/stylesheet.css" />
+  <!-- Licensed under the SIL Open Font License -->
+  <link rel="stylesheet" type="text/css" href="_static/fonts/source-serif-pro/source-serif-pro.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="_static/css/bootstrap-theme.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>Interpreting the output &#8212; MARLEY  documentation</title>
+    <link rel="stylesheet" href="_static/guzzle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/mar.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="copyright" title="Copyright" href="copyright.html" />
+    <link rel="next" title="MARLEY Bibliography" href="pubs.html" />
+    <link rel="prev" title="Getting started" href="getting_started.html" />
+  
+   
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pubs.html" title="MARLEY Bibliography"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting started"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MARLEY  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Interpreting the output</a></li> 
+      </ul>
+    </div>
+    <div class="container-wrapper">
+
+      <div id="mobile-toggle">
+        <a href="#"><span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span></a>
+      </div>
+  <div id="left-column">
+    <div class="sphinxsidebar"><a href="
+    index.html" class="text-logo">MARLEY User Guide</a>
+<div class="align-center">
+  <a href="
+    index.html">
+    <img src="doxygen/marley_diagram.svg"
+      alt="MARLEY logo" width=200 style="margin: 0px 0px"/>
+  <p style="color:black;margin-bottom:40px"> <b>Model of Argon Reaction <br>
+  Low Energy Yields</b> </p> </a>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Table Of Contents</h2>
+  </div>
+  <div class="sidebar-toc">
+    
+    
+      <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="copyright.html">Copyright and License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing MARLEY</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Interpreting the output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pdg-codes">PDG codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-file-formats">Output file formats</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pubs.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/MARLEY-MC/marley">GitHub repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev_docs.html">Developer documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="news.html">News</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+</ul>
+
+    
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Contents</h2>
+    <div class="sidebar-localtoc">
+      <ul>
+<li><a class="reference internal" href="#">Interpreting the output</a><ul>
+<li><a class="reference internal" href="#pdg-codes">PDG codes</a></li>
+<li><a class="reference internal" href="#output-file-formats">Output file formats</a><ul>
+<li><a class="reference internal" href="#ascii">ASCII</a></li>
+<li><a class="reference internal" href="#hepevt">HEPEVT</a></li>
+<li><a class="reference internal" href="#json">JSON</a></li>
+<li><a class="reference internal" href="#root">ROOT</a><ul>
+<li><a class="reference internal" href="#conventions-used-in-the-event-objects">Conventions used in the event objects</a></li>
+<li><a class="reference internal" href="#metadata">Metadata</a></li>
+<li><a class="reference internal" href="#flat-root-files">“Flat” ROOT files</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <div id="main-search">
+      <form class="form-inline" action="search.html" method="GET" role="form">
+        <div class="input-group">
+          <input name="q" type="text" class="form-control" placeholder="Search...">
+        </div>
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+        <div id="right-column">
+          
+          <div role="navigation" aria-label="breadcrumbs navigation">
+            <ol class="breadcrumb">
+              <li><a href="index.html">Docs</a></li>
+              
+              <li>Interpreting the output</li>
+            </ol>
+          </div>
+          
+          <div class="document clearer body">
+            
+  <div class="section" id="interpreting-the-output">
+<h1>Interpreting the output<a class="headerlink" href="#interpreting-the-output" title="Permalink to this headline">¶</a></h1>
+<p>This page provides a guide to the contents of the output files produced by the
+<code class="docutils literal notranslate"><span class="pre">marley</span></code> executable. Following a brief description of the <em>PDG codes</em> used to
+identify particle types in MARLEY, documentation for all four available output
+formats is given below.</p>
+<div class="section" id="pdg-codes">
+<h2>PDG codes<a class="headerlink" href="#pdg-codes" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="http://pdg.lbl.gov/index.html">Particle Data Group</a> (PDG) has defined a
+standard numbering scheme for representing particle species in Monte Carlo
+event generators. Each kind of particle is assigned a unique positive integer
+as an identifier. The corresponding antiparticle is assigned a negative integer
+with the same absolute value. A full description of the numbering scheme is
+available <a class="reference external" href="http://pdg.lbl.gov/current/mc-particle-id">here</a>.</p>
+<p>Like nearly all modern particle physics generators, MARLEY adopts the integer
+<em>PDG codes</em> for particle identification and uses them both internally and in
+output files. For convenience, a table of the PDG codes most relevant for
+MARLEY is given below.</p>
+   <head>
+   <style>
+     table.mytable {
+       border-collapse: separate;
+       border-spacing: 0 5px;
+     }
+     table.mytable th, td {
+       text-align: center;
+     }
+   </style>
+   </head>
+
+ <table align="center" style="width:30%" class="mytable">
+
+   <tr>
+     <th>PDG code</th>
+     <th>Particle</th>
+   </tr>
+
+   <tr>
+     <td>11</td>
+     <td>e<sup>&minus;</sup></td>
+   </tr>
+
+   <tr>
+     <td>12</td>
+     <td>&nu;<sub>e</sub></td>
+   </tr>
+
+   <tr>
+     <td>13</td>
+     <td>&mu;<sup>&minus;</sup></td>
+   </tr>
+
+   <tr>
+     <td>14</td>
+     <td>&nu;<sub>&mu;</sub></td>
+   </tr>
+
+   <tr>
+     <td>15</td>
+     <td>&tau;<sup>&minus;</sup></td>
+   </tr>
+
+   <tr>
+     <td>16</td>
+     <td>&nu;<sub>&tau;</sub></td>
+   </tr>
+
+   <tr>
+     <td>22</td>
+     <td>&gamma;</td>
+   </tr>
+
+   <tr>
+     <td>2112</td>
+     <td>n</td>
+   </tr>
+
+   <tr>
+     <td>2212</td>
+     <td>p</td>
+   </tr>
+
+   <tr>
+     <td>1000010020</td>
+     <td>d</td>
+   </tr>
+
+   <tr>
+     <td>1000010030</td>
+     <td>t</td>
+   </tr>
+
+   <tr>
+     <td>1000020030</td>
+     <td>h</td>
+   </tr>
+
+
+   <tr>
+     <td>1000020040</td>
+     <td>&alpha;</td>
+   </tr>
+
+</table><p>In general, a PDG code of the form 100ZZZAAA0 represents a nuclide with proton
+number Z and mass number A. For example, <sup>40</sup>Ar is represented by
+the PDG code 1000180400.</p>
+</div>
+<div class="section" id="output-file-formats">
+<h2>Output file formats<a class="headerlink" href="#output-file-formats" title="Permalink to this headline">¶</a></h2>
+<p>The neutrino scattering events generated by the <code class="docutils literal notranslate"><span class="pre">marley</span></code> executable may be
+saved to disk in four distinct output formats. Descriptions of each of these
+formats are given below.</p>
+<div class="section" id="ascii">
+<h3>ASCII<a class="headerlink" href="#ascii" title="Permalink to this headline">¶</a></h3>
+<p>The ASCII format is MARLEY’s native text-based format for event input and
+output. It is produced and parsed by applying the stream insertion (<code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code>) and
+extraction (<code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code>) operators, respectively, to the <code class="docutils literal notranslate"><span class="pre">marley::Event</span></code> class in
+the C++ source code.</p>
+<p>An ASCII-format output file begins with the line</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FluxAvgXSec
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">FluxAvgXSec</span></code> is the flux-averaged total cross section in natural units
+(MeV<sup> &minus;2</sup> per atom). This quantity may be used together with the
+events themselves to compute differential cross sections.</p>
+<p>One or more event records appear in the remainder of the output file. Each
+event record begins with a header of the form</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Ni Nf Ex twoJ P
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">Ni</span></code> (<code class="docutils literal notranslate"><span class="pre">Nf</span></code>) is the number of particles in the initial (final) state.
+The three remaining fields in the event header report properties of the
+final-state nucleus following the primary scattering reaction but before
+de-excitations. The <code class="docutils literal notranslate"><span class="pre">Ex</span></code> field gives the nuclear excitation energy (MeV),
+<code class="docutils literal notranslate"><span class="pre">twoJ</span></code> gives the nuclear spin multiplied by two (to allow half-integer spins
+to be represented by a C++ <code class="docutils literal notranslate"><span class="pre">int</span></code>), and <code class="docutils literal notranslate"><span class="pre">P</span></code> is a single character
+representing a positive (<code class="docutils literal notranslate"><span class="pre">+</span></code>) or negative (<code class="docutils literal notranslate"><span class="pre">-</span></code>) parity state.</p>
+<p>On the lines following the event header, each of the particles belonging to the
+event is described by a single line of the form</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>PDG Etot Px Py Pz M Q
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">PDG</span></code> is the PDG code identifying the particle species and <code class="docutils literal notranslate"><span class="pre">Etot</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Px</span></code>, <code class="docutils literal notranslate"><span class="pre">Py</span></code>, and <code class="docutils literal notranslate"><span class="pre">Pz</span></code> are, respectively, the total energy and the x-, y-,
+and z-components of the particle 3-momentum (MeV). The particle mass <code class="docutils literal notranslate"><span class="pre">M</span></code>
+(MeV) and (net) electric charge <code class="docutils literal notranslate"><span class="pre">Q</span></code> (in units of the elementary charge)
+appear at the end of each line. The first <code class="docutils literal notranslate"><span class="pre">Ni</span></code> lines following the event
+header describe the initial-state particles. The remaining <code class="docutils literal notranslate"><span class="pre">Nf</span></code> lines
+describe the final-state particles and complete the event record.</p>
+<div>
+<head><style>
+table.highlighttable {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+table.highlighttable td.linenos {
+  text-align: left;
+}
+table.hightlighttable td.code {
+  text-align: left;
+}
+</style>
+</head><div class="highlight-none notranslate"><table class="highlighttable" id="ascii-format-example"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="highlight" style="text-align: left;"><pre>5.98368867447267264e-19
+2 4 3.79748000000000019e+00 2 +
+12 1.00000000000000000e+01 0.00000000000000000e+00 0.00000000000000000e+00 1.00000000000000000e+01 0.00000000000000000e+00 0
+1000180400 3.72247225431518091e+04 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 3.72247225431518091e+04 0
+11 5.20690886815266740e+00 -4.63535385338761508e+00 1.35706546730579314e+00 -1.87687187323011373e+00 5.10998927645907708e-01 -1
+1000190400 3.72257175068044089e+04 4.98066184879143847e+00 -2.27058729207187593e+00 9.28456410767741858e+00 3.72257159465162476e+04 1
+22 1.53694352434620662e+00 -1.11400145523226901e+00 9.50751758100756628e-01 4.66119350851738223e-01 0.00000000000000000e+00 0
+22 2.26118395490673985e+00 7.68693459828445835e-01 -3.72299333346743089e-02 2.12618841470095354e+00 0.00000000000000000e+00 0
+2 3 1.03964200000000009e+01 2 +
+12 2.99304885549511290e+01 0.00000000000000000e+00 0.00000000000000000e+00 2.99304885549511290e+01 0.00000000000000000e+00 0
+1000180400 3.72247225431518091e+04 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 3.72247225431518091e+04 0
+11 1.85223477954320721e+01 -9.86795370224160173e+00 -1.55256312663347771e+01 -2.09630900945355991e+00 5.10998927645907708e-01 -1
+1000190390 3.62940260743929030e+04 -1.74322423197586254e+01 -4.21863040207651636e+01 5.85225771236273147e+01 3.62939501877290750e+04 1
+2112 9.42104609518426400e+02 2.73001960220002289e+01 5.77119352870999407e+01 -2.64957795592226226e+01 9.39565378653339735e+02 0
+</pre></div>
+</td></tr></table></div>
+</div><p>The listing above shows an example MARLEY output file in ASCII format. Line 1
+gives the value of 5.984&times;10<sup>&minus;19</sup> MeV<sup> &minus;2</sup> =
+2.330&times;10<sup>&minus;40</sup> cm<sup>2</sup> for the flux-averaged total cross section per atom.
+Line 2 gives the header for the first event, which involves a transition to the
+<sup>40</sup>K nuclear level with an excitation energy of 3.797 MeV above the ground
+state and spin-parity 1<sup>&plus;</sup>. Lines 3–4 describe the initial state: a 10-MeV
+&nu;<sub>e</sub> traveling in the +z direction toward a <sup>40</sup>Ar atom at rest. Lines 5–8
+describe the final-state particles: a 5.2 MeV electron, a <sup>40</sup>K ion, and two
+de-excitation γ-rays with energies of 1.54 and 2.26 MeV. The second and final
+event in the file, which appears on lines 9–14, involves a &nu;<sub>e</sub>-<sup>40</sup>Ar
+collision which produces an electron, a <sup>39</sup>K ion, and a neutron.</p>
+</div>
+<div class="section" id="hepevt">
+<h3>HEPEVT<a class="headerlink" href="#hepevt" title="Permalink to this headline">¶</a></h3>
+<p>The legacy <a class="reference external" href="https://home.fnal.gov/~mrenna/lutp0613man2/node49.html">HEPEVT</a>
+format is designed for interfacing event generators with each other and with
+other software. Compatibility with this event format is maintained in many
+modern high energy physics software libraries. The description presented here
+covers only those aspects of the HEPEVT format needed to interpret the output
+of MARLEY. Further details are available on pages 327–330 of <a class="reference external" href="https://doi.org/10.5170/CERN-1989-008-V-3">this document</a>.</p>
+<p>A HEPEVT-format output file consists of one or more text-based event records.
+Each of these records begins with the header</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>NEVHEP NHEP
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">NEVHEP</span></code> is the event number (untracked by MARLEY and thus always set
+to zero) and <code class="docutils literal notranslate"><span class="pre">NHEP</span></code> is the number of particles in the event. The header is
+followed by <code class="docutils literal notranslate"><span class="pre">NHEP</span></code> lines, each representing a single particle. These have the
+format</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ISTHEP IDHEP JMOHEP1 JMOHEP2 JDAHEP1 JDAHEP2 PHEP1 PHEP2 PHEP3 PHEP4 PHEP5 VHEP1 VHEP2 VHEP3 VHEP4
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">ISTHEP</span></code> is an integer code identifying the particle status and
+<code class="docutils literal notranslate"><span class="pre">IDHEP</span></code> is the particle’s PDG code. In agreement with the HEPEVT standard,
+MARLEY uses status code 1 for the final-state particles and 3 for the
+initial-state particles. The <code class="docutils literal notranslate"><span class="pre">JMOHEP1</span></code>, <code class="docutils literal notranslate"><span class="pre">JMOHEP2</span></code>, <code class="docutils literal notranslate"><span class="pre">JDAHEP1</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">JDAHEP2</span></code> entries record the indices (between 1 and <code class="docutils literal notranslate"><span class="pre">NHEP</span></code>, inclusive) of
+particles in the event record that correspond to the first mother, second
+mother, first daughter, and last daughter of the current particle,
+respectively. These indices are set to zero in cases where they do not apply
+(e.g., a particle with no daughters will have <code class="docutils literal notranslate"><span class="pre">JDAHEP1</span></code> = <code class="docutils literal notranslate"><span class="pre">JDAHEP2</span></code> = 0).
+Entries <code class="docutils literal notranslate"><span class="pre">PHEP1</span></code> through <code class="docutils literal notranslate"><span class="pre">PHEP3</span></code> record the x-, y-, and z-components of the
+particle 3-momentum, while <code class="docutils literal notranslate"><span class="pre">PHEP4</span></code> gives the total energy and <code class="docutils literal notranslate"><span class="pre">PHEP5</span></code> gives
+the particle mass (all in GeV). Entries <code class="docutils literal notranslate"><span class="pre">VHEP1</span></code> through <code class="docutils literal notranslate"><span class="pre">VHEP3</span></code> store the
+x, y, and z positions of the particle production vertex (mm), and <code class="docutils literal notranslate"><span class="pre">VHEP4</span></code>
+gives the production time (mm/c).</p>
+<p>Because MARLEY currently treats all nuclear de-excitations as instantaneous and
+does not perform any particle tracking, <code class="docutils literal notranslate"><span class="pre">VHEP1</span></code> through <code class="docutils literal notranslate"><span class="pre">VHEP4</span></code> are always
+identically zero in HEPEVT output files. Intermediate de-excitation steps are
+also not currently stored in the event record, so <code class="docutils literal notranslate"><span class="pre">JMOHEP1</span></code>, <code class="docutils literal notranslate"><span class="pre">JMOHEP2</span></code>,
+<code class="docutils literal notranslate"><span class="pre">JDAHEP1</span></code>, and <code class="docutils literal notranslate"><span class="pre">JDAHEP2</span></code> are also identically zero in most cases.</p>
+<p>In addition to the initial- and final-state particles, MARLEY adds a dummy
+particle with <code class="docutils literal notranslate"><span class="pre">ISTHEP</span></code> = 11 to each HEPEVT event record. All data fields are
+zero for this particle except for (1) <code class="docutils literal notranslate"><span class="pre">JMOHEP1</span></code>, which contains the nuclear
+spin multiplied by two, (2) <code class="docutils literal notranslate"><span class="pre">JMOHEP2</span></code>, which reports the parity of the
+nucleus as an integer, (3) <code class="docutils literal notranslate"><span class="pre">PHEP4</span></code>, which gives the excitation energy of the
+nucleus (MeV), and (4) <code class="docutils literal notranslate"><span class="pre">PHEP5</span></code>, which records the flux-averaged total cross
+section in units of MeV<sup> &minus;2</sup> per atom. As is the case for the
+ASCII format, the excitation energy, spin, and parity values refer to the
+nuclear state that is formed after the primary scattering reaction but before
+any de-excitations have occurred.</p>
+<div class="highlight-none notranslate" id="hepevt-format-example"><div class="highlight"><pre><span></span>0 7
+3 12 0 0 0 0 0.00000000000000000e+00 0.00000000000000000e+00 1.00000000000000002e-02 1.00000000000000002e-02 0.00000000000000000e+00 0. 0. 0. 0.
+3 1000180400 0 0 0 0 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 3.72247225431518061e+01 3.72247225431518061e+01 0. 0. 0. 0.
+11 0 2 1 0 0 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 3.79748000000000019e+00 5.98368867447267264e-19 0. 0. 0. 0.
+1 11 0 0 0 0 -4.63535385338761496e-03 1.35706546730579320e-03 -1.87687187323011366e-03 5.20690886815266749e-03 5.10998927645907710e-04 0. 0. 0. 0.
+1 1000190400 0 0 0 0 4.98066184879143812e-03 -2.27058729207187593e-03 9.28456410767741942e-03 3.72257175068044077e+01 3.72257159465162459e+01 0. 0. 0. 0.
+1 22 0 0 0 0 -1.11400145523226908e-03 9.50751758100756655e-04 4.66119350851738206e-04 1.53694352434620668e-03 0.00000000000000000e+00 0. 0. 0. 0.
+1 22 0 0 0 0 7.68693459828445808e-04 -3.72299333346743093e-05 2.12618841470095347e-03 2.26118395490674000e-03 0.00000000000000000e+00 0. 0. 0. 0.
+0 6
+3 12 0 0 0 0 0.00000000000000000e+00 0.00000000000000000e+00 2.99304885549511283e-02 2.99304885549511283e-02 0.00000000000000000e+00 0. 0. 0. 0.
+3 1000180400 0 0 0 0 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 3.72247225431518061e+01 3.72247225431518061e+01 0. 0. 0. 0.
+11 0 2 1 0 0 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 1.03964200000000009e+01 5.98368867447267264e-19 0. 0. 0. 0.
+1 11 0 0 0 0 -9.86795370224160216e-03 -1.55256312663347770e-02 -2.09630900945356009e-03 1.85223477954320724e-02 5.10998927645907710e-04 0. 0. 0. 0.
+1 1000190390 0 0 0 0 -1.74322423197586264e-02 -4.21863040207651613e-02 5.85225771236273160e-02 3.62940260743929031e+01 3.62939501877290738e+01 0. 0. 0. 0.
+1 2112 0 0 0 0 2.73001960220002303e-02 5.77119352870999400e-02 -2.64957795592226236e-02 9.42104609518426450e-01 9.39565378653339778e-01 0. 0. 0. 0.
+</pre></div>
+</div>
+<p>The listing above shows an example MARLEY output file in HEPEVT format. The
+same two events from the ASCII-format <a class="reference external" href="#ascii-format-example">example file</a>
+are used for easy comparison of the formats.</p>
+</div>
+<div class="section" id="json">
+<h3>JSON<a class="headerlink" href="#json" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="https://json.org/json-en.html">JSON</a> (JavaScript Object Notation) is a
+text-based data-interchange format used for a wide variety of applications. The
+grammar of JSON is based on two data structures. A JSON <em>object</em> is an
+unordered set of key-value pairs enclosed in curly braces (<code class="docutils literal notranslate"><span class="pre">{}</span></code>). A JSON
+<em>array</em> is an ordered list of values enclosed in square brackets (<code class="docutils literal notranslate"><span class="pre">[]</span></code>). Each
+<em>key</em> is an arbitrary string delimited by double quotes (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>) and separated
+from its corresponding value by a colon (<code class="docutils literal notranslate"><span class="pre">:</span></code>). Each <em>value</em> may be a string,
+a number, an object, an array, or one of the words (without surrounding double
+quotes) <code class="docutils literal notranslate"><span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code>, or <code class="docutils literal notranslate"><span class="pre">null</span></code>. Neighboring values within an array
+and key-value pairs within an object are separated from each other by a comma
+(<code class="docutils literal notranslate"><span class="pre">,</span></code>).</p>
+<p>The JSON-format output files produced by MARLEY contain a single object with
+two top-level keys. The <code class="docutils literal notranslate"><span class="pre">events</span></code> key is used to label an array of event
+objects, while the <code class="docutils literal notranslate"><span class="pre">gen_state</span></code> key is associated with an object describing
+the state of the generator at the moment that the file was created.</p>
+<p>Each element of the <code class="docutils literal notranslate"><span class="pre">events</span></code> array is a JSON object containing five key-value
+pairs. The first three of these, <code class="docutils literal notranslate"><span class="pre">Ex</span></code>, <code class="docutils literal notranslate"><span class="pre">twoJ</span></code>, and <code class="docutils literal notranslate"><span class="pre">parity</span></code>, provide the
+excitation energy (MeV), two times the total spin, and the parity of the final
+nucleus after the primary interaction but before any de-excitations have taken
+place. The other two keys, <code class="docutils literal notranslate"><span class="pre">initial_particles</span></code> and <code class="docutils literal notranslate"><span class="pre">final_particles</span></code>, are
+used store arrays of particles represented as JSON objects. Each particle
+object defines the following keys:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">charge</span></code></dt><dd><p>The (net) electric charge (in units of the elementary charge)</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pdg</span></code></dt><dd><p>PDG code identifying the particle type</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">E</span></code></dt><dd><p>Total energy</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">px</span></code></dt><dd><p>Momentum x-component</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">py</span></code></dt><dd><p>Momentum y-component</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">pz</span></code></dt><dd><p>Momentum z-component</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">mass</span></code></dt><dd><p>Mass</p>
+</dd>
+</dl>
+<p>The particle 4-momentum components and mass are all given in natural units
+(MeV).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">gen_state</span></code> JSON object includes several key-value pairs. The <code class="docutils literal notranslate"><span class="pre">config</span></code>
+key refers to a JSON object which reproduces the full contents (except for
+comments) of the job configuration file used to generate the events. The
+<code class="docutils literal notranslate"><span class="pre">event_count</span></code>, <code class="docutils literal notranslate"><span class="pre">flux_avg_xsec</span></code>, and <code class="docutils literal notranslate"><span class="pre">seed</span></code> keys label the total number of
+events generated at the time the file was written, the flux-averaged total
+cross section (MeV<sup> &minus;2</sup> per atom), and the integer random
+number seed used to initialize the event generator. A final key,
+<code class="docutils literal notranslate"><span class="pre">generator_state_string</span></code>, records a string representation of the internal
+state of the <a class="reference external" href="http://www.cplusplus.com/reference/random/mt19937_64/">std::mt19937_64</a> object used by
+MARLEY to obtain pseudorandom numbers.</p>
+<p>An example JSON output file is available <a class="reference external" href="_static/example.json">here</a>.
+It contains the same two events as the <a class="reference external" href="#ascii-format-example">ASCII</a>-
+and <a class="reference external" href="#hepevt-format-example">HEPEVT</a>-format examples above.</p>
+</div>
+<div class="section" id="root">
+<h3>ROOT<a class="headerlink" href="#root" title="Permalink to this headline">¶</a></h3>
+<p>If MARLEY has been built against the appropriate shared libraries from the
+<a class="reference external" href="https://root.cern.ch">ROOT</a> data analysis framework (see the description of
+MARLEY’s installation prerequisites <a class="reference external" href="getting_started.html#prerequisites">here</a>), then output files in ROOT’s
+compressed binary format may also be produced.</p>
+<p>Within a ROOT-format output file, access to the generated events is managed by
+an instance of the ROOT <a class="reference external" href="https://root.cern.ch/trees-five-steps">TTree</a>
+class, which provides a hierarchical data structure for storing many objects
+belonging to the same C++ type. In general, a <code class="docutils literal notranslate"><span class="pre">TTree</span></code> may own one or more
+branches (represented by the <code class="docutils literal notranslate"><span class="pre">TBranch</span></code> class), each of which owns one or more
+leaves (represented by <code class="docutils literal notranslate"><span class="pre">TLeaf</span></code>).</p>
+<p>The ROOT-format output files generated by MARLEY contain a single <code class="docutils literal notranslate"><span class="pre">TTree</span></code>
+called <code class="docutils literal notranslate"><span class="pre">MARLEY_event_tree</span></code>. This <code class="docutils literal notranslate"><span class="pre">TTree</span></code> has a single branch called
+<code class="docutils literal notranslate"><span class="pre">event</span></code> which stores one <code class="docutils literal notranslate"><span class="pre">marley::Event</span></code> object per tree entry. Example
+ROOT <a class="reference external" href="https://root.cern.ch/working-macros">macros</a> that demonstrate the
+recommended procedure for accessing and manipulating the events stored in this
+format are provided in the folder <code class="docutils literal notranslate"><span class="pre">examples/macros/</span></code> of the MARLEY source
+code.</p>
+<p>In order to properly interpret <code class="docutils literal notranslate"><span class="pre">marley::Event</span></code> objects, ROOT requires shared
+libraries containing <a class="reference external" href="https://root.cern.ch/interacting-shared-libraries-rootcling">dictionaries</a> for the MARLEY
+classes to be loaded at runtime. Whenever MARLEY is successfully built against
+ROOT, a helper script called <code class="docutils literal notranslate"><span class="pre">mroot</span></code> is installed in the <code class="docutils literal notranslate"><span class="pre">build/</span></code> folder.
+Running this script will start the interactive ROOT C++ interpreter after
+automatically loading the needed class dictionaries.</p>
+<div class="section" id="conventions-used-in-the-event-objects">
+<h4>Conventions used in the event objects<a class="headerlink" href="#conventions-used-in-the-event-objects" title="Permalink to this headline">¶</a></h4>
+<p>When analyzing <code class="docutils literal notranslate"><span class="pre">marley::Event</span></code> objects (or their alternative “flat”
+representation discussed <a class="reference external" href="#flat-root-files">below</a>), it is helpful to be
+aware of MARLEY’s nomenclature for the particles involved in each event’s 2 → 2
+primary interaction
+<p style="text-align: center;"> 𝑎 + 𝑏 → 𝑐 + 𝑑 .</p></p>
+<p>Here the particles 𝑎, 𝑏, 𝑐, and 𝑑 are labeled as, respectively, the
+<em>projectile</em>, <em>target</em>, <em>ejectile</em>, and <em>residue</em>. Where a mass difference
+exists, MARLEY chooses the projectile (ejectile) to be the lighter of the two
+particles in the initial (final) state. Otherwise, the choice is arbitrary. All
+four-vector components stored in a MARLEY event record are expressed in the
+laboratory frame, i.e., the rest frame of the target. If simulation of nuclear
+de-excitations is enabled (as it is by default) and the residue is a nucleus,
+its 4-momentum and net charge are stored in the event record after it has
+reached the ground state.</p>
+</div>
+<div class="section" id="metadata">
+<h4>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h4>
+<p>Four pieces of metadata are saved in a ROOT-format output file alongside the
+events themselves:</p>
+<dl class="simple">
+<dt>MARLEY_config</dt><dd><p>A JSON-format string which stores the contents (except for comments) of the
+job configuration file used to generate the events</p>
+</dd>
+<dt>MARLEY_state</dt><dd><p>A string giving the serialized internal state (obtained using the stream
+insertion operator <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code>) of the <a class="reference external" href="http://www.cplusplus.com/reference/random/mt19937_64/">std::mt19937_64</a> object used to
+generate random numbers when creating the events.</p>
+</dd>
+<dt>MARLEY_seed</dt><dd><p>A string representation of the integer random number seed used to initialize
+the simulation</p>
+</dd>
+<dt>MARLEY_flux_avg_xsec</dt><dd><p>A <a class="reference external" href="https://root.cern/root/html528/TParameter_double_.html">TParameter&lt;double&gt;</a> which stores the
+flux-averaged total cross section (MeV<sup> &minus;2</sup> per atom)</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="flat-root-files">
+<h4>“Flat” ROOT files<a class="headerlink" href="#flat-root-files" title="Permalink to this headline">¶</a></h4>
+<p>An alternative “flat” form of the ROOT output format is also available which
+may be analyzed without the need for the MARLEY class dictionaries. An output
+file containing MARLEY events in any of the four standard formats may be
+converted into a “flat” ROOT file using the <code class="docutils literal notranslate"><span class="pre">marsum</span></code> utility. After sourcing
+the <a class="reference external" href="getting_started.html#setting-up-the-runtime-environment">setup_marley.sh</a> script, one may
+convert the MARLEY output file <code class="docutils literal notranslate"><span class="pre">OLD_EVENTS_FILE</span></code> into a new “flat” ROOT file,
+<code class="docutils literal notranslate"><span class="pre">new_flat_file.root</span></code>, via the command</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>marsum new_flat_file.root OLD_EVENTS_FILE
+</pre></div>
+</div>
+<p>The new file will contain
+a single ROOT <code class="docutils literal notranslate"><span class="pre">TTree</span></code> called <code class="docutils literal notranslate"><span class="pre">mst</span></code>
+(for <u>M</u>ARLEY <u>s</u>ummary <u>t</u>ree) with the following branches:</p>
+<dl class="simple">
+<dt>pdgv <i style="font-weight: normal;">(int)</i></dt><dd><p>Projectile PDG code</p>
+</dd>
+<dt>Ev <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile total energy (MeV)</p>
+</dd>
+<dt>KEv <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile kinetic energy (MeV)</p>
+</dd>
+<dt>pxv <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile 3-momentum x-component (MeV)</p>
+</dd>
+<dt>pyv <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile 3-momentum y-component (MeV)</p>
+</dd>
+<dt>pzv <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile 3-momentum z-component (MeV)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>pdgt <i style="font-weight: normal;">(int)</i></dt><dd><p>Target PDG code</p>
+</dd>
+<dt>Mt <i style="font-weight: normal;">(double)</i></dt><dd><p>Target mass (MeV)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>pdgl <i style="font-weight: normal;">(int)</i></dt><dd><p>Ejectile PDG code</p>
+</dd>
+<dt>El <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile total energy (MeV)</p>
+</dd>
+<dt>KEl <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile kinetic energy (MeV)</p>
+</dd>
+<dt>pxl <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile 3-momentum x-component (MeV)</p>
+</dd>
+<dt>pyl <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile 3-momentum y-component (MeV)</p>
+</dd>
+<dt>pzl <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile 3-momentum z-component (MeV)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>pdgr <i style="font-weight: normal;">(int)</i></dt><dd><p>Residue PDG code</p>
+</dd>
+<dt>Er <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue total energy (MeV)</p>
+</dd>
+<dt>KEr <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue kinetic energy (MeV)</p>
+</dd>
+<dt>pxr <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue 3-momentum x-component (MeV)</p>
+</dd>
+<dt>pyr <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue 3-momentum y-component (MeV)</p>
+</dd>
+<dt>pzr <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue 3-momentum z-component (MeV)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Ex <i style="font-weight: normal;">(double)</i></dt><dd><p>Initial residue excitation energy (MeV)</p>
+</dd>
+<dt>twoJ <i style="font-weight: normal;">(int)</i></dt><dd><p>Two times the initial residue spin</p>
+</dd>
+<dt>parity <i style="font-weight: normal;">(int)</i></dt><dd><p>Initial residue parity</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>np <i style="font-weight: normal;">(int)</i></dt><dd><p>Number of de-excitation products</p>
+</dd>
+<dt>pdgp <i style="font-weight: normal;">(int[np])</i></dt><dd><p>De-excitation product PDG codes</p>
+</dd>
+<dt>Ep <i style="font-weight: normal;">(double[np])</i></dt><dd><p>De-excitation product total energies (MeV)</p>
+</dd>
+<dt>KEp <i style="font-weight: normal;">(double[np])</i></dt><dd><p>De-excitation product kinetic energies (MeV)</p>
+</dd>
+<dt>pxp <i style="font-weight: normal;">(double[np])</i></dt><dd><p>De-excitation product 3-momentum x-components (MeV)</p>
+</dd>
+<dt>pyp <i style="font-weight: normal;">(double[np])</i></dt><dd><p>De-excitation product 3-momentum y-components (MeV)</p>
+</dd>
+<dt>pzp <i style="font-weight: normal;">(double[np])</i></dt><dd><p>De-excitation product 3-momentum z-components (MeV)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>xsec <i style="font-weight: normal;">(double)</i></dt><dd><p>Flux-averaged total cross section (10<sup>&minus;42</sup> cm<sup>2</sup> per atom)</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+            
+  <div class="footer-relations">
+    
+      <div class="pull-left">
+        <a class="btn btn-default" href="getting_started.html" title="previous chapter (use the left arrow)">Getting started</a>
+      </div>
+    
+      <div class="pull-right">
+        <a class="btn btn-default" href="pubs.html" title="next chapter (use the right arrow)">MARLEY Bibliography</a>
+      </div>
+    </div>
+    <div class="clearer"></div>
+  
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pubs.html" title="MARLEY Bibliography"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting started"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MARLEY  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Interpreting the output</a></li> 
+      </ul>
+    </div>
+<script type="text/javascript">
+  $("#mobile-toggle a").click(function () {
+    $("#left-column").toggle();
+  });
+</script>
+<script type="text/javascript" src="_static/js/bootstrap.js"></script>
+  <div class="footer">
+    &copy; Copyright 2016-2020 Steven Gardiner
+  </div>
+  </body>
+</html>

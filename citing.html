@@ -14,7 +14,7 @@
   <link rel="stylesheet" type="text/css" href="_static/css/bootstrap-theme.min.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-    <title>Overview &#8212; MARLEY  documentation</title>
+    <title>Citing MARLEY &#8212; MARLEY  documentation</title>
     <link rel="stylesheet" href="_static/guzzle.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -26,7 +26,8 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="copyright" title="Copyright" href="copyright.html" />
-    <link rel="next" title="Copyright and License" href="copyright.html" />
+    <link rel="next" title="Getting started" href="getting_started.html" />
+    <link rel="prev" title="Copyright and License" href="copyright.html" />
   
    
 
@@ -38,10 +39,13 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="copyright.html" title="Copyright and License"
+          <a href="getting_started.html" title="Getting started"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">MARLEY  documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Overview</a></li> 
+        <li class="right" >
+          <a href="copyright.html" title="Copyright and License"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MARLEY  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Citing MARLEY</a></li> 
       </ul>
     </div>
     <div class="container-wrapper">
@@ -51,10 +55,10 @@
       </div>
   <div id="left-column">
     <div class="sphinxsidebar"><a href="
-    #" class="text-logo">MARLEY User Guide</a>
+    index.html" class="text-logo">MARLEY User Guide</a>
 <div class="align-center">
   <a href="
-    #">
+    index.html">
     <img src="doxygen/marley_diagram.svg"
       alt="MARLEY logo" width=200 style="margin: 0px 0px"/>
   <p style="color:black;margin-bottom:40px"> <b>Model of Argon Reaction <br>
@@ -67,9 +71,9 @@
   <div class="sidebar-toc">
     
     
-      <ul>
+      <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="copyright.html">Copyright and License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing MARLEY</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Citing MARLEY</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interpret_output.html">Interpreting the output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pubs.html">Bibliography</a></li>
@@ -102,42 +106,29 @@
           
           <div role="navigation" aria-label="breadcrumbs navigation">
             <ol class="breadcrumb">
-              <li><a href="#">Docs</a></li>
+              <li><a href="index.html">Docs</a></li>
               
-              <li>Overview</li>
+              <li>Citing MARLEY</li>
             </ol>
           </div>
           
           <div class="document clearer body">
             
-  <div class="section" id="overview">
-<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-</div>
-<p><strong>MARLEY</strong> (Model of Argon Reaction Low Energy Yields) is a Monte Carlo event
-generator for neutrino-nucleus interactions at energies of tens-of-MeV and
-below. The current version computes inclusive neutrino-nucleus cross sections
-employing the <em>allowed approximation</em>: the nuclear matrix elements are
-evaluated while neglecting Fermi motion and applying the long-wavelength (zero
-momentum transfer) limit. De-excitations of the final-state nucleus emerging
-from the primary interaction are simulated using a combination of tabulated
-γ-ray decay schemes and an original implementation of the Hauser-Feshbach
-statistical model.</p>
-<p>Input files are provided with the code that are suitable for simulating the
-charged-current process</p>
-<p><p align="center">&nu;<sub>e</sub>&nbsp;+&nbsp;<sup>40</sup>Ar&nbsp;&rarr;
-&nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup>,</p></p>
-<p>coherent elastic neutrino-nucleus scattering (CEvNS) on spin-zero target
-nuclei, and neutrino-electron elastic scattering on any atomic target.
-Inclusion of additional reactions and targets is planned for the future.</p>
-<p>The material presented here focuses on the practical aspects of MARLEY:
-installing the code, configuring and running simulations, and analyzing the
-output events. For more details on the MARLEY physics models, please see the
-references in the online <a class="reference external" href="pubs.html">bibliography</a>.</p>
-<p>MARLEY follows an open-source development model and welcomes contributions of
-new input files and code improvements from the community. A partial list of
-potential projects for future MARLEY development is available on the developer
-documentation <a class="reference external" href="dev_docs.html#development-wish-list">webpage</a>.</p>
+  <div class="section" id="citing-marley">
+<h1>Citing MARLEY<a class="headerlink" href="#citing-marley" title="Permalink to this headline">¶</a></h1>
+<p>If you refer to MARLEY in academic work, please <strong>always cite</strong> the following
+reference:</p>
+<p>S. Gardiner, <a class="reference external" href="http://doi.org/10.5281/zenodo.3903986">Nuclear Effects in Neutrino
+Detection</a>, PhD thesis,
+University of California, Davis (2018).</p>
+<p>Providing a citation for the MARLEY code itself is also encouraged and
+appreciated. To maximize reproducibility of published calculations, such
+citations should include the digital object identifier (DOI) associated with
+the code release that was used. The DOIs for recent versions of MARLEY are
+listed on the GitHub <a class="reference external" href="https://github.com/MARLEY-MC/marley/releases">releases webpage</a> and in the right-hand column
+of the Zenodo “concept DOI” <a class="reference external" href="https://doi.org/10.5281/zenodo.3901933">webpage</a>.</p>
+<p>For convenience, recommended <a class="reference external" href="http://www.bibtex.org/">BibTeX</a> citations to
+use for the latest MARLEY release are given in the <a class="reference external" href="CITATION.bib">CITATION.bib</a> file.</p>
 </div>
 
 
@@ -145,8 +136,12 @@ documentation <a class="reference external" href="dev_docs.html#development-wish
             
   <div class="footer-relations">
     
+      <div class="pull-left">
+        <a class="btn btn-default" href="copyright.html" title="previous chapter (use the left arrow)">Copyright and License</a>
+      </div>
+    
       <div class="pull-right">
-        <a class="btn btn-default" href="copyright.html" title="next chapter (use the right arrow)">Copyright and License</a>
+        <a class="btn btn-default" href="getting_started.html" title="next chapter (use the right arrow)">Getting started</a>
       </div>
     </div>
     <div class="clearer"></div>
@@ -161,10 +156,13 @@ documentation <a class="reference external" href="dev_docs.html#development-wish
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="copyright.html" title="Copyright and License"
+          <a href="getting_started.html" title="Getting started"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">MARLEY  documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Overview</a></li> 
+        <li class="right" >
+          <a href="copyright.html" title="Copyright and License"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MARLEY  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Citing MARLEY</a></li> 
       </ul>
     </div>
 <script type="text/javascript">
