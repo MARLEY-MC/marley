@@ -31,22 +31,18 @@ coherent elastic neutrino-nucleus scattering (CEvNS) on spin-zero target
 nuclei, and neutrino-electron elastic scattering on any atomic target.
 Inclusion of additional reactions and targets is planned for the future.
 
-MARLEY follows an open-source development model and welcomes contributions
-of new input files and code improvements from the community. A partial list
-of potential projects for future MARLEY development is available
-on the developer documentation webpage.
-
-The material presented here focuses on the practical aspects of MARLEY:
-installing the code, configuring and running simulations, and analyzing the
-output events. For more details on the MARLEY physics models, please see the
-references in the online bibliography.
-
 .. |ve40ArCC| raw:: html
 
    <p align="center">&nu;<sub>e</sub>&nbsp;+&nbsp;<sup>40</sup>Ar&nbsp;&rarr;
    &nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup>,</p>
 
 .. overview-end
+
+MARLEY follows an open-source development model and welcomes contributions of
+new input files and code improvements from the community. A partial list of
+potential projects for future MARLEY development is available on the developer
+documentation `webpage
+<http://www.marleygen.org/dev_docs.html#development-wish-list>`__.
 
 Copyright and License
 ---------------------
@@ -135,7 +131,7 @@ There are three prerequisites needed to build MARLEY:
 
 *  `GNU Scientific Library <https://www.gnu.org/software/gsl/>`__ (GSL)
 
-   - MARLEY's `Makefile <build/Makefile>`__ verifies that GSL is installed by
+   - MARLEY's ``Makefile`` verifies that GSL is installed by
      checking that the ``gsl-config`` script is available on the system
      ``PATH``.
 
@@ -246,7 +242,8 @@ in MARLEY's native ASCII output format.
 The ``annotated.js`` configuration file mentioned above is heavily commented
 with explanations of the most commonly-used input parameters. Reading it serves
 as a good next step for new users. When you are ready to start writing your own
-configuration files, editing a copy of ``examples/COPY_ME.js`` is recommended.
+configuration files, editing a copy of ``examples/config/COPY_ME.js`` is
+recommended.
 
 .. getting-started-end3
 

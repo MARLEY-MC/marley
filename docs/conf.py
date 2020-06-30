@@ -17,7 +17,8 @@ highlight_language = 'none'
 
 # TODO notes
 
-todo_include_todos = True
+#todo_include_todos = True
+todo_include_todos = False
 
 # -- HTML theme settings ------------------------------------------------
 
@@ -38,8 +39,9 @@ html_theme = 'guzzle_sphinx_theme'
 
 # Guzzle theme options (see theme.conf for more information)
 html_theme_options = {
-    "base_url": "http://my-site.com/docs/",
+    "base_url": "http://www.marleygen.org",
 }
 
 #html_add_permalinks = None
 html_static_path = [ '_static' ]
+html_extra_path = [ '../CITATION.bib' ]

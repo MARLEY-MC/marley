@@ -332,16 +332,21 @@ mardumpxs: $(MARLEY_LIBS)
 
 .PHONY: docs clean install uninstall
 
+doxygen:
+	export MARLEY_VERSION=$(VERSION_PREFIX)$(MARLEY_VERSION) \
+	export TARBALL_LINK=$(TARBALL_LINK) \
+	&& cd ../docs && $(MAKE) doxygen
+
 docs:
 	export MARLEY_VERSION=$(VERSION_PREFIX)$(MARLEY_VERSION) \
 	export TARBALL_LINK=$(TARBALL_LINK) \
-	&& cd ../doxygen \
-	&& doxygen && cd ../build
+	&& cd ../docs && $(MAKE) html
 
 clean:
 	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
 	$(RM) -rf *.dSYM marsum mroot $(TEST_EXECUTABLE) marg4
 	$(RM) -rf marprint mardumpxs marley-config ../doxygen/html/*
+	$(RM) -rf ../docs/_build/*
 
 install: marley
 	mkdir -p $(DESTDIR)$(bindir)

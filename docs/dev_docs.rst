@@ -8,7 +8,7 @@
    An alternative you can consider is putting raw HTML in the toctree
    itself, see, e.g., https://stackoverflow.com/a/61506452/4081973
 
-.. <meta http-equiv="refresh" content="0; url=./_static/doxygen/index.html" />
+.. <meta http-equiv="refresh" content="0; url=./doxygen/index.html" />
 
 =======================
 Developer documentation
@@ -197,11 +197,11 @@ API and meta documentation
 
 As a convenient reference for developers, a set of webpages that provide API
 documentation for the MARLEY C++ classes, source files, etc. is available `here
-<./_static/doxygen/index.html>`__. These webpages are generated automatically
-from the source code using a tool called `Doxygen
+<./doxygen/index.html>`__. These webpages are generated automatically from the
+source code using a tool called `Doxygen
 <https://www.doxygen.nl/index.html>`__. Special `comment blocks
-<https://www.doxygen.nl/manual/docblocks.html>`__ that are written in the MARLEY
-header files are interpreted by Doxygen during the generation process.
+<https://www.doxygen.nl/manual/docblocks.html>`__ that are written in the
+MARLEY header files are interpreted by Doxygen during the generation process.
 
 For offline viewing, the API documentation may generated in any environment
 in which Doxygen is installed. To create the HTML files, simply execute
@@ -214,7 +214,7 @@ from within the ``build/`` folder. After Doxygen executes, open the file
 documentation website.
 
 With the exception of the API webpages described above, all other content for
-the official MARLEY website (https://marleygen.org) is produced from a set of
+the official MARLEY website (http://www.marleygen.org) is produced from a set of
 text files stored in the ``docs/`` folder of the source code tree. These text
 files are written in the `reStructuredText
 <https://docutils.sourceforge.io/rst.html>`__ (reST) markup language. The
@@ -238,7 +238,6 @@ may be used to install Sphinx and its extensions via the commands
 
   brew install sphinx-doc
   pip3 install guzzle-sphinx-theme sphinxcontrib-bibtex sphinxcontrib-newsfeed
-  pip3 install cloud_sptheme
 
 After these components have been installed, one may build the MARLEY webpages
 by navigating to the ``docs/`` folder and using the Makefile:

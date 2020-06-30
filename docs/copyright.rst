@@ -12,6 +12,3 @@ Copyright and License
 .. include:: ../README.rst
    :start-after: copyright-start-2
    :end-before: See the `GUIDELINES
-
-.. todo::
-   Add links to projects list and bibliography
