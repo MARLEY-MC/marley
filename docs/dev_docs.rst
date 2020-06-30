@@ -207,16 +207,16 @@ For offline viewing, the API documentation may generated in any environment
 in which Doxygen is installed. To create the HTML files, simply execute
 ::
 
-   make docs
+   make doxygen
 
 from within the ``build/`` folder. After Doxygen executes, open the file
-``doxygen/html/index.html`` in a browser to view the local copy of the API
-documentation website.
+``docs/_build/html/doxygen/index.html`` in a browser to view the local copy of
+the API documentation website.
 
 With the exception of the API webpages described above, all other content for
-the official MARLEY website (http://www.marleygen.org) is produced from a set of
-text files stored in the ``docs/`` folder of the source code tree. These text
-files are written in the `reStructuredText
+the official MARLEY website (http://www.marleygen.org) is produced from a set
+of text files stored in the ``docs/`` folder of the source code tree. These
+text files are written in the `reStructuredText
 <https://docutils.sourceforge.io/rst.html>`__ (reST) markup language. The
 `Sphinx <https://www.sphinx-doc.org/en/master/index.html>`__ documentation
 generator is used with the `Guzzle theme
@@ -226,7 +226,7 @@ website. The `sphinxcontrib-bibtex
 <https://sphinxcontrib-bibtex.readthedocs.io/en/latest/>`__ extension is used
 to handle citations (see, e.g., the online `bibliography <pubs.html>`__). The
 `sphinxcontrib-newsfeed <https://pypi.org/project/sphinxcontrib-newsfeed/>`__
-is used to manage the posts on the `news webpage <news.html>`__.
+extension is used to manage the posts on the `news webpage <news.html>`__.
 
 Installation of the prerequisites needed to use Sphinx will vary somewhat
 across different systems. Typically, however, the standard package manager
@@ -239,12 +239,12 @@ may be used to install Sphinx and its extensions via the commands
   brew install sphinx-doc
   pip3 install guzzle-sphinx-theme sphinxcontrib-bibtex sphinxcontrib-newsfeed
 
-After these components have been installed, one may build the MARLEY webpages
-by navigating to the ``docs/`` folder and using the Makefile:
+After these components (and Doxygen) have been installed, one may build the
+MARLEY webpages by navigating to the ``build/`` folder and using the command
+
 ::
 
-  cd docs
-  make html
+  make docs
 
 When the build completes, an offline copy of the MARLEY website may be viewed
 by opening the file ``docs/_build/html/index.html`` in a browser.
