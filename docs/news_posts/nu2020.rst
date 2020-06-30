@@ -1,0 +1,79 @@
+New website and Neutrino 2020
+=============================
+
+.. feed-entry::
+   :date: 2020-06-29 21:55
+   :author: Steven Gardiner
+
+After several years of existence as an uninviting landing page for MARLEY's
+`Doxygen <https://www.doxygen.nl/index.html>`__-based API documentation, the
+`marleygen.org <http://www.marleygen.org>`__ website has now been completely
+revamped.
+
+.. cut::
+
+Fans of the old site can still find an updated version of the API
+documentation `here <../doxygen/index.html>`__.
+
+Today marks the beginning of the second week of the biannual `Neutrino
+<https://conferences.fnal.gov/nu2020>`__ conference. Due to the ongoing
+COVID-19 pandemic, the conference is being held completely online this year.
+Slides and video recordings of the plenary talks are available on the
+conference agenda `webpage
+<https://indico.fnal.gov/event/43209/timetable/#20200622.detailed>`__.
+
+Many scientific `posters <https://nusoft.fnal.gov/nova/nu2020postersession/>`__
+on a wide variety of topics have also been prepared for Neutrino 2020. These
+are being presented via a combination of downloadable PDF files, two-minute
+video explanations, and live conversations with the poster authors using a
+`customized version <https://nu2020-hubs.org/cloud>`__ of the `Mozilla Hubs
+<https://hubs.mozilla.com>`__ virtual reality plaform.
+
+Although my own Neutrino 2020 poster (`#549
+<https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=549>`__) is not
+related to MARLEY, the code is nevertheless having quite a showing at the
+conference. I've counted eight posters so far that include results calculated
+using MARLEY:
+
+.. |I-127| raw:: html
+
+   <sup>127</sup>I
+
+* Avinay Bhat for MicroBooNE, "MeV-scale physics in MicroBooNE,"
+  poster `#4 <https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=4>`__
+
+* Peibo An for COHERENT, "A machine learning approach to study the neutrino
+  charged-current interaction on |I-127|," poster `#13
+  <https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=13>`__
+
+* Ivan Lepetic *et al*., "Seeing the invisible: benefits and capabilities of
+  MeV-scale reconstruction in single-phase LArTPCs," poster
+  `#88 <https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=88>`__
+
+* Erin Conley for DUNE, "Using boosted decision trees to identify supernova
+  neutrino interactions in DUNE," poster
+  `#307 <https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=307>`__
+
+* Samuel Hedges for COHERENT, "Electron neutrino charged-current interactions
+  on I-127 in the COHERENT NaIvE detector," poster
+  `#420 <https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=420>`__
+
+* Jacob Daughhetee for COHERENT, “Neutrino-induced neutron detectors at the
+  Spallation Neutron Source,” poster `#428
+  <https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=428>`__
+
+* Biswaranjan Behera for DUNE, "Detecting supernova neutrinos using the DUNE
+  photon detection system," poster `#474
+  <https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=474>`__
+
+* Diane Markoff for COHERENT, "A ton-scale NaI detector for neutrino-nucleus
+  scattering measurements," poster `#554
+  <https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=554>`__
+
+It has been great to see all of the exciting work being done by MARLEY users.
+If I've missed your MARLEY-related poster, please send me an `email
+<mailto:gardiner@fnal.gov>`__ about it!
+
+A final tag for MARLEY v1.2.0 and an associated paper on the `arXiv
+<https://arxiv.org>`__ are both just around the corner. Stay tuned and happy
+remainder of Neutrino 2020!

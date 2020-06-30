@@ -39,9 +39,9 @@ html_theme = 'guzzle_sphinx_theme'
 
 # Guzzle theme options (see theme.conf for more information)
 html_theme_options = {
-    "base_url": "http://www.marleygen.org",
+    "base_url": "www.marleygen.org",
 }
 
 #html_add_permalinks = None
 html_static_path = [ '_static' ]
-html_extra_path = [ '../CITATION.bib' ]
+html_extra_path = [ '../CITATION.bib', './CNAME' ]

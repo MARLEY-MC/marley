@@ -7,4 +7,4 @@ MARLEY News
 .. feed::
    :title: MARLEY News
 
-   news_posts/release_v1_2_0
+   news_posts/nu2020

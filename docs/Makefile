@@ -46,6 +46,7 @@ doxygen:
 	cd doxygen && doxygen && cp -r html/* ../$(BUILDDIR)/html/doxygen
 
 html: doxygen
+	touch $(BUILDDIR)/html/.nojekyll
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
