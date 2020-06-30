@@ -63,8 +63,11 @@ script:
   - cd build
   - make
 
-# Deploy successful build of a tagged release to GitHub pages
-after_success:
-  - make docs
-  - cd ../doxygen
-  - bash deploy.sh
+# Temporarily disabled. I will manually deploy the first version
+# or two of the new website.
+#
+## Deploy successful build of a tagged release to GitHub pages
+#after_success:
+#  - make docs
+#  - cd ../docs/doxygen
+#  - bash deploy.sh
