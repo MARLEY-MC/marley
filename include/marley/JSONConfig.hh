@@ -57,6 +57,9 @@ namespace marley {
       inline const marley::JSON& get_json() const;
       inline void set_json(const marley::JSON& json);
 
+      static void handle_json_error(const std::string& name,
+        const marley::JSON& json);
+
     protected:
 
       /// @brief Helper function for loading strings from the JSON

@@ -95,13 +95,6 @@ namespace {
     return result;
   }
 
-  void handle_json_error(const char* name, const marley::JSON& json) {
-    std::ostringstream message;
-    message << "The JSON parameter \"" << name << "\" was set to the"
-      << " invalid value " << json;
-    throw marley::Error(message.str());
-  }
-
 }
 
 marley::JSONConfig::JSONConfig(const marley::JSON& json) : json_(json)
@@ -930,4 +923,13 @@ void marley::JSONConfig::update_logger_settings() const {
       }
     }
   }
+}
+
+void marley::JSONConfig::handle_json_error(const std::string& name,
+  const marley::JSON& json)
+{
+  std::ostringstream message;
+  message << "The JSON parameter \"" << name << "\" was set to the"
+    << " invalid value " << json;
+  throw marley::Error(message.str());
 }
