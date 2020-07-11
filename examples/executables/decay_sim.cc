@@ -27,6 +27,7 @@
 
 // MARLEY includes
 #include "marley/Generator.hh"
+#include "marley/JSON.hh"
 #include "marley/NucleusDecayer.hh"
 #include "marley/Parity.hh"
 #include "marley/Reaction.hh"
@@ -37,20 +38,91 @@
   #include "marley/JSONConfig.hh"
 #endif
 
+using ProcType = marley::Reaction::ProcessType;
+
 // Assume that the target is an atom and thus has zero net charge
 constexpr int TARGET_NET_CHARGE = 0;
 
-// Extract a parameter of an arbitrary type from a string representing
-// a command-line argument.
-// TODO: add error handling
-template <typename T> T get_param_from_arg(const char* arg) {
-  std::stringstream temp_ss( arg );
+// TODO: Refactor the marley::JSONConfig class to use something like
+// these templates
+
+// Extract a parameter of an arbitrary type from a JSON object with
+// error handling
+template <typename T> T get_param_from_object(const marley::JSON& obj,
+  const std::string& obj_key, const std::string& param_key)
+{
+  if ( !obj.has_key(param_key) ) {
+    std::string msg( "Missing \"" );
+    msg += param_key + "\" key in the";
+    if ( obj_key.empty() ) msg += " JSON configuration file";
+    else msg += " \"" + obj_key + "\" object";
+
+    throw marley::Error( msg );
+  }
+
+  bool ok = false;
+  const marley::JSON& param = obj.at( param_key );
+
+  // Helper variables
   T result;
-  temp_ss >> result;
+  int proc_int;
+  std::string parity_str;
+
+  // TODO: "if constexpr" is a C++17 feature. Keep this in mind if you
+  // want to use these tricks in the main MARLEY code base.
+  // Based on https://tinyurl.com/type-traits
+  if constexpr ( std::is_floating_point<T>::value ) {
+    result = param.to_double( ok );
+  }
+  else if constexpr ( std::is_integral<T>::value ) {
+    result = param.to_long( ok );
+  }
+  else if constexpr ( std::is_same<T, ProcType>::value ) {
+    proc_int = param.to_long( ok );
+  }
+  else if constexpr ( std::is_same<T, std::string>::value )
+  {
+    result = param.to_string( ok );
+  }
+  else if constexpr ( std::is_same<T, marley::Parity>::value )
+  {
+    parity_str = param.to_string( ok );
+  }
+  else if constexpr ( std::is_same<T, bool>::value ) {
+    result = param.to_bool( ok );
+  }
+  else if constexpr ( std::is_same<T, marley::JSON>::value ) {
+    return param;
+  }
+
+  // No else statement with a static_assert needed here. See discussion
+  // at https://stackoverflow.com/q/38304847
+
+  if ( !ok ) {
+    std::string combined_label = obj_key + '/' + param_key;
+    marley::JSONConfig::handle_json_error( combined_label, param );
+  }
+
+  if constexpr ( std::is_same<T, ProcType>::value ) {
+    result = static_cast<ProcType>( proc_int );
+  }
+  else if constexpr ( std::is_same<T, marley::Parity>::value ) {
+    std::stringstream temp_ss;
+    temp_ss >> result;
+  }
+
   return result;
 }
 
-using ProcType = marley::Reaction::ProcessType;
+// Similar to get_param_from_object_def, but return a default value if
+// the requested parameter key is not present in the JSON object
+template <typename T> T get_param_from_object_def(const marley::JSON& obj,
+  const std::string& obj_key, const std::string& param_key,
+  const T& default_value)
+{
+  if ( !obj.has_key(param_key) ) return default_value;
+  return get_param_from_object<T>( obj, obj_key, param_key );
+}
 
 // List of nuclear processes to consider. Other processes will not be
 // considered by this program.
@@ -60,33 +132,59 @@ constexpr std::array< ProcType, 3 > nuclear_proc_types = { ProcType::NeutrinoCC,
 
 int main( int argc, char* argv[] ) {
 
-  // TODO: switch to custom job configuration file parameters rather than
-  // this long command-line syntax
-
   // If the user has not supplied enough command-line arguments, display the
   // standard help message and exit
-  if ( argc != 11 ) {
-    std::cout << "Usage: " << argv[0]
-      << " CONFIG_FILE NUM_EVENTS PROJECTILE_PDG Zi Ai ProcessType"
-      << " Ex twoJ parity OUTPUT_FILE\n";
+  if ( argc < 2 ) {
+    std::cout << "Usage: " << argv[0] << " CONFIG_FILE\n";
     return 1;
   }
 
-  // Get the configuration information from the command line
+  // Get the configuration file name from the command line
   std::string config_file_name( argv[1] );
-  int num_events = get_param_from_arg<int>( argv[2] );
 
-  int projectile_pdg = get_param_from_arg<int>( argv[3] );
+  // Set up the generator using the job configuration file
+  #ifdef USE_ROOT
+    marley::RootJSONConfig jc( config_file_name );
+  #else
+    marley::JSONConfig jc( config_file_name );
+  #endif
 
-  // Target proton number
-  int Zi = get_param_from_arg<int>( argv[4] );
+  marley::Generator gen = jc.create_generator();
 
-  // Target nucleon number
-  int Ai = get_param_from_arg<int>( argv[5] );
+  // Parse the extra "decay sim" configuration parameters
+  // TODO: This is hacky. You can make this better by refactoring some
+  // other parts of the code that read similar configurations (e.g., the
+  // output specification in the "executable_settings" object used by
+  // the main MARLEY executable). Lots of repetition here too.
+  const marley::JSON& json = jc.get_json();
 
-  // ProcessType identifier
-  ProcType proc_type = static_cast<ProcType>(
-    get_param_from_arg<int>( argv[6] ));
+  // Check that there is an object with the right label in the configuration
+  // file
+  const std::string decay_config_label( "decays" );
+
+  const auto& decays = get_param_from_object<marley::JSON>(
+    json, "", decay_config_label );
+
+  // Get the total number of events to be simulated
+  long num_events = get_param_from_object<long>( decays, decay_config_label,
+    "events" );
+
+  // Get the projectile PDG code. If it is missing, assume it's an electron
+  // neutrino.
+  int projectile_pdg = get_param_from_object_def<int>( decays, decay_config_label,
+    "projectile", marley_utils::ELECTRON_NEUTRINO );
+
+  // Get the target proton and nucleon numbers
+  int Zi = get_param_from_object<int>( decays, decay_config_label,
+    "target_Z" );
+
+  int Ai = get_param_from_object<int>( decays, decay_config_label,
+    "target_A" );
+
+  // Get the process type for the primary 2 --> 2 reaction to assume.
+  // If it is absent, assume a NC process.
+  auto proc_type = get_param_from_object<ProcType>( decays, decay_config_label,
+    "proc_type" );
 
   auto iter = std::find( nuclear_proc_types.cbegin(),
     nuclear_proc_types.cend(), proc_type );
@@ -98,16 +196,27 @@ int main( int argc, char* argv[] ) {
     return 2;
   }
 
-  // Initial excitation energy (MeV)
-  double Ex = get_param_from_arg<double>( argv[7] );
+  // Get the initial excitation energy
+  double Ex = get_param_from_object<double>( decays, decay_config_label, "Ex" );
+  if ( Ex < 0. ) {
+    throw marley::Error( "Negative excitation energy encountered" );
+  }
 
-  // Two times the initial nuclear spin
-  int twoJ = get_param_from_arg<double>( argv[8] );
+  // Get two times the initial nuclear spin
+  int twoJ = get_param_from_object<int>( decays, decay_config_label, "twoJ" );
+  if ( twoJ < 0 ) {
+    throw marley::Error( "Negative nuclear spin value encountered" );
+  }
 
-  // Initial parity
-  marley::Parity parity( argv[9] );
+  // Get the initial nuclear parity
+  auto parity = get_param_from_object<marley::Parity>( decays,
+    decay_config_label, "parity" );
 
-  std::string output_file_name( argv[10] );
+  // Get the name to use for the output file
+  auto output_file_name = get_param_from_object<std::string>( decays,
+    decay_config_label, "output_file_name" );
+
+///////////////////////////////////
 
   // Determine the final-state particle PDG codes based on the process type
   int ejectile_pdg = marley::Reaction
@@ -123,15 +232,6 @@ int main( int argc, char* argv[] ) {
   int Zf = Zi + Delta_Z;
 
   int residue_net_charge = Delta_Z + TARGET_NET_CHARGE;
-
-  // Set up the generator using the job configuration file
-  #ifdef USE_ROOT
-    marley::RootJSONConfig jc( config_file_name );
-  #else
-    marley::JSONConfig jc( config_file_name );
-  #endif
-
-  marley::Generator gen = jc.create_generator();
 
   #ifdef USE_ROOT
     // Create a ROOT tree to store the events
@@ -159,7 +259,7 @@ int main( int argc, char* argv[] ) {
     out_ascii_file << dummy_xsec << '\n';
   #endif
 
-  for ( int evnum = 0; evnum < num_events; ++evnum ) {
+  for ( long evnum = 0; evnum < num_events; ++evnum ) {
 
     // Get access to the MassTable
     const auto& mt = marley::MassTable::Instance();
