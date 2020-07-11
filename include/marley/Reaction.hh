@@ -109,6 +109,10 @@ namespace marley {
         load_from_file(const std::string& filename,
         marley::StructureDatabase& db);
 
+      /// Function that returns the ejectile PDG code given the projectile
+      /// PDG code and the ProcessType
+      static int get_ejectile_pdg(int pdg_a, ProcessType proc_type);
+
     protected:
 
       int pdg_a_; ///< PDG code for the projectile
@@ -167,10 +171,6 @@ namespace marley {
       /// Returns a vector of PDG codes for projectiles that participate
       /// in a particular ProcessType
       static const std::vector<int>& get_projectiles(ProcessType proc_type);
-
-      /// Function that returns the ejectile PDG code given the projectile
-      /// PDG code and the ProcessType
-      static int get_ejectile_pdg(int pdg_a, ProcessType proc_type);
   };
 
 }
