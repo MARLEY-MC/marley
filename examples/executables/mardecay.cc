@@ -64,9 +64,9 @@ template <typename T> T get_param_from_object(const marley::JSON& obj,
   const marley::JSON& param = obj.at( param_key );
 
   // Helper variables
-  T result;
-  int proc_int;
-  std::string parity_str;
+  [[maybe_unused]] T result;
+  [[maybe_unused]] int proc_int;
+  [[maybe_unused]] std::string parity_str;
 
   // TODO: "if constexpr" is a C++17 feature. Keep this in mind if you
   // want to use these tricks in the main MARLEY code base.

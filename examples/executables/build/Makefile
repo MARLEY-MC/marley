@@ -46,7 +46,10 @@ marprint: marprint.o
 mardumpxs: mardumpxs.o
 	$(CXX) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) mardumpxs.o
 
+mardecay: mardecay.o
+	$(CXX) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) mardecay.o
+
 .PHONY: clean
 
 clean:
-	$(RM) *.o marprint mardumpxs
+	$(RM) *.o marprint mardumpxs mardecay
