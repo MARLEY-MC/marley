@@ -51,7 +51,7 @@ Copyright and License
 
 .. |copy| unicode:: 0xA9 .. copyright sign
 
-Copyright |copy| 2016-2020 Steven Gardiner gardiner@fnal.gov
+Copyright |copy| 2016-2021 Steven Gardiner gardiner@fnal.gov
 
 MARLEY is distributed under the terms of version 3 of the `GNU General Public
 License <http://www.gnu.org/licenses/gpl-3.0-standalone.html>`__ ("GPLv3") as
@@ -73,9 +73,17 @@ Citing MARLEY
 If you refer to MARLEY in academic work, please **always cite** the following
 reference:
 
-S. Gardiner, `Nuclear Effects in Neutrino
-Detection <http://doi.org/10.5281/zenodo.3903986>`__, PhD thesis,
-University of California, Davis (2018).
+S. Gardiner, `Simulating low-energy neutrino interactions with MARLEY
+<http://arxiv.org/abs/2101.11867>`__, arXiv:2101.11867 (2021).
+
+In publications which use the official reaction input files for
+charged-current scattering on argon-40 (i.e., any of the files
+in ``data/react`` whose names begin with ``ve40ArCC``), please also
+cite the paper describing their preparation:
+
+S. Gardiner, `Nuclear de-excitations in low-energy charged-current
+νₑ scattering on ⁴⁰Ar <http://arxiv.org/abs/2010.02393>`__,
+arXiv:2010.02393 (2020).
 
 Providing a citation for the MARLEY code itself is also encouraged and
 appreciated. To maximize reproducibility of published calculations, such
