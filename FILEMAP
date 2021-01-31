@@ -1,0 +1,168 @@
+Descriptions of the files and folders and folders included in the MARLEY source
+code distribution are given below.
+
+Root folder
+-----------
+
+* CITATION.bib: Recommended citations to use when referring to MARLEY in
+  academic work. These are given in BibTeX format. See README.rst or
+  http://www.marleygen.org/citing.html for further details.
+
+* COPYING: Contains the text of version 3 of the GNU General Public License
+  (GNU GPL v3). MARLEY is distributed under the terms of this license.
+
+* FILEMAP: This is the file that you are currently reading. Descriptions are
+  given herein for all files and folders in the MARLEY source code
+  distribution.
+
+* GUIDELINES: Contains the text of the MCnet Guidelines for Event Generator
+  Authors and Users. These guidelines are a non-binding supplement to the GNU
+  GPL v3 and provide suggestions for how event generator software should be
+  used and distributed.
+
+* README.rst: Main "readme" file explaining the purpose of the code and its
+  basic usage. Links are provided to more detailed documentation. This file
+  is written in the reStructuredText (reST) markup language to allow re-use
+  of the text on the official MARLEY website (http://www.marleygen.org) and
+  GitHub repository webpage (http://github.com/MARLEY-MC/marley).
+
+* setup_marley.sh: Bash shell script which sets up the MARLEY runtime
+  environment. Usage instructions are given in README.rst and
+  http://www.marleygen.org/getting_started.html.
+
+The following files are intended for use by MARLEY developers only:
+
+* .VERSION: For tagged releases of MARLEY, this text file contains the
+  version number. It should not be present in development versions of the code.
+
+* .gitignore: Lists files that are intentionally not tracked by the Git
+  version control system. Similar .gitignore files may be found in other
+  folders including build/.
+
+* .travis.yml: Build script for the Travis Continuous Integration system used
+  for testing MARLEY.
+
+build/ folder
+-------------
+
+MARLEY executables and shared libraries will appear in this folder when the
+code is successfully built.
+
+* Makefile: Script used by GNU Make to build MARLEY from the source code.
+
+data/ folder
+------------
+
+* gs_spin_parity_table.txt: Contains a table of ground-state
+  spin-parities for a large number of nuclides. Each line of the file includes
+  a nuclear PDG code followed by an integer equal to two times the total nuclear
+  spin. Each line terminates with either a + or - character used to represent a
+  parity value.
+
+* mass_table.js: Contains a table of particle and atomic masses in a JSON-like
+  format. The data sources and units used are documented in the file itself.
+
+data/react/ folder
+~~~~~~~~~~~~~~~~~~
+
+This folder stores reaction input files which are used to configure the active
+scattering processes in a MARLEY simulation. Documentation for these is given
+in section 6.4.1 of the MARLEY implementation paper
+(http://arxiv.org/abs/2101.11867).
+
+data/structure/ folder
+~~~~~~~~~~~~~~~~~~~~~~
+
+This folder contains many data files organized by element. Each one contains
+tables of discrete nuclear energy levels and gamma-rays given in a format
+described in appendix B of the MARLEY implementation paper
+(http://arxiv.org/abs/2101.11867). Most of these tables are reformatted
+versions of files originally distributed with version 1.6 of the TALYS code
+(https://tendl.web.psi.ch/tendl_2019/talys.html). In addition to the nuclear
+structure data tables, this folder also contains several other files:
+
+* nuclide_index.txt: An "index" file used by MARLEY when retrieving nuclear
+  data at runtime. Each line contains a nuclear PDG code and the name of
+  the file which contains the corresponding structure data.
+
+* README.md: A "readme" file which documents the nuclear structure data. It
+  is written in the Markdown markup language.
+
+* TALYS-CITATION.bib: Provides a BibTeX-format citation for TALYS. This
+  citation should be included in academic publications that use the default
+  nuclear structure data files distributed with MARLEY.
+
+data/tests/ folder
+~~~~~~~~~~~~~~~~~~
+
+This folder contains configuration files needed to run Catch2-based unit tests
+of the code. They are intended to be used by MARLEY developers only.
+
+docs/ folder
+------------
+
+Contains the source files needed to generate HTML web pages for the official
+MARLEY website. Instructions for those who wish to build a local copy of the
+website for offline viewing can be found at
+http://www.marleygen.org/dev_docs.html#api-and-meta-documentation.
+
+examples/ folder
+----------------
+
+This folder provides various resources that may be useful to new MARLEY users.
+
+examples/config/ folder
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Contains example job configuration files which may be used when running the
+main ``marley`` executable. Further details about them are given in
+setion 5.4 of the MARLEY implementation paper (http://arxiv.org/abs/2101.11867).
+
+examples/executables/ folder
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Provides the source code for several example programs that may be built against
+the MARLEY shared libraries. Further details about these are given in
+sections 5.5.1, 7.3.3, and 7.4.2 of the MARLEY implementation paper
+(http://arxiv.org/abs/2101.11867).
+
+examples/macros/ folder
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Contains example macros intended for use with the ROOT data analysis framework
+(http://root.cern.ch). Descriptions of all of the examples are given in
+examples/macros/README.md and section 7.3.4 of the MARLEY implementation
+paper (http://arxiv.org/abs/2101.11867).
+
+examples/marg4/ folder
+~~~~~~~~~~~~~~~~~~~~~~
+
+Provides the source code for an example program which interfaces MARLEY
+with the Geant4 particle transport code (http://geant4.web.cern.ch).
+Documentation for this program is given in section 8.2 of the MARLEY
+implementation paper (http://arxiv.org/abs/2101.11867).
+
+include/ folder
+---------------
+
+Contains the MARLEY C++ header files. Those in the catch2/ and fftpack4/
+subfolders belong to the external packages Catch2
+(https://github.com/catchorg/Catch2) and FFTPACK4
+(https://people.sc.fsu.edu/~jburkardt/c_src/fftpack4/fftpack4.html),
+respectively. These are distributed together with the MARLEY source code.
+Header files written specifically for MARLEY may be found in the marley/
+subfolder. The marley/tests/ subfolder includes header files intended solely
+for use in Catch2-based unit tests by developers.
+
+src/ folder
+-----------
+
+Contains the MARLEY C++ implementation files. The scripts/ subfolder contains
+some miscellaneous helper scripts. The tests/ subfolder includes C++
+implementation files which are used only for Catch2-based unit tests.
+
+.git/ folder
+------------
+
+Contains files managed automatically by the Git version control system, which
+is used for MARLEY development.

@@ -44,6 +44,9 @@ potential projects for future MARLEY development is available on the developer
 documentation `webpage
 <http://www.marleygen.org/dev_docs.html#development-wish-list>`__.
 
+See the `FILEMAP <FILEMAP>`__ file for a description of the full contents
+of the MARLEY source code distribution.
+
 Copyright and License
 ---------------------
 
