@@ -73,17 +73,21 @@ Citing MARLEY
 If you refer to MARLEY in academic work, please **always cite** the following
 reference:
 
-S. Gardiner, `Simulating low-energy neutrino interactions with MARLEY
-<http://arxiv.org/abs/2101.11867>`__, arXiv:2101.11867 (2021).
+S. Gardiner, Simulating low-energy neutrino interactions with MARLEY,
+`arXiv:2101.11867 <http://arxiv.org/abs/2101.11867>`__ (2021).
 
 In publications which use the official reaction input files for
 charged-current scattering on argon-40 (i.e., any of the files
 in ``data/react`` whose names begin with ``ve40ArCC``), please also
 cite the paper describing their preparation:
 
-S. Gardiner, `Nuclear de-excitations in low-energy charged-current
-νₑ scattering on ⁴⁰Ar <http://arxiv.org/abs/2010.02393>`__,
-arXiv:2010.02393 (2020).
+.. |endOfPaperTitle| raw:: html
+
+   &nu;<sub>e</sub> scattering on <sup>40</sup>Ar,
+
+S. Gardiner, Nuclear de-excitations in low-energy charged-current
+|endOfPaperTitle|
+`arXiv:2010.02393 <http://arxiv.org/abs/2010.02393>`__ (2020).
 
 Providing a citation for the MARLEY code itself is also encouraged and
 appreciated. To maximize reproducibility of published calculations, such
@@ -252,6 +256,9 @@ with explanations of the most commonly-used input parameters. Reading it serves
 as a good next step for new users. When you are ready to start writing your own
 configuration files, editing a copy of ``examples/config/COPY_ME.js`` is
 recommended.
+
+Full documentation for configuring MARLEY is available in section 6 of the
+MARLEY `implementation paper <http://arxiv.org/abs/2101.11867>`__.
 
 .. getting-started-end3
 

@@ -42,11 +42,6 @@ future MARLEY release) by means of a GitHub *pull request*. A brief tutorial
 illustrating this approach to development on GitHub is available `here
 <https://guides.github.com/activities/forking/>`__.
 
-Clear communication is essential when contributing to an open source project
-like MARLEY. This `guide
-<https://opensource.guide/how-to-contribute/#how-to-submit-a-contribution>`__
-presents some great tips on how to communicate most effectively.
-
 Regular contributors to MARLEY may be invited to join the core development team
 and be given write access to the official repository. Core developers are
 responsible for reviewing and approving pull requests submitted from forks.

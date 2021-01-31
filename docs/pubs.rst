@@ -23,7 +23,7 @@ About MARLEY
 .. bibliography:: marley_pubs.bib
    :all:
 
-Calculations using MARLEY
+Publications using MARLEY
 -------------------------
 
 .. bibliography:: external_pubs.bib
