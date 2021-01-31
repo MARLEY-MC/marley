@@ -92,12 +92,6 @@ structure data tables, this folder also contains several other files:
   citation should be included in academic publications that use the default
   nuclear structure data files distributed with MARLEY.
 
-data/tests/ folder
-~~~~~~~~~~~~~~~~~~
-
-This folder contains configuration files needed to run Catch2-based unit tests
-of the code. They are intended to be used by MARLEY developers only.
-
 docs/ folder
 ------------
 
@@ -145,21 +139,17 @@ implementation paper (http://arxiv.org/abs/2101.11867).
 include/ folder
 ---------------
 
-Contains the MARLEY C++ header files. Those in the catch2/ and fftpack4/
-subfolders belong to the external packages Catch2
-(https://github.com/catchorg/Catch2) and FFTPACK4
-(https://people.sc.fsu.edu/~jburkardt/c_src/fftpack4/fftpack4.html),
-respectively. These are distributed together with the MARLEY source code.
-Header files written specifically for MARLEY may be found in the marley/
-subfolder. The marley/tests/ subfolder includes header files intended solely
-for use in Catch2-based unit tests by developers.
+Contains the MARLEY C++ header files. Those in the fftpack4/ subfolder belong
+to the external package FFTPACK4
+(https://people.sc.fsu.edu/~jburkardt/c_src/fftpack4/fftpack4.html), which is
+distributed together with the MARLEY source code. Header files written
+specifically for MARLEY may be found in the marley/ subfolder.
 
 src/ folder
 -----------
 
 Contains the MARLEY C++ implementation files. The scripts/ subfolder contains
-some miscellaneous helper scripts. The tests/ subfolder includes C++
-implementation files which are used only for Catch2-based unit tests.
+some miscellaneous helper scripts.
 
 .git/ folder
 ------------

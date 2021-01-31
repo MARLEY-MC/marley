@@ -92,12 +92,8 @@ SHARED_LIB := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
 ROOT_SHARED_LIB_NAME := MARLEY_ROOT
 ROOT_SHARED_LIB := lib$(ROOT_SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
 
-TEST_EXECUTABLE = martest
-TEST_OBJECTS = $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/tests/*.cc)))
-
 all: marley
 debug: marley
-test: $(TEST_EXECUTABLE)
 
 # Skip lots of initialization if all we want is "make clean/uninstall"
 ifneq ($(MAKECMDGOALS),clean)
@@ -260,21 +256,12 @@ incdir = $(prefix)/include
 MARLEY_LIBS := $(SHARED_LIB)
 ifeq ($(USE_ROOT),yes)
   MARLEY_LIBS += $(ROOT_SHARED_LIB)
-
-  # If we're building the tests, then link to some extra ROOT libraries
-  ifneq (,$(findstring test,$(MAKECMDGOALS)))
-    ROOT_LDFLAGS += -lGraf -lGpad
-  endif
 endif
 
 # Causes GNU make to auto-delete the object files when the build is complete
-.INTERMEDIATE: $(OBJECTS) $(TEST_OBJECTS) $(ROOT_SHARED_LIB_OBJECTS) marley.o marsum.o
+.INTERMEDIATE: $(OBJECTS) $(ROOT_SHARED_LIB_OBJECTS) marley.o marsum.o
 
 %.o: $(SRC_DIR)/%.cc
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) \
-	-I$(INCLUDE_DIR) -fPIC -o $@ -c $^
-
-%.o: $(SRC_DIR)/tests/%.cc
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) \
 	-I$(INCLUDE_DIR) -fPIC -o $@ -c $^
 
@@ -306,11 +293,6 @@ marley: $(MARLEY_LIBS) marley.o marley-config $(MAYBE_MARSUM)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \
 	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
-
-$(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
-	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) -o $@ -L. \
-	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
-	  $(GSL_LDFLAGS) -o $@ $(TEST_OBJECTS)
 
 marg4: $(MARLEY_LIBS)
 	$(RM) ../examples/marg4/build/marg4
@@ -344,7 +326,7 @@ docs:
 
 clean:
 	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
-	$(RM) -rf *.dSYM marsum mroot $(TEST_EXECUTABLE) marg4
+	$(RM) -rf *.dSYM marsum mroot marg4
 	$(RM) -rf marprint mardumpxs marley-config ../doxygen/html/*
 	$(RM) -rf ../docs/_build/*
 
