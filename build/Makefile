@@ -11,12 +11,16 @@ CXX_STD=c++14
 UNKNOWN_REV=unknown version
 
 # If the target is "debug", then include debugging information and build the
-# marley executable with optimization turned off
+# marley executable with optimization turned off. Prepend the default -std
+# option so that it will be overridden if the user has manually specified one
+# in CXXFLAGS.
 ifeq ($(MAKECMDGOALS),debug)
-  CXXFLAGS ?= -O0 -g -std=$(CXX_STD)
+  override CXXFLAGS := -std=$(CXX_STD) $(CXXFLAGS) -O0 -g
 else
-# Otherwise, use full optimization and do not include debugging info
-  CXXFLAGS ?= -O3 -std=$(CXX_STD)
+  # Otherwise, use full optimization and do not include debugging info. Prepend
+  # the default -O3 and -std options here in case the user wants to manually
+  # override them in CXXFLAGS.
+  override CXXFLAGS := -O3 -std=$(CXX_STD) $(CXXFLAGS)
 endif
 
 UNAME_S := $(shell uname -s)
