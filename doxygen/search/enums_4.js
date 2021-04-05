@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['loglevel_930',['LogLevel',['../classmarley_1_1_logger.html#a704069c861a25a5295a04aa85dd09964',1,'marley::Logger']]]
+  ['loglevel_939',['LogLevel',['../classmarley_1_1_logger.html#a704069c861a25a5295a04aa85dd09964',1,'marley::Logger']]]
 ];
