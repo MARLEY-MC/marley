@@ -90,7 +90,8 @@ cite the paper describing their preparation:
 
 S. Gardiner, Nuclear de-excitations in low-energy charged-current
 |endOfPaperTitle|
-`arXiv:2010.02393 <http://arxiv.org/abs/2010.02393>`__ (2020).
+`Phys. Rev. C 103, 044604
+<https://doi.org/10.1103/PhysRevC.103.044604>`__ (2021).
 
 Providing a citation for the MARLEY code itself is also encouraged and
 appreciated. To maximize reproducibility of published calculations, such
