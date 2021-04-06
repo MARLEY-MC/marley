@@ -304,11 +304,11 @@ Special thanks go to
 .. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3901933.svg
    :target: https://doi.org/10.5281/zenodo.3901933
 
-.. |Build Status| image:: https://travis-ci.org/MARLEY-MC/marley.svg?branch=master
+.. |Build Status| image:: https://travis-ci.org/MARLEY-MC/marley.svg?branch=main
    :target: https://travis-ci.org/MARLEY-MC/marley
 
 .. |rel| image:: https://img.shields.io/github/v/release/MARLEY-MC/marley?include_prereleases
    :target: https://github.com/MARLEY-MC/marley/releases
 
-.. |commits since| image:: https://img.shields.io/github/commits-since/MARLEY-MC/marley/latest/master
-   :target: https://github.com/MARLEY-MC/marley/commits/master
+.. |commits since| image:: https://img.shields.io/github/commits-since/MARLEY-MC/marley/latest/main
+   :target: https://github.com/MARLEY-MC/marley/commits/main

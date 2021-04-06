@@ -85,7 +85,7 @@ MARLEY development guidelines
 
 Having checked out the source code in the manner described above, you may now
 make changes, build, and test in the usual way. Frequent Git commits will make
-your contributions easier to merge into the official ``master`` branch. Some
+your contributions easier to merge into the official ``main`` branch. Some
 useful advice on best practices for making commits is available `here
 <https://blog.hartleybrody.com/git-small-teams/>`__.
 
@@ -163,7 +163,7 @@ them in MARLEY. Please see the `instructions
 <https://tinyurl.com/github-fork-pull-request>`__ for creating a GitHub pull
 request if you are unfamiliar with the process. Under most circumstances, you
 will want to use the official ``MARLEY-MC/marley`` repository as the "base
-repository" and the ``master`` branch as the "base branch."
+repository" and the ``main`` branch as the "base branch."
 
 After your pull request has been created, the current MARLEY core developer(s)
 will be notified on GitHub. After reviewing your changes, they may leave
@@ -178,7 +178,7 @@ developer(s) by leaving comments of your own. New commits may be added to the
 pull request by pushing them to the same branch on your GitHub fork of MARLEY.
 
 When your changes have been approved, a core developer will merge your
-development branch into the ``master`` branch of the official repository.
+development branch into the ``main`` branch of the official repository.
 You have now completed a contribution which will be included in the next
 MARLEY release. Congratulations and thanks for your hard work!
 
@@ -187,7 +187,7 @@ MARLEY release. Congratulations and thanks for your hard work!
 API and meta documentation
 --------------------------
 
-.. Consider linking to separate Doxygen pages for the official master branch
+.. Consider linking to separate Doxygen pages for the official main branch
    and for tagged releases. GCC does this (see https://tinyurl.com/gcc-api)
 
 As a convenient reference for developers, a set of webpages that provide API
