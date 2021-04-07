@@ -2,6 +2,15 @@
 # https://amodernstory.com/2015/07/27/upgrading-travisci-build-scripts/
 language: cpp
 
+# Set the macOS version to use in test builds. Due to recent Oracle Java
+# licensing changes, the default Travis-CI macOS image (xcode9.4) now requires
+# a manual install of openjdk when "brew update" is run. This causes build jobs
+# to time out unnecessarily. Starting with the Xcode 10.2.1 image, openjdk is
+# pre-installed, avoiding this problem entirely. See this forum post for more
+# information:
+# https://discuss.circleci.com/t/xcode-10-2-1-image-released/30198/7
+osx_image: xcode10.2
+
 os:
   - linux
   - osx
@@ -55,7 +64,7 @@ matrix:
 # Choose the correct compiler versions from the build matrix
 before_install:
   - eval "${MATRIX_EVAL}"
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; fi
+  #- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install gsl; brew install --cask doxygen; fi
 
 # Build script
