@@ -2,7 +2,7 @@ var searchData=
 [
   ['randomize_5fprojectile_5fdirection_5f_330',['randomize_projectile_direction_',['../classmarley_1_1_projectile_direction_rotator.html#a676d8311101a7843283c83b7b8a3c617',1,'marley::ProjectileDirectionRotator']]],
   ['reaction_331',['Reaction',['../classmarley_1_1_reaction.html',1,'marley']]],
-  ['read_332',['read',['../classmarley_1_1_event.html#aeb9e68e8d40d229cf98de96f47885967',1,'marley::Event::read()'],['../classmarley_1_1_particle.html#af36f592e507a6d4234d8f608c802f90e',1,'marley::Particle::read()']]],
+  ['read_332',['read',['../classmarley_1_1_particle.html#af36f592e507a6d4234d8f608c802f90e',1,'marley::Particle::read()'],['../classmarley_1_1_event.html#aeb9e68e8d40d229cf98de96f47885967',1,'marley::Event::read()']]],
   ['read_5ffrom_5fstream_333',['read_from_stream',['../classmarley_1_1_decay_scheme.html#a0628dd23df6c8c4c9720e0f5076b8f0e',1,'marley::DecayScheme']]],
   ['read_5fhepevt_334',['read_hepevt',['../classmarley_1_1_event.html#a7abad21f00f25cd15c271dce71c5a9f9',1,'marley::Event']]],
   ['rejection_5fsample_335',['rejection_sample',['../classmarley_1_1_generator.html#a7feec256d2e102f9a0eb4e6674d07b34',1,'marley::Generator']]],

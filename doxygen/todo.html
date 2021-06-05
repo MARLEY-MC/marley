@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">v1.2.0</span>
+   &#160;<span id="projectnumber">c85c379</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -101,8 +101,8 @@ $(function() {
 <dt>Member <a class="el" href="classmarley_1_1_generator.html#afb504f69f96f923fc59f73439a28b6a7">marley::Generator::inverse_transform_sample</a>  (const std::function&lt; double(double)&gt; &amp;f, double xmin, double xmax, double bisection_tolerance=1e-12)</dt>
 <dd><a class="anchor" id="_todo000009"></a>Remove hard-coded number of points here  </dd>
 <dt>Member <a class="el" href="classmarley_1_1_integrator.html#a585cfe84668f6449c1fd0df483dcda0e">marley::Integrator::Integrator</a>  (size_t num=N_DEFAULT_)</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000011"></a>add error check for when num is ridiculously large </p>
-<p class="enddd"><a class="anchor" id="_todo000010"></a>add error check for when num == 0 or too small  </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000010"></a>add error check for when num == 0 or too small </p>
+<p class="enddd"><a class="anchor" id="_todo000011"></a>add error check for when num is ridiculously large  </p>
 </dd>
 <dt>Member <a class="el" href="classmarley_1_1_interpolation_grid.html#a31e40519c66691e953178588ce4d9e2a">marley::InterpolationGrid&lt; FirstNumericType, SecondNumericType &gt;::InterpolationGrid</a>  (const Grid &amp;grid, InterpolationMethod interp_method=InterpolationMethod::LinearLinear, ExtrapolationMethod extrap_method=ExtrapolationMethod::Zero)</dt>
 <dd><a class="anchor" id="_todo000034"></a>Add error checks for the supplied grid  </dd>
@@ -122,19 +122,19 @@ $(function() {
 <dd><a class="anchor" id="_todo000037"></a>See comments for marley::TargetAtom::operator int(). A similar situation occurs for this function.  </dd>
 <dt>Member <a class="el" href="classmarley_1_1_particle.html#aaf3981c8b1c12039bed79a276064b4d1">marley::Particle::charge_</a>  </dt>
 <dd><a class="anchor" id="_todo000038"></a>Add error handling for cases where a <a class="el" href="classmarley_1_1_particle.html" title="Momentum four-vector for a simulated particle.">marley::Particle</a> is constructed with a charge that is inappropriate.  </dd>
+<dt>Class <a class="el" href="classmarley_1_1_reaction.html">marley::Reaction</a>  </dt>
+<dd><a class="anchor" id="_todo000039"></a>Add check that projectile kinetic energy KEa &gt;= 0. for all relevant member functions of <a class="el" href="classmarley_1_1_reaction.html" title="Abstract base class that represents a two-two scattering reaction.">Reaction</a> and <a class="el" href="classmarley_1_1_nuclear_reaction.html" title="A neutrino-nucleus reaction.">NuclearReaction</a>  </dd>
 <dt>Member <a class="el" href="classmarley_1_1_reaction.html#a6e570c8943d34d22f11cd5f676b6f317">marley::Reaction::load_from_file</a>  (const std::string &amp;filename, <a class="el" href="classmarley_1_1_structure_database.html" title="Container for nuclear structure information organized by nuclide.">marley::StructureDatabase</a> &amp;db)</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000026"></a>Consider implementing a sorting procedure rather than strictly enforcing that energies must be given in ascending order. </p>
-<p class="interdd"><a class="anchor" id="_todo000024"></a>Add error handling for parsing problems </p>
-<p class="enddd"><a class="anchor" id="_todo000025"></a>This can be done more cleanly via iss = std::istringstream( line ); However, GCC 4 does not include the move constructor for string streams. This was fixed for GCC 5. Change this line after MARLEY drops support for GCC &lt; 5. See <a href="https://stackoverflow.com/a/27152585">https://stackoverflow.com/a/27152585</a> and <a href="https://stackoverflow.com/q/7623650">https://stackoverflow.com/q/7623650</a> for more details.  </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000024"></a>Add error handling for parsing problems </p>
+<p class="interdd"><a class="anchor" id="_todo000025"></a>This can be done more cleanly via iss = std::istringstream( line ); However, GCC 4 does not include the move constructor for string streams. This was fixed for GCC 5. Change this line after MARLEY drops support for GCC &lt; 5. See <a href="https://stackoverflow.com/a/27152585">https://stackoverflow.com/a/27152585</a> and <a href="https://stackoverflow.com/q/7623650">https://stackoverflow.com/q/7623650</a> for more details. </p>
+<p class="enddd"><a class="anchor" id="_todo000026"></a>Consider implementing a sorting procedure rather than strictly enforcing that energies must be given in ascending order.  </p>
 </dd>
 <dt>Member <a class="el" href="classmarley_1_1_structure_database.html#a5f8c71d9a57616cf7b078eda3489a34b">marley::StructureDatabase::get_optical_model</a>  (int nucleus_pid)</dt>
 <dd><a class="anchor" id="_todo000029"></a>add check for invalid nucleus particle ID value  </dd>
 <dt>Member <a class="el" href="classmarley_1_1_target_atom.html#a89735595d5bae86c882d549e86c73560">marley::TargetAtom::operator int</a>  () const</dt>
 <dd><a class="anchor" id="_todo000041"></a>Make this "constexpr" eventually. There is a bug in GCC before version 7.2 that doesn't respect the C++14 standard. Clang 3.6 correctly recognizes use of "constexpr" for this function as valid. See <a href="https://stackoverflow.com/a/36489493">https://stackoverflow.com/a/36489493</a> for more details. For now, we'll drop "constexpr" to preserve compatibility with old versions of GCC.  </dd>
 <dt>Member <a class="el" href="classmarley_1_1_text_output_file.html#a8a865181bfe86107ffc1e3e26cd3414e">marley::TextOutputFile::write_flux_avg_tot_xsec</a>  (double avg_tot_xsec) override</dt>
-<dd><a class="anchor" id="_todo000023"></a>Consider other ways of handling this  </dd>
-<dt>Class <a class="el" href="classmarley_1_1_reaction.html">marley::Reaction</a>  </dt>
-<dd><a class="anchor" id="_todo000039"></a>Add check that projectile kinetic energy KEa &gt;= 0. for all relevant member functions of <a class="el" href="classmarley_1_1_reaction.html" title="Abstract base class that represents a two-two scattering reaction.">Reaction</a> and <a class="el" href="classmarley_1_1_nuclear_reaction.html" title="A neutrino-nucleus reaction.">NuclearReaction</a> </dd>
+<dd><a class="anchor" id="_todo000023"></a>Consider other ways of handling this </dd>
 </dl>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
