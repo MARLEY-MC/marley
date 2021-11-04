@@ -77,7 +77,9 @@ If you refer to MARLEY in academic work, please **always cite** the following
 reference:
 
 S. Gardiner, Simulating low-energy neutrino interactions with MARLEY,
-`arXiv:2101.11867 <http://arxiv.org/abs/2101.11867>`__ (2021).
+`Comput. Phys. Commun. 269, 108123
+<https://doi.org/10.1016/j.cpc.2021.108123>`__,
+`arXiv:2101.11867 [nucl-th] <https://arxiv.org/abs/2101.11867>`__ (2021).
 
 In publications which use the official reaction input files for
 charged-current scattering on argon-40 (i.e., any of the files
@@ -91,7 +93,8 @@ cite the paper describing their preparation:
 S. Gardiner, Nuclear de-excitations in low-energy charged-current
 |endOfPaperTitle|
 `Phys. Rev. C 103, 044604
-<https://doi.org/10.1103/PhysRevC.103.044604>`__ (2021).
+<https://doi.org/10.1103/PhysRevC.103.044604>`__,
+`arXiv:2010.02393 [nucl-th] <https://arxiv.org/abs/2010.02393>`__ (2021).
 
 Providing a citation for the MARLEY code itself is also encouraged and
 appreciated. To maximize reproducibility of published calculations, such
