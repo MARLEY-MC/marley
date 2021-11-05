@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -189,8 +189,6 @@ Additional Inherited Members</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Abstract base class for <a class="el" href="classmarley_1_1_exit_channel.html" title="Abstract base class for compound nucleus de-excitation channels.">ExitChannel</a> objects that lead to discrete nuclear levels in the final state. </p>
-
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8hh_source.html#l00160">160</a> of file <a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aff672280150843bf38e1bf822972668d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aff672280150843bf38e1bf822972668d">&#9670;&nbsp;</a></span>DiscreteExitChannel()</h2>
@@ -222,10 +220,6 @@ Additional Inherited Members</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8hh_source.html#l00164">164</a> of file <a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;: <a class="code" href="classmarley_1_1_discrete_exit_channel.html#a03a73955e4d8d1df834b655b53bf855e">final_level_</a>( flev ) {}</div>
-<div class="ttc" id="aclassmarley_1_1_discrete_exit_channel_html_a03a73955e4d8d1df834b655b53bf855e"><div class="ttname"><a href="classmarley_1_1_discrete_exit_channel.html#a03a73955e4d8d1df834b655b53bf855e">marley::DiscreteExitChannel::final_level_</a></div><div class="ttdeci">const marley::Level &amp; final_level_</div><div class="ttdoc">Reference to the final-state nuclear level.</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00180">ExitChannel.hh:180</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
@@ -309,24 +303,11 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Implements <a class="el" href="classmarley_1_1_exit_channel.html#a51520493b6d42acea31cd0aa4daf7222">marley::ExitChannel</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8cc_source.html#l00368">368</a> of file <a class="el" href="_exit_channel_8cc_source.html">ExitChannel.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;{</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  Exf = <a class="code" href="classmarley_1_1_discrete_exit_channel.html#a03a73955e4d8d1df834b655b53bf855e">final_level_</a>.<a class="code" href="classmarley_1_1_level.html#af52edeb699b7bb3b0c9695483620e513">energy</a>();</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  two_Jf = <a class="code" href="classmarley_1_1_discrete_exit_channel.html#a03a73955e4d8d1df834b655b53bf855e">final_level_</a>.<a class="code" href="classmarley_1_1_level.html#ad364d18ab3329db9e31f9b57ef42f05d">twoJ</a>();</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  Pf = <a class="code" href="classmarley_1_1_discrete_exit_channel.html#a03a73955e4d8d1df834b655b53bf855e">final_level_</a>.<a class="code" href="classmarley_1_1_level.html#aad47add697e6ee7ad136b05e487068bc">parity</a>();</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;  this-&gt;<a class="code" href="classmarley_1_1_exit_channel.html#adc59b81f9dcc9a9b0d3fe4729f0ac907">prepare_products</a>( compound_nucleus, emitted_particle,</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;    residual_nucleus, Exf, gen );</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_adc59b81f9dcc9a9b0d3fe4729f0ac907"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#adc59b81f9dcc9a9b0d3fe4729f0ac907">marley::ExitChannel::prepare_products</a></div><div class="ttdeci">virtual void prepare_products(const marley::Particle &amp;compound_nucleus, marley::Particle &amp;emitted_particle, marley::Particle &amp;residual_nucleus, double Exf, marley::Generator &amp;gen) const</div><div class="ttdoc">Helper function that prepares Particle objects representing the products of the two-body decay.</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8cc_source.html#l00380">ExitChannel.cc:380</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_level_html_aad47add697e6ee7ad136b05e487068bc"><div class="ttname"><a href="classmarley_1_1_level.html#aad47add697e6ee7ad136b05e487068bc">marley::Level::parity</a></div><div class="ttdeci">marley::Parity parity() const</div><div class="ttdoc">Get the level parity.</div><div class="ttdef"><b>Definition:</b> <a href="_level_8hh_source.html#l00126">Level.hh:126</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_level_html_ad364d18ab3329db9e31f9b57ef42f05d"><div class="ttname"><a href="classmarley_1_1_level.html#ad364d18ab3329db9e31f9b57ef42f05d">marley::Level::twoJ</a></div><div class="ttdeci">int twoJ() const</div><div class="ttdoc">Get two times the level spin.</div><div class="ttdef"><b>Definition:</b> <a href="_level_8hh_source.html#l00123">Level.hh:123</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_level_html_af52edeb699b7bb3b0c9695483620e513"><div class="ttname"><a href="classmarley_1_1_level.html#af52edeb699b7bb3b0c9695483620e513">marley::Level::energy</a></div><div class="ttdeci">double energy() const</div><div class="ttdoc">Get the excitation energy of this level (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_level_8hh_source.html#l00120">Level.hh:120</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_exit_channel_8cc_source.html">ExitChannel.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a></li>
+<li>/Users/gardiner/marley/src/ExitChannel.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

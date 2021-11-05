@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -260,8 +260,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Container for ingoing and outgoing momentum 4-vectors from a reaction. </p>
 <p>For a two-two scattering reaction a + b &rarr; c + d, this class calls the ingoing particles the projectile (a) and target (b). The outgoing particles are called the ejectile (c) and residue (d). If the residue is a composite particle (e.g., a nucleus), then the class member Ex_ stores its excitation energy just after the two-two reaction occurred. After MARLEY simulates its de-excitation, the residue <a class="el" href="classmarley_1_1_particle.html" title="Momentum four-vector for a simulated particle.">Particle</a> object will be in its ground state, and the final_particles_ member of this class will include <a class="el" href="classmarley_1_1_particle.html" title="Momentum four-vector for a simulated particle.">Particle</a> objects representing the de-excitation products. </p><dl class="section note"><dt>Note</dt><dd>This class manually manages memory (using the &ldquo;<a href="http://tinyurl.com/mohpthc">rule of 5</a>&rdquo;) for the <a class="el" href="classmarley_1_1_particle.html" title="Momentum four-vector for a simulated particle.">Particle</a> objects that it owns. A better implementation from a modern C++ perspective would be to use vectors of std::unique_ptr&lt;marley::Particle&gt; objects and let those manage the memory (i.e., use the &ldquo;<a href="http://tinyurl.com/mohpthc">rule of zero</a>&rdquo;). This design choice was made to ensure compatibility with ROOT 5, which cannot generate dictionaries for C++11 classes like std::unique_ptr. </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="_event_8hh_source.html#l00066">66</a> of file <a class="el" href="_event_8hh_source.html">Event.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a6575ae561babcbfe5825276716078004"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6575ae561babcbfe5825276716078004">&#9670;&nbsp;</a></span>Event()</h2>
@@ -331,19 +329,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_event_8cc_source.html#l00067">67</a> of file <a class="el" href="_event_8cc_source.html">Event.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  : <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>{<span class="keyword">new</span> <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>(a), <span class="keyword">new</span> <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>(b)},</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>{<span class="keyword">new</span> <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>(c), <span class="keyword">new</span> <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>(d)},</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <a class="code" href="classmarley_1_1_event.html#a692656324d67901318077b9e66730bd9">Ex_</a>(<a class="code" href="classmarley_1_1_event.html#a30ded16033c03ece50e30265f37ab746">Ex</a>), <a class="code" href="classmarley_1_1_event.html#ae67665e77f84c985377d27ad5bb30fec">twoJ_</a>(<a class="code" href="classmarley_1_1_event.html#ad177e72058664225f8d81fcfe77fdf5e">twoJ</a>), <a class="code" href="classmarley_1_1_event.html#a4fccc1026debae9045800b26c5136157">parity_</a>(P) {}</div>
-<div class="ttc" id="aclassmarley_1_1_event_html_a30ded16033c03ece50e30265f37ab746"><div class="ttname"><a href="classmarley_1_1_event.html#a30ded16033c03ece50e30265f37ab746">marley::Event::Ex</a></div><div class="ttdeci">double Ex() const</div><div class="ttdoc">Get the excitation energy of the residue just after the initial two-body reaction.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8hh_source.html#l00277">Event.hh:277</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_event_html_a4fccc1026debae9045800b26c5136157"><div class="ttname"><a href="classmarley_1_1_event.html#a4fccc1026debae9045800b26c5136157">marley::Event::parity_</a></div><div class="ttdeci">Parity parity_</div><div class="ttdoc">The parity of the residue immediately after the two-two scattering reaction.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8hh_source.html#l00257">Event.hh:257</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_event_html_a692656324d67901318077b9e66730bd9"><div class="ttname"><a href="classmarley_1_1_event.html#a692656324d67901318077b9e66730bd9">marley::Event::Ex_</a></div><div class="ttdeci">double Ex_</div><div class="ttdoc">Excitation energy (MeV) of the residue immediately after the two-two scattering reaction.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8hh_source.html#l00249">Event.hh:249</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_event_html_abbbb8a042cc295ac0495180bc7e94c2d"><div class="ttname"><a href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">marley::Event::final_particles_</a></div><div class="ttdeci">std::vector&lt; marley::Particle * &gt; final_particles_</div><div class="ttdoc">Vector of pointers to each of the final state particles.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8hh_source.html#l00243">Event.hh:243</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_event_html_abf5e19f7274d57680892735e709be87f"><div class="ttname"><a href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">marley::Event::initial_particles_</a></div><div class="ttdeci">std::vector&lt; marley::Particle * &gt; initial_particles_</div><div class="ttdoc">Vector of pointers to each of the initial state particles.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8hh_source.html#l00240">Event.hh:240</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_event_html_ad177e72058664225f8d81fcfe77fdf5e"><div class="ttname"><a href="classmarley_1_1_event.html#ad177e72058664225f8d81fcfe77fdf5e">marley::Event::twoJ</a></div><div class="ttdeci">int twoJ() const</div><div class="ttdoc">Get two times the spin of the residue just after the initial two-body reaction.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8hh_source.html#l00278">Event.hh:278</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_event_html_ae67665e77f84c985377d27ad5bb30fec"><div class="ttname"><a href="classmarley_1_1_event.html#ae67665e77f84c985377d27ad5bb30fec">marley::Event::twoJ_</a></div><div class="ttdeci">int twoJ_</div><div class="ttdoc">Two times the spin of the residue immediately after the two-two scattering reaction.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8hh_source.html#l00253">Event.hh:253</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html"><div class="ttname"><a href="classmarley_1_1_particle.html">marley::Particle</a></div><div class="ttdoc">Momentum four-vector for a simulated particle.</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00032">Particle.hh:32</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
@@ -411,32 +396,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_event_8cc_source.html#l00294">294</a> of file <a class="el" href="_event_8cc_source.html">Event.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;{</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;  <span class="comment">// Print the status code to begin the particle entry in the HEPEVT record</span></div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;  os &lt;&lt; status &lt;&lt; <span class="charliteral">&#39; &#39;</span>;</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160; </div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;  <span class="comment">// TODO: improve this entry to give the user more control over the vertex</span></div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;  <span class="comment">// location and to reflect the parent-daughter relationships between</span></div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  <span class="comment">// particles.</span></div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  <span class="comment">// Convert from MARLEY natural units (MeV) to GeV for the HEPEVT format</span></div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  os &lt;&lt; p.<a class="code" href="classmarley_1_1_particle.html#ada55220bcb27e937651247ef2d7fa827">pdg_code</a>() &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; jmohep1 &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; jmohep2 &lt;&lt; <span class="stringliteral">&quot; 0 0 &quot;</span></div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    &lt;&lt; p.<a class="code" href="classmarley_1_1_particle.html#ae159dfaa1898dd408aa1cc05748f0b52">px</a>() / GEV_TO_MEV &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; p.<a class="code" href="classmarley_1_1_particle.html#a71d228872bfec238d09550e4420ea58d">py</a>() / GEV_TO_MEV</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; p.<a class="code" href="classmarley_1_1_particle.html#ad44fec71754aeeb7313bcfd6a008201a">pz</a>() / GEV_TO_MEV &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; p.<a class="code" href="classmarley_1_1_particle.html#abfb1fc1a44a837fc715d6cc7e14a1797">total_energy</a>() / GEV_TO_MEV</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; p.<a class="code" href="classmarley_1_1_particle.html#a1654aa6b7f98ecf3247476e13ba8d6de">mass</a>() / GEV_TO_MEV</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;    <span class="comment">// The spacetime origin is currently used as the initial position 4-vector</span></div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    <span class="comment">// for all particles</span></div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    &lt;&lt; <span class="stringliteral">&quot; 0. 0. 0. 0.&quot;</span> &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_a1654aa6b7f98ecf3247476e13ba8d6de"><div class="ttname"><a href="classmarley_1_1_particle.html#a1654aa6b7f98ecf3247476e13ba8d6de">marley::Particle::mass</a></div><div class="ttdeci">double mass() const</div><div class="ttdoc">Get the particle's mass (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00176">Particle.hh:176</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_a71d228872bfec238d09550e4420ea58d"><div class="ttname"><a href="classmarley_1_1_particle.html#a71d228872bfec238d09550e4420ea58d">marley::Particle::py</a></div><div class="ttdeci">double py() const</div><div class="ttdoc">Get the y component of the particle's 3-momentum (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00186">Particle.hh:186</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_abfb1fc1a44a837fc715d6cc7e14a1797"><div class="ttname"><a href="classmarley_1_1_particle.html#abfb1fc1a44a837fc715d6cc7e14a1797">marley::Particle::total_energy</a></div><div class="ttdeci">double total_energy() const</div><div class="ttdoc">Get the particle's total energy (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00179">Particle.hh:179</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_ad44fec71754aeeb7313bcfd6a008201a"><div class="ttname"><a href="classmarley_1_1_particle.html#ad44fec71754aeeb7313bcfd6a008201a">marley::Particle::pz</a></div><div class="ttdeci">double pz() const</div><div class="ttdoc">Get the z component of the particle's 3-momentum (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00189">Particle.hh:189</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_ada55220bcb27e937651247ef2d7fa827"><div class="ttname"><a href="classmarley_1_1_particle.html#ada55220bcb27e937651247ef2d7fa827">marley::Particle::pdg_code</a></div><div class="ttdeci">int pdg_code() const</div><div class="ttdoc">Get the Particle Data Group code for this particle.</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00192">Particle.hh:192</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_ae159dfaa1898dd408aa1cc05748f0b52"><div class="ttname"><a href="classmarley_1_1_particle.html#ae159dfaa1898dd408aa1cc05748f0b52">marley::Particle::px</a></div><div class="ttdeci">double px() const</div><div class="ttdoc">Get the x component of the particle's 3-momentum (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00183">Particle.hh:183</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_particle_8hh_source.html#l00176">marley::Particle::mass()</a>, <a class="el" href="_particle_8hh_source.html#l00192">marley::Particle::pdg_code()</a>, <a class="el" href="_particle_8hh_source.html#l00183">marley::Particle::px()</a>, <a class="el" href="_particle_8hh_source.html#l00186">marley::Particle::py()</a>, <a class="el" href="_particle_8hh_source.html#l00189">marley::Particle::pz()</a>, and <a class="el" href="_particle_8hh_source.html#l00179">marley::Particle::total_energy()</a>.</p>
-
 </div>
 </div>
 <a id="a0133a8450d147f055d77d78f9b0b2866"></a>
@@ -476,13 +435,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
   </table>
   </dd>
 </dl>
-
-<p class="definition">Definition at line <a class="el" href="_event_8hh_source.html#l00303">303</a> of file <a class="el" href="_event_8hh_source.html">Event.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;                                                                       {</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;    <span class="keywordflow">return</span> *<a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.at( idx );</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  }</div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_event_8hh_source.html#l00243">final_particles_</a>.</p>
 
 </div>
 </div>
@@ -524,13 +476,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_event_8hh_source.html#l00299">299</a> of file <a class="el" href="_event_8hh_source.html">Event.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;                                                                         {</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    <span class="keywordflow">return</span> *<a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>.at( idx );</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;  }</div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_event_8hh_source.html#l00240">initial_particles_</a>.</p>
-
 </div>
 </div>
 <a id="a03ab65e4644588cfd2704d8d04745b18"></a>
@@ -557,24 +502,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_event_8cc_source.html#l00226">226</a> of file <a class="el" href="_event_8cc_source.html">Event.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;                                             {</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;  <span class="comment">// Use an temporary ostringstream object so that we can ensure all</span></div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;  <span class="comment">// floating-point values are output with full precision without disturbing</span></div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;  <span class="comment">// the user&#39;s settings in the &quot;out&quot; stream.</span></div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  std::ostringstream temp;</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;  temp &lt;&lt; std::scientific;</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;  temp.precision(std::numeric_limits&lt;double&gt;::max_digits10);</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160; </div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;  temp &lt;&lt; <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>.size() &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.size()</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;    &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; <a class="code" href="classmarley_1_1_event.html#a692656324d67901318077b9e66730bd9">Ex_</a> &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; <a class="code" href="classmarley_1_1_event.html#ae67665e77f84c985377d27ad5bb30fec">twoJ_</a> &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; <a class="code" href="classmarley_1_1_event.html#a4fccc1026debae9045800b26c5136157">parity_</a> &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160; </div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> i : <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>) temp &lt;&lt; *i &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> f : <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>) temp &lt;&lt; *f &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160; </div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;  out &lt;&lt; temp.str();</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;}</div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="a625dc83512f4d1ee9032b917e5838b44"></a>
@@ -612,36 +539,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_event_8cc_source.html#l00641">641</a> of file <a class="el" href="_event_8cc_source.html">Event.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;                                                                     {</div>
-<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;  out &lt;&lt; <span class="stringliteral">&quot;\n*** MARLEY Event &quot;</span>;</div>
-<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;  <span class="keywordflow">if</span> ( num &gt;= 0 ) out &lt;&lt; num &lt;&lt; <span class="charliteral">&#39; &#39;</span>;</div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;  out &lt;&lt; <span class="stringliteral">&quot;has &quot;</span> &lt;&lt; this-&gt;<a class="code" href="classmarley_1_1_event.html#a4995a8204d92f61597853ff76cdb6d40">get_initial_particles</a>().size()</div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;    &lt;&lt; <span class="stringliteral">&quot; initial particles and &quot;</span> &lt;&lt; this-&gt;<a class="code" href="classmarley_1_1_event.html#a48daf3c973ea9c498931f6e47bb219c5">get_final_particles</a>().size()</div>
-<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;    &lt;&lt; <span class="stringliteral">&quot; final particles. ***&quot;</span> &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160; </div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="classmarley_1_1_event.html#ad177e72058664225f8d81fcfe77fdf5e">twoJ</a> = this-&gt;<a class="code" href="classmarley_1_1_event.html#ad177e72058664225f8d81fcfe77fdf5e">twoJ</a>();</div>
-<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;  <span class="keywordtype">bool</span> twoJ_is_odd = ( <a class="code" href="classmarley_1_1_event.html#ad177e72058664225f8d81fcfe77fdf5e">twoJ</a> % 2 == 1 );</div>
-<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;  out &lt;&lt; <span class="stringliteral">&quot;The residual nucleus initially had excitation energy &quot;</span></div>
-<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;    &lt;&lt; this-&gt;<a class="code" href="classmarley_1_1_event.html#a30ded16033c03ece50e30265f37ab746">Ex</a>() &lt;&lt; <span class="stringliteral">&quot; MeV and spin-parity &quot;</span>;</div>
-<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;  <span class="keywordflow">if</span> ( twoJ_is_odd ) out &lt;&lt; <a class="code" href="classmarley_1_1_event.html#ad177e72058664225f8d81fcfe77fdf5e">twoJ</a> &lt;&lt; <span class="stringliteral">&quot;/2&quot;</span>;</div>
-<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;  <span class="keywordflow">else</span> out &lt;&lt; <a class="code" href="classmarley_1_1_event.html#ad177e72058664225f8d81fcfe77fdf5e">twoJ</a> / 2;</div>
-<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;  out &lt;&lt; this-&gt;<a class="code" href="classmarley_1_1_event.html#ae4b1a119d18a0ea07643056e97f82fc3">parity</a>() &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160; </div>
-<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;  out &lt;&lt; <span class="stringliteral">&quot;Initial particles&quot;</span> &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;  <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>* p = NULL;</div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0u; i &lt; this-&gt;<a class="code" href="classmarley_1_1_event.html#a4995a8204d92f61597853ff76cdb6d40">get_initial_particles</a>().size(); ++i) {</div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;    print_particle_info( out, *this-&gt;<a class="code" href="classmarley_1_1_event.html#a4995a8204d92f61597853ff76cdb6d40">get_initial_particles</a>().at(i) );</div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;  }</div>
-<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;  out &lt;&lt; <span class="stringliteral">&quot;Final particles&quot;</span> &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0u; i &lt; this-&gt;<a class="code" href="classmarley_1_1_event.html#a48daf3c973ea9c498931f6e47bb219c5">get_final_particles</a>().size(); ++i) {</div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;    print_particle_info( out, *this-&gt;<a class="code" href="classmarley_1_1_event.html#a48daf3c973ea9c498931f6e47bb219c5">get_final_particles</a>().at(i) );</div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;  }</div>
-<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_event_html_a48daf3c973ea9c498931f6e47bb219c5"><div class="ttname"><a href="classmarley_1_1_event.html#a48daf3c973ea9c498931f6e47bb219c5">marley::Event::get_final_particles</a></div><div class="ttdeci">const std::vector&lt; marley::Particle * &gt; &amp; get_final_particles() const</div><div class="ttdoc">Get a const reference to the vector of final particles.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8hh_source.html#l00287">Event.hh:287</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_event_html_a4995a8204d92f61597853ff76cdb6d40"><div class="ttname"><a href="classmarley_1_1_event.html#a4995a8204d92f61597853ff76cdb6d40">marley::Event::get_initial_particles</a></div><div class="ttdeci">const std::vector&lt; marley::Particle * &gt; &amp; get_initial_particles() const</div><div class="ttdoc">Get a const reference to the vector of initial particles.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8hh_source.html#l00281">Event.hh:281</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_event_html_ae4b1a119d18a0ea07643056e97f82fc3"><div class="ttname"><a href="classmarley_1_1_event.html#ae4b1a119d18a0ea07643056e97f82fc3">marley::Event::parity</a></div><div class="ttdeci">marley::Parity parity() const</div><div class="ttdoc">Get the intrinsic parity of the residue just after the initial two-body reaction.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8hh_source.html#l00279">Event.hh:279</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="aeb9e68e8d40d229cf98de96f47885967"></a>
@@ -668,58 +565,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_event_8cc_source.html#l00243">243</a> of file <a class="el" href="_event_8cc_source.html">Event.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;                                     {</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;  this-&gt;<a class="code" href="classmarley_1_1_event.html#a841e5afb0bf71d35382ec26ed7f4d856">clear</a>();</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160; </div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;  <span class="keywordtype">int</span> num_initial;</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;  <span class="keywordtype">int</span> num_final;</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160; </div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;  in &gt;&gt; num_initial &gt;&gt; num_final &gt;&gt; <a class="code" href="classmarley_1_1_event.html#a692656324d67901318077b9e66730bd9">Ex_</a> &gt;&gt; <a class="code" href="classmarley_1_1_event.html#ae67665e77f84c985377d27ad5bb30fec">twoJ_</a> &gt;&gt; <a class="code" href="classmarley_1_1_event.html#a4fccc1026debae9045800b26c5136157">parity_</a>;</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160; </div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  <span class="comment">// If reading the event header line failed for some</span></div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;  <span class="comment">// reason, just return without trying to do anything else.</span></div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  <span class="keywordflow">if</span> ( !in ) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160; </div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  <span class="comment">// If we have invalid numbers of particles in either the initial or final</span></div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;  <span class="comment">// state (there need to be at least two in each and we can&#39;t fill memory when</span></div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  <span class="comment">// allocating space for them) then complain by throwing an error</span></div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  <span class="keywordflow">if</span> ( num_initial &lt; 2 || <span class="keyword">static_cast&lt;</span><span class="keywordtype">size_t</span><span class="keyword">&gt;</span>(num_initial)</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;    &gt; <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>.max_size() )</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;  {</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Invalid number of initial state particles (&quot;</span></div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;      + std::to_string(num_initial) + <span class="stringliteral">&quot;) encountered in marley::Event::read()&quot;</span>);</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;  }</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> ( num_final &lt; 2 || <span class="keyword">static_cast&lt;</span><span class="keywordtype">size_t</span><span class="keyword">&gt;</span>(num_final)</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    &gt; <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.max_size() )</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;  {</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Invalid number of final state particles (&quot;</span></div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;      + std::to_string(num_final) + <span class="stringliteral">&quot;) encountered in marley::Event::read()&quot;</span>);</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  }</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160; </div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;  <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>.resize( num_initial );</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.resize( num_final );</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160; </div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; num_initial; ++i) {</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>* p = <span class="keyword">new</span> <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>;</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    in &gt;&gt; *p;</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="keywordflow">if</span> ( !in ) <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Parse error while reading initial&quot;</span></div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;      <span class="stringliteral">&quot; particle #&quot;</span> + std::to_string(i) + <span class="stringliteral">&quot; from an ASCII-format event&quot;</span></div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;      <span class="stringliteral">&quot; record&quot;</span>);</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>.at(i) = p;</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;  }</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">int</span> f = 0; f &lt; num_final; ++f) {</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>* p = <span class="keyword">new</span> <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>;</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    in &gt;&gt; *p;</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    <span class="keywordflow">if</span> ( !in ) <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Parse error while reading final&quot;</span></div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;      <span class="stringliteral">&quot; particle #&quot;</span> + std::to_string(f) + <span class="stringliteral">&quot; from an ASCII-format event&quot;</span></div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;      <span class="stringliteral">&quot; record&quot;</span>);</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.at(f) = p;</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;  }</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_error_html"><div class="ttname"><a href="classmarley_1_1_error.html">marley::Error</a></div><div class="ttdoc">Base class for all exceptions thrown by MARLEY functions.</div><div class="ttdef"><b>Definition:</b> <a href="_error_8hh_source.html#l00032">Error.hh:32</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_event_html_a841e5afb0bf71d35382ec26ed7f4d856"><div class="ttname"><a href="classmarley_1_1_event.html#a841e5afb0bf71d35382ec26ed7f4d856">marley::Event::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">Deletes all particles from the event and resets the nuclear excitation energy to zero.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8cc_source.html#l00212">Event.cc:212</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="a7abad21f00f25cd15c271dce71c5a9f9"></a>
@@ -756,207 +601,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 <li>Zero of the particles with status code HEPEVT_FINAL_STATE_STATUS_CODE are ions <dl class="section return"><dt>Returns</dt><dd>True if the input stream was in a good state after attempting to read in the full HEPEVT record, or false otherwise. This behavior is designed to enable the return value of this function to be used as a while loop condition when reading in multiple HEPEVT records from an input stream. If the return value is false, the event object contents will have been cleared by this function. </dd></dl>
 </li>
 </ul>
-
-<p class="definition">Definition at line <a class="el" href="_event_8cc_source.html#l00380">380</a> of file <a class="el" href="_event_8cc_source.html">Event.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;{</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  <span class="comment">// If flux_avg_tot_xsec is not null, then clear any previous value there</span></div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  <span class="comment">// before continuing. It will be loaded with a new value below if we</span></div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  <span class="comment">// find a dummy particle encoding extra MARLEY-specific information in</span></div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  <span class="comment">// the input HEPEVT record.</span></div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  <span class="keywordflow">if</span> ( flux_avg_tot_xsec ) *flux_avg_tot_xsec = 0.;</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160; </div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  <span class="comment">// Remove any pre-existing contents in this event</span></div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  this-&gt;<a class="code" href="classmarley_1_1_event.html#a841e5afb0bf71d35382ec26ed7f4d856">clear</a>();</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160; </div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;  <span class="comment">// Check that the event contains exactly two initial-state particles</span></div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;  <span class="keywordtype">size_t</span> initial_state_particles = 0u;</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;  <span class="comment">// Check that one of the initial-state particles is an atom (ion)</span></div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  <span class="keywordtype">size_t</span> initial_state_ions = 0u;</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;  <span class="comment">// Check that the event contains exactly one final-state lepton</span></div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  <span class="keywordtype">size_t</span> final_state_leptons = 0u;</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  <span class="comment">// Check that the event contains at least one final-state ion</span></div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  <span class="keywordtype">size_t</span> final_state_ions = 0u;</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160; </div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  <span class="comment">// Initial indices of the final lepton and largest final ion (as judged</span></div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;  <span class="comment">// by the mass number A) in the final_particles_</span></div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;  <span class="comment">// vector. These will be used below to move them into the correct order.</span></div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  <span class="keywordtype">size_t</span> final_lepton_idx = 0u;</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  <span class="keywordtype">size_t</span> largest_final_ion_idx = 0u;</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;  <span class="keywordtype">int</span> largest_A = 0;</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160; </div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;  <span class="keywordtype">int</span> event_num; <span class="comment">// HEPEVT event number (ignored)</span></div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;  <span class="keywordtype">int</span> num_particles; <span class="comment">// Total number of particles stored in the event</span></div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;  in &gt;&gt; event_num  &gt;&gt; num_particles;</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160; </div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;  <span class="comment">// If reading the first line failed for some</span></div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;  <span class="comment">// reason, just return without trying to do anything else.</span></div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;  <span class="keywordflow">if</span> ( !in ) <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160; </div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;  <span class="comment">// If the number of particles in the event is negative or extremely</span></div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;  <span class="comment">// huge (so that it would overload memory) then throw a marley::Error</span></div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  <span class="keywordflow">if</span> ( num_particles &lt; 0 || <span class="keyword">static_cast&lt;</span><span class="keywordtype">size_t</span><span class="keyword">&gt;</span>(num_particles)</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;    &gt; <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>.max_size() )</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  {</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;    <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Invalid number of particles (&quot;</span></div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;      + std::to_string(num_particles) + <span class="stringliteral">&quot;) encountered in marley::&quot;</span></div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;      <span class="stringliteral">&quot;Event::read_hepevt()&quot;</span>);</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;  }</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160; </div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;  <span class="comment">// Dummy variables used to skip HEPEVT fields that MARLEY doesn&#39;t</span></div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;  <span class="comment">// care about (e.g., the particle production vertex 4-position)</span></div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;  <span class="keywordtype">int</span> dummy_int;</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;  <span class="keywordtype">double</span> dummy_double;</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160; </div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;  <span class="comment">// Fields that we do care about</span></div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;  <span class="keywordtype">double</span> Etot, px, py, pz, M;</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;  <span class="keywordtype">int</span> status_code, pdg, jmohep1, jmohep2;</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;  <span class="keywordflow">for</span> ( <span class="keywordtype">int</span> p = 0; p &lt; num_particles; ++p ) {</div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160; </div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;    in &gt;&gt; status_code &gt;&gt; pdg &gt;&gt; jmohep1 &gt;&gt; jmohep2;</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160; </div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;    <span class="comment">// Skip the JDAHEP1 and JDAHEP2 fields (daughter indices)</span></div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;    <span class="keywordflow">for</span> ( <span class="keywordtype">int</span> j = 0; j &lt; 2; ++j ) in &gt;&gt; dummy_int;</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160; </div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    <span class="comment">// Read in the particle 4-momentum and mass.</span></div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;    in &gt;&gt; px &gt;&gt; py &gt;&gt; pz &gt;&gt; Etot &gt;&gt; M;</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160; </div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    <span class="comment">// Skip the VHEP1 through VHEP4 fields (production vertex 4-position)</span></div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="keywordflow">for</span> ( <span class="keywordtype">int</span> j = 0; j &lt; 4; ++j ) in &gt;&gt; dummy_double;</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160; </div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;    <span class="keywordflow">if</span> ( !in ) <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Parse error while reading  particle #&quot;</span></div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;      + std::to_string(p) + <span class="stringliteral">&quot; from a HEPEVT-format event record&quot;</span>);</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160; </div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;    <span class="comment">// If the particle has this status code, it is a dummy particle that</span></div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="comment">// contains MARLEY-specific information</span></div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    <span class="keywordflow">if</span> ( status_code == HEPEVT_MARLEY_INFO_STATUS_CODE ) {</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;      <span class="comment">// The dummy particle total energy stores the nuclear excitation energy.</span></div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;      <span class="comment">// This value can be reconstructed (with some effort) from the</span></div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;      <span class="comment">// particle four-vectors, but just storing it is a lot easier.</span></div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;      <a class="code" href="classmarley_1_1_event.html#a692656324d67901318077b9e66730bd9">Ex_</a> = Etot;</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;      <span class="comment">// The dummy particle mass stores the flux-averaged total cross section.</span></div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;      <span class="comment">// If the user passed something other than a nullptr as the</span></div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;      <span class="comment">// flux_avg_tot_xsec argument to this function, then load it</span></div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;      <span class="comment">// with this value, which is not normally stored in the marley::Event</span></div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;      <span class="comment">// itself.</span></div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;      <span class="keywordflow">if</span> ( flux_avg_tot_xsec ) *flux_avg_tot_xsec = M;</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;      <span class="comment">// The JMOHEP1 field contains two times the residue spin immediately</span></div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;      <span class="comment">// following the initial two-two scattering reaction</span></div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;      <a class="code" href="classmarley_1_1_event.html#ae67665e77f84c985377d27ad5bb30fec">twoJ_</a> = jmohep1;</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;      <span class="comment">// The JMOHEP2 field contains an integer representation of the residue</span></div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;      <span class="comment">// parity immediately following the initial two-two scattering reaction</span></div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;      <a class="code" href="classmarley_1_1_event.html#a4fccc1026debae9045800b26c5136157">parity_</a> = jmohep2;</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;    }</div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160; </div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;    <span class="comment">// If the particle has a status code other than the two used by</span></div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;    <span class="comment">// MARLEY, then don&#39;t bother to record the particle in the event object</span></div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;    <span class="keywordflow">if</span> ( status_code != HEPEVT_INITIAL_STATE_STATUS_CODE</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;      &amp;&amp; status_code != HEPEVT_FINAL_STATE_STATUS_CODE ) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160; </div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;    <span class="comment">// Convert the particle 4-momentum components and mass from GeV (used in</span></div>
-<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;    <span class="comment">// the HEPEVT format) to MARLEY natural units (MeV)</span></div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;    px *= GEV_TO_MEV;</div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;    py *= GEV_TO_MEV;</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;    pz *= GEV_TO_MEV;</div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;    Etot *= GEV_TO_MEV;</div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;    M *= GEV_TO_MEV;</div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160; </div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;    <span class="comment">// We already checked that the particle has a status code recognized</span></div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;    <span class="comment">// by MARLEY above, so store it in the event object in the appropriate</span></div>
-<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;    <span class="comment">// place.</span></div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;    <span class="keywordflow">if</span> ( status_code == HEPEVT_INITIAL_STATE_STATUS_CODE ) {</div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;      <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>.push_back(</div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;        <span class="keyword">new</span> <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>(pdg, Etot, px, py, pz, M) );</div>
-<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;      ++initial_state_particles;</div>
-<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;      <span class="keywordflow">if</span> ( marley_utils::is_ion(pdg) ) ++initial_state_ions;</div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;    }</div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;    <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;      <span class="comment">// status_code == HEPEVT_FINAL_STATE_STATUS_CODE</span></div>
-<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;      <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.push_back(</div>
-<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;        <span class="keyword">new</span> <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>(pdg, Etot, px, py, pz, M) );</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;      <span class="keywordflow">if</span> ( marley_utils::is_lepton(pdg) ) {</div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;        ++final_state_leptons;</div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;        final_lepton_idx = <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.size() - 1;</div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;      }</div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;      <span class="keywordflow">if</span> ( marley_utils::is_ion(pdg) ) {</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;        ++final_state_ions;</div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;        <span class="comment">// Update the index of the largest final ion</span></div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;        <span class="keywordtype">int</span> A = marley_utils::get_particle_A( pdg ); <span class="comment">// mass number</span></div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;        <span class="keywordflow">if</span> ( A &gt; largest_A ) {</div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;          largest_A = A;</div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;          largest_final_ion_idx = <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.size() - 1;</div>
-<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;        }</div>
-<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;      }</div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;    }</div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;  }</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160; </div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;  <span class="comment">// Check that the event satisfies the criteria needed for a reasonable</span></div>
-<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;  <span class="comment">// marley::Event</span></div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;  <span class="keywordflow">if</span> ( initial_state_particles != 2u ) <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(</div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;    std::to_string(initial_state_particles) + <span class="stringliteral">&quot; initial-state particles&quot;</span></div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;    <span class="stringliteral">&quot; encountered while reading HEPEVT input&quot;</span>);</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> ( initial_state_ions != 1u ) <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Multiple&quot;</span></div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;    <span class="stringliteral">&quot; initial-state ions encountered while reading HEPEVT input&quot;</span>);</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> ( final_state_leptons != 1u ) <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Multiple&quot;</span></div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;    <span class="stringliteral">&quot; final-state leptons encountered while reading HEPEVT input&quot;</span>);</div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> ( final_state_ions &lt; 1u ) <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Zero&quot;</span></div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;    <span class="stringliteral">&quot; final-state ions encountered while reading HEPEVT input&quot;</span>);</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160; </div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;  <span class="comment">// Reorder (if needed) the initial particle list to ensure that the target</span></div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;  <span class="comment">// (the initial atom) appears in the correct position. This is required</span></div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;  <span class="comment">// because marley::Event objects rely on the ordering of the</span></div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;  <span class="comment">// initial_particles_ array to allow easy retrieval of the projectile and</span></div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;  <span class="comment">// target.</span></div>
-<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;  <span class="keyword">auto</span> target_iter = <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>.begin() + TARGET_INDEX;</div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;  <span class="keywordflow">if</span> ( !marley_utils::is_ion( (*target_iter)-&gt;pdg_code() ) ) {</div>
-<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;    <span class="keyword">auto</span> begin_ip = <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>.begin();</div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;    std::iter_swap( begin_ip, begin_ip + 1 );</div>
-<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;  }</div>
-<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160; </div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;  <span class="comment">// Play the same sort of game with the final particles. This will ensure that</span></div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;  <span class="comment">// the ejectile and residue are stored in the correct places.</span></div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;  <span class="keyword">auto</span> begin_fp = <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.begin();</div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;  <span class="keywordflow">if</span> ( final_lepton_idx != EJECTILE_INDEX ) {</div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;    std::iter_swap( begin_fp + EJECTILE_INDEX, begin_fp + final_lepton_idx );</div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;  }</div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;  <span class="keywordflow">if</span> ( largest_final_ion_idx != RESIDUE_INDEX ) {</div>
-<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;    std::iter_swap( begin_fp + RESIDUE_INDEX, begin_fp + largest_final_ion_idx );</div>
-<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;  }</div>
-<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160; </div>
-<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;  <span class="comment">// The marley::Particle constructor that we used above assumes that all ion</span></div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;  <span class="comment">// PDG codes passed to it represent fully ionized particles. Here we will</span></div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;  <span class="comment">// override this behavior and assume instead that the target atom has</span></div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;  <span class="comment">// zero net charge in the initial state.</span></div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;  this-&gt;<a class="code" href="classmarley_1_1_event.html#a7b7b623f50a873741b97b8969370f73f">target</a>().<a class="code" href="classmarley_1_1_particle.html#a4ecdc5bc636cb4de700835b4cc61193c">set_charge</a>( 0 );</div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160; </div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;  <span class="comment">// Determine the correct ionization state immediately following the prompt</span></div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;  <span class="comment">// 2--&gt;2 scattering reaction. Do this by assuming that the target atom is</span></div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;  <span class="comment">// neutral (see above). This implies that the final ion charge must be equal</span></div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;  <span class="comment">// and opposite to that of the final lepton.</span></div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;  <span class="keywordtype">int</span> Qf_ion = -this-&gt;<a class="code" href="classmarley_1_1_event.html#aa6db6fe3adaa0ef0d36988b7d86c83aa">ejectile</a>().<a class="code" href="classmarley_1_1_particle.html#a970bf62a4f11dd9ed9a87562dab3ee53">charge</a>();</div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160; </div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;  <span class="comment">// Get the nuclear residue net electric charge by summing all final-state</span></div>
-<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;  <span class="comment">// ions besides the residue itself. The difference between this sum and the</span></div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;  <span class="comment">// pre-de-excitation ion charge is the charge that should be used.</span></div>
-<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;  <span class="keywordtype">int</span> sum_Q_final_ions = 0;</div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;  <span class="keywordflow">for</span> ( <span class="keywordtype">size_t</span> f = 0u; f &lt; <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.size(); ++f ) {</div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    <span class="keywordflow">if</span> ( f == RESIDUE_INDEX ) <span class="keywordflow">continue</span>; <span class="comment">// skip the residue</span></div>
-<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160; </div>
-<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span>&amp; fp = <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.at( f );</div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;    <span class="keywordtype">int</span> pdg_f = fp-&gt;pdg_code();</div>
-<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;    <span class="keywordflow">if</span> ( marley_utils::is_ion(pdg_f) ) sum_Q_final_ions += fp-&gt;charge();</div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;  }</div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;  this-&gt;<a class="code" href="classmarley_1_1_event.html#a25e87ab8c9e1c82c7036576776b037d0">residue</a>().<a class="code" href="classmarley_1_1_particle.html#a4ecdc5bc636cb4de700835b4cc61193c">set_charge</a>( Qf_ion - sum_Q_final_ions );</div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160; </div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;  <span class="comment">// Everything was read in successfully. We&#39;re done!</span></div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_event_html_a25e87ab8c9e1c82c7036576776b037d0"><div class="ttname"><a href="classmarley_1_1_event.html#a25e87ab8c9e1c82c7036576776b037d0">marley::Event::residue</a></div><div class="ttdeci">const marley::Particle &amp; residue() const</div><div class="ttdoc">Get a const reference to the residue.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8cc_source.html#l00198">Event.cc:198</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_event_html_a7b7b623f50a873741b97b8969370f73f"><div class="ttname"><a href="classmarley_1_1_event.html#a7b7b623f50a873741b97b8969370f73f">marley::Event::target</a></div><div class="ttdeci">const marley::Particle &amp; target() const</div><div class="ttdoc">Get a const reference to the target.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8cc_source.html#l00190">Event.cc:190</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_event_html_aa6db6fe3adaa0ef0d36988b7d86c83aa"><div class="ttname"><a href="classmarley_1_1_event.html#aa6db6fe3adaa0ef0d36988b7d86c83aa">marley::Event::ejectile</a></div><div class="ttdeci">const marley::Particle &amp; ejectile() const</div><div class="ttdoc">Get a const reference to the ejectile.</div><div class="ttdef"><b>Definition:</b> <a href="_event_8cc_source.html#l00194">Event.cc:194</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_a4ecdc5bc636cb4de700835b4cc61193c"><div class="ttname"><a href="classmarley_1_1_particle.html#a4ecdc5bc636cb4de700835b4cc61193c">marley::Particle::set_charge</a></div><div class="ttdeci">void set_charge(int q)</div><div class="ttdoc">Set the particle's charge.</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00195">Particle.hh:195</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_a970bf62a4f11dd9ed9a87562dab3ee53"><div class="ttname"><a href="classmarley_1_1_particle.html#a970bf62a4f11dd9ed9a87562dab3ee53">marley::Particle::charge</a></div><div class="ttdeci">double charge() const</div><div class="ttdoc">Get the particle's charge in units of the proton charge.</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00194">Particle.hh:194</a></div></div>
-</div><!-- fragment -->
-<p class="reference">Referenced by <a class="el" href="_event_file_reader_8cc_source.html#l00037">marley::EventFileReader::deduce_file_format()</a>.</p>
 
 </div>
 </div>
@@ -1003,54 +647,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 </dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000033">Todo:</a></b></dt><dd>Alter <a class="el" href="classmarley_1_1_event.html#ac868412e5ceb2c30aa3612c1273dcede" title="Write a HEPEVT record for this event to a std::ostream. Use the spacetime origin (t = 0 mm/c,...">marley::Event::write_hepevt()</a> so that the user can specify a vertex position 4-vector to use. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_event_8cc_source.html#l00313">313</a> of file <a class="el" href="_event_8cc_source.html">Event.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;{</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;  <span class="comment">// Use an temporary ostringstream object so that we can ensure all</span></div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  <span class="comment">// floating-point values are output with full precision without disturbing</span></div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  <span class="comment">// the user&#39;s settings in the &quot;out&quot; stream.</span></div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;  std::ostringstream temp;</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;  temp.precision( std::numeric_limits&lt;double&gt;::max_digits10 );</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;  temp &lt;&lt; std::scientific;</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160; </div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;  <span class="comment">// Create a dummy particle that encodes extra MARLEY-specific information in</span></div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;  <span class="comment">// the HEPEVT format. Preserve MARLEY natural units for these quantities</span></div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;  <span class="comment">// (MeV) by pre-multiplying by the conversion factor used in</span></div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;  <span class="comment">// dump_hepevt_particle()</span></div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;  <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a> dummy_particle;</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;  dummy_particle.<a class="code" href="classmarley_1_1_particle.html#a4b5359afab7a2d03fcae8649f27beea2">set_total_energy</a>( <a class="code" href="classmarley_1_1_event.html#a692656324d67901318077b9e66730bd9">Ex_</a> * GEV_TO_MEV );</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;  dummy_particle.<a class="code" href="classmarley_1_1_particle.html#a12afb368a88434e445827b03f79c3bcc">set_mass</a>( flux_avg_tot_xsec * GEV_TO_MEV );</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160; </div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  <span class="comment">// Add one to the total particle count so that our dummy particle will be</span></div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  <span class="comment">// included correctly</span></div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;  <span class="keywordtype">size_t</span> num_particles = 1 + <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>.size()</div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;    + <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>.size();</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160; </div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;  <span class="comment">// Write the HEPEVT header line to the event record</span></div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;  temp &lt;&lt; event_num  &lt;&lt; <span class="charliteral">&#39; &#39;</span> &lt;&lt; num_particles &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160; </div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;  <span class="comment">// Write the initial particles to the event record</span></div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> i : <a class="code" href="classmarley_1_1_event.html#abf5e19f7274d57680892735e709be87f">initial_particles_</a>) <a class="code" href="classmarley_1_1_event.html#a04091a24b9c11ad4e87ef08ec72b965d">dump_hepevt_particle</a>(*i, temp,</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    HEPEVT_INITIAL_STATE_STATUS_CODE);</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160; </div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;  <span class="comment">// Write our dummy particle to the event record</span></div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;  <span class="comment">// We use the jmohep1 slot to record the twoJ_ data member and the jmohep2</span></div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;  <span class="comment">// slot to record the parity_ data member (both as integers)</span></div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;  <a class="code" href="classmarley_1_1_event.html#a04091a24b9c11ad4e87ef08ec72b965d">dump_hepevt_particle</a>( dummy_particle, temp, HEPEVT_MARLEY_INFO_STATUS_CODE,</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;    <a class="code" href="classmarley_1_1_event.html#ae67665e77f84c985377d27ad5bb30fec">twoJ_</a>, <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(<a class="code" href="classmarley_1_1_event.html#a4fccc1026debae9045800b26c5136157">parity_</a>) );</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160; </div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;  <span class="comment">// Write the final particles to the event record</span></div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> f : <a class="code" href="classmarley_1_1_event.html#abbbb8a042cc295ac0495180bc7e94c2d">final_particles_</a>) <a class="code" href="classmarley_1_1_event.html#a04091a24b9c11ad4e87ef08ec72b965d">dump_hepevt_particle</a>(*f, temp,</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    HEPEVT_FINAL_STATE_STATUS_CODE);</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160; </div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;  <span class="comment">// Output the finished HEPEVT format event to the &quot;out&quot; stream</span></div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;  out &lt;&lt; temp.str();</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_event_html_a04091a24b9c11ad4e87ef08ec72b965d"><div class="ttname"><a href="classmarley_1_1_event.html#a04091a24b9c11ad4e87ef08ec72b965d">marley::Event::dump_hepevt_particle</a></div><div class="ttdeci">void dump_hepevt_particle(const marley::Particle &amp;p, std::ostream &amp;os, int status, int jmohep1=0, int jmohep2=0) const</div><div class="ttdoc">Helper function for write_hepevt()</div><div class="ttdef"><b>Definition:</b> <a href="_event_8cc_source.html#l00294">Event.cc:294</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_a12afb368a88434e445827b03f79c3bcc"><div class="ttname"><a href="classmarley_1_1_particle.html#a12afb368a88434e445827b03f79c3bcc">marley::Particle::set_mass</a></div><div class="ttdeci">void set_mass(double m)</div><div class="ttdoc">Set the particle's mass.</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00177">Particle.hh:177</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_a4b5359afab7a2d03fcae8649f27beea2"><div class="ttname"><a href="classmarley_1_1_particle.html#a4b5359afab7a2d03fcae8649f27beea2">marley::Particle::set_total_energy</a></div><div class="ttdeci">void set_total_energy(double Etot)</div><div class="ttdoc">Set the particle's total energy.</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00180">Particle.hh:180</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_particle_8hh_source.html#l00177">marley::Particle::set_mass()</a>, and <a class="el" href="_particle_8hh_source.html#l00180">marley::Particle::set_total_energy()</a>.</p>
-
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
@@ -1077,15 +673,11 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 <p>Excitation energy (MeV) of the residue immediately after the two-two scattering reaction. </p>
 <dl class="section note"><dt>Note</dt><dd>The Ex_ class member is always zero for residues that have no excited states. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_event_8hh_source.html#l00249">249</a> of file <a class="el" href="_event_8hh_source.html">Event.hh</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="_event_8hh_source.html#l00277">Ex()</a>, and <a class="el" href="_event_8cc_source.html#l00116">operator=()</a>.</p>
-
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_event_8hh_source.html">Event.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_event_8cc_source.html">Event.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_event_8hh_source.html">Event.hh</a></li>
+<li>/Users/gardiner/marley/src/Event.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

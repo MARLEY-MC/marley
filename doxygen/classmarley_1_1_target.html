@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -141,8 +141,6 @@ Protected Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Description of a macroscopic target for scattering reactions. </p>
 <p>The target is composed of one or more nuclides and stores their relative abundances as atom fractions </p>
-
-<p class="definition">Definition at line <a class="el" href="_target_8hh_source.html#l00032">32</a> of file <a class="el" href="_target_8hh_source.html">Target.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a5759f539f3491b39bb51b48f532d4d6e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5759f539f3491b39bb51b48f532d4d6e">&#9670;&nbsp;</a></span>Target() <span class="overload">[1/3]</span></h2>
@@ -175,14 +173,6 @@ Protected Attributes</h2></td></tr>
   </table>
   </dd>
 </dl>
-
-<p class="definition">Definition at line <a class="el" href="_target_8cc_source.html#l00023">23</a> of file <a class="el" href="_target_8cc_source.html">Target.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;                              {</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  this-&gt;<a class="code" href="classmarley_1_1_target.html#a613295f5d8d120f566b68275d06cccc3">initialize_single_nuclide</a>( pdg );</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_target_html_a613295f5d8d120f566b68275d06cccc3"><div class="ttname"><a href="classmarley_1_1_target.html#a613295f5d8d120f566b68275d06cccc3">marley::Target::initialize_single_nuclide</a></div><div class="ttdeci">void initialize_single_nuclide(int pdg)</div><div class="ttdoc">Helper function for the constructors that use a single nuclide.</div><div class="ttdef"><b>Definition:</b> <a href="_target_8cc_source.html#l00035">Target.cc:35</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_target_8cc_source.html#l00035">initialize_single_nuclide()</a>.</p>
 
 </div>
 </div>
@@ -229,15 +219,6 @@ Protected Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_target_8cc_source.html#l00027">27</a> of file <a class="el" href="_target_8cc_source.html">Target.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;                                   {</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  <span class="comment">// Get the nuclear PDG code corresponding to these Z and A values</span></div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="keywordtype">int</span> pdg = marley_utils::get_nucleus_pid( Z, A );</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="comment">// Delegate the rest of the work</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  this-&gt;<a class="code" href="classmarley_1_1_target.html#a613295f5d8d120f566b68275d06cccc3">initialize_single_nuclide</a>( pdg );</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;}</div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="a19c7549a980c23c0af30207347a5e815"></a>
@@ -276,12 +257,6 @@ Protected Attributes</h2></td></tr>
 </dl>
 <dl class="section note"><dt>Note</dt><dd>The nuclides and atom_fracs vectors must have the same length. If this is not the case, a <a class="el" href="classmarley_1_1_error.html" title="Base class for all exceptions thrown by MARLEY functions.">marley::Error</a> will be thrown </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_target_8cc_source.html#l00046">46</a> of file <a class="el" href="_target_8cc_source.html">Target.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;{</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  this-&gt;<a class="code" href="classmarley_1_1_target.html#a97aaf7362669609d862a92cf6484bc01">initialize</a>( nuclides, atom_fracs );</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_target_html_a97aaf7362669609d862a92cf6484bc01"><div class="ttname"><a href="classmarley_1_1_target.html#a97aaf7362669609d862a92cf6484bc01">marley::Target::initialize</a></div><div class="ttdeci">void initialize(const std::vector&lt; TargetAtom &gt; &amp;nuclides, const std::vector&lt; double &gt; &amp;atom_fracs)</div><div class="ttdoc">General helper function for the constructors.</div><div class="ttdef"><b>Definition:</b> <a href="_target_8cc_source.html#l00052">Target.cc:52</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
@@ -304,12 +279,6 @@ Protected Attributes</h2></td></tr>
 <p>Return true if the target contains the requested atom, or false otherwise. </p>
 <p>Even if the target atom appears in the map, this function will return false if its atom fraction is exactly zero </p>
 
-<p class="definition">Definition at line <a class="el" href="_target_8cc_source.html#l00107">107</a> of file <a class="el" href="_target_8cc_source.html">Target.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;                                                                {</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="keywordflow">return</span> ( this-&gt;<a class="code" href="classmarley_1_1_target.html#aca127188fe531aee5326f8a36a056a84">atom_fraction</a>(atom) != 0. );</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_target_html_aca127188fe531aee5326f8a36a056a84"><div class="ttname"><a href="classmarley_1_1_target.html#aca127188fe531aee5326f8a36a056a84">marley::Target::atom_fraction</a></div><div class="ttdeci">double atom_fraction(const marley::TargetAtom &amp;atom) const</div><div class="ttdoc">Returns the atom fraction for the requested nuclide.</div><div class="ttdef"><b>Definition:</b> <a href="_target_8cc_source.html#l00098">Target.cc:98</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
@@ -336,15 +305,11 @@ Protected Attributes</h2></td></tr>
 <p>Map storing the atom fraction for each nuclide in the target material. </p>
 <p>Keys are <a class="el" href="classmarley_1_1_target_atom.html" title="An atomic target for a lepton scattering reaction.">TargetAtom</a> objects representing each nuclide, values are atom fractions. The <a class="el" href="classmarley_1_1_target.html" title="Description of a macroscopic target for scattering reactions.">Target</a> class ensures that the atom fractions always sum to unity. </p>
 
-<p class="definition">Definition at line <a class="el" href="_target_8hh_source.html#l00091">91</a> of file <a class="el" href="_target_8hh_source.html">Target.hh</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="_target_8hh_source.html#l00073">atom_fraction_map()</a>, and <a class="el" href="_target_8hh_source.html#l00066">has_single_nuclide()</a>.</p>
-
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_target_8hh_source.html">Target.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_target_8cc_source.html">Target.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_target_8hh_source.html">Target.hh</a></li>
+<li>/Users/gardiner/marley/src/Target.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

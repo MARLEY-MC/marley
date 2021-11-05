@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -201,8 +201,6 @@ class marley::InterpolationGrid&lt; FirstNumericType, SecondNumericType &gt;</h3
   </table>
   </dd>
 </dl>
-
-<p class="definition">Definition at line <a class="el" href="_interpolation_grid_8hh_source.html#l00036">36</a> of file <a class="el" href="_interpolation_grid_8hh_source.html">InterpolationGrid.hh</a>.</p>
 </div><h2 class="groupheader">Member Enumeration Documentation</h2>
 <a id="a12102e27f1cad372ea091eeb01d338ff"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a12102e27f1cad372ea091eeb01d338ff">&#9670;&nbsp;</a></span>ExtrapolationMethod</h2>
@@ -242,10 +240,6 @@ template&lt;typename FirstNumericType , typename SecondNumericType  = FirstNumer
 where \(y_{\text{left}+1}\) is the y value corresponding to the second-lowest x value, and \(y_{\text{right}-1}\) is the y value corresponding to the second-highest x value. </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="_interpolation_grid_8hh_source.html#l00096">96</a> of file <a class="el" href="_interpolation_grid_8hh_source.html">InterpolationGrid.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                                     { Zero, Endpoint,</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;        Continue, Throw };</div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="ae5168c850d65b47d2cafad055fa6651d"></a>
@@ -288,11 +282,6 @@ template&lt;typename FirstNumericType , typename SecondNumericType  = FirstNumer
 <td>LogLog</td><td>\(y = \exp\left[\ln(y_1) + \frac{\ln(y_2) - \ln(y_1)}{\ln(x_2) - \ln(x_1)}(\ln[x] - \ln[x_1])\right] \) </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="_interpolation_grid_8hh_source.html#l00063">63</a> of file <a class="el" href="_interpolation_grid_8hh_source.html">InterpolationGrid.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                                     { Constant = 1,</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        LinearLinear = 2, LinearLog = 3, LogLinear = 4,</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        LogLog = 5 };</div>
-</div><!-- fragment -->
 </div>
 </div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
@@ -341,16 +330,10 @@ template&lt;typename FirstNumericType , typename SecondNumericType  = FirstNumer
 <p>Create an <a class="el" href="classmarley_1_1_interpolation_grid.html" title="One-dimensional function y(x) defined using a grid of ordered pairs (x,y) and an interpolation rule.">InterpolationGrid</a> from a vector of ordered pairs. </p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000034">Todo:</a></b></dt><dd>Add error checks for the supplied grid </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_interpolation_grid_8hh_source.html#l00109">109</a> of file <a class="el" href="_interpolation_grid_8hh_source.html">InterpolationGrid.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;        : interpolation_method_(interp_method),</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;        extrapolation_method_(extrap_method), ordered_pairs_(grid)</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;      {</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;      }</div>
-</div><!-- fragment -->
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_interpolation_grid_8hh_source.html">InterpolationGrid.hh</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_interpolation_grid_8hh_source.html">InterpolationGrid.hh</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

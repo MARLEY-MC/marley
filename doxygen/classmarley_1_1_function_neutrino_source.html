@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -136,8 +136,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Neutrino source with an arbitrary energy spectrum described by a std::function&lt;double(double)&gt; object. </p>
-
-<p class="definition">Definition at line <a class="el" href="_neutrino_source_8hh_source.html#l00192">192</a> of file <a class="el" href="_neutrino_source_8hh_source.html">NeutrinoSource.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="acecbc6779fb887a0b735a825e72e7a5d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acecbc6779fb887a0b735a825e72e7a5d">&#9670;&nbsp;</a></span>FunctionNeutrinoSource()</h2>
@@ -186,18 +184,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_neutrino_source_8cc_source.html#l00103">103</a> of file <a class="el" href="_neutrino_source_8cc_source.html">NeutrinoSource.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  : <a class="code" href="classmarley_1_1_neutrino_source.html#a1cd585ba433a3d6afa815b63e96671a6">NeutrinoSource</a>(particle_id), Emin_(Emin), Emax_(Emax)</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;{</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  <span class="comment">// Normalize the supplied spectrum (not strictly necessary, but having the</span></div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="comment">// spectrum approximately normalized makes the default rejection sampling</span></div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="comment">// tolerance of 1e-8 reliable for finding the maximum of the spectrum)</span></div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="keywordtype">double</span> integral = marley_utils::num_integrate(prob_dens_func, Emin, Emax);</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  probability_density_ = [prob_dens_func, integral](<span class="keywordtype">double</span> E)</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    -&gt; <span class="keywordtype">double</span> { <span class="keywordflow">return</span> prob_dens_func(E) / integral; };</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_neutrino_source_html_a1cd585ba433a3d6afa815b63e96671a6"><div class="ttname"><a href="classmarley_1_1_neutrino_source.html#a1cd585ba433a3d6afa815b63e96671a6">marley::NeutrinoSource::NeutrinoSource</a></div><div class="ttdeci">NeutrinoSource(int particle_id)</div><div class="ttdef"><b>Definition:</b> <a href="_neutrino_source_8cc_source.html#l00022">NeutrinoSource.cc:22</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
@@ -236,17 +222,11 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 
 <p>Implements <a class="el" href="classmarley_1_1_neutrino_source.html#a66f4f7f4b44cf443989010aede2337ea">marley::NeutrinoSource</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_neutrino_source_8hh_source.html#l00308">308</a> of file <a class="el" href="_neutrino_source_8hh_source.html">NeutrinoSource.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;                                                          {</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    <span class="keywordflow">if</span> (E &lt; Emin_ || E &gt; Emax_) <span class="keywordflow">return</span> 0.;</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="keywordflow">else</span> <span class="keywordflow">return</span> probability_density_(E);</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  }</div>
-</div><!-- fragment -->
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_neutrino_source_8hh_source.html">NeutrinoSource.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_neutrino_source_8cc_source.html">NeutrinoSource.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_neutrino_source_8hh_source.html">NeutrinoSource.hh</a></li>
+<li>/Users/gardiner/marley/src/NeutrinoSource.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

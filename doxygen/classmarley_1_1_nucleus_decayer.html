@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -105,8 +105,6 @@ Public Member Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classmarley_1_1_event_processor.html" title="Abstract base class for entities that take a marley::Event as input and possibly modify it.">EventProcessor</a> that handles nuclear de-excitations. </p>
-
-<p class="definition">Definition at line <a class="el" href="_nucleus_decayer_8hh_source.html#l00023">23</a> of file <a class="el" href="_nucleus_decayer_8hh_source.html">NucleusDecayer.hh</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a4157059ecd2a4a002918fb6c0eaed595"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4157059ecd2a4a002918fb6c0eaed595">&#9670;&nbsp;</a></span>process_event()</h2>
@@ -154,173 +152,11 @@ Public Member Functions</h2></td></tr>
 
 <p>Implements <a class="el" href="classmarley_1_1_event_processor.html#a03822b7f9a0031d773c552ed1ccfc523">marley::EventProcessor</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_nucleus_decayer_8cc_source.html#l00046">46</a> of file <a class="el" href="_nucleus_decayer_8cc_source.html">NucleusDecayer.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;{</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="comment">// Get the residue excitation energy from the event. These values represent</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="comment">// its state immediately following the initial two-two scattering reaction.</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  <span class="keywordtype">double</span> Ex = <span class="keyword">event</span>.Ex();</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  <span class="keywordtype">int</span> twoJ = <span class="keyword">event</span>.twoJ();</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <a class="code" href="classmarley_1_1_parity.html">marley::Parity</a> P = <span class="keyword">event</span>.parity();</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="comment">// If the initial two-two scatter left the residue in its ground state,</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="comment">// there&#39;s nothing for us to do. Just return without comment.</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  <span class="keywordflow">if</span> ( Ex == 0. ) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  <span class="comment">// The excitation energy should be nonnegative. Complain if it&#39;s not.</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  <span class="keywordflow">if</span> ( Ex &lt; 0. ) <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Negative excitation energy Ex = &quot;</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    + std::to_string(Ex) + <span class="stringliteral">&quot; MeV encountered in marley::NucleusDecayer::&quot;</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="stringliteral">&quot;deexcite_residue()&quot;</span>);</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="comment">// To prevent accidental double application of the de-excitation cascade,</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <span class="comment">// check that the residue mass is consistent with the excitation energy</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  <span class="comment">// stored in the event record (and thus was never decayed).</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span>&amp; mt = <a class="code" href="classmarley_1_1_mass_table.html#a2e43b8ba549e31fc8c6b811656f69b94">marley::MassTable::Instance</a>();</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <span class="keywordtype">int</span> initial_residue_pdg = <span class="keyword">event</span>.residue().pdg_code();</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <span class="keywordtype">int</span> qIon = <span class="keyword">event</span>.residue().charge();</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="comment">// Check that the residue PDG code makes sense. If it&#39;s not a nucleus,</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="comment">// warn the user and refuse to do the cascade.</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keywordflow">if</span> ( !marley_utils::is_ion(initial_residue_pdg) ) {</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    MARLEY_LOG_WARNING() &lt;&lt; <span class="stringliteral">&quot;Unrecognized nuclear PDG code &quot;</span></div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;      &lt;&lt; initial_residue_pdg &lt;&lt; <span class="stringliteral">&quot; encountered in marley::NucleusDecayer::&quot;</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;      &lt;&lt; <span class="stringliteral">&quot;deexcite_residue(). The de-excitation cascade will be skipped&quot;</span>;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  }</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordtype">double</span> residue_mass = <span class="keyword">event</span>.residue().mass();</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <span class="comment">// Ground-state residue mass</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keywordtype">double</span> gs_residue_mass = mt.get_atomic_mass( initial_residue_pdg )</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    - qIon*mt.get_particle_mass( marley_utils::ELECTRON );</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160; </div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="keywordtype">double</span> expected_residue_mass = gs_residue_mass + Ex;</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keywordflow">if</span> ( std::abs(residue_mass - expected_residue_mass) &gt; EX_TOLERANCE ) {</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160; </div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keywordflow">if</span> ( std::abs(residue_mass - gs_residue_mass) &lt;= EX_TOLERANCE ) {</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;      MARLEY_LOG_WARNING() &lt;&lt; <span class="stringliteral">&quot;Encountered ground-state nuclear remnant&quot;</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        &lt;&lt; <span class="stringliteral">&quot; in marley::NucleusDecay::deexcite_residue(). The de-excitation&quot;</span></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        &lt;&lt; <span class="stringliteral">&quot; cascade has already been applied.&quot;</span>;</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;      <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    }</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160; </div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="comment">// If we get here, then the residue is not in its ground state but also</span></div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="comment">// not in the initial excited state given in the event record. Something</span></div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="comment">// went wrong with a partial application of a de-excitation cascade.</span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="comment">// Throw an error rather than trying to figure out how to do the right</span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="comment">// thing.</span></div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="comment"></span>    <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Partially de-excited nuclear remnant encountered&quot;</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        <span class="stringliteral">&quot; in marley::NucleusDecay::deexcite_residue().&quot;</span>);</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  }</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160; </div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  <span class="comment">// Decide whether we need to start the de-excitation cascade from a discrete</span></div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="comment">// nuclear level or from the continuum. Do this by comparing the excitation</span></div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="comment">// energy from the event record to the &quot;unbound threshold&quot; for the residue.</span></div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="comment">// If we&#39;re above the unbound threshold, do a continuum decay. Also start</span></div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  <span class="comment">// with a continuum decay if no discrete level data are available for the</span></div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  <span class="comment">// residue.</span></div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  <span class="keyword">auto</span>* ds = gen.<a class="code" href="classmarley_1_1_generator.html#a23a6a31e0d132f1627ea4683904f0860">get_structure_db</a>().<a class="code" href="classmarley_1_1_structure_database.html#aee50360e942b83d9ddba81675d48d1fc">get_decay_scheme</a>( initial_residue_pdg );</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  <span class="keywordtype">double</span> unbound_threshold = mt.unbound_threshold( initial_residue_pdg );</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="comment">// If Reaction::set_level_ptrs() changes, you&#39;ll want to change this too.</span></div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  <span class="comment">// TODO: find a better way of keeping the two pieces of code in sync</span></div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  <span class="keywordtype">bool</span> continuum = ( Ex &gt; unbound_threshold ) || ( !ds );</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160; </div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  <span class="comment">// Keep track of whether the cascade was started from the continuum</span></div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  <span class="comment">// or not. If it was started from a discrete level, we&#39;ll double-check that</span></div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  <span class="comment">// discrete level&#39;s excitation energy below.</span></div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  <span class="keywordtype">bool</span> started_from_continuum = continuum;</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160; </div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="comment">// Get a non-const reference to the nuclear residue. We&#39;ll use it to</span></div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  <span class="comment">// update the event record during each step of the Hauser-Feshbach</span></div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  <span class="comment">// cascade.</span></div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>&amp; residue = <span class="keyword">event</span>.residue();</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160; </div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="keywordflow">if</span> ( continuum ) {</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160; </div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="comment">// Dummy particles used for temporary storage of binary decay products</span></div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="comment">// during the de-excitation cascade</span></div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a> first, second;</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160; </div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="comment">// The selected level is unbound, so handle its de-excitation using</span></div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    <span class="comment">// the Hauser-Feshbach statistical model.</span></div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <span class="keywordflow">while</span> ( continuum &amp;&amp; Ex &gt; CONTINUUM_GS_CUTOFF ) {</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160; </div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;      <span class="keyword">auto</span>&amp; sdb = gen.<a class="code" href="classmarley_1_1_generator.html#a23a6a31e0d132f1627ea4683904f0860">get_structure_db</a>();</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;      <a class="code" href="classmarley_1_1_hauser_feshbach_decay.html">marley::HauserFeshbachDecay</a> hfd( residue, Ex, twoJ, P, sdb );</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;      MARLEY_LOG_DEBUG() &lt;&lt; hfd;</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160; </div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;      continuum = hfd.do_decay( Ex, twoJ, P, first, second, gen );</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160; </div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;      MARLEY_LOG_DEBUG() &lt;&lt; <span class="stringliteral">&quot;Hauser-Feshbach decay to &quot;</span> &lt;&lt; first.<a class="code" href="classmarley_1_1_particle.html#ada55220bcb27e937651247ef2d7fa827">pdg_code</a>()</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;        &lt;&lt; <span class="stringliteral">&quot; and &quot;</span> &lt;&lt; second.<a class="code" href="classmarley_1_1_particle.html#ada55220bcb27e937651247ef2d7fa827">pdg_code</a>();</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;      MARLEY_LOG_DEBUG() &lt;&lt; second.<a class="code" href="classmarley_1_1_particle.html#ada55220bcb27e937651247ef2d7fa827">pdg_code</a>() &lt;&lt; <span class="stringliteral">&quot; is at Ex = &quot;</span></div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;        &lt;&lt; Ex &lt;&lt; <span class="stringliteral">&quot; MeV.&quot;</span>;</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160; </div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;      residue = second;</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;      <span class="keyword">event</span>.add_final_particle( first );</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    }</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  }</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160; </div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;  <span class="keywordflow">if</span> ( !continuum ) {</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <span class="comment">// Either the selected initial level was bound (so it will only decay via</span></div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <span class="comment">// gamma emission) or the Hauser-Feshbach decay process has now accessed a</span></div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="comment">// bound level in the residual nucleus. In either case, use gamma-ray decay</span></div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    <span class="comment">// scheme data to sample the de-excitation gammas and add them to this</span></div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    <span class="comment">// event&#39;s final particle list.</span></div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    <a class="code" href="classmarley_1_1_decay_scheme.html">marley::DecayScheme</a>* dec_scheme = gen.<a class="code" href="classmarley_1_1_generator.html#a23a6a31e0d132f1627ea4683904f0860">get_structure_db</a>()</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;      .<a class="code" href="classmarley_1_1_structure_database.html#aee50360e942b83d9ddba81675d48d1fc">get_decay_scheme</a>( residue.<a class="code" href="classmarley_1_1_particle.html#ada55220bcb27e937651247ef2d7fa827">pdg_code</a>() );</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    <span class="comment">// Start the gamma cascade from this discrete level</span></div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    <a class="code" href="classmarley_1_1_level.html">marley::Level</a>* lev = dec_scheme-&gt;<a class="code" href="classmarley_1_1_decay_scheme.html#af8b2b68a691a14e32bdddc3a77d17bf6">get_pointer_to_closest_level</a>( Ex );</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160; </div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;    <span class="comment">// If we get a null level pointer from the decay scheme, complain</span></div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    <span class="keywordflow">if</span> ( !lev ) <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Null nuclear level pointer encountered&quot;</span></div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;      <span class="stringliteral">&quot; in marley::NucleusDecayer::deexcite_residue()&quot;</span>);</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160; </div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    <span class="comment">// If we did not simulate any continuum decays before getting to this</span></div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;    <span class="comment">// point, then double-check that the excitation energy from the event</span></div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="comment">// record and the initial level are consistent. If they&#39;re not, complain</span></div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    <span class="comment">// by throwing an error.</span></div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;    <span class="keywordflow">if</span> ( !started_from_continuum ) {</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;      <span class="keywordtype">double</span> Ex_level = lev-&gt;<a class="code" href="classmarley_1_1_level.html#af52edeb699b7bb3b0c9695483620e513">energy</a>();</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;      <span class="keywordflow">if</span> ( std::abs(Ex - Ex_level) &gt; EX_TOLERANCE ) {</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;        <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(<span class="stringliteral">&quot;Excitation energy mismatch encountered in&quot;</span></div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;          <span class="stringliteral">&quot; marley::NucleusDecayer::deexcite_residue(). Event has Ex = &quot;</span></div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;          + std::to_string(Ex) + <span class="stringliteral">&quot; MeV while the initial discrete level has &quot;</span></div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;          + std::to_string(Ex_level) + <span class="stringliteral">&quot; MeV&quot;</span>);</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;      }</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    }</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160; </div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    dec_scheme-&gt;<a class="code" href="classmarley_1_1_decay_scheme.html#a0b2e323b56f961e35bfd2fb4d848343f">do_cascade</a>( *lev, event, gen, residue.<a class="code" href="classmarley_1_1_particle.html#a970bf62a4f11dd9ed9a87562dab3ee53">charge</a>() );</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;  }</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160; </div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_decay_scheme_html"><div class="ttname"><a href="classmarley_1_1_decay_scheme.html">marley::DecayScheme</a></div><div class="ttdoc">Discrete level and γ-ray data for a specific nuclide.</div><div class="ttdef"><b>Definition:</b> <a href="_decay_scheme_8hh_source.html#l00030">DecayScheme.hh:30</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_decay_scheme_html_a0b2e323b56f961e35bfd2fb4d848343f"><div class="ttname"><a href="classmarley_1_1_decay_scheme.html#a0b2e323b56f961e35bfd2fb4d848343f">marley::DecayScheme::do_cascade</a></div><div class="ttdeci">void do_cascade(marley::Level &amp;initial_level, marley::Event &amp;event, marley::Generator &amp;gen, int qIon)</div><div class="ttdoc">Simulates nuclear de-excitation via γ-ray emission(s)</div><div class="ttdef"><b>Definition:</b> <a href="_decay_scheme_8cc_source.html#l00071">DecayScheme.cc:71</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_decay_scheme_html_af8b2b68a691a14e32bdddc3a77d17bf6"><div class="ttname"><a href="classmarley_1_1_decay_scheme.html#af8b2b68a691a14e32bdddc3a77d17bf6">marley::DecayScheme::get_pointer_to_closest_level</a></div><div class="ttdeci">marley::Level * get_pointer_to_closest_level(double E_level)</div><div class="ttdoc">Gets a pointer to the Level in the DecayScheme whose excitation energy is closest to E_level.</div><div class="ttdef"><b>Definition:</b> <a href="_decay_scheme_8cc_source.html#l00035">DecayScheme.cc:35</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_error_html"><div class="ttname"><a href="classmarley_1_1_error.html">marley::Error</a></div><div class="ttdoc">Base class for all exceptions thrown by MARLEY functions.</div><div class="ttdef"><b>Definition:</b> <a href="_error_8hh_source.html#l00032">Error.hh:32</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_generator_html_a23a6a31e0d132f1627ea4683904f0860"><div class="ttname"><a href="classmarley_1_1_generator.html#a23a6a31e0d132f1627ea4683904f0860">marley::Generator::get_structure_db</a></div><div class="ttdeci">marley::StructureDatabase &amp; get_structure_db()</div><div class="ttdoc">Get a reference to the StructureDatabase owned by this Generator.</div><div class="ttdef"><b>Definition:</b> <a href="_generator_8cc_source.html#l00436">Generator.cc:436</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_hauser_feshbach_decay_html"><div class="ttname"><a href="classmarley_1_1_hauser_feshbach_decay.html">marley::HauserFeshbachDecay</a></div><div class="ttdoc">Monte Carlo implementation of the Hauser-Feshbach statistical model for decays of highly-excited nucl...</div><div class="ttdef"><b>Definition:</b> <a href="_hauser_feshbach_decay_8hh_source.html#l00031">HauserFeshbachDecay.hh:31</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_level_html"><div class="ttname"><a href="classmarley_1_1_level.html">marley::Level</a></div><div class="ttdoc">A discrete nuclear energy level.</div><div class="ttdef"><b>Definition:</b> <a href="_level_8hh_source.html#l00029">Level.hh:29</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_level_html_af52edeb699b7bb3b0c9695483620e513"><div class="ttname"><a href="classmarley_1_1_level.html#af52edeb699b7bb3b0c9695483620e513">marley::Level::energy</a></div><div class="ttdeci">double energy() const</div><div class="ttdoc">Get the excitation energy of this level (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_level_8hh_source.html#l00120">Level.hh:120</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_mass_table_html_a2e43b8ba549e31fc8c6b811656f69b94"><div class="ttname"><a href="classmarley_1_1_mass_table.html#a2e43b8ba549e31fc8c6b811656f69b94">marley::MassTable::Instance</a></div><div class="ttdeci">static const MassTable &amp; Instance()</div><div class="ttdoc">Get a const reference to the singleton instance of the MassTable.</div><div class="ttdef"><b>Definition:</b> <a href="_mass_table_8cc_source.html#l00068">MassTable.cc:68</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_parity_html"><div class="ttname"><a href="classmarley_1_1_parity.html">marley::Parity</a></div><div class="ttdoc">Type-safe representation of a parity value (either +1 or -1)</div><div class="ttdef"><b>Definition:</b> <a href="_parity_8hh_source.html#l00025">Parity.hh:25</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html"><div class="ttname"><a href="classmarley_1_1_particle.html">marley::Particle</a></div><div class="ttdoc">Momentum four-vector for a simulated particle.</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00032">Particle.hh:32</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_a970bf62a4f11dd9ed9a87562dab3ee53"><div class="ttname"><a href="classmarley_1_1_particle.html#a970bf62a4f11dd9ed9a87562dab3ee53">marley::Particle::charge</a></div><div class="ttdeci">double charge() const</div><div class="ttdoc">Get the particle's charge in units of the proton charge.</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00194">Particle.hh:194</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html_ada55220bcb27e937651247ef2d7fa827"><div class="ttname"><a href="classmarley_1_1_particle.html#ada55220bcb27e937651247ef2d7fa827">marley::Particle::pdg_code</a></div><div class="ttdeci">int pdg_code() const</div><div class="ttdoc">Get the Particle Data Group code for this particle.</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00192">Particle.hh:192</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_structure_database_html_aee50360e942b83d9ddba81675d48d1fc"><div class="ttname"><a href="classmarley_1_1_structure_database.html#aee50360e942b83d9ddba81675d48d1fc">marley::StructureDatabase::get_decay_scheme</a></div><div class="ttdeci">marley::DecayScheme * get_decay_scheme(const int particle_id)</div><div class="ttdoc">Retrieves discrete level data from the database.</div><div class="ttdef"><b>Definition:</b> <a href="_structure_database_8cc_source.html#l00125">StructureDatabase.cc:125</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_particle_8hh_source.html#l00194">marley::Particle::charge()</a>, <a class="el" href="_decay_scheme_8cc_source.html#l00071">marley::DecayScheme::do_cascade()</a>, <a class="el" href="_hauser_feshbach_decay_8cc_source.html#l00193">marley::HauserFeshbachDecay::do_decay()</a>, <a class="el" href="_level_8hh_source.html#l00120">marley::Level::energy()</a>, <a class="el" href="_structure_database_8cc_source.html#l00125">marley::StructureDatabase::get_decay_scheme()</a>, <a class="el" href="_decay_scheme_8cc_source.html#l00035">marley::DecayScheme::get_pointer_to_closest_level()</a>, <a class="el" href="_generator_8cc_source.html#l00436">marley::Generator::get_structure_db()</a>, <a class="el" href="_mass_table_8cc_source.html#l00068">marley::MassTable::Instance()</a>, and <a class="el" href="_particle_8hh_source.html#l00192">marley::Particle::pdg_code()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="_generator_8cc_source.html#l00067">marley::Generator::create_event()</a>.</p>
-
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_nucleus_decayer_8hh_source.html">NucleusDecayer.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_nucleus_decayer_8cc_source.html">NucleusDecayer.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_nucleus_decayer_8hh_source.html">NucleusDecayer.hh</a></li>
+<li>/Users/gardiner/marley/src/NucleusDecayer.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

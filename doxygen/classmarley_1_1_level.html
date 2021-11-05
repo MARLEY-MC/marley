@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -154,8 +154,6 @@ Static Public Member Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A discrete nuclear energy level. </p>
-
-<p class="definition">Definition at line <a class="el" href="_level_8hh_source.html#l00029">29</a> of file <a class="el" href="_level_8hh_source.html">Level.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a1aba0bc7c5f9a344eb7971b61d08c223"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1aba0bc7c5f9a344eb7971b61d08c223">&#9670;&nbsp;</a></span>Level()</h2>
@@ -197,11 +195,6 @@ Static Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_level_8cc_source.html#l00026">26</a> of file <a class="el" href="_level_8cc_source.html">Level.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;                                                      : energy_(E),</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  twoJ_(<a class="code" href="classmarley_1_1_level.html#ad364d18ab3329db9e31f9b57ef42f05d">twoJ</a>), parity_(pi) {}</div>
-<div class="ttc" id="aclassmarley_1_1_level_html_ad364d18ab3329db9e31f9b57ef42f05d"><div class="ttname"><a href="classmarley_1_1_level.html#ad364d18ab3329db9e31f9b57ef42f05d">marley::Level::twoJ</a></div><div class="ttdeci">int twoJ() const</div><div class="ttdoc">Get two times the level spin.</div><div class="ttdef"><b>Definition:</b> <a href="_level_8hh_source.html#l00123">Level.hh:123</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
@@ -223,20 +216,6 @@ Static Public Member Functions</h2></td></tr>
 
 <p>Add a new gamma-ray transition to this level. </p>
 <dl class="section return"><dt>Returns</dt><dd>a reference to the newly added gamma </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="_level_8cc_source.html#l00042">42</a> of file <a class="el" href="_level_8cc_source.html">Level.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;                                                            {</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="comment">// Update the vector of gamma objects</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  gammas_.push_back(gamma);</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  <span class="comment">// Update the distribution for sampling gammas</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  update_gamma_distribution();</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="comment">// Return a reference to the newly added gamma</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keywordflow">return</span> gammas_.back();</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;}</div>
-</div><!-- fragment -->
-<p class="reference">Referenced by <a class="el" href="_decay_scheme_8cc_source.html#l00404">marley::DecayScheme::read_from_stream()</a>.</p>
 
 </div>
 </div>
@@ -283,19 +262,6 @@ Static Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>a reference to the newly added gamma </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_level_8cc_source.html#l00053">53</a> of file <a class="el" href="_level_8cc_source.html">Level.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;{</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="comment">// Update the vector of gamma objects</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  gammas_.emplace_back(<a class="code" href="classmarley_1_1_level.html#af52edeb699b7bb3b0c9695483620e513">energy</a>, branching_ratio, <span class="keyword">this</span>, end_lev);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  <span class="comment">// Update the distribution for sampling gammas</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  update_gamma_distribution();</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  <span class="comment">// Return a reference to the newly added gamma</span></div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  <span class="keywordflow">return</span> gammas_.back();</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_level_html_af52edeb699b7bb3b0c9695483620e513"><div class="ttname"><a href="classmarley_1_1_level.html#af52edeb699b7bb3b0c9695483620e513">marley::Level::energy</a></div><div class="ttdeci">double energy() const</div><div class="ttdoc">Get the excitation energy of this level (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_level_8hh_source.html#l00120">Level.hh:120</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="a11d0093a47c9e043d3bd6feddec83620"></a>
@@ -322,9 +288,6 @@ Static Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 <dl class="section return"><dt>Returns</dt><dd>true if the level owns at least one <a class="el" href="classmarley_1_1_gamma.html" title="A gamma-ray transition between two nuclear levels.">Gamma</a> object </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_level_8hh_source.html#l00133">133</a> of file <a class="el" href="_level_8hh_source.html">Level.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;{ <span class="keywordflow">return</span> !gammas_.empty(); }</div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="a33ca4dfdec1f8aac188a4ce21e6cb458"></a>
@@ -356,15 +319,6 @@ template&lt;typename It &gt; </div>
 <p>Convert an iterator that points to a <a class="el" href="classmarley_1_1_level.html" title="A discrete nuclear energy level.">marley::Level</a>* (or a smart pointer to a <a class="el" href="classmarley_1_1_level.html" title="A discrete nuclear energy level.">marley::Level</a>) into an iterator that points to the <a class="el" href="classmarley_1_1_level.html" title="A discrete nuclear energy level.">Level</a>'s energy_ member variable. </p>
 <p>This function is used by the <a class="el" href="classmarley_1_1_decay_scheme.html" title="Discrete level and γ-ray data for a specific nuclide.">DecayScheme</a> class to keep the vector of std::unique_ptr&lt;marley::Level&gt; objects that it owns sorted in order of increasing excitation energy. </p>
 
-<p class="definition">Definition at line <a class="el" href="_level_8hh_source.html#l00136">136</a> of file <a class="el" href="_level_8hh_source.html">Level.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  {</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="classmarley_1_1_iterator_to_pointer_member.html">marley::IteratorToPointerMember&lt;It, double&gt;</a>(it,</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;      &amp;marley::Level::energy_);</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;  }</div>
-<div class="ttc" id="aclassmarley_1_1_iterator_to_pointer_member_html"><div class="ttname"><a href="classmarley_1_1_iterator_to_pointer_member.html">marley::IteratorToPointerMember</a></div><div class="ttdoc">Template class that creates an iterator to a class member based on an iterator to a pointer (either b...</div><div class="ttdef"><b>Definition:</b> <a href="_iterator_to_pointer_member_8hh_source.html#l00030">IteratorToPointerMember.hh:31</a></div></div>
-</div><!-- fragment -->
-<p class="reference">Referenced by <a class="el" href="_decay_scheme_8cc_source.html#l00358">marley::DecayScheme::level_lower_bound_index()</a>.</p>
-
 </div>
 </div>
 <a id="a973d2edf432ed3c55186624845455998"></a>
@@ -386,29 +340,11 @@ template&lt;typename It &gt; </div>
 <p>Choose a gamma owned by this level randomly based on the relative intensities of all of the gammas. </p>
 <dl class="section return"><dt>Returns</dt><dd>a pointer to the selected <a class="el" href="classmarley_1_1_gamma.html" title="A gamma-ray transition between two nuclear levels.">Gamma</a> object, or nullptr if the level doesn't have any gammas </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_level_8cc_source.html#l00029">29</a> of file <a class="el" href="_level_8cc_source.html">Level.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;{</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="keywordflow">if</span> (gammas_.empty()) <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="comment">// Get the index of the gamma to return by randomly sampling from the</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="comment">// discrete distribution gamma_dist using the standard marley_utils random</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="comment">// number generator.</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keywordtype">size_t</span> g_index = gen.<a class="code" href="classmarley_1_1_generator.html#aa6f49482bbeca2b3eda7d3697b1b24ae">sample_from_distribution</a>(gamma_dist_);</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="comment">// Return a pointer to the corresponding gamma</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keywordflow">return</span> &amp;(gammas_[g_index]);</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  }</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_generator_html_aa6f49482bbeca2b3eda7d3697b1b24ae"><div class="ttname"><a href="classmarley_1_1_generator.html#aa6f49482bbeca2b3eda7d3697b1b24ae">marley::Generator::sample_from_distribution</a></div><div class="ttdeci">auto sample_from_distribution(RandomNumberDistribution &amp;rnd) -&gt; decltype(std::declval&lt; RandomNumberDistribution &amp; &gt;().operator()(std::declval&lt; std::mt19937_64 &amp; &gt;()))</div><div class="ttdoc">Sample from an arbitrary probability distribution (defined here as any object that implements an oper...</div><div class="ttdef"><b>Definition:</b> <a href="_generator_8hh_source.html#l00172">Generator.hh:172</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_generator_8hh_source.html#l00172">marley::Generator::sample_from_distribution()</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="_decay_scheme_8cc_source.html#l00071">marley::DecayScheme::do_cascade()</a>.</p>
-
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_level_8hh_source.html">Level.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_level_8cc_source.html">Level.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_level_8hh_source.html">Level.hh</a></li>
+<li>/Users/gardiner/marley/src/Level.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

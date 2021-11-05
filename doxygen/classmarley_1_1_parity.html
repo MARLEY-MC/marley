@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -148,8 +148,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Type-safe representation of a parity value (either +1 or -1) </p>
-
-<p class="definition">Definition at line <a class="el" href="_parity_8hh_source.html#l00025">25</a> of file <a class="el" href="_parity_8hh_source.html">Parity.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a1c0468577d29e0d3d021058506f65c28"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1c0468577d29e0d3d021058506f65c28">&#9670;&nbsp;</a></span>Parity() <span class="overload">[1/2]</span></h2>
@@ -183,10 +181,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_parity_8hh_source.html#l00035">35</a> of file <a class="el" href="_parity_8hh_source.html">Parity.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;        : <a class="code" href="classmarley_1_1_parity.html#a03f21157713d489f161039f2bf1373db">is_positive_</a>(is_positive) {}</div>
-<div class="ttc" id="aclassmarley_1_1_parity_html_a03f21157713d489f161039f2bf1373db"><div class="ttname"><a href="classmarley_1_1_parity.html#a03f21157713d489f161039f2bf1373db">marley::Parity::is_positive_</a></div><div class="ttdeci">bool is_positive_</div><div class="ttdoc">Boolean representation of the parity value that is true when the parity is +1 and false when it is -1...</div><div class="ttdef"><b>Definition:</b> <a href="_parity_8hh_source.html#l00104">Parity.hh:104</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="aac5aa726780517cdd71e35311b92e0ff"></a>
@@ -216,17 +210,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <p>Create a <a class="el" href="classmarley_1_1_parity.html" title="Type-safe representation of a parity value (either +1 or -1)">Parity</a> object from an integer. </p>
 <p>If an int value other than +1 or -1 is passed to this constructor, a <a class="el" href="classmarley_1_1_error.html" title="Base class for all exceptions thrown by MARLEY functions.">marley::Error</a> will be thrown. </p>
 
-<p class="definition">Definition at line <a class="el" href="_parity_8cc_source.html#l00024">24</a> of file <a class="el" href="_parity_8cc_source.html">Parity.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;                            {</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keywordflow">if</span> (i == 1) <a class="code" href="classmarley_1_1_parity.html#a03f21157713d489f161039f2bf1373db">is_positive_</a> = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> (i == -1) <a class="code" href="classmarley_1_1_parity.html#a03f21157713d489f161039f2bf1373db">is_positive_</a> = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>( <span class="stringliteral">&quot;Invalid parity &quot;</span> + std::to_string(i)</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    + <span class="stringliteral">&quot; passed to constructor of marley::Parity&quot;</span> );</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_error_html"><div class="ttname"><a href="classmarley_1_1_error.html">marley::Error</a></div><div class="ttdoc">Base class for all exceptions thrown by MARLEY functions.</div><div class="ttdef"><b>Definition:</b> <a href="_error_8hh_source.html#l00032">Error.hh:32</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_parity_8hh_source.html#l00104">is_positive_</a>.</p>
-
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
@@ -254,14 +237,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </div><div class="memdoc">
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000037">Todo:</a></b></dt><dd>See comments for marley::TargetAtom::operator int(). A similar situation occurs for this function. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_parity_8hh_source.html#l00086">86</a> of file <a class="el" href="_parity_8hh_source.html">Parity.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;                                           {</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="keywordflow">if</span> (<a class="code" href="classmarley_1_1_parity.html#a03f21157713d489f161039f2bf1373db">is_positive_</a>) <span class="keywordflow">return</span> 1;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        <span class="keywordflow">else</span> <span class="keywordflow">return</span> -1;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;      }</div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_parity_8hh_source.html#l00104">is_positive_</a>.</p>
-
 </div>
 </div>
 <a id="aca38727e4b0d97e8d7e1c9d03345e8c4"></a>
@@ -283,23 +258,11 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <p>Assigns a parity value using an integer. </p>
 <p>If an int value other than +1 or -1 is used, a <a class="el" href="classmarley_1_1_error.html" title="Base class for all exceptions thrown by MARLEY functions.">marley::Error</a> will be thrown. </p>
 
-<p class="definition">Definition at line <a class="el" href="_parity_8cc_source.html#l00034">34</a> of file <a class="el" href="_parity_8cc_source.html">Parity.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;                                                    {</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="comment">// Do the assignment</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="keywordflow">if</span> (i == 1) <a class="code" href="classmarley_1_1_parity.html#a03f21157713d489f161039f2bf1373db">is_positive_</a> = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> (i == -1) <a class="code" href="classmarley_1_1_parity.html#a03f21157713d489f161039f2bf1373db">is_positive_</a> = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>( <span class="stringliteral">&quot;Invalid parity &quot;</span> + std::to_string(i)</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    + <span class="stringliteral">&quot; assigned to variable of type marley::Parity&quot;</span> );</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="comment">// Return the existing object</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;}</div>
-</div><!-- fragment -->
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_parity_8hh_source.html">Parity.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_parity_8cc_source.html">Parity.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_parity_8hh_source.html">Parity.hh</a></li>
+<li>/Users/gardiner/marley/src/Parity.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -227,8 +227,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Gamma emission exit channel that leads to the unbound continuum in the final state </p>
-
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8hh_source.html#l00399">399</a> of file <a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a9e84f838b2f870e10969f9d82d3fc413"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9e84f838b2f870e10969f9d82d3fc413">&#9670;&nbsp;</a></span>GammaContinuumExitChannel()</h2>
@@ -303,25 +301,11 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 <p></p>
 <dl class="section note"><dt>Note</dt><dd>This line keeps old versions (4.9.3) of GCC happy</dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8hh_source.html#l00407">407</a> of file <a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;                       : <a class="code" href="classmarley_1_1_exit_channel.html#a83b95d67069692c2ac6c2c97f1e65a19">ExitChannel</a>( pdgi, qi, Exi, twoJi, Pi, rho_i, sdb ),</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;        <a class="code" href="classmarley_1_1_continuum_exit_channel.html#a1be10bd5579d426b3b0f35144562c5ed">ContinuumExitChannel</a>( Ec_min, sdb.<a class="code" href="classmarley_1_1_structure_database.html#add24e865e31e3748c4909fdba39bc807">get_gamma_l_max</a>() ),</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;        GammaExitChannel()</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;      {</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;        this-&gt;<a class="code" href="classmarley_1_1_continuum_exit_channel.html#a2d83ba734a27bd65ad335d2dc37b2e79">compute_total_width</a>();</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;      }</div>
-<div class="ttc" id="aclassmarley_1_1_continuum_exit_channel_html_a1be10bd5579d426b3b0f35144562c5ed"><div class="ttname"><a href="classmarley_1_1_continuum_exit_channel.html#a1be10bd5579d426b3b0f35144562c5ed">marley::ContinuumExitChannel::ContinuumExitChannel</a></div><div class="ttdeci">ContinuumExitChannel(double Ec_min, int lmax)</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00250">ExitChannel.hh:250</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_continuum_exit_channel_html_a2d83ba734a27bd65ad335d2dc37b2e79"><div class="ttname"><a href="classmarley_1_1_continuum_exit_channel.html#a2d83ba734a27bd65ad335d2dc37b2e79">marley::ContinuumExitChannel::compute_total_width</a></div><div class="ttdeci">virtual void compute_total_width() final override</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8cc_source.html#l00279">ExitChannel.cc:279</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a83b95d67069692c2ac6c2c97f1e65a19"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a83b95d67069692c2ac6c2c97f1e65a19">marley::ExitChannel::ExitChannel</a></div><div class="ttdeci">ExitChannel()=default</div></div>
-<div class="ttc" id="aclassmarley_1_1_structure_database_html_add24e865e31e3748c4909fdba39bc807"><div class="ttname"><a href="classmarley_1_1_structure_database.html#add24e865e31e3748c4909fdba39bc807">marley::StructureDatabase::get_gamma_l_max</a></div><div class="ttdeci">int get_gamma_l_max() const</div><div class="ttdoc">Returns the maximum multipolarity to consider when simulating gamma-ray emission to the continuum.</div><div class="ttdef"><b>Definition:</b> <a href="_structure_database_8hh_source.html#l00164">StructureDatabase.hh:164</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="classmarley_1_1_exit_channel.html#a8f8387c4d89b8457f7899a372524a27b">marley::ExitChannel::compute_total_width()</a>.</p>
-
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_exit_channel_8cc_source.html">ExitChannel.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a></li>
+<li>/Users/gardiner/marley/src/ExitChannel.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

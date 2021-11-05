@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -161,8 +161,6 @@ Protected Member Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Singleton lookup table for particle and atomic masses. </p>
-
-<p class="definition">Definition at line <a class="el" href="_mass_table_8hh_source.html#l00027">27</a> of file <a class="el" href="_mass_table_8hh_source.html">MassTable.hh</a>.</p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a29d26b85de4d9d961fc475cd63ea24a3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a29d26b85de4d9d961fc475cd63ea24a3">&#9670;&nbsp;</a></span>fragment_emission_threshold()</h2>
@@ -206,17 +204,6 @@ Protected Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00264">264</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;{</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;  <span class="comment">// Separation energy for the fragment</span></div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  <span class="keywordtype">double</span> Sa = this-&gt;<a class="code" href="classmarley_1_1_mass_table.html#a2c80b7a9b829e1c1e194e30dc4d934e9">get_fragment_separation_energy</a>( Zi, Ai, f.<a class="code" href="classmarley_1_1_fragment.html#ae1c0674c5c17cb7e0604da1842577f5a">get_pid</a>() );</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  <span class="keywordflow">return</span> Sa;</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_fragment_html_ae1c0674c5c17cb7e0604da1842577f5a"><div class="ttname"><a href="classmarley_1_1_fragment.html#ae1c0674c5c17cb7e0604da1842577f5a">marley::Fragment::get_pid</a></div><div class="ttdeci">int get_pid() const</div><div class="ttdoc">Get the PDG particle ID for this fragment.</div><div class="ttdef"><b>Definition:</b> <a href="_fragment_8hh_source.html#l00073">Fragment.hh:73</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_mass_table_html_a2c80b7a9b829e1c1e194e30dc4d934e9"><div class="ttname"><a href="classmarley_1_1_mass_table.html#a2c80b7a9b829e1c1e194e30dc4d934e9">marley::MassTable::get_fragment_separation_energy</a></div><div class="ttdeci">double get_fragment_separation_energy(int Z, int A, int pdg, bool theory_ok=true) const</div><div class="ttdoc">Get the separation energy for emission of a nuclear fragment from a nucleus.</div><div class="ttdef"><b>Definition:</b> <a href="_mass_table_8cc_source.html#l00205">MassTable.cc:205</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_fragment_8hh_source.html#l00073">marley::Fragment::get_pid()</a>.</p>
-
 </div>
 </div>
 <a id="a3ad072b1e576360f5898754077811267"></a>
@@ -254,17 +241,6 @@ Protected Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Atomic mass (MeV) </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00094">94</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;{</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="keywordtype">bool</span> exp;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  <span class="keywordtype">double</span> mass = lookup_atomic_mass(nucleus_pid, exp,</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    theory_ok);</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keywordflow">if</span> (exp) mass *= micro_amu_;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="keywordflow">return</span> mass;</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;}</div>
-</div><!-- fragment -->
-<p class="reference">Referenced by <a class="el" href="_nuclear_reaction_8cc_source.html#l00065">marley::NuclearReaction::NuclearReaction()</a>, and <a class="el" href="_decay_scheme_8cc_source.html#l00071">marley::DecayScheme::do_cascade()</a>.</p>
 
 </div>
 </div>
@@ -311,14 +287,6 @@ Protected Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Atomic mass (MeV) </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00190">190</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;                                                                          {</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;  <span class="keywordtype">bool</span> exp;</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  <span class="keywordtype">double</span> mass = lookup_atomic_mass(Z, A, exp, theory_ok);</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;  <span class="keywordflow">if</span> (exp) mass *= micro_amu_;</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  <span class="keywordflow">return</span> mass;</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;}</div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="a4d3708ae74e63b6a9a5e651f7d0f1161"></a>
@@ -364,22 +332,6 @@ Protected Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Binding energy (MeV) </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00166">166</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;{</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;  <span class="keywordtype">int</span> N = A - Z;</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;  <span class="keywordtype">double</span> m_hydrogen_1 = atomic_masses_.at(1000010010);</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  <span class="keywordtype">double</span> mn = particle_masses_.at(marley_utils::NEUTRON);</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160; </div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;  <span class="keywordtype">bool</span> exp;</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;  <span class="keywordtype">double</span> mN = lookup_atomic_mass(Z, A, exp, theory_ok);</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160; </div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  <span class="comment">// Experimental masses are given in micro-amu, while our liquid drop model</span></div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  <span class="comment">// estimates are given in MeV, so adjust the calculation appropriately</span></div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <span class="comment">// depending on which unit we are using for mN.</span></div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keywordflow">if</span> (exp) <span class="keywordflow">return</span> micro_amu_ * (Z*m_hydrogen_1 + N*mn - mN);</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">return</span> micro_amu_ * (Z*m_hydrogen_1 + N*mn) - mN;</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;}</div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="a290c723ff9b548d04c9c8f9db1322b9a"></a>
@@ -425,13 +377,6 @@ Protected Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Separation energy (MeV) </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00197">197</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;{</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;  <span class="keywordtype">int</span> Zi = marley_utils::get_particle_Z( nuc_pdg );</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;  <span class="keywordtype">int</span> Ai = marley_utils::get_particle_A( nuc_pdg );</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;  <span class="keywordflow">return</span> this-&gt;<a class="code" href="classmarley_1_1_mass_table.html#a2c80b7a9b829e1c1e194e30dc4d934e9">get_fragment_separation_energy</a>( Zi, Ai, frag_pdg, theory_ok );</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;}</div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="a2c80b7a9b829e1c1e194e30dc4d934e9"></a>
@@ -484,30 +429,6 @@ Protected Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Separation energy (MeV) </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00205">205</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;{</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  <span class="keywordtype">int</span> Zx = marley_utils::get_particle_Z(pid);</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;  <span class="keywordtype">int</span> Zf = Z - Zx;</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;  <span class="keywordtype">int</span> Af = A - marley_utils::get_particle_A(pid);</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160; </div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;  <span class="keywordtype">double</span> extra_mass = Zx*particle_masses_.at(marley_utils::ELECTRON)</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    + particle_masses_.at(pid);</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160; </div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;  <span class="keywordtype">bool</span> exp_i, exp_f;</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;  <span class="keywordtype">double</span> m_atom_initial = lookup_atomic_mass(Z, A, exp_i, theory_ok);</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;  <span class="keywordtype">double</span> m_atom_final = lookup_atomic_mass(Zf, Af, exp_f, theory_ok);</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160; </div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;  <span class="keywordflow">if</span> (exp_i) {</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    <span class="keywordflow">if</span> (exp_f) <span class="keywordflow">return</span> micro_amu_*(m_atom_final - m_atom_initial + extra_mass);</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    <span class="keywordflow">else</span> <span class="keywordflow">return</span> m_atom_final + micro_amu_*(extra_mass - m_atom_initial);</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;  }</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> (exp_f) <span class="keywordflow">return</span> micro_amu_*(m_atom_final + extra_mass)</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;    - m_atom_initial;</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">return</span> micro_amu_*extra_mass + m_atom_final - m_atom_initial;</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;}</div>
-</div><!-- fragment -->
-<p class="reference">Referenced by <a class="el" href="_backshifted_fermi_gas_model_8cc_source.html#l00023">marley::BackshiftedFermiGasModel::BackshiftedFermiGasModel()</a>.</p>
-
 </div>
 </div>
 <a id="a32b0055a72b31714274272ca614cb399"></a>
@@ -553,16 +474,6 @@ Protected Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Mass excess (MeV) </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00182">182</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;{</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;  <span class="keywordtype">bool</span> exp;</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;  <span class="keywordtype">double</span> mN = lookup_atomic_mass(Z, A, exp, theory_ok);</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;  <span class="keywordflow">if</span> (exp) <span class="keywordflow">return</span> micro_amu_*(mN - A*1e6);</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">return</span> mN - micro_amu_*A*1e6;</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;}</div>
-</div><!-- fragment -->
-<p class="reference">Referenced by <a class="el" href="_backshifted_fermi_gas_model_8cc_source.html#l00023">marley::BackshiftedFermiGasModel::BackshiftedFermiGasModel()</a>.</p>
-
 </div>
 </div>
 <a id="aa01d20dec4be5b289a6b17c16c851916"></a>
@@ -589,20 +500,6 @@ Protected Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Particle mass (MeV) </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00083">83</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;                                                               {</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="keywordtype">int</span> <span class="keywordtype">id</span> = particle_id;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="comment">// The lookup table only includes entries for particles (as opposed to</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="comment">// antiparticles), so flip the sign of the input particle id for the</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  <span class="comment">// lookup if it represents an antiparticle.</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keywordflow">if</span> (<span class="keywordtype">id</span> &lt; 0) <span class="keywordtype">id</span> *= -1;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="comment">// Find the particle&#39;s mass in the lookup table, and convert its</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="comment">// value from micro-amu to MeV</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="keywordflow">return</span> micro_amu_ * particle_masses_.at(<span class="keywordtype">id</span>);</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;}</div>
-</div><!-- fragment -->
-<p class="reference">Referenced by <a class="el" href="_nuclear_reaction_8cc_source.html#l00065">marley::NuclearReaction::NuclearReaction()</a>, <a class="el" href="_decay_scheme_8cc_source.html#l00071">marley::DecayScheme::do_cascade()</a>, <a class="el" href="_fragment_8hh_source.html#l00088">marley::Fragment::get_mass()</a>, and <a class="el" href="_weisskopf_single_particle_model_8cc_source.html#l00043">marley::WeisskopfSingleParticleModel::strength_function()</a>.</p>
 
 </div>
 </div>
@@ -642,12 +539,6 @@ Protected Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Atomic mass (MeV) </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00079">79</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                                                                        {</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="classmarley_1_1_mass_table.html#ab684a41226e22dfbdba76b3d7e253591">liquid_drop_model_mass_excess</a>(Z, A) + micro_amu_*1e6*A;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_mass_table_html_ab684a41226e22dfbdba76b3d7e253591"><div class="ttname"><a href="classmarley_1_1_mass_table.html#ab684a41226e22dfbdba76b3d7e253591">marley::MassTable::liquid_drop_model_mass_excess</a></div><div class="ttdeci">double liquid_drop_model_mass_excess(int Z, int A) const</div><div class="ttdoc">Calculate a theoretical mass excess for a nucleus using the liquid drop model.</div><div class="ttdef"><b>Definition:</b> <a href="_mass_table_8cc_source.html#l00232">MassTable.cc:232</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="ab684a41226e22dfbdba76b3d7e253591"></a>
@@ -687,41 +578,6 @@ Protected Member Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>Mass excess (MeV)</dd></dl>
 <p>The liquid drop model parameters used here are based on those given in <a href="http://dx.doi.org/10.1016/j.nuclphysa.2008.06.005">A. J. Koning, et al., Nucl. Phys. A 810 (2008) pp. 13-76</a> for use with the back-shifted Fermi gas nuclear level density model. </p>
 
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00232">232</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;                                                                        {</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160; </div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;  <span class="comment">// Liquid drop model parameters (taken from paper by A. J. Koning, et al.)</span></div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> Mn = 8.07144; <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> MH = 7.28899; <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> a1 = 15.677; <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> a2 = 18.56; <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> kappa = 1.79;</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> c3 = 0.717; <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> c4 = 1.21129; <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160; </div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;  <span class="keywordtype">int</span> N = A - Z;</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160; </div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;  <span class="keywordtype">double</span> kappa_term = kappa * std::pow((N - Z) / <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(A), 2);</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;  <span class="keywordtype">double</span> c1 = a1 * (1 - kappa_term);</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;  <span class="keywordtype">double</span> c2 = a2 * (1 - kappa_term);</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160; </div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;  <span class="keywordtype">double</span> Evol = -c1 * A;</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;  <span class="keywordtype">double</span> Esur = c2 * std::pow(A, 2.0/3.0);</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  <span class="keywordtype">double</span> Ecoul = (c3 / std::pow(A, 1.0/3.0) - c4 / A) * std::pow(Z, 2);</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160; </div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  <span class="keywordtype">double</span> delta_LDM = 0;</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  <span class="keywordtype">bool</span> z_odd = Z % 2;</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  <span class="keywordtype">bool</span> n_odd = N % 2;</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160; </div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  <span class="comment">// delta_LDM will be zero if the nucleus is odd-even</span></div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  <span class="keywordflow">if</span> (z_odd &amp;&amp; n_odd) delta_LDM = 11/std::sqrt(A);</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> (!z_odd &amp;&amp; !n_odd) delta_LDM = -11/std::sqrt(A);</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160; </div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;  <span class="keywordflow">return</span> Mn * N + MH * Z + Evol + Esur + Ecoul + delta_LDM;</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;}</div>
-</div><!-- fragment -->
-<p class="reference">Referenced by <a class="el" href="_backshifted_fermi_gas_model_8cc_source.html#l00023">marley::BackshiftedFermiGasModel::BackshiftedFermiGasModel()</a>.</p>
-
 </div>
 </div>
 <a id="aed1e82fb5b3fa81eda72cb5e8d3adf28"></a>
@@ -748,14 +604,6 @@ Protected Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00296">296</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;{</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;  <span class="keywordtype">int</span> Zi = marley_utils::get_particle_Z( initial_nucleus_pdg );</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;  <span class="keywordtype">int</span> Ai = marley_utils::get_particle_A( initial_nucleus_pdg );</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;  <span class="keywordflow">return</span> this-&gt;<a class="code" href="classmarley_1_1_mass_table.html#ac3abe208670268e6fc69adfd29c9fd08">unbound_threshold</a>( Zi, Ai );</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_mass_table_html_ac3abe208670268e6fc69adfd29c9fd08"><div class="ttname"><a href="classmarley_1_1_mass_table.html#ac3abe208670268e6fc69adfd29c9fd08">marley::MassTable::unbound_threshold</a></div><div class="ttdeci">double unbound_threshold(const int Zi, const int Ai) const</div><div class="ttdoc">Computes the lowest excitation energy at which one of the nuclear fragments considered by the HauserF...</div><div class="ttdef"><b>Definition:</b> <a href="_mass_table_8cc_source.html#l00275">MassTable.cc:275</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="ac3abe208670268e6fc69adfd29c9fd08"></a>
@@ -793,37 +641,11 @@ Protected Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_mass_table_8cc_source.html#l00275">275</a> of file <a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;{</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;  <span class="comment">// Before looking up the separation energies, start by setting the unbound</span></div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;  <span class="comment">// threshold to infinity.</span></div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;  <span class="keywordtype">double</span> <a class="code" href="classmarley_1_1_mass_table.html#ac3abe208670268e6fc69adfd29c9fd08">unbound_threshold</a> = std::numeric_limits&lt;double&gt;::max();</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;  MARLEY_LOG_DEBUG() &lt;&lt; <span class="stringliteral">&quot;unbound_threshold = &quot;</span> &lt;&lt; <a class="code" href="classmarley_1_1_mass_table.html#ac3abe208670268e6fc69adfd29c9fd08">unbound_threshold</a> &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160; </div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;  <span class="comment">// Loop over each available nuclear fragment. If it has a smaller separation</span></div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;  <span class="comment">// energy than the current value of unbound_threshold, update the stored value</span></div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  <span class="keywordflow">for</span> ( <span class="keyword">const</span> <span class="keyword">auto</span>&amp; pair : <a class="code" href="classmarley_1_1_structure_database.html#ae75f726dbcf90a641ee19e1f8ce60b0a">marley::StructureDatabase::fragments</a>() ) {</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    <span class="keyword">const</span> <a class="code" href="classmarley_1_1_fragment.html">marley::Fragment</a>&amp; f = pair.second;</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    <span class="keywordtype">double</span> thresh = this-&gt;<a class="code" href="classmarley_1_1_mass_table.html#a29d26b85de4d9d961fc475cd63ea24a3">fragment_emission_threshold</a>( Zi, Ai, f );</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    MARLEY_LOG_DEBUG() &lt;&lt; f.<a class="code" href="classmarley_1_1_fragment.html#ae1c0674c5c17cb7e0604da1842577f5a">get_pid</a>() &lt;&lt; <span class="stringliteral">&quot; emission threshold = &quot;</span></div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;      &lt;&lt; thresh &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    <span class="keywordflow">if</span> ( thresh &lt; <a class="code" href="classmarley_1_1_mass_table.html#ac3abe208670268e6fc69adfd29c9fd08">unbound_threshold</a> ) <a class="code" href="classmarley_1_1_mass_table.html#ac3abe208670268e6fc69adfd29c9fd08">unbound_threshold</a> = thresh;</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    MARLEY_LOG_DEBUG() &lt;&lt; <span class="stringliteral">&quot;unbound_threshold = &quot;</span> &lt;&lt; <a class="code" href="classmarley_1_1_mass_table.html#ac3abe208670268e6fc69adfd29c9fd08">unbound_threshold</a> &lt;&lt; <span class="charliteral">&#39;\n&#39;</span>;</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;  }</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160; </div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="classmarley_1_1_mass_table.html#ac3abe208670268e6fc69adfd29c9fd08">unbound_threshold</a>;</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_fragment_html"><div class="ttname"><a href="classmarley_1_1_fragment.html">marley::Fragment</a></div><div class="ttdoc">Simple container for storing reference data about each of the nuclear fragments considered by MARLEY'...</div><div class="ttdef"><b>Definition:</b> <a href="_fragment_8hh_source.html#l00027">Fragment.hh:27</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_mass_table_html_a29d26b85de4d9d961fc475cd63ea24a3"><div class="ttname"><a href="classmarley_1_1_mass_table.html#a29d26b85de4d9d961fc475cd63ea24a3">marley::MassTable::fragment_emission_threshold</a></div><div class="ttdeci">double fragment_emission_threshold(const int Zi, const int Ai, const marley::Fragment &amp;f) const</div><div class="ttdoc">Get the approximate excitation energy threshold for emission of a particular nuclear fragment.</div><div class="ttdef"><b>Definition:</b> <a href="_mass_table_8cc_source.html#l00264">MassTable.cc:264</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_structure_database_html_ae75f726dbcf90a641ee19e1f8ce60b0a"><div class="ttname"><a href="classmarley_1_1_structure_database.html#ae75f726dbcf90a641ee19e1f8ce60b0a">marley::StructureDatabase::fragments</a></div><div class="ttdeci">static const std::map&lt; int, marley::Fragment &gt; &amp; fragments()</div><div class="ttdoc">Retrieves a const reference to the table of Fragment objects.</div><div class="ttdef"><b>Definition:</b> <a href="_structure_database_8hh_source.html#l00140">StructureDatabase.hh:140</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_structure_database_8hh_source.html#l00140">marley::StructureDatabase::fragments()</a>, and <a class="el" href="_fragment_8hh_source.html#l00073">marley::Fragment::get_pid()</a>.</p>
-
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_mass_table_8hh_source.html">MassTable.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_mass_table_8cc_source.html">MassTable.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_mass_table_8hh_source.html">MassTable.hh</a></li>
+<li>/Users/gardiner/marley/src/MassTable.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

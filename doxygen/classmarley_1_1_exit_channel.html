@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -189,8 +189,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Abstract base class for compound nucleus de-excitation channels. </p>
-
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8hh_source.html#l00036">36</a> of file <a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a83b95d67069692c2ac6c2c97f1e65a19"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a83b95d67069692c2ac6c2c97f1e65a19">&#9670;&nbsp;</a></span>ExitChannel() <span class="overload">[1/2]</span></h2>
@@ -294,22 +292,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8hh_source.html#l00055">55</a> of file <a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                                                     : <a class="code" href="classmarley_1_1_exit_channel.html#a417cc9c85665e4f2f781be6be04ee7cc">pdgi_</a>( pdgi ),</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        <a class="code" href="classmarley_1_1_exit_channel.html#a8bf587a8d0d6d15aecf8a1bda69c0bf8">qi_</a>( qi ), <a class="code" href="classmarley_1_1_exit_channel.html#ad1010df4e33762806fcd0049b03ddece">Exi_</a>( Exi ), <a class="code" href="classmarley_1_1_exit_channel.html#a0ddee27521b18fd4a4a424f2f58c1e53">twoJi_</a>( twoJi ), <a class="code" href="classmarley_1_1_exit_channel.html#a61ffe27cd4631c4bf117313284250b51">Pi_</a>( Pi ), <a class="code" href="classmarley_1_1_exit_channel.html#a4c9631ea711dd81c7977e87df746c0f0">sdb_</a>( &amp;sdb )</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;      {</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        <a class="code" href="classmarley_1_1_exit_channel.html#afc85ca8bd6a3561208f5343bbc329348">one_over_two_pi_rho_i_</a> = std::pow( 2. * marley_utils::pi * rho_i, -1 );</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;      }</div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a0ddee27521b18fd4a4a424f2f58c1e53"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a0ddee27521b18fd4a4a424f2f58c1e53">marley::ExitChannel::twoJi_</a></div><div class="ttdeci">int twoJi_</div><div class="ttdoc">Two times the initial nuclear spin .</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00138">ExitChannel.hh:138</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a417cc9c85665e4f2f781be6be04ee7cc"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a417cc9c85665e4f2f781be6be04ee7cc">marley::ExitChannel::pdgi_</a></div><div class="ttdeci">int pdgi_</div><div class="ttdoc">PDG code for the initial nucleus.</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00128">ExitChannel.hh:128</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a4c9631ea711dd81c7977e87df746c0f0"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a4c9631ea711dd81c7977e87df746c0f0">marley::ExitChannel::sdb_</a></div><div class="ttdeci">marley::StructureDatabase * sdb_</div><div class="ttdoc">StructureDatabase to use in calculations.</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00155">ExitChannel.hh:155</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a61ffe27cd4631c4bf117313284250b51"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a61ffe27cd4631c4bf117313284250b51">marley::ExitChannel::Pi_</a></div><div class="ttdeci">marley::Parity Pi_</div><div class="ttdoc">Initial nuclear parity .</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00141">ExitChannel.hh:141</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a8bf587a8d0d6d15aecf8a1bda69c0bf8"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a8bf587a8d0d6d15aecf8a1bda69c0bf8">marley::ExitChannel::qi_</a></div><div class="ttdeci">int qi_</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00132">ExitChannel.hh:132</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_ad1010df4e33762806fcd0049b03ddece"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#ad1010df4e33762806fcd0049b03ddece">marley::ExitChannel::Exi_</a></div><div class="ttdeci">double Exi_</div><div class="ttdoc">Initial nuclear excitation energy  (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00135">ExitChannel.hh:135</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_afc85ca8bd6a3561208f5343bbc329348"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#afc85ca8bd6a3561208f5343bbc329348">marley::ExitChannel::one_over_two_pi_rho_i_</a></div><div class="ttdeci">double one_over_two_pi_rho_i_</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00149">ExitChannel.hh:149</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_exit_channel_8hh_source.html#l00149">one_over_two_pi_rho_i_</a>.</p>
-
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
@@ -338,8 +320,6 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 <p>Helper function that initializes the width_ member variable upon construction </p>
 
 <p>Implemented in <a class="el" href="classmarley_1_1_gamma_discrete_exit_channel.html#a320f8b6913c84fabd82c5e9ac477df34">marley::GammaDiscreteExitChannel</a>, <a class="el" href="classmarley_1_1_fragment_discrete_exit_channel.html#a38e28785c5a16f029d424cc74bfd3eb9">marley::FragmentDiscreteExitChannel</a>, and <a class="el" href="classmarley_1_1_continuum_exit_channel.html#a2d83ba734a27bd65ad335d2dc37b2e79">marley::ContinuumExitChannel</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="_exit_channel_8hh_source.html#l00380">marley::FragmentContinuumExitChannel::FragmentContinuumExitChannel()</a>, <a class="el" href="_exit_channel_8hh_source.html#l00336">marley::FragmentDiscreteExitChannel::FragmentDiscreteExitChannel()</a>, <a class="el" href="_exit_channel_8hh_source.html#l00407">marley::GammaContinuumExitChannel::GammaContinuumExitChannel()</a>, and <a class="el" href="_exit_channel_8hh_source.html#l00358">marley::GammaDiscreteExitChannel::GammaDiscreteExitChannel()</a>.</p>
 
 </div>
 </div>
@@ -454,18 +434,6 @@ template&lt;typename It &gt; </div>
 <p>Convert an iterator that points to an <a class="el" href="classmarley_1_1_exit_channel.html" title="Abstract base class for compound nucleus de-excitation channels.">ExitChannel</a> object into an iterator to the <a class="el" href="classmarley_1_1_exit_channel.html" title="Abstract base class for compound nucleus de-excitation channels.">ExitChannel</a>'s width_ member variable. </p>
 <p>This is used to load a std::discrete_distribution with decay widths for sampling without redundant storage. </p>
 
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8hh_source.html#l00092">92</a> of file <a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;      {</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="classmarley_1_1_iterator_to_pointer_member.html">marley::IteratorToPointerMember</a>&lt;It,</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;          <span class="keywordtype">double</span>&gt;(it, &amp;<a class="code" href="classmarley_1_1_exit_channel.html#a4c1dd582e6d15aad2630c446b03109cc">marley::ExitChannel::width_</a>);</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;      }</div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a4c1dd582e6d15aad2630c446b03109cc"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a4c1dd582e6d15aad2630c446b03109cc">marley::ExitChannel::width_</a></div><div class="ttdeci">double width_</div><div class="ttdoc">Total decay width into this channel (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00152">ExitChannel.hh:152</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_iterator_to_pointer_member_html"><div class="ttname"><a href="classmarley_1_1_iterator_to_pointer_member.html">marley::IteratorToPointerMember</a></div><div class="ttdoc">Template class that creates an iterator to a class member based on an iterator to a pointer (either b...</div><div class="ttdef"><b>Definition:</b> <a href="_iterator_to_pointer_member_8hh_source.html#l00030">IteratorToPointerMember.hh:31</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_exit_channel_8hh_source.html#l00152">width_</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="_hauser_feshbach_decay_8cc_source.html#l00239">marley::HauserFeshbachDecay::sample_exit_channel()</a>.</p>
-
 </div>
 </div>
 <a id="adc59b81f9dcc9a9b0d3fe4729f0ac907"></a>
@@ -532,52 +500,6 @@ template&lt;typename It &gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8cc_source.html#l00380">380</a> of file <a class="el" href="_exit_channel_8cc_source.html">ExitChannel.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;{</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span>&amp; mt = <a class="code" href="classmarley_1_1_mass_table.html#a2e43b8ba549e31fc8c6b811656f69b94">marley::MassTable::Instance</a>();</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  <span class="keywordtype">int</span> ep_pdg = this-&gt;<a class="code" href="classmarley_1_1_exit_channel.html#a9ddda0ed709256e8b97f52c878a1f843">emitted_particle_pdg</a>();</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  <span class="keywordtype">double</span> ep_mass = mt.get_particle_mass( ep_pdg );</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160; </div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  emitted_particle = <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>( ep_pdg, ep_mass );</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160; </div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  <span class="comment">// Proton number of the emitted particle</span></div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;  <span class="keywordtype">int</span> ep_Z = marley_utils::get_particle_Z( ep_pdg );</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160; </div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;  <span class="comment">// Final ion charge after particle emission</span></div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  <span class="keywordtype">int</span> qf = <a class="code" href="classmarley_1_1_exit_channel.html#a8bf587a8d0d6d15aecf8a1bda69c0bf8">qi_</a> - ep_Z;</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160; </div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  <span class="keywordtype">double</span> me = mt.get_particle_mass( marley_utils::ELECTRON );</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  <span class="keywordtype">int</span> remnant_pdg = this-&gt;<a class="code" href="classmarley_1_1_exit_channel.html#ae2c00027ab1cb3d9fa80061a9149e44b">final_nucleus_pdg</a>();</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160; </div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  <span class="comment">// Approximate the ground state mass of the ion formed when the fragment is</span></div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;  <span class="comment">// emitted by subtracting qf electron masses from the atomic mass for the</span></div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;  <span class="comment">// final nuclide.</span></div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;  <span class="keywordtype">double</span> Mfgs_ion = mt.get_atomic_mass( remnant_pdg ) - qf*me;</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160; </div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  residual_nucleus = <a class="code" href="classmarley_1_1_particle.html">marley::Particle</a>( remnant_pdg, Mfgs_ion + Exf, qf );</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160; </div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;  <span class="comment">// Now that the PDG codes, masses, and net charges of the binary decay</span></div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;  <span class="comment">// products have been set, choose a direction for the emitted particle.</span></div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;  <span class="comment">// TODO: Consider changing this to a more realistic model instead of</span></div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;  <span class="comment">// isotropic emissions.</span></div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  <span class="keywordtype">double</span> cos_theta_emitted_particle</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;    = gen.<a class="code" href="classmarley_1_1_generator.html#a0f589845050dad9b4640ab25750db4ca">uniform_random_double</a>( -1., 1., <span class="keyword">true</span> );</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;  <span class="keywordtype">double</span> phi_emitted_particle</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    = gen.<a class="code" href="classmarley_1_1_generator.html#a0f589845050dad9b4640ab25750db4ca">uniform_random_double</a>( 0., marley_utils::two_pi, <span class="keyword">false</span> );</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160; </div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;  <span class="comment">// Handle the kinematics calculations for this decay. Load the</span></div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;  <span class="comment">// final-state particle objects with their full 4-momenta.</span></div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  marley_kinematics::two_body_decay( compound_nucleus, emitted_particle,</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;    residual_nucleus, cos_theta_emitted_particle, phi_emitted_particle );</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a9ddda0ed709256e8b97f52c878a1f843"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a9ddda0ed709256e8b97f52c878a1f843">marley::ExitChannel::emitted_particle_pdg</a></div><div class="ttdeci">virtual int emitted_particle_pdg() const =0</div><div class="ttdoc">Returns the PDG code for the particle (gamma-ray or nuclear fragment) emitted by decays into this Exi...</div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_ae2c00027ab1cb3d9fa80061a9149e44b"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#ae2c00027ab1cb3d9fa80061a9149e44b">marley::ExitChannel::final_nucleus_pdg</a></div><div class="ttdeci">virtual int final_nucleus_pdg() const =0</div><div class="ttdoc">Returns the PDG code for the final nucleus.</div></div>
-<div class="ttc" id="aclassmarley_1_1_generator_html_a0f589845050dad9b4640ab25750db4ca"><div class="ttname"><a href="classmarley_1_1_generator.html#a0f589845050dad9b4640ab25750db4ca">marley::Generator::uniform_random_double</a></div><div class="ttdeci">double uniform_random_double(double min, double max, bool inclusive)</div><div class="ttdoc">Sample a random number uniformly on either [min, max) or [min, max].</div><div class="ttdef"><b>Definition:</b> <a href="_generator_8cc_source.html#l00173">Generator.cc:173</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_mass_table_html_a2e43b8ba549e31fc8c6b811656f69b94"><div class="ttname"><a href="classmarley_1_1_mass_table.html#a2e43b8ba549e31fc8c6b811656f69b94">marley::MassTable::Instance</a></div><div class="ttdeci">static const MassTable &amp; Instance()</div><div class="ttdoc">Get a const reference to the singleton instance of the MassTable.</div><div class="ttdef"><b>Definition:</b> <a href="_mass_table_8cc_source.html#l00068">MassTable.cc:68</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_particle_html"><div class="ttname"><a href="classmarley_1_1_particle.html">marley::Particle</a></div><div class="ttdoc">Momentum four-vector for a simulated particle.</div><div class="ttdef"><b>Definition:</b> <a href="_particle_8hh_source.html#l00032">Particle.hh:32</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_mass_table_8cc_source.html#l00068">marley::MassTable::Instance()</a>, and <a class="el" href="_generator_8cc_source.html#l00173">marley::Generator::uniform_random_double()</a>.</p>
-
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
@@ -603,10 +525,6 @@ template&lt;typename It &gt; </div>
 <p>Normalization factor needed so that the decay widths have correct units</p>
 <p>This factor is equal to \( \left[ 2\pi\rho(E_x, J, \Pi) \right]^{-1} \) where \(\rho\) is the initial nuclear level density (MeV<sup> -1</sup>) in the vicinity of the initial nuclear level. This level has excitation energy \( E_x \), total spin \( J \), and parity \( \Pi \). </p>
 
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8hh_source.html#l00149">149</a> of file <a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a>.</p>
-
-<p class="reference">Referenced by <a class="el" href="_exit_channel_8hh_source.html#l00055">ExitChannel()</a>.</p>
-
 </div>
 </div>
 <a id="a8bf587a8d0d6d15aecf8a1bda69c0bf8"></a>
@@ -630,13 +548,11 @@ template&lt;typename It &gt; </div>
 </div><div class="memdoc">
 <p>Net charge (in units of the elementary charge) of the initial atom or ion </p>
 
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8hh_source.html#l00132">132</a> of file <a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a>.</p>
-
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_exit_channel_8cc_source.html">ExitChannel.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a></li>
+<li>/Users/gardiner/marley/src/ExitChannel.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

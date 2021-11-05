@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -183,8 +183,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 <p class="endtd">\(\displaystyle\sigma_{\text{M}\ell} = (0.0008)^{\ell - 1}\,\sigma_{\text{M}1}\) </p>
 </td><td>mb </td></tr>
 </table>
-
-<p class="definition">Definition at line <a class="el" href="_standard_lorentzian_model_8hh_source.html#l00108">108</a> of file <a class="el" href="_standard_lorentzian_model_8hh_source.html">StandardLorentzianModel.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a652afe88397d22a00b6d8480035eb7be"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a652afe88397d22a00b6d8480035eb7be">&#9670;&nbsp;</a></span>StandardLorentzianModel()</h2>
@@ -212,51 +210,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
       </table>
 </div><div class="memdoc">
 <dl class="section note"><dt>Note</dt><dd>Be careful! You <b>must</b> initialize the E1 giant resonance parameters before the M1 parameters!</dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="_standard_lorentzian_model_8cc_source.html#l00029">29</a> of file <a class="el" href="_standard_lorentzian_model_8cc_source.html">StandardLorentzianModel.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  : <a class="code" href="classmarley_1_1_gamma_strength_function_model.html#adaf1257174b3c8a28fa2eb5dd87815db">GammaStrengthFunctionModel</a>(Z, A)</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;{</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="comment">// E1 giant resonance parameterization taken from the empirical fit for</span></div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="comment">// spherical nuclei given in the</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="comment">// &lt;a href=&quot;https://www-nds.iaea.org/RIPL-2/handbook/ripl2.pdf&quot;&gt;</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="comment">// RIPL-2 handbook&lt;/a&gt;, p. 129</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="comment">// @todo Consider updating E1 parameters to the new SLO fit from RIPL-3 (see</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="comment">// equation 174 in the RIPL-3 Nuclear Data Sheets paper, and compare equation</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="comment">// 173)</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  e_E1_ = 31.2*std::pow(<a class="code" href="classmarley_1_1_gamma_strength_function_model.html#aedb32e61fc400eacbbb8e14a0c7686ba">A_</a>, -1.0/3.0) + 20.6*std::pow(<a class="code" href="classmarley_1_1_gamma_strength_function_model.html#aedb32e61fc400eacbbb8e14a0c7686ba">A_</a>, -1.0/6.0); <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  gamma_E1_ = 0.026 * std::pow(e_E1_, 1.91); <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  sigma_E1_ = 1.2 * 120 * (<a class="code" href="classmarley_1_1_gamma_strength_function_model.html#aedb32e61fc400eacbbb8e14a0c7686ba">A_</a> - <a class="code" href="classmarley_1_1_gamma_strength_function_model.html#ad2795137e9c07314fa7fa4c0b9e4ab03">Z_</a>) * <a class="code" href="classmarley_1_1_gamma_strength_function_model.html#ad2795137e9c07314fa7fa4c0b9e4ab03">Z_</a>/(<a class="code" href="classmarley_1_1_gamma_strength_function_model.html#aedb32e61fc400eacbbb8e14a0c7686ba">A_</a> * marley_utils::pi * gamma_E1_)</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    * marley_utils::mb; <span class="comment">// mb</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="comment">// E2 giant resonance parameterization taken from the global fit given by</span></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="comment">// Kopecky in the</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  <span class="comment">// &lt;a href=&quot;https://www-nds.iaea.org/ripl/readme/ripl_handbook.ps&quot;&gt;RIPL-1</span></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="comment">// handbook&lt;/a&gt;, p. 103</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="comment">// RIPL-2 and RIPL-3 do not update this parameterization for the SLO</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  e_E2_ = 63*std::pow(<a class="code" href="classmarley_1_1_gamma_strength_function_model.html#aedb32e61fc400eacbbb8e14a0c7686ba">A_</a>, -1.0/3.0); <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  gamma_E2_ = 6.11 - 0.012*<a class="code" href="classmarley_1_1_gamma_strength_function_model.html#aedb32e61fc400eacbbb8e14a0c7686ba">A_</a>; <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  sigma_E2_ = 0.00014 * std::pow(<a class="code" href="classmarley_1_1_gamma_strength_function_model.html#ad2795137e9c07314fa7fa4c0b9e4ab03">Z_</a>, 2) * e_E2_</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    / (std::pow(<a class="code" href="classmarley_1_1_gamma_strength_function_model.html#aedb32e61fc400eacbbb8e14a0c7686ba">A_</a>, 1.0/3.0) * gamma_E2_) * marley_utils::mb; <span class="comment">// mb</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  <span class="comment">// M1 parameterization taken from the global SLO model fit given in the</span></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="comment">// &lt;a href=&quot;https://www-nds.iaea.org/RIPL-2/handbook/ripl2.pdf&quot;&gt;RIPL-2</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="comment">// handbook&lt;/a&gt;, p. 132</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="comment"></span>  constexpr <span class="keywordtype">double</span> e_gamma_ref = 7.0; <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  <span class="keywordtype">double</span> factor_m1 = <a class="code" href="classmarley_1_1_standard_lorentzian_model.html#a367fb33c72a71661473be5b1acb89e2b">strength_function</a>(TrType::electric, 1, e_gamma_ref)</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    / (0.0588 * std::pow(<a class="code" href="classmarley_1_1_gamma_strength_function_model.html#aedb32e61fc400eacbbb8e14a0c7686ba">A_</a>, 0.878));</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  gamma_M1_ = 4.0; <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  e_M1_ = 41*std::pow(<a class="code" href="classmarley_1_1_gamma_strength_function_model.html#aedb32e61fc400eacbbb8e14a0c7686ba">A_</a>, -1.0/3.0); <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  sigma_M1_ = (std::pow(std::pow(e_gamma_ref, 2) - std::pow(e_M1_, 2), 2)</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    + std::pow(e_gamma_ref, 2) * std::pow(gamma_M1_, 2))</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    * (3 * std::pow(marley_utils::pi, 2) * factor_m1)</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    / (e_gamma_ref * std::pow(gamma_M1_, 2)); <span class="comment">// mb</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_gamma_strength_function_model_html_ad2795137e9c07314fa7fa4c0b9e4ab03"><div class="ttname"><a href="classmarley_1_1_gamma_strength_function_model.html#ad2795137e9c07314fa7fa4c0b9e4ab03">marley::GammaStrengthFunctionModel::Z_</a></div><div class="ttdeci">int Z_</div><div class="ttdoc">Atomic number.</div><div class="ttdef"><b>Definition:</b> <a href="_gamma_strength_function_model_8hh_source.html#l00074">GammaStrengthFunctionModel.hh:74</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_gamma_strength_function_model_html_adaf1257174b3c8a28fa2eb5dd87815db"><div class="ttname"><a href="classmarley_1_1_gamma_strength_function_model.html#adaf1257174b3c8a28fa2eb5dd87815db">marley::GammaStrengthFunctionModel::GammaStrengthFunctionModel</a></div><div class="ttdeci">GammaStrengthFunctionModel(int Z, int A)</div><div class="ttdef"><b>Definition:</b> <a href="_gamma_strength_function_model_8cc_source.html#l00025">GammaStrengthFunctionModel.cc:25</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_gamma_strength_function_model_html_aedb32e61fc400eacbbb8e14a0c7686ba"><div class="ttname"><a href="classmarley_1_1_gamma_strength_function_model.html#aedb32e61fc400eacbbb8e14a0c7686ba">marley::GammaStrengthFunctionModel::A_</a></div><div class="ttdeci">int A_</div><div class="ttdoc">Mass number.</div><div class="ttdef"><b>Definition:</b> <a href="_gamma_strength_function_model_8hh_source.html#l00075">GammaStrengthFunctionModel.hh:75</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_standard_lorentzian_model_html_a367fb33c72a71661473be5b1acb89e2b"><div class="ttname"><a href="classmarley_1_1_standard_lorentzian_model.html#a367fb33c72a71661473be5b1acb89e2b">marley::StandardLorentzianModel::strength_function</a></div><div class="ttdeci">virtual double strength_function(TransitionType type, int l, double e_gamma) override</div><div class="ttdoc">Returns the gamma-ray strength function (MeV –2 –1) for the requested gamma energy and multipolarity.</div><div class="ttdef"><b>Definition:</b> <a href="_standard_lorentzian_model_8cc_source.html#l00133">StandardLorentzianModel.cc:133</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_gamma_strength_function_model_8hh_source.html#l00075">marley::GammaStrengthFunctionModel::A_</a>, <a class="el" href="_standard_lorentzian_model_8cc_source.html#l00133">strength_function()</a>, and <a class="el" href="_gamma_strength_function_model_8hh_source.html#l00074">marley::GammaStrengthFunctionModel::Z_</a>.</p>
 
 </div>
 </div>
@@ -313,14 +266,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 
 <p>Implements <a class="el" href="classmarley_1_1_gamma_strength_function_model.html#aa03728dbf54850dbc6fac5a9a066dfb8">marley::GammaStrengthFunctionModel</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_standard_lorentzian_model_8cc_source.html#l00133">133</a> of file <a class="el" href="_standard_lorentzian_model_8cc_source.html">StandardLorentzianModel.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;{</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  <span class="keywordflow">return</span> std::pow(e_gamma, 3 - 2*l)</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    * strength_function_coefficient(type, l, e_gamma);</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;}</div>
-</div><!-- fragment -->
-<p class="reference">Referenced by <a class="el" href="_standard_lorentzian_model_8cc_source.html#l00029">StandardLorentzianModel()</a>.</p>
-
 </div>
 </div>
 <a id="adb487e56903f0112cde94c0a62422bb5"></a>
@@ -375,18 +320,11 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 
 <p>Implements <a class="el" href="classmarley_1_1_gamma_strength_function_model.html#a2d98bc20681a2aa07abc0b6b6bf5bf07">marley::GammaStrengthFunctionModel</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_standard_lorentzian_model_8cc_source.html#l00140">140</a> of file <a class="el" href="_standard_lorentzian_model_8cc_source.html">StandardLorentzianModel.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;{</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;  <span class="comment">// Eg^4 = (Eg^[2l + 1] * Eg^[3 - 2l]</span></div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;  <span class="keywordflow">return</span> 2. * marley_utils::pi * strength_function_coefficient(type, l, e_gamma)</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    * std::pow(e_gamma, 4);</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;}</div>
-</div><!-- fragment -->
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_standard_lorentzian_model_8hh_source.html">StandardLorentzianModel.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_standard_lorentzian_model_8cc_source.html">StandardLorentzianModel.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_standard_lorentzian_model_8hh_source.html">StandardLorentzianModel.hh</a></li>
+<li>/Users/gardiner/marley/src/StandardLorentzianModel.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

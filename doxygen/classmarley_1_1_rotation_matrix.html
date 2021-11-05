@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -127,8 +127,6 @@ ThreeThreeMatrix&#160;</td><td class="memItemRight" valign="bottom"><a class="el
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Simple rotation matrix implementation used to reorient <a class="el" href="classmarley_1_1_particle.html" title="Momentum four-vector for a simulated particle.">Particle</a> objects based on the incident neutrino direction. </p>
-
-<p class="definition">Definition at line <a class="el" href="_rotation_matrix_8hh_source.html#l00029">29</a> of file <a class="el" href="_rotation_matrix_8hh_source.html">RotationMatrix.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a2a85baae6ac4a3b5e150cce57a25441c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2a85baae6ac4a3b5e150cce57a25441c">&#9670;&nbsp;</a></span>RotationMatrix()</h2>
@@ -160,116 +158,11 @@ ThreeThreeMatrix&#160;</td><td class="memItemRight" valign="bottom"><a class="el
 <p>This function is a C++11 version of an original rotation matrix program by M&ouml;ller &amp; Hughes (see <a href="http://tinyurl.com/hperc7d">this</a> GitHub page for details)</p>
 <p>The vectors from_vec and to_vec do not need to be normalized, but both should be nonzero. If either vector is a null vector, then a <a class="el" href="classmarley_1_1_error.html" title="Base class for all exceptions thrown by MARLEY functions.">marley::Error</a> will be thrown.</p>
 
-<p class="definition">Definition at line <a class="el" href="_rotation_matrix_8cc_source.html#l00111">111</a> of file <a class="el" href="_rotation_matrix_8cc_source.html">RotationMatrix.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;{</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  <span class="keyword">static</span> constexpr ThreeVector null_three_vector = { 0., 0., 0. };</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="keywordflow">if</span> (from_vec == null_three_vector)</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(std::string(<span class="stringliteral">&quot;Null from vector&quot;</span>)</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;      + <span class="stringliteral">&quot; passed to constructor of marley::RotationMatrix&quot;</span>);</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> (to_vec == null_three_vector)</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="keywordflow">throw</span> <a class="code" href="classmarley_1_1_error.html">marley::Error</a>(std::string(<span class="stringliteral">&quot;Null to vector&quot;</span>)</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;      + <span class="stringliteral">&quot; passed to constructor of marley::RotationMatrix&quot;</span>);</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160; </div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  <span class="comment">// The from and to vectors must be normalized to use this method, so make any</span></div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  <span class="comment">// necessary adjustments now.</span></div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  ThreeVector from = normalize(from_vec);</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  ThreeVector to = normalize(to_vec);</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160; </div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  <span class="keywordtype">double</span> e = dot_product(from, to);</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  <span class="keywordtype">double</span> f = std::abs(e);</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160; </div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> EPSILON = 0.000001;</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  <span class="keywordflow">if</span> (f &gt; 1.0 - EPSILON) { <span class="comment">// &quot;from&quot; and &quot;to&quot; vectors are almost parallel</span></div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160; </div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="comment">// Temporary storage vectors</span></div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    ThreeVector v;</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    ThreeVector u;</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160; </div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <span class="comment">// Find the standard unit vector x most nearly orthogonal to &quot;from&quot;</span></div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;    ThreeVector x;</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;    x[0] = std::abs(from[0]);</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;    x[1] = std::abs(from[1]);</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    x[2] = std::abs(from[2]);</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160; </div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    <span class="keywordflow">if</span> (x[0] &lt; x[1])</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    {</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;      <span class="keywordflow">if</span> (x[0] &lt; x[2])</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;      {</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;        x[0] = 1.0; x[1] = x[2] = 0.0;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;      }</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;      <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;      {</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;        x[2] = 1.0; x[0] = x[1] = 0.0;</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;      }</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    }</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;    {</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;      <span class="keywordflow">if</span> (x[1] &lt; x[2])</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;      {</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;        x[1] = 1.0; x[0] = x[2] = 0.0;</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;      }</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;      <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;      {</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        x[2] = 1.0; x[0] = x[1] = 0.0;</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;      }</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    }</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    <span class="comment">// u = x - from</span></div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    subtract(u, x, from);</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160; </div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    <span class="comment">// v = x - to</span></div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    subtract(v, x, to);</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160; </div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    <span class="comment">// coefficients for later use</span></div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;    <span class="keywordtype">double</span> c1 = 2.0 / dot_product(u, u);</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="keywordtype">double</span> c2 = 2.0 / dot_product(v, v);</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    <span class="keywordtype">double</span> c3 = c1 * c2  * dot_product(u, v);</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160; </div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">unsigned</span> i = 0; i &lt; 3; ++i) {</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">unsigned</span> j = 0; j &lt; 3; ++j) {</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;        <a class="code" href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">matrix_</a>[i][j] =  - c1 * u[i] * u[j] - c2 * v[i] * v[j]</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;          + c3 * v[i] * u[j];</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;      }</div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;      <a class="code" href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">matrix_</a>[i][i] += 1.0;</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    }</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;  }</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;  <span class="keywordflow">else</span>  <span class="comment">// the most common case, unless &quot;from&quot; = &quot;to&quot;, or &quot;from&quot; = -&quot;to&quot;</span></div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;  {</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    ThreeVector v;</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    cross_product(v, from, to); <span class="comment">// v = from x to</span></div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160; </div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    <span class="comment">// hand-optimized version (9 mults less than original)</span></div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    <span class="comment">// optimization by Gottfried Chen</span></div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    <span class="keywordtype">double</span> hvx, hvz, hvxy, hvxz, hvyz;</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    <span class="keywordtype">double</span> h = 1.0 / (1.0 + e);</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    hvx = h * v[0];</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    hvz = h * v[2];</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    hvxy = hvx * v[1];</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    hvxz = hvx * v[2];</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    hvyz = hvz * v[1];</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160; </div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    <a class="code" href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">matrix_</a>[0][0] = e + hvx * v[0];</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    <a class="code" href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">matrix_</a>[0][1] = hvxy - v[2];</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    <a class="code" href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">matrix_</a>[0][2] = hvxz + v[1];</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160; </div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    <a class="code" href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">matrix_</a>[1][0] = hvxy + v[2];</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    <a class="code" href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">matrix_</a>[1][1] = e + h * v[1] * v[1];</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    <a class="code" href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">matrix_</a>[1][2] = hvyz - v[0];</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160; </div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;    <a class="code" href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">matrix_</a>[2][0] = hvxz - v[1];</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    <a class="code" href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">matrix_</a>[2][1] = hvyz + v[0];</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    <a class="code" href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">matrix_</a>[2][2] = e + hvz * v[2];</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;  }</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_error_html"><div class="ttname"><a href="classmarley_1_1_error.html">marley::Error</a></div><div class="ttdoc">Base class for all exceptions thrown by MARLEY functions.</div><div class="ttdef"><b>Definition:</b> <a href="_error_8hh_source.html#l00032">Error.hh:32</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_rotation_matrix_html_ac1e04913d31ea0cc69574d217aea720f"><div class="ttname"><a href="classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f">marley::RotationMatrix::matrix_</a></div><div class="ttdeci">ThreeThreeMatrix matrix_</div><div class="ttdoc">3×3 rotation matrix</div><div class="ttdef"><b>Definition:</b> <a href="_rotation_matrix_8hh_source.html#l00058">RotationMatrix.hh:58</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_rotation_matrix_8hh_source.html">RotationMatrix.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_rotation_matrix_8cc_source.html">RotationMatrix.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_rotation_matrix_8hh_source.html">RotationMatrix.hh</a></li>
+<li>/Users/gardiner/marley/src/RotationMatrix.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

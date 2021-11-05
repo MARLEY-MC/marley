@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -135,8 +135,6 @@ static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Base class for all exceptions thrown by MARLEY functions. </p>
 <p>A distinct exception class allows the user to differentiate between exceptions thrown by MARLEY and those thrown by other libraries. The <a class="el" href="classmarley_1_1_error.html" title="Base class for all exceptions thrown by MARLEY functions.">marley::Error</a> class also forwards its error message to the <a class="el" href="classmarley_1_1_logger.html" title="Simple singleton logging class.">marley::Logger</a> class, which prints them to enabled logging streams as appropriate. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000032">Todo:</a></b></dt><dd>Create an MARLEY exception class hierarchy as needed. </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="_error_8hh_source.html#l00032">32</a> of file <a class="el" href="_error_8hh_source.html">Error.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aa9aa1cf3adada436c39dfb8a91856bd9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa9aa1cf3adada436c39dfb8a91856bd9">&#9670;&nbsp;</a></span>Error() <span class="overload">[1/2]</span></h2>
@@ -167,13 +165,6 @@ static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
   </table>
   </dd>
 </dl>
-
-<p class="definition">Definition at line <a class="el" href="_error_8hh_source.html#l00036">36</a> of file <a class="el" href="_error_8hh_source.html">Error.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;                                                 : msg_(message)</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        { <span class="keywordflow">if</span> (<a class="code" href="classmarley_1_1_error.html#ab397217dd48ccb061e46165109e10e27">log_them_</a>) MARLEY_LOG_ERROR() &lt;&lt; msg_; }</div>
-<div class="ttc" id="aclassmarley_1_1_error_html_ab397217dd48ccb061e46165109e10e27"><div class="ttname"><a href="classmarley_1_1_error.html#ab397217dd48ccb061e46165109e10e27">marley::Error::log_them_</a></div><div class="ttdeci">static bool log_them_</div><div class="ttdoc">If true, marley::Error messages will be printed to the Logger.</div><div class="ttdef"><b>Definition:</b> <a href="_error_8hh_source.html#l00055">Error.hh:55</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_error_8hh_source.html#l00055">log_them_</a>.</p>
 
 </div>
 </div>
@@ -207,17 +198,11 @@ static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" hre
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_error_8hh_source.html#l00040">40</a> of file <a class="el" href="_error_8hh_source.html">Error.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;                                                      : msg_(message)</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        { <span class="keywordflow">if</span> (<a class="code" href="classmarley_1_1_error.html#ab397217dd48ccb061e46165109e10e27">log_them_</a>) MARLEY_LOG_ERROR() &lt;&lt; msg_; }</div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_error_8hh_source.html#l00055">log_them_</a>.</p>
-
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_error_8hh_source.html">Error.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_error_8cc_source.html">Error.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_error_8hh_source.html">Error.hh</a></li>
+<li>/Users/gardiner/marley/src/Error.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

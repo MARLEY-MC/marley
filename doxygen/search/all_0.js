@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['a_0',['A',['../classmarley_1_1_optical_model.html#a5122fadbd2acdfb4d2cfa580b11b1f17',1,'marley::OpticalModel::A()'],['../classmarley_1_1_target_atom.html#a3330c1dec43ba0f04aa1a9ca146b2e47',1,'marley::TargetAtom::A()'],['../classmarley_1_1_decay_scheme.html#ab91b54200b32bc24a52928cd70271e25',1,'marley::DecayScheme::A()']]],
+  ['a_0',['A',['../classmarley_1_1_decay_scheme.html#ab91b54200b32bc24a52928cd70271e25',1,'marley::DecayScheme::A()'],['../classmarley_1_1_optical_model.html#a5122fadbd2acdfb4d2cfa580b11b1f17',1,'marley::OpticalModel::A()'],['../classmarley_1_1_target_atom.html#a3330c1dec43ba0f04aa1a9ca146b2e47',1,'marley::TargetAtom::A()']]],
   ['a_5f_1',['A_',['../classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b',1,'marley::BackshiftedFermiGasModel::A_()'],['../classmarley_1_1_decay_scheme.html#a8be245528b2f8a9a09b021103bde57ca',1,'marley::DecayScheme::A_()'],['../classmarley_1_1_gamma_strength_function_model.html#aedb32e61fc400eacbbb8e14a0c7686ba',1,'marley::GammaStrengthFunctionModel::A_()']]],
   ['a_5ftilde_5f_2',['a_tilde_',['../classmarley_1_1_backshifted_fermi_gas_model.html#a56e868d5fc6040e52f343cfe730e51e3',1,'marley::BackshiftedFermiGasModel']]],
   ['add_5fdecay_5fscheme_3',['add_decay_scheme',['../classmarley_1_1_structure_database.html#a6d8ba804e6cfa46b5426962a72e6aeca',1,'marley::StructureDatabase']]],

@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -159,8 +159,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Implementation of the back-shifted Fermi gas nuclear level density model. </p>
 <p>Level density parameters used in this class are based on the global fits originally performed in <a href="http://dx.doi.org/10.1016/j.nuclphysa.2008.06.005">A. J. Koning, et al., Nucl. Phys. A810 (2008) pp. 13-76</a>. In addition to being used in MARLEY, this model has been adopted as one of the available options in the <a href="http://www-nds.iaea.org/RIPL-3/">RIPL-3</a> data library and the <a href="http://talys.eu">TALYS</a> nuclear code. </p>
-
-<p class="definition">Definition at line <a class="el" href="_backshifted_fermi_gas_model_8hh_source.html#l00031">31</a> of file <a class="el" href="_backshifted_fermi_gas_model_8hh_source.html">BackshiftedFermiGasModel.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ab770422ac171113fddccc02b82f116e4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab770422ac171113fddccc02b82f116e4">&#9670;&nbsp;</a></span>BackshiftedFermiGasModel()</h2>
@@ -195,58 +193,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
   </dd>
 </dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000030">Todo:</a></b></dt><dd>Add other constructors to the <a class="el" href="classmarley_1_1_backshifted_fermi_gas_model.html" title="Implementation of the back-shifted Fermi gas nuclear level density model.">BackshiftedFermiGasModel</a> class to allow the user to set the level density parameters based on local fits </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="_backshifted_fermi_gas_model_8cc_source.html#l00023">23</a> of file <a class="el" href="_backshifted_fermi_gas_model_8cc_source.html">BackshiftedFermiGasModel.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  : <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a36d8c99f14aa9646d91a1bc331e8b0a0">Z_</a>(Z), <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b">A_</a>(A)</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;{</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keywordtype">int</span> N = <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b">A_</a> - <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a36d8c99f14aa9646d91a1bc331e8b0a0">Z_</a>;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keywordtype">double</span> A_third = std::pow(<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b">A_</a>, 1.0/3.0);</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="comment">// Parameters from global level density fit</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> alpha = 0.0722396; <span class="comment">// MeV^(-1)</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> beta = 0.195267; <span class="comment">// MeV^(-1)</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> gamma_1 = 0.410289; <span class="comment">// MeV(-1)</span></div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">double</span> delta_global = 0.173015; <span class="comment">// MeV</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="comment">// Asymptotic level density parameter</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a56e868d5fc6040e52f343cfe730e51e3">a_tilde_</a> = alpha*<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b">A_</a> + beta*std::pow(A_third, 2);</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="comment">// Damping parameter</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a2a69bceea9e183906bac3ec5f8105d4e">gamma_</a> = gamma_1 / A_third;</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="keyword">const</span> <a class="code" href="classmarley_1_1_mass_table.html">marley::MassTable</a>&amp; mt = <a class="code" href="classmarley_1_1_mass_table.html#a2e43b8ba549e31fc8c6b811656f69b94">marley::MassTable::Instance</a>();</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="comment">// Shell correction energy</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#af5a2ad2c4358a639b2e5804d5f18b63f">delta_W_</a> = mt.<a class="code" href="classmarley_1_1_mass_table.html#a32b0055a72b31714274272ca614cb399">get_mass_excess</a>(<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a36d8c99f14aa9646d91a1bc331e8b0a0">Z_</a>, <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b">A_</a>)</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    - mt.<a class="code" href="classmarley_1_1_mass_table.html#ab684a41226e22dfbdba76b3d7e253591">liquid_drop_model_mass_excess</a>(<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a36d8c99f14aa9646d91a1bc331e8b0a0">Z_</a>, <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b">A_</a>);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="comment">// Energy shift</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a9b87e21ca41020ed3d411190de150074">Delta_BFM_</a> = delta_global;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="keywordtype">bool</span> z_odd = Z % 2;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keywordtype">bool</span> n_odd = N % 2;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  <span class="comment">// There will be no change to the energy shift if the nucleus is odd-even</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  <span class="keywordflow">if</span> (z_odd &amp;&amp; n_odd) <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a9b87e21ca41020ed3d411190de150074">Delta_BFM_</a> += -12/std::sqrt(<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b">A_</a>);</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> (!z_odd &amp;&amp; !n_odd) <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a9b87e21ca41020ed3d411190de150074">Delta_BFM_</a> += 12/std::sqrt(<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b">A_</a>);</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="comment">// Spin cut-off parameter</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#af947d80f6af12690dc92d2d831a5291f">sigma_d_global_</a> = 0.83*std::pow(<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b">A_</a>, 0.26);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a08ec01c6f72356b43ac3b4596923cc1c">Sn_</a> = mt.<a class="code" href="classmarley_1_1_mass_table.html#a2c80b7a9b829e1c1e194e30dc4d934e9">get_fragment_separation_energy</a>(<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a36d8c99f14aa9646d91a1bc331e8b0a0">Z_</a>, <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b">A_</a>, marley_utils::NEUTRON);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_backshifted_fermi_gas_model_html_a08ec01c6f72356b43ac3b4596923cc1c"><div class="ttname"><a href="classmarley_1_1_backshifted_fermi_gas_model.html#a08ec01c6f72356b43ac3b4596923cc1c">marley::BackshiftedFermiGasModel::Sn_</a></div><div class="ttdeci">double Sn_</div><div class="ttdoc">neutron separation energy (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_backshifted_fermi_gas_model_8hh_source.html#l00080">BackshiftedFermiGasModel.hh:80</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_backshifted_fermi_gas_model_html_a2a69bceea9e183906bac3ec5f8105d4e"><div class="ttname"><a href="classmarley_1_1_backshifted_fermi_gas_model.html#a2a69bceea9e183906bac3ec5f8105d4e">marley::BackshiftedFermiGasModel::gamma_</a></div><div class="ttdeci">double gamma_</div><div class="ttdoc">damping parameter (MeV -1)</div><div class="ttdef"><b>Definition:</b> <a href="_backshifted_fermi_gas_model_8hh_source.html#l00074">BackshiftedFermiGasModel.hh:74</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_backshifted_fermi_gas_model_html_a36d8c99f14aa9646d91a1bc331e8b0a0"><div class="ttname"><a href="classmarley_1_1_backshifted_fermi_gas_model.html#a36d8c99f14aa9646d91a1bc331e8b0a0">marley::BackshiftedFermiGasModel::Z_</a></div><div class="ttdeci">int Z_</div><div class="ttdoc">atomic number for this nuclide</div><div class="ttdef"><b>Definition:</b> <a href="_backshifted_fermi_gas_model_8hh_source.html#l00068">BackshiftedFermiGasModel.hh:68</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_backshifted_fermi_gas_model_html_a56e868d5fc6040e52f343cfe730e51e3"><div class="ttname"><a href="classmarley_1_1_backshifted_fermi_gas_model.html#a56e868d5fc6040e52f343cfe730e51e3">marley::BackshiftedFermiGasModel::a_tilde_</a></div><div class="ttdeci">double a_tilde_</div><div class="ttdoc">asymptotic level density parameter (MeV -1)</div><div class="ttdef"><b>Definition:</b> <a href="_backshifted_fermi_gas_model_8hh_source.html#l00073">BackshiftedFermiGasModel.hh:73</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_backshifted_fermi_gas_model_html_a5797ef42f534b80c0c8ed75b203ba89b"><div class="ttname"><a href="classmarley_1_1_backshifted_fermi_gas_model.html#a5797ef42f534b80c0c8ed75b203ba89b">marley::BackshiftedFermiGasModel::A_</a></div><div class="ttdeci">int A_</div><div class="ttdoc">mass number for this nuclide</div><div class="ttdef"><b>Definition:</b> <a href="_backshifted_fermi_gas_model_8hh_source.html#l00069">BackshiftedFermiGasModel.hh:69</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_backshifted_fermi_gas_model_html_a9b87e21ca41020ed3d411190de150074"><div class="ttname"><a href="classmarley_1_1_backshifted_fermi_gas_model.html#a9b87e21ca41020ed3d411190de150074">marley::BackshiftedFermiGasModel::Delta_BFM_</a></div><div class="ttdeci">double Delta_BFM_</div><div class="ttdoc">excitation energy shift (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_backshifted_fermi_gas_model_8hh_source.html#l00076">BackshiftedFermiGasModel.hh:76</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_backshifted_fermi_gas_model_html_af5a2ad2c4358a639b2e5804d5f18b63f"><div class="ttname"><a href="classmarley_1_1_backshifted_fermi_gas_model.html#af5a2ad2c4358a639b2e5804d5f18b63f">marley::BackshiftedFermiGasModel::delta_W_</a></div><div class="ttdeci">double delta_W_</div><div class="ttdoc">shell correction energy (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_backshifted_fermi_gas_model_8hh_source.html#l00075">BackshiftedFermiGasModel.hh:75</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_backshifted_fermi_gas_model_html_af947d80f6af12690dc92d2d831a5291f"><div class="ttname"><a href="classmarley_1_1_backshifted_fermi_gas_model.html#af947d80f6af12690dc92d2d831a5291f">marley::BackshiftedFermiGasModel::sigma_d_global_</a></div><div class="ttdeci">double sigma_d_global_</div><div class="ttdoc">global fit for discrete-region spin cut-off parameter</div><div class="ttdef"><b>Definition:</b> <a href="_backshifted_fermi_gas_model_8hh_source.html#l00079">BackshiftedFermiGasModel.hh:79</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_mass_table_html"><div class="ttname"><a href="classmarley_1_1_mass_table.html">marley::MassTable</a></div><div class="ttdoc">Singleton lookup table for particle and atomic masses.</div><div class="ttdef"><b>Definition:</b> <a href="_mass_table_8hh_source.html#l00027">MassTable.hh:27</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_mass_table_html_a2c80b7a9b829e1c1e194e30dc4d934e9"><div class="ttname"><a href="classmarley_1_1_mass_table.html#a2c80b7a9b829e1c1e194e30dc4d934e9">marley::MassTable::get_fragment_separation_energy</a></div><div class="ttdeci">double get_fragment_separation_energy(int Z, int A, int pdg, bool theory_ok=true) const</div><div class="ttdoc">Get the separation energy for emission of a nuclear fragment from a nucleus.</div><div class="ttdef"><b>Definition:</b> <a href="_mass_table_8cc_source.html#l00205">MassTable.cc:205</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_mass_table_html_a2e43b8ba549e31fc8c6b811656f69b94"><div class="ttname"><a href="classmarley_1_1_mass_table.html#a2e43b8ba549e31fc8c6b811656f69b94">marley::MassTable::Instance</a></div><div class="ttdeci">static const MassTable &amp; Instance()</div><div class="ttdoc">Get a const reference to the singleton instance of the MassTable.</div><div class="ttdef"><b>Definition:</b> <a href="_mass_table_8cc_source.html#l00068">MassTable.cc:68</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_mass_table_html_a32b0055a72b31714274272ca614cb399"><div class="ttname"><a href="classmarley_1_1_mass_table.html#a32b0055a72b31714274272ca614cb399">marley::MassTable::get_mass_excess</a></div><div class="ttdeci">double get_mass_excess(int Z, int A, bool theory_ok=true) const</div><div class="ttdoc">Get the mass excess of a nucleus.</div><div class="ttdef"><b>Definition:</b> <a href="_mass_table_8cc_source.html#l00182">MassTable.cc:182</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_mass_table_html_ab684a41226e22dfbdba76b3d7e253591"><div class="ttname"><a href="classmarley_1_1_mass_table.html#ab684a41226e22dfbdba76b3d7e253591">marley::MassTable::liquid_drop_model_mass_excess</a></div><div class="ttdeci">double liquid_drop_model_mass_excess(int Z, int A) const</div><div class="ttdoc">Calculate a theoretical mass excess for a nucleus using the liquid drop model.</div><div class="ttdef"><b>Definition:</b> <a href="_mass_table_8cc_source.html#l00232">MassTable.cc:232</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_backshifted_fermi_gas_model_8hh_source.html#l00069">A_</a>, <a class="el" href="_backshifted_fermi_gas_model_8hh_source.html#l00073">a_tilde_</a>, <a class="el" href="_backshifted_fermi_gas_model_8hh_source.html#l00076">Delta_BFM_</a>, <a class="el" href="_backshifted_fermi_gas_model_8hh_source.html#l00075">delta_W_</a>, <a class="el" href="_backshifted_fermi_gas_model_8hh_source.html#l00074">gamma_</a>, <a class="el" href="_mass_table_8cc_source.html#l00205">marley::MassTable::get_fragment_separation_energy()</a>, <a class="el" href="_mass_table_8cc_source.html#l00182">marley::MassTable::get_mass_excess()</a>, <a class="el" href="_mass_table_8cc_source.html#l00068">marley::MassTable::Instance()</a>, <a class="el" href="_mass_table_8cc_source.html#l00232">marley::MassTable::liquid_drop_model_mass_excess()</a>, <a class="el" href="_backshifted_fermi_gas_model_8hh_source.html#l00079">sigma_d_global_</a>, <a class="el" href="_backshifted_fermi_gas_model_8hh_source.html#l00080">Sn_</a>, and <a class="el" href="_backshifted_fermi_gas_model_8hh_source.html#l00068">Z_</a>.</p>
 
 </div>
 </div>
@@ -289,64 +235,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 
 <p>Implements <a class="el" href="classmarley_1_1_level_density_model.html#a8dcfeb11aea0ffb0bdbb0659bf76aa67">marley::LevelDensityModel</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_backshifted_fermi_gas_model_8cc_source.html#l00077">77</a> of file <a class="el" href="_backshifted_fermi_gas_model_8cc_source.html">BackshiftedFermiGasModel.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                                                              {</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="comment">// Effective excitation energy</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordtype">double</span> U = Ex - <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a9b87e21ca41020ed3d411190de150074">Delta_BFM_</a>;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <span class="comment">// Level density parameter</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keywordtype">double</span> a;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="keywordflow">if</span> (U &lt;= 0) { <span class="comment">// Equivalently, Ex &lt;= Delta_BFM_</span></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="comment">// Use first-order Taylor expansion for small energies</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    a = <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a56e868d5fc6040e52f343cfe730e51e3">a_tilde_</a> * (1 + <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a2a69bceea9e183906bac3ec5f8105d4e">gamma_</a> * <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#af5a2ad2c4358a639b2e5804d5f18b63f">delta_W_</a>);</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  }</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    a = <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a56e868d5fc6040e52f343cfe730e51e3">a_tilde_</a> * (1 + (<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#af5a2ad2c4358a639b2e5804d5f18b63f">delta_W_</a> / U) * (1 - std::exp(-<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a2a69bceea9e183906bac3ec5f8105d4e">gamma_</a> * U)));</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  }</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">double</span> Ed = 0.;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="comment">// Compute the spin cut-off parameter sigma_</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="comment">// To avoid numerical problems, we will always use the discrete spin cutoff</span></div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="comment">// parameter for U &lt;= Ed.</span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="comment">// The TALYS manual suggests using this for Ex &lt;= Ed, but this isn&#39;t a huge</span></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="comment">// change. The actual TALYS code may make this same choice.</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="comment"></span>  <span class="keywordflow">if</span> (U &lt;= Ed) <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a889e32bc2f07a20e23455f645b2f2f3e">sigma_</a> = <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#af947d80f6af12690dc92d2d831a5291f">sigma_d_global_</a>;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160; </div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="keywordflow">if</span> (Ex &gt;= <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a08ec01c6f72356b43ac3b4596923cc1c">Sn_</a>) {</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;      <span class="keywordtype">double</span> sigma_F2 = <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a86585e11c811274d1c93004c6c5e3414">compute_sigma_F2</a>(Ex, a);</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;      <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a889e32bc2f07a20e23455f645b2f2f3e">sigma_</a> = std::sqrt(sigma_F2);</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    }</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;      <span class="comment">// sigma_F2 evaluated for Ex == Sn for the linear interpolation</span></div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;      <span class="keywordtype">double</span> sigma_F2_Sn = <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a86585e11c811274d1c93004c6c5e3414">compute_sigma_F2</a>(<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a08ec01c6f72356b43ac3b4596923cc1c">Sn_</a>, a);</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;      <span class="comment">// Ed &lt; Ex &lt; Sn_</span></div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;      <span class="keywordtype">double</span> sigma_d2 = std::pow(<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#af947d80f6af12690dc92d2d831a5291f">sigma_d_global_</a>, 2);</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;      <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a889e32bc2f07a20e23455f645b2f2f3e">sigma_</a> = std::sqrt(sigma_d2 + (Ex - Ed)</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;        * (sigma_F2_Sn - sigma_d2) / (<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a08ec01c6f72356b43ac3b4596923cc1c">Sn_</a> - Ed));</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    }</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  }</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160; </div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  <span class="comment">// For very small excitation energies, take the limit of the total</span></div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  <span class="comment">// level density as U -&gt; 0 to prevent numerical issues.</span></div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="keywordflow">if</span> (U &lt;= 0) {</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">double</span> exp1 = std::exp(1);</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordflow">return</span> exp1 * a / (12 * <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a889e32bc2f07a20e23455f645b2f2f3e">sigma_</a>);</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  }</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160; </div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="keywordtype">double</span> aU = a * U;</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  <span class="keywordtype">double</span> sqrt_aU = std::sqrt(aU);</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;  <span class="keywordflow">return</span> std::pow(12 * <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a889e32bc2f07a20e23455f645b2f2f3e">sigma_</a> * (std::sqrt(2 * sqrt_aU)*U*std::exp(-2 * sqrt_aU)</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    + std::exp(-aU - 1)/a), -1);</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_backshifted_fermi_gas_model_html_a86585e11c811274d1c93004c6c5e3414"><div class="ttname"><a href="classmarley_1_1_backshifted_fermi_gas_model.html#a86585e11c811274d1c93004c6c5e3414">marley::BackshiftedFermiGasModel::compute_sigma_F2</a></div><div class="ttdeci">double compute_sigma_F2(double Ex, double a)</div><div class="ttdoc">Helper function used when evaluating the spin cutoff parameter.</div><div class="ttdef"><b>Definition:</b> <a href="_backshifted_fermi_gas_model_8hh_source.html#l00059">BackshiftedFermiGasModel.hh:59</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_backshifted_fermi_gas_model_html_a889e32bc2f07a20e23455f645b2f2f3e"><div class="ttname"><a href="classmarley_1_1_backshifted_fermi_gas_model.html#a889e32bc2f07a20e23455f645b2f2f3e">marley::BackshiftedFermiGasModel::sigma_</a></div><div class="ttdeci">double sigma_</div><div class="ttdoc">spin cut-off parameter</div><div class="ttdef"><b>Definition:</b> <a href="_backshifted_fermi_gas_model_8hh_source.html#l00071">BackshiftedFermiGasModel.hh:71</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="a406b208cd993bb2064ed046c579b73cb"></a>
@@ -395,17 +283,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 
 <p>Implements <a class="el" href="classmarley_1_1_level_density_model.html#a294e14aab099cdda0f3306f1215520fd">marley::LevelDensityModel</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_backshifted_fermi_gas_model_8cc_source.html#l00067">67</a> of file <a class="el" href="_backshifted_fermi_gas_model_8cc_source.html">BackshiftedFermiGasModel.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                                                                         {</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <span class="keywordtype">double</span> rho = <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#af3354e4d7d3f194751e5604c99f6f6f8">level_density</a>(Ex);</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <span class="comment">// Spin-cutoff parameter sigma_ is updated by previous call to</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="comment">// this-&gt;level_density(Ex)</span></div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keywordtype">double</span> two_sigma2 = 2 * std::pow(<a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#a889e32bc2f07a20e23455f645b2f2f3e">sigma_</a>, 2);</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="keywordflow">return</span> ((two_J + 1) / two_sigma2) * std::exp(-0.25 * std::pow(two_J + 1, 2)</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    / two_sigma2) * rho;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_backshifted_fermi_gas_model_html_af3354e4d7d3f194751e5604c99f6f6f8"><div class="ttname"><a href="classmarley_1_1_backshifted_fermi_gas_model.html#af3354e4d7d3f194751e5604c99f6f6f8">marley::BackshiftedFermiGasModel::level_density</a></div><div class="ttdeci">virtual double level_density(double Ex) override</div><div class="ttdef"><b>Definition:</b> <a href="_backshifted_fermi_gas_model_8cc_source.html#l00077">BackshiftedFermiGasModel.cc:77</a></div></div>
-</div><!-- fragment -->
 </div>
 </div>
 <a id="a51704ceb6cf13ceba7039d3cef696b87"></a>
@@ -462,16 +339,11 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 
 <p>Implements <a class="el" href="classmarley_1_1_level_density_model.html#aa708771dc44e7674844090c69a3bea32">marley::LevelDensityModel</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_backshifted_fermi_gas_model_8cc_source.html#l00061">61</a> of file <a class="el" href="_backshifted_fermi_gas_model_8cc_source.html">BackshiftedFermiGasModel.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;{</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="keywordflow">return</span> 0.5 * <a class="code" href="classmarley_1_1_backshifted_fermi_gas_model.html#af3354e4d7d3f194751e5604c99f6f6f8">level_density</a>(Ex, two_J);</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;}</div>
-</div><!-- fragment -->
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_backshifted_fermi_gas_model_8hh_source.html">BackshiftedFermiGasModel.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_backshifted_fermi_gas_model_8cc_source.html">BackshiftedFermiGasModel.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_backshifted_fermi_gas_model_8hh_source.html">BackshiftedFermiGasModel.hh</a></li>
+<li>/Users/gardiner/marley/src/BackshiftedFermiGasModel.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

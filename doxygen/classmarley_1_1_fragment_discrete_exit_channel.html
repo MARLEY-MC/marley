@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="marley_diagram.svg"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">MARLEY (Model of Argon Reaction Low Energy Yields)
-   &#160;<span id="projectnumber">c85c379</span>
+   &#160;<span id="projectnumber">v1.2.0</span>
    </div>
    <div id="projectbrief">A Monte Carlo event generator for tens-of-MeV neutrino interactions</div>
   </td>
@@ -203,8 +203,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Fragment emission <a class="el" href="classmarley_1_1_exit_channel.html" title="Abstract base class for compound nucleus de-excitation channels.">ExitChannel</a> that leads to a discrete nuclear level in the final state </p>
-
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8hh_source.html#l00328">328</a> of file <a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="abd8edb377b3de7cecf2d235f255988f6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abd8edb377b3de7cecf2d235f255988f6">&#9670;&nbsp;</a></span>FragmentDiscreteExitChannel()</h2>
@@ -285,19 +283,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 <p></p>
 <dl class="section note"><dt>Note</dt><dd>This line keeps old versions (4.9.3) of GCC happy</dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8hh_source.html#l00336">336</a> of file <a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a>.</p>
-<div class="fragment"><div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;        : <a class="code" href="classmarley_1_1_exit_channel.html#a83b95d67069692c2ac6c2c97f1e65a19">ExitChannel</a>( pdgi, qi, Exi, twoJi, Pi, rho_i, sdb ),</div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;        <a class="code" href="classmarley_1_1_discrete_exit_channel.html#aff672280150843bf38e1bf822972668d">DiscreteExitChannel</a>( flev ), <a class="code" href="classmarley_1_1_fragment_exit_channel.html#a031500fc356f423837cdfb8506b5bae5">FragmentExitChannel</a>( frag )</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;      {</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;        this-&gt;<a class="code" href="classmarley_1_1_fragment_discrete_exit_channel.html#a38e28785c5a16f029d424cc74bfd3eb9">compute_total_width</a>();</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;      }</div>
-<div class="ttc" id="aclassmarley_1_1_discrete_exit_channel_html_aff672280150843bf38e1bf822972668d"><div class="ttname"><a href="classmarley_1_1_discrete_exit_channel.html#aff672280150843bf38e1bf822972668d">marley::DiscreteExitChannel::DiscreteExitChannel</a></div><div class="ttdeci">DiscreteExitChannel(const marley::Level &amp;flev)</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00164">ExitChannel.hh:164</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a83b95d67069692c2ac6c2c97f1e65a19"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a83b95d67069692c2ac6c2c97f1e65a19">marley::ExitChannel::ExitChannel</a></div><div class="ttdeci">ExitChannel()=default</div></div>
-<div class="ttc" id="aclassmarley_1_1_fragment_discrete_exit_channel_html_a38e28785c5a16f029d424cc74bfd3eb9"><div class="ttname"><a href="classmarley_1_1_fragment_discrete_exit_channel.html#a38e28785c5a16f029d424cc74bfd3eb9">marley::FragmentDiscreteExitChannel::compute_total_width</a></div><div class="ttdeci">virtual void compute_total_width() final override</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8cc_source.html#l00081">ExitChannel.cc:81</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_fragment_exit_channel_html_a031500fc356f423837cdfb8506b5bae5"><div class="ttname"><a href="classmarley_1_1_fragment_exit_channel.html#a031500fc356f423837cdfb8506b5bae5">marley::FragmentExitChannel::FragmentExitChannel</a></div><div class="ttdeci">FragmentExitChannel(const marley::Fragment &amp;fragment)</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00189">ExitChannel.hh:189</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="classmarley_1_1_exit_channel.html#a8f8387c4d89b8457f7899a372524a27b">marley::ExitChannel::compute_total_width()</a>.</p>
-
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
@@ -327,95 +312,11 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class
 
 <p>Implements <a class="el" href="classmarley_1_1_exit_channel.html#a8f8387c4d89b8457f7899a372524a27b">marley::ExitChannel</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_exit_channel_8cc_source.html#l00081">81</a> of file <a class="el" href="_exit_channel_8cc_source.html">ExitChannel.cc</a>.</p>
-<div class="fragment"><div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                                                            {</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160; </div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keywordtype">int</span> remnant_pdg = this-&gt;<a class="code" href="classmarley_1_1_fragment_exit_channel.html#ab78122ca67ce0f7c2fa8f492f781bf44">final_nucleus_pdg</a>();</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <a class="code" href="classmarley_1_1_optical_model.html">marley::OpticalModel</a>&amp; om = <a class="code" href="classmarley_1_1_exit_channel.html#a4c9631ea711dd81c7977e87df746c0f0">sdb_</a>-&gt;<a class="code" href="classmarley_1_1_structure_database.html#a5f8c71d9a57616cf7b078eda3489a34b">get_optical_model</a>( remnant_pdg );</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160; </div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="comment">// Get information about the emitted fragment</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  <span class="keyword">const</span> <a class="code" href="classmarley_1_1_fragment.html">marley::Fragment</a>&amp; f = *<a class="code" href="classmarley_1_1_exit_channel.html#a4c9631ea711dd81c7977e87df746c0f0">sdb_</a>-&gt;<a class="code" href="classmarley_1_1_structure_database.html#a2eacab52c1999449c344432f41b79f5a">get_fragment</a>( <a class="code" href="classmarley_1_1_fragment_exit_channel.html#a7c1f5c0b08fb7fa7a21c7529d9a0ffb7">fragment_pdg_</a> );</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keywordtype">int</span> two_s = f.<a class="code" href="classmarley_1_1_fragment.html#a7828ca3ea60b4b78cdd81b411a401652">get_two_s</a>(); <span class="comment">// two times the fragment spin</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <a class="code" href="classmarley_1_1_parity.html">marley::Parity</a> Pa = f.<a class="code" href="classmarley_1_1_fragment.html#afed2f1cb2c5838bfc8badea41160984e">get_parity</a>(); <span class="comment">// intrinsic parity</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="comment">// Maximum possible excitation energy in the daughter nucleus after the</span></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="comment">// fragment is emitted</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  <span class="keywordtype">double</span> Exf_max = this-&gt;<a class="code" href="classmarley_1_1_fragment_exit_channel.html#afe3d45a4e07d4c83d4766a172da8b425">max_Exf</a>();</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="comment">// Excitation energy of the final nuclear level</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  <span class="keywordtype">double</span> Exf = <a class="code" href="classmarley_1_1_discrete_exit_channel.html#a03a73955e4d8d1df834b655b53bf855e">final_level_</a>.<a class="code" href="classmarley_1_1_level.html#af52edeb699b7bb3b0c9695483620e513">energy</a>();</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160; </div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="comment">// Initialize the total decay width to zero, just in case</span></div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <a class="code" href="classmarley_1_1_exit_channel.html#a4c1dd582e6d15aad2630c446b03109cc">width_</a> = 0.;</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="keywordflow">if</span> ( Exf &gt;= Exf_max ) {</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    issue_Exf_warning( Exf, Exf_max );</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  }</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160; </div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  <span class="comment">// Total kinetic energy in the CM frame immediately after the binary decay</span></div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="keywordtype">double</span> total_KE_CM_frame = Exf_max - Exf;</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160; </div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="keywordtype">int</span> twoJf = <a class="code" href="classmarley_1_1_discrete_exit_channel.html#a03a73955e4d8d1df834b655b53bf855e">final_level_</a>.<a class="code" href="classmarley_1_1_level.html#ad364d18ab3329db9e31f9b57ef42f05d">twoJ</a>();</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  <a class="code" href="classmarley_1_1_parity.html">marley::Parity</a> Pf = <a class="code" href="classmarley_1_1_discrete_exit_channel.html#a03a73955e4d8d1df834b655b53bf855e">final_level_</a>.<a class="code" href="classmarley_1_1_level.html#aad47add697e6ee7ad136b05e487068bc">parity</a>();</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">int</span> two_j = std::abs(<a class="code" href="classmarley_1_1_exit_channel.html#a0ddee27521b18fd4a4a424f2f58c1e53">twoJi_</a> - twoJf); two_j &lt;= <a class="code" href="classmarley_1_1_exit_channel.html#a0ddee27521b18fd4a4a424f2f58c1e53">twoJi_</a> + twoJf;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    two_j += 2)</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  {</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="keywordtype">int</span> j_plus_s = (two_j + two_s) / 2;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160; </div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="comment">// For each new iteration, increment l and flip the overall final</span></div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="comment">// state parity</span></div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="keywordtype">int</span> l = std::abs(two_j - two_s) / 2;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordtype">bool</span> l_is_odd = l % 2;</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <a class="code" href="classmarley_1_1_parity.html">marley::Parity</a> P_final_state = Pf * Pa * <a class="code" href="classmarley_1_1_parity.html">marley::Parity</a>( !l_is_odd );</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    <span class="keywordflow">for</span> ( ; l &lt;= j_plus_s; ++l, !P_final_state )</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    {</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;      <span class="comment">// The current term in the sum only contributes to the total decay</span></div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;      <span class="comment">// width if parity is conserved</span></div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;      <span class="keywordflow">if</span> ( <a class="code" href="classmarley_1_1_exit_channel.html#a61ffe27cd4631c4bf117313284250b51">Pi_</a> == P_final_state ) {</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160; </div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;        <span class="keywordtype">double</span> Tlj = om.<a class="code" href="classmarley_1_1_optical_model.html#a9f767e4a177f1bb0a2a8d436c5c07d63">transmission_coefficient</a>( total_KE_CM_frame,</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;          <a class="code" href="classmarley_1_1_fragment_exit_channel.html#a7c1f5c0b08fb7fa7a21c7529d9a0ffb7">fragment_pdg_</a>, two_j, l, two_s );</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160; </div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;        <span class="keywordtype">double</span> partial_width = <a class="code" href="classmarley_1_1_exit_channel.html#afc85ca8bd6a3561208f5343bbc329348">one_over_two_pi_rho_i_</a> * Tlj;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160; </div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;        <a class="code" href="classmarley_1_1_exit_channel.html#a4c1dd582e6d15aad2630c446b03109cc">width_</a> += partial_width;</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160; </div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;        <span class="comment">// TODO: cache term indexed by l, two_j</span></div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;      }</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    }</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;  }</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;}</div>
-<div class="ttc" id="aclassmarley_1_1_discrete_exit_channel_html_a03a73955e4d8d1df834b655b53bf855e"><div class="ttname"><a href="classmarley_1_1_discrete_exit_channel.html#a03a73955e4d8d1df834b655b53bf855e">marley::DiscreteExitChannel::final_level_</a></div><div class="ttdeci">const marley::Level &amp; final_level_</div><div class="ttdoc">Reference to the final-state nuclear level.</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00180">ExitChannel.hh:180</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a0ddee27521b18fd4a4a424f2f58c1e53"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a0ddee27521b18fd4a4a424f2f58c1e53">marley::ExitChannel::twoJi_</a></div><div class="ttdeci">int twoJi_</div><div class="ttdoc">Two times the initial nuclear spin .</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00138">ExitChannel.hh:138</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a4c1dd582e6d15aad2630c446b03109cc"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a4c1dd582e6d15aad2630c446b03109cc">marley::ExitChannel::width_</a></div><div class="ttdeci">double width_</div><div class="ttdoc">Total decay width into this channel (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00152">ExitChannel.hh:152</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a4c9631ea711dd81c7977e87df746c0f0"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a4c9631ea711dd81c7977e87df746c0f0">marley::ExitChannel::sdb_</a></div><div class="ttdeci">marley::StructureDatabase * sdb_</div><div class="ttdoc">StructureDatabase to use in calculations.</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00155">ExitChannel.hh:155</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_a61ffe27cd4631c4bf117313284250b51"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#a61ffe27cd4631c4bf117313284250b51">marley::ExitChannel::Pi_</a></div><div class="ttdeci">marley::Parity Pi_</div><div class="ttdoc">Initial nuclear parity .</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00141">ExitChannel.hh:141</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_exit_channel_html_afc85ca8bd6a3561208f5343bbc329348"><div class="ttname"><a href="classmarley_1_1_exit_channel.html#afc85ca8bd6a3561208f5343bbc329348">marley::ExitChannel::one_over_two_pi_rho_i_</a></div><div class="ttdeci">double one_over_two_pi_rho_i_</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00149">ExitChannel.hh:149</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_fragment_exit_channel_html_a7c1f5c0b08fb7fa7a21c7529d9a0ffb7"><div class="ttname"><a href="classmarley_1_1_fragment_exit_channel.html#a7c1f5c0b08fb7fa7a21c7529d9a0ffb7">marley::FragmentExitChannel::fragment_pdg_</a></div><div class="ttdeci">int fragment_pdg_</div><div class="ttdoc">PDG code identifying the emitted fragment.</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8hh_source.html#l00207">ExitChannel.hh:207</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_fragment_exit_channel_html_ab78122ca67ce0f7c2fa8f492f781bf44"><div class="ttname"><a href="classmarley_1_1_fragment_exit_channel.html#ab78122ca67ce0f7c2fa8f492f781bf44">marley::FragmentExitChannel::final_nucleus_pdg</a></div><div class="ttdeci">virtual int final_nucleus_pdg() const final override</div><div class="ttdoc">Returns the PDG code for the final nucleus.</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8cc_source.html#l00060">ExitChannel.cc:60</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_fragment_exit_channel_html_afe3d45a4e07d4c83d4766a172da8b425"><div class="ttname"><a href="classmarley_1_1_fragment_exit_channel.html#afe3d45a4e07d4c83d4766a172da8b425">marley::FragmentExitChannel::max_Exf</a></div><div class="ttdeci">double max_Exf() const</div><div class="ttdoc">Helper function that returns that maximum possible excitation energy for the daughter nucleus after e...</div><div class="ttdef"><b>Definition:</b> <a href="_exit_channel_8cc_source.html#l00074">ExitChannel.cc:74</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_fragment_html"><div class="ttname"><a href="classmarley_1_1_fragment.html">marley::Fragment</a></div><div class="ttdoc">Simple container for storing reference data about each of the nuclear fragments considered by MARLEY'...</div><div class="ttdef"><b>Definition:</b> <a href="_fragment_8hh_source.html#l00027">Fragment.hh:27</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_fragment_html_a7828ca3ea60b4b78cdd81b411a401652"><div class="ttname"><a href="classmarley_1_1_fragment.html#a7828ca3ea60b4b78cdd81b411a401652">marley::Fragment::get_two_s</a></div><div class="ttdeci">int get_two_s() const</div><div class="ttdoc">Get two times the spin of this fragment.</div><div class="ttdef"><b>Definition:</b> <a href="_fragment_8hh_source.html#l00076">Fragment.hh:76</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_fragment_html_afed2f1cb2c5838bfc8badea41160984e"><div class="ttname"><a href="classmarley_1_1_fragment.html#afed2f1cb2c5838bfc8badea41160984e">marley::Fragment::get_parity</a></div><div class="ttdeci">marley::Parity get_parity() const</div><div class="ttdoc">Get the parity of this fragment.</div><div class="ttdef"><b>Definition:</b> <a href="_fragment_8hh_source.html#l00079">Fragment.hh:79</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_level_html_aad47add697e6ee7ad136b05e487068bc"><div class="ttname"><a href="classmarley_1_1_level.html#aad47add697e6ee7ad136b05e487068bc">marley::Level::parity</a></div><div class="ttdeci">marley::Parity parity() const</div><div class="ttdoc">Get the level parity.</div><div class="ttdef"><b>Definition:</b> <a href="_level_8hh_source.html#l00126">Level.hh:126</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_level_html_ad364d18ab3329db9e31f9b57ef42f05d"><div class="ttname"><a href="classmarley_1_1_level.html#ad364d18ab3329db9e31f9b57ef42f05d">marley::Level::twoJ</a></div><div class="ttdeci">int twoJ() const</div><div class="ttdoc">Get two times the level spin.</div><div class="ttdef"><b>Definition:</b> <a href="_level_8hh_source.html#l00123">Level.hh:123</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_level_html_af52edeb699b7bb3b0c9695483620e513"><div class="ttname"><a href="classmarley_1_1_level.html#af52edeb699b7bb3b0c9695483620e513">marley::Level::energy</a></div><div class="ttdeci">double energy() const</div><div class="ttdoc">Get the excitation energy of this level (MeV)</div><div class="ttdef"><b>Definition:</b> <a href="_level_8hh_source.html#l00120">Level.hh:120</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_optical_model_html"><div class="ttname"><a href="classmarley_1_1_optical_model.html">marley::OpticalModel</a></div><div class="ttdoc">Abstract base class for nuclear optical model implementations.</div><div class="ttdef"><b>Definition:</b> <a href="_optical_model_8hh_source.html#l00023">OpticalModel.hh:23</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_optical_model_html_a9f767e4a177f1bb0a2a8d436c5c07d63"><div class="ttname"><a href="classmarley_1_1_optical_model.html#a9f767e4a177f1bb0a2a8d436c5c07d63">marley::OpticalModel::transmission_coefficient</a></div><div class="ttdeci">virtual double transmission_coefficient(double total_KE_CM, int fragment_pdg, int two_j, int l, int two_s, int target_charge=0)=0</div><div class="ttdoc">Calculate the transmission coefficient for a nuclear fragment.</div></div>
-<div class="ttc" id="aclassmarley_1_1_parity_html"><div class="ttname"><a href="classmarley_1_1_parity.html">marley::Parity</a></div><div class="ttdoc">Type-safe representation of a parity value (either +1 or -1)</div><div class="ttdef"><b>Definition:</b> <a href="_parity_8hh_source.html#l00025">Parity.hh:25</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_structure_database_html_a2eacab52c1999449c344432f41b79f5a"><div class="ttname"><a href="classmarley_1_1_structure_database.html#a2eacab52c1999449c344432f41b79f5a">marley::StructureDatabase::get_fragment</a></div><div class="ttdeci">static const marley::Fragment * get_fragment(const int fragment_pdg)</div><div class="ttdoc">Retrieves nuclear fragment data from the database.</div><div class="ttdef"><b>Definition:</b> <a href="_structure_database_8cc_source.html#l00292">StructureDatabase.cc:292</a></div></div>
-<div class="ttc" id="aclassmarley_1_1_structure_database_html_a5f8c71d9a57616cf7b078eda3489a34b"><div class="ttname"><a href="classmarley_1_1_structure_database.html#a5f8c71d9a57616cf7b078eda3489a34b">marley::StructureDatabase::get_optical_model</a></div><div class="ttdeci">marley::OpticalModel &amp; get_optical_model(int nucleus_pid)</div><div class="ttdoc">Retrieves an optical model object from the database, creating it if one did not already exist.</div><div class="ttdef"><b>Definition:</b> <a href="_structure_database_8cc_source.html#l00192">StructureDatabase.cc:192</a></div></div>
-</div><!-- fragment -->
-<p class="reference">References <a class="el" href="_fragment_8hh_source.html#l00079">marley::Fragment::get_parity()</a>, <a class="el" href="_fragment_8hh_source.html#l00076">marley::Fragment::get_two_s()</a>, and <a class="el" href="classmarley_1_1_optical_model.html#a9f767e4a177f1bb0a2a8d436c5c07d63">marley::OpticalModel::transmission_coefficient()</a>.</p>
-
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/sjg/GENIE/marley/include/marley/<a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a></li>
-<li>/home/sjg/GENIE/marley/src/<a class="el" href="_exit_channel_8cc_source.html">ExitChannel.cc</a></li>
+<li>/Users/gardiner/marley/include/marley/<a class="el" href="_exit_channel_8hh_source.html">ExitChannel.hh</a></li>
+<li>/Users/gardiner/marley/src/ExitChannel.cc</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
