@@ -46,6 +46,13 @@ namespace marley {
       /// GCC.
       inline explicit operator int() const { return pdg_; }
 
+      /// @brief Copy assignment operator
+      inline marley::TargetAtom& operator=( const marley::TargetAtom& ta )
+      {
+        pdg_ = ta.pdg_;
+        return *this;
+      }
+
       /// @brief Two TargetAtom objects are considered equal if their
       /// nuclear PDG codes match
       inline bool operator==(const marley::TargetAtom& ta) const
