@@ -1,5 +1,5 @@
 /// @file
-/// @copyright Copyright (C) 2016-2021 Steven Gardiner
+/// @copyright Copyright (C) 2016-2023 Steven Gardiner
 /// @license GNU General Public License, version 3
 //
 // This file is part of MARLEY (Model of Argon Reaction Low Energy Yields)
