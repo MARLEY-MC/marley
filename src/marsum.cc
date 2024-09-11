@@ -123,12 +123,12 @@ int main( int argc, char* argv[] ) {
   // De-excitation products (final-state particles other than the
   // ejectile and ground-state residue)
   out_tree->Branch( "np", &np, "np/I" );
-  out_tree->Branch( "pdgp", PDGs.data(), "pdgp[np]/I" );
-  out_tree->Branch( "Ep",  Es.data(), "Ep[np]/D" );
-  out_tree->Branch( "KEp", KEs.data(), "KEp[np]/D" );
-  out_tree->Branch( "pxp", pXs.data(), "pxp[np]/D" );
-  out_tree->Branch( "pyp", pYs.data(), "pyp[np]/D" );
-  out_tree->Branch( "pzp", pZs.data(), "pzp[np]/D" );
+  out_tree->Branch( "pdgp", &PDGs );
+  out_tree->Branch( "Ep",  &Es );
+  out_tree->Branch( "KEp", &KEs );
+  out_tree->Branch( "pxp", &pXs );
+  out_tree->Branch( "pyp", &pYs );
+  out_tree->Branch( "pzp", &pZs );
 
   // Flux-averaged total cross section
   out_tree->Branch( "xsec", &flux_avg_tot_xsec, "xsec/D" );
@@ -276,15 +276,6 @@ int main( int argc, char* argv[] ) {
         pYs.push_back( p4p.py() );
         pZs.push_back( p4p.pz() );
       }
-
-      // Update the branch addresses (manipulating the vectors may have
-      // invalidated them)
-      out_tree->SetBranchAddress( "pdgp", PDGs.data() );
-      out_tree->SetBranchAddress( "Ep",  Es.data() );
-      out_tree->SetBranchAddress( "KEp", KEs.data() );
-      out_tree->SetBranchAddress( "pxp", pXs.data() );
-      out_tree->SetBranchAddress( "pyp", pYs.data() );
-      out_tree->SetBranchAddress( "pzp", pZs.data() );
 
       // Make a copy of the vector of weights for the current event
       other_weights = ev.weights();
