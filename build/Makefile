@@ -361,8 +361,8 @@ install: marley
 	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
 	cp $(ROOT_SHARED_LIB) $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp marley_root_dict_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
-	cp -r ../react $(DESTDIR)$(datadir)/marley
-	cp -r ../structure $(DESTDIR)$(datadir)/marley
+	cp -r ../data/react $(DESTDIR)$(datadir)/marley
+	cp -r ../data/structure $(DESTDIR)$(datadir)/marley
 	cp -r ../examples $(DESTDIR)$(datadir)/marley
 	cp -r ../include/marley $(DESTDIR)$(incdir)
 	ldconfig
