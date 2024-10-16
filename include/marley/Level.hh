@@ -32,7 +32,8 @@ namespace marley {
       /// @param E excitation energy of this level (MeV)
       /// @param twoJ two times the level spin
       /// @param pi level parity
-      Level(double E, int twoJ, marley::Parity pi);
+      /// @param half_life half-life of the level (s)
+      Level( double E, int twoJ, marley::Parity pi, double half_life );
 
       /// @brief Retrieve a const reference to the vector of gamma rays owned
       /// by this level
@@ -55,6 +56,11 @@ namespace marley {
       inline marley::Parity parity() const;
       /// Set the level parity
       inline void set_parity(marley::Parity pi);
+
+      /// Get the level half-life (s)
+      inline double half_life() const;
+      /// Set the level half-life (s)
+      inline void set_half_life( double half_life );
 
       /// @return true if the level owns at least one Gamma object
       inline bool has_gammas() const;
@@ -104,6 +110,10 @@ namespace marley {
 
       marley::Parity parity_; ///< level parity
 
+      /// @brief Half-life of the level (s)
+      /// @note The mean lifetime (tau) is given by tau = half_life / ln(2).
+      double half_life_;
+
       /// @brief gamma-ray transitions owned by this level
       std::vector<marley::Gamma> gammas_;
 
@@ -125,6 +135,10 @@ namespace marley {
 
   inline marley::Parity Level::parity() const { return parity_; }
   inline void Level::set_parity(marley::Parity pi) { parity_ = pi; }
+
+  inline double Level::half_life() const { return half_life_; }
+  inline void Level::set_half_life( double half_life )
+    { half_life_ = half_life; }
 
   inline const std::vector<marley::Gamma>& Level::gammas() const
     { return gammas_; }

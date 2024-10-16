@@ -240,20 +240,20 @@ void marley::DecayScheme::parse_talys(const std::string& filename) {
     // Read in this level's index, energy, spin, parity, and
     // number of gamma transitions
     int level_num, pi, num_gammas;
-    double level_energy, spin;
-    iss >> level_num >> level_energy >> spin >> pi >> num_gammas;
+    double level_energy, spin, half_life;
+    iss >> level_num >> level_energy >> spin >> pi >> num_gammas >> half_life;
 
     // Compute two times the spin so that we can represent half-integer
     // nuclear level spins as integers
-    int twoJ = std::round(2 * spin);
+    int twoJ = std::round( 2 * spin );
 
     // Create a parity object to use when constructing the level
     marley::Parity parity = marley::Parity(pi);
 
     // Construct a new level object and add it to the decay scheme. Get
     // a pointer to the newly-added level
-    marley::Level& current_level = add_level(marley::Level(level_energy,
-      twoJ, parity));
+    marley::Level& current_level = add_level( marley::Level(level_energy,
+      twoJ, parity, half_life) );
 
     for (int g_idx = 0; g_idx < num_gammas; ++g_idx) {
 
@@ -300,7 +300,7 @@ void marley::DecayScheme::print_report(std::ostream& ostr) const {
     marley::Parity parity = lev->parity();
 
     ostr << "Level at " << lev->energy() << " MeV has spin-parity "
-      << spin << parity << '\n';
+      << spin << parity << " and half-life " << lev->half_life() << " s\n";
 
     std::vector<marley::Gamma>& gammas = lev->gammas();
 
@@ -440,13 +440,14 @@ void marley::DecayScheme::read_from_stream(std::istream& in) {
   // just return the stream without doing anything else.
   if ( !in ) return;
 
-  double energy, ri;
+  double energy, ri, half_life;
   int two_j, num_gammas, level_f_idx;
   marley::Parity pi;
 
   for ( int i = 0; i < num_levels; ++i ) {
-    in >> energy >> two_j >> pi >> num_gammas;
-    marley::Level& l = add_level( marley::Level(energy, two_j, pi) );
+    in >> energy >> two_j >> pi >> num_gammas >> half_life;
+
+    marley::Level& l = add_level( marley::Level(energy, two_j, pi, half_life) );
     for ( int j = 0; j < num_gammas; ++j ) {
       in >> energy >> ri >> level_f_idx;
       l.add_gamma( energy, ri, levels_.at(level_f_idx).get() );
