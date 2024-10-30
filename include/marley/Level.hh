@@ -62,6 +62,9 @@ namespace marley {
       /// Set the level half-life (s)
       inline void set_half_life( double half_life );
 
+      /// Get the decay time of the level
+      inline double GetDecaytime() const;
+
       /// @return true if the level owns at least one Gamma object
       inline bool has_gammas() const;
 
@@ -114,6 +117,8 @@ namespace marley {
       /// @note The mean lifetime (tau) is given by tau = half_life / ln(2).
       double half_life_;
 
+      double decaytime_; // Simulated decay time (s) per level
+
       /// @brief gamma-ray transitions owned by this level
       std::vector<marley::Gamma> gammas_;
 
@@ -124,6 +129,9 @@ namespace marley {
       /// @brief helper function that updates gamma-ray distribution when Gamma
       /// objects are added or removed from the level
       void update_gamma_distribution();
+
+      /// Calculator of the decay time
+      double CalculateDecaytime( double half_life );
   };
 
   // Inline function definitions
@@ -139,6 +147,8 @@ namespace marley {
   inline double Level::half_life() const { return half_life_; }
   inline void Level::set_half_life( double half_life )
     { half_life_ = half_life; }
+
+  inline double Level::GetDecaytime() const { return decaytime_; }
 
   inline const std::vector<marley::Gamma>& Level::gammas() const
     { return gammas_; }
