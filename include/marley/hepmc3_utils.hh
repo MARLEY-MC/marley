@@ -28,6 +28,10 @@
 // MARLEY includes
 #include "marley/Reaction.hh"
 
+namespace marley {
+  class Generator;
+}
+
 namespace HepMC3 {
   class FourVector;
   class GenCrossSection;
@@ -121,4 +125,11 @@ namespace marley_hepmc3 {
   std::shared_ptr< HepMC3::GenParticle > get_residue(
     HepMC3::GenEvent& ev );
 
+  /// Handles sampling and storing a random decay time for a particle decay
+  /// vertex
+  /// @param partial_width Partial decay width (MeV) for the decay process
+  ///   of interest
+  void store_decay_time( double partial_width, marley::Generator& gen,
+    std::shared_ptr< HepMC3::GenVertex >& decay_vtx,
+    const std::shared_ptr< HepMC3::GenParticle >& parent );
 };

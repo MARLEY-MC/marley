@@ -149,40 +149,12 @@ void marley::DecayScheme::do_cascade( marley::Level& initial_level,
       decay_vtx->add_particle_out( nucleus );
 
       // Sample a decay time (MeV^{-1}) for emission of the chosen gamma-ray
+      // and store this timing information in the new binary decay vertex
       double gamma_partial_width = gamma_branching_ratio * level_total_width;
-      double decay_time = gen.sample_decay_time( gamma_partial_width );
-      MARLEY_LOG_DEBUG() << "gamma decay_time = "
-        << marley_utils::hbar * decay_time << " s";
+      marley_hepmc3::store_decay_time( gamma_partial_width, gen, decay_vtx,
+        residue );
 
-      // Convert to the appropriate time units (cm) for a NuHepMC 4-position.
-      // See marley::Reaction::make_event_object() where this is defined.
-      constexpr double fm_to_cm = 1e-13;
-      decay_time *= marley_utils::hbar_c * fm_to_cm;
-
-      // The decay width treatment above assumes that the parent nucleus is
-      // at rest. Apply a (typically very small) time dilation correction
-      // since it may be moving in the laboratory frame.
-      const HepMC3::FourVector& mom4_res = residue->momentum();
-      double E2_res = std::pow( mom4_res.e(), 2 );
-      double beta2_res = mom4_res.length2() / E2_res;
-      double gamma_res = 1. / marley_utils::real_sqrt( 1. - beta2_res );
-      decay_time *= gamma_res;
-
-      // Get the creation time of the decaying residue from its starting vertex
-      const auto res_prod_vtx = residue->production_vertex();
-      if ( !res_prod_vtx ) throw marley::Error( "Could not access parent"
-        " nucleus production vertex in marley::DecayScheme::do_cascade()" );
-      double old_time = res_prod_vtx->position().t(); // cm
-
-      // Set and store the gamma-ray emission time in the decay vertex, then
-      // add it to the event record
-      // TODO: add spatial information as needed
-      double new_time = old_time + decay_time; // cm
-      HepMC3::FourVector decay_pos4;
-      decay_pos4.set_t( new_time );
-
-      decay_vtx->set_position( decay_pos4 );
-
+      // Add the decay vertex to the event record
       event.add_vertex( decay_vtx );
 
       // We can set the charge attribute now that the daughter nucleus

@@ -22,6 +22,7 @@
 
 // HepMC3 includes
 #include "HepMC3/Attribute.h"
+#include "HepMC3/FourVector.h"
 #include "HepMC3/GenCrossSection.h"
 #include "HepMC3/GenEvent.h"
 #include "HepMC3/GenRunInfo.h"
@@ -32,6 +33,7 @@
 #include "marley/marley_utils.hh"
 #include "marley/hepmc3_utils.hh"
 #include "marley/Error.hh"
+#include "marley/Generator.hh"
 #include "marley/Reaction.hh"
 
 namespace {
@@ -387,4 +389,43 @@ namespace marley_hepmc3 {
 
   }
 
+}
+
+// Handles sampling and storing a random decay time for a binary decay vertex
+void marley_hepmc3::store_decay_time( double partial_width,
+  marley::Generator& gen, std::shared_ptr< HepMC3::GenVertex >& decay_vtx,
+  const std::shared_ptr< HepMC3::GenParticle >& parent )
+{
+  // Sample a decay time (MeV^{-1}) to assign to the decay vertex
+  double decay_time = gen.sample_decay_time( partial_width );
+  MARLEY_LOG_DEBUG() << "decay_time = "
+    << marley_utils::hbar * decay_time << " s";
+
+  // Convert to the appropriate time units (cm) for a NuHepMC 4-position.
+  // See marley::Reaction::make_event_object() where the units are defined.
+  constexpr double fm_to_cm = 1e-13;
+  decay_time *= marley_utils::hbar_c * fm_to_cm;
+
+  // The decay width treatment above assumes that the parent particle is
+  // at rest. Apply a (typically very small) time dilation correction
+  // since it may be moving in the laboratory frame.
+  const HepMC3::FourVector& mom4_parent = parent->momentum();
+  double E2_parent = std::pow( mom4_parent.e(), 2 );
+  double beta2_parent = mom4_parent.length2() / E2_parent;
+  double gamma_parent = 1. / marley_utils::real_sqrt( 1. - beta2_parent );
+  decay_time *= gamma_parent;
+
+  // Get the creation time of the parent particle from its starting vertex
+  const auto parent_prod_vtx = parent->production_vertex();
+  if ( !parent_prod_vtx ) throw marley::Error( "Could not access parent"
+    " particle production vertex in marley_hepmc3::store_decay_time()" );
+  double old_time = parent_prod_vtx->position().t(); // cm
+
+  // Set and store the absolute time in the decay vertex
+  // TODO: add spatial information as needed
+  double new_time = old_time + decay_time; // cm
+  HepMC3::FourVector decay_pos4;
+  decay_pos4.set_t( new_time );
+
+  decay_vtx->set_position( decay_pos4 );
 }
