@@ -867,3 +867,25 @@ std::string marley::Generator::string_from_crpa_discrete_mode(
   else throw marley::Error( "Unrecognized CRPADiscreteMode value encountered"
     " in marley::Generator::string_from_crpa_discrete_mode()" );
 }
+
+// Sample a random decay time given a partial decay width
+double marley::Generator::sample_decay_time( double partial_width ) {
+  if ( partial_width <= 0. ) throw marley::Error( "Non-positive partial decay"
+    " width passed to marley::Generator::sample_decay_time()" );
+
+  // Mean lifetime (1/MeV)
+  double tau = 1. / partial_width;
+
+  // Find the double value that comes immediately after zero. This allows us
+  // exclude zero and sample uniformly on (0, 1]. Including zero would lead to
+  // the possibility of an infinite decay time. See http://tinyurl.com/n3ocg3p
+  // for more information.
+  double min_to_use = std::nextafter( 0., std::numeric_limits<double>::max() );
+
+  // Choose a random number uniformly on (0, 1].
+  double r = this->uniform_random_double( min_to_use, 1., true );
+
+  // Decay time in MeV^{-1}
+  double t = -tau * std::log( r );
+  return t;
+}

@@ -122,8 +122,14 @@ namespace marley {
       /// @param xmin Lower bound of the sampling interval
       /// @param xmax Upper bound of the sampling interval
       /// @return Sampled value of x
-      double inverse_transform_sample(const std::function<double(double)>& f,
-        double xmin, double xmax, double bisection_tolerance = 1e-12);
+      double inverse_transform_sample( const std::function<double(double)>& f,
+        double xmin, double xmax, double bisection_tolerance = 1e-12 );
+
+      /// @brief Sample a random decay time given a partial decay width
+      /// @param partial_width Partial decay width (MeV) for the decay process
+      ///   of interest
+      /// @return Time for a decay via this process to occur (MeV<sup> -1</sup>)
+      double sample_decay_time( double partial_width );
 
       /// @brief Get a reference to the StructureDatabase owned by this
       /// Generator

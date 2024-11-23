@@ -17,8 +17,6 @@
 #include <string>
 #include <vector>
 #include <regex>
-#include <random>
-#include <chrono>
 
 #include "marley/marley_utils.hh"
 #include "marley/Generator.hh"
@@ -27,9 +25,7 @@
 
 marley::Level::Level( double E, int twoJ, marley::Parity pi, double half_life )
   : energy_( E ), twoJ_( twoJ ), parity_( pi ), half_life_( half_life )
-{
-  decaytime_ = CalculateDecaytime( half_life_ );
-}
+{}
 
 const marley::Gamma* marley::Level::sample_gamma( marley::Generator& gen )
 {
@@ -92,17 +88,4 @@ void marley::Level::update_gamma_distribution() {
   // Update the discrete distribution used to sample gammas
   std::discrete_distribution< size_t >::param_type params( ri_begin, ri_end );
   gamma_dist_.param( params );
-}
-
-double marley::Level::CalculateDecaytime( double half_life,
-  marley::Generator& gen )
-{
-  double r = gen.uniform_random_double( 0., 1., true );
-  if ( r==0. )
-    r=0.0000000000001;
-  double tau = halftime/log(2);
-  double logr = log(r);
-  double t = -tau*log(r);
-  decaytime_ = t;
-  return t;
 }

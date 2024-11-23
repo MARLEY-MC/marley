@@ -62,9 +62,6 @@ namespace marley {
       /// Set the level half-life (s)
       inline void set_half_life( double half_life );
 
-      /// Get the decay time of the level
-      inline double GetDecaytime( marley::Generator& gen );
-
       /// @return true if the level owns at least one Gamma object
       inline bool has_gammas() const;
 
@@ -117,50 +114,42 @@ namespace marley {
       /// @note The mean lifetime (tau) is given by tau = half_life / ln(2).
       double half_life_;
 
-      double decaytime_; // Simulated decay time (s) per level
-
       /// @brief gamma-ray transitions owned by this level
-      std::vector<marley::Gamma> gammas_;
+      std::vector< marley::Gamma > gammas_;
 
       /// @brief discrete distribution object used to sample gamma-ray
       /// de-excitations
-      std::discrete_distribution<size_t> gamma_dist_;
+      std::discrete_distribution< size_t > gamma_dist_;
 
       /// @brief helper function that updates gamma-ray distribution when Gamma
       /// objects are added or removed from the level
       void update_gamma_distribution();
-
-      /// Calculator of the decay time
-      double CalculateDecaytime( double half_life, marley::Generator& gen );
   };
 
   // Inline function definitions
   inline double Level::energy() const { return energy_; }
-  inline void Level::set_energy(double E) { energy_ = E; }
+  inline void Level::set_energy( double E ) { energy_ = E; }
 
   inline int Level::twoJ() const { return twoJ_; }
   inline void Level::set_twoJ(int twoJ) { twoJ_ = twoJ; }
 
   inline marley::Parity Level::parity() const { return parity_; }
-  inline void Level::set_parity(marley::Parity pi) { parity_ = pi; }
+  inline void Level::set_parity( marley::Parity pi ) { parity_ = pi; }
 
   inline double Level::half_life() const { return half_life_; }
   inline void Level::set_half_life( double half_life )
     { half_life_ = half_life; }
 
-  inline double Level::GetDecaytime( marley::Generator& gen )
-    { return this->CalculateDecaytime( half_life_, gen ); }
-
-  inline const std::vector<marley::Gamma>& Level::gammas() const
+  inline const std::vector< marley::Gamma >& Level::gammas() const
     { return gammas_; }
-  inline std::vector<marley::Gamma>& Level::gammas() { return gammas_; }
+  inline std::vector< marley::Gamma >& Level::gammas() { return gammas_; }
 
   inline bool Level::has_gammas() const { return !gammas_.empty(); }
 
-  template<typename It> inline marley::IteratorToPointerMember<It,
-    double> Level::make_energy_iterator(It it)
+  template< typename It > inline marley::IteratorToPointerMember< It,
+    double > Level::make_energy_iterator( It it )
   {
-    return marley::IteratorToPointerMember<It, double>(it,
-      &marley::Level::energy_);
+    return marley::IteratorToPointerMember< It, double >( it,
+      &marley::Level::energy_ );
   }
 }
