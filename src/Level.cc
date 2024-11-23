@@ -27,14 +27,26 @@ marley::Level::Level( double E, int twoJ, marley::Parity pi, double half_life )
   : energy_( E ), twoJ_( twoJ ), parity_( pi ), half_life_( half_life )
 {}
 
-const marley::Gamma* marley::Level::sample_gamma( marley::Generator& gen )
+const marley::Gamma* marley::Level::sample_gamma( marley::Generator& gen,
+  double* prob_ptr )
 {
+  // Initialize the probability of sampling the gamma to zero
+  if ( prob_ptr ) *prob_ptr = 0.;
+
   if ( gammas_.empty() ) return nullptr;
   else {
     // Get the index of the gamma to return by randomly sampling from the
     // discrete distribution gamma_dist using the standard marley_utils random
     // number generator.
     size_t g_index = gen.sample_from_distribution( gamma_dist_ );
+
+    // If we have a non-null double* to use to store the probability of
+    // sampling this particular gamma, then do the storage here
+    if ( prob_ptr ) {
+      std::vector< double > probs = gamma_dist_.probabilities();
+      *prob_ptr = probs.at( g_index );
+    }
+
     // Return a pointer to the corresponding gamma
     return &( gammas_[ g_index ] );
   }

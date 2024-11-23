@@ -219,8 +219,6 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
             const auto* f_spw = static_cast< const marley
               ::FragmentContinuumExitChannel::FragmentSpinParityWidth* >(
               spw_ptr );
-// Print two_j_frag value with "SELECTED"
-//std::cout << "two_j_frag = " << f_spw->two_j_frag << " SELECTED" << std::endl;
             decay_vtx->add_attribute( "two_j_frag",
               std::make_shared< HepMC3::IntAttribute >(f_spw->two_j_frag) );
             decay_vtx->add_attribute( "orb_l",
@@ -262,10 +260,10 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
       if ( !started_from_continuum ) {
         double Ex_level = lev->energy();
         if ( std::abs(Ex - Ex_level) > EX_TOLERANCE ) {
-          throw marley::Error("Excitation energy mismatch encountered in"
+          throw marley::Error( "Excitation energy mismatch encountered in"
             " marley::NucleusDecayer::deexcite_residue(). Event has Ex = "
             + std::to_string(Ex) + " MeV while the initial discrete level has "
-            + std::to_string(Ex_level) + " MeV");
+            + std::to_string(Ex_level) + " MeV" );
         }
       }
 

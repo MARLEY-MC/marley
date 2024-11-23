@@ -83,9 +83,14 @@ namespace marley {
 
       /// @brief Choose a gamma owned by this level randomly based on the
       /// relative intensities of all of the gammas.
+      /// @param gen Reference to the Generator object to use for
+      ///   random sampling
+      /// @param[out] prob_ptr Optional double* that, if not nullptr,
+      ///   will be used to store the probability of choosing the sampled gamma
       /// @return a pointer to the selected Gamma object, or nullptr
       /// if the level doesn't have any gammas
-      const marley::Gamma* sample_gamma(marley::Generator& gen);
+      const marley::Gamma* sample_gamma( marley::Generator& gen,
+        double* prob_ptr = nullptr );
 
       /// Returns the level spin-parity as a string
       std::string spin_parity_string() const;
