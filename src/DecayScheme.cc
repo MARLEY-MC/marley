@@ -93,7 +93,7 @@ void marley::DecayScheme::do_cascade(marley::Level& initial_level,
   const marley::MassTable& mt = marley::MassTable::Instance();
 
   while ( !cascade_finished ) {
-
+    double decaytime = p_current_level->GetDecaytime(gen);
     // Randomly select a gamma to produce
     const marley::Gamma* p_gamma = p_current_level->sample_gamma(gen);
     if (!p_gamma) {

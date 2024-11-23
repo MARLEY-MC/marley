@@ -63,7 +63,7 @@ namespace marley {
       inline void set_half_life( double half_life );
 
       /// Get the decay time of the level
-      inline double GetDecaytime() const;
+      inline double GetDecaytime( marley::Generator& gen );
 
       /// @return true if the level owns at least one Gamma object
       inline bool has_gammas() const;
@@ -131,7 +131,7 @@ namespace marley {
       void update_gamma_distribution();
 
       /// Calculator of the decay time
-      double CalculateDecaytime( double half_life );
+      double CalculateDecaytime( double half_life, marley::Generator& gen );
   };
 
   // Inline function definitions
@@ -148,7 +148,8 @@ namespace marley {
   inline void Level::set_half_life( double half_life )
     { half_life_ = half_life; }
 
-  inline double Level::GetDecaytime() const { return decaytime_; }
+  inline double Level::GetDecaytime( marley::Generator& gen )
+    { return this->CalculateDecaytime( half_life_, gen ); }
 
   inline const std::vector<marley::Gamma>& Level::gammas() const
     { return gammas_; }

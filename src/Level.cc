@@ -94,18 +94,15 @@ void marley::Level::update_gamma_distribution() {
   gamma_dist_.param( params );
 }
 
-double marley::Level::CalculateDecaytime( double half_life ) {
-  // Give as result a simulated decay time for the level
-  // Gettig the seed for the random number
-  auto now = std::chrono::high_resolution_clock::now();
-  auto seed = now.time_since_epoch().count();
-
-  std::mt19937 generator(seed);
-  std::uniform_int_distribution<int> distribution(1, 1000000);
-  int rint = distribution(generator);
-  // Get a random number between 0 and 1;
-  double r = (double)rint/1000000.;
+double marley::Level::CalculateDecaytime( double half_life,
+  marley::Generator& gen )
+{
+  double r = gen.uniform_random_double( 0., 1., true );
+  if ( r==0. )
+    r=0.0000000000001;
   double tau = halftime/log(2);
+  double logr = log(r);
   double t = -tau*log(r);
+  decaytime_ = t;
   return t;
 }
