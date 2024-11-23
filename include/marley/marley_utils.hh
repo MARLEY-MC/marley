@@ -112,9 +112,14 @@ namespace marley_utils {
 
   // Fine structure constant
   constexpr double alpha = 7.2973525698e-3;
+
   // Conversion factor used to switch to natural units (hbar = c = 1)
   constexpr double hbar_c = 197.3269718; // MeV*fm
   constexpr double hbar_c2 = hbar_c * hbar_c; // MeV^2 * fm^2
+
+  // Need to convert tabulated half-lives (s) to natural units (1/MeV)
+  constexpr double hbar = 6.58211951e-22; // MeV * s
+
   // Electron mass
   constexpr double m_e = 0.510998928; // MeV
   // Proton mass (from 2023 PDG Review of Particle Physics)

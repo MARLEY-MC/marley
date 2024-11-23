@@ -223,15 +223,12 @@ const marley::ExitChannel& marley::HauserFeshbachDecay::do_decay(
 
 void marley::HauserFeshbachDecay::print(std::ostream& out) const {
 
-  // Needed to print results in conventional units
-  constexpr double hbar = 6.58211951e-22; // MeV * s
-
   out << "Compound nucleus " << compound_nucleus_->pid()
     << " with Ex = " << Exi_ << ", spin = " << twoJi_ / 2;
   if (twoJi_ % 2) out << ".5";
   out << ", and parity = " << Pi_ << '\n';
   out << "Total width = " << total_width_ << " MeV\n";
-  out << "Mean lifetime = " << hbar / total_width_ << " s\n";
+  out << "Mean lifetime = " << marley_utils::hbar / total_width_ << " s\n";
   for (const auto& ec : exit_channels_) {
     double width = ec->width();
     bool continuum = ec->is_continuum();
