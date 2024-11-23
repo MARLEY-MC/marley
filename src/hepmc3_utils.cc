@@ -403,8 +403,7 @@ void marley_hepmc3::store_decay_time( double partial_width,
 
   // Convert to the appropriate time units (cm) for a NuHepMC 4-position.
   // See marley::Reaction::make_event_object() where the units are defined.
-  constexpr double fm_to_cm = 1e-13;
-  decay_time *= marley_utils::hbar_c * fm_to_cm;
+  decay_time *= marley_utils::hbar_c * marley_utils::fm_to_cm;
 
   // The decay width treatment above assumes that the parent particle is
   // at rest. Apply a (typically very small) time dilation correction

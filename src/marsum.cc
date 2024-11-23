@@ -27,6 +27,7 @@
 #include "HepMC3/FourVector.h"
 #include "HepMC3/GenEvent.h"
 #include "HepMC3/GenParticle.h"
+#include "HepMC3/GenVertex.h"
 
 // ROOT includes
 #include "TFile.h"
@@ -64,7 +65,7 @@ int main( int argc, char* argv[] ) {
 
   // Information about each of the other final-state particles
   std::vector<int> PDGs;
-  std::vector<double> Es, KEs, pXs, pYs, pZs;
+  std::vector<double> Es, KEs, pXs, pYs, pZs, Ts;
 
   // Nuclear properties immediately after the primary interaction
   double Ex; // excitation energy (MeV)
@@ -135,6 +136,7 @@ int main( int argc, char* argv[] ) {
   out_tree->Branch( "pxp", &pXs );
   out_tree->Branch( "pyp", &pYs );
   out_tree->Branch( "pzp", &pZs );
+  out_tree->Branch( "tp", &Ts );
 
   // Flux-averaged total cross section
   out_tree->Branch( "xsec", &flux_avg_tot_xsec, "xsec/D" );
@@ -197,6 +199,7 @@ int main( int argc, char* argv[] ) {
       pXs.clear();
       pYs.clear();
       pZs.clear();
+      Ts.clear();
 
       auto projectile = marley_hepmc3::get_projectile( ev );
       pdgv = projectile->pid();
@@ -288,6 +291,13 @@ int main( int argc, char* argv[] ) {
         pXs.push_back( p4p.px() );
         pYs.push_back( p4p.py() );
         pZs.push_back( p4p.pz() );
+
+        const HepMC3::FourVector& pos4_p = p->production_vertex()->position();
+        double tp = pos4_p.t(); // cm
+        // Convert from NuHepMC 4-position units (cm) to conventional units (s)
+        tp *= marley_utils::hbar / marley_utils::hbar_c
+          / marley_utils::fm_to_cm;
+        Ts.push_back( tp );
       }
 
       // Make a copy of the vector of weights for the current event

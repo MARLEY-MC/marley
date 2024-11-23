@@ -157,6 +157,8 @@ namespace marley_utils {
   constexpr double fm2_to_minus40_cm2 = 1e14;
   // Constant to use to convert from fm^2 to picobarn
   constexpr double fm2_to_picobarn = 1e10;
+  // Constant to use when converting fm to cm
+  constexpr double fm_to_cm = 1e-13;
   // Square of the elementary charge
   constexpr double e2 = hbar_c * alpha; // MeV*fm
   // Constant to use when approximating nuclear radii via
