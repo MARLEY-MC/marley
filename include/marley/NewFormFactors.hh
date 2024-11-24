@@ -24,6 +24,8 @@
 
 namespace marley {
 
+  class JSON;
+
   class SachsFormFactors {
     public:
 
@@ -142,8 +144,7 @@ namespace marley {
   class NewFormFactors {
     public:
 
-      NewFormFactors( const std::string& sachs_ff_model,
-        const std::string& axial_ff_model );
+      NewFormFactors( const JSON& config );
 
       /// Charged-current vector form factor
       /// @param Q2 Negative square @f$ Q^{2} @f$ of the four-momentum transfer

@@ -32,6 +32,7 @@ namespace HepMC3 {
 namespace marley {
 
   class Generator;
+  class JSON;
   class Parity;
   class StructureDatabase;
 
@@ -122,7 +123,7 @@ namespace marley {
       static std::vector< std::unique_ptr<Reaction> >
         load_from_file( const std::string& filename,
         StructureDatabase& db, CoulombCorrector::CoulombMode coulomb_mode,
-        FormFactors::FFScalingMode ff_scaling_mode, bool superallowed );
+        const JSON& ff_config, bool superallowed );
 
       /// Function that returns the ejectile PDG code given the projectile
       /// PDG code and the ProcessType

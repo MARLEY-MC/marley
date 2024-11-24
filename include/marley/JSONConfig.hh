@@ -44,8 +44,7 @@ namespace marley {
       void prepare_neutrino_source( marley::Generator& gen ) const;
       void prepare_reactions( marley::Generator& gen,
         marley::CoulombCorrector::CoulombMode coulomb_mode,
-        marley::FormFactors::FFScalingMode ff_scaling_mode,
-        bool superallowed ) const;
+        const marley::JSON& ff_config, bool superallowed ) const;
       void prepare_structure( marley::Generator& gen ) const;
       void prepare_target( marley::Generator& gen ) const;
       void prepare_weights( marley::Generator& gen ) const;

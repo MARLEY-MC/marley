@@ -29,6 +29,7 @@
 #include "marley/AllowedNuclearReactionWithQ2.hh"
 #include "marley/ElectronReaction.hh"
 #include "marley/HauserFeshbachDecay.hh"
+#include "marley/JSON.hh"
 #include "marley/Logger.hh"
 #include "marley/MatrixElement.hh"
 #include "marley/Reaction.hh"
@@ -369,7 +370,7 @@ const std::vector<int>& marley::Reaction::get_projectiles(ProcType pt) {
 std::vector< std::unique_ptr<marley::Reaction> >
   marley::Reaction::load_from_file( const std::string& filename,
   marley::StructureDatabase& db, CoulombCorrector::CoulombMode coulomb_mode,
-  FormFactors::FFScalingMode ff_scaling_mode, bool superallowed)
+  const marley::JSON& ff_config, bool superallowed)
 {
   // Create an empty vector to start
   std::vector< std::unique_ptr<marley::Reaction> > loaded_reactions;
@@ -438,10 +439,10 @@ std::vector< std::unique_ptr<marley::Reaction> >
   // format code from the current line in order to decide what to do next.
   int integer_data_format;
   iss >> integer_data_format;
-  auto df = static_cast<DataFormat>( integer_data_format );
+  auto df = static_cast< DataFormat >( integer_data_format );
 
-  if ( ( df == AllowedApproximation ) || ( df == AllowedApproximationWithQ2 ) ) {
-
+  if ( ( df == AllowedApproximation ) || ( df == AllowedApproximationWithQ2 ) )
+  {
     // Read in all of the level energy (MeV), squared matrix element (B(F) or
     // B(GT) strength), and matrix element type identifier (0 represents B(F),
     // 1 represents B(GT)) triplets. Create a vector of MatrixElement objects
@@ -542,15 +543,16 @@ std::vector< std::unique_ptr<marley::Reaction> >
 
       } else if ( df == AllowedApproximationWithQ2 ) {
         loaded_reactions.emplace_back(
-          std::make_unique< marley::AllowedNuclearReactionWithQ2 >( proc_type, pdg_a,
-          pdg_b, pdg_c, pdg_d, q_d, matrix_elements, nucelon_radii,
-          coulomb_mode, ff_scaling_mode, superallowed )
+          std::make_unique< marley::AllowedNuclearReactionWithQ2 >( proc_type,
+          pdg_a, pdg_b, pdg_c, pdg_d, q_d, matrix_elements, nucelon_radii,
+          coulomb_mode, ff_config, superallowed )
         );
       }
 
     }
 
-  } else if ( df == MultipoleResponses ) {
+  }
+  else if ( df == MultipoleResponses ) {
 
     // An energy shift is provided following the data format code if we
     // are working with multipole responses. This accounts for the energy
@@ -610,14 +612,16 @@ void marley::Reaction::get_residue_pdg_and_charge(
   int A = marley_utils::get_particle_A( pdg_b );
 
   // NC scattering leaves the target nucleus the same
-  if ( proc_type == marley::Reaction::ProcessType::NC_Discrete ||
-       proc_type == marley::Reaction::ProcessType::NC_Continuum ) {
+  if ( proc_type == marley::Reaction::ProcessType::NC_Discrete
+    || proc_type == marley::Reaction::ProcessType::NC_Continuum )
+  {
     pdg_d = pdg_b;
     q_d = 0;
   }
   // Neutrino CC scattering raises Z by one
-  else if ( proc_type == marley::Reaction::ProcessType::NeutrinoCC_Discrete ||
-            proc_type == marley::Reaction::ProcessType::NeutrinoCC_Continuum ) {
+  else if ( proc_type == marley::Reaction::ProcessType::NeutrinoCC_Discrete
+    || proc_type == marley::Reaction::ProcessType::NeutrinoCC_Continuum )
+  {
     // Check that the neutron number of the target is positive
     int Ni = A - Zi;
     if ( Ni <= 0 ) throw marley::Error("A NeutrinoCC process requires"
@@ -628,8 +632,9 @@ void marley::Reaction::get_residue_pdg_and_charge(
     q_d = 1;
   }
   // Antineutrino CC scattering lowers Z by one
-  else if ( proc_type == marley::Reaction::ProcessType::AntiNeutrinoCC_Discrete ||
-            proc_type == marley::Reaction::ProcessType::AntiNeutrinoCC_Continuum ) {
+  else if ( proc_type == marley::Reaction::ProcessType::AntiNeutrinoCC_Discrete
+    || proc_type == marley::Reaction::ProcessType::AntiNeutrinoCC_Continuum )
+  {
     // Check that the neutron number of the target is positive
     if ( Zi <= 0 ) throw marley::Error("An AntiNeutrinoCC process requires"
       " a target nucleus with Z > 0");

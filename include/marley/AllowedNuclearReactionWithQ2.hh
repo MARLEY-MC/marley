@@ -27,12 +27,14 @@
 #include "marley/Level.hh"
 #include "marley/MassTable.hh"
 #include "marley/MatrixElement.hh"
+#include "marley/NewFormFactors.hh"
 #include "marley/NuclearReaction.hh"
 #include "marley/StructureDatabase.hh"
 
 namespace marley {
 
   class Generator;
+  class JSON;
 
   /// @brief A neutrino-nucleus reaction whose cross section is calculated
   /// according to the allowed approximation
@@ -57,8 +59,8 @@ namespace marley {
         int pdg_c, int pdg_d, int q_d,
         const std::shared_ptr<std::vector<marley::MatrixElement> >& mat_els,
         const std::pair< std::vector<int>, std::vector<double> > nucleon_radii,
-        CoulombCorrector::CoulombMode mode,
-        FormFactors::FFScalingMode ff_scaling_mode, bool superallowed );
+        CoulombCorrector::CoulombMode mode, const JSON& ff_config,
+        bool superallowed );
 
       virtual std::shared_ptr< HepMC3::GenEvent > create_event(
         int particle_id_a, double KEa, marley::Generator& gen ) const override;
@@ -173,8 +175,8 @@ namespace marley {
       /// @brief Object that handles calculations of Coulomb correction factors
       CoulombCorrector coulomb_corrector_;
 
-      /// @brief Object that handles calculations of nuclear form factors
-      FormFactors form_factors_;
+      /// @brief Object that handles calculations of nucleon form factors
+      NewFormFactors form_factors_;
 
       /// @brief Flag that indicates whether to include aditional terms beyond
       /// the q->0 limit

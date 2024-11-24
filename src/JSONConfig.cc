@@ -41,7 +41,6 @@ using InterpMethod = marley::InterpolationGrid<double>::InterpolationMethod;
 using ProcType = marley::Reaction::ProcessType;
 using CMode = marley::CoulombCorrector::CoulombMode;
 using CRPADiscreteMode = marley::Generator::CRPADiscreteMode;
-using FFScalingMode = marley::FormFactors::FFScalingMode;
 
 // anonymous namespace for helper functions, etc.
 namespace {
@@ -174,20 +173,22 @@ marley::Generator marley::JSONConfig::create_generator() const
       ::coulomb_mode_from_string( my_mode );
   }
 
-  // Set the way the form factors depend on Q^2 in all reactions.
-  FFScalingMode ff_scaling_mode = FFScalingMode::DIPOLE; // Default mode
-  if ( json_.has_key("ff_scaling_mode") ) {
-    const auto& ffmode = json_.at( "ff_scaling_mode" );
-    if ( !ffmode.is_string() ) throw marley::Error("Invalid form factor"
-      " scaling mode specification " + ffmode.dump_string() );
-    std::string my_mode = ffmode.to_string();
-    ff_scaling_mode = marley::FormFactors
-      ::ff_scaling_mode_from_string( my_mode );
+  // Configure the parameterizations used for nucleon form factors
+  marley::JSON ff_config;
+  if ( json_.has_key("form_factors") ) {
+    ff_config = json_.at( "form_factors" );
+    if ( !ff_config.is_object() ) throw marley::Error( "Invalid form factor"
+      " configuration " + ff_config.dump_string() );
   }
-  // Inform the user about the set form factor scaling mode
-  MARLEY_LOG_INFO() << "Configured form factor scaling mode: " << marley::FormFactors::string_from_ff_scaling_mode( ff_scaling_mode );
+  else {
+    // Adopt a default form factor configuration if the user did not provide
+    // one
+    ff_config[ "sachs_model" ] = "bbba05";
+    ff_config[ "axial_model" ] = "dipole";
+  }
 
-  // If the user has disabled non-superallowed terms in the allowed approximation...
+  // If the user has disabled non-superallowed terms in the allowed
+  // approximation...
   bool superallowed = false; // Default is to include all terms
   if ( json_.has_key("superallowed") ) {
     const auto& superallowed_from_json = json_.at( "superallowed" );
@@ -195,7 +196,8 @@ marley::Generator marley::JSONConfig::create_generator() const
       bool superallowed_or_not = superallowed_from_json.to_bool();
       superallowed = superallowed_or_not;
       if ( superallowed_or_not ) {
-        MARLEY_LOG_INFO() << "Only 'superallowed' cross section terms will be included (if using the allowed approximation)";
+        MARLEY_LOG_INFO() << "Only 'superallowed' cross section terms"
+          << " will be included (if using the allowed approximation)";
       }
     }
   }
@@ -208,7 +210,7 @@ marley::Generator marley::JSONConfig::create_generator() const
   prepare_direction( gen );
   prepare_structure( gen );
   prepare_neutrino_source( gen );
-  prepare_reactions( gen, coulomb_mode, ff_scaling_mode, superallowed );
+  prepare_reactions( gen, coulomb_mode, ff_config, superallowed );
   prepare_target( gen );
   prepare_weights( gen );
 
@@ -412,7 +414,7 @@ void marley::JSONConfig::prepare_direction( marley::Generator& gen ) const {
 }
 
 void marley::JSONConfig::prepare_reactions( marley::Generator& gen,
-  CMode coulomb_mode, FFScalingMode ff_scaling_mode, bool superallowed ) const
+  CMode coulomb_mode, const marley::JSON& ff_config, bool superallowed ) const
 {
   const auto& fm = marley::FileManager::Instance();
 
@@ -452,7 +454,7 @@ void marley::JSONConfig::prepare_reactions( marley::Generator& gen,
 
           auto reacts = marley::Reaction::load_from_file(
             full_file_name, gen.get_structure_db(), coulomb_mode,
-            ff_scaling_mode, superallowed );
+            ff_config, superallowed );
 
           if ( reacts.empty() ) throw marley::Error( "Failed to load"
             " any reactions from the file " + full_file_name + ". Please"

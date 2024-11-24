@@ -17,6 +17,7 @@
 // MARLEY includes
 #include "marley/Error.hh"
 #include "marley/NewFormFactors.hh"
+#include "marley/JSON.hh"
 #include "marley/marley_utils.hh"
 
 double marley::DipoleSachsFormFactors::GEp( double Q2 ) {
@@ -135,9 +136,28 @@ double marley::NewFormFactors::F2n( double Q2 ) const {
   return F2n;
 }
 
-marley::NewFormFactors::NewFormFactors( const std::string& sachs_ff_model,
-  const std::string& axial_ff_model )
-{
+marley::NewFormFactors::NewFormFactors( const marley::JSON& config ) {
+
+  if ( !config.has_key("sachs_model") ) {
+    throw marley::Error( "Missing Sachs form factor model configuration" );
+  }
+  const auto& sachs_json = config.at( "sachs_model" );
+  if ( !sachs_json.is_string() ) {
+    throw marley::Error( "Invalid Sachs form factor model "
+      + sachs_json.dump_string() );
+  }
+  std::string sachs_ff_model = sachs_json.to_string();
+
+  if ( !config.has_key("axial_model") ) {
+    throw marley::Error( "Missing axial form factor model configuration" );
+  }
+  const auto& axial_json = config.at( "axial_model" );
+  if ( !axial_json.is_string() ) {
+    throw marley::Error( "Invalid axial form factor model "
+      + axial_json.dump_string() );
+  }
+  std::string axial_ff_model = axial_json.to_string();
+
   // Choose the model to use for the Sachs form factors
   if ( sachs_ff_model == "trivial" ) {
     sachs_ff_ = std::make_shared< TrivialSachsFormFactors >();
@@ -148,8 +168,8 @@ marley::NewFormFactors::NewFormFactors( const std::string& sachs_ff_model,
   else if ( sachs_ff_model == "bbba05" ) {
     sachs_ff_ = std::make_shared< BBBA05SachsFormFactors >();
   }
-  else throw marley::Error( "Unrecognized Sachs form factor model name in"
-    " constructor of marley::NewFormFactors" );
+  else throw marley::Error( "Unrecognized Sachs form factor model name \""
+    + sachs_ff_model + "\" in constructor of marley::NewFormFactors" );
 
   // Choose the model to use for the axial form factors
   if ( axial_ff_model == "trivial" ) {
@@ -159,8 +179,8 @@ marley::NewFormFactors::NewFormFactors( const std::string& sachs_ff_model,
     axial_ff_ = std::make_shared< DipoleAxialFormFactors >( marley_utils::g_A,
       marley_utils::M_A );
   }
-  else throw marley::Error( "Unrecognized axial form factor model name in"
-    " constructor of marley::NewFormFactors" );
+  else throw marley::Error( "Unrecognized axial form factor model name \""
+    + axial_ff_model + "\" in constructor of marley::NewFormFactors" );
 }
 
 double marley::SachsFormFactors::tau( double Q2 ) {
