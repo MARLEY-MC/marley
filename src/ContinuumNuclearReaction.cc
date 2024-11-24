@@ -22,11 +22,11 @@
 #include "marley/Error.hh"
 #include "marley/Generator.hh"
 #include "marley/MassTable.hh"
-#include "marley/TabulatedNuclearReaction.hh"
+#include "marley/ContinuumNuclearReaction.hh"
 #include "marley/marley_utils.hh"
 #include "marley/hepmc3_utils.hh"
 
-marley::TabulatedNuclearReaction::TabulatedNuclearReaction(
+marley::ContinuumNuclearReaction::ContinuumNuclearReaction(
   Reaction::ProcessType pt, int pdg_a, int pdg_b, int pdg_c, int pdg_d,
   int q_d, const std::shared_ptr<TabulatedXSec>& txsec )
   : marley::NuclearReaction( pt, pdg_a, pdg_b, pdg_c, pdg_d, q_d ),
@@ -34,14 +34,14 @@ marley::TabulatedNuclearReaction::TabulatedNuclearReaction(
 {
 }
 
-double marley::TabulatedNuclearReaction::total_xs( int pdg_a,
+double marley::ContinuumNuclearReaction::total_xs( int pdg_a,
   double KEa ) const
 {
   if ( pdg_a != pdg_a_ ) return 0.;
   return xsec_->integral( pdg_a, KEa );
 }
 
-std::shared_ptr< HepMC3::GenEvent > marley::TabulatedNuclearReaction
+std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
   ::create_event( int pdg_a, double KEa, marley::Generator& gen ) const
 {
   // TODO: reduce code duplication here with AllowedNuclearReaction using the
@@ -269,9 +269,9 @@ std::shared_ptr< HepMC3::GenEvent > marley::TabulatedNuclearReaction
 // Adds an indication to the description that the daughter nucleus will always
 // be left in an excited state.
 // TODO: revisit this as needed. I assume here that the
-// TabulatedNuclearReaction class will always be used for calculations in the
+// ContinuumNuclearReaction class will always be used for calculations in the
 // unbound continuum of nuclear levels
-void marley::TabulatedNuclearReaction::set_description() {
+void marley::ContinuumNuclearReaction::set_description() {
   marley::NuclearReaction::set_description();
   description_ += '*';
 }

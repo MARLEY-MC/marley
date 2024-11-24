@@ -38,7 +38,7 @@ namespace marley {
 
   /// @brief A neutrino-nucleus reaction whose cross section is calculated
   /// according to the allowed approximation
-  class AllowedNuclearReactionWithQ2 : public NuclearReaction {
+  class DiscreteNuclearReaction : public NuclearReaction {
 
     public:
 
@@ -55,7 +55,7 @@ namespace marley {
       /// corrections for the reaction cross section
       /// @param ff_scaling_mode Indicates the method to use when scaling
       /// the nuclear form factors with Q<sup>2</sup> in the matrix elements
-      AllowedNuclearReactionWithQ2( ProcessType pt, int pdg_a, int pdg_b,
+      DiscreteNuclearReaction( ProcessType pt, int pdg_a, int pdg_b,
         int pdg_c, int pdg_d, int q_d,
         const std::shared_ptr<std::vector<marley::MatrixElement> >& mat_els,
         const std::pair< std::vector<int>, std::vector<double> > nucleon_radii,

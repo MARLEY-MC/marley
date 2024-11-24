@@ -27,11 +27,11 @@ namespace marley {
 
   /// @brief Generates inclusive scattering events and computes cross
   /// sections using tabulated nuclear responses
-  class TabulatedNuclearReaction : public NuclearReaction {
+  class ContinuumNuclearReaction : public NuclearReaction {
 
     public:
 
-      TabulatedNuclearReaction( Reaction::ProcessType pt, int pdg_a,
+      ContinuumNuclearReaction( Reaction::ProcessType pt, int pdg_a,
         int pdg_b, int pdg_c, int pdg_d, int q_d,
         const std::shared_ptr<TabulatedXSec>& txsec );
 

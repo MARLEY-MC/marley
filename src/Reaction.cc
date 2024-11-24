@@ -26,7 +26,7 @@
 
 // MARLEY includes
 #include "marley/AllowedNuclearReaction.hh"
-#include "marley/AllowedNuclearReactionWithQ2.hh"
+#include "marley/DiscreteNuclearReaction.hh"
 #include "marley/ElectronReaction.hh"
 #include "marley/HauserFeshbachDecay.hh"
 #include "marley/JSON.hh"
@@ -35,7 +35,7 @@
 #include "marley/Reaction.hh"
 #include "marley/StructureDatabase.hh"
 #include "marley/hepmc3_utils.hh"
-#include "marley/TabulatedNuclearReaction.hh"
+#include "marley/ContinuumNuclearReaction.hh"
 #include "marley/marley_kinematics.hh"
 #include "marley/marley_utils.hh"
 
@@ -543,7 +543,7 @@ std::vector< std::unique_ptr<marley::Reaction> >
 
       } else if ( df == AllowedApproximationWithQ2 ) {
         loaded_reactions.emplace_back(
-          std::make_unique< marley::AllowedNuclearReactionWithQ2 >( proc_type,
+          std::make_unique< marley::DiscreteNuclearReaction >( proc_type,
           pdg_a, pdg_b, pdg_c, pdg_d, q_d, matrix_elements, nucelon_radii,
           coulomb_mode, ff_config, superallowed )
         );
@@ -591,7 +591,7 @@ std::vector< std::unique_ptr<marley::Reaction> >
       txsec->optimize( pdg_a, 100. );
 
       loaded_reactions.emplace_back(
-        std::make_unique< marley::TabulatedNuclearReaction >( proc_type, pdg_a,
+        std::make_unique< marley::ContinuumNuclearReaction >( proc_type, pdg_a,
           pdg_b, pdg_c, pdg_d, q_d, txsec )
       );
     }

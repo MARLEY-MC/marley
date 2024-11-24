@@ -21,7 +21,7 @@
 #include <sstream>
 
 #include "marley/marley_utils.hh"
-#include "marley/AllowedNuclearReactionWithQ2.hh"
+#include "marley/DiscreteNuclearReaction.hh"
 #include "marley/Error.hh"
 #include "marley/FormFactors.hh"
 #include "marley/Generator.hh"
@@ -39,7 +39,7 @@ namespace {
   constexpr int BOGUS_TWO_J_VALUE = -99999;
 }
 
-marley::AllowedNuclearReactionWithQ2::AllowedNuclearReactionWithQ2(
+marley::DiscreteNuclearReaction::DiscreteNuclearReaction(
   ProcType pt, int pdg_a, int pdg_b, int pdg_c, int pdg_d, int q_d,
   const std::shared_ptr< std::vector<marley::MatrixElement> >& mat_els,
   const std::pair< std::vector<int>, std::vector<double> > nucleon_radii,
@@ -54,7 +54,7 @@ marley::AllowedNuclearReactionWithQ2::AllowedNuclearReactionWithQ2(
 
 // Creates an event object by sampling the appropriate quantities and
 // performing kinematic calculations
-std::shared_ptr< HepMC3::GenEvent > marley::AllowedNuclearReactionWithQ2
+std::shared_ptr< HepMC3::GenEvent > marley::DiscreteNuclearReaction
   ::create_event( int pdg_a, double KEa, marley::Generator& gen ) const
 {
   // Check that the projectile supplied to this event is correct. If not, alert
@@ -251,7 +251,7 @@ std::shared_ptr< HepMC3::GenEvent > marley::AllowedNuclearReactionWithQ2
 
 // Compute the total reaction cross section (summed over all final nuclear
 // levels) in units of MeV^(-2) using the center of momentum frame.
-double marley::AllowedNuclearReactionWithQ2::total_xs( int pdg_a, double KEa )
+double marley::DiscreteNuclearReaction::total_xs( int pdg_a, double KEa )
   const
 {
   double dummy_cos_theta = 0.;
@@ -261,7 +261,7 @@ double marley::AllowedNuclearReactionWithQ2::total_xs( int pdg_a, double KEa )
 // Compute the differential cross section d\sigma / d\cos\theta_c^{CM}
 // summed over all final nuclear levels. This is done in units of MeV^(-2)
 // using the center of momentum frame.
-double marley::AllowedNuclearReactionWithQ2::diff_xs( int pdg_a, double KEa,
+double marley::DiscreteNuclearReaction::diff_xs( int pdg_a, double KEa,
   double cos_theta_c_cm ) const
 {
   return summed_xs_helper( pdg_a, KEa, cos_theta_c_cm, nullptr, true );
@@ -270,7 +270,7 @@ double marley::AllowedNuclearReactionWithQ2::diff_xs( int pdg_a, double KEa,
 // Compute the differential cross section d\sigma / d\cos\theta_c^{CM} for a
 // transition to a particular final nuclear level. This is done in units of
 // MeV^(-2) using the center of momentum frame.
-double marley::AllowedNuclearReactionWithQ2::diff_xs(
+double marley::DiscreteNuclearReaction::diff_xs(
   const marley::MatrixElement& mat_el, double KEa, double cos_theta_c_cm,
   double& beta_c_cm, bool check_max_E_level ) const
 {
@@ -438,7 +438,7 @@ double marley::AllowedNuclearReactionWithQ2::diff_xs(
 
 // Compute the total reaction cross section (in MeV^(-2)) for a transition to a
 // particular nuclear level using the center of momentum frame
-double marley::AllowedNuclearReactionWithQ2::total_xs(
+double marley::DiscreteNuclearReaction::total_xs(
   const marley::MatrixElement& mat_el, double KEa, double& beta_c_cm,
   bool check_max_E_level ) const
 {
@@ -467,7 +467,7 @@ double marley::AllowedNuclearReactionWithQ2::total_xs(
 }
 
 // Helper function for total_xs and diff_xs()
-double marley::AllowedNuclearReactionWithQ2::summed_xs_helper( int pdg_a,
+double marley::DiscreteNuclearReaction::summed_xs_helper( int pdg_a,
   double KEa, double cos_theta_c_cm, std::vector<double>* level_xsecs,
   bool differential ) const
 {
@@ -544,7 +544,7 @@ double marley::AllowedNuclearReactionWithQ2::summed_xs_helper( int pdg_a,
 }
 
 // Bessel factor calculation
-double marley::AllowedNuclearReactionWithQ2::bessel_factor( double kappa_cm )
+double marley::DiscreteNuclearReaction::bessel_factor( double kappa_cm )
   const
 {
   // If kappa is zero, return 1. to avoid division by zero.
@@ -602,7 +602,7 @@ double marley::AllowedNuclearReactionWithQ2::bessel_factor( double kappa_cm )
 
 
 // Sample an ejectile scattering cosine in the CM frame.
-double marley::AllowedNuclearReactionWithQ2::sample_cos_theta_c_cm(
+double marley::DiscreteNuclearReaction::sample_cos_theta_c_cm(
   const marley::MatrixElement& mat_el, double KEa, double beta_c_cm,
   marley::Generator& gen ) const
 {
@@ -619,7 +619,7 @@ double marley::AllowedNuclearReactionWithQ2::sample_cos_theta_c_cm(
       max = this->diff_xs( mat_el, KEa, -1., beta_c_cm, false );
     }
     else throw marley::Error( "Unrecognized matrix element type encountered"
-      " in marley::AllowedNuclearReactionWithQ2::sample_cos_theta_c_cm()" );
+      " in marley::DiscreteNuclearReaction::sample_cos_theta_c_cm()" );
   }
 
   return gen.rejection_sample(
@@ -628,7 +628,7 @@ double marley::AllowedNuclearReactionWithQ2::sample_cos_theta_c_cm(
     -1., 1., max );
 }
 
-std::shared_ptr< HepMC3::GenEvent > marley::AllowedNuclearReactionWithQ2
+std::shared_ptr< HepMC3::GenEvent > marley::DiscreteNuclearReaction
   ::make_event_object( double KEa, double pc_cm, double cos_theta_c_cm,
   double phi_c_cm, double Ec_cm, double Ed_cm, double E_level, int twoJ,
   const marley::Parity& P ) const
@@ -643,7 +643,7 @@ std::shared_ptr< HepMC3::GenEvent > marley::AllowedNuclearReactionWithQ2
 
 // Adds an indication of whether the reaction populates excited levels of the
 // daughter nucleus or only accesses the ground state (e.g., CEvNS)
-void marley::AllowedNuclearReactionWithQ2::set_description() {
+void marley::DiscreteNuclearReaction::set_description() {
   // Initialize the description_ member variable with the basic information
   // first
   marley::NuclearReaction::set_description();
