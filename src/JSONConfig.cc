@@ -25,7 +25,7 @@
 #include "marley/marley_utils.hh"
 #include "marley/Error.hh"
 #include "marley/FileManager.hh"
-#include "marley/FormFactor.hh"
+#include "marley/FormFactors.hh"
 #include "marley/JSONConfig.hh"
 #include "marley/NeutrinoSource.hh"
 #include "marley/NuclearReaction.hh"
@@ -41,7 +41,7 @@ using InterpMethod = marley::InterpolationGrid<double>::InterpolationMethod;
 using ProcType = marley::Reaction::ProcessType;
 using CMode = marley::CoulombCorrector::CoulombMode;
 using CRPADiscreteMode = marley::Generator::CRPADiscreteMode;
-using FFScalingMode = marley::FormFactor::FFScalingMode;
+using FFScalingMode = marley::FormFactors::FFScalingMode;
 
 // anonymous namespace for helper functions, etc.
 namespace {
@@ -181,11 +181,11 @@ marley::Generator marley::JSONConfig::create_generator() const
     if ( !ffmode.is_string() ) throw marley::Error("Invalid form factor"
       " scaling mode specification " + ffmode.dump_string() );
     std::string my_mode = ffmode.to_string();
-    ff_scaling_mode = marley::FormFactor
+    ff_scaling_mode = marley::FormFactors
       ::ff_scaling_mode_from_string( my_mode );
   }
   // Inform the user about the set form factor scaling mode
-  MARLEY_LOG_INFO() << "Configured form factor scaling mode: " << marley::FormFactor::string_from_ff_scaling_mode( ff_scaling_mode );
+  MARLEY_LOG_INFO() << "Configured form factor scaling mode: " << marley::FormFactors::string_from_ff_scaling_mode( ff_scaling_mode );
 
   // If the user has disabled non-superallowed terms in the allowed approximation...
   bool superallowed = false; // Default is to include all terms
@@ -267,7 +267,7 @@ marley::Generator marley::JSONConfig::create_generator() const
   for ( auto& react : gen.reactions_ ) {
 
     ProcType pt = react->process_type();
-    if ( pt == ProcType::NeutrinoCC_Discrete || pt == ProcType::AntiNeutrinoCC_Discrete 
+    if ( pt == ProcType::NeutrinoCC_Discrete || pt == ProcType::AntiNeutrinoCC_Discrete
         || pt == ProcType::NeutrinoCC_Continuum || pt == ProcType::AntiNeutrinoCC_Continuum) {
       found_cc = true;
     }

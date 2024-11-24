@@ -30,7 +30,7 @@
 #include "marley/MatrixElement.hh"
 //#include "marley/NucleusDecayer.hh"
 #include "marley/NuclearResponses.hh"
-#include "marley/FormFactor.hh"
+#include "marley/FormFactors.hh"
 #include "marley/Integrator.hh"
 
 using ME_Type = marley::MatrixElement::TransitionType;
@@ -45,11 +45,11 @@ marley::AllowedNuclearReactionWithQ2::AllowedNuclearReactionWithQ2( ProcType pt,
   const std::shared_ptr< std::vector<marley::MatrixElement> >& mat_els,
   const std::pair< std::vector<int>, std::vector<double> > nucleon_radii,
   marley::CoulombCorrector::CoulombMode mode,
-  marley::FormFactor::FFScalingMode ff_scaling_mode, bool superallowed )
+  marley::FormFactors::FFScalingMode ff_scaling_mode, bool superallowed )
   : marley::NuclearReaction( pt, pdg_a, pdg_b, pdg_c, pdg_d, q_d ),
   matrix_elements_( mat_els ), nucleon_radii_( nucleon_radii ),
   coulomb_corrector_( pdg_c, pdg_d, mode ),
-  form_factor_( ff_scaling_mode ), superallowed_( superallowed )
+  form_factors_( ff_scaling_mode ), superallowed_( superallowed )
 {
 }
 
@@ -398,7 +398,7 @@ double marley::AllowedNuclearReactionWithQ2::diff_xs(
   const double k2M = kappa_cm_eff * kappa_cm_eff / marley_utils::m_nucleon;
 
   if ( mat_el.type() == ME_Type::FERMI ) {
-    double F1 = form_factor_.F1( Q2_eff, marley_utils::M_V );
+    double F1 = form_factors_.F1( Q2_eff, marley_utils::M_V );
     strength_eff *= F1*F1 / marley_utils::g_V2;
 
     rCC = strength_eff;
@@ -409,12 +409,12 @@ double marley::AllowedNuclearReactionWithQ2::diff_xs(
     rTprime = 0.;
   }
   else if ( mat_el.type() == ME_Type::GAMOW_TELLER ) {
-    double FA = form_factor_.FA( Q2_eff, marley_utils::M_A );
+    double FA = form_factors_.FA( Q2_eff, marley_utils::M_A );
     strength_eff *= FA*FA / marley_utils::g_A2;
 
-    double FP = form_factor_.FP( Q2_eff, marley_utils::M_A );
-    double F1 = form_factor_.F1( Q2_eff, marley_utils::M_V );
-    double F2 = form_factor_.F2( Q2_eff, marley_utils::M_V );
+    double FP = form_factors_.FP( Q2_eff, marley_utils::M_A );
+    double F1 = form_factors_.F1( Q2_eff, marley_utils::M_V );
+    double F2 = form_factors_.F2( Q2_eff, marley_utils::M_V );
 
     double FPA = FP / FA;
     double F12A = ( F1 + 2. * marley_utils::m_nucleon * F2 ) / FA;
@@ -552,8 +552,8 @@ double marley::AllowedNuclearReactionWithQ2::bessel_factor( double kappa_cm )
   if ( kappa_cm == 0. ) return 1.;
 
   // If the scaling mode is set to flat, return 1.
-  if ( form_factor_.ff_scaling_mode()
-    == marley::FormFactor::FFScalingMode::FLAT ) return 1.;
+  if ( form_factors_.ff_scaling_mode()
+    == marley::FormFactors::FFScalingMode::FLAT ) return 1.;
 
   // If the nucleon radii pair is empty, give a warning and return 1.
   if ( nucleon_radii_.first.empty() || nucleon_radii_.second.empty() ) {

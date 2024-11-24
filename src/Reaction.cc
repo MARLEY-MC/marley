@@ -340,7 +340,7 @@ int marley::Reaction::get_ejectile_pdg(int pdg_a, ProcType proc_type) {
   // given process type
   const auto& vec = proc_type_to_nu_pdg.at( proc_type );
   if ( std::find(vec.cbegin(), vec.cend(), pdg_a) != vec.end() ) {
-    if ( proc_type == ProcType::NeutrinoCC_Discrete || 
+    if ( proc_type == ProcType::NeutrinoCC_Discrete ||
           proc_type == ProcType::NeutrinoCC_Continuum ) pdg_c = pdg_a - 1;
     else if ( proc_type == ProcType::AntiNeutrinoCC_Discrete ||
               proc_type == ProcType::AntiNeutrinoCC_Continuum ) pdg_c = pdg_a + 1;
@@ -369,7 +369,7 @@ const std::vector<int>& marley::Reaction::get_projectiles(ProcType pt) {
 std::vector< std::unique_ptr<marley::Reaction> >
   marley::Reaction::load_from_file( const std::string& filename,
   marley::StructureDatabase& db, CoulombCorrector::CoulombMode coulomb_mode,
-  FormFactor::FFScalingMode ff_scaling_mode, bool superallowed)
+  FormFactors::FFScalingMode ff_scaling_mode, bool superallowed)
 {
   // Create an empty vector to start
   std::vector< std::unique_ptr<marley::Reaction> > loaded_reactions;
@@ -470,8 +470,8 @@ std::vector< std::unique_ptr<marley::Reaction> >
       iss.str(line);
       iss.clear();
 
-      // Check whether we have reached the end of the matrix element data 
-      // and are now reading the nuclear radii and degeneracies. This will be 
+      // Check whether we have reached the end of the matrix element data
+      // and are now reading the nuclear radii and degeneracies. This will be
       // indicated by a line that starts with a capital 'R'.
       if (line[0] == 'R') {
         read_radii = true;

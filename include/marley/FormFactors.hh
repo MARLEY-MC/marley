@@ -21,23 +21,19 @@
 #include <map>
 #include <string>
 
-// MARLEY includes
-
-
 namespace marley {
 
-  /// @brief Class implementing the different nuclear form factors used in
-  /// MARLEY
-
-  class FormFactor {
+  /// @brief Calculates nucleon form factors
+  class FormFactors {
 
     public:
 
-      /// @brief Enumeration of the possible Q^2 scaling modes for the form factors
+      /// @brief Enumeration of the possible Q^2 scaling modes for the form
+      /// factors
       enum class FFScalingMode { DIPOLE, FLAT };
 
       /// @brief Class constructor
-      FormFactor( FFScalingMode mode = FFScalingMode::DIPOLE );
+      FormFactors( FFScalingMode mode = FFScalingMode::DIPOLE );
 
       /// @brief Get the current Q^2 scaling mode
       inline FFScalingMode ff_scaling_mode() const;
@@ -112,7 +108,8 @@ namespace marley {
 
     private:
 
-      /// @brief Helper map for converting strings to Q^2 scaling modes and vice versa
+      /// @brief Helper map for converting strings to Q^2 scaling modes and
+      /// vice versa
       static std::map<FFScalingMode, std::string> ff_scaling_mode_map_;
 
       /// @brief The current Q^2 scaling mode
@@ -121,16 +118,16 @@ namespace marley {
   };
 
   // Inline function definitions
-  inline FormFactor::FFScalingMode FormFactor::ff_scaling_mode() const
+  inline FormFactors::FFScalingMode FormFactors::ff_scaling_mode() const
     { return ff_scaling_mode_; }
 
-  inline void FormFactor::set_ff_scaling_mode( FFScalingMode mode )
+  inline void FormFactors::set_ff_scaling_mode( FFScalingMode mode )
     { ff_scaling_mode_ = mode; }
 
-  inline double FormFactor::F1( double Q2, double M ) const
+  inline double FormFactors::F1( double Q2, double M ) const
     { return ( F1_p( Q2, M ) - F1_n( Q2, M ) ); }
 
-  inline double FormFactor::F2( double Q2, double M ) const
+  inline double FormFactors::F2( double Q2, double M ) const
     { return ( F2_p( Q2, M ) - F2_n( Q2, M ) ); }
 
 }

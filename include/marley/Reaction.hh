@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "marley/CoulombCorrector.hh"
-#include "marley/FormFactor.hh"
+#include "marley/FormFactors.hh"
 #include "marley/MassTable.hh"
 #include "marley/TargetAtom.hh"
 
@@ -122,7 +122,7 @@ namespace marley {
       static std::vector< std::unique_ptr<Reaction> >
         load_from_file( const std::string& filename,
         StructureDatabase& db, CoulombCorrector::CoulombMode coulomb_mode,
-        FormFactor::FFScalingMode ff_scaling_mode, bool superallowed );
+        FormFactors::FFScalingMode ff_scaling_mode, bool superallowed );
 
       /// Function that returns the ejectile PDG code given the projectile
       /// PDG code and the ProcessType

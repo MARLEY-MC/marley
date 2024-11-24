@@ -17,22 +17,22 @@
 // Standard library includes
 
 // MARLEY includes
-#include "marley/FormFactor.hh"
+#include "marley/FormFactors.hh"
 #include "marley/marley_utils.hh"
 #include "marley/Error.hh"
 
 // The default constructor sets the Q^2 scaling mode
-marley::FormFactor::FormFactor( FFScalingMode mode ) : ff_scaling_mode_(mode) {}
+marley::FormFactors::FormFactors( FFScalingMode mode ) : ff_scaling_mode_(mode) {}
 
 // Helper map for converting strings to Q^2 scaling modes
-std::map < marley::FormFactor::FFScalingMode, std::string >
-  marley::FormFactor::ff_scaling_mode_map_ = {
-  { marley::FormFactor::FFScalingMode::DIPOLE, "dipole" },
-  { marley::FormFactor::FFScalingMode::FLAT, "flat" }
+std::map < marley::FormFactors::FFScalingMode, std::string >
+  marley::FormFactors::ff_scaling_mode_map_ = {
+  { marley::FormFactors::FFScalingMode::DIPOLE, "dipole" },
+  { marley::FormFactors::FFScalingMode::FLAT, "flat" }
 };
 
 // Convert a string to a Q^2 scaling mode
-marley::FormFactor::FFScalingMode marley::FormFactor
+marley::FormFactors::FFScalingMode marley::FormFactors
   ::ff_scaling_mode_from_string( const std::string& str )
 {
   for (const auto& pair : ff_scaling_mode_map_) {
@@ -42,22 +42,22 @@ marley::FormFactor::FFScalingMode marley::FormFactor
 }
 
 // Convert a Q^2 scaling mode to a string
-std::string marley::FormFactor::string_from_ff_scaling_mode(
+std::string marley::FormFactors::string_from_ff_scaling_mode(
   FFScalingMode mode )
 {
   auto it = ff_scaling_mode_map_.find( mode );
   if ( it != ff_scaling_mode_map_.end() ) return it->second;
   else throw marley::Error( "Invalid FFScalingMode value encountered in"
-    " marley::FormFactor::string_from_q2_scaling_mode" );
+    " marley::FormFactors::string_from_q2_scaling_mode" );
 }
 
 // Dipole dependence form factor
-double marley::FormFactor::dipole( double Q2, double M ) const {
+double marley::FormFactors::dipole( double Q2, double M ) const {
   return 1.0 / ( ( 1.0 + Q2 / M / M ) * ( 1.0 + Q2 / M / M ) );
 }
 
 // F1_n form factor
-double marley::FormFactor::F1_n( double Q2, double M ) const {
+double marley::FormFactors::F1_n( double Q2, double M ) const {
   if ( ff_scaling_mode_ == FFScalingMode::FLAT ) { Q2 = 0.; }
   else if ( ff_scaling_mode_ != FFScalingMode::DIPOLE ) {
     throw marley::Error("Invalid Q^2 scaling mode.");
@@ -70,7 +70,7 @@ double marley::FormFactor::F1_n( double Q2, double M ) const {
 }
 
 // F1_p form factor
-double marley::FormFactor::F1_p( double Q2, double M ) const {
+double marley::FormFactors::F1_p( double Q2, double M ) const {
   if ( ff_scaling_mode_ == FFScalingMode::FLAT ) { Q2 = 0.; }
   else if ( ff_scaling_mode_ != FFScalingMode::DIPOLE ) {
     throw marley::Error( "Invalid Q^2 scaling mode." );
@@ -83,7 +83,7 @@ double marley::FormFactor::F1_p( double Q2, double M ) const {
 }
 
 // F2_n form factor
-double marley::FormFactor::F2_n( double Q2, double M ) const {
+double marley::FormFactors::F2_n( double Q2, double M ) const {
   if ( ff_scaling_mode_ == FFScalingMode::FLAT ) { Q2 = 0.; }
   else if ( ff_scaling_mode_ != FFScalingMode::DIPOLE ) {
     throw marley::Error( "Invalid Q^2 scaling mode." );
@@ -98,7 +98,7 @@ double marley::FormFactor::F2_n( double Q2, double M ) const {
 }
 
 // F2_p form factor
-double marley::FormFactor::F2_p( double Q2, double M ) const {
+double marley::FormFactors::F2_p( double Q2, double M ) const {
   if ( ff_scaling_mode_ == FFScalingMode::FLAT ) { Q2 = 0.; }
   else if ( ff_scaling_mode_ != FFScalingMode::DIPOLE ) {
     throw marley::Error( "Invalid Q^2 scaling mode." );
@@ -113,10 +113,10 @@ double marley::FormFactor::F2_p( double Q2, double M ) const {
 }
 
 // FS form factor
-double marley::FormFactor::FS( double Q2, double M ) const { return 0.0; }
+double marley::FormFactors::FS( double Q2, double M ) const { return 0.0; }
 
 // FA form factor
-double marley::FormFactor::FA( double Q2, double M ) const {
+double marley::FormFactors::FA( double Q2, double M ) const {
   if ( ff_scaling_mode_ == FFScalingMode::FLAT ) { Q2 = 0.; }
   else if ( ff_scaling_mode_ != FFScalingMode::DIPOLE ) {
     throw marley::Error( "Invalid Q^2 scaling mode." );
@@ -126,7 +126,7 @@ double marley::FormFactor::FA( double Q2, double M ) const {
 }
 
 // FP form factor
-double marley::FormFactor::FP( double Q2, double M ) const {
+double marley::FormFactors::FP( double Q2, double M ) const {
   if (ff_scaling_mode_ == FFScalingMode::FLAT) { Q2 = 0.; }
   else if (ff_scaling_mode_ != FFScalingMode::DIPOLE) {
     throw marley::Error( "Invalid Q^2 scaling mode." );
@@ -139,4 +139,4 @@ double marley::FormFactor::FP( double Q2, double M ) const {
 }
 
 // FT form factor
-double marley::FormFactor::FT( double Q2, double M ) const { return 0.0; }
+double marley::FormFactors::FT( double Q2, double M ) const { return 0.0; }

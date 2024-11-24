@@ -58,7 +58,7 @@ namespace marley {
         const std::shared_ptr<std::vector<marley::MatrixElement> >& mat_els,
         const std::pair< std::vector<int>, std::vector<double> > nucleon_radii,
         CoulombCorrector::CoulombMode mode,
-        FormFactor::FFScalingMode ff_scaling_mode, bool superallowed );
+        FormFactors::FFScalingMode ff_scaling_mode, bool superallowed );
 
       virtual std::shared_ptr< HepMC3::GenEvent > create_event(
         int particle_id_a, double KEa, marley::Generator& gen ) const override;
@@ -174,7 +174,7 @@ namespace marley {
       CoulombCorrector coulomb_corrector_;
 
       /// @brief Object that handles calculations of nuclear form factors
-      FormFactor form_factor_;
+      FormFactors form_factors_;
 
       /// @brief Flag that indicates whether to include aditional terms beyond
       /// the q->0 limit
