@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "marley/CoulombCorrector.hh"
-#include "marley/FormFactors.hh"
 #include "marley/MassTable.hh"
 #include "marley/TargetAtom.hh"
 

@@ -21,7 +21,6 @@
 
 // MARLEY includes
 #include "marley/CoulombCorrector.hh"
-#include "marley/FormFactors.hh"
 #include "marley/Generator.hh"
 #include "marley/InterpolationGrid.hh"
 #include "marley/JSON.hh"

@@ -25,7 +25,6 @@
 #include "marley/marley_utils.hh"
 #include "marley/Error.hh"
 #include "marley/FileManager.hh"
-#include "marley/FormFactors.hh"
 #include "marley/JSONConfig.hh"
 #include "marley/NeutrinoSource.hh"
 #include "marley/NuclearReaction.hh"
