@@ -27,7 +27,7 @@
 #include "marley/Level.hh"
 #include "marley/MassTable.hh"
 #include "marley/MatrixElement.hh"
-#include "marley/NewFormFactors.hh"
+#include "marley/FormFactors.hh"
 #include "marley/NuclearReaction.hh"
 #include "marley/StructureDatabase.hh"
 
@@ -176,7 +176,7 @@ namespace marley {
       CoulombCorrector coulomb_corrector_;
 
       /// @brief Object that handles calculations of nucleon form factors
-      NewFormFactors form_factors_;
+      FormFactors form_factors_;
 
       /// @brief Flag that indicates whether to include aditional terms beyond
       /// the q->0 limit

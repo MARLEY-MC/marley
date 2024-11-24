@@ -141,10 +141,11 @@ namespace marley {
       double Ma_;
   };
 
-  class NewFormFactors {
+  /// Calculates nucleon form factors for both vector and axial currents
+  class FormFactors {
     public:
 
-      NewFormFactors( const JSON& config );
+      FormFactors( const JSON& config );
 
       /// Charged-current vector form factor
       /// @param Q2 Negative square @f$ Q^{2} @f$ of the four-momentum transfer

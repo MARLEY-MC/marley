@@ -23,12 +23,12 @@
 #include "marley/marley_utils.hh"
 #include "marley/AllowedNuclearReactionWithQ2.hh"
 #include "marley/Error.hh"
+#include "marley/FormFactors.hh"
 #include "marley/Generator.hh"
 #include "marley/LeptonFactors.hh"
 #include "marley/Level.hh"
 #include "marley/Logger.hh"
 #include "marley/MatrixElement.hh"
-#include "marley/NewFormFactors.hh"
 #include "marley/NuclearResponses.hh"
 #include "marley/Integrator.hh"
 
