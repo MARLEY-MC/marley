@@ -205,6 +205,10 @@ namespace marley {
       marley::NuclearFormFactor& get_nuclear_form_factor(
         const int Z, const int A );
 
+      /// Sets the name of the nuclear form factor model to use
+      inline void set_nuclear_ff_model( const std::string model_name )
+        { nuclear_ff_model_ = model_name; }
+
     private:
 
       /// @brief Lookup table for marley::DecayScheme objects.
@@ -288,6 +292,11 @@ namespace marley {
       /// @brief Storage for JSON configuration settings for optical model
       /// parameters
       std::map< std::string, marley::JSON > om_config_map_;
+
+      /// @brief Name of the nuclear form factor model to use
+      /// when constructing new NuclearFormFactor objects
+      /// @details Default to using the Klein-Nystrand nuclear form factor
+      std::string nuclear_ff_model_ = "klein";
   };
 
 }

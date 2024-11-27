@@ -184,6 +184,7 @@ marley::Generator marley::JSONConfig::create_generator() const
     // one
     ff_config[ "sachs_model" ] = "bbba05";
     ff_config[ "axial_model" ] = "dipole";
+    ff_config[ "nuclear_model" ] = "klein";
   }
 
   // If the user has disabled non-superallowed terms in the allowed
@@ -207,7 +208,7 @@ marley::Generator marley::JSONConfig::create_generator() const
 
   // Use the JSON settings to update the generator's parameters
   prepare_direction( gen );
-  prepare_structure( gen );
+  prepare_structure( gen, ff_config );
   prepare_neutrino_source( gen );
   prepare_reactions( gen, coulomb_mode, ff_config, superallowed );
   prepare_target( gen );
@@ -507,7 +508,8 @@ void marley::JSONConfig::prepare_reactions( marley::Generator& gen,
     " file." );
 }
 
-void marley::JSONConfig::prepare_structure( marley::Generator& gen ) const
+void marley::JSONConfig::prepare_structure( marley::Generator& gen,
+  const marley::JSON& ff_config ) const
 {
   auto& sdb = gen.get_structure_db();
 
@@ -563,6 +565,19 @@ void marley::JSONConfig::prepare_structure( marley::Generator& gen ) const
       << " differential decay widths set to l_max = " << g_lmax;
   }
 
+  if ( !ff_config.has_key("nuclear_model") ) {
+    throw marley::Error( "Missing nuclear_model key in form factor"
+      " specification" );
+  }
+  const auto& nucl_model_json = ff_config.at( "nuclear_model" );
+  if ( !nucl_model_json.is_string() ) {
+    throw marley::Error( "Invalid nuclear form factor model "
+      + nucl_model_json.dump_string() );
+  }
+  std::string nuclear_ff_model = nucl_model_json.to_string();
+  sdb.set_nuclear_ff_model( nuclear_ff_model );
+  MARLEY_LOG_INFO() << "Configured " << nuclear_ff_model << " nuclear form"
+    << " factor model";
 }
 
 //------------------------------------------------------------------------------

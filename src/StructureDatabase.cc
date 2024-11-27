@@ -505,9 +505,26 @@ marley::NuclearFormFactor& marley::StructureDatabase::get_nuclear_form_factor(
     int Z = marley_utils::get_particle_Z( nucleus_pid );
     int A = marley_utils::get_particle_A( nucleus_pid );
 
-    return *( nuclear_form_factor_table_.emplace( nucleus_pid,
-      std::make_unique< marley::KleinNystrandNuclearFormFactor >(
-      Z, A) ).first->second.get() );
+    // Construct the appropriate nuclear form factor based on the current
+    // configuration
+    if ( nuclear_ff_model_ == "trivial" ) {
+      return *( nuclear_form_factor_table_.emplace( nucleus_pid,
+        std::make_unique< TrivialNuclearFormFactor >(Z, A) ).first
+        ->second.get() );
+    }
+    else if ( nuclear_ff_model_ == "klein" ) {
+      return *( nuclear_form_factor_table_.emplace( nucleus_pid,
+        std::make_unique< KleinNystrandNuclearFormFactor >(Z, A) ).first
+        ->second.get() );
+    }
+    else if ( nuclear_ff_model_ == "helm" ) {
+      return *( nuclear_form_factor_table_.emplace( nucleus_pid,
+        std::make_unique< HelmNuclearFormFactor >(Z, A) ).first
+        ->second.get() );
+    }
+    else throw marley::Error( "Unrecognized nuclear form factor model name \""
+      + nuclear_ff_model_ + "\" encountered in marley::StructureDatabase"
+      "::get_nuclear_form_factor()" );
   }
   else return *( iter->second.get() );
 }

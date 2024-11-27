@@ -32,9 +32,14 @@ namespace marley {
       /// @param A Nucleon number
       NuclearFormFactor( int Z, int A ) : Z_( Z ), A_( A ) {}
 
+      virtual ~NuclearFormFactor() = default;
+
       /// Evaluate the nuclear form factor at a given 3-momentum transfer
       /// @param kappa Magnitude of the 3-momentum transfer (MeV)
       virtual double F( double kappa ) const = 0;
+
+      inline int Z() const { return Z_; }
+      inline int A() const { return A_; }
 
     protected:
 
@@ -43,6 +48,17 @@ namespace marley {
 
       /// Nucleon number
       int A_;
+  };
+
+  // Implements a nuclear form factor that is trivially unity
+  class TrivialNuclearFormFactor : public NuclearFormFactor {
+    public:
+
+      inline TrivialNuclearFormFactor( int Z, int A )
+        : NuclearFormFactor( Z, A ) {}
+
+      inline virtual double F( double kappa ) const override final
+        { return 1.; }
   };
 
   /// Implements a nuclear form factor based on Phys. Rev. 104, 1466 (1956).
