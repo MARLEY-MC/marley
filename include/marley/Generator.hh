@@ -29,6 +29,7 @@
 #include "marley/NeutrinoSource.hh"
 #include "marley/NuclearReaction.hh"
 #include "marley/LevelDensityModel.hh"
+#include "marley/NuclearFormFactor.hh"
 #include "marley/OpticalModel.hh"
 #include "marley/Parity.hh"
 #include "marley/ProjectileDirectionRotator.hh"

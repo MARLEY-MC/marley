@@ -26,6 +26,7 @@
 #include "marley/JSON.hh"
 #include "marley/KoningDelarocheOpticalModel.hh"
 #include "marley/Logger.hh"
+#include "marley/NuclearFormFactor.hh"
 #include "marley/StandardLorentzianModel.hh"
 #include "marley/StructureDatabase.hh"
 #include "marley/TargetAtom.hh"
@@ -489,4 +490,31 @@ void marley::StructureDatabase::load_optical_model_params(
 
   if ( !ok ) throw marley::Error( "Failed to parse optical model"
     " JSON configuration" );
+}
+
+marley::NuclearFormFactor& marley::StructureDatabase::get_nuclear_form_factor(
+  int nucleus_pid )
+{
+  /// @todo add check for invalid nucleus particle ID value
+  auto iter = nuclear_form_factor_table_.find( nucleus_pid );
+
+  if ( iter == nuclear_form_factor_table_.end() ) {
+    // The requested nuclear form factor wasn't found, so create it and add it
+    // to the table, returning a reference to the stored nuclear form factor
+    // afterwards.
+    int Z = marley_utils::get_particle_Z( nucleus_pid );
+    int A = marley_utils::get_particle_A( nucleus_pid );
+
+    return *( nuclear_form_factor_table_.emplace( nucleus_pid,
+      std::make_unique< marley::KleinNystrandNuclearFormFactor >(
+      Z, A) ).first->second.get() );
+  }
+  else return *( iter->second.get() );
+}
+
+marley::NuclearFormFactor& marley::StructureDatabase::get_nuclear_form_factor(
+  const int Z, const int A )
+{
+  int nucleus_pid = marley_utils::get_nucleus_pid( Z, A );
+  return this->get_nuclear_form_factor( nucleus_pid );
 }

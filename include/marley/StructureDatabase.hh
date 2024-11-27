@@ -30,13 +30,15 @@ namespace marley {
   class Fragment;
   class LevelDensityModel;
   class OpticalModel;
+  class NuclearFormFactor;
 
   /// @brief Container for nuclear structure information organized by nuclide
   /// @details Currently, the StructureDatabase object can hold nuclear
   /// discrete level data (DecayScheme objects), optical models (OpticalModel
   /// objects), @f$\gamma@f$-ray strength function models
-  /// (GammaStrengthFunctionModel objects), and level density models
-  /// (LevelDensityModel objects)
+  /// (GammaStrengthFunctionModel objects), level density models
+  /// (LevelDensityModel objects), and nuclear form factor models
+  /// (NuclearFormFactor objects)
   class StructureDatabase {
 
     public:
@@ -191,6 +193,18 @@ namespace marley {
       /// for the optical model parameters
       void load_optical_model_params( const marley::JSON* om_config = nullptr );
 
+      /// @brief Retrieves a nuclear form factor object from the database,
+      /// creating it if one did not already exist
+      /// @param particle_id PDG particle ID for the desired nuclide
+      marley::NuclearFormFactor& get_nuclear_form_factor( int nucleus_pid );
+
+      /// @brief Retrieves a nuclear form factor object from the database,
+      /// creating it if one did not already exist
+      /// @param Z Proton number
+      /// @param A Nucleon number
+      marley::NuclearFormFactor& get_nuclear_form_factor(
+        const int Z, const int A );
+
     private:
 
       /// @brief Lookup table for marley::DecayScheme objects.
@@ -214,6 +228,12 @@ namespace marley {
       /// strength function models.
       std::unordered_map<int, std::unique_ptr<
         marley::GammaStrengthFunctionModel> > gamma_strength_function_table_;
+
+      /// @brief Lookup table for marley::NuclearFormFactor objects.
+      /// @details Keys are PDG codes, values are unique_ptrs to models
+      /// for the nuclear form factor
+      std::unordered_map<int, std::unique_ptr<marley::NuclearFormFactor> >
+        nuclear_form_factor_table_;
 
       /// @brief Lookup table for nuclear fragments that will be considered
       /// when modeling de-excitations in the unbound continuum
