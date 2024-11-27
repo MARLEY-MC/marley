@@ -25,7 +25,6 @@
 #include "HepMC3/GenParticle.h"
 
 // MARLEY includes
-#include "marley/AllowedNuclearReaction.hh"
 #include "marley/DiscreteNuclearReaction.hh"
 #include "marley/ElectronReaction.hh"
 #include "marley/HauserFeshbachDecay.hh"
@@ -441,8 +440,8 @@ std::vector< std::unique_ptr<marley::Reaction> >
   iss >> integer_data_format;
   auto df = static_cast< DataFormat >( integer_data_format );
 
-  if ( ( df == AllowedApproximation ) || ( df == AllowedApproximationWithQ2 ) )
-  {
+  if ( df == DiscreteStrengths ) {
+
     // Read in all of the level energy (MeV), squared matrix element (B(F) or
     // B(GT) strength), and matrix element type identifier (0 represents B(F),
     // 1 represents B(GT)) triplets. Create a vector of MatrixElement objects
@@ -503,24 +502,14 @@ std::vector< std::unique_ptr<marley::Reaction> >
     // scattering process of interest. For each one, decide what the ejectile
     // PDG code should be, then produce a corresponding Reaction object
     for ( const int& pdg_a : get_projectiles(proc_type) ) {
-      int pdg_c = get_ejectile_pdg(pdg_a, proc_type);
+      int pdg_c = get_ejectile_pdg( pdg_a, proc_type );
 
-      if ( df == AllowedApproximation ) {
-        loaded_reactions.emplace_back(
-          std::make_unique< marley::AllowedNuclearReaction >( proc_type, pdg_a,
-          pdg_b, pdg_c, pdg_d, q_d, matrix_elements, coulomb_mode )
-        );
-
-      } else if ( df == AllowedApproximationWithQ2 ) {
-        loaded_reactions.emplace_back(
-          std::make_unique< marley::DiscreteNuclearReaction >( proc_type,
-            pdg_a, pdg_b, pdg_c, pdg_d, q_d, matrix_elements, coulomb_mode,
-            ff_config )
-        );
-      }
-
+      loaded_reactions.emplace_back(
+        std::make_unique< marley::DiscreteNuclearReaction >( proc_type,
+          pdg_a, pdg_b, pdg_c, pdg_d, q_d, matrix_elements, coulomb_mode,
+          ff_config )
+      );
     }
-
   }
   else if ( df == MultipoleResponses ) {
 

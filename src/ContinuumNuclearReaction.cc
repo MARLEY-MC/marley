@@ -44,7 +44,7 @@ double marley::ContinuumNuclearReaction::total_xs( int pdg_a,
 std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
   ::create_event( int pdg_a, double KEa, marley::Generator& gen ) const
 {
-  // TODO: reduce code duplication here with AllowedNuclearReaction using the
+  // TODO: reduce code duplication here with DiscreteNuclearReaction using the
   // common base class NuclearReaction
 
   // Check that the projectile supplied to this event is correct. If not, alert
@@ -209,7 +209,7 @@ std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
 
     // @Pablo: If the excitation energy Ex is below the unbound threshold...
 
-    // If crpa_discrete_mode_ is set to MIRROR, we mirror around the unbound threshold. 
+    // If crpa_discrete_mode_ is set to MIRROR, we mirror around the unbound threshold.
     // Update w (energy transfer) if the excitation energy is below the unbound threshold
     if (gen.crpa_discrete_mode() == marley::Generator::CRPADiscreteMode::MIRROR) {
       if ( Ex < unbound_threshold ) {

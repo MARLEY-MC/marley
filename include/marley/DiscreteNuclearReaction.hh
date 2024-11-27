@@ -48,10 +48,10 @@ namespace marley {
       /// @param pdg_b Target PDG code
       /// @param pdg_c Ejectile PDG code
       /// @param pdg_d Residue PDG code
-      /// @param q_d Charge of the residue after the prompt 2->2 scatter
-      /// represented by this AllowedNuclearReaction object
+      /// @param q_d Charge of the residue after the prompt 2->2 interaction
+      /// represented by this DiscreteNuclearReaction object
       /// @param mat_els A vector of MatrixElement objects that should
-      /// be used to compute cross sections for this AllowedNuclearReaction
+      /// be used to compute cross sections for this DiscreteNuclearReaction
       /// @param mode Indicates the method to use when computing Coulomb
       /// corrections for the reaction cross section
       /// @param ff_config JSON object containing information needed
@@ -128,7 +128,7 @@ namespace marley {
 
       virtual void set_description() override;
 
-      /// Helper function used by AllowedNuclearReaction::create_event()
+      /// Helper function used by DiscreteNuclearReaction::create_event()
       virtual std::shared_ptr< HepMC3::GenEvent > make_event_object(
         double KEa, double pc_cm, double cos_theta_c_cm, double phi_c_cm,
         double Ec_cm, double Ed_cm, double E_level, int twoJ,

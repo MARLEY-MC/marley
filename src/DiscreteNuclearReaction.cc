@@ -108,7 +108,7 @@ std::shared_ptr< HepMC3::GenEvent > marley::DiscreteNuclearReaction
     + " MeV is below the threshold value " + std::to_string( KEa_threshold_ )
     + " MeV." );
 
-  /// @todo Add more error checks to AllowedNuclearReaction::create_event() as
+  /// @todo Add more error checks to DiscreteNuclearReaction::create_event() as
   /// necessary
 
   // Create an empty vector of sampling weights (partial total cross
@@ -266,7 +266,7 @@ std::shared_ptr< HepMC3::GenEvent > marley::DiscreteNuclearReaction
       }
     }
     else throw marley::Error( "Unrecognized matrix element type encountered"
-      " in marley::AllowedNuclearReaction::create_event()" );
+      " in marley::DiscreteNuclearReaction::create_event()" );
   }
 
   MARLEY_LOG_DEBUG() << "Sampled a " << sampled_matrix_el.type_str()
@@ -395,7 +395,7 @@ double marley::DiscreteNuclearReaction::diff_xs(
     }
   }
   else throw marley::Error( "Unrecognized or invalid process type encountered"
-    " in marley::AllowedNuclearReaction::diff_xs()" );
+    " in marley::DiscreteNuclearReaction::diff_xs()" );
 
   // We're done with the overall factors. Now compute the lepton part of the
   // tensor contraction
@@ -464,7 +464,7 @@ double marley::DiscreteNuclearReaction::diff_xs(
     rTprime = -1. * strength_eff * 2./3. * kM * F12A;
   }
   else throw marley::Error( "Unrecognized matrix element type encountered in"
-    " marley::AllowedNuclearReaction::diff_xs()" );
+    " marley::DiscreteNuclearReaction::diff_xs()" );
 
   marley::NuclearResponses nr( rCC, rLL, rCL, rTvv, rTaa, rTprime );
 

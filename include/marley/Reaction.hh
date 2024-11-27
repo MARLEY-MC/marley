@@ -65,12 +65,7 @@ namespace marley {
       enum DataFormat {
         /// Fermi and Gamow-Teller matrix elements are tabulated for discrete
         /// nuclear levels
-        AllowedApproximation = 0,
-        /// Fermi and Gamow-Teller matrix elements are tabulated for discrete
-        /// nuclear levels, and the nuclear form factors are scaled with
-        /// Q^2 in the matrix elements
-        /// @todo this should't really be here, as the DataFormat is exactly the same (not really anymore)
-        AllowedApproximationWithQ2 = 2,
+        DiscreteStrengths = 0,
         /// Continuum nuclear responses are given for one or more multipoles
         MultipoleResponses = 1
       };
