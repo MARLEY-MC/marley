@@ -16,8 +16,8 @@
 
 // MARLEY includes
 #include "marley/Error.hh"
-#include "marley/FormFactors.hh"
 #include "marley/JSON.hh"
+#include "marley/NucleonFormFactors.hh"
 #include "marley/marley_utils.hh"
 
 double marley::DipoleSachsFormFactors::GEp( double Q2 ) {
@@ -104,7 +104,7 @@ double marley::TrivialAxialFormFactors::FP( double /*Q2*/ ) {
     / marley_utils::m_pion / marley_utils::m_pion;
 }
 
-double marley::FormFactors::F1p( double Q2 ) const {
+double marley::NucleonFormFactors::F1p( double Q2 ) const {
   double tau = sachs_ff_->tau( Q2 );
   double GEp = sachs_ff_->GEp( Q2 );
   double GMp = sachs_ff_->GMp( Q2 );
@@ -112,7 +112,7 @@ double marley::FormFactors::F1p( double Q2 ) const {
   return F1p;
 }
 
-double marley::FormFactors::F1n( double Q2 ) const {
+double marley::NucleonFormFactors::F1n( double Q2 ) const {
   double tau = sachs_ff_->tau( Q2 );
   double GEn = sachs_ff_->GEn( Q2 );
   double GMn = sachs_ff_->GMn( Q2 );
@@ -120,7 +120,7 @@ double marley::FormFactors::F1n( double Q2 ) const {
   return F1n;
 }
 
-double marley::FormFactors::F2p( double Q2 ) const {
+double marley::NucleonFormFactors::F2p( double Q2 ) const {
   double tau = sachs_ff_->tau( Q2 );
   double GEp = sachs_ff_->GEp( Q2 );
   double GMp = sachs_ff_->GMp( Q2 );
@@ -128,7 +128,7 @@ double marley::FormFactors::F2p( double Q2 ) const {
   return F2p;
 }
 
-double marley::FormFactors::F2n( double Q2 ) const {
+double marley::NucleonFormFactors::F2n( double Q2 ) const {
   double tau = sachs_ff_->tau( Q2 );
   double GEn = sachs_ff_->GEn( Q2 );
   double GMn = sachs_ff_->GMn( Q2 );
@@ -136,7 +136,7 @@ double marley::FormFactors::F2n( double Q2 ) const {
   return F2n;
 }
 
-marley::FormFactors::FormFactors( const marley::JSON& config ) {
+marley::NucleonFormFactors::NucleonFormFactors( const marley::JSON& config ) {
 
   if ( !config.has_key("sachs_model") ) {
     throw marley::Error( "Missing Sachs form factor model configuration" );
@@ -169,7 +169,7 @@ marley::FormFactors::FormFactors( const marley::JSON& config ) {
     sachs_ff_ = std::make_shared< BBBA05SachsFormFactors >();
   }
   else throw marley::Error( "Unrecognized Sachs form factor model name \""
-    + sachs_ff_model + "\" in constructor of marley::FormFactors" );
+    + sachs_ff_model + "\" in constructor of marley::NucleonFormFactors" );
 
   // Choose the model to use for the axial form factors
   if ( axial_ff_model == "trivial" ) {
@@ -180,7 +180,7 @@ marley::FormFactors::FormFactors( const marley::JSON& config ) {
       marley_utils::M_A );
   }
   else throw marley::Error( "Unrecognized axial form factor model name \""
-    + axial_ff_model + "\" in constructor of marley::FormFactors" );
+    + axial_ff_model + "\" in constructor of marley::NucleonFormFactors" );
 }
 
 double marley::SachsFormFactors::tau( double Q2 ) {

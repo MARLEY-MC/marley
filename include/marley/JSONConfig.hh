@@ -44,8 +44,7 @@ namespace marley {
       void prepare_reactions( marley::Generator& gen,
         marley::CoulombCorrector::CoulombMode coulomb_mode,
         const marley::JSON& ff_config, bool superallowed ) const;
-      void prepare_structure( marley::Generator& gen,
-        const marley::JSON& ff_config ) const;
+      void prepare_structure( marley::Generator& gen ) const;
       void prepare_target( marley::Generator& gen ) const;
       void prepare_weights( marley::Generator& gen ) const;
 

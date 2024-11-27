@@ -453,45 +453,15 @@ std::vector< std::unique_ptr<marley::Reaction> >
     auto matrix_elements = std::make_shared<std::vector<
       marley::MatrixElement> >();
 
-    // Also read the nuclear radii for spherical Bessel function calculations
-    // in the allowed approximation with Q^2 scaling.
-    /// @todo Also use a shared pointer?
-    std::pair< std::vector<int>, std::vector<double> > nucelon_radii;
-
     // Set the old energy entry to the lowest representable double
     // value. This guarantees that we always read in the first energy
     // value given in the reaction data file
     double old_energy = std::numeric_limits<double>::lowest();
-    // Boolean flag to indicate that we have reached the end of the matrix
-    // element data and are now reading the nuclear radii and degeneracies
-    bool read_radii = false;
     while (line = marley_utils::get_next_line(file_in, rx_comment, false),
       file_in.good())
     {
       iss.str(line);
       iss.clear();
-
-      // Check whether we have reached the end of the matrix element data
-      // and are now reading the nuclear radii and degeneracies. This will be
-      // indicated by a line that starts with a capital 'R'.
-      if (line[0] == 'R') {
-        read_radii = true;
-        continue;
-      }
-
-      if (read_radii) {
-        /// @todo Get rid of the unused level data
-        int degeneracy, level, n, l;
-        double radius, j, E;
-        iss >> level >> n >> l >> j >> degeneracy >> E >> radius;
-        nucelon_radii.first.push_back(degeneracy);
-        nucelon_radii.second.push_back(radius);
-        MARLEY_LOG_INFO() << "Read nuclear radius " << radius << " fm for level "
-          << level << " with degeneracy " << degeneracy;
-        continue;
-      }
-
-      // Else, we just go on reading the matrix elements
 
       /// @todo Consider implementing a sorting procedure rather than strictly
       /// enforcing that energies must be given in ascending order.
@@ -502,9 +472,9 @@ std::vector< std::unique_ptr<marley::Reaction> >
       double energy, strength;
       int integer_me_type;
       iss >> energy >> strength >> integer_me_type;
-      if (old_energy >= energy) throw marley::Error(std::string("Invalid")
-        + " reaction dataset. Level energies must be unique and must be"
-        + " given in ascending order.");
+      if ( old_energy >= energy ) throw marley::Error( "Invalid reaction"
+        " dataset. Level energies must be unique and must be given in"
+        " ascending order." );
 
       // @todo Right now, 0 corresponds to a Fermi transition, and 1
       // corresponds to a Gamow-Teller transition. As you add new matrix
@@ -512,8 +482,8 @@ std::vector< std::unique_ptr<marley::Reaction> >
       // implementation. All of the level pointers owned by the matrix elements
       // will initially be set to nullptr. This may be changed later if
       // discrete level data can be found for the residual nucleus.
-      matrix_elements->emplace_back(energy, strength,
-        static_cast<ME_Type>(integer_me_type), nullptr);
+      matrix_elements->emplace_back( energy, strength,
+        static_cast<ME_Type>(integer_me_type), nullptr );
       old_energy = energy;
     }
 
@@ -544,8 +514,8 @@ std::vector< std::unique_ptr<marley::Reaction> >
       } else if ( df == AllowedApproximationWithQ2 ) {
         loaded_reactions.emplace_back(
           std::make_unique< marley::DiscreteNuclearReaction >( proc_type,
-          pdg_a, pdg_b, pdg_c, pdg_d, q_d, matrix_elements, nucelon_radii,
-          coulomb_mode, ff_config, superallowed )
+            pdg_a, pdg_b, pdg_c, pdg_d, q_d, matrix_elements, coulomb_mode,
+            ff_config )
         );
       }
 

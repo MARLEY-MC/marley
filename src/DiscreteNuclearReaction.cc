@@ -20,17 +20,19 @@
 #include <iostream>
 #include <sstream>
 
-#include "marley/marley_utils.hh"
 #include "marley/DiscreteNuclearReaction.hh"
 #include "marley/Error.hh"
-#include "marley/FormFactors.hh"
 #include "marley/Generator.hh"
+#include "marley/JSON.hh"
 #include "marley/LeptonFactors.hh"
 #include "marley/Level.hh"
 #include "marley/Logger.hh"
 #include "marley/MatrixElement.hh"
+#include "marley/NuclearFormFactor.hh"
+#include "marley/NucleonFormFactors.hh"
 #include "marley/NuclearResponses.hh"
 #include "marley/Integrator.hh"
+#include "marley/marley_utils.hh"
 
 using ME_Type = marley::MatrixElement::TransitionType;
 using ProcType = marley::Reaction::ProcessType;
@@ -42,14 +44,49 @@ namespace {
 marley::DiscreteNuclearReaction::DiscreteNuclearReaction(
   ProcType pt, int pdg_a, int pdg_b, int pdg_c, int pdg_d, int q_d,
   const std::shared_ptr< std::vector<marley::MatrixElement> >& mat_els,
-  const std::pair< std::vector<int>, std::vector<double> > nucleon_radii,
-  marley::CoulombCorrector::CoulombMode mode,
-  const marley::JSON& ff_config, bool superallowed )
+  marley::CoulombCorrector::CoulombMode mode, const marley::JSON& ff_config )
   : marley::NuclearReaction( pt, pdg_a, pdg_b, pdg_c, pdg_d, q_d ),
-  matrix_elements_( mat_els ), nucleon_radii_( nucleon_radii ),
-  coulomb_corrector_( pdg_c, pdg_d, mode ),
-  form_factors_( ff_config ), superallowed_( superallowed )
+  matrix_elements_( mat_els ), coulomb_corrector_( pdg_c, pdg_d, mode ),
+  nucleon_form_factors_( ff_config )
 {
+  if ( !ff_config.has_key("nuclear_model") ) {
+    throw marley::Error( "Missing nuclear form factor model configuration" );
+  }
+  const auto& nucl_json = ff_config.at( "nuclear_model" );
+  if ( !nucl_json.is_string() ) {
+    throw marley::Error( "Invalid nuclear form factor model "
+      + nucl_json.dump_string() );
+  }
+  std::string nucl_ff_model = nucl_json.to_string();
+
+  // Target nucleus proton number
+  int Zb = marley_utils::get_particle_Z( pdg_b_ );
+  // Target nucleus nucleon number
+  int Ab = marley_utils::get_particle_A( pdg_b_ );
+
+  // Choose the model to use for the nuclear form factor
+  if ( nucl_ff_model == "trivial" ) {
+    nuclear_ff_ = std::make_shared< TrivialNuclearFormFactor >( Zb, Ab );
+  }
+  else if ( nucl_ff_model == "helm" ) {
+    nuclear_ff_ = std::make_shared< HelmNuclearFormFactor >( Zb, Ab );
+  }
+  else if ( nucl_ff_model == "klein" ) {
+    nuclear_ff_ = std::make_shared< KleinNystrandNuclearFormFactor >( Zb, Ab );
+  }
+  else throw marley::Error( "Unrecognized nuclear form factor model name \""
+    + nucl_ff_model + "\" in constructor of marley::DiscreteNuclearReaction" );
+
+  // Determine whether we're working within the complete allowed approximation
+  // by checking the form factor models. If they are all trivial, then
+  // this is the case, and set the appropriate flag.
+  const auto* tsff = dynamic_cast< const marley::TrivialSachsFormFactors* >(
+    nucleon_form_factors_.sachs_ff() );
+  const auto* taff = dynamic_cast< const marley::TrivialAxialFormFactors* >(
+    nucleon_form_factors_.axial_ff() );
+
+  allowed_approx_ = false;
+  if ( tsff && taff && nucl_ff_model == "trivial" ) allowed_approx_ = true;
 }
 
 // Creates an event object by sampling the appropriate quantities and
@@ -380,14 +417,13 @@ double marley::DiscreteNuclearReaction::diff_xs(
   // Now compute the nuclear responses. Copy the energy transfer, 3-momentum
   // transfer magnitude, and Q^2 to effective values. These will be set to zero
   // if we're working in the allowed approximation.
-  double omega_cm_eff = superallowed_ ? 0. : omega_cm;
-  double kappa_cm_eff = superallowed_ ? 0. : kappa_cm;
-  double Q2_eff = superallowed_ ? 0. : Q2;
+  double omega_cm_eff = allowed_approx_ ? 0. : omega_cm;
+  double kappa_cm_eff = allowed_approx_ ? 0. : kappa_cm;
+  double Q2_eff = allowed_approx_ ? 0. : Q2;
 
-  // Calculate the adjusted transition strength appropriate for the chosen
-  // nuclear level
+  // Scale the transition strength by the squared nuclear form factor
   double strength_eff = mat_el.strength();
-  strength_eff *= this->bessel_factor( kappa_cm_eff );
+  strength_eff *= std::pow( nuclear_ff_->F( kappa_cm_eff ), 2 );
 
   // Scale the strength by the relevant nucleon form factor and divide by the
   // relevant coupling constant. Use the scaled value to compute the nuclear
@@ -397,7 +433,7 @@ double marley::DiscreteNuclearReaction::diff_xs(
   const double k2M = kappa_cm_eff * kappa_cm_eff / marley_utils::m_nucleon;
 
   if ( mat_el.type() == ME_Type::FERMI ) {
-    double F1 = form_factors_.F1( Q2_eff );
+    double F1 = nucleon_form_factors_.F1( Q2_eff );
     strength_eff *= F1*F1 / marley_utils::g_V2;
 
     rCC = strength_eff;
@@ -408,12 +444,12 @@ double marley::DiscreteNuclearReaction::diff_xs(
     rTprime = 0.;
   }
   else if ( mat_el.type() == ME_Type::GAMOW_TELLER ) {
-    double FA = form_factors_.FA( Q2_eff );
+    double FA = nucleon_form_factors_.FA( Q2_eff );
     strength_eff *= FA*FA / marley_utils::g_A2;
 
-    double FP = form_factors_.FP( Q2_eff );
-    double F1 = form_factors_.F1( Q2_eff );
-    double F2 = form_factors_.F2( Q2_eff );
+    double FP = nucleon_form_factors_.FP( Q2_eff );
+    double F1 = nucleon_form_factors_.F1( Q2_eff );
+    double F2 = nucleon_form_factors_.F2( Q2_eff );
 
     double FPA = FP / FA;
     double F12A = ( F1 + 2. * marley_utils::m_nucleon * F2 ) / FA;
@@ -442,7 +478,7 @@ double marley::DiscreteNuclearReaction::total_xs(
   const marley::MatrixElement& mat_el, double KEa, double& beta_c_cm,
   bool check_max_E_level ) const
 {
-  if ( superallowed_ ) return 2. * this->diff_xs( mat_el, KEa, 0., beta_c_cm,
+  if ( allowed_approx_ ) return 2. * this->diff_xs( mat_el, KEa, 0., beta_c_cm,
     check_max_E_level );
 
   // Integrator object to integrate over the scattering angle
@@ -543,75 +579,17 @@ double marley::DiscreteNuclearReaction::summed_xs_helper( int pdg_a,
   return xsec;
 }
 
-// Bessel factor calculation
-double marley::DiscreteNuclearReaction::bessel_factor( double kappa_cm )
-  const
-{
-  // If kappa is zero, return 1. to avoid division by zero.
-  if ( kappa_cm == 0. ) return 1.;
-
-  // TODO: make the Bessel factor separately configurable
-  // Neglect the Bessel scaling factor if we are using trivial Sachs
-  // and/or axial form factors
-  const auto* tsff = dynamic_cast< const marley::TrivialSachsFormFactors* >(
-    form_factors_.sachs_ff() );
-  const auto* taff = dynamic_cast< const marley::TrivialAxialFormFactors* >(
-    form_factors_.axial_ff() );
-
-  if ( tsff || taff ) return 1.;
-
-  // If the nucleon radii pair is empty, give a warning and return 1.
-  if ( nucleon_radii_.first.empty() || nucleon_radii_.second.empty() ) {
-    MARLEY_LOG_WARNING() << "Nuclear radii vector is empty in"
-      << " marley::AllowedNuclearReaction::bessel_factor().";
-    return 1.;
-  }
-
-  double bessel_sum = 0.;
-  int nucleon_count = 0;
-  int nucleon_limit;
-
-  // Set the nucleon type depending on the process type
-  if ( process_type_ == ProcessType::NeutrinoCC_Discrete ) {
-    nucleon_limit = marley_utils::get_particle_Z( pdg_b_ );
-  }
-  else if ( process_type_ == ProcessType::AntiNeutrinoCC_Discrete ) {
-    nucleon_limit = marley_utils::get_particle_A( pdg_b_ )
-      - marley_utils::get_particle_Z( pdg_b_ );
-  }
-  else {
-    // Throw an error
-    /// @todo Fix for NC reactions
-    throw marley::Error( "Unrecognized or invalid process type encountered in"
-      " marley::AllowedNuclearReaction::bessel_factor()" );
-  }
-
-  for ( int i = 0; i < nucleon_radii_.first.size(); i ++ ) {
-    int degeneracy = nucleon_radii_.first.at(i);
-    double radius = nucleon_radii_.second.at(i);
-
-    int level_i_count = (nucleon_count + degeneracy) <= nucleon_limit
-      ? degeneracy : nucleon_limit - nucleon_count;
-    nucleon_count += level_i_count;
-    bessel_sum += level_i_count * std::sin( kappa_cm * radius )
-      / ( kappa_cm * radius );
-  }
-
-  return std::pow( bessel_sum / nucleon_limit, 2 );
-}
-
-
 // Sample an ejectile scattering cosine in the CM frame.
 double marley::DiscreteNuclearReaction::sample_cos_theta_c_cm(
   const marley::MatrixElement& mat_el, double KEa, double beta_c_cm,
   marley::Generator& gen ) const
 {
-  // For now the max is unknown, so the rejection sample will calculate it
-  // "on the fly"
+  // For now the max is unknown, so the rejection sampling algorithm will
+  // calculate it "on the fly"
   double max = marley_utils::UNKNOWN_MAX;
 
-  // For the superallowed case, we know where it will be a priori
-  if ( superallowed_ ) {
+  // For the allowed approximation, we know where it will be a priori
+  if ( allowed_approx_ ) {
     if ( mat_el.type() == ME_Type::FERMI ) {
       max = this->diff_xs( mat_el, KEa, 1., beta_c_cm, false );
     }

@@ -27,8 +27,9 @@
 #include "marley/Level.hh"
 #include "marley/MassTable.hh"
 #include "marley/MatrixElement.hh"
-#include "marley/FormFactors.hh"
 #include "marley/NuclearReaction.hh"
+#include "marley/NuclearFormFactor.hh"
+#include "marley/NucleonFormFactors.hh"
 #include "marley/StructureDatabase.hh"
 
 namespace marley {
@@ -53,14 +54,12 @@ namespace marley {
       /// be used to compute cross sections for this AllowedNuclearReaction
       /// @param mode Indicates the method to use when computing Coulomb
       /// corrections for the reaction cross section
-      /// @param ff_scaling_mode Indicates the method to use when scaling
-      /// the nuclear form factors with Q<sup>2</sup> in the matrix elements
+      /// @param ff_config JSON object containing information needed
+      /// to configure the nucleon and nuclear form factor models
       DiscreteNuclearReaction( ProcessType pt, int pdg_a, int pdg_b,
         int pdg_c, int pdg_d, int q_d,
         const std::shared_ptr<std::vector<marley::MatrixElement> >& mat_els,
-        const std::pair< std::vector<int>, std::vector<double> > nucleon_radii,
-        CoulombCorrector::CoulombMode mode, const JSON& ff_config,
-        bool superallowed );
+        CoulombCorrector::CoulombMode mode, const JSON& ff_config );
 
       virtual std::shared_ptr< HepMC3::GenEvent > create_event(
         int particle_id_a, double KEa, marley::Generator& gen ) const override;
@@ -176,11 +175,14 @@ namespace marley {
       CoulombCorrector coulomb_corrector_;
 
       /// @brief Object that handles calculations of nucleon form factors
-      FormFactors form_factors_;
+      NucleonFormFactors nucleon_form_factors_;
+
+      /// @brief Object that handles calculations of the nuclear form factor
+      std::shared_ptr< NuclearFormFactor > nuclear_ff_;
 
       /// @brief Flag that indicates whether to include aditional terms beyond
       /// the q->0 limit
-      bool superallowed_;
+      bool allowed_approx_ = false;
   };
 
 }
