@@ -138,6 +138,11 @@ double marley::NucleonFormFactors::F2n( double Q2 ) const {
 
 marley::NucleonFormFactors::NucleonFormFactors( const marley::JSON& config ) {
 
+  // Flag used to ensure that we send information about the form factor
+  // configuration to the logger exactly once when this function is first
+  // called
+  static bool need_to_log = true;
+
   if ( !config.has_key("sachs_model") ) {
     throw marley::Error( "Missing Sachs form factor model configuration" );
   }
@@ -161,12 +166,21 @@ marley::NucleonFormFactors::NucleonFormFactors( const marley::JSON& config ) {
   // Choose the model to use for the Sachs form factors
   if ( sachs_ff_model == "trivial" ) {
     sachs_ff_ = std::make_shared< TrivialSachsFormFactors >();
+    if ( need_to_log ) {
+      MARLEY_LOG_INFO() << "Using trivial Sachs form factors";
+    }
   }
   else if ( sachs_ff_model == "dipole" ) {
     sachs_ff_ = std::make_shared< DipoleSachsFormFactors >( marley_utils::M_V );
+    if ( need_to_log ) {
+      MARLEY_LOG_INFO() << "Using dipole Sachs form factors";
+    }
   }
   else if ( sachs_ff_model == "bbba05" ) {
     sachs_ff_ = std::make_shared< BBBA05SachsFormFactors >();
+    if ( need_to_log ) {
+      MARLEY_LOG_INFO() << "Using BBBA05 Sachs form factors";
+    }
   }
   else throw marley::Error( "Unrecognized Sachs form factor model name \""
     + sachs_ff_model + "\" in constructor of marley::NucleonFormFactors" );
@@ -174,13 +188,21 @@ marley::NucleonFormFactors::NucleonFormFactors( const marley::JSON& config ) {
   // Choose the model to use for the axial form factors
   if ( axial_ff_model == "trivial" ) {
     axial_ff_ = std::make_shared< TrivialAxialFormFactors >();
+    if ( need_to_log ) {
+      MARLEY_LOG_INFO() << "Using trivial axial form factors";
+    }
   }
   else if ( axial_ff_model == "dipole" ) {
     axial_ff_ = std::make_shared< DipoleAxialFormFactors >( marley_utils::g_A,
       marley_utils::M_A );
+    if ( need_to_log ) {
+      MARLEY_LOG_INFO() << "Using dipole axial form factors";
+    }
   }
   else throw marley::Error( "Unrecognized axial form factor model name \""
     + axial_ff_model + "\" in constructor of marley::NucleonFormFactors" );
+
+  need_to_log = false;
 }
 
 double marley::SachsFormFactors::tau( double Q2 ) {
