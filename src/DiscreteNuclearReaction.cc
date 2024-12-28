@@ -49,33 +49,13 @@ marley::DiscreteNuclearReaction::DiscreteNuclearReaction(
   matrix_elements_( mat_els ), coulomb_corrector_( pdg_c, pdg_d, mode ),
   nucleon_form_factors_( ff_config )
 {
-  if ( !ff_config.has_key("nuclear_model") ) {
-    throw marley::Error( "Missing nuclear form factor model configuration" );
-  }
-  const auto& nucl_json = ff_config.at( "nuclear_model" );
-  if ( !nucl_json.is_string() ) {
-    throw marley::Error( "Invalid nuclear form factor model "
-      + nucl_json.dump_string() );
-  }
-  std::string nucl_ff_model = nucl_json.to_string();
-
   // Target nucleus proton number
   int Zb = marley_utils::get_particle_Z( pdg_b_ );
   // Target nucleus nucleon number
   int Ab = marley_utils::get_particle_A( pdg_b_ );
 
   // Choose the model to use for the nuclear form factor
-  if ( nucl_ff_model == "trivial" ) {
-    nuclear_ff_ = std::make_shared< TrivialNuclearFormFactor >( Zb, Ab );
-  }
-  else if ( nucl_ff_model == "helm" ) {
-    nuclear_ff_ = std::make_shared< HelmNuclearFormFactor >( Zb, Ab );
-  }
-  else if ( nucl_ff_model == "klein" ) {
-    nuclear_ff_ = std::make_shared< KleinNystrandNuclearFormFactor >( Zb, Ab );
-  }
-  else throw marley::Error( "Unrecognized nuclear form factor model name \""
-    + nucl_ff_model + "\" in constructor of marley::DiscreteNuclearReaction" );
+  nuclear_ff_ = marley::NuclearFormFactor::create( Zb, Ab, ff_config );
 
   // Determine whether we're working within the complete allowed approximation
   // by checking the form factor models. If they are all trivial, then
@@ -84,9 +64,11 @@ marley::DiscreteNuclearReaction::DiscreteNuclearReaction(
     nucleon_form_factors_.sachs_ff() );
   const auto* taff = dynamic_cast< const marley::TrivialAxialFormFactors* >(
     nucleon_form_factors_.axial_ff() );
+  const auto* tnff = dynamic_cast< const marley::TrivialNuclearFormFactor* >(
+    nuclear_ff_.get() );
 
   allowed_approx_ = false;
-  if ( tsff && taff && nucl_ff_model == "trivial" ) allowed_approx_ = true;
+  if ( tsff && taff && tnff ) allowed_approx_ = true;
 }
 
 // Creates an event object by sampling the appropriate quantities and

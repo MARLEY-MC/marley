@@ -24,6 +24,9 @@
 
 namespace marley {
 
+  // Forward-declare the JSON class
+  class JSON;
+
   /// Base class for nuclear form factor models
   class NuclearFormFactor {
     public:
@@ -40,6 +43,14 @@ namespace marley {
 
       inline int Z() const { return Z_; }
       inline int A() const { return A_; }
+
+      /// Factory method to create derived class objects
+      /// @param Z Proton number
+      /// @param A Nucleon number
+      /// @param ff_config JSON object containing the model configuration to
+      /// use when initializing the new object
+      static std::shared_ptr< marley::NuclearFormFactor > create( int Z, int A,
+        const JSON& ff_config );
 
     protected:
 
