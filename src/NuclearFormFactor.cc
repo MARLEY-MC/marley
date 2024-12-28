@@ -18,12 +18,22 @@
 #include "marley/Error.hh"
 #include "marley/FileManager.hh"
 #include "marley/JSON.hh"
+#include "marley/JSONConfig.hh"
 #include "marley/NuclearFormFactor.hh"
 
 std::shared_ptr< marley::NuclearFormFactor > marley::NuclearFormFactor::create(
   int Z, int A, const marley::JSON& ff_config )
 {
   static bool need_to_log_nuc_ff_info = true;
+
+  // If the user has requested use of the allowed approximation, then configure
+  // the trivial nuclear form factor model and return without logging this
+  // choice (it will be handled elsewhere)
+  if ( marley::JSONConfig::check_for_allowed_approximation(ff_config) ) {
+    auto tnff = std::make_shared< marley::TrivialNuclearFormFactor >( Z, A );
+    need_to_log_nuc_ff_info = false;
+    return tnff;
+  }
 
   if ( !ff_config.has_key("nuclear_model") ) {
     throw marley::Error( "Missing nuclear form factor model configuration" );

@@ -24,6 +24,7 @@
 #include "marley/Error.hh"
 #include "marley/Generator.hh"
 #include "marley/JSON.hh"
+#include "marley/JSONConfig.hh"
 #include "marley/LeptonFactors.hh"
 #include "marley/Level.hh"
 #include "marley/Logger.hh"
@@ -58,17 +59,10 @@ marley::DiscreteNuclearReaction::DiscreteNuclearReaction(
   nuclear_ff_ = marley::NuclearFormFactor::create( Zb, Ab, ff_config );
 
   // Determine whether we're working within the complete allowed approximation
-  // by checking the form factor models. If they are all trivial, then
-  // this is the case, and set the appropriate flag.
-  const auto* tsff = dynamic_cast< const marley::TrivialSachsFormFactors* >(
-    nucleon_form_factors_.sachs_ff() );
-  const auto* taff = dynamic_cast< const marley::TrivialAxialFormFactors* >(
-    nucleon_form_factors_.axial_ff() );
-  const auto* tnff = dynamic_cast< const marley::TrivialNuclearFormFactor* >(
-    nuclear_ff_.get() );
-
-  allowed_approx_ = false;
-  if ( tsff && taff && tnff ) allowed_approx_ = true;
+  // by checking the form factor JSON configuration. If the user has requested
+  // this, then set the corresponding flag to true.
+  allowed_approx_ = marley::JSONConfig
+    ::check_for_allowed_approximation( ff_config );
 }
 
 // Creates an event object by sampling the appropriate quantities and

@@ -43,7 +43,7 @@ namespace marley {
       void prepare_neutrino_source( marley::Generator& gen ) const;
       void prepare_reactions( marley::Generator& gen,
         marley::CoulombCorrector::CoulombMode coulomb_mode,
-        const marley::JSON& ff_config, bool superallowed ) const;
+        const marley::JSON& ff_config ) const;
       void prepare_structure( marley::Generator& gen ) const;
       void prepare_target( marley::Generator& gen ) const;
       void prepare_weights( marley::Generator& gen ) const;
@@ -60,6 +60,12 @@ namespace marley {
       bool process_extra_source_types( const std::string& type,
         const marley::JSON& source_spec, int pdg_code,
         std::unique_ptr< marley::NeutrinoSource >& source ) const;
+
+      /// Helper function that checks whether an input JSON object representing
+      /// the form factor configuration corresponds to a valid request for the
+      /// allowed approximation to be used
+      static bool check_for_allowed_approximation(
+        const marley::JSON& ff_config );
 
       inline const marley::JSON& get_json() const;
       inline void set_json( const marley::JSON& json );

@@ -17,6 +17,7 @@
 // MARLEY includes
 #include "marley/Error.hh"
 #include "marley/JSON.hh"
+#include "marley/JSONConfig.hh"
 #include "marley/NucleonFormFactors.hh"
 #include "marley/marley_utils.hh"
 
@@ -142,6 +143,16 @@ marley::NucleonFormFactors::NucleonFormFactors( const marley::JSON& config ) {
   // configuration to the logger exactly once when this function is first
   // called
   static bool need_to_log = true;
+
+  // If the user has requested use of the allowed approximation, then
+  // configure trivial form factor models and return without logging this
+  // choice (it will be handled elsewhere)
+  if ( marley::JSONConfig::check_for_allowed_approximation(config) ) {
+    sachs_ff_ = std::make_shared< TrivialSachsFormFactors >();
+    axial_ff_ = std::make_shared< TrivialAxialFormFactors >();
+    need_to_log = false;
+    return;
+  }
 
   if ( !config.has_key("sachs_model") ) {
     throw marley::Error( "Missing Sachs form factor model configuration" );

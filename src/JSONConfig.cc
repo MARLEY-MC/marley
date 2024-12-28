@@ -172,12 +172,17 @@ marley::Generator marley::JSONConfig::create_generator() const
       ::coulomb_mode_from_string( my_mode );
   }
 
-  // Configure the parameterizations used for nucleon form factors
+  // Configure the parameterizations used for nucleon and nuclear form factors
   marley::JSON ff_config;
   if ( json_.has_key("form_factors") ) {
     ff_config = json_.at( "form_factors" );
-    if ( !ff_config.is_object() ) throw marley::Error( "Invalid form factor"
-      " configuration " + ff_config.dump_string() );
+    if ( !ff_config.is_object() ) {
+      if ( this->check_for_allowed_approximation(ff_config) ) {
+        MARLEY_LOG_INFO() << "Using the allowed approximation";
+      }
+      else throw marley::Error( "Invalid form factor configuration "
+        + ff_config.dump_string() );
+    }
   }
   else {
     // Adopt a default form factor configuration if the user did not provide
@@ -185,21 +190,6 @@ marley::Generator marley::JSONConfig::create_generator() const
     ff_config[ "sachs_model" ] = "bbba05";
     ff_config[ "axial_model" ] = "dipole";
     ff_config[ "nuclear_model" ] = "klein";
-  }
-
-  // If the user has disabled non-superallowed terms in the allowed
-  // approximation...
-  bool superallowed = false; // Default is to include all terms
-  if ( json_.has_key("superallowed") ) {
-    const auto& superallowed_from_json = json_.at( "superallowed" );
-    if ( superallowed_from_json.is_bool() ) {
-      bool superallowed_or_not = superallowed_from_json.to_bool();
-      superallowed = superallowed_or_not;
-      if ( superallowed_or_not ) {
-        MARLEY_LOG_INFO() << "Only 'superallowed' cross section terms"
-          << " will be included (if using the allowed approximation)";
-      }
-    }
   }
 
   // Turn off calls to Generator::normalize_E_pdf() until we
@@ -210,7 +200,7 @@ marley::Generator marley::JSONConfig::create_generator() const
   prepare_direction( gen );
   prepare_structure( gen );
   prepare_neutrino_source( gen );
-  prepare_reactions( gen, coulomb_mode, ff_config, superallowed );
+  prepare_reactions( gen, coulomb_mode, ff_config );
   prepare_target( gen );
   prepare_weights( gen );
 
@@ -414,7 +404,7 @@ void marley::JSONConfig::prepare_direction( marley::Generator& gen ) const {
 }
 
 void marley::JSONConfig::prepare_reactions( marley::Generator& gen,
-  CMode coulomb_mode, const marley::JSON& ff_config, bool superallowed ) const
+  CMode coulomb_mode, const marley::JSON& ff_config ) const
 {
   const auto& fm = marley::FileManager::Instance();
 
@@ -454,7 +444,7 @@ void marley::JSONConfig::prepare_reactions( marley::Generator& gen,
 
           auto reacts = marley::Reaction::load_from_file(
             full_file_name, gen.get_structure_db(), coulomb_mode,
-            ff_config, superallowed );
+            ff_config );
 
           if ( reacts.empty() ) throw marley::Error( "Failed to load"
             " any reactions from the file " + full_file_name + ". Please"
@@ -1071,4 +1061,21 @@ void marley::JSONConfig::prepare_weights( marley::Generator& gen ) const {
   // Initialize the Weighter object owned by the generator
   gen.weighter_ = std::make_shared< marley::Weighter >( wgt_config );
 
+}
+
+// Helper function that checks whether an input JSON object representing the
+// form factor configuration corresponds to a valid request for the allowed
+// approximation to be used
+bool marley::JSONConfig::check_for_allowed_approximation(
+  const marley::JSON& ff_config )
+{
+  // The JSON object must be a simple string
+  if ( !ff_config.is_string() ) return false;
+
+  // It must also have one of the values given below
+  auto cfg_str = ff_config.to_string();
+  if ( cfg_str == "allowed" || cfg_str == "AA" || cfg_str == "aa" ) {
+    return true;
+  }
+  return false;
 }

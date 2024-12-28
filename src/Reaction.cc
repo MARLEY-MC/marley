@@ -369,7 +369,7 @@ const std::vector<int>& marley::Reaction::get_projectiles(ProcType pt) {
 std::vector< std::unique_ptr<marley::Reaction> >
   marley::Reaction::load_from_file( const std::string& filename,
   marley::StructureDatabase& db, CoulombCorrector::CoulombMode coulomb_mode,
-  const marley::JSON& ff_config, bool superallowed)
+  const marley::JSON& ff_config )
 {
   // Create an empty vector to start
   std::vector< std::unique_ptr<marley::Reaction> > loaded_reactions;

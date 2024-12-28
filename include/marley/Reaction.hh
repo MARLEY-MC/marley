@@ -114,10 +114,9 @@ namespace marley {
 
       /// Factory method called by JSONConfig to build
       /// Reaction objects given a file with matrix element data
-      static std::vector< std::unique_ptr<Reaction> >
-        load_from_file( const std::string& filename,
-        StructureDatabase& db, CoulombCorrector::CoulombMode coulomb_mode,
-        const JSON& ff_config, bool superallowed );
+      static std::vector< std::unique_ptr< Reaction > >
+        load_from_file( const std::string& filename, StructureDatabase& db,
+        CoulombCorrector::CoulombMode coulomb_mode, const JSON& ff_config );
 
       /// Function that returns the ejectile PDG code given the projectile
       /// PDG code and the ProcessType
