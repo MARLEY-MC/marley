@@ -114,12 +114,6 @@ namespace marley {
       virtual double total_xs( const marley::MatrixElement& me, double KEa,
         double& beta_c_cm, bool check_max_E_level = true ) const;
 
-      /// @brief Returns the Bessel function factor that appears in the
-      /// differential cross section for a given value of kappa (modulus of
-      /// the momentum transfer in the CM frame)
-      /// @param kappa Modulus of the momentum transfer in the CM frame
-      double bessel_factor( double kappa ) const;
-
       /// Allows access to the owned vector of MatrixElement objects
       inline const std::vector< marley::MatrixElement >& matrix_elements() const
         { return *matrix_elements_; }
