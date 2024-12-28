@@ -271,6 +271,30 @@ double marley::DiscreteNuclearReaction::total_xs( int pdg_a, double KEa )
   return summed_xs_helper( pdg_a, KEa, dummy_cos_theta, nullptr, false );
 }
 
+// Compute the total reaction cross section (summed over all final nuclear
+// levels) in units of MeV^(-2) using the center of momentum frame. Include
+// only transitions matching the input matrix element type.
+double marley::DiscreteNuclearReaction::total_xs( int pdg_a, double KEa,
+  ME_Type mat_el_type ) const
+{
+  double dummy_cos_theta = 0.;
+  std::vector< double > level_xsecs;
+  // Accumulate partial cross section values for all of the accessible
+  // nuclear transitions
+  this->summed_xs_helper( pdg_a, KEa, dummy_cos_theta, &level_xsecs, false );
+
+  // Sum up the contributions from transitions that match the requested
+  // matrix element type, then return the result
+  double xsec = 0.;
+  for ( size_t j = 0u; j < level_xsecs.size(); ++j ) {
+    const auto& ml = matrix_elements_->at( j );
+    if ( ml.type() == mat_el_type ) {
+      xsec += level_xsecs.at( j );
+    }
+  }
+  return xsec;
+}
+
 // Compute the differential cross section d\sigma / d\cos\theta_c^{CM}
 // summed over all final nuclear levels. This is done in units of MeV^(-2)
 // using the center of momentum frame.
@@ -515,6 +539,7 @@ double marley::DiscreteNuclearReaction::summed_xs_helper( int pdg_a,
     // Check whether the matrix element (B(F) + B(GT)) is nonvanishing for the
     // current level. If it is, just set the weight equal to zero rather than
     // computing the total xs.
+    double partial_xsec = 0.;
     if ( mat_el.strength() != 0. ) {
 
       // Set the check_max_E_level flag to false when calculating the total
@@ -522,7 +547,6 @@ double marley::DiscreteNuclearReaction::summed_xs_helper( int pdg_a,
       // current level is kinematically accessible in the check against
       // max_E_level above)
       double beta_c_cm = 0.;
-      double partial_xsec;
 
       // Compute either the total or differential (d\sigma / d\cos\theta_{CM})
       // cross section as requested
@@ -546,11 +570,16 @@ double marley::DiscreteNuclearReaction::summed_xs_helper( int pdg_a,
 
       xsec += partial_xsec;
 
-      // Store the partial cross section to the current individual nuclear
-      // level if needed (i.e., if level_xsecs is not nullptr)
-      if ( level_xsecs ) level_xsecs->push_back( partial_xsec );
-    }
-  }
+    } // mat_el.strength() != 0.
+
+    // Store the partial cross section to the current individual nuclear
+    // level if needed (i.e., if level_xsecs is not nullptr). This is
+    // done even when the current matrix element is zero so that the
+    // partial cross sections for each transition match the ordering
+    // in the vector of matrix elements.
+    if ( level_xsecs ) level_xsecs->push_back( partial_xsec );
+
+  } // loop over matrix elements
 
   return xsec;
 }

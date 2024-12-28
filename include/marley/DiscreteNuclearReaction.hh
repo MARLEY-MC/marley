@@ -68,13 +68,24 @@ namespace marley {
       /// in the residue
       void set_decay_scheme( marley::DecayScheme* scheme );
 
-      /// @brief Total reaction cross section (MeV<sup> -2</sup>), including
+      /// @brief Total reaction cross section (MeV<sup> -2</sup>) including
       /// all kinematically-allowed final nuclear levels
       /// @param pdg_a PDG code for the projectile
       /// @param KEa Lab-frame kinetic energy (MeV) of the projectile
       /// @return Reaction total cross section (MeV<sup> -2</sup>)
       /// @note This function returns 0. if pdg_a != pdg_a_.
       virtual double total_xs( int pdg_a, double KEa ) const override;
+
+      /// @brief Total reaction cross section (MeV<sup> -2</sup>) including
+      /// all kinematically-allowed nuclear transitions of a particular type
+      /// @param pdg_a PDG code for the projectile
+      /// @param KEa Lab-frame kinetic energy (MeV) of the projectile
+      /// @param mat_el_type marley::MatrixElement::TransitionType for the
+      /// kind of nuclear transition of interest
+      /// @return Reaction total cross section (MeV<sup> -2</sup>)
+      /// @note This function returns 0. if pdg_a != pdg_a_.
+      virtual double total_xs( int pdg_a, double KEa,
+        marley::MatrixElement::TransitionType mat_el_type ) const;
 
       /// @brief Differential cross section
       /// @f$d\sigma/d\cos\theta_{c}^{\mathrm{CM}}@f$
