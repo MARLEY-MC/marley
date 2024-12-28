@@ -18,8 +18,10 @@
 
 // Standard library includes
 #include <cmath>
+#include <limits>
 
 // MARLEY includes
+#include "marley/Logger.hh"
 #include "marley/marley_utils.hh"
 
 namespace marley {
@@ -128,27 +130,79 @@ namespace marley {
   class KleinNystrandNuclearFormFactor : public NuclearFormFactor {
     public:
 
-      inline KleinNystrandNuclearFormFactor( int Z, int A )
-        : NuclearFormFactor( Z, A )
+      inline KleinNystrandNuclearFormFactor( int Z, int A,
+        bool adapted = false, double r0 = DUMMY_r0_VALUE )
+        : NuclearFormFactor( Z, A ), adapted_( adapted ), r0_( r0 )
       {
+        // COHERENT-style "adapted" treatment uses the rms charge radius r0 to
+        // calculate the effective nuclear radius. If the user did not supply
+        // one, then look it up from the table of measurements.
+        if ( adapted_ ) {
+          if ( r0_ == DUMMY_r0_VALUE ) {
+            // Ensure that the table has been loaded
+            if ( !r0_table_ ) this->initialize_r0_table();
+
+            int pdg = marley_utils::get_nucleus_pid( Z, A );
+            auto iter = r0_table_->find( pdg );
+            if ( iter != r0_table_->end() ) {
+              r0_ = iter->second;
+            }
+            else {
+              throw marley::Error( "Unable to find tabulated rms charge"
+                " radius for nucleus with PDG code " + std::to_string( pdg )
+                + ". Please specify a value in fm using the \"r0\" JSON key." );
+            }
+          }
+
+          R_ = marley_utils::real_sqrt( 5.*r0_*r0_/3. - 10.*a_*a_ );
+          return;
+        }
+
+        // Default treatment assigns the effective nuclear radius based solely
+        // on the nucleon number
         R_ = 1.23 * std::pow( A_, marley_utils::ONE_THIRD ); // fm
       }
 
       virtual double F( double kappa ) const override final;
 
-      /// Switches to using a COHERENT-style "adapted" form factor
-      /// @param r0 Proton rms radius (fm)
-      void use_adapted_version( double r0 ) {
-        R_ = marley_utils::real_sqrt( 5.*r0*r0/3. - 10.*a_*a_ );
+      /// Returns the value of the rms charge radius used with the adapted
+      /// version
+      inline double r0() const {
+        if ( !adapted_ ) MARLEY_LOG_WARNING() << "Requested rms charge radius"
+          << " when using default Klein-Nystrand nuclear form factor";
+        return r0_;
       }
 
+      /// Dummy value used to signal the need to look up the rms charge radius
+      /// from a table of measurements
+      static constexpr double DUMMY_r0_VALUE
+        = std::numeric_limits< double >::lowest();
+
     protected:
+
+      static void initialize_r0_table();
+
+      /// @brief Stores measured rms charge radii for many nucleii
+      /// @details Keys are nuclear PDG codes, values are rms charge radii (fm)
+      inline static std::unique_ptr< std::map< int, double > > r0_table_;
+
+      /// @brief Name of the data file containing the measured rms charge
+      /// radii
+      inline static const std::string r0_data_file_name_
+        = "nuclear_charge_radii.js";
 
       /// Range (fm) of the assumed Yukawa potential
       double a_ = 0.7;
 
       /// Effective nuclear radius (fm)
       double R_;
+
+      /// Flag indicating whether we are using the COHERENT-style "adapted"
+      /// version
+      bool adapted_ = false;
+
+      /// Value of the rms charge radius, used only for the adapted version
+      double r0_ = DUMMY_r0_VALUE;
   };
 
 }
