@@ -70,7 +70,7 @@ namespace marley {
       inline TrivialNuclearFormFactor( int Z, int A )
         : NuclearFormFactor( Z, A ) {}
 
-      inline virtual double F( double kappa ) const override final
+      inline virtual double F( double /*kappa*/ ) const override final
         { return 1.; }
   };
 
