@@ -58,6 +58,10 @@ namespace marley_utils {
   // maximum before doing the sampling.
   constexpr double UNKNOWN_MAX = std::numeric_limits<double>::infinity();
 
+  // Limits rejection sampling loops to a finite but large number of iterations
+  // before taking corrective action to avoid "getting stuck"
+  constexpr int LARGE_NUMBER_OF_ITERATIONS = 100000;
+
   // Fermi coupling constant (MeV^(-2))
   constexpr double GF = 1.16637e-11;
   // Square of the Fermi coupling constant (MeV^(-4))

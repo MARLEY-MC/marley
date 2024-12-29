@@ -135,11 +135,32 @@ std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
   // differential cross section for the chosen multipole.
   // Use a simple rejection sampling technique.
   double w, ctl, diff, y;
+  int sampling_attempts = 0;
   do {
+    // Occasionally the value of diff_max retrieved above can be extremely
+    // overestimated when using an optimized version of the total cross
+    // section calculation (which relies on interpolation). This typically
+    // happens very close to threshold and leads to sampling getting stuck
+    // due to a very low acceptance efficiency.
+    //
+    // To guard against this situation, when the number of sampling attempts
+    // exceeds a large value, the estimate of the maximum differential cross
+    // section diff_max is recalculated at exactly the input projectile kinetic
+    // energy rather than relying on the precomputed value. The updated
+    // estimate is then used in a new set of sampling attempts.
+    if ( sampling_attempts > marley_utils::LARGE_NUMBER_OF_ITERATIONS ) {
+      // The value of diff_max is updated by this call to
+      // marley::TabulatedXSec::compute_integral()
+      xsec_->compute_integral( pdg_a_, KEa, sampled_ml, diff_max );
+      sampling_attempts = 0;
+    }
+
     w = gen.uniform_random_double( wmin, wmax, true );
     ctl = gen.uniform_random_double( -1., 1., true );
     diff = xsec_->diff_xsec( pdg_a_, KEa, w, ctl, sampled_ml );
     y = gen.uniform_random_double( 0., diff_max, true );
+    ++sampling_attempts;
+
   } while ( y > diff );
 
   // Sample a lab-frame azimuthal scattering angle uniformly
