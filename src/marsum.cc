@@ -46,13 +46,14 @@ int main( int argc, char* argv[] ) {
     return 0;
   }
 
-  // Temporary storage for output TTree branch variables
-  double Ex; // nuclear excitation energy
-  int twoJ; // two times the residue spin immediately after the two-two
-            // scattering reaction
-  int par; // integer representation of the intrinsic parity of the
-           // residue immediately following the two-two reaction
-  double flux_avg_tot_xsec; // flux-averaged total cross section
+  //// Temporary storage for output TTree branch variables
+
+  // Flux-averaged inclusive total cross section
+  double flux_avg_tot_xsec;
+
+  // Process type label for the primary interaction mode
+  int proc_type;
+
   double Ev, KEv, pxv, pyv, pzv; // projectile
   double Mt; // target mass
   double El, KEl, pxl, pyl, pzl; // ejectile
@@ -64,6 +65,11 @@ int main( int argc, char* argv[] ) {
   // Information about each of the other final-state particles
   std::vector<int> PDGs;
   std::vector<double> Es, KEs, pXs, pYs, pZs;
+
+  // Nuclear properties immediately after the primary interaction
+  double Ex; // excitation energy (MeV)
+  int twoJ; // two times the spin
+  int par; // integer representation of the intrinsic parity
 
   // Event weights
   double cv_weight; // Central-value weight (normally unity, required by
@@ -132,6 +138,9 @@ int main( int argc, char* argv[] ) {
 
   // Flux-averaged total cross section
   out_tree->Branch( "xsec", &flux_avg_tot_xsec, "xsec/D" );
+
+  // Process type
+  out_tree->Branch( "proc", &proc_type, "proc/I" );
 
   // Event weights
   out_tree->Branch( "cv_weight", &cv_weight, "cv_weight/D" );
@@ -244,6 +253,10 @@ int main( int argc, char* argv[] ) {
       par = parity_attr->value();
 
       flux_avg_tot_xsec = efr.flux_averaged_xsec();
+
+      auto proc_type_attr = ev.attribute< HepMC3::IntAttribute >(
+        "signal_process_id" );
+      proc_type = proc_type_attr->value();
 
       np = 0;
       const auto& particles = ev.particles();

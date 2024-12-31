@@ -53,25 +53,25 @@ namespace {
     ptype_to_nuhepmc_proc =
   {
     { marley::Reaction::ProcessType::NeutrinoCC_Discrete,
-      { 100, "vCC", "inclusive charged-current neutrino-nucleus"
-        " scattering" } },
+      { 100, "vCC-discrete", "charged-current neutrino-nucleus"
+        " scattering via discrete transitions" } },
     { marley::Reaction::ProcessType::AntiNeutrinoCC_Discrete,
-      { 101, "anti-vCC", "inclusive charged-current antineutrino-nucleus"
-        " scattering" } },
+      { 110, "anti-vCC-discrete", "charged-current antineutrino-nucleus"
+        " scattering via discrete transitions" } },
     { marley::Reaction::ProcessType::NC_Discrete,
-      { 150, "NC", "inclusive neutral-current (anti)neutrino-nucleus"
-        " scattering" } },
+      { 150, "NC-discrete", "neutral-current (anti)neutrino-nucleus"
+        " scattering via discrete transitions" } },
     { marley::Reaction::ProcessType::NuElectronElastic,
       { 700, "v-e", "(anti)neutrino-electron elastic scattering" } },
     { marley::Reaction::ProcessType::NeutrinoCC_Continuum,
-      { 100, "vCC", "inclusive charged-current neutrino-nucleus"
-        " scattering" } },
+      { 101, "vCC-continuum", "charged-current neutrino-nucleus"
+        " scattering via continuum transitions" } },
     { marley::Reaction::ProcessType::AntiNeutrinoCC_Continuum,
-      { 101, "anti-vCC", "inclusive charged-current antineutrino-nucleus"
-        " scattering" } },
+      { 111, "anti-vCC-continuum", "charged-current antineutrino-nucleus"
+        " scattering via continuum transitions" } },
     { marley::Reaction::ProcessType::NC_Continuum,
-      { 150, "NC", "inclusive neutral-current (anti)neutrino-nucleus"
-        " scattering" } },
+      { 151, "NC-continuum", "neutral-current (anti)neutrino-nucleus"
+        " scattering via continuum transitions" } },
   };
 
   // G.R.5
