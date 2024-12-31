@@ -30,6 +30,8 @@ git_rev=@@GIT_REVISION@@
 cxx_std=@@CXX_STD@@
 hepmc3_cflags=@@HEPMC3_CFLAGS@@
 hepmc3_libs=@@HEPMC3_LIBS@@
+gsl_cflags=@@GSL_CFLAGS@@
+gsl_libs=@@GSL_LIBS@@
 
 # Add the "USE_ROOT" preprocessor macro definition to the
 # compiler flags if ROOT support is enabled
@@ -39,12 +41,13 @@ if [ "$use_root" = "yes" ]; then
   root_cflags="${root_cflags} -DUSE_ROOT"
 fi
 
-cflags="${hepmc3_cflags} ${root_cflags} -std=${cxx_std} -I${incdir}"
+cflags="${hepmc3_cflags} ${gsl_cflags} ${root_cflags}"
+cflags="${cflags} -std=${cxx_std} -I${incdir}"
 
 # Set up the linker commands for the MARLEY shared libraries. If ROOT support
 # is enabled, then include the extra library containing the needed
 # dictionaries.
-libs="-L${libdir} -lMARLEY ${hepmc3_libs}"
+libs="-L${libdir} -lMARLEY ${hepmc3_libs} ${gsl_libs}"
 if [ "$use_root" = "yes" ]; then
   libs="${libs} -lMARLEY_ROOT"
   root_libs=$(root-config --libs)

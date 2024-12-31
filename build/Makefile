@@ -356,6 +356,8 @@ marley-config: $(MARLEY_LIBS)
 	  -e "s|@@CXX_STD@@|\"$(CXX_STD)\"|g" \
 	  -e "s|@@HEPMC3_CFLAGS@@|\"$(HEPMC3_CXXFLAGS)\"|g" \
 	  -e "s|@@HEPMC3_LIBS@@|\"$(HEPMC3_LDFLAGS)\"|g" \
+	  -e "s|@@GSL_CFLAGS@@|\"$(GSL_CXXFLAGS)\"|g" \
+	  -e "s|@@GSL_LIBS@@|\"$(GSL_LDFLAGS)\"|g" \
 	  -e "s|@@USE_ROOT@@|\"$(USE_ROOT)\"|g" marley-config
 	$(RM) marley-config.bak
 
