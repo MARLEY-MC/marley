@@ -51,15 +51,15 @@ std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
   // the user that this event does not use the requested projectile.
   if ( pdg_a != pdg_a_ ) throw marley::Error( "Could not create this event."
     " The requested projectile particle ID, " + std::to_string( pdg_a )
-    + ", does not match the projectile particle ID, " + std::to_string( pdg_a_ )
-    + ", in the reaction dataset." );
+    + ", does not match the projectile particle ID, "
+    + std::to_string( pdg_a_ ) + ", in the reaction dataset." );
 
   // Sample a final residue energy level. First, check to make sure the given
   // projectile energy is above threshold for this reaction.
   if ( KEa < KEa_threshold_ ) throw std::range_error( "Could"
-    " not create this event. Projectile kinetic energy " + std::to_string( KEa )
-    + " MeV is below the threshold value " + std::to_string( KEa_threshold_ )
-    + " MeV." );
+    " not create this event. Projectile kinetic energy "
+    + std::to_string( KEa ) + " MeV is below the threshold value "
+    + std::to_string( KEa_threshold_ ) + " MeV." );
 
   // Select a specific multipole to use for the current event using the
   // individual total cross sections
@@ -185,9 +185,14 @@ std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
   double Ex; // Excitation energy of the residue
   double Ec; // Ejectile total energy
   double pc; // Magnitude of the ejectile's lab-frame momentum
-  double pc_x, pc_y, pc_z; // Cartesian components of the ejectile's lab-frame momentum
+
+  // Cartesian components of the ejectile's lab-frame momentum
+  double pc_x, pc_y, pc_z;
+
+  // Lab-frame 4-momenta of the projectile, target, and ejectile
+  HepMC3::FourVector pro_mom4, tar_mom4, eje_mom4;
+
   double pa; // Magnitude of the projectile's lab-frame 3-momentum
-  HepMC3::FourVector pro_mom4, tar_mom4, eje_mom4; // Lab-frame 4-momenta of the projectile, target, and ejectile
   double Ed, pd_x, pd_y, pd_z; // Residue 4-momentum components
 
   // To be used to determine where Ex is above or below the unbound threshold
@@ -197,7 +202,10 @@ std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
   // Flag to indicate whether we have dealt witht the CRPA strength leak
   bool dealt_with_crpa_strength_leak = false;
 
-  do{
+  // Calculate lepton kinematics based on the cosine (ctl) and energy transfer
+  // (w) sampled above. Deal with leak-down of the continuum strength below the
+  // unbound threshold according to the current strategy set in the Generator.
+  do {
     Ec = Ea - w;
     pc = marley_utils::real_sqrt( Ec*Ec - mc_*mc_ );
 
@@ -230,39 +238,50 @@ std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
 
     // @Pablo: If the excitation energy Ex is below the unbound threshold...
 
-    // If crpa_discrete_mode_ is set to MIRROR, we mirror around the unbound threshold.
-    // Update w (energy transfer) if the excitation energy is below the unbound threshold
-    if (gen.crpa_discrete_mode() == marley::Generator::CRPADiscreteMode::MIRROR) {
+    // If crpa_discrete_mode_ is set to MIRROR, we mirror around the unbound
+    // threshold. Update w (energy transfer) if the excitation energy is below
+    // the unbound threshold
+    if ( gen.crpa_discrete_mode()
+      == marley::Generator::CRPADiscreteMode::MIRROR )
+    {
       if ( Ex < unbound_threshold ) {
-        double delta = 2 * (unbound_threshold - Ex);
+        double delta = 2. * ( unbound_threshold - Ex );
         w += delta;
 
         // Print message to debug
-        MARLEY_LOG_DEBUG() << "Excitation energy " << Ex << " MeV is below the unbound threshold " << unbound_threshold << " MeV. "
-          "Mirroring the energy transfer around the unbound threshold.";
+        MARLEY_LOG_DEBUG() << "Excitation energy " << Ex
+          << " MeV is below the unbound threshold " << unbound_threshold
+          << " MeV. Mirroring the energy transfer around the unbound"
+          << " threshold.";
       }
       else {
         dealt_with_crpa_strength_leak = true;
       }
     }
 
-    // If crpa_discrete_mode_ is set to ACCUMULATE, we sample exactly at the unbound threshold
-    // if the excitation energy is below the unbound threshold.
-    else if (gen.crpa_discrete_mode() == marley::Generator::CRPADiscreteMode::ACCUMULATE) {
+    // If crpa_discrete_mode_ is set to ACCUMULATE, we sample exactly at the
+    // unbound threshold if the excitation energy is below the unbound
+    // threshold.
+    else if ( gen.crpa_discrete_mode()
+      == marley::Generator::CRPADiscreteMode::ACCUMULATE )
+    {
       if ( Ex < unbound_threshold ) {
         double delta = unbound_threshold - Ex;
         w += delta;
 
         // Print message to debug
-        MARLEY_LOG_DEBUG() << "Excitation energy " << Ex << " MeV is below the unbound threshold " << unbound_threshold << " MeV. "
-          "Sampling exactly at the unbound threshold.";
+        MARLEY_LOG_DEBUG() << "Excitation energy " << Ex
+          << " MeV is below the unbound threshold " << unbound_threshold
+          << " MeV. Sampling exactly at the unbound threshold.";
       }
       else {
         dealt_with_crpa_strength_leak = true;
       }
     }
 
-    else if (gen.crpa_discrete_mode() == marley::Generator::CRPADiscreteMode::IGNORE) {
+    else if ( gen.crpa_discrete_mode()
+      == marley::Generator::CRPADiscreteMode::IGNORE )
+    {
       dealt_with_crpa_strength_leak = true;
     }
 
