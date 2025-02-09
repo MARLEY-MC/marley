@@ -19,6 +19,7 @@
 #include "marley/Event.hh"
 #include "marley/Generator.hh"
 #include "marley/HauserFeshbachDecay.hh"
+#include "marley/Fission.hh"
 #include "marley/Level.hh"
 #include "marley/Logger.hh"
 #include "marley/MatrixElement.hh"
@@ -142,15 +143,30 @@ void marley::NucleusDecayer::process_event( marley::Event& event,
       marley::HauserFeshbachDecay hfd( residue, Ex, twoJ, P, sdb );
       MARLEY_LOG_DEBUG() << hfd;
 
-      continuum = hfd.do_decay( Ex, twoJ, P, first, second, gen );
+      //Calculate fission widths
+      if ( gen.get_do_fission() ) {
+        double total_width_with_fission = 0;
+        //marley::Fission fis(); //Does what most of my existing code does, stores
+                               //the total fission width in the created fis object
+        //Makes a std::discrete_distribution<size_t> of the fission and non-fission widths,
+        //and samples from that.
+      }
 
-      MARLEY_LOG_DEBUG() << "Hauser-Feshbach decay to " << first.pdg_code()
-        << " and " << second.pdg_code();
-      MARLEY_LOG_DEBUG() << second.pdg_code() << " is at Ex = "
-        << Ex << " MeV.";
-
-      residue = second;
-      event.add_final_particle( first );
+      //Here we'll ask if we've set a flag indicating that a fission has occurred. If not, do a
+      //normal decay. If so, we then need to determine fission fragments, and add those to our 
+      //event list and what residue is
+      else {
+      
+        continuum = hfd.do_decay( Ex, twoJ, P, first, second, gen );
+  
+        MARLEY_LOG_DEBUG() << "Hauser-Feshbach decay to " << first.pdg_code()
+          << " and " << second.pdg_code();
+        MARLEY_LOG_DEBUG() << second.pdg_code() << " is at Ex = "
+          << Ex << " MeV.";
+  
+        residue = second;
+        event.add_final_particle( first );
+      }
     }
   }
 

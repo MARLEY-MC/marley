@@ -176,6 +176,19 @@ marley::Generator marley::JSONConfig::create_generator() const
     }
   }
 
+  // If the user has enabled fission, then set the flag appropriately.
+  bool fission_enabled = false;
+  if ( json_.has_key("do_fission") ) {
+    const auto& do_fis = json_.at("do_fission");
+    if ( do_fis.is_bool() ) {
+      bool fis_or_not = do_fis.to_bool();
+      gen.set_do_fission( fis_or_not );
+      if ( fis_or_not ) {
+        MARLEY_LOG_INFO() << "Nuclear fission will be simulated";
+      }
+    }
+  }
+
   // Skip the rest of initialization if we've disabled all reactions.
   // This can be used to partially initialize the Generator in unusual
   // situations.
@@ -482,6 +495,8 @@ void marley::JSONConfig::prepare_structure(marley::Generator& gen) const
     MARLEY_LOG_INFO() << "Multipolarity cutoff for gamma-ray"
       << " differential decay widths set to l_max = " << g_lmax;
   }
+
+  
 
 }
 

@@ -212,6 +212,14 @@ namespace marley {
       /// know what you are doing.
       inline void set_do_deexcitations( bool do_them );
 
+      /// @brief Sets the value of the do_fission flag
+      /// @details By default this is false unless enabled in JSON
+      inline void set_do_fission( bool do_them );
+
+      /// @brief Gets the value of the do_fission flag
+      /// @details
+      inline bool get_do_fission();
+
       /// @brief Computes the flux-averaged total cross section for all
       /// enabled neutrino reactions, taking target atom fractions into
       /// account as appropriate
@@ -356,6 +364,11 @@ namespace marley {
       /// circumstances
       bool do_deexcitations_ = true;
 
+      /// @brief Flag that determines whether neutrino-induced 
+      /// fission is enabled.
+      /// @details Disabled by default, enabled in the JSON config file
+      bool do_fission_ = false;
+
       /// @brief Computes the total cross section at fixed energy for all
       /// configured reactions involving a particular target atom.
       /// @details Atom fractions in the owned Target are ignored by this
@@ -390,4 +403,10 @@ namespace marley {
 
   inline void Generator::set_do_deexcitations( bool do_them )
     { do_deexcitations_ = do_them; }
+
+  inline void Generator::set_do_fission( bool do_them )
+    { do_fission_ = do_them; }
+
+  inline bool Generator::get_do_fission() 
+    { return do_fission_; }
 }

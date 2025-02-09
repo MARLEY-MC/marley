@@ -82,7 +82,7 @@ marley::Event marley::Generator::create_event() {
   }
 
   // (4) If needed, rotate the event to match the desired projectile direction
-  rotator_.process_event( ev, *this );
+  rotator_.process_event( ev, *this);
 
   // Return the completed event object
   return ev;
