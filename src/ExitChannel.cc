@@ -490,8 +490,8 @@ void marley::ContinuumExitChannel::do_decay( double& Exf, int& two_Jf,
     residual_nucleus, Exf, qIon, gen );
 }
 
-void marley::ContinuumExitChannel::sample_spin_parity(double Exf, int& twoJ,
-  marley::Parity& Pi, marley::Generator& gen) const
+void marley::ContinuumExitChannel::sample_spin_parity( double Exf, int& twoJ,
+  marley::Parity& Pi, marley::Generator& gen ) const
 {
   // Clear any previous table entries of spin-parities and decay widths
   this->clear_jpi_widths();
@@ -502,7 +502,7 @@ void marley::ContinuumExitChannel::sample_spin_parity(double Exf, int& twoJ,
 
   // Throw an error if all decays are impossible
   if ( diff_width <= 0. ) throw marley::Error( "Cannot "
-    "continue Hauser-Feshbach decay. All partial differential decay widths"
+    "continue Hauser-Feshbach decay. All partial differential decay widths "
     "are zero." );
 
   // Sample a final spin and parity
@@ -523,13 +523,6 @@ void marley::ContinuumExitChannel::sample_spin_parity(double Exf, int& twoJ,
   last_sampled_spw_ = jpi_widths_table_.at( jpi_index ).get();
   twoJ = last_sampled_spw_->twoJf;
   Pi = last_sampled_spw_->Pf;
-
-  const auto* temp_ptr = dynamic_cast< const FragmentContinuumExitChannel
-    ::FragmentSpinParityWidth* >( last_sampled_spw_ );
-  if ( temp_ptr ) {
-     // std::cout << "CHOSEN two_j_frag = " << temp_ptr->two_j_frag << '\n';
-  }
-
 }
 
 void marley::ContinuumExitChannel::clear_jpi_widths() const {
