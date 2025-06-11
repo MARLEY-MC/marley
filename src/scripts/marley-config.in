@@ -49,7 +49,6 @@ cflags="${cflags} -std=${cxx_std} -I${incdir}"
 # dictionaries.
 libs="-L${libdir} -lMARLEY ${hepmc3_libs} ${gsl_libs}"
 if [ "$use_root" = "yes" ]; then
-  libs="${libs} -lMARLEY_ROOT"
   root_libs=$(root-config --libs)
   libs="${libs} ${root_libs}"
 fi

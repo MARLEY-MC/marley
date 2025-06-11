@@ -97,8 +97,6 @@ override CXXFLAGS += -DMARLEY_GIT_REVISION="\"$(MARLEY_GIT_REVISION)\""
 
 SHARED_LIB_NAME := MARLEY
 SHARED_LIB := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
-ROOT_SHARED_LIB_NAME := MARLEY_ROOT
-ROOT_SHARED_LIB := lib$(ROOT_SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
 
 TEST_EXECUTABLE = martest
 TEST_OBJECTS = $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/tests/*.cc)))
@@ -146,7 +144,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
       endif
     endif
   endif
-  
+
   OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
   OBJECTS := $(filter-out marley.o marley_root.o, $(OBJECTS))
   OBJECTS := $(filter-out marsum.o OutputFileRoot.o, $(OBJECTS))
@@ -264,19 +262,10 @@ $(HEPMC3_SHARED_LIB): $(HEPMC3_OBJECTS)
       USE_ROOT = yes
       ROOT_OBJ_DICT = marley_root_dict.o
 
-      # If we're linking against ROOT, then we need to move the OutputFile.o,
-      # OutputFileAscii.o, EventFileReader.o objects from the MARLEY library to the
-      # MARLEY_ROOT library
-      OBJECTS := $(filter-out OutputFile.o OutputFileAscii.o, $(OBJECTS))
-      OBJECTS := $(filter-out EventFileReader.o JSONConfig.o, $(OBJECTS))
+      OBJECTS += marley_root.o OutputFileRoot.o
+      OBJECTS += OutputFilePlainRoot.o $(ROOT_OBJ_DICT)
+      #OBJECTS += MacroEventFileReader.o
 
-      ROOT_SHARED_LIB_LDFLAGS := -l$(ROOT_SHARED_LIB_NAME)
-      ROOT_SHARED_LIB_OBJECTS = marley_root.o JSONConfig.o OutputFile.o
-      ROOT_SHARED_LIB_OBJECTS += OutputFileAscii.o OutputFileRoot.o
-      ROOT_SHARED_LIB_OBJECTS += OutputFilePlainRoot.o
-      ROOT_SHARED_LIB_OBJECTS += EventFileReader.o $(ROOT_OBJ_DICT)
-      #ROOT_SHARED_LIB_OBJECTS += MacroEventFileReader.o
-  
 $(ROOT_OBJ_DICT):
 	$(RM) marley_root_dict*.*
 	$(ROOTCLING) -f marley_root_dict.cc -c $(ROOT_DICT_INCLUDES)
@@ -284,11 +273,6 @@ $(ROOT_OBJ_DICT):
 	  -I$(INCLUDE_DIR) -I$(HEPMC3_INCDIR)/HepMC3/Data -fPIC \
           -o $(ROOT_OBJ_DICT) -c marley_root_dict.cc
 	$(RM) marley_root_dict.cc
-  
-$(ROOT_SHARED_LIB): $(SHARED_LIB) $(ROOT_SHARED_LIB_OBJECTS)
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -fPIC -shared \
-	  -o $(ROOT_SHARED_LIB) -L. -l$(SHARED_LIB_NAME) \
-	  $(ROOT_SHARED_LIB_OBJECTS) $(ROOT_LDFLAGS) $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS)
 
     endif
   else
@@ -310,8 +294,6 @@ incdir = $(prefix)/include
 
 MARLEY_LIBS := $(SHARED_LIB)
 ifeq ($(USE_ROOT),yes)
-  MARLEY_LIBS += $(ROOT_SHARED_LIB)
-
   # If we're building the tests, then link to some extra ROOT libraries
   ifneq (,$(findstring test,$(MAKECMDGOALS)))
     ROOT_LDFLAGS += -lGraf -lGpad
@@ -319,7 +301,7 @@ ifeq ($(USE_ROOT),yes)
 endif
 
 # Causes GNU make to auto-delete the object files when the build is complete
-.INTERMEDIATE: $(OBJECTS) $(TEST_OBJECTS) $(ROOT_SHARED_LIB_OBJECTS) $(HEPMC3_OBJECTS) marley.o marsum.o
+.INTERMEDIATE: $(OBJECTS) $(TEST_OBJECTS) $(HEPMC3_OBJECTS) marley.o marsum.o
 
 %.o: $(SRC_DIR)/%.cc
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
@@ -334,12 +316,12 @@ endif
 	-I$(INCLUDE_DIR) -fPIC -o $@ -c $^
 
 $(SHARED_LIB): $(HEPMC3_SHARED_LIB) $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) \
+	$(CXX) $(CXXFLAGS) $(ROOT_CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) $(GSL_LDFLAGS) $(ROOT_LDFLAGS) $(HEPMC3_LDFLAGS) \
 	-fPIC -shared -o $@ $(OBJECTS)
 
 marsum: $(MARLEY_LIBS) marsum.o
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L. \
-	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
+	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marsum.o
 
 mroot: $(MARLEY_LIBS)
@@ -363,12 +345,12 @@ marley-config: $(MARLEY_LIBS)
 
 marley: $(MARLEY_LIBS) marley.o marley-config $(MAYBE_MARSUM)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L. \
-	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
+	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
 
 $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L. \
-	  -l$(SHARED_LIB_NAME) $(ROOT_SHARED_LIB_LDFLAGS) $(ROOT_LDFLAGS) \
+	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -o $@ $(TEST_OBJECTS)
 
 marg4: $(MARLEY_LIBS)
@@ -427,7 +409,6 @@ install: marley
 	mkdir -p $(DESTDIR)$(datadir)/marley
 	cp marley $(MAYBE_MARSUM) $(DESTDIR)$(bindir)
 	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
-	cp $(ROOT_SHARED_LIB) $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp marley_root_dict_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp -r ../react $(DESTDIR)$(datadir)/marley
 	cp -r ../structure $(DESTDIR)$(datadir)/marley
@@ -440,7 +421,6 @@ uninstall:
 	$(RM) $(DESTDIR)$(bindir)/marsum
 	$(RM) $(DESTDIR)$(bindir)/mroot
 	$(RM) $(DESTDIR)$(libdir)/$(SHARED_LIB)
-	$(RM) $(DESTDIR)$(libdir)/$(ROOT_SHARED_LIB)
 	$(RM) $(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm
 	$(RM) -r $(DESTDIR)$(datadir)/marley
 	$(RM) -r $(DESTDIR)$(incdir)/marley
