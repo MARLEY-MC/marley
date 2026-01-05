@@ -408,10 +408,6 @@ int main( int argc, char* argv[] ) {
     std::cout.rdbuf( &my_status_inserter );
     std::cerr.rdbuf( &my_status_inserter );
 
-    // Compute the flux-averaged total cross section for all
-    // enabled reactions
-    double avg_tot_xs = gen->flux_averaged_total_xs(); // MeV^(-2)
-
     // Update the start time to just before we begin the event loop.
     // This will help us get the best estimate for the remaining time
     // that the program will run.

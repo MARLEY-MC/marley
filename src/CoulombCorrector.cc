@@ -60,7 +60,7 @@ namespace {
 }
 
 marley::CoulombCorrector::CoulombCorrector( int pdg_c,
-  int pdg_d, CoulombMode mode ) : coulomb_mode_( mode ), pdg_c_( pdg_c )
+  int pdg_d, CoulombMode mode ) : pdg_c_( pdg_c ), coulomb_mode_( mode )
 {
   // Extract the mass number and proton number from the residue PDG code
   Af_ = marley_utils::get_particle_A( pdg_d );

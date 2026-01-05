@@ -61,11 +61,7 @@ void marley::HauserFeshbachDecay::build_exit_channels(
     const marley::Fragment& f = pair.second;
 
     // Get information about the current fragment
-    int two_s = f.get_two_s(); // spin
-    marley::Parity Pa = f.get_parity();
     int fragment_pid = f.get_pid();
-    int Za = f.get_Z(); // atomic number
-    double Ma = f.get_mass(); // mass
 
     // Get information about the final-state nucleus
     int Zf = Zi - f.get_Z(); // atomic number
@@ -132,7 +128,7 @@ void marley::HauserFeshbachDecay::build_exit_channels(
         if ( Exf < Exf_max )  {
 
           // Store information for this decay channel
-	  auto ec = std::make_unique< marley::FragmentDiscreteExitChannel >(
+          auto ec = std::make_unique< marley::FragmentDiscreteExitChannel >(
             pdgi, qi, Exi_, twoJi_, Pi_, rho_i, sdb, *level, f );
 
           total_width_ += ec->width();

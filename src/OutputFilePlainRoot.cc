@@ -144,8 +144,9 @@ void marley::OutputFilePlainRoot::open() {
 }
 
 /// @todo Implement this function
-bool marley::OutputFilePlainRoot::resume( std::unique_ptr<marley::Generator>& gen,
-  long& num_previous_events )
+bool marley::OutputFilePlainRoot::resume(
+  std::unique_ptr<marley::Generator>& /*gen*/,
+  long& /*num_previous_events*/ )
 {
 
   /// For now, we don't support resuming from a plain ROOT file

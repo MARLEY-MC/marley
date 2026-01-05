@@ -162,10 +162,6 @@ int main( int argc, char* argv[] ) {
     // Temporary object to use for reading in saved events
     HepMC3::GenEvent ev;
 
-    // Stores the number of elements expected in the other_weights vector
-    // (determined on the first iteration of the event loop below)
-    int num_other_weights = 0;
-
     // Event loop
     int event_num = 0;
     while ( efr >> ev ) {
@@ -186,9 +182,6 @@ int main( int argc, char* argv[] ) {
         // Store the names in the output TFile
         out_tfile.WriteObject( &wgt_names,
           "MARLEY_other_weight_names", "WriteDelete" );
-
-        // Record the expected number of other (i.e., non-CV) weights
-        num_other_weights = wgt_names.size();
       }
 
       if ( event_num % 1000 == 0 ) std::cout << "Event " << event_num << '\n';

@@ -221,12 +221,6 @@ double marley::OMPWeightCalculator::weight( HepMC3::GenEvent& ev,
         orb_l = orb_l_attr->value();
       }
 
-      double width_sp = 0.;
-      if ( width_sp_attr ) {
-        decayed_to_continuum = true;
-        width_sp = width_sp_attr->value();
-      }
-
       // Find the SpinParityWidth object corresponding to the spin-parity
       // value that was actually sampled
       const auto& spw_vec = cec.get_spw_table();
@@ -256,15 +250,6 @@ double marley::OMPWeightCalculator::weight( HepMC3::GenEvent& ev,
           return true;
         }
       );
-
-      if ( !emitted_gamma ) {
-
-        for ( const auto& spw : spw_vec ) {
-        const auto* f_spw = static_cast< const marley
-          ::FragmentContinuumExitChannel
-          ::FragmentSpinParityWidth* >( spw.get() );
-        }
-      }
 
       if ( spw_iter == spw_vec.cend() ) {
         MARLEY_LOG_WARNING() << "Could not find SpinParityWidth during"

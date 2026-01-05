@@ -43,7 +43,6 @@ marley::OutputFileRoot::~OutputFileRoot() {
 
 void marley::OutputFileRoot::open() {
 
-  bool file_exists = check_if_file_exists( name_ );
   std::string open_mode_str( "update" );
   if ( mode_ == Mode::OVERWRITE ) open_mode_str = "recreate";
 
