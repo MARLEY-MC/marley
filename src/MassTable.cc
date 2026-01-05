@@ -209,13 +209,18 @@ double marley::MassTable::get_fragment_separation_energy(int Z, int A, int pid,
   int Zf = Z - Zx;
   int Af = A - marley_utils::get_particle_A(pid);
 
+  // This value is in micro-atomic-mass-units (micro-AMU)
   double extra_mass = Zx*particle_masses_.at(marley_utils::ELECTRON)
     + particle_masses_.at(pid);
 
+  // These values may be in micro-AMU or MeV
   bool exp_i, exp_f;
   double m_atom_initial = lookup_atomic_mass(Z, A, exp_i, theory_ok);
   double m_atom_final = lookup_atomic_mass(Zf, Af, exp_f, theory_ok);
 
+  // Experimental values are tabulated in micro-AMU, while theoretical
+  // estimates use MeV. Adjust application of the conversion factor
+  // appropriately for each case so that we always return something in MeV.
   if (exp_i) {
     if (exp_f) return micro_amu_*(m_atom_final - m_atom_initial + extra_mass);
     else return m_atom_final + micro_amu_*(extra_mass - m_atom_initial);
