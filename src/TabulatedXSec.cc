@@ -27,8 +27,8 @@
 
 marley::TabulatedXSec::TabulatedXSec( int target_pdg,
   marley::Reaction::ProcessType p_type, CoulombCorrector::CoulombMode mode,
-  double Delta ) : ta_( target_pdg ), proc_type_( p_type ),
-  coulomb_mode_( mode ), Delta_( Delta )
+  double delta_ias ) : ta_( target_pdg ), proc_type_( p_type ),
+  coulomb_mode_( mode ), delta_ias_( delta_ias )
 {
   // Set the residue PDG code (pdg_d_) based on the input information
   int dummy_charge;
@@ -126,7 +126,7 @@ double marley::TabulatedXSec::diff_xsec( int pdg_a, double KEa, double omega,
   // Determine the total energies and momenta of the initial and final leptons
   double Ea = KEa + ma;
   double pa = marley_utils::real_sqrt( Ea*Ea - ma*ma );
-  double Ec = Ea - omega + this->Delta();
+  double Ec = Ea - omega;
   if ( Ec < mc ) return 0.;
 
   double pc = marley_utils::real_sqrt( Ec*Ec - mc*mc );
@@ -141,10 +141,16 @@ double marley::TabulatedXSec::diff_xsec( int pdg_a, double KEa, double omega,
   // multipole
   const auto& rt = this->responses_.at( ml );
 
-  // Interpolate a set of nuclear responses for the given omega and q values
-  if ( omega < rt.w_min() || omega > rt.w_max()
+  // Shift the energy transfer at which the responses are evaluated. This
+  // effective value of the energy transfer tries to correct for using the
+  // same nuclear potential for the initial and final states despite
+  // a change of nuclear charge for charged-current interactions.
+  double omega_eff = omega + this->delta_ias();
+
+  // Interpolate a set of nuclear responses for the given omega_eff and q values
+  if ( omega_eff < rt.w_min() || omega_eff > rt.w_max()
     || q < rt.q_min() || q > rt.q_max() ) return 0.;
-  auto nr = rt.interpolate( omega, q );
+  auto nr = rt.interpolate( omega_eff, q );
 
   // Compute the lepton factors
   double beta = pc / Ec;
@@ -242,12 +248,14 @@ double marley::TabulatedXSec::compute_integral( int pdg_a, double KEa,
   double integ = 0.;
   for ( size_t iw = 0u; iw < num_w; ++iw ) {
 
-    // Get the energy transfer at the current grid point
-    double w = wvec.at( iw );
-    double w_eff = w - Delta_;
+    // Get the energy transfer at the current grid point. Note that the
+    // tables of nuclear responses are reported on a grid that uses the
+    // effective value (shifted by delta_ias_). We correct for this here.
+    double w_eff = wvec.at( iw );
+    double w = w_eff - this->delta_ias();
 
     // Use it to compute the ejectile total energy, etc.
-    double Ec = Ea - w_eff;
+    double Ec = Ea - w;
     // We can skip unphysical terms for which the total energy is smaller than
     // the final lepton mass
     if ( Ec < mc ) continue;
@@ -433,10 +441,10 @@ void marley::TabulatedXSec::optimize( int pdg_a, double max_KEa ) {
 // analog state in the final nucleus. This leads to an effective energy
 // transfer value omega_eff which is used when evaluating the final-state
 // lepton energy.
-double marley::TabulatedXSec::Delta() const {
+double marley::TabulatedXSec::delta_ias() const {
   bool is_charged_current = this->is_cc();
 
   double result = 0.;
-  if ( is_charged_current ) result = Delta_;
+  if ( is_charged_current ) result = delta_ias_;
   return result;
 }

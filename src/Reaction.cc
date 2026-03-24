@@ -517,14 +517,14 @@ std::vector< std::unique_ptr<marley::Reaction> >
     // are working with multipole responses. This accounts for the energy
     // difference between the ground state of the initial nucleus and the
     // isobaric analog state in the daughter nucleus.
-    double Delta;
-    iss >> Delta;
+    double delta_ias;
+    iss >> delta_ias;
 
     // Create a shared pointer to a TabulatedXSec object that will manage
     // the tables of nuclear responses. These can be re-used for multiple
     // neutrino flavors by separate Reaction objects.
     auto txsec = std::make_shared< marley::TabulatedXSec >(
-      pdg_b, proc_type, coulomb_mode, Delta );
+      pdg_b, proc_type, coulomb_mode, delta_ias );
 
     // Each line contains a file name corresponding to a distinct table
     // of nuclear responses. Add each one to the map managed by the

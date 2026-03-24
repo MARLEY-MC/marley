@@ -115,10 +115,13 @@ std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
   // during kinematic sampling below
   const auto& rt = xsec_->get_table( sampled_ml );
 
-  // Get the minimum energy transfer value that appears in the table of
-  // nuclear responses
-  double table_wmin = rt.w_min();
-  double table_wmax = rt.w_max();
+  // Get the values of the energy transfer that correspond to the edges
+  // of the table of nuclear responses. Note that the table is actually given
+  // in terms of the effective energy transfer, which differs by delta_ias
+  // from the actual energy transfer. We therefore apply a shift here
+  // to correct for this.
+  double table_wmin = rt.w_min() - xsec_->delta_ias();
+  double table_wmax = rt.w_max() - xsec_->delta_ias();
 
   // Choose a reasonable sampling interval for the energy transfer
   double Ea = KEa + ma_; // Projectile total energy
@@ -236,7 +239,7 @@ std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
     // the residue's ground-state mass
     Ex = md_ - md_gs_;
 
-    // @Pablo: If the excitation energy Ex is below the unbound threshold...
+    // If the excitation energy Ex is below the unbound threshold...
 
     // If crpa_discrete_mode_ is set to MIRROR, we mirror around the unbound
     // threshold. Update w (energy transfer) if the excitation energy is below
@@ -297,10 +300,8 @@ std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
     marley_hepmc3::NUHEPMC_UNDECAYED_RESIDUE_STATUS, md_ );
 
   // Make event object and set charge attributes
-
   auto event = marley::Reaction::make_event_object( KEa, ejectile, residue, Ex,
     twoJ, P );
-
   this->set_charge_attributes( event );
 
   return event;

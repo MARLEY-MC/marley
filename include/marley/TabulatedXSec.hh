@@ -39,12 +39,12 @@ namespace marley {
 
       explicit TabulatedXSec( int target_pdg,
         marley::Reaction::ProcessType p_type,
-        marley::CoulombCorrector::CoulombMode mode, double Delta );
+        marley::CoulombCorrector::CoulombMode mode, double delta_ias );
 
       void add_table( const std::string& file_name );
 
       /// @brief Get the shift used to compute the effective energy transfer
-      double Delta() const;
+      double delta_ias() const;
 
       /// @brief Returns true if this cross section represents a CC process
       /// or false otherwise
@@ -171,7 +171,7 @@ namespace marley {
       /// Effective shift in the energy transfer that accounts for the mass
       /// difference between the ground state of the initial nucleus and the
       /// isobaric analog state in the daughter nucleus
-      double Delta_;
+      double delta_ias_;
   };
 
 }
