@@ -34,6 +34,7 @@ namespace marley {
     public:
 
       WeightCalculator( const marley::JSON& config );
+      virtual ~WeightCalculator() = default;
 
       virtual double weight( HepMC3::GenEvent& event,
         marley::Generator& gen ) const = 0;
@@ -53,6 +54,7 @@ namespace marley {
 
       TrivialWeightCalculator( const marley::JSON& config )
         : WeightCalculator( config ) {}
+      virtual ~TrivialWeightCalculator() = default;
 
       inline virtual double weight( HepMC3::GenEvent& /*event*/,
         marley::Generator& /*gen*/ ) const override { return 1.; }

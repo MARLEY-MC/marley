@@ -26,6 +26,7 @@ namespace marley {
     public:
 
       OMPWeightCalculator( const marley::JSON& config );
+      virtual ~OMPWeightCalculator() = default;
 
       virtual double weight( HepMC3::GenEvent& event,
         marley::Generator& gen ) const override;

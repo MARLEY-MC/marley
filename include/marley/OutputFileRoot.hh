@@ -27,8 +27,8 @@
 #include "marley/OutputFile.hh"
 
 namespace HepMC3 {
-  class GenEventData;
-  class GenRunInfoData;
+  struct GenEventData;
+  struct GenRunInfoData;
 };
 
 namespace marley {

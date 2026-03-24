@@ -70,6 +70,8 @@ namespace marley {
       inline TrivialNuclearFormFactor( int Z, int A )
         : NuclearFormFactor( Z, A ) {}
 
+      virtual ~TrivialNuclearFormFactor() = default;
+
       inline virtual double F( double /*kappa*/ ) const override final
         { return 1.; }
   };
@@ -85,6 +87,8 @@ namespace marley {
         c_ = 1.23*std::pow( A, marley_utils::ONE_THIRD ) - 0.6; // fm
         this->update_effective_radius();
       }
+
+      virtual ~HelmNuclearFormFactor() = default;
 
       virtual double F( double kappa ) const override final;
 
@@ -162,6 +166,8 @@ namespace marley {
         // on the nucleon number
         R_ = 1.23 * std::pow( A_, marley_utils::ONE_THIRD ); // fm
       }
+
+      virtual ~KleinNystrandNuclearFormFactor() = default;
 
       virtual double F( double kappa ) const override final;
 

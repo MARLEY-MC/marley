@@ -202,7 +202,7 @@ double marley::OMPWeightCalculator::weight( HepMC3::GenEvent& ev,
       cec.differential_width( Exf, true );
 
       // Retrieve extra information based on the kind of emitted particle
-      int mpol, two_j_frag, orb_l;
+      int mpol = 0, two_j_frag = 0, orb_l = 0;
       bool emitted_gamma = false;
       auto mpol_attr = vtx->attribute< HepMC3::IntAttribute >(
         "multipolarity" );

@@ -30,6 +30,7 @@ namespace marley {
     public:
 
       SachsFormFactors() {}
+      virtual ~SachsFormFactors() = default;
 
       /// Proton electric form factor
       /// @param Q2 Negative square @f$ Q^{2} @f$ of the four-momentum transfer
@@ -64,6 +65,7 @@ namespace marley {
 
       /// @param Mv Vector mass parameter (MeV)
       DipoleSachsFormFactors( double Mv ) : Mv_( Mv ) {}
+      virtual ~DipoleSachsFormFactors() = default;
 
       virtual double GEp( double Q2 ) override final;
       inline virtual double GEn( double /*Q2*/ ) override final { return 0.; }
@@ -87,6 +89,7 @@ namespace marley {
     public:
 
       BBBA05SachsFormFactors() {}
+      virtual ~BBBA05SachsFormFactors() = default;
 
       virtual double GEp( double Q2 ) override final;
       virtual double GEn( double Q2 ) override final;
@@ -112,6 +115,7 @@ namespace marley {
     public:
 
       AxialFormFactors() {}
+      virtual ~AxialFormFactors() = default;
 
       /// Axial-vector form factor
       virtual double FA( double Q2 ) = 0;
@@ -126,6 +130,7 @@ namespace marley {
       // @param gA Axial-vector coupling constant (dimensionless)
       // @param Ma Axial mass parameter (MeV)
       DipoleAxialFormFactors( double gA, double Ma ) : gA_( gA ), Ma_( Ma ) {}
+      virtual ~DipoleAxialFormFactors() = default;
 
       inline double FA( double Q2 ) override final
         { return -gA_ / std::pow( 1.0 + Q2 / Ma_ / Ma_, 2 ); }
@@ -209,6 +214,7 @@ namespace marley {
     public:
 
       TrivialSachsFormFactors() {}
+      virtual ~TrivialSachsFormFactors() = default;
 
       virtual double GEp( double Q2 ) override final;
       virtual double GEn( double Q2 ) override final;
@@ -225,6 +231,7 @@ namespace marley {
     public:
 
       TrivialAxialFormFactors() {}
+      virtual ~TrivialAxialFormFactors() = default;
 
       double FA( double Q2 ) override final;
       double FP( double Q2 ) override final;
