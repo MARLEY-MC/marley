@@ -23,6 +23,7 @@
 
 // MARLEY includes
 #include "marley/marley_utils.hh"
+#include "marley/ContinuumNuclearReaction.hh"
 #include "marley/Error.hh"
 #include "marley/FileManager.hh"
 #include "marley/JSONConfig.hh"
@@ -39,7 +40,7 @@
 using InterpMethod = marley::InterpolationGrid<double>::InterpolationMethod;
 using ProcType = marley::Reaction::ProcessType;
 using CMode = marley::CoulombCorrector::CoulombMode;
-using CRPADiscreteMode = marley::Generator::CRPADiscreteMode;
+using SubContinuumMode = marley::ContinuumNuclearReaction::SubContinuumMode;
 
 // anonymous namespace for helper functions, etc.
 namespace {
@@ -220,25 +221,18 @@ marley::Generator marley::JSONConfig::create_generator() const
   // Save a copy of the JSON settings used to configure the generator
   gen.set_json_config( json_ );
 
-  // Set the flag to specify how to deal with CRPA strength
-  // leaking below the unbound threshold
-  //
-  // Ignore by default
-  CRPADiscreteMode crpa_discrete_mode = CRPADiscreteMode::IGNORE;
+  // If specified by the user, set the approach to continuum strength leaking
+  // below the unbound threshold. The default setting is "accumulate."
+  if ( json_.has_key("sub_continuum_mode") ) {
+    const auto& sc_mode_str = json_.at( "sub_continuum_mode" );
+    if ( !sc_mode_str.is_string() ) throw marley::Error( "Invalid sub-continuum"
+      " mode specification " + sc_mode_str.dump_string() );
+    std::string my_mode = sc_mode_str.to_string();
+    SubContinuumMode sc_mode = marley::ContinuumNuclearReaction
+      ::sub_continuum_mode_from_string( my_mode );
 
-  if ( json_.has_key("crpa_discrete_mode") ) {
-    const auto& crpamode = json_.at( "crpa_discrete_mode" );
-    if ( !crpamode.is_string() ) throw marley::Error("Invalid CRPA discrete"
-      " mode specification " + crpamode.dump_string() );
-    std::string my_mode = crpamode.to_string();
-    crpa_discrete_mode = marley::Generator
-      ::crpa_discrete_mode_from_string( my_mode );
-
-    gen.set_crpa_discrete_mode( crpa_discrete_mode );
+    marley::ContinuumNuclearReaction::set_sub_continuum_mode( sc_mode );
   }
-  // Inform the user about the set CRPA discrete mode
-  MARLEY_LOG_INFO() << "Configured CRPA discrete mode: "
-    << marley::Generator::string_from_crpa_discrete_mode( crpa_discrete_mode );
 
   // Skip the rest of initialization if we've disabled all reactions.
   // This can be used to partially initialize the Generator in unusual
@@ -252,16 +246,29 @@ marley::Generator marley::JSONConfig::create_generator() const
     }
   }
 
-  // Iterate through all configured nuclear reactions. Set a flag indicating
-  // whether at least one of them was a CC reaction. We will only bother to
-  // print the logging message below if one such reaction was found.
+  // Iterate through all configured reactions. Set flags indicating
+  // whether at least one of them was a CC nuclear reaction and whether at least
+  // one of them is a continuum nuclear reaction. The results will control
+  // whether some logging messages below are printed or skipped due to being
+  // irrelevant.
   bool found_cc = false;
+  bool found_continuum = false;
   for ( auto& react : gen.reactions_ ) {
 
     ProcType pt = react->process_type();
-    if ( pt == ProcType::NeutrinoCC_Discrete || pt == ProcType::AntiNeutrinoCC_Discrete
-        || pt == ProcType::NeutrinoCC_Continuum || pt == ProcType::AntiNeutrinoCC_Continuum) {
+    if ( pt == ProcType::NeutrinoCC_Discrete
+      || pt == ProcType::AntiNeutrinoCC_Discrete
+      || pt == ProcType::NeutrinoCC_Continuum
+      || pt == ProcType::AntiNeutrinoCC_Continuum)
+    {
       found_cc = true;
+    }
+
+    if ( pt == ProcType::NeutrinoCC_Continuum
+      || pt == ProcType::AntiNeutrinoCC_Continuum
+      || pt == ProcType::NC_Continuum )
+    {
+      found_continuum = true;
     }
   }
 
@@ -271,6 +278,17 @@ marley::Generator marley::JSONConfig::create_generator() const
     std::string cmode_str = marley::CoulombCorrector
       ::string_from_coulomb_mode( coulomb_mode );
     MARLEY_LOG_INFO() << "Configured Coulomb correction method: " << cmode_str;
+  }
+
+  // If at least one continuum nuclear reaction is configured, then inform the
+  // user about the active sub-continuum mode
+  if ( found_continuum ) {
+    SubContinuumMode sc_mode
+      = marley::ContinuumNuclearReaction::sub_continuum_mode();
+
+    MARLEY_LOG_INFO() << "Configured sub-continuum mode: "
+      << marley::ContinuumNuclearReaction
+      ::string_from_sub_continuum_mode( sc_mode );
   }
 
   // Now that the reactions and source are both prepared, check that a neutrino
@@ -352,7 +370,7 @@ marley::Generator marley::JSONConfig::create_generator() const
     << " * 10^(-40) cm^2";
 
   return gen;
-}
+  }
 
 //------------------------------------------------------------------------------
 void marley::JSONConfig::prepare_direction( marley::Generator& gen ) const {
