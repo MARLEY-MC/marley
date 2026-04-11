@@ -56,6 +56,20 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
   auto undecayed_residues = marley_hepmc3::get_particles_with_status(
     marley_hepmc3::NUHEPMC_UNDECAYED_RESIDUE_STATUS, event );
 
+  // Check the reaction process that created this event. The process types
+  // distinguish between discrete and continuum reactions, which is helpful
+  // below.
+  int proc_id = event.attribute< HepMC3::IntAttribute >(
+    "signal_process_id" )->value();
+  auto proc_type = marley_hepmc3::from_nuhepmc_proc_id( proc_id );
+  bool is_continuum_channel = false;
+  if ( proc_type == marley::Reaction::ProcessType::NeutrinoCC_Continuum
+    || proc_type == marley::Reaction::ProcessType::AntiNeutrinoCC_Continuum 
+    || proc_type == marley::Reaction::ProcessType::NC_Continuum )
+  {
+    is_continuum_channel = true;
+  }
+
   for ( auto residue : undecayed_residues ) {
 
     // Get the residue excitation energy from the event. These values represent
@@ -74,7 +88,8 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
       + std::to_string(Ex) + " MeV encountered in marley::NucleusDecayer::"
       "deexcite_residue()");
 
-    // To prevent accidental double application of the de-excitation cascade,   // check that the residue mass is consistent with the excitation energy
+    // To prevent accidental double application of the de-excitation cascade,
+    // check that the residue mass is consistent with the excitation energy
     // stored in the event record (and thus was never decayed).
     const auto& mt = marley::MassTable::Instance();
     int initial_residue_pdg = residue->pid();
@@ -127,7 +142,13 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
 
     // If Reaction::set_level_ptrs() changes, you'll want to change this too.
     // TODO: find a better way of keeping the two pieces of code in sync
-    bool continuum = ( Ex > unbound_threshold ) || ( !ds );
+    // TODO: numerical round-off can cause issues with the first test, so you
+    // should revisit it again when interfacing MARLEY with other codes
+    // that use it solely as a de-excitation model. For now, the third
+    // option in the logical OR prevents issues with numerical round-off near
+    // the unbound threshold.
+    bool continuum = ( Ex > unbound_threshold )
+      || ( !ds ) || ( is_continuum_channel );
 
     // Keep track of whether the cascade was started from the continuum
     // or not. If it was started from a discrete level, we'll double-check that

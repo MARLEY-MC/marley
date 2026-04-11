@@ -135,6 +135,18 @@ namespace marley_hepmc3 {
     return DUMMY_NUHEPMC_PROC_ID;
   }
 
+  marley::Reaction::ProcessType from_nuhepmc_proc_id( const int proc_id ) {
+    marley::Reaction::ProcessType pt = marley::Reaction::ProcessType::Unknown;
+    auto itr = std::find_if( ptype_to_nuhepmc_proc.cbegin(),
+      ptype_to_nuhepmc_proc.cend(), [ proc_id ]( auto& pair ) -> bool
+      { return pair.second.id_ == proc_id; }
+    );
+    if ( itr != ptype_to_nuhepmc_proc.end() ) {
+      pt = itr->first;
+    }
+    return pt;
+  }
+
   void set_particle_charge( HepMC3::GenParticle& particle, int charge ) {
     bool added_ok = particle.add_attribute( "charge",
       std::make_shared< HepMC3::IntAttribute >(charge) );

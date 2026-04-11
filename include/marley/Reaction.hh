@@ -52,6 +52,7 @@ namespace marley {
       /// @brief Enumerated type describing the kind of scattering process
       /// represented by a Reaction
       enum ProcessType {
+        Unknown = -1, ///< Dummy value used for error handling
         NeutrinoCC_Discrete = 0,     ///< Nuclear matrix elements contain @f$ t_{-} @f$ for a transition to a discrete nuclear level
         AntiNeutrinoCC_Discrete = 1, ///< Nuclear matrix elements contain @f$ t_{+} @f$ for a transition to a discrete nuclear level
         NC_Discrete = 2,             ///< Nuclear matrix elements contain @f$ t_{3} @f$ for a transition to a discrete nuclear level

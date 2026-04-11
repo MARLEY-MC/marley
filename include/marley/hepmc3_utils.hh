@@ -53,6 +53,7 @@ namespace marley_hepmc3 {
 
   // E.C.1
   int get_nuhepmc_proc_id( const marley::Reaction::ProcessType pt );
+  marley::Reaction::ProcessType from_nuhepmc_proc_id( const int proc_id );
 
   // G.R.5
   void prepare_vertex_status_metadata( HepMC3::GenRunInfo& run_info );
