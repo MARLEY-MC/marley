@@ -300,12 +300,12 @@ bool marley::ContinuumNuclearReaction::reassign_sub_continuum( double& w,
   double Ec = Ea - w;
   double pc = marley_utils::real_sqrt( Ec*Ec - mc_*mc_ );
 
-  // Magnitude of the 3-momentum transfer
-  double kappa = pa*pa + pc*pc - 2.*pa*pc*ctl;
+  // Squared magnitude of the 3-momentum transfer
+  double kappa2 = pa*pa + pc*pc - 2.*pa*pc*ctl;
 
   // Total energy and excitation energy of the residue
   double Ed = mb_ + w;
-  double Ex = marley_utils::real_sqrt( Ed*Ed - kappa*kappa ) - md_gs_;
+  double Ex = marley_utils::real_sqrt( Ed*Ed - kappa2 ) - md_gs_;
 
   // Get the "unbound threshold" used to determine the start of the continuum
   const auto& mt = marley::MassTable::Instance();
