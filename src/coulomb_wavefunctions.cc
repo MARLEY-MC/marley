@@ -15,7 +15,7 @@
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
 #include "marley/coulomb_wavefunctions.hh"
-#include "marley/marley_gsl.hh"
+#include "builtin/marley_gsl.hh"
 #include "marley/Logger.hh"
 
 std::complex< double > coulomb_H_plus( int l, double eta, double rho ) {

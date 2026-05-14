@@ -1,7 +1,0 @@
-This folder contains a "built-in" version of the HepMC3 reference implementation
-that includes only those components needed to build MARLEY. Source code for the
-current version of the full HepMC3 library can be obtained from
-https://gitlab.cern.ch/hepmc/HepMC3. The source code included in this folder is
-redistributed under the terms of the GNU General Public License, version 3 or
-later. All source files in this folder are copyright (C) 2014-2023 by the HepMC
-Collaboration.

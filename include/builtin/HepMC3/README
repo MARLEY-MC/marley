@@ -1,0 +1,15 @@
+This folder contains the header files for a "built-in" version of the HepMC3
+reference implementation that includes only those components needed to build
+MARLEY. The corresponding implementation files have been amalgamated into
+src/marley_hepmc3.cc.
+
+Source code for the full HepMC3 library can be obtained from
+https://gitlab.cern.ch/hepmc/HepMC3. The source code included in this folder
+is redistributed under the terms of the GNU Lesser General Public License,
+version 2.1 or later. All files in this folder are copyright (C) 2014-2023
+by the HepMC Collaboration.
+
+These headers are used when no system HepMC3 installation can be found (or
+when IGNORE_HEPMC3 is set). When a system installation is present, the
+compiler is directed to its headers instead; the files in this folder are then
+not used.

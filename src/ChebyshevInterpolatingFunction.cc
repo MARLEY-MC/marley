@@ -21,8 +21,8 @@
 #include <limits>
 
 // FFTPACK4 includes
-#include "fftpack4/fftpack4.h"
-#include "fftpack4/fftpack4_precision.h"
+#include "builtin/fftpack4/fftpack4.h"
+#include "builtin/fftpack4/fftpack4_precision.h"
 
 // MARLEY includes
 #include "marley/ChebyshevInterpolatingFunction.hh"

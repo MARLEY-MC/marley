@@ -21,7 +21,7 @@
 #include <vector>
 
 // GSL includes
-#include "marley/marley_gsl.hh" // provides gsl_cdf_chisq_Q for p-value calculation
+#include "builtin/marley_gsl.hh" // provides gsl_cdf_chisq_Q for p-value calculation
 
 // ROOT includes
 #ifdef USE_ROOT

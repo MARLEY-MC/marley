@@ -4,7 +4,6 @@ BUILD_DIR = $(TOP_DIR)/build
 DATA_DIR = $(TOP_DIR)/data
 INCLUDE_DIR = $(TOP_DIR)/include
 SRC_DIR = $(TOP_DIR)/src
-HEPMC3_DIR = $(TOP_DIR)/hepmc3
 
 # Default version of the C++ standard to use for compilation
 CXX_STD=c++17
@@ -150,6 +149,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
   OBJECTS := $(filter-out marsum.o OutputFileRoot.o, $(OBJECTS))
   OBJECTS := $(filter-out OutputFilePlainRoot.o, $(OBJECTS))
   OBJECTS := $(filter-out MacroEventFileReader.o, $(OBJECTS))
+  OBJECTS := $(filter-out marley_hepmc3.o, $(OBJECTS))
 
   # Get information about the GNU Scientific Library installation
   ifndef IGNORE_GSL
@@ -182,38 +182,37 @@ ifneq ($(MAKECMDGOALS),uninstall)
   # Get information about the HepMC3 installation
   ifndef IGNORE_HEPMC3
     HEPMC3CONFIG := $(shell which HepMC3-config)
-    ifeq (, $(shell which HepMC3-config))
-      define hepmc3_builtin_message
-    Could not find a working HepMC3 installation.
-    A built-in HepMC3 library will be used instead.
-      endef
-      $(info "$(hepmc3_builtin_message)")
+    ifeq (, $(HEPMC3CONFIG))
+      $(info Could not find a working HepMC3 installation.)
+      $(info A built-in HepMC3 library will be used instead.)
     else
-      # Add the appropriate compilation flags to use the HepMC3 reference
+      # Add the appropriate compilation flags to use the system HepMC3
       # implementation
-      HEPMC3_INCDIR := $(shell $(HEPMC3CONFIG) --includedir)
-      HEPMC3_CXXFLAGS := $(shell $(HEPMC3CONFIG) --cflags)
-      HEPMC3_LDFLAGS := $(shell $(HEPMC3CONFIG) --libs)
-      FOUND_HEPMC3 := TRUE
+      HEPMC3_INCDIR   := $(shell $(HEPMC3CONFIG) --includedir)
+      HEPMC3_CXXFLAGS := $(shell $(HEPMC3CONFIG) --cflags) -DMARLEY_FOUND_HEPMC3
+      HEPMC3_LDFLAGS  := $(shell $(HEPMC3CONFIG) --libs)
+      FOUND_HEPMC3    := TRUE
     endif
   else
     $(info Ignoring any HepMC3 installations that may be present.)
   endif
 
   ifndef FOUND_HEPMC3
-    # Use the built-in HepMC3 library
-    HEPMC3_INCDIR := $(HEPMC3_DIR)/include
-    HEPMC3_CXXFLAGS := -I$(HEPMC3_INCDIR)
-    HEPMC3_LDFLAGS := -L$(BUILD_DIR) -lHepMC3
-
-    HEPMC3_OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(HEPMC3_DIR)/*.cc)))
+    # Use the built-in HepMC3 subset (implementation in src/marley_hepmc3.cc,
+    # headers in include/builtin/HepMC3/).
+    #
+    # IMPORTANT: The -I flag below must remain conditional on FOUND_HEPMC3
+    # being unset. Making it unconditional would expose include/builtin/HepMC3/
+    # to the compiler in the system-HepMC3 case, breaking header isolation and
+    # potentially causing MARLEY to compile against the wrong headers.
+    HEPMC3_INCDIR     := $(INCLUDE_DIR)/builtin
+    HEPMC3_CXXFLAGS   := -I$(HEPMC3_INCDIR)
+    HEPMC3_LDFLAGS    := -L$(BUILD_DIR) -lHepMC3
     HEPMC3_SHARED_LIB := libHepMC3.$(SHARED_LIB_SUFFIX)
 
-$(HEPMC3_SHARED_LIB): $(HEPMC3_OBJECTS)
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) \
-        $(HEPMC3_CXXFLAGS) -fPIC -shared $(ROOT_LDFLAGS) $(GSL_LDFLAGS) \
-        -o $@ $^
-
+    # Disable warnings about deprecated declarations in the built-in HepMC3
+    # library (triggered via use of sprintf)
+    marley_hepmc3.o: HEPMC3_CXXFLAGS += -Wno-deprecated-declarations
   endif
 
   # The user may force the Makefile to ignore ROOT entirely by defining
@@ -314,7 +313,7 @@ ifeq ($(USE_ROOT),yes)
 endif
 
 # Causes GNU make to auto-delete the object files when the build is complete
-.INTERMEDIATE: $(OBJECTS) $(TEST_OBJECTS) $(HEPMC3_OBJECTS) marley.o marsum.o
+.INTERMEDIATE: $(OBJECTS) $(TEST_OBJECTS) marley_hepmc3.o marley.o marsum.o
 
 %.o: $(SRC_DIR)/%.cc
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
@@ -324,9 +323,16 @@ endif
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
 	-I$(INCLUDE_DIR) -fPIC -o $@ -c $^
 
-%.o: $(HEPMC3_DIR)/%.cc
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
-	-I$(INCLUDE_DIR) -fPIC -o $@ -c $^
+ifndef FOUND_HEPMC3
+
+marley_hepmc3.o: $(SRC_DIR)/marley_hepmc3.cc
+	$(CXX) $(ROOT_CXXFLAGS) $(HEPMC3_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) \
+	-fPIC -o $@ -c $<
+
+$(HEPMC3_SHARED_LIB): marley_hepmc3.o
+	$(CXX) $(CXXFLAGS) -fPIC -shared -o $@ $<
+
+endif
 
 $(SHARED_LIB): $(HEPMC3_SHARED_LIB) $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(ROOT_CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) $(GSL_LDFLAGS) $(ROOT_LDFLAGS) $(HEPMC3_LDFLAGS) \
@@ -409,7 +415,7 @@ docs:
 	&& cd ../docs && $(MAKE) html
 
 clean:
-	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley
+	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley $(HEPMC3_SHARED_LIB)
 	$(RM) -rf *.dSYM marsum mroot $(TEST_EXECUTABLE) marg4
 	$(RM) -rf marprint mardumpxs mardecay marreweight
 	$(RM) -rf marley-config ../doxygen/html/*
@@ -427,6 +433,9 @@ install: marley
 	cp -r ../structure $(DESTDIR)$(datadir)/marley
 	cp -r ../examples $(DESTDIR)$(datadir)/marley
 	cp -r ../include/marley $(DESTDIR)$(incdir)
+ifndef FOUND_HEPMC3
+	cp $(HEPMC3_SHARED_LIB) $(DESTDIR)$(libdir)
+endif
 	ldconfig
 
 uninstall:

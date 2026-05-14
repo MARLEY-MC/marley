@@ -75,7 +75,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "fftpack4/fftpack4.h"
+#include "builtin/fftpack4/fftpack4.h"
 
 #ifdef __cplusplus
 

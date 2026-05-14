@@ -140,7 +140,7 @@ code that is "correct, beautiful, [and] fast (`in that order
 * C++ source files have the filename extension ``.cc``. Header files have the
   filename extension ``.hh``. An exception to the latter rule occurs for
   header files original to another code base (e.g.,
-  ``include/fftpack4/fftpack4.h``).
+  ``include/builtin/fftpack4/fftpack4.h``).
 * Use whitespace to improve readability, e.g., ``std::cout << x << '\n';``
   rather than ``std::cout<<x<<'\n';``.
 * Prefer a maximum line width of 80 columns. Tolerate modestly longer lines
