@@ -152,19 +152,32 @@ ifneq ($(MAKECMDGOALS),uninstall)
   OBJECTS := $(filter-out MacroEventFileReader.o, $(OBJECTS))
 
   # Get information about the GNU Scientific Library installation
-  # (required as of MARLEY v1.1.0)
-  GSLCONFIG := $(shell which gsl-config)
-  ifeq (, $(shell which gsl-config))
-    define err_message
-Could not find a working GNU Scientific Library installation.
-Please ensure that the gsl-config executable is on your PATH and try again.
-    endef
-    $(error "$(err_message)")
+  ifndef IGNORE_GSL
+    GSLCONFIG := $(shell which gsl-config)
+    ifeq (, $(GSLCONFIG))
+      $(info Could not find a working GNU Scientific Library installation.)
+      $(info A built-in GSL library will be used instead.)
+    else
+      # Add the appropriate compilation flags to use the system GNU Scientific
+      # Library
+      GSL_CXXFLAGS := $(shell $(GSLCONFIG) --cflags) -DMARLEY_FOUND_GSL
+      GSL_LDFLAGS := $(shell $(GSLCONFIG) --libs)
+      FOUND_GSL := TRUE
+    endif
+  else
+    $(info Ignoring any GSL installations that may be present.)
   endif
 
-  # Add the appropriate compilation flags to use the GNU Scientific Library
-  GSL_CXXFLAGS := $(shell $(GSLCONFIG) --cflags)
-  GSL_LDFLAGS := $(shell $(GSLCONFIG) --libs)
+  ifndef FOUND_GSL
+    # Use the built-in GSL subset
+    GSL_CXXFLAGS :=
+    GSL_LDFLAGS := -lm
+
+    # Keep built-in GSL symbols hidden to avoid clashes with any system GSL
+    # loaded by other libraries in the host environment.
+    marley_gsl.o: CXXFLAGS += -fvisibility=hidden
+
+  endif
 
   # Get information about the HepMC3 installation
   ifndef IGNORE_HEPMC3

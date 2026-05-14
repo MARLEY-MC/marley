@@ -21,7 +21,7 @@
 #include <vector>
 
 // GSL includes
-#include "gsl/gsl_cdf.h" // p-value for chi-squared test
+#include "marley/marley_gsl.hh" // provides gsl_cdf_chisq_Q for p-value calculation
 
 // ROOT includes
 #ifdef USE_ROOT
@@ -173,6 +173,10 @@ namespace marley {
             else --degrees_of_freedom;
           }
 
+          if ( degrees_of_freedom <= 0 ) throw marley::Error(
+            "marley::Histogram::chi2_test cannot compute a chi-squared"
+            " p-value with non-positive degrees of freedom" );
+
           p_value = gsl_cdf_chisq_Q( chi2, degrees_of_freedom );
 
           MARLEY_LOG_INFO() << "chi2 / DOF = " << chi2
@@ -227,4 +231,3 @@ namespace marley {
   } // tests namespace
 
 } // marley namespace
-

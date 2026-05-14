@@ -14,12 +14,8 @@
 // Please respect the MCnet academic usage guidelines. See GUIDELINES
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
-// Functions to calculate the Coulomb wavefunctions using the GNU Scientific
-// Library
-#include "gsl/gsl_errno.h"
-#include "gsl/gsl_sf_coulomb.h"
-
 #include "marley/coulomb_wavefunctions.hh"
+#include "marley/marley_gsl.hh"
 #include "marley/Logger.hh"
 
 std::complex< double > coulomb_H_plus( int l, double eta, double rho ) {
