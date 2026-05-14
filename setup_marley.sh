@@ -11,15 +11,18 @@ THIS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )" && pwd )"
 export MARLEY=${THIS_DIRECTORY}
 
 # For running MARLEY
-export PATH=${PATH}:${THIS_DIRECTORY}/build
+export PATH=${PATH}:${THIS_DIRECTORY}/build/bin
 
 if [ "$(uname)" = "Darwin" ]; then
   # macOS platform
-  export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:${THIS_DIRECTORY}/build
+  export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:${THIS_DIRECTORY}/build/lib
 else
   # Assume a GNU/Linux platform
-  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${THIS_DIRECTORY}/build
+  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${THIS_DIRECTORY}/build/lib
 fi
 
 # For using MARLEY classes in ROOT 6
 export ROOT_INCLUDE_PATH=${ROOT_INCLUDE_PATH}:${THIS_DIRECTORY}/include
+
+# Allows CMake's find_package() to work with MARLEY
+export CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:${THIS_DIRECTORY}/build

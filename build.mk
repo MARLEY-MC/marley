@@ -1,5 +1,5 @@
 # Names of various MARLEY directories
-TOP_DIR = $(shell cd .. && pwd)
+TOP_DIR ?= $(CURDIR)
 BUILD_DIR = $(TOP_DIR)/build
 DATA_DIR = $(TOP_DIR)/data
 INCLUDE_DIR = $(TOP_DIR)/include
@@ -68,8 +68,8 @@ endif
 # If the .VERSION file exists, use its contents as the
 # MARLEY version number. The .VERSION file should only
 # be added to the source tree in tagged releases.
-ifneq (,$(wildcard ../.VERSION))
-  MARLEY_VERSION := $(shell cat ../.VERSION)
+ifneq (,$(wildcard $(TOP_DIR)/.VERSION))
+  MARLEY_VERSION := $(shell cat $(TOP_DIR)/.VERSION)
 
   # Define a link to a tarball on GitHub for the current tagged release
   TARBALL_LINK = "<a href=\"https://github.com/MARLEY-MC/marley/$\
@@ -92,12 +92,13 @@ endif
 override CXXFLAGS += -DMARLEY_VERSION="\"$(MARLEY_VERSION)\""
 
 # Define the MARLEY_GIT_REVISION preprocessor macro
-override CXXFLAGS += -DMARLEY_GIT_REVISION="\"$(MARLEY_GIT_REVISION)\""
+override CXXFLAGS += -DMARLEY_GIT_REVISION="\"$(GIT_REVISION)\""
 
 SHARED_LIB_NAME := MARLEY
-SHARED_LIB := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
+SHARED_LIB_FILE := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
+SHARED_LIB := $(BUILD_DIR)/lib/$(SHARED_LIB_FILE)
 
-TEST_EXECUTABLE = martest
+TEST_EXECUTABLE = $(BUILD_DIR)/bin/martest
 TEST_OBJECTS = $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/tests/*.cc)))
 
 all: marley
@@ -207,8 +208,8 @@ ifneq ($(MAKECMDGOALS),uninstall)
     # potentially causing MARLEY to compile against the wrong headers.
     HEPMC3_INCDIR     := $(INCLUDE_DIR)/builtin
     HEPMC3_CXXFLAGS   := -I$(HEPMC3_INCDIR)
-    HEPMC3_LDFLAGS    := -L$(BUILD_DIR) -lHepMC3
-    HEPMC3_SHARED_LIB := libHepMC3.$(SHARED_LIB_SUFFIX)
+    HEPMC3_LDFLAGS    := -L$(BUILD_DIR)/lib -lHepMC3
+    HEPMC3_SHARED_LIB := $(BUILD_DIR)/lib/libHepMC3.$(SHARED_LIB_SUFFIX)
 
     # Disable warnings about deprecated declarations in the built-in HepMC3
     # library (triggered via use of sprintf)
@@ -238,7 +239,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
       $(info Found ROOT version $(ROOT_VERSION) in $(ROOT))
       $(info MARLEY will be built with ROOT support.)
       override CXXFLAGS += -DUSE_ROOT
-      MAYBE_MARSUM = marsum mroot
+      MAYBE_MARSUM = $(BUILD_DIR)/bin/marsum $(BUILD_DIR)/bin/mroot
       ROOT_CXXFLAGS := $(shell $(ROOTCONFIG) --cflags)
 
       # If ROOT was built with a later C++ standard, switch to building MARLEY
@@ -330,28 +331,41 @@ marley_hepmc3.o: $(SRC_DIR)/marley_hepmc3.cc
 	-fPIC -o $@ -c $<
 
 $(HEPMC3_SHARED_LIB): marley_hepmc3.o
+	@mkdir -p $(BUILD_DIR)/lib
 	$(CXX) $(CXXFLAGS) -fPIC -shared -o $@ $<
 
 endif
 
 $(SHARED_LIB): $(HEPMC3_SHARED_LIB) $(OBJECTS)
+	@mkdir -p $(BUILD_DIR)/lib
 	$(CXX) $(CXXFLAGS) $(ROOT_CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) $(GSL_LDFLAGS) $(ROOT_LDFLAGS) $(HEPMC3_LDFLAGS) \
 	-fPIC -shared -o $@ $(OBJECTS)
 
-marsum: $(MARLEY_LIBS) marsum.o
-	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L. \
-	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
-	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marsum.o
+marley: $(BUILD_DIR)/bin/marley
 
-mroot: $(MARLEY_LIBS)
-	cp $(SRC_DIR)/scripts/mroot .
+marsum: $(BUILD_DIR)/bin/marsum
+
+mroot: $(BUILD_DIR)/bin/mroot
+
+marley-config: $(BUILD_DIR)/bin/marley-config
+
+$(BUILD_DIR)/bin/marsum: $(MARLEY_LIBS) marsum.o
+	@mkdir -p $(BUILD_DIR)/bin
+	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L$(BUILD_DIR)/lib \
+	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
+	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(BUILD_DIR)/lib marsum.o
+
+$(BUILD_DIR)/bin/mroot: $(MARLEY_LIBS)
+	@mkdir -p $(BUILD_DIR)/bin
+	cp $(SRC_DIR)/scripts/mroot $@
 
 # We use a temporary backup file here so that the invocation of sed is
 # compatible with both the GNU/Linux and BSD/macOS versions.
 # See https://stackoverflow.com/a/22084103/4081973 for details.
-marley-config: $(MARLEY_LIBS)
-	$(RM) marley-config
-	cp $(SRC_DIR)/scripts/marley-config.in marley-config
+$(BUILD_DIR)/bin/marley-config: $(MARLEY_LIBS)
+	@mkdir -p $(BUILD_DIR)/bin
+	$(RM) $(BUILD_DIR)/bin/marley-config
+	cp $(SRC_DIR)/scripts/marley-config.in $(BUILD_DIR)/bin/marley-config
 	sed -i.bak -e '/^##/d' -e "s|@@VERSION@@|\"$(MARLEY_VERSION)\"|g" \
 	  -e "s|@@GIT_REVISION@@|\"$(GIT_REVISION)\"|g" \
 	  -e "s|@@CXX_STD@@|\"$(CXX_STD)\"|g" \
@@ -359,80 +373,48 @@ marley-config: $(MARLEY_LIBS)
 	  -e "s|@@HEPMC3_LIBS@@|\"$(HEPMC3_LDFLAGS)\"|g" \
 	  -e "s|@@GSL_CFLAGS@@|\"$(GSL_CXXFLAGS)\"|g" \
 	  -e "s|@@GSL_LIBS@@|\"$(GSL_LDFLAGS)\"|g" \
-	  -e "s|@@USE_ROOT@@|\"$(USE_ROOT)\"|g" marley-config
-	$(RM) marley-config.bak
+	  -e "s|@@USE_ROOT@@|\"$(USE_ROOT)\"|g" $(BUILD_DIR)/bin/marley-config
+	$(RM) $(BUILD_DIR)/bin/marley-config.bak
 
-marley: $(MARLEY_LIBS) marley.o marley-config $(MAYBE_MARSUM)
-	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L. \
-	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) $(ROOT_LDFLAGS) \
-	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(shell pwd) marley.o
+$(BUILD_DIR)/bin/marley: $(MARLEY_LIBS) marley.o $(BUILD_DIR)/bin/marley-config $(MAYBE_MARSUM)
+	@mkdir -p $(BUILD_DIR)/bin
+	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L$(BUILD_DIR)/lib \
+	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
+	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(BUILD_DIR)/lib marley.o
 
 $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
-	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L. \
-	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) $(ROOT_LDFLAGS) \
-	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -o $@ $(TEST_OBJECTS)
+	@mkdir -p $(BUILD_DIR)/bin
+	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L$(BUILD_DIR)/lib \
+	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
+	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(TEST_OBJECTS)
 
-marg4: $(MARLEY_LIBS)
-	$(RM) ../examples/marg4/build/marg4
-	cd ../examples/marg4/build && $(MAKE)
-	cp ../examples/marg4/build/marg4 .
-	$(RM) ../examples/marg4/build/marg4
-
-marprint: $(MARLEY_LIBS)
-	$(RM) ../examples/executables/build/marprint
-	cd ../examples/executables/build && $(MAKE) marprint
-	cp ../examples/executables/build/marprint .
-	$(RM) ../examples/executables/build/marprint
-
-mardumpxs: $(MARLEY_LIBS)
-	$(RM) ../examples/executables/build/mardumpxs
-	cd ../examples/executables/build && $(MAKE) mardumpxs
-	cp ../examples/executables/build/mardumpxs .
-	$(RM) ../examples/executables/build/mardumpxs
-
-mardecay: $(MARLEY_LIBS)
-	$(RM) ../examples/executables/build/mardecay
-	cd ../examples/executables/build && $(MAKE) mardecay
-	cp ../examples/executables/build/mardecay .
-	$(RM) ../examples/executables/build/mardecay
-
-marreweight: $(MARLEY_LIBS)
-	$(RM) ../examples/executables/build/marreweight
-	cd ../examples/executables/build && $(MAKE) marreweight
-	cp ../examples/executables/build/marreweight .
-	$(RM) ../examples/executables/build/marreweight
-
-.PHONY: docs clean install uninstall
+.PHONY: marley marsum mroot docs clean install uninstall
 
 doxygen:
 	export MARLEY_VERSION=$(VERSION_PREFIX)$(MARLEY_VERSION) \
 	export TARBALL_LINK=$(TARBALL_LINK) \
-	&& cd ../docs && $(MAKE) doxygen
+	&& cd $(TOP_DIR)/docs && $(MAKE) doxygen
 
 docs:
 	export MARLEY_VERSION=$(VERSION_PREFIX)$(MARLEY_VERSION) \
 	export TARBALL_LINK=$(TARBALL_LINK) \
-	&& cd ../docs && $(MAKE) html
+	&& cd $(TOP_DIR)/docs && $(MAKE) html
 
 clean:
-	$(RM) *.$(SHARED_LIB_SUFFIX) *.o marley_root_dict*.* marley $(HEPMC3_SHARED_LIB)
-	$(RM) -rf *.dSYM marsum mroot $(TEST_EXECUTABLE) marg4
-	$(RM) -rf marprint mardumpxs mardecay marreweight
-	$(RM) -rf marley-config ../doxygen/html/*
-	$(RM) -rf ../docs/_build/*
+	$(RM) -rf $(BUILD_DIR)
 
 install: marley
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(incdir)/marley
 	mkdir -p $(DESTDIR)$(datadir)/marley
-	cp marley $(MAYBE_MARSUM) $(DESTDIR)$(bindir)
+	cp $(BUILD_DIR)/bin/marley $(MAYBE_MARSUM) $(DESTDIR)$(bindir)
 	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
 	cp marley_root_dict_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
-	cp -r ../react $(DESTDIR)$(datadir)/marley
-	cp -r ../structure $(DESTDIR)$(datadir)/marley
-	cp -r ../examples $(DESTDIR)$(datadir)/marley
-	cp -r ../include/marley $(DESTDIR)$(incdir)
+	cp -r $(TOP_DIR)/react $(DESTDIR)$(datadir)/marley
+	cp -r $(TOP_DIR)/structure $(DESTDIR)$(datadir)/marley
+	cp -r $(TOP_DIR)/examples $(DESTDIR)$(datadir)/marley
+	cp -r $(TOP_DIR)/include/marley $(DESTDIR)$(incdir)
 ifndef FOUND_HEPMC3
 	cp $(HEPMC3_SHARED_LIB) $(DESTDIR)$(libdir)
 endif
@@ -442,7 +424,7 @@ uninstall:
 	$(RM) $(DESTDIR)$(bindir)/marley
 	$(RM) $(DESTDIR)$(bindir)/marsum
 	$(RM) $(DESTDIR)$(bindir)/mroot
-	$(RM) $(DESTDIR)$(libdir)/$(SHARED_LIB)
+	$(RM) $(DESTDIR)$(libdir)/$(SHARED_LIB_FILE)
 	$(RM) $(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm
 	$(RM) -r $(DESTDIR)$(datadir)/marley
 	$(RM) -r $(DESTDIR)$(incdir)/marley

@@ -1,15 +1,3 @@
-*.o
-*.so
-*.root
-*.hepevt
+build
 *.swp
-marley_root_dict.cc
-marley_root_dict.h
-E_lev*.pdf
-E_neutrino.pdf
-E_residue.pdf
-KE_*.pdf
-build/*
-!build/Makefile
-!docs/_static/example.hepevt
 .vscode
