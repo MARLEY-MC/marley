@@ -1,0 +1,500 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      build_path:
+        description: 'Build path to test (on push/PR only builtin runs by default)'
+        required: true
+        default: 'builtin'
+        type: choice
+        options:
+          - builtin
+          - system
+          - everything
+      ref_source:
+        description: 'Reference source for golden files'
+        required: true
+        default: 'main'
+        type: choice
+        options:
+          - main
+          - custom
+          - none
+      ref_branch:
+        description: 'Reference branch name (only used when ref_source is "custom"; ignored otherwise)'
+        required: false
+        default: 'main'
+        type: string
+      force_regen:
+        description: 'Force re-generation of reference golden files'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+# Cancel in-progress runs for the same branch/PR when a new push arrives.
+# workflow_dispatch runs are never cancelled (each gets a unique group via
+# run_id) so that manually triggered validations don't interfere with each
+# other or with concurrent push-triggered runs.
+concurrency:
+  group: >-
+    ci-${{
+      github.event_name == 'workflow_dispatch'
+        && github.run_id
+        || github.ref
+    }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Reference Generation Jobs
+  #
+  # Build the project from the reference branch (default: main), run the
+  # standard event-generation config, and cache the stripped HepMC3 output.
+  # The test jobs restore this cache to perform byte-for-byte physics
+  # validation via diff.
+  #
+  # On push/pull_request the reference is always generated from main.
+  # On workflow_dispatch the caller can choose main, a custom branch, or
+  # 'none' (skip physics validation entirely).
+  #
+  # macOS reference generation runs only on workflow_dispatch because macOS
+  # runners bill at ~10x the Linux rate.
+  # ---------------------------------------------------------------------------
+
+  ref-linux:
+    name: Reference (Linux)
+    # Skip only when the caller has explicitly opted out of physics validation.
+    # On push/PR, github.event.inputs.ref_source is null, so the condition
+    # evaluates to true and the job runs.
+    if: github.event.inputs.ref_source != 'none'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      cache_key: ${{ steps.compute-key.outputs.cache-key }}
+    steps:
+      - name: Determine reference branch
+        id: ref_branch
+        env:
+          REF_SOURCE: ${{ github.event.inputs.ref_source }}
+          REF_BRANCH: ${{ github.event.inputs.ref_branch }}
+          EVENT_NAME: ${{ github.event_name }}
+          GH_REF: ${{ github.ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          if [[ "${REF_SOURCE}" == "custom" ]]; then
+            # Dispatch with an explicit custom reference branch.
+            echo "branch=${REF_BRANCH}" >> "$GITHUB_OUTPUT"
+            echo "ref=${REF_BRANCH}" >> "$GITHUB_OUTPUT"
+          elif [[ "${EVENT_NAME}" == "push" && "${GH_REF}" == "refs/heads/main" ]]; then
+            # Push directly to main: use the pre-push SHA as the reference so
+            # we compare the incoming commit(s) against the prior state of main
+            # rather than against themselves (which would be a tautology).
+            # On the very first push to main BEFORE_SHA is the null SHA; fall
+            # back to the current SHA in that case (tautology is unavoidable).
+            if [[ "${BEFORE_SHA}" == "0000000000000000000000000000000000000000" ]]; then
+              echo "branch=main" >> "$GITHUB_OUTPUT"
+              echo "ref=${CURRENT_SHA}" >> "$GITHUB_OUTPUT"
+            else
+              echo "branch=main" >> "$GITHUB_OUTPUT"
+              echo "ref=${BEFORE_SHA}" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            # Default for push to develop, pull_request, and dispatch with
+            # ref_source == 'main': generate from the current tip of main.
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute cache key
+        id: compute-key
+        # Key on the HEAD SHA of the *reference ref*, not github.sha (which is
+        # the triggering commit and differs on every push to develop).  Two
+        # develop pushes sharing the same main HEAD reuse the same cached golden
+        # file.  On a push to main the ref is the pre-push SHA (set above), so
+        # the key is stable and distinct from the incoming commit.
+        # force_regen overrides this with run_id+run_attempt, which is always
+        # unique and therefore always produces a fresh cache entry.
+        # The resolved SHA is also emitted as 'ref-sha' so that the checkout
+        # step uses the exact same commit, eliminating any race between
+        # ls-remote and the subsequent git fetch.
+        env:
+          REF: ${{ steps.ref_branch.outputs.ref }}
+        run: |
+          if [[ "${{ github.event.inputs.force_regen }}" == "true" ]]; then
+            suffix="${{ github.run_id }}-${{ github.run_attempt }}"
+            # For force_regen the cache key is unique; still need a SHA for
+            # checkout.  Resolve the branch name (or use the SHA directly).
+            if [[ "${REF}" =~ ^[0-9a-f]{40}$ ]]; then
+              ref_sha="${REF}"
+            else
+              ref_sha=$(git ls-remote "${{ github.server_url }}/${{ github.repository }}" \
+                "refs/heads/${REF}" | cut -f1)
+              if [[ -z "${ref_sha}" ]]; then
+                echo "ERROR: branch '${REF}' not found" >&2
+                exit 1
+              fi
+            fi
+          elif [[ "${REF}" =~ ^[0-9a-f]{40}$ ]]; then
+            # ref is already a full SHA (push-to-main case) — use it directly.
+            ref_sha="${REF}"
+            suffix="${ref_sha}"
+          else
+            # ref is a branch name — resolve its current HEAD SHA once and use
+            # the same value for both the cache key and the checkout ref.
+            ref_sha=$(git ls-remote "${{ github.server_url }}/${{ github.repository }}" \
+              "refs/heads/${REF}" | cut -f1)
+            if [[ -z "${ref_sha}" ]]; then
+              echo "ERROR: branch '${REF}' not found" >&2
+              exit 1
+            fi
+            suffix="${ref_sha}"
+          fi
+          echo "cache-key=ref-linux-${{ steps.ref_branch.outputs.branch }}-${suffix}" \
+            >> "$GITHUB_OUTPUT"
+          echo "ref-sha=${ref_sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore cached reference file
+        id: restore-cache
+        uses: actions/cache@v5
+        with:
+          path: golden-linux.hepmc3
+          key: ${{ steps.compute-key.outputs.cache-key }}
+          restore-keys: |
+            ref-linux-${{ steps.ref_branch.outputs.branch }}-
+
+      - name: Check out reference branch
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.compute-key.outputs.ref-sha }}
+          fetch-depth: 1
+
+      - name: Build reference binary
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        # Use fully built-in deps so the golden file represents canonical
+        # MARLEY output independent of any system library versions.  This
+        # means the system-path test legs compare against the same reference,
+        # which is intentional: regressions introduced by upstream library
+        # changes will surface as diff failures there.
+        run: make IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1
+
+      - name: Generate reference events
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        env:
+          MARLEY: ${{ github.workspace }}
+        run: |
+          ./build/bin/marley generate examples/config/COPY_ME.js
+          grep -v -e '^T MARLEY' -e '^HepMC::Version' events.hepmc3 \
+            > golden-linux.hepmc3
+
+  ref-macos:
+    name: Reference (macOS)
+    # macOS runners are expensive; only generate on workflow_dispatch, and only
+    # when physics validation has been requested.
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.ref_source != 'none'
+    runs-on: macos-latest
+    timeout-minutes: 45
+    outputs:
+      cache_key: ${{ steps.compute-key.outputs.cache-key }}
+    steps:
+      - name: Determine reference branch
+        id: ref_branch
+        env:
+          REF_SOURCE: ${{ github.event.inputs.ref_source }}
+          REF_BRANCH: ${{ github.event.inputs.ref_branch }}
+        run: |
+          if [[ "${REF_SOURCE}" == "custom" ]]; then
+            echo "branch=${REF_BRANCH}" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute cache key
+        id: compute-key
+        # Same rationale as ref-linux: resolve the branch to a SHA once and
+        # use that same SHA for both the cache key and the checkout ref,
+        # eliminating any race between ls-remote and the subsequent git fetch.
+        env:
+          BRANCH: ${{ steps.ref_branch.outputs.branch }}
+        run: |
+          ref_sha=$(git ls-remote "${{ github.server_url }}/${{ github.repository }}" \
+            "refs/heads/${BRANCH}" | cut -f1)
+          if [[ -z "${ref_sha}" ]]; then
+            echo "ERROR: branch '${BRANCH}' not found" >&2
+            exit 1
+          fi
+          if [[ "${{ github.event.inputs.force_regen }}" == "true" ]]; then
+            suffix="${{ github.run_id }}-${{ github.run_attempt }}"
+          else
+            suffix="${ref_sha}"
+          fi
+          echo "cache-key=ref-macos-${BRANCH}-${suffix}" >> "$GITHUB_OUTPUT"
+          echo "ref-sha=${ref_sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore cached reference file
+        id: restore-cache
+        uses: actions/cache@v5
+        with:
+          path: golden-macos.hepmc3
+          key: ${{ steps.compute-key.outputs.cache-key }}
+          restore-keys: |
+            ref-macos-${{ steps.ref_branch.outputs.branch }}-
+
+      - name: Check out reference branch
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.compute-key.outputs.ref-sha }}
+          fetch-depth: 1
+
+      - name: Build reference binary
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        # Same rationale as ref-linux: fully built-in deps for a canonical
+        # golden file independent of system library versions.
+        run: make IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1
+
+      - name: Generate reference events
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        env:
+          MARLEY: ${{ github.workspace }}
+        run: |
+          ./build/bin/marley generate examples/config/COPY_ME.js
+          grep -v -e '^T MARLEY' -e '^HepMC::Version' events.hepmc3 \
+            > golden-macos.hepmc3
+
+  # ---------------------------------------------------------------------------
+  # Main Build / Test Matrix
+  # ---------------------------------------------------------------------------
+  test:
+    name: ${{ matrix.name }}
+    needs: [ref-linux, ref-macos]
+    timeout-minutes: 60
+    # always() is required so that test jobs proceed when ref-macos is skipped
+    # (the normal push/PR case).  The ref-linux guard blocks all test jobs if
+    # the Linux reference build genuinely fails.
+    # NOTE: matrix context is not available in job-level if: expressions, so
+    # matrix-dependent filtering (macOS dispatch-only, build_path selection)
+    # is handled by the "Check matrix eligibility" guard step below.
+    if: always() && needs.ref-linux.result != 'failure'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # --- Linux: builtin path (all optional deps disabled) ---
+          - name: "Linux · Built-in"
+            os: ubuntu-latest
+            path: builtin
+            cxx: g++
+            flags: "IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            ref_job: ref-linux
+            golden: golden-linux.hepmc3
+            current: current-linux.hepmc3
+
+          # --- Linux: system path (GSL + HepMC3 + ROOT from package manager) ---
+          - name: "Linux · System"
+            os: ubuntu-latest
+            path: system
+            cxx: g++
+            flags: ""
+            ref_job: ref-linux
+            golden: golden-linux.hepmc3
+            current: current-linux.hepmc3
+
+          # --- macOS: builtin path ---
+          # Only runs on workflow_dispatch (filtered below); ref-macos is also
+          # workflow_dispatch-only, so golden files are available.
+          - name: "macOS · Built-in"
+            os: macos-latest
+            path: builtin
+            cxx: clang++
+            flags: "IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            ref_job: ref-macos
+            golden: golden-macos.hepmc3
+            current: current-macos.hepmc3
+
+          # --- macOS: system path ---
+          - name: "macOS · System"
+            os: macos-latest
+            path: system
+            cxx: clang++
+            flags: ""
+            ref_job: ref-macos
+            golden: golden-macos.hepmc3
+            current: current-macos.hepmc3
+
+    steps:
+      - name: Check matrix eligibility
+        id: eligibility
+        # The matrix context is unavailable in job-level if: expressions, so
+        # the macOS dispatch-only guard and build_path filter are applied here
+        # instead.  All subsequent steps are conditioned on this output.
+        run: |
+          os="${{ matrix.os }}"
+          path="${{ matrix.path }}"
+          event="${{ github.event_name }}"
+          build_path="${{ github.event.inputs.build_path }}"
+
+          # macOS legs are workflow_dispatch only
+          if [[ "${os}" == "macos-latest" && "${event}" != "workflow_dispatch" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Filter by build_path input; a null/empty value (push/PR) defaults
+          # to 'builtin' to avoid the expensive ROOT install by default.
+          if [[ "${build_path}" == "everything" ]]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          elif [[ "${build_path}" == "${path}" ]]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          elif [[ -z "${build_path}" && "${path}" == "builtin" ]]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out repository
+        if: steps.eligibility.outputs.skip != 'true'
+        uses: actions/checkout@v5
+
+      # ROOT is only needed for the system build.
+      - name: Set up Micromamba (ROOT via conda-forge)
+        if: steps.eligibility.outputs.skip != 'true' && matrix.path == 'system'
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-name: marley-env
+          environment-spec: |
+            channels:
+              - conda-forge
+            dependencies:
+              - root
+          cache-environment: true
+
+      - name: Install system dependencies (Linux · system path)
+        if: steps.eligibility.outputs.skip != 'true' && matrix.os == 'ubuntu-latest' && matrix.path == 'system'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgsl-dev libhepmc3-dev
+
+      - name: Install system dependencies (macOS · system path)
+        if: steps.eligibility.outputs.skip != 'true' && matrix.os == 'macos-latest' && matrix.path == 'system'
+        run: brew install gsl hepmc3
+
+      - name: Verify compiler
+        if: steps.eligibility.outputs.skip != 'true'
+        run: ${{ matrix.cxx }} --version
+
+      - name: Build
+        if: steps.eligibility.outputs.skip != 'true'
+        run: make CXX=${{ matrix.cxx }} ${{ matrix.flags }}
+
+      - name: Build test binary
+        if: steps.eligibility.outputs.skip != 'true'
+        run: make test CXX=${{ matrix.cxx }} ${{ matrix.flags }}
+
+      - name: Verify system dependencies were linked
+        if: steps.eligibility.outputs.skip != 'true' && matrix.path == 'system'
+        run: |
+          cflags=$(./build/bin/marley-config --cflags)
+          use_root=$(./build/bin/marley-config --use-root)
+          echo "cflags:   ${cflags}"
+          echo "use-root: ${use_root}"
+          echo "${cflags}" | grep -q '\-DMARLEY_FOUND_GSL' \
+            || { echo "ERROR: system GSL was not linked"; exit 1; }
+          echo "${cflags}" | grep -q '\-DMARLEY_FOUND_HEPMC3' \
+            || { echo "ERROR: system HepMC3 was not linked"; exit 1; }
+          [ "${use_root}" = "yes" ] \
+            || { echo "ERROR: ROOT was not linked"; exit 1; }
+
+      - name: Unit tests
+        if: steps.eligibility.outputs.skip != 'true'
+        env:
+          MARLEY: ${{ github.workspace }}
+        run: ./build/bin/martest
+
+      # Physics validation: restore the golden file produced by the matching
+      # ref-* job and diff it against freshly generated output.
+      #
+      # 'needs' cannot be indexed dynamically, so Linux and macOS legs are
+      # handled by separate conditional steps that reference the two ref jobs
+      # by their static names.
+      #
+      # Linux legs: ref-linux always runs alongside them (on push/PR and
+      # workflow_dispatch), so validation runs whenever ref_source != 'none'.
+      #
+      # macOS legs: ref-macos is workflow_dispatch-only, and macOS test legs
+      # are also workflow_dispatch-only, so this is consistent.
+
+      - name: Restore golden file (Linux)
+        id: restore-golden-linux
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          matrix.os == 'ubuntu-latest' &&
+          github.event.inputs.ref_source != 'none' &&
+          needs.ref-linux.result == 'success'
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ matrix.golden }}
+          key: ${{ needs.ref-linux.outputs.cache_key }}
+          # No restore-keys fallback here: we rely solely on the exact key
+          # passed from the ref job.  A prefix fallback could silently restore
+          # a golden file from a different reference SHA, defeating the
+          # integrity guarantee of the byte-for-byte diff.  If the exact key
+          # misses (e.g. first-ever run or a cache service anomaly), the
+          # Physics validation step will hard-fail with a clear error.
+
+      - name: Restore golden file (macOS)
+        id: restore-golden-macos
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          matrix.os == 'macos-latest' &&
+          github.event.inputs.ref_source != 'none' &&
+          needs.ref-macos.result == 'success'
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ matrix.golden }}
+          key: ${{ needs.ref-macos.outputs.cache_key }}
+          # Same rationale as Linux: no prefix fallback; exact key only.
+
+      - name: Physics validation
+        # Run whenever a golden file was requested (ref_source != 'none') and
+        # the appropriate ref job was not skipped.  The shell script below
+        # handles the missing-file case: hard-fail for internal events, warn
+        # and skip for PRs from forks (which cannot read base-repo caches).
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          github.event.inputs.ref_source != 'none' &&
+          (needs.ref-linux.result == 'success' ||
+           needs.ref-macos.result == 'success')
+        env:
+          MARLEY: ${{ github.workspace }}
+          IS_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          golden="${{ matrix.golden }}"
+          if [[ ! -f "${golden}" ]]; then
+            if [[ "${IS_FORK_PR}" == "true" ]]; then
+              echo "WARNING: golden file not available for fork PR; physics validation skipped"
+              exit 0
+            fi
+            echo "ERROR: golden file '${golden}' not found; cannot perform physics validation" >&2
+            exit 1
+          fi
+          ./build/bin/marley generate examples/config/COPY_ME.js
+          grep -v -e '^T MARLEY' -e '^HepMC::Version' events.hepmc3 \
+            > ${{ matrix.current }}
+          diff "${golden}" ${{ matrix.current }}

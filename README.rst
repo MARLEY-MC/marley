@@ -3,7 +3,7 @@ MARLEY (Model of Argon Reaction Low Energy Yields)
 
 |platform| |License: GPL v3| |DOI|
 
-|rel| |commits since|
+|Build Status| |rel| |commits since|
 
 Introduction
 ------------
@@ -323,6 +323,9 @@ Special thanks go to
 
 .. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3901933.svg
    :target: https://doi.org/10.5281/zenodo.3901933
+
+.. |Build Status| image:: https://github.com/MARLEY-MC/marley/actions/workflows/ci.yml/badge.svg?branch=main
+   :target: https://github.com/MARLEY-MC/marley/actions/workflows/ci.yml
 
 .. |rel| image:: https://img.shields.io/github/v/release/MARLEY-MC/marley?include_prereleases
    :target: https://github.com/MARLEY-MC/marley/releases
