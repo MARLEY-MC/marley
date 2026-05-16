@@ -1,5 +1,5 @@
 # CMakeLists.txt for MARLEY neutrino event generator
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 # ------------------------------------------------------------------------------
 # Compute "source revision" (runtime version string) from .VERSION or Git
@@ -168,17 +168,13 @@ endif()
 
 if(NOT GSL_FOUND)
   # Built-in GSL fallback (IGNORE_GSL=ON or no system GSL detected)
-  message(STATUS "Using built-in GSL subset (IGNORE_GSL=ON or no system GSL found)")
+  message(STATUS "Using built-in GSL subset (src/marley_gsl.cc)")
   # No external includes or link flags needed — the builtin sources
   # (src/marley_gsl.cc) are already included via the MARLEY_SOURCES glob.
   # Link against libm, and hide the built-in GSL symbols to avoid clashes
   # with any system GSL loaded by other libraries.
   set(GSL_CFLAGS "")
   set(GSL_LIBS   "-lm")
-  set_source_files_properties(
-    ${CMAKE_SOURCE_DIR}/src/marley_gsl.cc
-    PROPERTIES COMPILE_FLAGS "-fvisibility=hidden"
-  )
 endif()
 
 # ------------------------------------------------------------------------------
@@ -306,6 +302,14 @@ add_library(marley_lib SHARED ${MARLEY_SOURCES})
 
 if(MARLEY_FOUND_GSL_DEFINE)
   target_compile_definitions(marley_lib PRIVATE MARLEY_FOUND_GSL)
+else()
+  # When we're using the built-in GSL code, tell the compiler to hide the
+  # symbols it provides from external users of the MARLEY shared library. This
+  # is intended to prevent clashes with the system GSL library later. The extra
+  # compile flag is only set for this source file when compiling the marley_lib
+  # shared library target
+  set_property(SOURCE ${CMAKE_SOURCE_DIR}/src/marley_gsl.cc TARGET marley_lib
+    APPEND PROPERTY COMPILE_OPTIONS "-fvisibility=hidden")
 endif()
 
 # Public includes and transitive deps
@@ -584,49 +588,48 @@ add_custom_target(uninstall
 # Run with: ctest --test-dir build
 # The MARLEY env-var must point at the source root so that FileManager can find
 # data files (same requirement as the GNU Make 'make test' path).
-#
-# NOTE: martest links against gsl_cdf_chisq_Q which is only in the full system
-# GSL library.  When only the built-in GSL subset is available (IGNORE_GSL=ON
-# or no system GSL detected), the test executable cannot be built.
 # ------------------------------------------------------------------------------
 enable_testing()
 
-if(GSL_FOUND)
-  file(GLOB MARLEY_TEST_SOURCES
-    "${CMAKE_SOURCE_DIR}/src/tests/*.cc"
-  )
-  add_executable(martest ${MARLEY_TEST_SOURCES})
-  target_link_libraries(martest PRIVATE MARLEY)
-  target_include_directories(martest PRIVATE
-    "${CMAKE_SOURCE_DIR}/include"
-  )
-  set_target_properties(martest PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-  )
-  # Inherit ROOT compiler and linker settings when building with ROOT support
-  if(USE_ROOT)
-    if(TARGET ROOT::Graf AND TARGET ROOT::Gpad)
-      target_link_libraries(martest PRIVATE ROOT::Graf ROOT::Gpad)
-    else()
-      if(DEFINED ROOT_CFLAGS AND NOT "${ROOT_CFLAGS}" STREQUAL "")
-        target_compile_options(martest PRIVATE ${ROOT_CFLAGS})
-      endif()
-      if(DEFINED ROOT_LIBS AND NOT "${ROOT_LIBS}" STREQUAL "")
-        target_link_libraries(martest PRIVATE ${ROOT_LIBS} -lGraf -lGpad)
-      endif()
+file(GLOB MARLEY_TEST_SOURCES
+  "${CMAKE_SOURCE_DIR}/src/tests/*.cc"
+)
+if(NOT GSL_FOUND)
+  # If the system GSL library was not found (or it was ignored), then we need
+  # to include the built-in GSL code when building the test executable
+  list(APPEND MARLEY_TEST_SOURCES "${CMAKE_SOURCE_DIR}/src/marley_gsl.cc")
+endif()
+
+add_executable(martest ${MARLEY_TEST_SOURCES})
+target_link_libraries(martest PRIVATE MARLEY)
+prefer_imported_or_flags(martest PRIVATE "${GSL_IMPORTED_TARGETS}"
+  GSL_CFLAGS GSL_LIBS)
+target_include_directories(martest PRIVATE
+  "${CMAKE_SOURCE_DIR}/include"
+)
+set_target_properties(martest PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+# Inherit ROOT compiler and linker settings when building with ROOT support
+if(USE_ROOT)
+  if(TARGET ROOT::Graf AND TARGET ROOT::Gpad)
+    target_link_libraries(martest PRIVATE ROOT::Graf ROOT::Gpad)
+  else()
+    if(DEFINED ROOT_CFLAGS AND NOT "${ROOT_CFLAGS}" STREQUAL "")
+      target_compile_options(martest PRIVATE ${ROOT_CFLAGS})
+    endif()
+    if(DEFINED ROOT_LIBS AND NOT "${ROOT_LIBS}" STREQUAL "")
+      target_link_libraries(martest PRIVATE ${ROOT_LIBS} -lGraf -lGpad)
     endif()
   endif()
-
-  add_test(
-    NAME martest
-    COMMAND martest
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-  )
-  # Point the test at the source root so FileManager finds data/ and data/tests/
-  set_tests_properties(martest PROPERTIES
-    ENVIRONMENT "MARLEY=${CMAKE_SOURCE_DIR}"
-  )
-else()
-  message(STATUS "Skipping martest: system GSL not found (gsl_cdf_chisq_Q is required)."
-                 " Install system GSL and reconfigure without IGNORE_GSL=ON to enable tests.")
 endif()
+
+add_test(
+  NAME martest
+  COMMAND martest
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+# Point the test at the source root so FileManager finds data/ and data/tests/
+set_tests_properties(martest PROPERTIES
+  ENVIRONMENT "MARLEY=${CMAKE_SOURCE_DIR}"
+)
