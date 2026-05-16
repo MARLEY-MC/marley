@@ -936,7 +936,7 @@ void marley::JSONConfig::update_logger_settings() const {
     // If the user hasn't specified a logger configuration, use the default,
     // which is logging at the INFO level to stdout.
     logger.add_stream( std::cout, LogLevel::INFO );
-    logger.enable();
+    logger.set_level( marley::Logger::LogLevel::INFO );
     return;
   }
   else {
@@ -955,7 +955,7 @@ void marley::JSONConfig::update_logger_settings() const {
       logger.disable();
       return;
     }
-    else logger.enable();
+    else logger.set_level( marley::Logger::LogLevel::INFO );
 
     // Loop over the list of log files and add them one-by-one to the Logger.
     for ( const auto& el : elements ) {

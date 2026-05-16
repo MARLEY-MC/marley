@@ -267,12 +267,6 @@ namespace {
     std::flush( std::cout );
   }
 
-  void show_exception_message( const std::exception& except ) {
-    auto& log = marley::Logger::Instance();
-    log.flush();
-    MARLEY_LOG_ERROR() << except.what();
-  }
-
 } // anonymous namespace
 
 bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
@@ -481,7 +475,7 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
       reset_terminal( g_fallback_mode ? 0 : num_status_lines,
         /*clear_status=*/false );
     }
-    show_exception_message( error );
+    MARLEY_LOG_ERROR() << std::flush << error.what();
   }
 
   return false;
