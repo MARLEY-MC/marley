@@ -135,11 +135,11 @@ namespace marley {
             for ( auto& s : osvec_ ) s << '\n';
           }
 
-          template<typename OutputType> Message&&
+          template<typename OutputType> Message&
             operator<<( const OutputType& ot )
           {
             for ( auto& s : osvec_ ) s << ot;
-            return std::move( *this );
+            return *this;
           }
 
         protected:
