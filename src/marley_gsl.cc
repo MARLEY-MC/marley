@@ -471,15 +471,6 @@ gsl_set_error_handler (gsl_error_handler_t * new_handler)
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -677,16 +668,6 @@ gsl_stream_printf (const char *label, const char *file, int line,
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
 
 double gsl_log1p (const double x);
@@ -795,16 +776,6 @@ gsl_fdiv (const double x, const double y)
 
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
-
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -1029,16 +1000,6 @@ gsl_isinf (const double x)
 
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
-
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -1286,15 +1247,6 @@ gsl_coerce_long_double (const long double x)
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -1645,15 +1597,6 @@ double gsl_min (double a, double b)
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -1782,15 +1725,6 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -2072,16 +2006,6 @@ const double gsl_prec_root6_eps[_GSL_PREC_T_NUM] = {
 #ifndef __GSL_COMPLEX_H__
 #define __GSL_COMPLEX_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
 
 
@@ -2195,15 +2119,6 @@ __END_DECLS
 #endif /* __GSL_COMPLEX_H__ */
 
 /* end inlined header: gsl/gsl_complex.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-#define __BEGIN_DECLS extern "C" {
-#define __END_DECLS }
-#else
-#define __BEGIN_DECLS           /* empty */
-#define __END_DECLS             /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -2428,16 +2343,6 @@ __END_DECLS
 
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
-
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -2717,15 +2622,6 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -2900,15 +2796,6 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -3032,15 +2919,6 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -3182,16 +3060,6 @@ __END_DECLS
 #define M_EULER    0.57721566490153286060651209008      /* Euler constant */
 #endif
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
 
 /* other needlessly compulsive abstractions */
@@ -3272,16 +3140,6 @@ __END_DECLS
 
 #ifndef __GSL_COMPLEX_H__
 #define __GSL_COMPLEX_H__
-
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -3512,16 +3370,6 @@ __END_DECLS
 #ifndef __GSL_COMPLEX_H__
 #define __GSL_COMPLEX_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
 
 
@@ -3635,15 +3483,6 @@ __END_DECLS
 #endif /* __GSL_COMPLEX_H__ */
 
 /* end inlined header: gsl/gsl_complex.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-#define __BEGIN_DECLS extern "C" {
-#define __END_DECLS }
-#else
-#define __BEGIN_DECLS           /* empty */
-#define __END_DECLS             /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -4816,16 +4655,6 @@ gsl_complex_arccoth (gsl_complex a)
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
 
 double gsl_log1p (const double x);
@@ -5104,15 +4933,6 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -5287,15 +5107,6 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -5419,15 +5230,6 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -5569,16 +5371,6 @@ __END_DECLS
 #define M_EULER    0.57721566490153286060651209008      /* Euler constant */
 #endif
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
 
 /* other needlessly compulsive abstractions */
@@ -5705,15 +5497,6 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -5871,16 +5654,6 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
 
 struct gsl_sf_result_struct {
@@ -5908,15 +5681,6 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -6336,16 +6100,6 @@ double gsl_sf_log_1plusx_mx(const double x)
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
 
 double gsl_log1p (const double x);
@@ -6624,15 +6378,6 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -6807,15 +6552,6 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -6939,15 +6675,6 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
 
 __BEGIN_DECLS
 
@@ -7089,16 +6816,6 @@ __END_DECLS
 #define M_EULER    0.57721566490153286060651209008      /* Euler constant */
 #endif
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
 
 /* other needlessly compulsive abstractions */
@@ -7225,16 +6942,6 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
 
 enum {
@@ -7391,16 +7098,6 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
-
 __BEGIN_DECLS
 
 struct gsl_sf_result_struct {
@@ -7428,15 +7125,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -7535,15 +7224,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -7572,15 +7253,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -8536,15 +8209,7 @@ double gsl_sf_sinc(const double x)
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -8824,15 +8489,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -9007,15 +8664,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -9139,15 +8788,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -9289,15 +8930,7 @@ __END_DECLS
 #define M_EULER    0.57721566490153286060651209008      /* Euler constant */
 #endif
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -9425,15 +9058,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -9591,15 +9216,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -9628,15 +9245,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -9946,15 +9555,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -10051,15 +9652,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -10094,15 +9687,7 @@ __END_DECLS
 #endif /* __GSL_PRECISION_H__ */
 
 /* end inlined header: gsl/gsl_precision.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -10881,15 +10466,7 @@ double gsl_sf_exprel_n(const int n, const double x)
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -11169,15 +10746,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -11352,15 +10921,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -11484,15 +11045,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -11634,15 +11187,7 @@ __END_DECLS
 #define M_EULER    0.57721566490153286060651209008      /* Euler constant */
 #endif
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -11770,15 +11315,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -11936,15 +11473,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -12041,15 +11570,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -12084,15 +11605,7 @@ __END_DECLS
 #endif /* __GSL_PRECISION_H__ */
 
 /* end inlined header: gsl/gsl_precision.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -12242,15 +11755,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -12279,15 +11784,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -12386,15 +11883,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -12423,15 +11912,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -12561,15 +12042,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -12598,15 +12071,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -12775,15 +12240,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -12812,15 +12269,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -14827,15 +14276,7 @@ double gsl_sf_lnchoose(unsigned int n, unsigned int m)
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -15115,15 +14556,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -15298,15 +14731,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -15430,15 +14855,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -15580,15 +14997,7 @@ __END_DECLS
 #define M_EULER    0.57721566490153286060651209008      /* Euler constant */
 #endif
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -15716,15 +15125,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -15884,15 +15285,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -15921,15 +15314,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -16103,15 +15488,7 @@ double gsl_sf_multiply(const double x, const double y)
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -16391,15 +15768,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -16574,15 +15943,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -16706,15 +16067,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -16856,15 +16209,7 @@ __END_DECLS
 #define M_EULER    0.57721566490153286060651209008      /* Euler constant */
 #endif
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -16992,15 +16337,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -17160,15 +16497,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -17197,15 +16526,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -17277,15 +16598,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -17382,15 +16695,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -17425,15 +16730,7 @@ __END_DECLS
 #endif /* __GSL_PRECISION_H__ */
 
 /* end inlined header: gsl/gsl_precision.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -17583,15 +16880,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -17620,15 +16909,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -17938,15 +17219,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -17975,15 +17248,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -18049,15 +17314,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -18086,15 +17343,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -19286,15 +18535,7 @@ double gsl_sf_eta(const double s)
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -19574,15 +18815,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -19757,15 +18990,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -19889,15 +19114,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -20039,15 +19256,7 @@ __END_DECLS
 #define M_EULER    0.57721566490153286060651209008      /* Euler constant */
 #endif
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -20175,15 +19384,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -20341,15 +19542,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -20446,15 +19639,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -20489,15 +19674,7 @@ __END_DECLS
 #endif /* __GSL_PRECISION_H__ */
 
 /* end inlined header: gsl/gsl_precision.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -20647,15 +19824,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -20684,15 +19853,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -21002,15 +20163,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -21039,15 +20192,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -21176,15 +20321,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -21213,15 +20350,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -21418,15 +20547,7 @@ __END_DECLS
 #ifndef __GSL_COMPLEX_H__
 #define __GSL_COMPLEX_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -22587,15 +21708,7 @@ double gsl_sf_psi_n(const int n, const double x)
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -22875,15 +21988,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -23058,15 +22163,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -23190,15 +22287,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -23340,15 +22429,7 @@ __END_DECLS
 #define M_EULER    0.57721566490153286060651209008      /* Euler constant */
 #endif
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -23476,15 +22557,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -23642,15 +22715,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -23679,15 +22744,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -23925,15 +22982,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -24015,15 +23064,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -24052,15 +23093,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -25147,15 +24180,7 @@ double gsl_sf_airy_Bi_scaled(const double x, gsl_mode_t mode)
 #ifndef __GSL_SYS_H__
 #define __GSL_SYS_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -25435,15 +24460,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -25618,15 +24635,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -25750,15 +24759,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -25900,15 +24901,7 @@ __END_DECLS
 #define M_EULER    0.57721566490153286060651209008      /* Euler constant */
 #endif
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -26036,15 +25029,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -26202,15 +25187,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -26307,15 +25284,7 @@ __END_DECLS
 #endif /* __GSL_TYPES_H__ */
 
 /* end inlined header: gsl/gsl_types.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -26350,15 +25319,7 @@ __END_DECLS
 #endif /* __GSL_PRECISION_H__ */
 
 /* end inlined header: gsl/gsl_precision.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -26508,15 +25469,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -26545,15 +25498,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -26752,15 +25697,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -26842,15 +25779,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -26879,15 +25808,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -27042,15 +25963,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -27079,15 +25992,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -27153,15 +26058,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -27190,15 +26087,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -27577,15 +26466,7 @@ __END_DECLS
 #endif /* __GSL_INLINE_H__ */
 
 /* end inlined header: gsl/gsl_inline.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -27667,15 +26548,7 @@ __END_DECLS
 #ifndef __GSL_SF_RESULT_H__
 #define __GSL_SF_RESULT_H__
 
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -27704,15 +26577,7 @@ __END_DECLS
 #endif /* __GSL_SF_RESULT_H__ */
 
 /* end inlined header: gsl/gsl_sf_result.h */
-#undef __BEGIN_DECLS
-#undef __END_DECLS
-#ifdef __cplusplus
-# define __BEGIN_DECLS extern "C" {
-# define __END_DECLS }
-#else
-# define __BEGIN_DECLS /* empty */
-# define __END_DECLS /* empty */
-#endif
+
 
 __BEGIN_DECLS
 
@@ -29872,6 +28737,10 @@ gsl_cdf_gamma_Q (const double x, const double a, const double b)
 }
 /* end inlined source: cdf/gamma.c */
 
+/* Added to ensure extern "C" linking of gsl_cdf_gamma_Q below */
+__BEGIN_DECLS
+/* End addition */
+
 /* begin inlined source: cdf/chisq.c (gsl_cdf_chisq_Q only) */
 /* cdf/cdf_chisq.c
  *
@@ -29910,5 +28779,9 @@ gsl_cdf_chisq_Q (const double x, const double nu)
   return gsl_cdf_gamma_Q (x, nu / 2, 2.0);
 }
 /* end inlined source: cdf/chisq.c */
+
+/* Added to close the final __BEGIN_DECLS above (see comments up there) */
+__END_DECLS
+/* End addition */
 
 #endif // MARLEY_FOUND_GSL

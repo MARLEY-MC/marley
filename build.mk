@@ -177,6 +177,14 @@ ifneq ($(MAKECMDGOALS),uninstall)
     # loaded by other libraries in the host environment.
     marley_gsl.o: CXXFLAGS += -fvisibility=hidden
 
+    # The MARLEY shared library doesn't expose the built-in GSL symbols, so
+    # we will need to link them into the test executable directly. In order
+    # to expose the GSL functions, we need to compile this version of the
+    # built-in GSL object file *without* -fvisibility=hidden. The special
+    # sufixx .test.o uses a rule below to recompile the same source into
+    # a different object
+    TEST_OBJECTS += marley_gsl.test.o
+
   endif
 
   # Get information about the HepMC3 installation
@@ -319,23 +327,29 @@ endif
 # Causes GNU make to auto-delete the object files when the build is complete
 .INTERMEDIATE: $(OBJECTS) $(TEST_OBJECTS) marley_hepmc3.o marley.o
 
+# Define a variable to store a command used repeatedly in target definitions
+COMPILE_CXX = $(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) \
+              $(HEPMC3_CXXFLAGS) -I$(INCLUDE_DIR) -fPIC
+
 %.o: $(SRC_DIR)/%.cc
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
-	-I$(INCLUDE_DIR) -fPIC -o $@ -c $^
+	$(COMPILE_CXX) -o $@ -c $<
 
 %.o: $(SRC_DIR)/app/%.cc
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
-	-I$(INCLUDE_DIR) -fPIC -o $@ -c $^
+	$(COMPILE_CXX) -o $@ -c $<
 
 %.o: $(SRC_DIR)/tests/%.cc
-	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
-	-I$(INCLUDE_DIR) -fPIC -o $@ -c $^
+	$(COMPILE_CXX) -o $@ -c $<
+
+# Special rule used as needed to compile the built-in GSL code without
+# hidden symbols so we can use them in the test executable
+%.test.o: $(SRC_DIR)/%.cc
+	$(COMPILE_CXX) -o $@ -c $<
+
 
 ifndef FOUND_HEPMC3
 
 marley_hepmc3.o: $(SRC_DIR)/marley_hepmc3.cc
-	$(CXX) $(ROOT_CXXFLAGS) $(HEPMC3_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) \
-	-fPIC -o $@ -c $<
+	$(COMPILE_CXX) -o $@ -c $<
 
 $(HEPMC3_SHARED_LIB): marley_hepmc3.o
 	@mkdir -p $(BUILD_DIR)/lib
