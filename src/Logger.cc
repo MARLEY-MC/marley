@@ -59,23 +59,6 @@ marley::Logger::OutStream::OutStream(std::ostream& os,
   stream_ = std::shared_ptr<std::ostream>(&os, [](std::ostream*) -> void {});
 }
 
-
-marley::Logger::OutStreamVector&
-  marley::Logger::OutStreamVector::operator<<(std::ostream&
-  (*manip)(std::ostream&))
-{
-  for (auto s : *this) if (s.enabled_ && s.stream_) manip(*s.stream_);
-  return *this;
-}
-
-marley::Logger::OutStreamVector&
-  marley::Logger::OutStreamVector::operator<<(std::ios_base&
-  (*manip)(std::ios_base&))
-{
-  for (auto s : *this) if (s.enabled_ && s.stream_) manip(*s.stream_);
-  return *this;
-}
-
 void marley::Logger::flush() {
   for (auto s : streams_) if (s.enabled_ && s.stream_) s.stream_->flush();
 }

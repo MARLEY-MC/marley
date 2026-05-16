@@ -63,7 +63,6 @@ namespace marley {
       class OutStream {
 
         friend class Logger;
-        friend class OutStreamVector;
 
         public:
 
@@ -104,6 +103,13 @@ namespace marley {
           /// streams except for std::cout and std::cerr.
           OutStream(std::ostream& os, LogLevel lev, bool enable = true);
 
+          template< typename OutputType > OutStream& operator<<(
+            const OutputType& output )
+          {
+            if ( this->enabled_ && this->stream_ ) *(this->stream_) << output;
+            return *this;
+          }
+
         private:
 
           /// @brief Pointer to a std::ostream that will receive logging
@@ -118,46 +124,26 @@ namespace marley {
           bool enabled_;
       };
 
-      /// @brief A std::vector of OutStream objects that provides a stream
-      /// output << operator for sending logging messages to the streams
-      class OutStreamVector : public std::vector<OutStream> {
-        public:
-
-          OutStreamVector() : std::vector<OutStream>() {}
-
-          template<typename OutputType> OutStreamVector&
-            operator<<(const OutputType& ot);
-
-          /// @brief Allows the logger to use the << operator on output
-          /// manipulators like std::endl.
-          /// @note Code for this function is based on a trick discussed here:
-          /// http://www.cplusplus.com/forum/general/54588/#msg294798
-          OutStreamVector& operator<<(std::ostream& (*manip)(std::ostream&));
-
-          /// @brief Backup overload for extra output manipulators
-          OutStreamVector& operator<<(std::ios_base& (*manip)(std::ios_base&));
-      };
-
       /// @brief Temporary object used for forming logger messages
       /// @details Upon destruction, a newline is appended to the message. This
       /// is based on a trick from https://stackoverflow.com/a/57553824
       class Message {
         public:
-          Message(OutStreamVector& vec) : osvec_( vec ) {}
+          Message( std::vector< OutStream >& vec) : osvec_( vec ) {}
 
           inline ~Message() {
-            osvec_ << '\n';
+            for ( auto& s : osvec_ ) s << '\n';
           }
 
           template<typename OutputType> Message&&
-            operator<<(const OutputType& ot)
+            operator<<( const OutputType& ot )
           {
-            osvec_ << ot;
+            for ( auto& s : osvec_ ) s << ot;
             return std::move( *this );
           }
 
         protected:
-          OutStreamVector& osvec_;
+          std::vector< OutStream >& osvec_;
       };
 
       /// @brief Create the singleton Logger
@@ -251,7 +237,7 @@ namespace marley {
 
       /// @brief Vector of wrapped std::ostream objects that will
       /// receive the log messages
-      OutStreamVector streams_;
+      std::vector< OutStream > streams_;
 
       /// @brief Whether the Logger is currently enabled
       bool enabled_;
@@ -264,13 +250,6 @@ namespace marley {
 
 // Inline function definitions
 inline void marley::Logger::disable() { enable(false); }
-
-template<typename OutputType> marley::Logger::OutStreamVector&
-  marley::Logger::OutStreamVector::operator<<(const OutputType& ot)
-{
-  for (auto s : *this) if (s.enabled_ && s.stream_) *(s.stream_) << ot;
-  return *this;
-}
 
 // Convenient shortcut functions for recording log messages
 inline auto MARLEY_LOG_ERROR() {
