@@ -1,5 +1,6 @@
 # CMakeLists.txt for MARLEY neutrino event generator
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ------------------------------------------------------------------------------
 # Compute "source revision" (runtime version string) from .VERSION or Git
