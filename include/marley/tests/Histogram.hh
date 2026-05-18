@@ -134,7 +134,7 @@ namespace marley {
           // Note that ROOT numbers the bins (except for the underflow and overflow
           // bins) from 1 to N, while we number them from 0 to N - 1 (and don't use
           // underflow and overflow)
-          for ( int b = 1; b <= N_bins_; ++b ) {
+          for ( int b = 1; b <= static_cast<int>(N_bins_); ++b ) {
             hist.SetBinContent(b, bin_counts_.at( b - 1 ));
           }
           return hist;
