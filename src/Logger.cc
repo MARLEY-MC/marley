@@ -17,7 +17,6 @@
 #include <iostream>
 
 #include "marley/Error.hh"
-#include "marley/FileManager.hh"
 #include "marley/JSON.hh"
 #include "marley/Logger.hh"
 #include "marley/marley_utils.hh"
@@ -25,6 +24,9 @@
 const char* marley::Logger::loglevel_to_str(LogLevel lev)
 {
   switch (lev) {
+    case LogLevel::FATAL:
+      return "[FATAL]: ";
+      break;
     case LogLevel::ERROR:
       return "[ERROR]: ";
       break;
@@ -33,6 +35,9 @@ const char* marley::Logger::loglevel_to_str(LogLevel lev)
       break;
     case LogLevel::DEBUG:
       return "[DEBUG]: ";
+      break;
+    case LogLevel::TRACE:
+      return "[TRACE]: ";
       break;
     default:
       return "";
@@ -184,8 +189,18 @@ void marley::Logger::configure( const marley::JSON& config ) {
       throw marley::Error( "Invalid marley::Logger level specification \""
         + lev.dump_string() + '\"' );
     }
-    if ( cat == "default" ) set_default_categ = true;
-    category_map_[ cat ] = this->string_to_loglevel( lev.to_string() );
+    LogLevel ll = this->string_to_loglevel( lev.to_string() );
+    // The "default" category doesn't appear in the internal map. Instead,
+    // it has a dedicated class member to use as the ultimate fallback.
+    if ( cat == "default" ) {
+      set_default_categ = true;
+      default_level_ = ll;
+    }
+    else if ( cat.empty() ) {
+      throw marley::Error( "Empty name encountered in the category"
+        " configuration for marley::Logger" );
+    }
+    else category_map_[ cat ] = ll;
   }
 
   if ( !set_default_categ ) {
@@ -283,15 +298,16 @@ void marley::Logger::add_stream( std::ostream& stream,
   }
 }
 
-marley::Logger::Message marley::Logger::log( LogLevel lev ) {
-
+marley::Logger::Message marley::Logger::log( LogLevel lev,
+  const std::string& category )
+{
   std::vector< std::ostream* > active_streams;
-  // The current logging level determines whether the output Message will accept
-  // streamed content at all
-  if ( this->should_emit("default", lev) ) {
+  // The current severity level determines whether the output Message will
+  // accept streamed content at all
+  if ( this->should_emit( category, lev) ) {
     for( auto& s : streams_ ) {
       // The Message will send the streamed content only to OutStreams whose
-      // logging levels are configured to accept it
+      // severity levels are configured to accept it
       if ( lev <= s.max_level_ && lev >= s.min_level_ ) {
         // Store a pointer to the std::ostream object that will receive output
         active_streams.push_back( s.stream_.get() );
@@ -319,4 +335,47 @@ marley::Logger::Message& marley::Logger::Message::operator<<( std::ios_base&
 {
   buffer_ << manip;
   return *this;
+}
+
+marley::Logger::LogLevel marley::Logger::category_level(
+  const std::string& category )
+{
+  // First check the cache. If we've already resolved the level for this
+  // category, then just use the result. This avoids unnecessary string
+  // splitting to check parent category settings.
+  auto iter = resolved_level_cache_.find( category );
+  if ( iter != resolved_level_cache_.end() ) return iter->second;
+
+  // Position of the delimiter used to mark category hierarchy separations
+  size_t delim_pos = std::string::npos;
+
+  // We need to resolve the severity level for a new category. Copy the
+  // input so that we can iteratively trim it to scan up the hierarchy.
+  std::string categ( category );
+  do {
+
+    // A value of delim_pos other than std::string::npos signals that we
+    // need to erase the rightmost category name so that we can look up
+    // the severity setting for the immediate parent category below.
+    if ( delim_pos != std::string::npos ) categ.erase( delim_pos );
+
+    // Check for a setting for the current category. The most specific setting
+    // wins, so cache the result and return immediately if one is found
+    const auto cit = category_map_.find( categ );
+    if ( cit != category_map_.cend() ) {
+      LogLevel resolved = cit->second;
+      resolved_level_cache_[ categ ] = resolved;
+      return resolved;
+    }
+
+    // Search for the last category delimiter in the current category string
+    delim_pos = categ.rfind( CATEG_DELIM_ );
+
+    // If one was not found, then exit the loop so we can fall back to the
+    // default severity level
+  } while( delim_pos != std::string::npos );
+
+  // A specific category setting was not found, so fall back to the default
+  // severity level
+  return default_level_;
 }

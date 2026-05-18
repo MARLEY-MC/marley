@@ -198,11 +198,16 @@ namespace marley {
       /// @brief Prepare the Logger to receive a log message via
       /// the << stream operator
       /// @param lev marley::Logger::LogLevel of the incoming message
-      Message log( LogLevel lev = LogLevel::INFO );
+      /// @param category Named category of the incoming message
+      Message log( LogLevel lev, const std::string& category = "" );
 
       /// @brief Returns whether the logger should emit a message for the
       /// given category and level
-      inline bool should_emit( std::string_view category, LogLevel lev );
+      inline bool should_emit( const std::string& category, LogLevel lev );
+
+      /// @brief Looks up the severity setting for the input category,
+      /// including inheritance from the hierarchy
+      LogLevel category_level( const std::string& category );
 
       // Make the singleton Logger uncopyable and unmovable
       /// @brief Deleted copy constructor
@@ -252,20 +257,32 @@ namespace marley {
       /// category-specific levels
       LogLevel default_level_ = LogLevel::INFO;
 
-      /// @brief Stores category logging levels
+      /// @brief Stores configuration of severity levels for each configured
+      /// category
       std::unordered_map< std::string, LogLevel > category_map_;
+
+      /// @brief Caches resolved fully-qualified severity levels (which can
+      /// differ when using hierarchical categories). This avoids
+      /// string splitting beyond the first lookup.
+      /// @note The cache becomes invalidated and must be cleared in response to
+      /// a change of either category_map_ or default_level_
+      std::unordered_map< std::string, LogLevel > resolved_level_cache_;
 
       /// @brief Used to avoid race conditions when emitting logging messages
       std::mutex mutex_;
+
+      /// @brief Delimiter used to separate sub-categories in labels
+      static constexpr char CATEG_DELIM_ = '.';
   };
 
 }
 
 // Inline function definitions
-inline bool marley::Logger::should_emit( std::string_view /*category*/,
+inline bool marley::Logger::should_emit( const std::string& category,
   LogLevel lev )
 {
-  return ( lev <= default_level_ );
+  LogLevel cl = this->category_level( category );
+  return ( lev >= cl );
 }
 
 // Convenient shortcut functions for recording log messages
