@@ -23,6 +23,42 @@
 #include <unordered_map>
 #include <vector>
 
+// Define numerical values for the severity levels in a form that can be
+// understood by the preprocessor (enums aren't available yet)
+#define MARLEY_LOGGER_LEVEL_TRACE  0
+#define MARLEY_LOGGER_LEVEL_DEBUG  1
+#define MARLEY_LOGGER_LEVEL_INFO   2
+#define MARLEY_LOGGER_LEVEL_NOTICE 3
+#define MARLEY_LOGGER_LEVEL_WARN   4
+#define MARLEY_LOGGER_LEVEL_ERROR  5
+#define MARLEY_LOGGER_LEVEL_FATAL  6
+
+// Default to maximum severity of INFO (this can be overriden via injection
+// of a different definition for this macro at compile time). Anything below
+// this is blocked from execution at compile time, preventing
+// debugging messages from impairing runtime performance when they are not
+// enabled.
+#ifndef MARLEY_COMPILED_LOG_LEVEL
+  #define MARLEY_COMPILED_LOG_LEVEL MARLEY_LOGGER_LEVEL_INFO
+#endif
+
+// Main user-facing macro (accepts one or two arguments depending on
+// whether a category is specified)
+#define MARLEY_LOG(...) \
+    MARLEY_LOG_SELECT(__VA_ARGS__, \
+        MARLEY_LOG_2, \
+        MARLEY_LOG_1) \
+    (__VA_ARGS__)
+
+#define MARLEY_LOG_SELECT(_1,_2,NAME,...) NAME
+
+#define MARLEY_LOG_1(level) MARLEY_LOG_IMPL(level,"")
+#define MARLEY_LOG_2(level, category) MARLEY_LOG_IMPL(level,category)
+
+#define MARLEY_LOG_IMPL(level, category) \
+  ( MARLEY_COMPILED_LOG_LEVEL <= MARLEY_LOGGER_LEVEL_##level ) && \
+  marley::Logger::Instance().log( marley::Logger::LogLevel::level, category )
+
 // Forward declare some MARLEY classes and their operator<< functions so that
 // we can stream them to the Logger
 namespace marley {
@@ -51,11 +87,18 @@ namespace marley {
     public:
 
       /// @brief Defines the logging levels recognized by the marley::Logger.
-      /// @details Note that C++ automatically assigns ascending values to the
-      /// enum class members (which have an underlying integral type) in the
-      /// order that they are written in the definition, so TRACE < DEBUG, etc.
-      /// That is, the numerical values are in order of increasing severity.
-      enum class LogLevel { TRACE, DEBUG, INFO, NOTICE, WARNING, ERROR, FATAL };
+      /// @details Note that we tie the numerical values of the levels
+      /// to the previously-defined pre-processor macros to ensure consistency.
+      /// The levels appear in increasing numerical order (increasing severity).
+      enum class LogLevel {
+        TRACE  = MARLEY_LOGGER_LEVEL_TRACE,
+        DEBUG  = MARLEY_LOGGER_LEVEL_DEBUG,
+        INFO   = MARLEY_LOGGER_LEVEL_INFO,
+        NOTICE = MARLEY_LOGGER_LEVEL_NOTICE,
+        WARN   = MARLEY_LOGGER_LEVEL_WARN,
+        ERROR  = MARLEY_LOGGER_LEVEL_ERROR,
+        FATAL  = MARLEY_LOGGER_LEVEL_FATAL,
+      };
 
     private:
 
@@ -130,6 +173,10 @@ namespace marley {
           // here to allow returning a Message by value.
           Message( Message&& other ) = default;
           Message& operator=( Message&& other ) = default;
+
+          // Allows conversion to bool to get the types to work in the MARLEY_LOG_IMPL macro.
+          // The return value is not intended to be used anywhere.
+          inline explicit operator bool() { return true; }
 
           inline ~Message() {
             // If we have no active OutStreams, then just destroy the Message
