@@ -51,13 +51,13 @@ std::shared_ptr< marley::NuclearFormFactor > marley::NuclearFormFactor::create(
   if ( nucl_ff_model == "trivial" ) {
     nuclear_ff = std::make_shared< marley::TrivialNuclearFormFactor >( Z, A );
     if ( need_to_log_nuc_ff_info ) {
-      MARLEY_LOG_INFO() << "Using trivial nuclear form factor";
+      MARLEY_LOG( INFO, "physics.formfactor" ) << "Using trivial nuclear form factor";
     }
   }
   else if ( nucl_ff_model == "helm" ) {
     nuclear_ff = std::make_shared< marley::HelmNuclearFormFactor >( Z, A );
     if ( need_to_log_nuc_ff_info ) {
-      MARLEY_LOG_INFO() << "Using Helm nuclear form factor";
+      MARLEY_LOG( INFO, "physics.formfactor" ) << "Using Helm nuclear form factor";
     }
   }
   else if ( nucl_ff_model == "klein" ) {
@@ -77,7 +77,7 @@ std::shared_ptr< marley::NuclearFormFactor > marley::NuclearFormFactor::create(
       std::string kn_name;
       if ( adapted ) kn_name += "adapted ";
       kn_name += "Klein-Nystrand";
-      MARLEY_LOG_INFO() << "Using " << kn_name << " nuclear form factor";
+      MARLEY_LOG( INFO, "physics.formfactor" ) << "Using " << kn_name << " nuclear form factor";
     }
   }
   else throw marley::Error( "Unrecognized nuclear form factor model name \""
@@ -122,7 +122,7 @@ void marley::KleinNystrandNuclearFormFactor::initialize_r0_table() {
       " environment variable." );
   }
 
-  MARLEY_LOG_INFO() << "Loading ground-state nuclear rms charge radii from "
+  MARLEY_LOG( INFO, "init.structure" ) << "Loading ground-state nuclear rms charge radii from "
     << full_r0_file_name;
 
   marley::JSON r0_json_obj = marley::JSON::load_file( full_r0_file_name );
@@ -151,8 +151,8 @@ void marley::KleinNystrandNuclearFormFactor::initialize_r0_table() {
     int pdg = marley_utils::get_nucleus_pid( Z, A );
     r0_table_->operator[]( pdg ) = R;
 
-    MARLEY_LOG_DEBUG() << "Nucleus with PDG code " << pdg << " has rms charge"
-      " radius " << R << " fm";
+    MARLEY_LOG( DEBUG, "init.structure" ) << "Nucleus with PDG code " << pdg
+      << " has rms charge radius " << R << " fm";
   }
 
 }

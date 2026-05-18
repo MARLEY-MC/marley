@@ -61,6 +61,7 @@ void marley_gsl_error_handler( const char* reason, const char* file, int line,
   // coulomb_H_plus()
   if ( gsl_errno == GSL_EOVRFLW ) return;
 
-  MARLEY_LOG_ERROR() << "GSL error: " << reason << " in file " << file
+  MARLEY_LOG( ERROR, "physics.formfactor" ) << "GSL error: " << reason
+    << " in file " << file
     << " at line " << line << " with error code " << gsl_errno;
 }

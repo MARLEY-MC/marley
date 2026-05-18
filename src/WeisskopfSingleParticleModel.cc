@@ -71,7 +71,8 @@ double marley::WeisskopfSingleParticleModel::strength_function(TrType type,
   }
 
   else if (type == TrType::unphysical) {
-    MARLEY_LOG_WARNING() << "Unphysical EM transition encountered in"
+    MARLEY_LOG( WARN, "physics.deexcitation" )
+      << "Unphysical EM transition encountered in"
       << " WeisskopfSingleParticleModel::strength_function()."
       << " The strength function will be set to zero.";
     return 0.;

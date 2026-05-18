@@ -475,7 +475,7 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
       reset_terminal( g_fallback_mode ? 0 : num_status_lines,
         /*clear_status=*/false );
     }
-    MARLEY_LOG_ERROR() << std::flush << error.what();
+    MARLEY_LOG( ERROR, "app" ) << std::flush << error.what();
   }
 
   return false;

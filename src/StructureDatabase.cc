@@ -140,7 +140,8 @@ marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(
   else {
 
     marley::TargetAtom ta_requested( particle_id );
-    MARLEY_LOG_DEBUG() << "Looking up structure data for " << ta_requested;
+    MARLEY_LOG( DEBUG, "init.structure.decay" )
+      << "Looking up structure data for " << ta_requested;
 
     if ( !loaded_structure_index_ ) this->load_structure_index();
     auto ds_file_iter = decay_scheme_filenames_.find( particle_id );
@@ -164,21 +165,21 @@ marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(
       if ( particle_id == ds_pdg ) found_it = true;
       this->add_decay_scheme( ds_pdg, temp_ds );
       marley::TargetAtom ta( ds_pdg );
-      MARLEY_LOG_DEBUG() << "Added decay scheme for " << ta << " from "
-        << full_ds_file_name;
+      MARLEY_LOG( DEBUG, "init.structure.decay" ) << "Added decay scheme for "
+        << ta << " from " << full_ds_file_name;
       ++loaded_nuclide_count;
       temp_ds = std::make_unique< marley::DecayScheme >();
     }
     if ( !found_it ) {
-      MARLEY_LOG_WARNING() << "Failed to load nuclear structure"
-        << " data for " << ta_requested << " from the"
-        << " file " << ds_file_name;
+      MARLEY_LOG( WARN, "init.structure.decay" )
+        << "Failed to load nuclear structure data for " << ta_requested
+        << " from the file " << ds_file_name;
       // Make a nullptr entry in the lookup table to avoid duplicate attempts
       // to load the missing data
       decay_scheme_table_[ particle_id ] = nullptr;
     }
     if ( loaded_nuclide_count > 0 ) {
-      MARLEY_LOG_INFO() << "Loaded structure data for "
+      MARLEY_LOG( INFO, "init.structure.decay" ) << "Loaded structure data for "
         << loaded_nuclide_count << " nuclides from the file "
         << full_ds_file_name;
     }
@@ -383,16 +384,15 @@ void marley::StructureDatabase::initialize_jpi_table() {
       " environment variable." );
   }
 
-  MARLEY_LOG_INFO() << "Loading ground-state nuclear spin-parities from "
+  MARLEY_LOG( INFO, "init.structure" ) << "Loading ground-state nuclear spin-parities from "
     << full_jpi_file_name;
 
   std::ifstream table_file( full_jpi_file_name );
   int nuc_pdg, twoJ;
   marley::Parity Pi;
   while ( table_file >> nuc_pdg >> twoJ >> Pi ) {
-    MARLEY_LOG_DEBUG() << "Nucleus with PDG code " << nuc_pdg
-      << " has spin-parity " << static_cast<double>( twoJ ) / 2.
-      << Pi;
+    MARLEY_LOG( DEBUG, "init.structure" ) << "Nucleus with PDG code " << nuc_pdg
+      << " has spin-parity " << static_cast<double>( twoJ ) / 2. << Pi;
     jpi_table_[ nuc_pdg ] = std::pair<int, marley::Parity>( twoJ, Pi );
   }
 
@@ -438,15 +438,16 @@ void marley::StructureDatabase::load_structure_index() {
       " environment variable." );
   }
 
-  MARLEY_LOG_INFO() << "Loaded structure data index from "
+  MARLEY_LOG( INFO, "init.structure" ) << "Loaded structure data index from "
     << full_index_file_name;
 
   std::ifstream index_file( full_index_file_name );
   int nuc_pdg;
   std::string data_file_name;
   while ( index_file >> nuc_pdg >> data_file_name ) {
-    MARLEY_LOG_DEBUG() << "Nucleus with PDG code " << nuc_pdg
-      << " has a tabulated decay scheme in the file " << data_file_name;
+    MARLEY_LOG( DEBUG, "init.structure.decay" ) << "Nucleus with PDG code "
+      << nuc_pdg << " has a tabulated decay scheme in the file "
+      << data_file_name;
     decay_scheme_filenames_[ nuc_pdg ] = data_file_name;
   }
 
@@ -480,7 +481,7 @@ void marley::StructureDatabase::load_optical_model_params(
         " environment variable." );
     }
 
-    MARLEY_LOG_INFO() << "Loading nuclear optical model parameters from "
+    MARLEY_LOG( INFO, "init.structure" ) << "Loading nuclear optical model parameters from "
       << om_full_file_name;
 
     auto temp_config = marley::JSON::load_file( om_full_file_name );

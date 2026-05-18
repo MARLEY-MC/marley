@@ -180,8 +180,8 @@ double marley::OMPWeightCalculator::weight( HepMC3::GenEvent& ev,
     );
 
     if ( ec_iter == ec_vec.cend() ) {
-      MARLEY_LOG_WARNING() << "Could not find ExitChannel"
-        << " during reweighting";
+      MARLEY_LOG( WARN, "physics.opticalmodel" )
+        << "Could not find ExitChannel during reweighting";
       weight = 0.;
       continue;
     }
@@ -252,8 +252,8 @@ double marley::OMPWeightCalculator::weight( HepMC3::GenEvent& ev,
       );
 
       if ( spw_iter == spw_vec.cend() ) {
-        MARLEY_LOG_WARNING() << "Could not find SpinParityWidth during"
-          << " reweighting";
+        MARLEY_LOG( WARN, "physics.opticalmodel" )
+          << "Could not find SpinParityWidth during reweighting";
         weight = 0.;
         continue;
       }
@@ -284,7 +284,7 @@ double marley::OMPWeightCalculator::weight( HepMC3::GenEvent& ev,
     }
 
     if ( !bad_width_name.empty() ) {
-      MARLEY_LOG_WARNING() << bad_width_name << " is non-positive";
+      MARLEY_LOG( WARN, "physics.opticalmodel" ) << bad_width_name << " is non-positive";
       weight = 0.;
       continue;
     }

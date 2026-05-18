@@ -108,9 +108,10 @@ bool marley::CommandHandler::cmd_dumpxs( std::deque< std::string >& args ) {
 
     out_file << KE << ' ' << xsec << '\n';
 
-    MARLEY_LOG_INFO() << "KE = " << KE
+    MARLEY_LOG( INFO, "app" ) << "KE = " << KE
       << " MeV, abundance-weighted total xsec = "
       << xsec << " × 10^{-42} cm^2 / atom";
+
   }
 
   return true;

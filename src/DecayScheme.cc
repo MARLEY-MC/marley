@@ -83,7 +83,8 @@ void marley::DecayScheme::do_cascade( marley::Level& initial_level,
 {
   int qIon = marley_hepmc3::get_particle_charge( *residue );
 
-  MARLEY_LOG_DEBUG() << "Beginning gamma cascade at level with energy "
+  MARLEY_LOG( DEBUG, "physics.deexcitation.gamma" )
+    << "Beginning gamma cascade at level with energy "
     << initial_level.energy() << " MeV";
 
   marley::Level* p_current_level = &initial_level;
@@ -102,7 +103,8 @@ void marley::DecayScheme::do_cascade( marley::Level& initial_level,
       &gamma_branching_ratio );
 
     if ( !p_gamma ) {
-      MARLEY_LOG_DEBUG() << "  this level does not have any gammas";
+      MARLEY_LOG( DEBUG, "physics.deexcitation.gamma" )
+        << "  this level does not have any gammas";
       cascade_finished = true;
     }
     else {
@@ -117,11 +119,13 @@ void marley::DecayScheme::do_cascade( marley::Level& initial_level,
         throw marley::Error( "This gamma does not have an end level."
           " Cannot continue cascade." );
       }
-      MARLEY_LOG_DEBUG() << std::setprecision(15) << std::scientific
+      MARLEY_LOG( DEBUG, "physics.deexcitation.gamma" )
+        << std::setprecision(15) << std::scientific
         << "  emitted gamma with energy "
         << p_gamma->energy() << " MeV. New level has energy "
         << p_current_level->energy() << " MeV.";
-      MARLEY_LOG_DEBUG() << "gamma energy = " << p_gamma->energy();
+      MARLEY_LOG( DEBUG, "physics.deexcitation.gamma" )
+        << "gamma energy = " << p_gamma->energy();
 
       // Get the excitation energy of the end level. This will be added to
       // the ground state mass of the nucleus to determine its
@@ -180,7 +184,8 @@ void marley::DecayScheme::do_cascade( marley::Level& initial_level,
     }
   }
 
-  MARLEY_LOG_DEBUG() << "Finished gamma cascade at level with energy "
+  MARLEY_LOG( DEBUG, "physics.deexcitation.gamma" )
+    << "Finished gamma cascade at level with energy "
     << p_current_level->energy();
 
   residue->set_status( marley_hepmc3::NUHEPMC_FINAL_STATE_STATUS );
@@ -232,9 +237,10 @@ void marley::DecayScheme::parse_talys( const std::string& filename ) {
     " (adopted levels, gammas) for " + marley_utils::nucid_to_symbol( nuc_id )
     + " could not be found in the TALYS data file " + filename );
 
-  MARLEY_LOG_DEBUG() << "Gamma decay scheme data for " + nuc_id
+  MARLEY_LOG( DEBUG, "init.structure.decay" )
+    << "Gamma decay scheme data for " + nuc_id
     << " found. Using TALYS dataset ";
-  MARLEY_LOG_DEBUG() << line;
+  MARLEY_LOG( DEBUG, "init.structure.decay" ) << line;
 
   // Dummy integer and number of excited levels for this nuclide
   int dummy, num_excited_levels;

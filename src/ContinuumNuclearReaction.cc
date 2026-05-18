@@ -324,7 +324,7 @@ bool marley::ContinuumNuclearReaction::reassign_sub_continuum( double& w,
     // exactly at the unbound threshold
     Ex = unbound_threshold;
 
-    MARLEY_LOG_DEBUG() << "Excitation energy " << Ex
+    MARLEY_LOG( DEBUG, "physics.reaction" ) << "Excitation energy " << Ex
       << " MeV is below the unbound threshold " << unbound_threshold
       << " MeV. Sampling exactly at the unbound threshold.";
   }
@@ -334,7 +334,7 @@ bool marley::ContinuumNuclearReaction::reassign_sub_continuum( double& w,
     // as it was originally below.
     Ex = 2.*unbound_threshold - Ex;
 
-    MARLEY_LOG_DEBUG() << "Excitation energy " << Ex
+    MARLEY_LOG( DEBUG, "physics.reaction" ) << "Excitation energy " << Ex
       << " MeV is below the unbound threshold " << unbound_threshold
       << " MeV. Mirroring the energy transfer around the unbound"
       << " threshold.";

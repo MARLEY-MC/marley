@@ -246,7 +246,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
   marley::Generator gen = config.create_generator();
 
-  MARLEY_LOG_INFO() << "Generating " << NUM_EVENTS << " events";
+  MARLEY_LOG( INFO, "test" ) << "Generating " << NUM_EVENTS << " events";
 
   double E_min = gen.get_source().get_Emin();
   double E_max = gen.get_source().get_Emax();
@@ -264,7 +264,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
   for ( int e = 0; e < NUM_EVENTS; ++e ) {
 
-    if ( e % 1000 == 0 ) MARLEY_LOG_INFO() << "Event " << e;
+    if ( e % 1000 == 0 ) MARLEY_LOG( INFO, "test" ) << "Event " << e;
 
     // Generate a new event
     auto ev_ptr = gen.create_event();
@@ -468,7 +468,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     auto& sdb = gen.get_structure_db();
     marley::HauserFeshbachDecay hfd( compound_nuc, HF_Exi, HF_twoJi, HF_Pi,
       sdb );
-    MARLEY_LOG_DEBUG() << hfd;
+    MARLEY_LOG( DEBUG, "test" ) << hfd;
 
     // **** First, check the MC branching ratios to different final particles
     // against the underlying discrete distribution
@@ -656,7 +656,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
         // then samples angles and calls marley_kinematics::two_body_decay()
         // in order to set the particle momenta, etc. You could alternatively
         // just calculate the one quantity that you need (fragment CM KE)
-        if ( e % 1000 == 0 ) MARLEY_LOG_INFO() << "Decay " << e;
+        if ( e % 1000 == 0 ) MARLEY_LOG( INFO, "test" ) << "Decay " << e;
         cec.do_decay(dummy_Ex, dummy_twoJf, dummy_P,
           compound_nuc, fragment, final_nucleus, dummy_qi, gen);
         double E_frag_CM = ( mi*mi - std::pow(final_nucleus->generated_mass(), 2)

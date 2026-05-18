@@ -70,7 +70,7 @@ marley::FileManager::FileManager() {
     default_search_path_ += ':' + marley_dir_ + "/data/structure";
   }
 
-  MARLEY_LOG_DEBUG() << "MARLEY search path set to \""
+  MARLEY_LOG( DEBUG, "io" ) << "MARLEY search path set to \""
     << default_search_path_ << '\"';
 }
 
@@ -178,7 +178,7 @@ bool marley::FileManager::dir_iterate(const std::string& dir_name,
   DIR* directory = opendir( dir_name.c_str() );
 
   if ( !directory ) {
-    MARLEY_LOG_WARNING() << "Could not read from the directory \""
+    MARLEY_LOG( WARN, "io" ) << "Could not read from the directory \""
       << dir_name << '\"';
     return false;
   }
@@ -193,12 +193,12 @@ bool marley::FileManager::dir_iterate(const std::string& dir_name,
     std::string base_name = file->d_name;
     std::string full_file_name = dir_name + '/' + base_name;
 
-    MARLEY_LOG_DEBUG() << "marley::FileManager found file \""
+    MARLEY_LOG( DEBUG, "io" ) << "marley::FileManager found file \""
       << full_file_name << '\"';
 
     // If we had a problem, complain and try the next file
     if ( stat(full_file_name.c_str(), &file_stat) ) {
-      MARLEY_LOG_DEBUG() << "Couldn't stat the file \""
+      MARLEY_LOG( DEBUG, "io" ) << "Couldn't stat the file \""
         << full_file_name << '\"';
       continue;
     }

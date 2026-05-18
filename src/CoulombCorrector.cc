@@ -199,7 +199,8 @@ double marley::CoulombCorrector::ema_factor(double beta_rel_cd, bool& ok,
 
   // Check for numerical errors from the square root
   if ( !std::isfinite(gamma_rel_cd) ) {
-    MARLEY_LOG_WARNING() << "Invalid beta_rel = " << beta_rel_cd
+    MARLEY_LOG( WARN, "physics.formfactor" ) << "Invalid beta_rel = "
+      << beta_rel_cd
       << " encountered in marley::CoulombCorrector::ema_factor()";
   }
 

@@ -110,7 +110,8 @@ double marley::StandardLorentzianModel::strength_function_coefficient(
   }
 
   else if (type == TrType::unphysical) {
-    MARLEY_LOG_WARNING() << "Unphysical EM transition encountered in"
+    MARLEY_LOG( WARN, "physics.deexcitation" )
+      << "Unphysical EM transition encountered in"
       << " StandardLorentzianModel::strength_function_coefficient()."
       << " The strength function will be set to zero.";
     return 0.;

@@ -179,9 +179,9 @@ namespace marley {
 
           p_value = gsl_cdf_chisq_Q( chi2, degrees_of_freedom );
 
-          MARLEY_LOG_INFO() << "chi2 / DOF = " << chi2
+          MARLEY_LOG( INFO, "test" ) << "chi2 / DOF = " << chi2
             << " / " << degrees_of_freedom;
-          MARLEY_LOG_INFO() << "p-value = " << p_value;
+          MARLEY_LOG( INFO, "test" ) << "p-value = " << p_value;
 
           passed = ( p_value >= SIGNIFICANCE_LEVEL );
         }

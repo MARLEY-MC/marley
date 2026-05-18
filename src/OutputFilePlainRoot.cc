@@ -123,7 +123,7 @@ void marley::OutputFilePlainRoot::open() {
   if ( mode_ == Mode::OVERWRITE && file_exists && !force_ ) {
     bool overwrite = marley_utils::prompt_yes_no( "Overwrite file " + name_ );
     if ( !overwrite ) {
-      MARLEY_LOG_INFO() << "Cancelling overwrite of output file \""
+      MARLEY_LOG( INFO, "io" ) << "Cancelling overwrite of output file \""
         << name_ << '\"';
       mode_ = Mode::RESUME;
     }

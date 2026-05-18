@@ -334,7 +334,7 @@ double marley::KoningDelarocheOpticalModel::compute_transmission_coefficient(
   // TODO: revisit this, perhaps add a warning message?
   double norm_S = std::norm( S );
   if ( norm_S < 0. || norm_S > 1.0000001 ) {
-    MARLEY_LOG_DEBUG() << "Invalid S-matrix norm = " << norm_S << '\n';
+    MARLEY_LOG( DEBUG, "physics.opticalmodel" ) << "Invalid S-matrix norm = " << norm_S << '\n';
   }
   norm_S = std::min( 1., std::max(0., norm_S) );
 

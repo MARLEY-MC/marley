@@ -98,7 +98,8 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
     // Check that the residue PDG code makes sense. If it's not a nucleus,
     // warn the user and refuse to do the cascade.
     if ( !marley_utils::is_ion(initial_residue_pdg) ) {
-      MARLEY_LOG_WARNING() << "Unrecognized nuclear PDG code "
+      MARLEY_LOG( WARN, "physics.deexcitation" )
+        << "Unrecognized nuclear PDG code "
         << initial_residue_pdg << " encountered in marley::NucleusDecayer::"
         << "deexcite_residue(). The de-excitation cascade will be skipped";
       continue;
@@ -115,7 +116,8 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
     if ( std::abs(residue_mass - expected_residue_mass) > EX_TOLERANCE ) {
 
       if ( std::abs(residue_mass - gs_residue_mass) <= EX_TOLERANCE ) {
-        MARLEY_LOG_WARNING() << "Encountered ground-state nuclear remnant"
+        MARLEY_LOG( WARN, "physics.deexcitation" )
+          << "Encountered ground-state nuclear remnant"
           << " in marley::NucleusDecay::deexcite_residue(). The de-excitation"
           << " cascade has already been applied.";
         continue;
@@ -169,7 +171,7 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
         auto& sdb = gen.get_structure_db();
 
         marley::HauserFeshbachDecay hfd( residue, Ex, twoJ, P, sdb );
-        MARLEY_LOG_DEBUG() << hfd;
+        MARLEY_LOG( DEBUG, "physics.deexcitation.hauser" ) << hfd;
 
         int q_second;
         const auto& exit_channel = hfd.do_decay( Ex, twoJ, P, first, second,
@@ -180,10 +182,11 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
         double width_tot = hfd.total_width();
         double width_ec = exit_channel.width();
 
-        MARLEY_LOG_DEBUG() << "Hauser-Feshbach decay to " << first->pid()
+        MARLEY_LOG( DEBUG, "physics.deexcitation.hauser" )
+          << "Hauser-Feshbach decay to " << first->pid()
           << " and " << second->pid();
-        MARLEY_LOG_DEBUG() << second->pid() << " is at Ex = "
-          << Ex << " MeV.";
+        MARLEY_LOG( DEBUG, "physics.deexcitation.hauser" )
+          << second->pid() << " is at Ex = " << Ex << " MeV.";
 
         // Create a new binary decay vertex
         auto decay_vtx = std::make_shared< HepMC3::GenVertex >();

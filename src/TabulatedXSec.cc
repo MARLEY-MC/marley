@@ -412,7 +412,7 @@ void marley::TabulatedXSec::optimize( int pdg_a, double max_KEa ) {
       };
     }
 
-    MARLEY_LOG_INFO() << "Optimizing total cross section for "
+    MARLEY_LOG( INFO, "physics.reaction.xsec" ) << "Optimizing total cross section for "
       << ml.J_ << ml.Pi_;
 
     // Now we're ready to build the Chebyshev interpolating functions for
@@ -422,7 +422,7 @@ void marley::TabulatedXSec::optimize( int pdg_a, double max_KEa ) {
       max_KEa, 64 );
     // TODO: do you want adaptive grid sizing here?
 
-    MARLEY_LOG_DEBUG() << "Optimizing max diff for "
+    MARLEY_LOG( DEBUG, "physics.reaction.xsec" ) << "Optimizing max diff for "
       << ml.J_ << ml.Pi_;
 
     ChebyshevInterpolatingFunction max_diff_xs_cif( max_diff_xsec_func,

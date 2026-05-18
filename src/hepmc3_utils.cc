@@ -410,7 +410,7 @@ void marley_hepmc3::store_decay_time( double partial_width,
 {
   // Sample a decay time (MeV^{-1}) to assign to the decay vertex
   double decay_time = gen.sample_decay_time( partial_width );
-  MARLEY_LOG_DEBUG() << "decay_time = "
+  MARLEY_LOG( DEBUG, "physics.deexcitation" ) << "decay_time = "
     << marley_utils::hbar * decay_time << " s";
 
   // Convert to the appropriate time units (cm) for a NuHepMC 4-position.

@@ -35,13 +35,17 @@ namespace marley {
 
       /// @param message
       /// An error message to display if the exception is not caught
-      inline explicit Error( const char* message ) : msg_(message)
-        { if ( log_them_ ) MARLEY_LOG_ERROR() << msg_; }
+      /// @param category Optional logger category for this error message
+      inline explicit Error( const char* message,
+        const std::string& category = "" ) : msg_(message)
+        { if ( log_them_ ) MARLEY_LOG( ERROR, category ) << msg_; }
 
       /// @param message
       /// An error message to display if the exception is not caught
-      inline explicit Error( const std::string& message ) : msg_(message)
-        { if ( log_them_ ) MARLEY_LOG_ERROR() << msg_; }
+      /// @param category Optional logger category for this error message
+      inline explicit Error( const std::string& message,
+        const std::string& category = "" ) : msg_(message)
+        { if ( log_them_ ) MARLEY_LOG( ERROR, category ) << msg_; }
 
       inline virtual ~Error() {}
 

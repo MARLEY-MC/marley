@@ -178,19 +178,19 @@ marley::NucleonFormFactors::NucleonFormFactors( const marley::JSON& config ) {
   if ( sachs_ff_model == "trivial" ) {
     sachs_ff_ = std::make_shared< TrivialSachsFormFactors >();
     if ( need_to_log ) {
-      MARLEY_LOG_INFO() << "Using trivial Sachs form factors";
+      MARLEY_LOG( INFO, "physics.formfactor" ) << "Using trivial Sachs form factors";
     }
   }
   else if ( sachs_ff_model == "dipole" ) {
     sachs_ff_ = std::make_shared< DipoleSachsFormFactors >( marley_utils::M_V );
     if ( need_to_log ) {
-      MARLEY_LOG_INFO() << "Using dipole Sachs form factors";
+      MARLEY_LOG( INFO, "physics.formfactor" ) << "Using dipole Sachs form factors";
     }
   }
   else if ( sachs_ff_model == "bbba05" ) {
     sachs_ff_ = std::make_shared< BBBA05SachsFormFactors >();
     if ( need_to_log ) {
-      MARLEY_LOG_INFO() << "Using BBBA05 Sachs form factors";
+      MARLEY_LOG( INFO, "physics.formfactor" ) << "Using BBBA05 Sachs form factors";
     }
   }
   else throw marley::Error( "Unrecognized Sachs form factor model name \""
@@ -200,14 +200,14 @@ marley::NucleonFormFactors::NucleonFormFactors( const marley::JSON& config ) {
   if ( axial_ff_model == "trivial" ) {
     axial_ff_ = std::make_shared< TrivialAxialFormFactors >();
     if ( need_to_log ) {
-      MARLEY_LOG_INFO() << "Using trivial axial form factors";
+      MARLEY_LOG( INFO, "physics.formfactor" ) << "Using trivial axial form factors";
     }
   }
   else if ( axial_ff_model == "dipole" ) {
     axial_ff_ = std::make_shared< DipoleAxialFormFactors >( marley_utils::g_A,
       marley_utils::M_A );
     if ( need_to_log ) {
-      MARLEY_LOG_INFO() << "Using dipole axial form factors";
+      MARLEY_LOG( INFO, "physics.formfactor" ) << "Using dipole axial form factors";
     }
   }
   else throw marley::Error( "Unrecognized axial form factor model name \""

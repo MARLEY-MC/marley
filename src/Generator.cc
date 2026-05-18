@@ -65,7 +65,7 @@ marley::Generator::Generator( uint_fast64_t seed )
 void marley::Generator::print_logo() {
   static bool printed_logo = false;
   if ( !printed_logo ) {
-    MARLEY_LOG_INFO() << '\n' << marley_utils::marley_logo
+    MARLEY_LOG( INFO, "physics.generator" ) << '\n' << marley_utils::marley_logo
       << "\nDon't worry about a thing,\n'Cause every little thing"
       << " gonna be all right.\n-- Bob, \"Three Little Birds\"\n\n"
       << "Model of Argon Reaction Low Energy Yields\n"
@@ -160,7 +160,8 @@ void marley::Generator::reseed( uint_fast64_t seed ) {
   std::seed_seq seed_sequence{ seed_ };
   rand_gen_.seed( seed_sequence );
 
-  MARLEY_LOG_INFO() << "Seeded random number generator with " << seed_;
+  MARLEY_LOG( INFO, "physics.generator" ) << "Seeded random number generator with "
+    << seed_;
 }
 
 std::string marley::Generator::get_state_string() const {
@@ -304,12 +305,13 @@ double marley::Generator::rejection_sample(
     val = f( x );
     if ( val > fmax ) {
 
-      MARLEY_LOG_WARNING() << "PDF value f(x) = "
-      << val << " at x = " << x << " exceeded the estimated maximum"
-      << " fmax = " << fmax << " during rejection sampling.";
+      MARLEY_LOG( WARN, "physics.generator.sampling" ) << "PDF value f(x) = "
+        << val << " at x = " << x << " exceeded the estimated maximum"
+        << " fmax = " << fmax << " during rejection sampling.";
 
       fmax = val * safety_factor;
-      MARLEY_LOG_WARNING() << "A new estimate fmax = " << val * safety_factor
+      MARLEY_LOG( WARN, "physics.generator.sampling" )
+        << "A new estimate fmax = " << val * safety_factor
         << " will now be adopted.";
     }
   }
@@ -400,7 +402,8 @@ marley::Reaction& marley::Generator::sample_reaction( double& E ) {
     && old_max != E_pdf_max_ )
   {
     if ( !issued_long_error_message ) {
-      MARLEY_LOG_ERROR() << "Estimation of the maximum PDF value failed when"
+      MARLEY_LOG( ERROR, "physics.generator.sampling" )
+        << "Estimation of the maximum PDF value failed when"
         << " using a rejection method to sample reacting neutrino energies.\n"
         << "This may occur when, e.g., an incident neutrino flux"
         << " is used that includes multiple sharp peaks.\n"
@@ -414,9 +417,10 @@ marley::Reaction& marley::Generator::sample_reaction( double& E ) {
       issued_long_error_message = true;
     }
     else {
-      MARLEY_LOG_ERROR() << "The maximum PDF value for sampling reacting"
-       << " neutrino energies was exceeded again. The new estimated maximum is"
-       << "\n    energy_pdf_max: " << E_pdf_max_ << ',';
+      MARLEY_LOG( ERROR, "physics.generator.sampling" )
+        << "The maximum PDF value for sampling reacting"
+        << " neutrino energies was exceeded again. The new estimated maximum is"
+        << "\n    energy_pdf_max: " << E_pdf_max_ << ',';
     }
   }
 
@@ -509,7 +513,7 @@ void marley::Generator::set_neutrino_direction(
     dir_msg += std::to_string( normalized_dir_vec[i] );
     if ( i < 2 ) dir_msg += ", ";
   }
-  MARLEY_LOG_INFO() << dir_msg << ')';
+  MARLEY_LOG( INFO, "physics.generator" ) << dir_msg << ')';
 }
 
 void marley::Generator::set_weight_flux( bool should_we_weight ) {

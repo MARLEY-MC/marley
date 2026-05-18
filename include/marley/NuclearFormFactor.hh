@@ -174,7 +174,8 @@ namespace marley {
       /// Returns the value of the rms charge radius used with the adapted
       /// version
       inline double r0() const {
-        if ( !adapted_ ) MARLEY_LOG_WARNING() << "Requested rms charge radius"
+        if ( !adapted_ ) MARLEY_LOG( WARN, "physics.formfactor" )
+          << "Requested rms charge radius"
           << " when using default Klein-Nystrand nuclear form factor";
         return r0_;
       }

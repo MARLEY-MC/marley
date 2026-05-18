@@ -79,7 +79,7 @@ void marley::OutputFileAscii::open() {
   if ( mode_ == Mode::OVERWRITE && file_exists && !force_ ) {
     bool overwrite = marley_utils::prompt_yes_no( "Overwrite file " + name_ );
     if ( !overwrite ) {
-      MARLEY_LOG_INFO() << "Cancelling overwrite of output file \""
+      MARLEY_LOG( INFO, "io" ) << "Cancelling overwrite of output file \""
         << name_ << '\"';
       open_mode_flag = std::ios::in | std::ios::out;
       mode_ = Mode::RESUME;
@@ -109,7 +109,7 @@ bool marley::OutputFileAscii::resume( std::unique_ptr<marley::Generator>& gen,
     return false;
   }
 
-  MARLEY_LOG_INFO() << "Continuing previous run from the file " << name_;
+  MARLEY_LOG( INFO, "io" ) << "Continuing previous run from the file " << name_;
 
   // Create a temporary event to use for storage while parsing the file
   auto evt = std::make_shared< HepMC3::GenEvent >();
@@ -174,7 +174,7 @@ bool marley::OutputFileAscii::resume( std::unique_ptr<marley::Generator>& gen,
   gen = this->restore_generator( json_config );
   gen->seed_using_state_string( state_str->value() );
 
-  MARLEY_LOG_INFO() << "The previous run was initialized using"
+  MARLEY_LOG( INFO, "io" ) << "The previous run was initialized using"
     << " the random number generator seed " << seed_str->value();
 
   // TODO: maybe use seekg() to back up to remove HepMC3 footer after the last

@@ -42,7 +42,7 @@ marley::MassTable::MassTable() {
       " environment variable.");
   }
 
-  MARLEY_LOG_INFO() << "Loading particle and atomic masses from "
+  MARLEY_LOG( INFO, "init.structure" ) << "Loading particle and atomic masses from "
     << full_mt_file_name;
 
   // Read in the mass table from a JSON data file
@@ -282,17 +282,17 @@ double marley::MassTable::unbound_threshold(const int Zi, const int Ai) const
   // Before looking up the separation energies, start by setting the unbound
   // threshold to infinity.
   double unbound_threshold = std::numeric_limits<double>::max();
-  MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << '\n';
+  MARLEY_LOG( DEBUG, "init.structure" ) << "unbound_threshold = " << unbound_threshold << '\n';
 
   // Loop over each available nuclear fragment. If it has a smaller separation
   // energy than the current value of unbound_threshold, update the stored value
   for ( const auto& pair : marley::StructureDatabase::fragments() ) {
     const marley::Fragment& f = pair.second;
     double thresh = this->fragment_emission_threshold( Zi, Ai, f );
-    MARLEY_LOG_DEBUG() << f.get_pid() << " emission threshold = "
+    MARLEY_LOG( DEBUG, "init.structure" ) << f.get_pid() << " emission threshold = "
       << thresh << '\n';
     if ( thresh < unbound_threshold ) unbound_threshold = thresh;
-    MARLEY_LOG_DEBUG() << "unbound_threshold = " << unbound_threshold << '\n';
+    MARLEY_LOG( DEBUG, "init.structure" ) << "unbound_threshold = " << unbound_threshold << '\n';
   }
 
   return unbound_threshold;

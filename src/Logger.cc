@@ -30,7 +30,7 @@ const char* marley::Logger::loglevel_to_str(LogLevel lev)
     case LogLevel::ERROR:
       return "[ERROR]: ";
       break;
-    case LogLevel::WARNING:
+    case LogLevel::WARN:
       return "[WARNING]: ";
       break;
     case LogLevel::DEBUG:
@@ -56,7 +56,7 @@ marley::Logger::LogLevel marley::Logger::string_to_loglevel(
     { "debug", LogLevel::DEBUG },
     { "info", LogLevel::INFO },
     { "notice", LogLevel::NOTICE },
-    { "warn", LogLevel::WARNING },
+    { "warn", LogLevel::WARN },
     { "error", LogLevel::ERROR },
     { "fatal", LogLevel::FATAL }
   };
@@ -174,7 +174,7 @@ void marley::Logger::configure( const marley::JSON& config ) {
   if ( !config.has_key("categories") ) {
     // If the user has not configured any categories then globally set the
     // logging level to INFO and move on
-    default_level_ = LogLevel::INFO;  
+    default_level_ = LogLevel::INFO;
     return;
   }
 

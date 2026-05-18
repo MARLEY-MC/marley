@@ -29,7 +29,8 @@ namespace {
   // Helper function that issues a warning when the final nuclear excitation
   // energy exceeds the energetically accessible maximum value
   void issue_Exf_warning( double Exf, double Exf_max ) {
-    MARLEY_LOG_WARNING() << "Final nuclear excitation energy Exf = "
+    MARLEY_LOG( WARN, "physics.deexcitation" )
+      << "Final nuclear excitation energy Exf = "
       << Exf << " MeV exceeds the maximum accessible value of " << Exf_max
       << " MeV. The decay width for this exit channel will be set to zero.";
   }
@@ -39,7 +40,8 @@ namespace {
   void issue_Exf_continuum_warning( double Exf, double E_c_min,
     double E_c_max )
   {
-    MARLEY_LOG_WARNING() << "Final nuclear excitation energy Exf = "
+    MARLEY_LOG( WARN, "physics.deexcitation" )
+      << "Final nuclear excitation energy Exf = "
       << Exf << " MeV lies outside the accessible continuum [ " << E_c_min
       << " MeV, " << E_c_max << " MeV ]. The differential decay width"
       << " will be set to zero.";

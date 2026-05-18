@@ -171,7 +171,7 @@ marley::Generator marley::JSONConfig::create_generator() const
     ff_config = json_.at( "form_factors" );
     if ( !ff_config.is_object() ) {
       if ( this->check_for_allowed_approximation(ff_config) ) {
-        MARLEY_LOG_INFO() << "Using the allowed approximation";
+        MARLEY_LOG( INFO, "init.config" ) << "Using the allowed approximation";
       }
       else throw marley::Error( "Invalid form factor configuration "
         + ff_config.dump_string() );
@@ -205,7 +205,7 @@ marley::Generator marley::JSONConfig::create_generator() const
       bool deexcite_or_not = do_deex.to_bool();
       gen.set_do_deexcitations( deexcite_or_not );
       if ( !deexcite_or_not ) {
-        MARLEY_LOG_INFO() << "Nuclear de-excitations will not be simulated";
+        MARLEY_LOG( INFO, "init.config" ) << "Nuclear de-excitations will not be simulated";
       }
     }
   }
@@ -232,7 +232,7 @@ marley::Generator marley::JSONConfig::create_generator() const
   if ( json_.has_key("reactions") ) {
     const auto& reactions = json_.at( "reactions" );
     if ( reactions.is_null() ) {
-      MARLEY_LOG_INFO() << "Null reactions array detected."
+      MARLEY_LOG( INFO, "init.config" ) << "Null reactions array detected."
         << " Initialization of reactions will be skipped.";
       return gen;
     }
@@ -269,7 +269,7 @@ marley::Generator marley::JSONConfig::create_generator() const
   if ( found_cc ) {
     std::string cmode_str = marley::CoulombCorrector
       ::string_from_coulomb_mode( coulomb_mode );
-    MARLEY_LOG_INFO() << "Configured Coulomb correction method: " << cmode_str;
+    MARLEY_LOG( INFO, "init.config" ) << "Configured Coulomb correction method: " << cmode_str;
   }
 
   // If at least one continuum nuclear reaction is configured, then inform the
@@ -278,7 +278,7 @@ marley::Generator marley::JSONConfig::create_generator() const
     SubContinuumMode sc_mode
       = marley::ContinuumNuclearReaction::sub_continuum_mode();
 
-    MARLEY_LOG_INFO() << "Configured sub-continuum mode: "
+    MARLEY_LOG( INFO, "init.config" ) << "Configured sub-continuum mode: "
       << marley::ContinuumNuclearReaction
       ::string_from_sub_continuum_mode( sc_mode );
   }
@@ -297,7 +297,7 @@ marley::Generator marley::JSONConfig::create_generator() const
 
   // Before returning the newly-created Generator object, print logging
   // messages describing the reactions that are active.
-  MARLEY_LOG_INFO() << "Generator configuration complete. Active reactions:";
+  MARLEY_LOG( INFO, "init.config" ) << "Generator configuration complete. Active reactions:";
   for ( const auto& r : gen.get_reactions() ) {
 
     const marley::TargetAtom ta = r->atomic_target();
@@ -341,7 +341,7 @@ marley::Generator marley::JSONConfig::create_generator() const
       if ( no_flux ) temp_oss << "\u001b[30m";
       temp_oss << ')';
 
-      MARLEY_LOG_INFO() << "  " << proc_type_str << ": "
+      MARLEY_LOG( INFO, "init.config" ) << "  " << proc_type_str << ": "
         << r->get_description() << " (KE @ threshold: "
         << temp_oss.str();
     }
@@ -357,7 +357,7 @@ marley::Generator marley::JSONConfig::create_generator() const
   // Now we're all ready to go. Log the flux-averaged total cross section
   // value before returning the fully-configured generator.
   double avg_tot_xs = gen.flux_averaged_total_xs(); // MeV^(-2)
-  MARLEY_LOG_INFO() << "Flux-averaged total cross section per atom: "
+  MARLEY_LOG( INFO, "init.config" ) << "Flux-averaged total cross section per atom: "
     << marley_utils::hbar_c2 * avg_tot_xs * marley_utils::fm2_to_minus40_cm2
     << " * 10^(-40) cm^2";
 
@@ -402,7 +402,7 @@ void marley::JSONConfig::prepare_direction( marley::Generator& gen ) const {
     else if ( direction.is_string() && direction.to_string() == "isotropic" ) {
       gen.get_rotator().set_randomize_directions( true );
 
-      MARLEY_LOG_INFO() << "Projectile directions will be sampled"
+      MARLEY_LOG( INFO, "init.config" ) << "Projectile directions will be sampled"
         << " isotropically";
     }
     else {
@@ -473,7 +473,7 @@ void marley::JSONConfig::prepare_reactions( marley::Generator& gen,
           auto begin = loaded_proc_types.cbegin();
           auto end = loaded_proc_types.cend();
           if ( std::find(begin, end, temp_pair) != end ) {
-            MARLEY_LOG_WARNING() << "Reaction settings for the "
+            MARLEY_LOG( WARN, "init.config" ) << "Reaction settings for the "
               << marley::Reaction::proc_type_to_string( temp_pt )
               << " process on " << temp_atom << " were already loaded."
               << " To avoid duplication, those in " << full_file_name
@@ -482,7 +482,7 @@ void marley::JSONConfig::prepare_reactions( marley::Generator& gen,
           }
           // Otherwise, save the process type for later checks of this kind
           else {
-            MARLEY_LOG_INFO() << "Loaded "
+            MARLEY_LOG( INFO, "init.config" ) << "Loaded "
               << marley::Reaction::proc_type_to_string( temp_pt )
               << " reaction data for " << temp_atom << " from "
               << full_file_name;
@@ -516,8 +516,8 @@ void marley::JSONConfig::prepare_structure( marley::Generator& gen ) const {
   const std::string om_key = "opt_mod";
   if ( json_.has_key(om_key) ) {
     const marley::JSON om_config = json_.at( om_key );
-    MARLEY_LOG_INFO() << "Loading custom optical model configuration";
-    MARLEY_LOG_DEBUG() << om_config.dump_string();
+    MARLEY_LOG( INFO, "init.config" ) << "Loading custom optical model configuration";
+    MARLEY_LOG( DEBUG, "init.config" ) << om_config.dump_string();
 
     sdb.load_optical_model_params( &om_config );
   }
@@ -541,7 +541,7 @@ void marley::JSONConfig::prepare_structure( marley::Generator& gen ) const {
 
     sdb.set_fragment_l_max( f_lmax );
 
-    MARLEY_LOG_INFO() << "Orbital angular momentum cutoff for fragment"
+    MARLEY_LOG( INFO, "init.config" ) << "Orbital angular momentum cutoff for fragment"
       << " differential decay widths set to l_max = " << f_lmax;
   }
 
@@ -559,7 +559,7 @@ void marley::JSONConfig::prepare_structure( marley::Generator& gen ) const {
 
     sdb.set_gamma_l_max( g_lmax );
 
-    MARLEY_LOG_INFO() << "Multipolarity cutoff for gamma-ray"
+    MARLEY_LOG( INFO, "init.config" ) << "Multipolarity cutoff for gamma-ray"
       << " differential decay widths set to l_max = " << g_lmax;
   }
 }
@@ -623,7 +623,7 @@ void marley::JSONConfig::prepare_neutrino_source( marley::Generator& gen ) const
   // If the neutrino source key has a null value, just return without doing
   // anything else
   if ( source_spec.is_null() ) {
-    MARLEY_LOG_INFO() << "Null source specification detected. Skipping"
+    MARLEY_LOG( INFO, "init.config.source" ) << "Null source specification detected. Skipping"
       << " neutrino source configuration.";
     return;
   }
@@ -659,13 +659,13 @@ void marley::JSONConfig::prepare_neutrino_source( marley::Generator& gen ) const
     double energy = source_get_double( "energy", source_spec, "monoenergetic" );
     source_check_positive( energy, "energy", "monoenergetic" );
     source = std::make_unique< marley::MonoNeutrinoSource >( pdg, energy );
-    MARLEY_LOG_INFO() << "Created monoenergetic "
+    MARLEY_LOG( INFO, "init.config.source" ) << "Created monoenergetic "
       << marley_utils::get_particle_symbol( pdg ) << " source with"
       << " neutrino energy = " << energy << " MeV";
   }
   else if ( type == "dar" || type == "decay-at-rest" ) {
     source = std::make_unique< marley::DecayAtRestNeutrinoSource >( pdg );
-     MARLEY_LOG_INFO() << "Created muon decay-at-rest "
+     MARLEY_LOG( INFO, "init.config.source" ) << "Created muon decay-at-rest "
        << marley_utils::get_particle_symbol( pdg ) << " source";
   }
   else if ( type == "fd" || type == "fermi-dirac" || type == "fermi_dirac" ) {
@@ -687,12 +687,12 @@ void marley::JSONConfig::prepare_neutrino_source( marley::Generator& gen ) const
 
     source = std::make_unique< marley::FermiDiracNeutrinoSource >( pdg, Emin,
       Emax, temp, eta );
-    MARLEY_LOG_INFO() << "Created Fermi-Dirac "
+    MARLEY_LOG( INFO, "init.config.source" ) << "Created Fermi-Dirac "
       << marley_utils::get_particle_symbol( pdg ) << " source with parameters";
-    MARLEY_LOG_INFO() << "  Emin = " << Emin << " MeV";
-    MARLEY_LOG_INFO() << "  Emax = " << Emax << " MeV";
-    MARLEY_LOG_INFO() << "  temperature = " << temp << " MeV";
-    MARLEY_LOG_INFO() << "  eta = " << eta;
+    MARLEY_LOG( INFO, "init.config.source" ) << "  Emin = " << Emin << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  Emax = " << Emax << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  temperature = " << temp << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  eta = " << eta;
   }
   else if ( type == "bf" || type == "beta" || type == "beta-fit" ) {
     double Emin = source_get_double( "Emin", source_spec, "beta-fit" );
@@ -712,12 +712,12 @@ void marley::JSONConfig::prepare_neutrino_source( marley::Generator& gen ) const
 
     source = std::make_unique< marley::BetaFitNeutrinoSource >( pdg, Emin,
       Emax, Emean, beta );
-    MARLEY_LOG_INFO() << "Created beta-fit "
+    MARLEY_LOG( INFO, "init.config.source" ) << "Created beta-fit "
       << marley_utils::get_particle_symbol( pdg ) << " source with parameters";
-    MARLEY_LOG_INFO() << "  Emin = " << Emin << " MeV";
-    MARLEY_LOG_INFO() << "  Emax = " << Emax << " MeV";
-    MARLEY_LOG_INFO() << "  average energy = " << Emean << " MeV";
-    MARLEY_LOG_INFO() << "  beta = " << beta;
+    MARLEY_LOG( INFO, "init.config.source" ) << "  Emin = " << Emin << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  Emax = " << Emax << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  average energy = " << Emean << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  beta = " << beta;
   }
   else if ( type == "hist" || type == "histogram" ) {
 
@@ -756,7 +756,7 @@ void marley::JSONConfig::prepare_neutrino_source( marley::Generator& gen ) const
     // Create the source
     source = std::make_unique< marley::GridNeutrinoSource >( Es, weights, pdg,
       InterpMethod::Constant );
-    MARLEY_LOG_INFO() << "Created histogram "
+    MARLEY_LOG( INFO, "init.config.source" ) << "Created histogram "
       << marley_utils::get_particle_symbol( pdg ) << " source";
   }
   else if ( type == "grid" ) {
@@ -770,7 +770,7 @@ void marley::JSONConfig::prepare_neutrino_source( marley::Generator& gen ) const
 
     source = std::make_unique< marley::GridNeutrinoSource >( energies, PDs,
       pdg, method );
-    MARLEY_LOG_INFO() << "Created grid "
+    MARLEY_LOG( INFO, "init.config.source" ) << "Created grid "
       << marley_utils::get_particle_symbol( pdg ) << " source";
   }
   else if ( !process_extra_source_types(type, source_spec, pdg, source) ) {
@@ -892,10 +892,10 @@ void marley::JSONConfig::prepare_target( marley::Generator& gen ) const {
   auto target = std::make_unique< marley::Target >( atoms, atom_fractions );
   if ( target->has_single_nuclide() ) {
     const marley::TargetAtom& ta = target->atom_fraction_map().cbegin()->first;
-    MARLEY_LOG_INFO() << "Configured pure " << ta << " neutrino target";
+    MARLEY_LOG( INFO, "init.config.target" ) << "Configured pure " << ta << " neutrino target";
   }
   else {
-    MARLEY_LOG_INFO() << "Configured composite neutrino target with the"
+    MARLEY_LOG( INFO, "init.config.target" ) << "Configured composite neutrino target with the"
       << " following nuclide fractions:\n" << *target;
   }
   gen.set_target( std::move(target) );
@@ -941,22 +941,22 @@ bool marley::JSONConfig::process_extra_source_types(
   if ( type == "th1" ) {
     auto th1 = marley_root::get_root_object< TH1 >( tfile, namecycle );
     source = marley_root::make_root_neutrino_source( pdg_code, th1 );
-    MARLEY_LOG_INFO() << "Created a TH1 "
+    MARLEY_LOG( INFO, "init.config.source" ) << "Created a TH1 "
       << marley_utils::neutrino_pdg_to_string( pdg_code )
       << " source with parameters";
-    MARLEY_LOG_INFO() << "  Emin = " << source->get_Emin() << " MeV";
-    MARLEY_LOG_INFO() << "  Emax = " << source->get_Emax() << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  Emin = " << source->get_Emin() << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  Emax = " << source->get_Emax() << " MeV";
     return true;
   }
 
   else if ( type == "tgraph" ) {
     auto tg = marley_root::get_root_object<TGraph>( tfile, namecycle );
     source = marley_root::make_root_neutrino_source( pdg_code, tg );
-    MARLEY_LOG_INFO() << "Created a TGraph "
+    MARLEY_LOG( INFO, "init.config.source" ) << "Created a TGraph "
       << marley_utils::neutrino_pdg_to_string( pdg_code )
       << " source with parameters";
-    MARLEY_LOG_INFO() << "  Emin = " << source->get_Emin() << " MeV";
-    MARLEY_LOG_INFO() << "  Emax = " << source->get_Emax() << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  Emin = " << source->get_Emin() << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  Emax = " << source->get_Emax() << " MeV";
     return true;
   }
 #endif

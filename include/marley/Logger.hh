@@ -185,7 +185,7 @@ namespace marley {
 
           // Allows conversion to bool to get the types to work in the MARLEY_LOG_IMPL macro.
           // The return value is not intended to be used anywhere.
-          inline explicit operator bool() { return true; }
+          inline explicit operator bool() const { return true; }
 
           inline ~Message() {
             // If we have no active OutStreams, then just destroy the Message
@@ -339,21 +339,4 @@ inline bool marley::Logger::should_emit( const std::string& category,
 {
   LogLevel cl = this->category_level( category );
   return ( lev >= cl );
-}
-
-// Convenient shortcut functions for recording log messages
-inline auto MARLEY_LOG_ERROR() {
-  return marley::Logger::Instance().log( marley::Logger::LogLevel::ERROR );
-}
-
-inline auto MARLEY_LOG_WARNING() {
-  return marley::Logger::Instance().log( marley::Logger::LogLevel::WARNING );
-}
-
-inline auto MARLEY_LOG_INFO() {
-  return marley::Logger::Instance().log( marley::Logger::LogLevel::INFO );
-}
-
-inline auto MARLEY_LOG_DEBUG() {
-  return marley::Logger::Instance().log( marley::Logger::LogLevel::DEBUG );
 }

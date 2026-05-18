@@ -152,7 +152,8 @@ int main(int argc, char* argv[]) {
     out_file << KE << ' ' << xsec << '\n';
 
     // Also write these quantities to the Logger
-    MARLEY_LOG_INFO() << "KE = " << KE << " MeV, abundance-weighted total xsec = "
+    MARLEY_LOG( INFO, "app" ) << "KE = " << KE
+      << " MeV, abundance-weighted total xsec = "
       << xsec << " \u00D7 10^{-42} cm^2 / atom";
   }
 

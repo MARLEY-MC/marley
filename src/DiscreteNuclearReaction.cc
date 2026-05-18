@@ -245,7 +245,8 @@ std::shared_ptr< HepMC3::GenEvent > marley::DiscreteNuclearReaction
       " in marley::DiscreteNuclearReaction::create_event()" );
   }
 
-  MARLEY_LOG_DEBUG() << "Sampled a " << sampled_matrix_el.type_str()
+  MARLEY_LOG( DEBUG, "physics.reaction" ) << "Sampled a "
+    << sampled_matrix_el.type_str()
     << " transition from the " << marley::TargetAtom( pdg_b_ )
     << " ground state (with spin-parity " << static_cast<double>( twoJ_gs ) / 2.
     << P_gs << ") to the " << marley::TargetAtom( pdg_d_ )
@@ -495,7 +496,7 @@ double marley::DiscreteNuclearReaction::total_xs(
       check_max_E_level ); }, -1., 1.
   );
 
-  MARLEY_LOG_DEBUG() << "total xsec " << description_
+  MARLEY_LOG( DEBUG, "physics.reaction.xsec" ) << "total xsec " << description_
     << " to level with energy " << mat_el.level_energy() << " MeV is "
     << total_xsec << " MeV^(-2).";
 
@@ -557,13 +558,16 @@ double marley::DiscreteNuclearReaction::summed_xs_helper( int pdg_a,
       }
 
       if ( std::isnan(partial_xsec) ) {
-        MARLEY_LOG_WARNING() << "Partial cross section for reaction "
+        MARLEY_LOG( WARN, "physics.reaction.xsec" )
+          << "Partial cross section for reaction "
           << description_ << " gave NaN result.";
-        MARLEY_LOG_DEBUG() << "Parameters were level energy = "
+        MARLEY_LOG( DEBUG, "physics.reaction.xsec" )
+          << "Parameters were level energy = "
           << mat_el.level_energy() << " MeV, projectile kinetic energy = "
           << KEa << " MeV, and reduced matrix element = " << mat_el.strength()
           << ". Differential was set to " << differential << ".";
-        MARLEY_LOG_DEBUG() << "The partial cross section to this level"
+        MARLEY_LOG( DEBUG, "physics.reaction.xsec" )
+          << "The partial cross section to this level"
           << " will be set to zero.";
         partial_xsec = 0.;
       }

@@ -149,7 +149,7 @@ namespace {
       // For each energy, find a pointer to the level with the closest energy
       // owned by the decay scheme object.
       marley::Level* plevel = ds->get_pointer_to_closest_level( en );
-      MARLEY_LOG_DEBUG() << "reaction level at " << en
+      MARLEY_LOG( DEBUG, "physics.reaction" ) << "reaction level at " << en
         << " MeV was matched to the decay scheme level at "
         << plevel->energy() << " MeV";
 
@@ -181,7 +181,8 @@ namespace {
         marley::TargetAtom nuc_b( pdg_b );
         marley::TargetAtom nuc_d( pdg_d );
 
-        MARLEY_LOG_WARNING() << "The tabulated " << nuc_d << " level at "
+        MARLEY_LOG( WARN, "physics.reaction" )
+          << "The tabulated " << nuc_d << " level at "
           << plevel->energy() << " MeV does not satisfy the selection rules"
           << " for a " << mat_el.type_str() << " transition from the " << nuc_b
           << " ground state.\n Initial J\u03C0 = "

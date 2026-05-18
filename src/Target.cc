@@ -71,8 +71,8 @@ void marley::Target::initialize( const std::vector<marley::TargetAtom>& nuclides
     if ( af < 0. ) throw marley::Error("Invalid atom fraction "
       + std::to_string(af) + " encountered for a "
       + nuc.to_string() + " target atom");
-    else if ( af == 0. ) MARLEY_LOG_WARNING() << "Atom fraction of zero"
-      << " encountered for a " << nuc << " target atom";
+    else if ( af == 0. ) MARLEY_LOG( WARN, "init.config.target" )
+      << "Atom fraction of zero encountered for a " << nuc << " target atom";
     sum += af;
   }
 
