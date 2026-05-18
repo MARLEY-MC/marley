@@ -1,9 +1,9 @@
 # Top-level Makefile for MARLEY
-# Dispatches to CMake (preferred) or the hand-written GNU Make recipe (build.mk).
+# Dispatches to CMake (preferred) or the hand-written GNU Make recipe (make/build.mk).
 #
 # Usage:
 #   make                   — auto-detect cmake; use it if found
-#   make IGNORE_CMAKE=1    — force use of the hand-written build.mk recipe
+#   make IGNORE_CMAKE=1    — force use of the hand-written make/build.mk recipe
 #   make IGNORE_ROOT=1     — pass through to either build system
 #   make IGNORE_HEPMC3=1   — pass through to either build system
 #   make IGNORE_GSL=1      — use built-in GSL subset (pass through to either build system)
@@ -73,7 +73,7 @@ ifdef USE_CMAKE
 	cmake --build build $(CMAKE_BUILD_FLAGS)
 else
 	@mkdir -p build
-	$(MAKE) -C build -f $(CURDIR)/build.mk TOP_DIR=$(CURDIR) $(PASSTHROUGH_VARS)
+	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) $(PASSTHROUGH_VARS)
 endif
 
 debug:
@@ -82,7 +82,7 @@ ifdef USE_CMAKE
 	cmake --build build $(CMAKE_BUILD_FLAGS)
 else
 	@mkdir -p build
-	$(MAKE) -C build -f $(CURDIR)/build.mk TOP_DIR=$(CURDIR) debug $(PASSTHROUGH_VARS)
+	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) debug $(PASSTHROUGH_VARS)
 endif
 
 test:
@@ -92,7 +92,7 @@ ifdef USE_CMAKE
 	cd $(CURDIR) && MARLEY=$(CURDIR) ctest --test-dir build --output-on-failure
 else
 	@mkdir -p build
-	$(MAKE) -C build -f $(CURDIR)/build.mk TOP_DIR=$(CURDIR) test $(PASSTHROUGH_VARS)
+	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) test $(PASSTHROUGH_VARS)
 endif
 
 docs:
@@ -101,7 +101,7 @@ ifdef USE_CMAKE
 	cmake --build build --target docs $(CMAKE_BUILD_FLAGS)
 else
 	@mkdir -p build
-	$(MAKE) -C build -f $(CURDIR)/build.mk TOP_DIR=$(CURDIR) docs $(PASSTHROUGH_VARS)
+	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) docs $(PASSTHROUGH_VARS)
 endif
 
 doxygen:
@@ -110,7 +110,7 @@ ifdef USE_CMAKE
 	cmake --build build --target doxygen $(CMAKE_BUILD_FLAGS)
 else
 	@mkdir -p build
-	$(MAKE) -C build -f $(CURDIR)/build.mk TOP_DIR=$(CURDIR) doxygen $(PASSTHROUGH_VARS)
+	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) doxygen $(PASSTHROUGH_VARS)
 endif
 
 install:
@@ -119,7 +119,7 @@ ifdef USE_CMAKE
 	cmake --install build
 else
 	@mkdir -p build
-	$(MAKE) -C build -f $(CURDIR)/build.mk TOP_DIR=$(CURDIR) install $(PASSTHROUGH_VARS)
+	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) install $(PASSTHROUGH_VARS)
 endif
 
 uninstall:
@@ -128,7 +128,7 @@ ifdef USE_CMAKE
 	cmake --build build --target uninstall
 else
 	@mkdir -p build
-	$(MAKE) -C build -f $(CURDIR)/build.mk TOP_DIR=$(CURDIR) uninstall $(PASSTHROUGH_VARS)
+	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) uninstall $(PASSTHROUGH_VARS)
 endif
 
 reconfigure:
@@ -145,7 +145,7 @@ clean:
 help:
 	@echo "Usage:"
 	@echo "  make                   Auto-detect cmake and use it if found"
-	@echo "  make IGNORE_CMAKE=1    Force GNU Make path (build.mk)"
+	@echo "  make IGNORE_CMAKE=1    Force GNU Make path (make/build.mk)"
 	@echo "  make IGNORE_ROOT=1     Ignore ROOT"
 	@echo "  make IGNORE_HEPMC3=1   Ignore external HepMC3"
 	@echo "  make IGNORE_GSL=1      Use built-in GSL subset"
