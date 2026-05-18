@@ -33,13 +33,21 @@
 #define MARLEY_LOGGER_LEVEL_ERROR  5
 #define MARLEY_LOGGER_LEVEL_FATAL  6
 
+// Double-expansion helper that allows a severity level token (e.g., INFO) to
+// be assigned to MARLEY_COMPILED_LOG_LEVEL and matched to one of the numerical
+// values above. This is used below to enable numerical comparison in
+// MARLEY_LOG_IMPL without needing to reference the numerical values above
+// when configuring CMake or GNU Make.
+#define MARLEY_LOG_LEVEL_NUM(level) MARLEY_LOG_LEVEL_NUM_IMPL(level)
+#define MARLEY_LOG_LEVEL_NUM_IMPL(level) MARLEY_LOGGER_LEVEL_##level
+
 // Default to maximum severity of INFO (this can be overriden via injection
 // of a different definition for this macro at compile time). Anything below
 // this is blocked from execution at compile time, preventing
 // debugging messages from impairing runtime performance when they are not
 // enabled.
 #ifndef MARLEY_COMPILED_LOG_LEVEL
-  #define MARLEY_COMPILED_LOG_LEVEL MARLEY_LOGGER_LEVEL_INFO
+  #define MARLEY_COMPILED_LOG_LEVEL INFO
 #endif
 
 // Main user-facing macro (accepts one or two arguments depending on
@@ -56,7 +64,8 @@
 #define MARLEY_LOG_2(level, category) MARLEY_LOG_IMPL(level,category)
 
 #define MARLEY_LOG_IMPL(level, category) \
-  ( MARLEY_COMPILED_LOG_LEVEL <= MARLEY_LOGGER_LEVEL_##level ) && \
+  ( MARLEY_LOG_LEVEL_NUM(MARLEY_COMPILED_LOG_LEVEL) \
+    <= MARLEY_LOGGER_LEVEL_##level ) && \
   marley::Logger::Instance().log( marley::Logger::LogLevel::level, category )
 
 // Forward declare some MARLEY classes and their operator<< functions so that

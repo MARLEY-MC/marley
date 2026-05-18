@@ -15,12 +15,14 @@ UNKNOWN_REV=unknown version
 # option so that it will be overridden if the user has manually specified one
 # in CXXFLAGS.
 ifeq ($(MAKECMDGOALS),debug)
-  override CXXFLAGS := -std=$(CXX_STD) $(CXXFLAGS) -O0 -g
+  override CXXFLAGS := -std=$(CXX_STD) $(CXXFLAGS) -O0 -g \
+    -DMARLEY_COMPILED_LOG_LEVEL=TRACE
 else
   # Otherwise, use full optimization and do not include debugging info. Prepend
   # the default -O3 and -std options here in case the user wants to manually
   # override them in CXXFLAGS.
-  override CXXFLAGS := -O3 -std=$(CXX_STD) $(CXXFLAGS)
+  override CXXFLAGS := -O3 -std=$(CXX_STD) $(CXXFLAGS) \
+    -DMARLEY_COMPILED_LOG_LEVEL=INFO
 endif
 
 UNAME_S := $(shell uname -s)
