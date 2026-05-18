@@ -293,7 +293,7 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
     if ( cfn_empty || config_file_name.front() == '-' )
     {
       if ( !cfn_empty && config_file_name != "-h"
-        && config_file_name == "--help" )
+        && config_file_name != "--help" )
       {
         std::cerr << "marley generate: unrecognized option '"
           << config_file_name << "'\n";

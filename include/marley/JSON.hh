@@ -720,7 +720,6 @@ namespace marley {
       if ( found_char == std::ifstream::traits_type::eof() )
         msg += "end-of-file";
       else msg += std::string( "\'" ) + found_char + '\'';
-      //MARLEY_LOG_WARNING() << msg;
       throw marley::Error( msg );
     }
 
@@ -730,7 +729,6 @@ namespace marley {
       std::string msg( message );
       if ( !is ) msg += "end-of-file";
       else msg += '\'' + found_str + '\'';
-      //MARLEY_LOG_WARNING() << msg;
       throw marley::Error( msg );
     }
 
@@ -1076,12 +1074,12 @@ namespace marley {
 }
 
 // Stream operators for JSON input and output using C++ streams
-inline std::ostream& operator<<(std::ostream &os, const marley::JSON& json) {
+inline std::ostream& operator<<(std::ostream& os, const marley::JSON& json) {
   os << json.dump_string();
   return os;
 }
 
-inline std::istream& operator>>(std::istream &is, marley::JSON& json) {
+inline std::istream& operator>>(std::istream& is, marley::JSON& json) {
   json = marley::JSON::load(is);
   return is;
 }

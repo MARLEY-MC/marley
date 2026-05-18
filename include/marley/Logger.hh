@@ -20,12 +20,14 @@
 #include <memory>
 #include <mutex>
 #include <sstream>
+#include <unordered_map>
 #include <vector>
 
 // Forward declare some MARLEY classes and their operator<< functions so that
 // we can stream them to the Logger
 namespace marley {
   class HauserFeshbachDecay;
+  class JSON;
   class Parity;
   class Target;
   class TargetAtom;
@@ -34,6 +36,7 @@ namespace marley {
 std::ostream& operator<<( std::ostream& out,
   const marley::HauserFeshbachDecay& hfd );
 
+std::ostream& operator<<( std::ostream& os, const marley::JSON& json );
 std::ostream& operator<<( std::ostream& out, const marley::Parity& p );
 std::ostream& operator<<( std::ostream& out, const marley::Target& t );
 std::ostream& operator<<( std::ostream& out, const marley::TargetAtom& ta );
@@ -50,9 +53,9 @@ namespace marley {
       /// @brief Defines the logging levels recognized by the marley::Logger.
       /// @details Note that C++ automatically assigns ascending values to the
       /// enum class members (which have an underlying integral type) in the
-      /// order that they are written in the definition, so DISABLED < ERROR
-      /// < WARNING < INFO < DEBUG.
-      enum class LogLevel { DISABLED, ERROR, WARNING, INFO, DEBUG };
+      /// order that they are written in the definition, so TRACE < DEBUG, etc.
+      /// That is, the numerical values are in order of increasing severity.
+      enum class LogLevel { TRACE, DEBUG, INFO, NOTICE, WARNING, ERROR, FATAL };
 
     private:
 
@@ -80,7 +83,8 @@ namespace marley {
           /// this function. This could still be permissible if a suitable
           /// custom deleter was used to define the shared_ptr, but for safety,
           /// one should use @see OutStream::(std::ostream& os)
-          OutStream( std::shared_ptr< std::ostream > os, LogLevel lev );
+          OutStream( std::shared_ptr< std::ostream > os,
+            LogLevel min, LogLevel max );
 
           /// @param [in] os Reference to std::ostream object that will receive
           /// logging messages
@@ -93,14 +97,7 @@ namespace marley {
           /// constructor @see OutStream::(std::shared_ptr<std::ostream> os)
           /// is recommended for use with all streams except for std::cout and
           /// std::cerr.
-          OutStream( std::ostream& os, LogLevel lev );
-
-          template< typename OutputType > OutStream& operator<<(
-            const OutputType& output )
-          {
-            if ( stream_ ) *stream_ << output;
-            return *this;
-          }
+          OutStream( std::ostream& os, LogLevel min, LogLevel max );
 
         private:
 
@@ -108,8 +105,11 @@ namespace marley {
           /// messages
           std::shared_ptr< std::ostream > stream_;
 
-          /// @brief Logging level to use for this OutStream
-          LogLevel level_;
+          /// @brief Minimum severity to accept for this OutStream
+          LogLevel min_level_;
+
+          /// @brief Maximum severity to accept for this OutStream
+          LogLevel max_level_;
       };
 
     public:
@@ -121,7 +121,7 @@ namespace marley {
 
         public:
 
-          Message( std::vector< OutStream* >& vec, std::mutex* mtx )
+          Message( std::vector< std::ostream* >& vec, std::mutex* mtx )
             : osvec_( vec ), mtx_( mtx ) {}
 
           // Copy constructors cannot be defaulted because the class owns
@@ -146,7 +146,10 @@ namespace marley {
           template< typename OutputType > Message&
             operator<<( const OutputType& out )
           {
-            buffer_ << out;
+            // If we have no active OutStreams, then don't both to store the
+            // streaming output (since it will not be sent anywhere by the
+            // destructor
+            if ( !osvec_.empty() ) buffer_ << out;
             return *this;
           }
 
@@ -154,12 +157,13 @@ namespace marley {
           /// (like std::endl) via operator<<
           /// @note Code for this function is based on a trick discussed here:
           /// http://www.cplusplus.com/forum/general/54588/#msg294798
-          Message& operator<<(std::ostream& (*manip)(std::ostream&));
+          Message& operator<<( std::ostream& (*manip)(std::ostream&) );
 
           /// @brief Backup overload for extra output manipulators
-          Message& operator<<(std::ios_base& (*manip)(std::ios_base&));
+          Message& operator<<( std::ios_base& (*manip)(std::ios_base&) );
 
         protected:
+
           /// Used to cache output from multiple calls to operator<< until we
           /// have the full message. Then we just emit it in a single-step
           /// for each active OutStream, all at once. This together with a
@@ -167,47 +171,25 @@ namespace marley {
           /// conditions between parallel threads.
           std::ostringstream buffer_;
 
-          /// Active OutStreams that should receive the message
-          std::vector< OutStream* > osvec_;
+          /// Active output streams that should receive the Message
+          std::vector< std::ostream* > osvec_;
 
-          /// std::mutex to use to lock streaming output when emitting the final
-          /// message
+          /// std::mutex to use to lock streaming output when emitting the
+          /// final message
           std::mutex* mtx_;
       };
 
       /// @brief Create the singleton Logger
-      /// @param lev Logging level to use for emitting messages
-      Logger( LogLevel lev );
+      Logger();
+
+      /// @brief Initialize the Logger using settings expressed as a JSON
+      /// object
+      void configure( const marley::JSON& json );
+
+      static LogLevel string_to_loglevel( const std::string& str );
 
       /// @brief Get the singleton instance of the Logger class
       static Logger& Instance();
-
-      /// @brief Add a std::ostream to the vector of streams that will receive
-      /// Logger output
-      /// @note The stream owned by the std::shared_ptr should have been
-      /// dynamically allocated since std::shared_ptr will auto-delete it when
-      /// use_count falls to zero (unless a suitable custom deleter was used).
-      /// For adding std::cout or std::cerr to the Logger, please use @see
-      /// add_stream(std::ostream& stream, LogLevel level) instead. See also
-      /// the documentation for @see marley::Logger::OutStream::OutStream.
-      void add_stream( std::shared_ptr< std::ostream > stream,
-        LogLevel level = LogLevel::WARNING );
-
-      /// @brief Add a std::ostream to the vector of streams that will receive
-      /// Logger output
-      /// @note For streams other than std::cout and std::cerr, using @see
-      /// add_stream( std::shared_ptr< std::ostream > stream, LogLevel level )
-      /// instead of this function is recommended. See also the documentation
-      /// for @see marley::Logger::OutStream::OutStream.
-      void add_stream( std::ostream& stream,
-        LogLevel level = LogLevel::WARNING );
-
-      /// @brief Clear the vector of streams that receive Logger output
-      void clear_streams();
-
-      /// @brief Disable the Logger
-      /// @return The logging level in use before the logger was disabled
-      inline LogLevel disable();
 
       /// @brief Returns true if stream is already registered with the
       /// Logger, or false otherwise
@@ -216,17 +198,11 @@ namespace marley {
       /// @brief Prepare the Logger to receive a log message via
       /// the << stream operator
       /// @param lev marley::Logger::LogLevel of the incoming message
-      Message log( LogLevel lev = LogLevel::WARNING );
+      Message log( LogLevel lev = LogLevel::INFO );
 
       /// @brief Returns whether the logger should emit a message for the
       /// given category and level
-      inline bool should_emit( /*std::string_view category,*/ LogLevel lev );
-
-      /// @brief Set the global logging level
-      inline void set_level( LogLevel lev );
-
-      /// @brief Retrieve the current logging level
-      inline LogLevel level() const;
+      inline bool should_emit( std::string_view category, LogLevel lev );
 
       // Make the singleton Logger uncopyable and unmovable
       /// @brief Deleted copy constructor
@@ -240,33 +216,44 @@ namespace marley {
 
     private:
 
-      /// @brief Helper function for the marley::Logger::add_stream() methods
-      /// @param os Pointer to the std::ostream that we're attempting to add
-      /// to the Logger
-      /// @param [out] stream_enabled Whether the stream is enabled based on
-      /// the Logger state and the new LogLevel value
-      /// @param level The logging level for this stream
-      /// @return A pointer to the matching stream if it has already been added
-      /// to the Logger, or nullptr otherwise. If the stream has already been
-      /// added, its logging level and enabled/disabled state will be updated
-      /// by this function.
-      OutStream* find_stream(const std::ostream* os, bool& stream_enabled,
-        LogLevel level);
+      /// @brief Add a std::ostream to the vector of streams that will receive
+      /// Logger output
+      /// @note The stream owned by the std::shared_ptr should have been
+      /// dynamically allocated since std::shared_ptr will auto-delete it when
+      /// use_count falls to zero (unless a suitable custom deleter was used).
+      /// For adding std::cout or std::cerr to the Logger, please use @see
+      /// add_stream(std::ostream& stream, LogLevel level) instead. See also
+      /// the documentation for @see marley::Logger::OutStream::OutStream.
+      void add_stream( std::shared_ptr< std::ostream > stream,
+        LogLevel min, LogLevel max );
+
+      /// @brief Add a std::ostream to the vector of streams that will receive
+      /// Logger output
+      /// @note For streams other than std::cout and std::cerr, using @see
+      /// add_stream( std::shared_ptr< std::ostream > stream, LogLevel level )
+      /// instead of this function is recommended. See also the documentation
+      /// for @see marley::Logger::OutStream::OutStream.
+      void add_stream( std::ostream& stream, LogLevel min, LogLevel max );
 
       // @brief Returns a pointer to the given stream's OutStream object if
       // it has been added to the Logger, or nullptr otherwise.
-      const OutStream* get_stream(const std::ostream* os) const;
+      const OutStream* get_stream( const std::ostream* os ) const;
 
       // @brief Returns a pointer to the given stream's OutStream object if
       // it has been added to the Logger, or nullptr otherwise.
-      OutStream* get_stream(const std::ostream* os);
+      OutStream* get_stream( const std::ostream* os );
 
       /// @brief Vector of wrapped std::ostream objects that will
       /// receive the log messages
       std::vector< OutStream > streams_;
 
-      /// @brief Emit messages only at this logging level and less detailed
-      LogLevel level_;
+      /// @brief Default logging level for emitting messages
+      /// @details This value is the ultimate fallback for missing
+      /// category-specific levels
+      LogLevel default_level_ = LogLevel::INFO;
+
+      /// @brief Stores category logging levels
+      std::unordered_map< std::string, LogLevel > category_map_;
 
       /// @brief Used to avoid race conditions when emitting logging messages
       std::mutex mutex_;
@@ -275,35 +262,25 @@ namespace marley {
 }
 
 // Inline function definitions
-inline marley::Logger::LogLevel marley::Logger::disable() {
-  LogLevel old_level = level_;
-  level_ = LogLevel::DISABLED;
-  return old_level;
-}
-
-inline void marley::Logger::set_level( LogLevel lev ) { level_ = lev; }
-
-inline marley::Logger::LogLevel marley::Logger::level() const {
-  return level_;
-}
-
-inline bool marley::Logger::should_emit( LogLevel lev ) {
-  return ( lev <= level_ );
+inline bool marley::Logger::should_emit( std::string_view /*category*/,
+  LogLevel lev )
+{
+  return ( lev <= default_level_ );
 }
 
 // Convenient shortcut functions for recording log messages
 inline auto MARLEY_LOG_ERROR() {
-  return marley::Logger::Instance().log(marley::Logger::LogLevel::ERROR);
+  return marley::Logger::Instance().log( marley::Logger::LogLevel::ERROR );
 }
 
 inline auto MARLEY_LOG_WARNING() {
-  return marley::Logger::Instance().log(marley::Logger::LogLevel::WARNING);
+  return marley::Logger::Instance().log( marley::Logger::LogLevel::WARNING );
 }
 
 inline auto MARLEY_LOG_INFO() {
-  return marley::Logger::Instance().log(marley::Logger::LogLevel::INFO);
+  return marley::Logger::Instance().log( marley::Logger::LogLevel::INFO );
 }
 
 inline auto MARLEY_LOG_DEBUG() {
-  return marley::Logger::Instance().log(marley::Logger::LogLevel::DEBUG);
+  return marley::Logger::Instance().log( marley::Logger::LogLevel::DEBUG );
 }

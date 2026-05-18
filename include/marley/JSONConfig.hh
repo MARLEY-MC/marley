@@ -48,8 +48,6 @@ namespace marley {
       void prepare_target( marley::Generator& gen ) const;
       void prepare_weights( marley::Generator& gen ) const;
 
-      void update_logger_settings() const;
-
       InterpMethod get_interpolation_method( const std::string& rule ) const;
       int neutrino_pdg( const std::string& nu ) const;
 
