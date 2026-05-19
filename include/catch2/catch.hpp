@@ -7627,7 +7627,21 @@ namespace Catch {
 
 #ifdef CATCH_PLATFORM_MAC
 
-    #define CATCH_TRAP() __asm__("int $3\n" : : ) /* NOLINT */
+    /* On macOS the debugger trap instruction depends on the CPU architecture.
+     *
+     * x86 / x86_64:  "int $3"  — the classic x86 software breakpoint.
+     *
+     * ARM64 (Apple Silicon):  "brk #0"  — the AArch64 breakpoint instruction.
+     *   The immediate value #0 is the conventional choice used by debuggers
+     *   (e.g. LLDB) to recognise a software breakpoint.  Using "int $3" on
+     *   ARM64 produces an assembler error because the mnemonic does not exist
+     *   in the AArch64 instruction set.
+     */
+    #if defined(__arm64__) || defined(__aarch64__)
+        #define CATCH_TRAP() __asm__("brk #0" : : ) /* NOLINT */
+    #else
+        #define CATCH_TRAP() __asm__("int $3\n" : : ) /* NOLINT */
+    #endif
 
 #elif defined(CATCH_PLATFORM_LINUX)
     // If we can use inline assembler, do it because this allows us to break
