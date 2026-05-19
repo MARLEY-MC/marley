@@ -108,7 +108,7 @@ constexpr int NUM_TGRAPH_POINTS = 3000;
 void make_plots(const std::string& hist_title,
   const marley::tests::Histogram& events_hist,
   const std::vector<double>* theory_counts, double flux_avg_xsec, double chi2,
-  int ndof, double p_value, const std::string& output_filename,
+  int ndof, double p_value, const std::string& /*output_filename*/,
   const std::function<double(double)>* mod_xsec,
   const std::vector<std::string>* bin_labels = nullptr)
 {
@@ -226,7 +226,7 @@ void make_plots(const std::string& hist_title,
   ltx2.Draw("same");
   ltx2.SetTextSize(0.035);
 
-  canvas.SaveAs( output_filename.c_str() );
+  //canvas.SaveAs( output_filename.c_str() );
 }
 #endif
 
@@ -708,15 +708,16 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     // Differential cross section with respect to lab-frame recoil kinetic
     // energy of the struck nucleus (Tf_lab) at fixed projectile kinetic
     // energy (KEa)
-    std::function<double(double, double)> cevns_diff_xsec = [ma, mb, QW2, gV2](double KEa,
-      double Tf_lab) -> double
+    std::function< double( double, double ) > cevns_diff_xsec
+      = [ ma, mb, QW2 ]( double KEa, double Tf_lab ) -> double
     {
       // Mandelstam s
       double s = std::pow(ma + mb, 2) + 2.*mb*KEa;
       double sqrt_s = marley_utils::real_sqrt( s );
 
       // Target CM frame total energy
-      double Eb_CM = ( s - ma*ma + mb*mb ) / (2. * marley_utils::real_sqrt(s) );
+      double Eb_CM = ( s - ma*ma + mb*mb )
+        / ( 2. * marley_utils::real_sqrt(s) );
       double Eb_CM2 = std::pow(Eb_CM, 2);
 
       // Projectile CM frame total energy
@@ -729,7 +730,8 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
       if ( Tf_lab_max <= 0. ) return 0.;
       if ( Tf_lab > Tf_lab_max ) return 0.;
 
-      double xsec = marley_utils::GF2 * QW2 * gV2 * mb / (4. * marley_utils::pi);
+      double xsec = marley_utils::GF2 * QW2 * gV2 * mb
+        / ( 4. * marley_utils::pi );
 
       xsec *= ( Eb_CM2 / s ) * ( 1. - Tf_lab / Tf_lab_max );
 
@@ -755,8 +757,8 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
       return result;
     };
 
-    double cevns_pdf_norm = marley_utils::num_integrate(flux_avg_cevns_diff_xsec,
-      TF_MIN, TF_MAX);
+    double cevns_pdf_norm = marley_utils::num_integrate(
+      flux_avg_cevns_diff_xsec, TF_MIN, TF_MAX );
 
     // Flux-averaged total cross section (10^(-40) cm^2)
     double flux_avg_xsec = gen.flux_averaged_total_xs()
