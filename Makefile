@@ -32,16 +32,6 @@ ifdef IGNORE_GSL
 CMAKE_FLAGS += -DIGNORE_GSL=ON
 endif
 
-CMAKE_BUILD_FLAGS :=
-MAKE_JFLAG := $(firstword $(filter -j%,$(MAKEFLAGS)))
-ifneq ($(MAKE_JFLAG),)
-ifneq ($(MAKE_JFLAG),-j)
-CMAKE_BUILD_FLAGS += --parallel $(patsubst -j%,%,$(MAKE_JFLAG))
-else
-CMAKE_BUILD_FLAGS += --parallel
-endif
-endif
-
 PASSTHROUGH_VARS :=
 ifdef IGNORE_ROOT
 PASSTHROUGH_VARS += IGNORE_ROOT=$(IGNORE_ROOT)
@@ -70,7 +60,7 @@ endif
 all:
 ifdef USE_CMAKE
 	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
-	cmake --build build $(CMAKE_BUILD_FLAGS)
+	$(MAKE) -C build
 else
 	@mkdir -p build
 	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) $(PASSTHROUGH_VARS)
@@ -79,7 +69,7 @@ endif
 debug:
 ifdef USE_CMAKE
 	cmake -S . -B build $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Debug
-	cmake --build build $(CMAKE_BUILD_FLAGS)
+	$(MAKE) -C build
 else
 	@mkdir -p build
 	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) debug $(PASSTHROUGH_VARS)
@@ -88,7 +78,7 @@ endif
 test:
 ifdef USE_CMAKE
 	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
-	cmake --build build --target martest $(CMAKE_BUILD_FLAGS)
+	$(MAKE) -C build martest
 	cd $(CURDIR) && MARLEY=$(CURDIR) ctest --test-dir build --output-on-failure
 else
 	@mkdir -p build
@@ -99,6 +89,7 @@ docs:
 ifdef USE_CMAKE
 	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
 	cmake --build build --target docs $(CMAKE_BUILD_FLAGS)
+	$(MAKE) -C build docs
 else
 	@mkdir -p build
 	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) docs $(PASSTHROUGH_VARS)
@@ -108,6 +99,7 @@ doxygen:
 ifdef USE_CMAKE
 	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
 	cmake --build build --target doxygen $(CMAKE_BUILD_FLAGS)
+	$(MAKE) -C build doxygen
 else
 	@mkdir -p build
 	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) doxygen $(PASSTHROUGH_VARS)
@@ -125,7 +117,7 @@ endif
 uninstall:
 ifdef USE_CMAKE
 	@test -d build/CMakeFiles || (echo "ERROR: No CMake build found in build/. Run 'cmake --install' first." && exit 1)
-	cmake --build build --target uninstall
+	$(MAKE) -C build uninstall
 else
 	@mkdir -p build
 	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) uninstall $(PASSTHROUGH_VARS)
