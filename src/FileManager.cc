@@ -193,7 +193,7 @@ bool marley::FileManager::dir_iterate(const std::string& dir_name,
     std::string base_name = file->d_name;
     std::string full_file_name = dir_name + '/' + base_name;
 
-    MARLEY_LOG( DEBUG, "io" ) << "marley::FileManager found file \""
+    MARLEY_LOG( TRACE, "io" ) << "marley::FileManager found file \""
       << full_file_name << '\"';
 
     // If we had a problem, complain and try the next file

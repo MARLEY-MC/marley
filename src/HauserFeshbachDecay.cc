@@ -18,6 +18,7 @@
 
 #include "marley/ExitChannel.hh"
 #include "marley/Generator.hh"
+#include "marley/Logger.hh"
 #include "marley/MassTable.hh"
 #include "marley/HauserFeshbachDecay.hh"
 #include "marley/StructureDatabase.hh"
@@ -55,6 +56,10 @@ void marley::HauserFeshbachDecay::build_exit_channels(
   double rho_i = ldm.level_density( Exi_, twoJi_, Pi_ );
 
   total_width_ = 0.; // total compound nucleus decay width
+
+  MARLEY_LOG( DEBUG, "physics.deexcitation.hauser" ) << "Building exit"
+    " channels for PDG " << pdgi << " (Z=" << Zi << ", A=" << Ai
+    << ") at Ex = " << Exi_ << " MeV, 2J = " << twoJi_ << ", P = " << Pi_;
 
   for ( const auto& pair : sdb.fragments() ) {
 
@@ -132,6 +137,10 @@ void marley::HauserFeshbachDecay::build_exit_channels(
             pdgi, qi, Exi_, twoJi_, Pi_, rho_i, sdb, *level, f );
 
           total_width_ += ec->width();
+          MARLEY_LOG( TRACE, "physics.deexcitation.hauser.widths" )
+            << "  fragment " << marley_utils::particle_symbols.at( fragment_pid )
+            << " -> discrete level at " << Exf << " MeV, width = "
+            << ec->width() << " MeV";
 
           exit_channels_.push_back( std::move(ec) );
         }
@@ -148,6 +157,10 @@ void marley::HauserFeshbachDecay::build_exit_channels(
         pdgi, qi, Exi_, twoJi_, Pi_, rho_i, sdb, E_c_min, f );
 
       total_width_ += ec->width();
+      MARLEY_LOG( TRACE, "physics.deexcitation.hauser.widths" )
+        << "  fragment " << marley_utils::particle_symbols.at( fragment_pid )
+        << " -> continuum [" << E_c_min << ", " << Exf_max << "] MeV,"
+        << " width = " << ec->width() << " MeV";
 
       exit_channels_.push_back( std::move(ec) );
     }
@@ -181,6 +194,9 @@ void marley::HauserFeshbachDecay::build_exit_channels(
           qi, Exi_, twoJi_, Pi_, rho_i, sdb, *level_f );
 
         total_width_ += ec->width();
+        MARLEY_LOG( TRACE, "physics.deexcitation.hauser.widths" )
+          << "  gamma -> discrete level at " << Exf << " MeV, width = "
+          << ec->width() << " MeV";
 
         exit_channels_.push_back( std::move(ec) );
       }
@@ -198,9 +214,16 @@ void marley::HauserFeshbachDecay::build_exit_channels(
       qi, Exi_, twoJi_, Pi_, rho_i, sdb, E_c_min );
 
     total_width_ += ec->width();
+    MARLEY_LOG( TRACE, "physics.deexcitation.hauser.widths" )
+      << "  gamma -> continuum [" << E_c_min << ", " << Exi_ << "] MeV,"
+      << " width = " << ec->width() << " MeV";
 
     exit_channels_.push_back( std::move(ec) );
   }
+
+  MARLEY_LOG( DEBUG, "physics.deexcitation.hauser" ) << "Total compound"
+    " nucleus width = " << total_width_ << " MeV ("
+    << exit_channels_.size() << " exit channels)";
 }
 
 const marley::ExitChannel& marley::HauserFeshbachDecay::do_decay(
@@ -266,5 +289,18 @@ const std::unique_ptr< marley::ExitChannel >&
   size_t exit_channel_index = gen.sample_from_distribution( exit_channel_dist );
 
   const auto& ec = exit_channels_.at( exit_channel_index );
+
+  // Log which exit channel was selected and its branching fraction
+  double width_ec = ec->width();
+  double branching = ( total_width_ > 0. ) ? ( width_ec / total_width_ ) : 0.;
+  int ec_pdg = ec->emitted_particle_pdg();
+  std::string ec_symbol = marley_utils::particle_symbols.count( ec_pdg )
+    ? marley_utils::particle_symbols.at( ec_pdg ) : std::to_string( ec_pdg );
+  MARLEY_LOG( DEBUG, "physics.deexcitation.hauser" ) << "Selected exit channel:"
+    " emits " << ec_symbol
+    << ( ec->is_continuum() ? " to continuum" : " to discrete level" )
+    << ", width = " << width_ec << " MeV"
+    << ", branching fraction = " << branching;
+
   return ec;
 }

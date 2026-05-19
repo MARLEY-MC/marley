@@ -56,6 +56,9 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
   auto undecayed_residues = marley_hepmc3::get_particles_with_status(
     marley_hepmc3::NUHEPMC_UNDECAYED_RESIDUE_STATUS, event );
 
+  MARLEY_LOG( DEBUG, "physics.deexcitation" ) << "NucleusDecayer: processing "
+    << undecayed_residues.size() << " undecayed residue(s)";
+
   // Check the reaction process that created this event. The process types
   // distinguish between discrete and continuum reactions, which is helpful
   // below.
@@ -82,6 +85,10 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
     // If the residue is in its ground state, then there's nothing for us to do.
     // Just continue the loop without comment.
     if ( Ex == 0. ) continue;
+
+    MARLEY_LOG( DEBUG, "physics.deexcitation" ) << "De-exciting residue PDG "
+      << residue->pid() << ": Ex = " << Ex << " MeV, 2J = " << twoJ
+      << ", P = " << P;
 
     // The excitation energy should be nonnegative. Complain if it's not.
     if ( Ex < 0. ) throw marley::Error("Negative excitation energy Ex = "
@@ -156,6 +163,9 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
     // or not. If it was started from a discrete level, we'll double-check that
     // discrete level's excitation energy below.
     bool started_from_continuum = continuum;
+
+    MARLEY_LOG( DEBUG, "physics.deexcitation" ) << "De-excitation path: "
+      << ( continuum ? "continuum (Hauser-Feshbach)" : "discrete gamma cascade" );
 
     if ( continuum ) {
 

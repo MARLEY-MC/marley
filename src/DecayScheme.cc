@@ -124,8 +124,6 @@ void marley::DecayScheme::do_cascade( marley::Level& initial_level,
         << "  emitted gamma with energy "
         << p_gamma->energy() << " MeV. New level has energy "
         << p_current_level->energy() << " MeV.";
-      MARLEY_LOG( DEBUG, "physics.deexcitation.gamma" )
-        << "gamma energy = " << p_gamma->energy();
 
       // Get the excitation energy of the end level. This will be added to
       // the ground state mass of the nucleus to determine its
@@ -172,6 +170,10 @@ void marley::DecayScheme::do_cascade( marley::Level& initial_level,
       // sample from [0, 2*pi)
       double gamma_phi = gen.uniform_random_double( 0., 2.*marley_utils::pi,
         false );
+
+      MARLEY_LOG( TRACE, "physics.deexcitation.gamma" )
+        << "  sampled gamma direction: cos_theta = " << gamma_cos_theta
+        << ", phi = " << gamma_phi << " rad";
 
       // Determine the final energies and momenta for the recoiling nucleus and
       // emitted gamma ray. Store them in the final state particle objects.

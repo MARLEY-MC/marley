@@ -317,6 +317,11 @@ double marley::KoningDelarocheOpticalModel::compute_transmission_coefficient(
   if ( total_KE_CM <= 0. ) return 0.;
   update_target_mass( target_charge );
   calculate_kinematic_variables( total_KE_CM, fragment_pdg );
+
+  MARLEY_LOG( DEBUG, "physics.opticalmodel" ) << "KD OMP: fragment PDG "
+    << fragment_pdg << ", 2j = " << two_j << ", l = " << l
+    << ", 2s = " << two_s << ", KE_CM = " << total_KE_CM << " MeV";
+
   std::complex< double > S = s_matrix_element( fragment_pdg, two_j, l, two_s );
 
   // Guard against ±inf or NaN values that can occur in edge cases when the
@@ -338,8 +343,11 @@ double marley::KoningDelarocheOpticalModel::compute_transmission_coefficient(
   }
   norm_S = std::min( 1., std::max(0., norm_S) );
 
+  double T = 1.0 - norm_S;
+  MARLEY_LOG( TRACE, "physics.opticalmodel" ) << "KD OMP: S = (" << S.real()
+    << ", " << S.imag() << "), T = " << T;
   // We can now compute the transmission coefficient in the usual way
-  return 1.0 - norm_S;
+  return T;
 }
 
 std::complex< double >

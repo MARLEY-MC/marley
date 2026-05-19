@@ -147,7 +147,14 @@ marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(
     auto ds_file_iter = decay_scheme_filenames_.find( particle_id );
 
     // If not, then just give up and return a null pointer
-    if ( ds_file_iter == decay_scheme_filenames_.end() ) return nullptr;
+    if ( ds_file_iter == decay_scheme_filenames_.end() ) {
+      MARLEY_LOG( NOTICE, "init.structure.decay" ) << "No tabulated decay"
+        " scheme available for " << ta_requested << ". The Hauser-Feshbach"
+        " statistical model will be used for de-excitation.";
+      // Cache the null result to avoid repeating the lookup
+      decay_scheme_table_[ particle_id ] = nullptr;
+      return nullptr;
+    }
 
     // If a file is available, load all of the decay schemes present in it
     // and add them to the lookup table. If we find the one we're looking
@@ -391,7 +398,7 @@ void marley::StructureDatabase::initialize_jpi_table() {
   int nuc_pdg, twoJ;
   marley::Parity Pi;
   while ( table_file >> nuc_pdg >> twoJ >> Pi ) {
-    MARLEY_LOG( DEBUG, "init.structure" ) << "Nucleus with PDG code " << nuc_pdg
+    MARLEY_LOG( TRACE, "init.structure" ) << "Nucleus with PDG code " << nuc_pdg
       << " has spin-parity " << static_cast<double>( twoJ ) / 2. << Pi;
     jpi_table_[ nuc_pdg ] = std::pair<int, marley::Parity>( twoJ, Pi );
   }
@@ -445,11 +452,14 @@ void marley::StructureDatabase::load_structure_index() {
   int nuc_pdg;
   std::string data_file_name;
   while ( index_file >> nuc_pdg >> data_file_name ) {
-    MARLEY_LOG( DEBUG, "init.structure.decay" ) << "Nucleus with PDG code "
+    MARLEY_LOG( TRACE, "init.structure.decay" ) << "Nucleus with PDG code "
       << nuc_pdg << " has a tabulated decay scheme in the file "
       << data_file_name;
     decay_scheme_filenames_[ nuc_pdg ] = data_file_name;
   }
+
+  MARLEY_LOG( DEBUG, "init.structure.decay" ) << "Structure index loaded: "
+    << decay_scheme_filenames_.size() << " nuclide(s) indexed";
 
   // Avoid duplicate loading of the structure index by setting the
   // "already loaded" flag

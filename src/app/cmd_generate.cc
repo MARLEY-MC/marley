@@ -321,10 +321,12 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
     marley::JSON ex_set = json.get_object( "executable_settings" );
     long num_events = ex_set.get_long( "events", 1e3 );
 
+    MARLEY_LOG( INFO, "app" ) << "Requested events: " << num_events
+      << ", configuration file: \"" << config_file_name << "\"";
+
     int status_update_interval = DEFAULT_STATUS_UPDATE_INTERVAL;
     if ( ex_set.has_key("status_update_interval") ) {
       const auto& sui = ex_set.at( "status_update_interval" );
-
       bool ok;
       int sui_value = sui.to_long( ok );
 
@@ -449,7 +451,8 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
         update_status_bars( ev_count, num_events, num_old_events,
           start_time_point, output_files, num_status_lines );
       }
-    }
+
+    } // event loop
 
     reset_terminal( g_fallback_mode ? 0 : num_status_lines );
 
@@ -463,8 +466,16 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
     std::time_t end_time
       = std::chrono::system_clock::to_time_t( end_time_point );
 
-    if ( !interrupted ) std::cout << "MARLEY terminated normally on ";
-    else                std::cout << "MARLEY was interrupted by the user on ";
+    if ( !interrupted ) {
+      MARLEY_LOG( NOTICE, "app" ) << "Generated " << ( ev_count - 1
+        - num_old_events ) << " event(s) successfully";
+      std::cout << "MARLEY terminated normally on ";
+      }
+    else {
+      MARLEY_LOG( NOTICE, "app" ) << "Generation interrupted after "
+        << ( ev_count - 1 - num_old_events ) << " event(s)";
+      std::cout << "MARLEY was interrupted by the user on ";
+    }
     std::cout << put_time( std::localtime(&end_time), "%c %Z" ) << '\n';
 
     return true;

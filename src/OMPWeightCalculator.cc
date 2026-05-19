@@ -300,11 +300,17 @@ double marley::OMPWeightCalculator::weight( HepMC3::GenEvent& ev,
       w *= width_ec_alt / width_ec;
     }
 
+    MARLEY_LOG( DEBUG, "physics.opticalmodel" ) << "OMP reweight: vertex"
+      " weight w = " << w << " (tot_width_alt/tot_width = "
+      << width_tot_alt << "/" << width_tot << ")";
+
     // Multiply the weight for the current decay vertex into the overall
     // event weight
     weight *= w;
 
   } // decay vertex loop
 
+  MARLEY_LOG( DEBUG, "physics.opticalmodel" ) << "OMP reweight: final event"
+    " weight = " << weight;
   return weight;
 }

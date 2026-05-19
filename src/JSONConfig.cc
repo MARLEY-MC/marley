@@ -151,6 +151,9 @@ marley::Generator marley::JSONConfig::create_generator() const
   // user-supplied seed or the current number of seconds since the Unix epoch.
   marley::Generator gen( seed );
 
+  MARLEY_LOG( DEBUG, "init.config" ) << "Full generator configuration:\n"
+    << json_;
+
   // Set the method to use for computing Coulomb corrections in all reactions.
   // If the user gave an explicit setting for this, use that.
   // Otherwise, interpolate between the Fermi function and the modified
@@ -297,7 +300,7 @@ marley::Generator marley::JSONConfig::create_generator() const
 
   // Before returning the newly-created Generator object, print logging
   // messages describing the reactions that are active.
-  MARLEY_LOG( INFO, "init.config" ) << "Generator configuration complete. Active reactions:";
+  MARLEY_LOG( NOTICE, "init.config" ) << "Generator configuration complete. Active reactions:";
   for ( const auto& r : gen.get_reactions() ) {
 
     const marley::TargetAtom ta = r->atomic_target();
@@ -344,6 +347,11 @@ marley::Generator marley::JSONConfig::create_generator() const
       MARLEY_LOG( INFO, "init.config" ) << "  " << proc_type_str << ": "
         << r->get_description() << " (KE @ threshold: "
         << temp_oss.str();
+      if ( no_flux ) MARLEY_LOG( NOTICE, "init.config" )
+        << "  WARNING: reaction \"" << r->get_description() << "\" threshold"
+        << " (" << threshold_KE << " MeV) exceeds the maximum source energy ("
+        << gen.get_source().get_Emax() << " MeV). No events will be generated"
+        << " via this reaction.";
     }
   }
 
@@ -612,7 +620,11 @@ void marley::JSONConfig::prepare_neutrino_source( marley::Generator& gen ) const
     const marley::JSON& max_spec = json_.at( "energy_pdf_max" );
     double user_max = max_spec.to_double( ok );
     if ( !ok ) handle_json_error( "energy_pdf_max", max_spec );
-    else gen.set_default_E_pdf_max( user_max );
+    else {
+      gen.set_default_E_pdf_max( user_max );
+      MARLEY_LOG( DEBUG, "init.config.source" ) << "User-specified"
+        " energy_pdf_max = " << user_max;
+    }
   }
 
   // Check whether the JSON configuration includes a neutrino source
@@ -787,6 +799,8 @@ void marley::JSONConfig::prepare_neutrino_source( marley::Generator& gen ) const
     if ( !ok ) handle_json_error( "source.weight_flux",
       source_spec.at("weight_flux") );
     gen.set_weight_flux( should_we_weight );
+    MARLEY_LOG( DEBUG, "init.config.source" ) << "weight_flux = "
+      << ( should_we_weight ? "true" : "false" );
   }
 
   // Load the generator with the new source object

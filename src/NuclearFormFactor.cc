@@ -151,8 +151,8 @@ void marley::KleinNystrandNuclearFormFactor::initialize_r0_table() {
     int pdg = marley_utils::get_nucleus_pid( Z, A );
     r0_table_->operator[]( pdg ) = R;
 
-    MARLEY_LOG( DEBUG, "init.structure" ) << "Nucleus with PDG code " << pdg
-      << " has rms charge radius " << R << " fm";
+    MARLEY_LOG( TRACE, "init.structure.masstable" ) << "Nucleus with PDG code "
+      << pdg << " has rms charge radius " << R << " fm";
   }
 
 }

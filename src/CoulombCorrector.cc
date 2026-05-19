@@ -118,14 +118,22 @@ double marley::CoulombCorrector::coulomb_correction_factor( double beta_rel_cd )
   const
 {
   // Don't do anything if Coulomb corrections are switched off
-  if ( coulomb_mode_ == CoulombMode::NO_CORRECTION ) return 1.;
+  if ( coulomb_mode_ == CoulombMode::NO_CORRECTION ) {
+    MARLEY_LOG( TRACE, "physics.coulomb" ) << "Coulomb correction factor = 1"
+      " (NO_CORRECTION mode)";
+    return 1.;
+  }
 
   // Fermi function approach to the Coulomb correction
   double fermi_func = fermi_function( beta_rel_cd );
 
   // Unconditionally return the value of the Fermi function if the user
   // has configured things this way
-  if ( coulomb_mode_ == CoulombMode::FERMI_FUNCTION ) return fermi_func;
+  if ( coulomb_mode_ == CoulombMode::FERMI_FUNCTION ) {
+    MARLEY_LOG( TRACE, "physics.coulomb" ) << "Coulomb correction factor = "
+      << fermi_func << " (Fermi function, beta_rel = " << beta_rel_cd << ")";
+    return fermi_func;
+  }
 
   bool use_mema = false;
   if ( coulomb_mode_ == CoulombMode::MEMA
@@ -169,8 +177,11 @@ double marley::CoulombCorrector::coulomb_correction_factor( double beta_rel_cd )
   double diff_Fermi = std::abs( fermi_func - 1. );
   double diff_EMA = std::abs( factor_EMA - 1. );
 
-  if ( diff_Fermi < diff_EMA ) return fermi_func;
-  else return factor_EMA;
+  double result = ( diff_Fermi < diff_EMA ) ? fermi_func : factor_EMA;
+  MARLEY_LOG( TRACE, "physics.coulomb" ) << "Coulomb correction factor = "
+    << result << " (beta_rel = " << beta_rel_cd
+    << ", Fermi = " << fermi_func << ", EMA = " << factor_EMA << ")";
+  return result;
 }
 
 // Effective momentum approximation for the Coulomb correction factor
@@ -199,7 +210,7 @@ double marley::CoulombCorrector::ema_factor(double beta_rel_cd, bool& ok,
 
   // Check for numerical errors from the square root
   if ( !std::isfinite(gamma_rel_cd) ) {
-    MARLEY_LOG( WARN, "physics.formfactor" ) << "Invalid beta_rel = "
+    MARLEY_LOG( WARN, "physics.coulomb" ) << "Invalid beta_rel = "
       << beta_rel_cd
       << " encountered in marley::CoulombCorrector::ema_factor()";
   }

@@ -17,6 +17,7 @@
 #include "marley/marley_utils.hh"
 #include "marley/ElectronReaction.hh"
 #include "marley/Generator.hh"
+#include "marley/Logger.hh"
 
 namespace {
 
@@ -54,6 +55,10 @@ marley::ElectronReaction::ElectronReaction(int pdg_a, int target_atom_pdg)
   // for this reaction to proceed at threshold
   KEa_threshold_ = ( std::pow(mc_ + md_, 2)
     - std::pow(ma_ + mb_, 2) ) / ( 2.*mb_ );
+
+  MARLEY_LOG( DEBUG, "physics.reaction" ) << "ElectronReaction: "
+    << description_ << ", g1 = " << g1_ << ", g2 = " << g2_
+    << ", threshold KE = " << KEa_threshold_ << " MeV";
 }
 
 void marley::ElectronReaction::set_coupling_constants()
@@ -208,6 +213,10 @@ std::shared_ptr< HepMC3::GenEvent > marley::ElectronReaction::create_event(
   // We can do this because the differential cross section is independent of
   // the azimuthal angle.
   double phi_c_cm = gen.uniform_random_double(0., marley_utils::two_pi, false);
+
+  MARLEY_LOG( DEBUG, "physics.reaction" ) << "ElectronReaction::create_event:"
+    " KEa = " << KEa << " MeV, sampled cos_theta_cm = " << cos_theta_c_cm
+    << ", phi_cm = " << phi_c_cm;
 
   // Create and return the completed event object
   // Note: electrons have spin 1/2 and positive intrinsic parity

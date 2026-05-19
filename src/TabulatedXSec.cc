@@ -363,6 +363,8 @@ double marley::TabulatedXSec::integral( int pdg_a, double KEa ) const
 }
 
 void marley::TabulatedXSec::optimize( int pdg_a, double max_KEa ) {
+  MARLEY_LOG( INFO, "physics.reaction.xsec" ) << "Optimizing CRPA cross"
+    " section up to " << max_KEa << " MeV";
   // Loop over each of the multipoles
   for ( const auto& pair : responses_ ) {
     const auto& ml = pair.first;
@@ -412,8 +414,9 @@ void marley::TabulatedXSec::optimize( int pdg_a, double max_KEa ) {
       };
     }
 
-    MARLEY_LOG( INFO, "physics.reaction.xsec" ) << "Optimizing total cross section for "
-      << ml.J_ << ml.Pi_;
+    MARLEY_LOG( DEBUG, "physics.reaction.xsec" ) << "Optimizing total cross section for "
+      << ml.J_ << ml.Pi_ << " over KE in ["
+      << min_KEa << ", " << max_KEa << "] MeV";
 
     // Now we're ready to build the Chebyshev interpolating functions for
     // this multipole. We need one for the total cross section and the

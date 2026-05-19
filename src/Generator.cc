@@ -65,7 +65,7 @@ marley::Generator::Generator( uint_fast64_t seed )
 void marley::Generator::print_logo() {
   static bool printed_logo = false;
   if ( !printed_logo ) {
-    MARLEY_LOG( INFO, "physics.generator" ) << '\n' << marley_utils::marley_logo
+    MARLEY_LOG( NOTICE, "physics.generator" ) << '\n' << marley_utils::marley_logo
       << "\nDon't worry about a thing,\n'Cause every little thing"
       << " gonna be all right.\n-- Bob, \"Three Little Birds\"\n\n"
       << "Model of Argon Reaction Low Energy Yields\n"
@@ -160,7 +160,7 @@ void marley::Generator::reseed( uint_fast64_t seed ) {
   std::seed_seq seed_sequence{ seed_ };
   rand_gen_.seed( seed_sequence );
 
-  MARLEY_LOG( INFO, "physics.generator" ) << "Seeded random number generator with "
+  MARLEY_LOG( NOTICE, "physics.generator" ) << "Seeded random number generator with "
     << seed_;
 }
 
@@ -198,6 +198,8 @@ void marley::Generator::normalize_E_pdf() {
         " source. Please verify that your neutrino source produces particles"
         " above threshold for at least one reaction.");
     }
+    MARLEY_LOG( DEBUG, "physics.generator" ) << "Energy PDF normalization"
+      " factor = " << norm_;
   }
   else {
     // Reset the normalization factor to its default of one until
@@ -219,6 +221,8 @@ void marley::Generator::normalize_E_pdf() {
         " source spectrum produces significant flux above the reaction"
         " threshold(s)." );
     }
+    MARLEY_LOG( DEBUG, "physics.generator" ) << "Energy PDF normalization"
+      " factor = " << norm_;
   }
 }
 
@@ -293,6 +297,9 @@ double marley::Generator::rejection_sample(
       x_at_max ) * safety_factor;
   }
 
+  MARLEY_LOG( TRACE, "physics.generator.sampling" ) << "rejection_sample:"
+    " xmin = " << xmin << ", xmax = " << xmax << ", initial fmax = " << fmax;
+
   double x, y, val;
 
   do {
@@ -303,6 +310,8 @@ double marley::Generator::rejection_sample(
     y = uniform_random_double( 0., fmax, true );
 
     val = f( x );
+    MARLEY_LOG( TRACE, "physics.generator.sampling" ) << "rejection_sample:"
+      " trial x = " << x << ", y = " << y << ", f(x) = " << val;
     if ( val > fmax ) {
 
       MARLEY_LOG( WARN, "physics.generator.sampling" ) << "PDF value f(x) = "
@@ -430,7 +439,10 @@ marley::Reaction& marley::Generator::sample_reaction( double& E ) {
   std::discrete_distribution<size_t>::param_type
     params( total_xs_values_.begin(), total_xs_values_.end() );
   size_t r_index = r_index_dist_( rand_gen_, params );
-  return *reactions_.at( r_index );
+  auto& sampled_reaction = *reactions_.at( r_index );
+  MARLEY_LOG( DEBUG, "physics.generator" ) << "Sampled reaction: "
+    << sampled_reaction.get_description() << " at E_nu = " << E << " MeV";
+  return sampled_reaction;
 }
 
 const marley::NeutrinoSource& marley::Generator::get_source() const {

@@ -18,6 +18,7 @@
 #include "marley/Error.hh"
 #include "marley/Generator.hh"
 #include "marley/JSONConfig.hh"
+#include "marley/Logger.hh"
 #include "marley/OutputFile.hh"
 #include "marley/OutputFileAscii.hh"
 
@@ -64,14 +65,23 @@ std::shared_ptr< marley::OutputFile > marley::OutputFile::make_OutputFile(
   std::string format = output_config.at( "format" ).to_string();
 
   if ( format == "ascii" ) {
-    return std::make_shared< marley::OutputFileAscii >( output_config );
+    auto out = std::make_shared< marley::OutputFileAscii >( output_config );
+    MARLEY_LOG( INFO, "io" ) << "Opened output file \"" << out->name()
+      << "\" (format: ascii)";
+    return out;
   }
   #ifdef USE_ROOT
   else if ( format == "root" ) {
-    return std::make_shared< marley::OutputFileRoot >( output_config );
+    auto out = std::make_shared< marley::OutputFileRoot >( output_config );
+    MARLEY_LOG( INFO, "io" ) << "Opened output file \"" << out->name()
+      << "\" (format: root)";
+    return out;
   }
   else if ( format == "plain-root" ) {
-    return std::make_shared< marley::OutputFilePlainRoot >( output_config );
+    auto out = std::make_shared< marley::OutputFilePlainRoot >( output_config );
+    MARLEY_LOG( INFO, "io" ) << "Opened output file \"" << out->name()
+      << "\" (format: plain-root)";
+    return out;
   }
   #endif
   else throw marley::Error( "Invalid output file format \"" + format

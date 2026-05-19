@@ -169,6 +169,9 @@ bool marley::OutputFileAscii::resume( std::unique_ptr<marley::Generator>& gen,
   // event in the file is equal to the total number of events.
   num_previous_events = evt->event_number();
 
+  MARLEY_LOG( INFO, "io" ) << "Resuming run from \"" << name_ << "\":"
+    << " found " << num_previous_events << " previous event(s)";
+
   // We're done retrieving the information. Restore the Generator to its
   // previous state
   gen = this->restore_generator( json_config );
