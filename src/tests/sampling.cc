@@ -35,7 +35,7 @@
 
 // MARLEY includes
 #include "marley/Error.hh"
-#include "marley/Event.hh"
+#include "marley/DiscreteNuclearReaction.hh"
 #include "marley/Generator.hh"
 #include "marley/HauserFeshbachDecay.hh"
 #include "marley/JSON.hh"
@@ -43,8 +43,14 @@
 #include "marley/FileManager.hh"
 #include "marley/Logger.hh"
 #include "marley/Reaction.hh"
+#include "marley/hepmc3_utils.hh"
 #include "marley/marley_kinematics.hh"
 #include "marley/marley_utils.hh"
+
+// HepMC3 includes (needed to construct a GenEvent/GenVertex placeholder
+// for the Hauser-Feshbach test)
+#include "HepMC3/GenEvent.h"
+#include "HepMC3/GenVertex.h"
 
 #include "marley/tests/Histogram.hh"
 
@@ -261,40 +267,43 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     if ( e % 1000 == 0 ) MARLEY_LOG_INFO() << "Event " << e;
 
     // Generate a new event
-    HepMC3::GenEvent ev = gen.create_event();
-    //ev_file << ev << '\n';
+    auto ev_ptr = gen.create_event();
+    auto& ev = *ev_ptr;
 
-    // DEBUG
-    //ev_file >> ev;
+    // Store the neutrino energy (kinetic energy = E - m)
+    auto proj = marley_hepmc3::get_projectile( ev );
+    energy_hist.fill( proj->momentum().e() - proj->generated_mass() );
 
-    // Store the neutrino energy
-    energy_hist.fill( ev.projectile().kinetic_energy() );
-
-    cevns_hist.fill( ev.residue().kinetic_energy() );
+    // Store the nuclear recoil kinetic energy (residue)
+    auto resid = marley_hepmc3::get_residue( ev );
+    if ( resid ) cevns_hist.fill( resid->momentum().e() - resid->generated_mass() );
 
     // Calculate the boost parameters needed to go from the lab frame
     // to the CM frame.
-    const marley::Particle& p1 = ev.projectile();
-    const marley::Particle& p2 = ev.target();
+    auto targ = marley_hepmc3::get_target( ev );
+    const auto& p1_mom = proj->momentum();
+    const auto& p2_mom = targ->momentum();
 
-    double E_tot = p1.total_energy() + p2.total_energy();
+    double E_tot = p1_mom.e() + p2_mom.e();
 
-    double beta_x = ( p1.px() + p2.px() ) / E_tot;
-    double beta_y = ( p1.py() + p2.py() ) / E_tot;
-    double beta_z = ( p1.pz() + p2.pz() ) / E_tot;
+    double beta_x = ( p1_mom.px() + p2_mom.px() ) / E_tot;
+    double beta_y = ( p1_mom.py() + p2_mom.py() ) / E_tot;
+    double beta_z = ( p1_mom.pz() + p2_mom.pz() ) / E_tot;
 
-    // Make copies of the projectile and ejectile and boost them to the CM
-    // frame
-    marley::Particle pr = ev.projectile();
-    marley::Particle ej = ev.ejectile();
+    // Make temporary particle copies to boost into the CM frame
+    HepMC3::GenParticle pr_copy( proj->momentum(), proj->pid(), proj->status() );
+    auto ej_ptr = marley_hepmc3::get_ejectile( ev );
+    HepMC3::GenParticle ej_copy( ej_ptr->momentum(), ej_ptr->pid(), ej_ptr->status() );
 
-    marley_kinematics::lorentz_boost(beta_x, beta_y, beta_z, pr);
-    marley_kinematics::lorentz_boost(beta_x, beta_y, beta_z, ej);
+    marley_kinematics::lorentz_boost(beta_x, beta_y, beta_z, pr_copy);
+    marley_kinematics::lorentz_boost(beta_x, beta_y, beta_z, ej_copy);
 
     // Store the CM frame scattering angle for the current event.
-    double cos_theta_ej_cm = ( pr.px()*ej.px() + pr.py()*ej.py()
-      + pr.pz()*ej.pz() ) / pr.momentum_magnitude()
-      / ej.momentum_magnitude();
+    const auto& pr_mom = pr_copy.momentum();
+    const auto& ej_mom = ej_copy.momentum();
+    double cos_theta_ej_cm = ( pr_mom.px()*ej_mom.px() + pr_mom.py()*ej_mom.py()
+      + pr_mom.pz()*ej_mom.pz() ) / pr_mom.p3mod()
+      / ej_mom.p3mod();
 
     cos_hist.fill( cos_theta_ej_cm );
   }
@@ -345,7 +354,9 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
       int pdg_a = source.get_pid();
       double diff_xsec = 0.;
       for ( const auto& react : reactions ) {
-        diff_xsec += react->diff_xs(pdg_a, Ev, cos_theta_c_cm);
+        const auto* dnr = dynamic_cast<const marley::DiscreteNuclearReaction*>(
+          react.get() );
+        if ( dnr ) diff_xsec += dnr->diff_xs(pdg_a, Ev, cos_theta_c_cm);
       }
       return diff_xsec;
     };
@@ -433,7 +444,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
   INFO("Checking sampling of Hauser-Feshbach decays");
   {
-    // Create a Particle object representing a compound 40K* ion
+    // Create a GenParticle object representing a compound 40K* ion
     // with net charge qi = +1
     const int qi = 1;
     const auto& mt = marley::MassTable::Instance();
@@ -441,7 +452,17 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     double mass = mt.get_atomic_mass( PDG_40K ) - qi*me;
     mass += HF_Exi;
 
-    marley::Particle compound_nuc( PDG_40K, mass, 0., 0., 0., mass, 1 );
+    auto compound_nuc = marley_hepmc3::make_particle( PDG_40K, 0., 0., 0., mass,
+      marley_hepmc3::NUHEPMC_INTERMEDIATE_RESIDUE_STATUS, mass );
+
+    // HepMC3 GenParticle::add_attribute() requires the particle to be
+    // attached to a GenEvent.  Create a minimal placeholder event so that
+    // set_particle_charge() can store the charge attribute.
+    auto tmp_evt = std::make_shared< HepMC3::GenEvent >();
+    auto tmp_vtx = std::make_shared< HepMC3::GenVertex >();
+    tmp_vtx->add_particle_out( compound_nuc );
+    tmp_evt->add_vertex( tmp_vtx );
+    marley_hepmc3::set_particle_charge( *compound_nuc, qi );
 
     // Now create a HauserFeshbachDecay object that can be used to decay it
     auto& sdb = gen.get_structure_db();
@@ -465,9 +486,6 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     // Do a bunch of decays, and record which particle (gamma or fragment)
     // gets emitted each time
     for ( int e = 0; e < NUM_EVENTS; ++e ) {
-      marley::Parity dummy_Pf;
-      marley::Particle emitted_particle;
-      marley::Particle final_nucleus;
       const auto& exit_channel = hfd.sample_exit_channel( gen );
 
       int emitted_pdg = exit_channel->emitted_particle_pdg();
@@ -570,7 +588,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
       double Ex_max = cec.E_c_max();
 
       // Mass of the initial (pre-decay) nucleus
-      double mi = compound_nuc.mass();
+      double mi = compound_nuc->generated_mass();
 
       // Proton number of the emitted particle
       int ep_Z = marley_utils::get_particle_Z( cec.emitted_particle_pdg() );
@@ -629,7 +647,9 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
         double dummy_Ex = HF_Exi;
         int dummy_twoJf = HF_twoJi;
         marley::Parity dummy_P = HF_Pi;
-        marley::Particle fragment, final_nucleus;
+        std::shared_ptr<HepMC3::GenParticle> fragment;
+        std::shared_ptr<HepMC3::GenParticle> final_nucleus;
+        int dummy_qi = qi;
 
         // TODO: finish decay. The exit channel just gets
         // the two final masses ready. HauserFeshbachDecay
@@ -638,10 +658,10 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
         // just calculate the one quantity that you need (fragment CM KE)
         if ( e % 1000 == 0 ) MARLEY_LOG_INFO() << "Decay " << e;
         cec.do_decay(dummy_Ex, dummy_twoJf, dummy_P,
-          compound_nuc, fragment, final_nucleus, gen);
-        double E_frag_CM = ( mi*mi - std::pow(final_nucleus.mass(), 2)
-          + std::pow(fragment.mass(), 2) ) / ( 2. * mi );
-        double KE_frag_CM = E_frag_CM - fragment.mass();
+          compound_nuc, fragment, final_nucleus, dummy_qi, gen);
+        double E_frag_CM = ( mi*mi - std::pow(final_nucleus->generated_mass(), 2)
+          + std::pow(fragment->generated_mass(), 2) ) / ( 2. * mi );
+        double KE_frag_CM = E_frag_CM - fragment->generated_mass();
         hf_decay_hist.fill( KE_frag_CM );
       }
 
