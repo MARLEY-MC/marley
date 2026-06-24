@@ -66,8 +66,8 @@ bool marley::CommandHandler::cmd_dumpxs( std::deque< std::string >& args ) {
   }
 
   // We know that args has exactly two elements if we make it here
-  std::string config_file_name( args.front() );
-  std::string output_file_name( args.back() );
+  std::string output_file_name( args.front() );
+  std::string config_file_name( args.back() );
 
   std::ifstream temp_stream( output_file_name );
   if ( temp_stream ) {

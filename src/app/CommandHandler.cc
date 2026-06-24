@@ -47,8 +47,12 @@ namespace {
   }
 
   void print_print_help() {
-    std::cout << "Usage: marley print INPUT_FILE...\n\n"
+    std::cout << "Usage: marley print [FORMAT] INPUT_FILES...\n\n"
       << "Print one or more MARLEY event files in a human-readable format.\n\n"
+      << "  FORMAT         Optional output format selector:\n"
+      << "                   hepmc3 (default): stream HepMC3 text to stdout\n"
+      << "                   legacy: MARLEY legacy human-readable event"
+      << " summary\n\n"
       << "Options:\n"
       << "  -h, --help     Print this help message\n";
   }
@@ -62,7 +66,7 @@ namespace {
   }
 
   void print_dumpxs_help() {
-    std::cout << "Usage: marley dump-xs CONFIG_FILE OUTPUT_FILE\n\n"
+    std::cout << "Usage: marley dump-xs OUTPUT_FILE CONFIG_FILE\n\n"
       << "Tabulate the total cross section versus projectile energy using the\n"
       << "settings in CONFIG_FILE and write the results to OUTPUT_FILE.\n\n"
       << "Options:\n"
@@ -142,6 +146,9 @@ bool marley::CommandHandler::print_top_level_help() {
     std::cout << '\n';
   }
 
+  std::cout << "\nOptions:\n"
+    << "  -h, --help     Show top-level help\n"
+    << "  -v, --version  Print version information\n";
   std::cout << "\nRun 'marley help <command>' or 'marley <command> --help' for"
     << " details.\n"
     << "MARLEY home page: <https://www.marleygen.org>\n";
