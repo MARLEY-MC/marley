@@ -43,14 +43,25 @@ namespace marley {
       inline void set_vT( double val ) { vT_ = val; }
       inline void set_vTprime( double val ) { vTprime_ = val; }
 
-      // Scalar product with the corresponding nuclear responses
+      // Scalar product with the corresponding nuclear responses.
+      // Guard each term so that a zero nuclear response yields a zero
+      // contribution even when the corresponding lepton factor is NaN.
+      // Note that NaN * 0 == NaN rather than 0, which would silently corrupt
+      // the result.
+      /// @todo Revisit this hacky fix as you do a full implementation of
+      /// inelastic NC scattering at finite momentum transfer
       inline double operator*( const NuclearResponses& nr ) {
         double product = 0.;
-        product += this->vCC_ * nr.RCC();
-        product += this->vLL_ * nr.RLL();
-        product += this->vCL_ * nr.RCL();
-        product += this->vT_ * nr.RT();
-        product += this->vTprime_ * nr.RTprime();
+        double rcc = nr.RCC();
+        double rll = nr.RLL();
+        double rcl = nr.RCL();
+        double rt  = nr.RT();
+        double rtp = nr.RTprime();
+        if ( rcc != 0. ) product += this->vCC_ * rcc;
+        if ( rll != 0. ) product += this->vLL_ * rll;
+        if ( rcl != 0. ) product += this->vCL_ * rcl;
+        if ( rt  != 0. ) product += this->vT_ * rt;
+        if ( rtp != 0. ) product += this->vTprime_ * rtp;
         return product;
       }
 
