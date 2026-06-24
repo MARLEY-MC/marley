@@ -638,7 +638,7 @@ if(NOT GSL_FOUND)
 endif()
 
 add_executable(martest ${MARLEY_TEST_SOURCES})
-target_link_libraries(martest PRIVATE MARLEY)
+target_link_libraries(martest PRIVATE marley_lib)
 prefer_imported_or_flags(martest PRIVATE "${GSL_IMPORTED_TARGETS}"
   GSL_CFLAGS GSL_LIBS)
 target_include_directories(martest PRIVATE
