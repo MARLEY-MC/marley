@@ -302,6 +302,12 @@ datadir = $(prefix)/share
 libdir = $(exec_prefix)/lib
 incdir = $(prefix)/include
 
+# Path (without DESTDIR) to the install manifest that records which files were
+# placed on disk by "make install".  This is the single source of truth used by
+# "make uninstall" to remove exactly the installed files.
+MARLEY_MANIFEST_RELPATH = $(libdir)/marley-install-manifest.txt
+MARLEY_MANIFEST = $(DESTDIR)$(MARLEY_MANIFEST_RELPATH)
+
 MARLEY_LIBS := $(SHARED_LIB)
 ifeq ($(USE_ROOT),yes)
   # If we're building the tests, then link to some extra ROOT libraries
@@ -414,19 +420,51 @@ ifndef FOUND_HEPMC3
 	cp -r $(INCLUDE_DIR)/builtin/HepMC3/. $(DESTDIR)$(incdir)/HepMC3
 	touch $(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3
 endif
+	# Write the install manifest: one absolute path per line (no DESTDIR prefix),
+	# matching the convention used by CMake's install_manifest.txt.  The manifest
+	# records every file actually placed on disk so that "make uninstall" can
+	# remove them precisely without touching unrelated files or directories.
+	{ \
+	  printf '%s\n' "$(bindir)/marley"; \
+	  printf '%s\n' "$(bindir)/marley-config"; \
+	  if [ "$(USE_ROOT)" = "yes" ]; then printf '%s\n' "$(bindir)/mroot"; fi; \
+	  printf '%s\n' "$(libdir)/$(SHARED_LIB_FILE)"; \
+	  if [ -f "$(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm" ]; then \
+	    printf '%s\n' "$(libdir)/marley_root_dict_rdict.pcm"; \
+	  fi; \
+	  find "$(DESTDIR)$(datadir)/marley" -type f \
+	    | sed 's|^$(DESTDIR)||'; \
+	  find "$(DESTDIR)$(incdir)/marley" -type f \
+	    | sed 's|^$(DESTDIR)||'; \
+	  if [ -f "$(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3" ]; then \
+	    printf '%s\n' "$(libdir)/libHepMC3.$(SHARED_LIB_SUFFIX)"; \
+	    find "$(DESTDIR)$(incdir)/HepMC3" -type f \
+	      | sed 's|^$(DESTDIR)||'; \
+	    printf '%s\n' "$(libdir)/.marley-installed-builtin-hepmc3"; \
+	  fi; \
+	} > $(MARLEY_MANIFEST)
 	ldconfig
 
 uninstall:
-	$(RM) $(DESTDIR)$(bindir)/marley
-	$(RM) $(DESTDIR)$(bindir)/marley-config
-	$(RM) $(DESTDIR)$(bindir)/mroot
-	$(RM) $(DESTDIR)$(libdir)/$(SHARED_LIB_FILE)
-	$(RM) $(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm
-	if [ -f $(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3 ]; then \
-	  $(RM) $(DESTDIR)$(libdir)/libHepMC3.$(SHARED_LIB_SUFFIX); \
-	  $(RM) -r $(DESTDIR)$(incdir)/HepMC3; \
-	  $(RM) $(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3; \
+	@if [ ! -f "$(MARLEY_MANIFEST)" ]; then \
+	  echo "ERROR: Install manifest not found: $(MARLEY_MANIFEST)"; \
+	  echo "       Have you run 'make install' from this build? Aborting."; \
+	  exit 1; \
 	fi
-	$(RM) -r $(DESTDIR)$(datadir)/marley
-	$(RM) -r $(DESTDIR)$(incdir)/marley
+	# Remove every file listed in the manifest.
+	while IFS= read -r f; do \
+	  if [ -f "$(DESTDIR)$$f" ] || [ -L "$(DESTDIR)$$f" ]; then \
+	    echo "Removing: $(DESTDIR)$$f"; \
+	    rm -f "$(DESTDIR)$$f"; \
+	  fi; \
+	done < $(MARLEY_MANIFEST)
+	# Remove the manifest itself.
+	rm -f $(MARLEY_MANIFEST)
+	# Prune directories that may now be empty.
+	rmdir --ignore-fail-on-non-empty -p \
+	  "$(DESTDIR)$(datadir)/marley" 2>/dev/null || true
+	rmdir --ignore-fail-on-non-empty \
+	  "$(DESTDIR)$(incdir)/marley" 2>/dev/null || true
+	rmdir --ignore-fail-on-non-empty \
+	  "$(DESTDIR)$(incdir)/HepMC3" 2>/dev/null || true
 	ldconfig

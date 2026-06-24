@@ -87,8 +87,9 @@ endif
 
 test:
 ifdef USE_CMAKE
-	@echo "CMake test target (CTest) is not yet implemented."
-	@echo "Use 'make IGNORE_CMAKE=1 test' to run tests via the GNU Make path."
+	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
+	cmake --build build --target martest $(CMAKE_BUILD_FLAGS)
+	cd $(CURDIR) && MARLEY=$(CURDIR) ctest --test-dir build --output-on-failure
 else
 	@mkdir -p build
 	$(MAKE) -C build -f $(CURDIR)/build.mk TOP_DIR=$(CURDIR) test $(PASSTHROUGH_VARS)
@@ -122,12 +123,13 @@ else
 endif
 
 uninstall:
-	# NOTE: 'uninstall' always uses the GNU Make path (build.mk) for now.
-	# CMake does not generate an uninstall target by default, and install paths
-	# may differ between the CMake and GNU Make builds.
-	# TODO: Implement a cmake_uninstall.cmake script for the CMake path.
+ifdef USE_CMAKE
+	@test -d build/CMakeFiles || (echo "ERROR: No CMake build found in build/. Run 'cmake --install' first." && exit 1)
+	cmake --build build --target uninstall
+else
 	@mkdir -p build
 	$(MAKE) -C build -f $(CURDIR)/build.mk TOP_DIR=$(CURDIR) uninstall $(PASSTHROUGH_VARS)
+endif
 
 reconfigure:
 ifdef USE_CMAKE
@@ -147,4 +149,4 @@ help:
 	@echo "  make IGNORE_ROOT=1     Ignore ROOT"
 	@echo "  make IGNORE_HEPMC3=1   Ignore external HepMC3"
 	@echo "  make IGNORE_GSL=1      Use built-in GSL subset"
-	@echo "  make [debug|test|docs|doxygen|install|clean|reconfigure]"
+	@echo "  make [debug|test|docs|doxygen|install|uninstall|clean|reconfigure]"
