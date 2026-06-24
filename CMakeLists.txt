@@ -627,6 +627,6 @@ if(GSL_FOUND)
     ENVIRONMENT "MARLEY=${CMAKE_SOURCE_DIR}"
   )
 else()
-  message(STATUS "Skipping martest: system GSL not found (gsl_cdf_chisq_Q is required). "
-                 "Install system GSL and reconfigure without IGNORE_GSL=ON to enable tests.")
+  message(STATUS "Skipping martest: system GSL not found (gsl_cdf_chisq_Q is required)."
+                 " Install system GSL and reconfigure without IGNORE_GSL=ON to enable tests.")
 endif()

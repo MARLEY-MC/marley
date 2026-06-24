@@ -460,11 +460,11 @@ uninstall:
 	done < $(MARLEY_MANIFEST)
 	# Remove the manifest itself.
 	rm -f $(MARLEY_MANIFEST)
-	# Prune directories that may now be empty.
-	rmdir --ignore-fail-on-non-empty -p \
-	  "$(DESTDIR)$(datadir)/marley" 2>/dev/null || true
-	rmdir --ignore-fail-on-non-empty \
-	  "$(DESTDIR)$(incdir)/marley" 2>/dev/null || true
-	rmdir --ignore-fail-on-non-empty \
-	  "$(DESTDIR)$(incdir)/HepMC3" 2>/dev/null || true
+	# Prune directories that may now be empty.  Use plain rmdir (POSIX) rather
+	# than the GNU-specific --ignore-fail-on-non-empty flag so this works on
+	# non-Linux systems (e.g. macOS/BSD).  The '|| true' suppresses the exit
+	# code that rmdir emits when a directory is not empty.
+	rmdir -p "$(DESTDIR)$(datadir)/marley" 2>/dev/null || true
+	rmdir "$(DESTDIR)$(incdir)/marley" 2>/dev/null || true
+	rmdir "$(DESTDIR)$(incdir)/HepMC3" 2>/dev/null || true
 	ldconfig
