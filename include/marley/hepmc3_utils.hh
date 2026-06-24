@@ -21,6 +21,7 @@
 #pragma once
 
 // Standard library includes
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -133,4 +134,10 @@ namespace marley_hepmc3 {
   void store_decay_time( double partial_width, marley::Generator& gen,
     std::shared_ptr< HepMC3::GenVertex >& decay_vtx,
     const std::shared_ptr< HepMC3::GenParticle >& parent );
+
+  /// @brief Print a human-readable summary of a MARLEY HepMC3 event to
+  /// the given output stream in the standard MARLEY display format.
+  /// @param ev The event to print (const reference).
+  /// @param os The output stream to write to. Defaults to std::cout.
+  void print_event( const HepMC3::GenEvent& ev, std::ostream& os = std::cout );
 };

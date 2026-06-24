@@ -3,7 +3,7 @@
     default: "trace",
 
     //// Physics — runtime event generation
-    //physics.generator: "info",
+    physics.generator: "info",
     //physics.generator.sampling: "info",
     //physics.reaction: "info",
     //physics.reaction.xsec: "info",

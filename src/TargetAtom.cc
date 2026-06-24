@@ -14,8 +14,6 @@
 // Please respect the MCnet academic usage guidelines. See GUIDELINES
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
-
-
 #include "marley/Error.hh"
 #include "marley/TargetAtom.hh"
 #include "marley/marley_utils.hh"
@@ -38,14 +36,12 @@ int marley::TargetAtom::A() const {
 }
 
 std::string marley::TargetAtom::to_string() const {
-  std::string result = std::to_string( this->A() );
-  result += marley_utils::element_symbols.at( this->Z() );
-  return result;
+  return marley_utils::get_particle_symbol( pdg_ );
 }
 
 void marley::TargetAtom::check_pdg_validity() const {
   int A = marley_utils::get_particle_A( pdg_ );
-  if ( A <= 0 ) throw marley::Error("Invalid nuclear PDG code "
-    + std::to_string(pdg_) + " encountered upon construction of"
-    + " a marley::TargetAtom object.");
+  if ( A <= 0 ) throw marley::Error( "Invalid nuclear PDG code "
+    + std::to_string( pdg_ ) + " encountered upon construction of"
+    + " a marley::TargetAtom object." );
 }

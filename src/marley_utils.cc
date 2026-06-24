@@ -571,6 +571,55 @@ int marley_utils::get_particle_helicity( const int pdg ) {
   return DUMMY_HELICITY;
 }
 
+std::string marley_utils::get_particle_symbol( int pid, bool excited ) {
+
+  // Try to find the particle in the hard-coded list
+  auto iter = particle_symbols.find( std::abs(pid) );
+
+  // If it was found, store the result
+  std::string result;
+  if ( iter != particle_symbols.end() ) {
+    result = iter->second;
+    // For charged leptons, indicate the sign. For antineutrinos,
+    // add a macron above the nu.
+    if ( is_lepton(pid) ) {
+      int charge = get_particle_charge( pid );
+      if ( charge < 0 ) result += "⁻";
+      else if ( charge > 0 ) result += "⁺";
+      else if ( pid < 0 ) {
+        static const std::string COMBINING_MACRON( "̄" );
+        result = result.substr( 0, 2 ) + COMBINING_MACRON + result.back();
+      }
+    }
+  }
+  // Otherwise, check if it is a complex nucleus (or ion). If it is, follow
+  // the standard recipe using Z and A.
+  else if ( marley_utils::is_ion(pid) ) {
+    result = std::to_string( get_particle_A(pid) );
+    int Z = get_particle_Z( pid );
+    auto el_iter = marley_utils::element_symbols.find( Z );
+    if ( el_iter != element_symbols.end() ) {
+      result += el_iter->second;
+      if ( excited ) result += '*';
+      return result;
+    }
+    else {
+      throw marley::Error( "Unrecognized element with Z = "
+        + std::to_string( Z ) + " encountered in marley_utils::"
+        "get_particle_symbol()" );
+    }
+  } // is ion or complex nucleus
+  else throw marley::Error( "Unrecognized PDG code " + std::to_string(pid) );
+
+  // Only PDG codes corresponding to complex nuclei should use the excited flag
+  if ( excited && !is_ion(pid) ) {
+    throw marley::Error( "Excited flag set for PDG code = "
+      + std::to_string( pid ) + " in marley_utils::get_particle_symbol()" );
+  }
+
+  return result;
+}
+
 // Converts an ENSDF nucid to an atomic number. Currently, no checking is done
 // to see if the string is a valid nucid.
 int marley_utils::nucid_to_Z(std::string nucid) {

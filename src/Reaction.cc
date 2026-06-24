@@ -46,6 +46,7 @@ namespace {
   using namespace marley_utils;
 
   std::map<ProcType, std::string> proc_type_to_string_map {
+    { ProcType::Unknown, "Unknown" },
     { ProcType::NeutrinoCC_Discrete, "\u03BD CC (Discrete)" },
     { ProcType::AntiNeutrinoCC_Discrete, "anti-\u03BD CC (Discrete)" },
     { ProcType::NC_Discrete, "NC (Discrete)" },
