@@ -163,6 +163,25 @@ void marley::DecayScheme::do_cascade( marley::Level& initial_level,
       // belongs to the decay vertex (and thus the parent event)
       marley_hepmc3::set_particle_charge( *nucleus, qIon );
 
+      // We can also now set the attributes representing the
+      // excitation energy, spin, and parity of the daughter nucleus
+      nucleus->add_attribute( "Ex",
+        std::make_shared< HepMC3::DoubleAttribute >(Exf) );
+      nucleus->add_attribute( "twoJ",
+        std::make_shared< HepMC3::IntAttribute >( p_current_level->twoJ() )
+      );
+      nucleus->add_attribute( "parity", std::make_shared< HepMC3::IntAttribute >(
+        static_cast< int >(p_current_level->parity()) )
+      );
+
+      // Also store the total decay width and the partial decay width for the
+      // selected gamma-ray in attributes attached to the vertex
+      decay_vtx->add_attribute( "TotalWidth",
+        std::make_shared<HepMC3::DoubleAttribute>(level_total_width) );
+
+      decay_vtx->add_attribute( "PartialWidth",
+        std::make_shared<HepMC3::DoubleAttribute>( gamma_partial_width ) );
+
       // Sample a direction assuming that the gammas are emitted isotropically
       // in the nucleus's rest frame.
       // sample from [-1, 1]
