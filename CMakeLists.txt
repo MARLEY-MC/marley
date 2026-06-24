@@ -293,15 +293,13 @@ endif()
 # ------------------------------------------------------------------------------
 # Main MARLEY library
 # ------------------------------------------------------------------------------
-file(GLOB MARLEY_SOURCES ${CMAKE_SOURCE_DIR}/src/*.cc)
+file(GLOB MARLEY_SOURCES ${CMAKE_SOURCE_DIR}/src/*.cc ${CMAKE_SOURCE_DIR}/src/app/*.cc)
 list(FILTER MARLEY_SOURCES EXCLUDE REGEX "marley\\.cc$")
-list(FILTER MARLEY_SOURCES EXCLUDE REGEX "marsum\\.cc$")
 list(FILTER MARLEY_SOURCES EXCLUDE REGEX "marley_hepmc3\\.cc$")
 if(NOT USE_ROOT)
   list(FILTER MARLEY_SOURCES EXCLUDE REGEX "marley_root\\.cc$")
   list(FILTER MARLEY_SOURCES EXCLUDE REGEX "OutputFileRoot\\.cc$")
   list(FILTER MARLEY_SOURCES EXCLUDE REGEX "OutputFilePlainRoot\\.cc$")
-  list(FILTER MARLEY_SOURCES EXCLUDE REGEX "MacroEventFileReader\\.cc$")
 endif()
 
 add_library(MARLEY SHARED ${MARLEY_SOURCES})
@@ -383,6 +381,18 @@ endif()
 # ------------------------------------------------------------------------------
 add_executable(marley ${CMAKE_SOURCE_DIR}/src/marley.cc)
 target_link_libraries(marley PRIVATE MARLEY)
+if(USE_ROOT)
+  if(TARGET ROOT::Graf AND TARGET ROOT::Gpad)
+    target_link_libraries(marley PRIVATE ROOT::Graf ROOT::Gpad)
+  else()
+    if(DEFINED ROOT_CFLAGS AND NOT "${ROOT_CFLAGS}" STREQUAL "")
+      target_compile_options(marley PRIVATE ${ROOT_CFLAGS})
+    endif()
+    if(DEFINED ROOT_LIBS AND NOT "${ROOT_LIBS}" STREQUAL "")
+      target_link_libraries(marley PRIVATE ${ROOT_LIBS} -lGraf -lGpad)
+    endif()
+  endif()
+endif()
 set_target_properties(marley PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
   INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_BINARY_DIR}/lib"
@@ -390,23 +400,6 @@ set_target_properties(marley PROPERTIES
 )
 
 if(USE_ROOT)
-  add_executable(marsum ${CMAKE_SOURCE_DIR}/src/marsum.cc)
-  target_link_libraries(marsum PRIVATE MARLEY)
-  if(TARGET ROOT::Graf AND TARGET ROOT::Gpad)
-    target_link_libraries(marsum PRIVATE ROOT::Graf ROOT::Gpad)
-  else()
-    if(DEFINED ROOT_CFLAGS AND NOT "${ROOT_CFLAGS}" STREQUAL "")
-      target_compile_options(marsum PRIVATE ${ROOT_CFLAGS})
-    endif()
-    if(DEFINED ROOT_LIBS AND NOT "${ROOT_LIBS}" STREQUAL "")
-      target_link_libraries(marsum PRIVATE ${ROOT_LIBS} -lGraf -lGpad)
-    endif()
-  endif()
-  set_target_properties(marsum PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_BINARY_DIR}/lib"
-    BUILD_RPATH   "${CMAKE_BINARY_DIR}/lib"
-  )
   configure_file(${CMAKE_SOURCE_DIR}/src/scripts/mroot ${CMAKE_BINARY_DIR}/bin/mroot COPYONLY)
   file(CHMOD ${CMAKE_BINARY_DIR}/bin/mroot
     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
@@ -467,9 +460,6 @@ file(MAKE_DIRECTORY "${MARLEY_BUILD_CONFIG_DIR}")
 
 # Collect targets to export from the build tree
 set(_marley_export_targets MARLEY)
-if(USE_ROOT)
-  list(APPEND _marley_export_targets marsum)
-endif()
 if(USE_BUILTIN_HEPMC3)
   list(APPEND _marley_export_targets HepMC3_builtin)
 endif()
@@ -501,9 +491,6 @@ install(TARGETS marley
   RUNTIME DESTINATION bin
 )
 if(USE_ROOT)
-  install(TARGETS marsum
-    RUNTIME DESTINATION bin
-  )
   install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/mroot
     DESTINATION bin
   )

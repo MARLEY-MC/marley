@@ -1,0 +1,138 @@
+// Standard library includes
+#include <fstream>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
+// HepMC3 includes
+#include "HepMC3/GenEvent.h"
+#include "HepMC3/GenRunInfo.h"
+
+// MARLEY includes
+#include "marley/CommandHandler.hh"
+#include "marley/EventFileReader.hh"
+#include "marley/Generator.hh"
+#include "marley/JSONConfig.hh"
+#include "marley/OutputFile.hh"
+#include "marley/WeightCalculator.hh"
+#include "marley/Weighter.hh"
+#include "marley/marley_utils.hh"
+
+bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
+
+  // If we have an unexpected number of arguments, decide whether the
+  // user intended to request help with this command
+  if ( args.size() != 2u ) {
+    std::string first_arg;
+    if ( !args.empty() ) first_arg = args.front();
+
+    // Print the help message either way
+    args.clear();
+    args.push_front( "reweight" );
+    marley::CommandHandler::cmd_help( args );
+
+    // Return a boolean status based on whether the help message was
+    // explicitly requested (normal behavior) or not (an error condition)
+    if ( first_arg == "-h" || first_arg == "--help" ) return true;
+    return false;
+  }
+
+  // If we make it here, then we know that args has exactly two elements
+  std::string config_file_name( args.front() );
+
+  marley::JSON rw_config = marley::JSON::load_file( config_file_name );
+  if ( !rw_config.has_key("weights") ) throw marley::Error( "Missing"
+    " \"weights\" key in marreweight configuration file" );
+
+  const auto& json_weights = rw_config.at( "weights" );
+  marley::Weighter weighter( json_weights );
+  weighter.set_use_cv_weight( false );
+
+  std::string input_file_name( args.back() );
+  marley::EventFileReader efr( input_file_name );
+
+  HepMC3::GenEvent ev;
+  efr >> ev;
+
+  auto run_info = ev.run_info();
+  const std::vector< std::string > wgt_names = run_info->weight_names();
+
+  auto& calc_vec = weighter.get_weight_calculators();
+  size_t num_new_weights = calc_vec.size();
+
+  for ( auto riter = wgt_names.crbegin();
+    riter != wgt_names.crend(); ++riter )
+  {
+    const auto& w_name = *riter;
+    marley::JSON temp_json;
+    temp_json[ "name" ] = w_name;
+    auto w_calc = std::make_shared< marley
+      ::TrivialWeightCalculator >( temp_json );
+    calc_vec.insert( calc_vec.begin(), w_calc );
+  }
+
+  auto full_name_vec = weighter.get_weight_names();
+
+  auto prior_config_str = run_info->attribute< HepMC3::StringAttribute >(
+    "MARLEY.JSONconfig" );
+
+  if ( !prior_config_str ) {
+    throw marley::Error( "Failed to retrieve previous generator"
+      " configuration from the input file \"" + input_file_name + "\"" );
+  }
+
+  auto prior_json_config = marley::JSON::load( prior_config_str->value() );
+  marley::JSONConfig jc( prior_json_config );
+  auto gen = std::make_unique< marley::Generator >( jc.create_generator() );
+
+  std::vector< std::shared_ptr<marley::OutputFile> > output_files;
+
+  if ( rw_config.has_key("output") ) {
+    marley::JSON output_set = rw_config.at( "output" );
+    if ( !output_set.is_array() ) throw marley::Error( "The"
+      " \"output\" key in the reweighting configuration must have a value"
+      " that is a JSON array." );
+    else for ( const auto& el : output_set.array_range() ) {
+      if ( el.has_key("mode") ) {
+        std::string mode_str = el.at( "mode" ).to_string();
+        if ( mode_str != "overwrite" ) throw marley::Error( "Only the"
+          " \"overwrite\" output file mode is allowed for a reweighting"
+          " job." );
+      }
+      output_files.push_back( marley::OutputFile::make_OutputFile(el) );
+    }
+  }
+  else {
+    std::string out_config_str = "{ format: \"ascii\","
+      " file: \"reweighted_events.hepmc3\", mode: \"overwrite\" }";
+    auto out_config = marley::JSON::load( out_config_str );
+
+    output_files.push_back( marley::OutputFile::make_OutputFile(out_config) );
+  }
+
+  int event_count = 0;
+  do {
+
+    std::cout << "Event " << event_count << '\n';
+
+    run_info->set_weight_names( full_name_vec );
+
+    auto& ev_wgt_vec = ev.weights();
+    for ( size_t w = 0u; w < num_new_weights; ++w ) {
+      ev_wgt_vec.push_back( 1. );
+    }
+
+    weighter.process_event( ev, *gen );
+
+    for ( const auto& file : output_files ) {
+      file->write_event( &ev );
+    }
+
+    run_info->set_weight_names( wgt_names );
+    ++event_count;
+
+  } while ( efr >> ev );
+
+  return true;
+}

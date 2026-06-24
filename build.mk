@@ -145,11 +145,10 @@ ifneq ($(MAKECMDGOALS),uninstall)
     endif
   endif
 
-  OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
+  OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc $(SRC_DIR)/app/*.cc)))
   OBJECTS := $(filter-out marley.o marley_root.o, $(OBJECTS))
-  OBJECTS := $(filter-out marsum.o OutputFileRoot.o, $(OBJECTS))
+  OBJECTS := $(filter-out OutputFileRoot.o, $(OBJECTS))
   OBJECTS := $(filter-out OutputFilePlainRoot.o, $(OBJECTS))
-  OBJECTS := $(filter-out MacroEventFileReader.o, $(OBJECTS))
   OBJECTS := $(filter-out marley_hepmc3.o, $(OBJECTS))
 
   # Get information about the GNU Scientific Library installation
@@ -239,7 +238,6 @@ ifneq ($(MAKECMDGOALS),uninstall)
       $(info Found ROOT version $(ROOT_VERSION) in $(ROOT))
       $(info MARLEY will be built with ROOT support.)
       override CXXFLAGS += -DUSE_ROOT
-      MAYBE_MARSUM = $(BUILD_DIR)/bin/marsum $(BUILD_DIR)/bin/mroot
       ROOT_CXXFLAGS := $(shell $(ROOTCONFIG) --cflags)
 
       # If ROOT was built with a later C++ standard, switch to building MARLEY
@@ -277,7 +275,6 @@ ifneq ($(MAKECMDGOALS),uninstall)
 
       OBJECTS += marley_root.o OutputFileRoot.o
       OBJECTS += OutputFilePlainRoot.o $(ROOT_OBJ_DICT)
-      #OBJECTS += MacroEventFileReader.o
 
 $(ROOT_OBJ_DICT):
 	$(RM) marley_root_dict*.*
@@ -314,9 +311,13 @@ ifeq ($(USE_ROOT),yes)
 endif
 
 # Causes GNU make to auto-delete the object files when the build is complete
-.INTERMEDIATE: $(OBJECTS) $(TEST_OBJECTS) marley_hepmc3.o marley.o marsum.o
+.INTERMEDIATE: $(OBJECTS) $(TEST_OBJECTS) marley_hepmc3.o marley.o
 
 %.o: $(SRC_DIR)/%.cc
+	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
+	-I$(INCLUDE_DIR) -fPIC -o $@ -c $^
+
+%.o: $(SRC_DIR)/app/%.cc
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
 	-I$(INCLUDE_DIR) -fPIC -o $@ -c $^
 
@@ -343,17 +344,9 @@ $(SHARED_LIB): $(HEPMC3_SHARED_LIB) $(OBJECTS)
 
 marley: $(BUILD_DIR)/bin/marley
 
-marsum: $(BUILD_DIR)/bin/marsum
-
 mroot: $(BUILD_DIR)/bin/mroot
 
 marley-config: $(BUILD_DIR)/bin/marley-config
-
-$(BUILD_DIR)/bin/marsum: $(MARLEY_LIBS) marsum.o
-	@mkdir -p $(BUILD_DIR)/bin
-	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L$(BUILD_DIR)/lib \
-	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
-	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(BUILD_DIR)/lib marsum.o
 
 $(BUILD_DIR)/bin/mroot: $(MARLEY_LIBS)
 	@mkdir -p $(BUILD_DIR)/bin
@@ -376,10 +369,10 @@ $(BUILD_DIR)/bin/marley-config: $(MARLEY_LIBS)
 	  -e "s|@@USE_ROOT@@|\"$(USE_ROOT)\"|g" $(BUILD_DIR)/bin/marley-config
 	$(RM) $(BUILD_DIR)/bin/marley-config.bak
 
-$(BUILD_DIR)/bin/marley: $(MARLEY_LIBS) marley.o $(BUILD_DIR)/bin/marley-config $(MAYBE_MARSUM)
+$(BUILD_DIR)/bin/marley: $(MARLEY_LIBS) marley.o $(BUILD_DIR)/bin/marley-config $(if $(filter yes,$(USE_ROOT)),$(BUILD_DIR)/bin/mroot)
 	@mkdir -p $(BUILD_DIR)/bin
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L$(BUILD_DIR)/lib \
-	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
+	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) $(if $(filter yes,$(USE_ROOT)),-lGraf -lGpad) \
 	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(BUILD_DIR)/lib marley.o
 
 $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
@@ -388,7 +381,7 @@ $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(TEST_OBJECTS)
 
-.PHONY: marley marsum mroot docs clean install uninstall
+.PHONY: marley mroot docs clean install uninstall
 
 doxygen:
 	export MARLEY_VERSION=$(VERSION_PREFIX)$(MARLEY_VERSION) \
@@ -403,12 +396,13 @@ docs:
 clean:
 	$(RM) -rf $(BUILD_DIR)
 
-install: marley
+install: marley $(if $(filter yes,$(USE_ROOT)),mroot)
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(incdir)/marley
 	mkdir -p $(DESTDIR)$(datadir)/marley
-	cp $(BUILD_DIR)/bin/marley $(MAYBE_MARSUM) $(DESTDIR)$(bindir)
+	cp $(BUILD_DIR)/bin/marley $(DESTDIR)$(bindir)
+	if [ "$(USE_ROOT)" = "yes" ]; then cp $(BUILD_DIR)/bin/mroot $(DESTDIR)$(bindir); fi
 	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
 	cp marley_root_dict_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp -r $(TOP_DIR)/react $(DESTDIR)$(datadir)/marley
@@ -422,7 +416,6 @@ endif
 
 uninstall:
 	$(RM) $(DESTDIR)$(bindir)/marley
-	$(RM) $(DESTDIR)$(bindir)/marsum
 	$(RM) $(DESTDIR)$(bindir)/mroot
 	$(RM) $(DESTDIR)$(libdir)/$(SHARED_LIB_FILE)
 	$(RM) $(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm

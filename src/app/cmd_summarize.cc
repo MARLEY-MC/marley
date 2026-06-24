@@ -1,27 +1,9 @@
-/// @file
-/// @copyright Copyright (C) 2016-2024 Steven Gardiner
-/// @license GNU General Public License, version 3
-//
-// This file is part of MARLEY (Model of Argon Reaction Low Energy Yields)
-//
-// MARLEY is free software: you can redistribute it and/or modify it under the
-// terms of version 3 of the GNU General Public License as published by the
-// Free Software Foundation.
-//
-// For the full text of the license please see COPYING or
-// visit http://opensource.org/licenses/GPL-3.0
-//
-// Please respect the MCnet academic usage guidelines. See GUIDELINES
-// or visit https://www.montecarlonet.org/GUIDELINES for details.
-
+// Standard library includes
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-
-#ifndef USE_ROOT
-  #error Building the marsum executable requires ROOT
-#endif
 
 // HepMC3 includes
 #include "HepMC3/FourVector.h"
@@ -29,70 +11,83 @@
 #include "HepMC3/GenParticle.h"
 #include "HepMC3/GenVertex.h"
 
+#ifdef USE_ROOT
 // ROOT includes
 #include "TFile.h"
 #include "TTree.h"
+#endif
 
 // MARLEY includes
+#include "marley/CommandHandler.hh"
+#include "marley/EventFileReader.hh"
 #include "marley/hepmc3_utils.hh"
 #include "marley/marley_utils.hh"
-#include "marley/EventFileReader.hh"
 
-int main( int argc, char* argv[] ) {
+#ifndef USE_ROOT
 
-  // If the user has not supplied enough command-line arguments, display the
-  // standard help message and exit
-  if ( argc <= 2 ) {
-    std::cout << "Usage: " << argv[0] << " OUTPUT_FILE INPUT_FILE...\n";
-    return 0;
+bool marley::CommandHandler::cmd_summarize(
+  std::deque< std::string >& /*args*/ )
+{
+  std::cerr << "marley: the 'summarize' command requires linking to ROOT."
+  std::cerr << "Please rebuild MARLEY against ROOT and try again.\n"
+  return false;
+}
+
+#else
+
+bool marley::CommandHandler::cmd_summarize( std::deque< std::string >& args ) {
+
+  // If we have too few arguments, decide whether the
+  // user intended to request help with this command
+  if ( args.size() < 2u ) {
+    std::string first_arg;
+    if ( !args.empty() ) first_arg = args.front();
+
+    // Print the help message either way
+    args.clear();
+    args.push_front( "summarize" );
+    marley::CommandHandler::cmd_help( args );
+
+    // Return a boolean status based on whether the help message was
+    // explicitly requested (normal behavior) or not (an error condition)
+    if ( first_arg == "-h" || first_arg == "--help" ) return true;
+    return false;
   }
 
-  //// Temporary storage for output TTree branch variables
-
-  // Flux-averaged inclusive total cross section
   double flux_avg_tot_xsec;
-
-  // Process type label for the primary interaction mode
   int proc_type;
 
-  double Ev, KEv, pxv, pyv, pzv; // projectile
-  double Mt; // target mass
-  double El, KEl, pxl, pyl, pzl; // ejectile
-  double Er, KEr, pxr, pyr, pzr; // residue (after de-excitations)
-  int pdgv, pdgt, pdgl, pdgr; // PDG codes
-  int np; // number of de-excitation products (final-state particles other
-          // than the ejectile and residue)
+  double Ev, KEv, pxv, pyv, pzv;
+  double Mt;
+  double El, KEl, pxl, pyl, pzl;
+  double Er, KEr, pxr, pyr, pzr;
+  int pdgv, pdgt, pdgl, pdgr;
+  int np;
 
-  // Information about each of the other final-state particles
-  std::vector<int> PDGs;
-  std::vector<double> Es, KEs, pXs, pYs, pZs, Ts;
+  std::vector< int > PDGs;
+  std::vector< double > Es, KEs, pXs, pYs, pZs, Ts;
 
-  // Nuclear properties immediately after the primary interaction
-  double Ex; // excitation energy (MeV)
-  int twoJ; // two times the spin
-  int par; // integer representation of the intrinsic parity
+  double Ex;
+  int twoJ;
+  int par;
 
-  // Event weights
-  double cv_weight; // Central-value weight (normally unity, required by
-                    // NuHepMC standard)
-  std::vector< double > other_weights; // Other user-defined weights
+  double cv_weight;
+  std::vector< double > other_weights;
 
-  // Check whether the output file exists and warn the user before
-  // overwriting it if it does
-  std::ifstream temp_stream( argv[1] );
+  std::ifstream temp_stream( args.front() );
   if ( temp_stream ) {
-    bool overwrite = marley_utils::prompt_yes_no(
-      "Really overwrite " + std::string(argv[1]) + '?');
+    bool overwrite = marley_utils::prompt_yes_no( "Really overwrite "
+      + args.front() + '?' );
+
     if ( !overwrite ) {
       std::cout << "Action aborted.\n";
-      return 0;
+      return true;
     }
   }
 
-  TFile out_tfile( argv[1], "recreate" );
+  TFile out_tfile( args.front().c_str(), "recreate" );
   TTree* out_tree = new TTree( "mst", "MARLEY summary tree" );
 
-  // projectile branches
   out_tree->Branch( "pdgv", &pdgv, "pdgv/I" );
   out_tree->Branch( "Ev", &Ev, "Ev/D" );
   out_tree->Branch( "KEv", &KEv, "KEv/D" );
@@ -100,11 +95,9 @@ int main( int argc, char* argv[] ) {
   out_tree->Branch( "pyv", &pyv, "pyv/D" );
   out_tree->Branch( "pzv", &pzv, "pzv/D" );
 
-  // target branches
   out_tree->Branch( "pdgt", &pdgt, "pdgt/I" );
   out_tree->Branch( "Mt", &Mt, "Mt/D" );
 
-  // ejectile branches
   out_tree->Branch( "pdgl", &pdgl, "pdgl/I" );
   out_tree->Branch( "El", &El, "El/D" );
   out_tree->Branch( "KEl", &KEl, "KEl/D" );
@@ -112,7 +105,6 @@ int main( int argc, char* argv[] ) {
   out_tree->Branch( "pyl", &pyl, "pyl/D" );
   out_tree->Branch( "pzl", &pzl, "pzl/D" );
 
-  // residue branches
   out_tree->Branch( "pdgr", &pdgr, "pdgr/I" );
   out_tree->Branch( "Er", &Er, "Er/D" );
   out_tree->Branch( "KEr", &KEr, "KEr/D" );
@@ -120,15 +112,10 @@ int main( int argc, char* argv[] ) {
   out_tree->Branch( "pyr", &pyr, "pyr/D" );
   out_tree->Branch( "pzr", &pzr, "pzr/D" );
 
-  // Nuclear excitation energy branch
   out_tree->Branch( "Ex", &Ex, "Ex/D" );
-
-  // Spin and parity branches
   out_tree->Branch( "twoJ", &twoJ, "twoJ/I" );
   out_tree->Branch( "parity", &par, "parity/I" );
 
-  // De-excitation products (final-state particles other than the
-  // ejectile and ground-state residue)
   out_tree->Branch( "np", &np, "np/I" );
   out_tree->Branch( "pdgp", &PDGs );
   out_tree->Branch( "Ep",  &Es );
@@ -138,48 +125,33 @@ int main( int argc, char* argv[] ) {
   out_tree->Branch( "pzp", &pZs );
   out_tree->Branch( "tp", &Ts );
 
-  // Flux-averaged total cross section
   out_tree->Branch( "xsec", &flux_avg_tot_xsec, "xsec/D" );
-
-  // Process type
   out_tree->Branch( "proc", &proc_type, "proc/I" );
 
-  // Event weights
   out_tree->Branch( "cv_weight", &cv_weight, "cv_weight/D" );
   out_tree->Branch( "other_weights", &other_weights );
 
-  // Prepare to read the input file(s)
-  std::vector<std::string> input_file_names;
-  for ( int i = 2; i < argc; ++i ) input_file_names.push_back( argv[i] );
+  // Strip off the leading argument (the output file name) now that we're
+  // done with it
+  args.pop_front();
 
-  // File loop
-  for ( const auto& file_name : input_file_names ) {
+  // All remaining arguments are input file names. Loop over them to process
+  // the events for the output summary TTree
+  for ( const auto& file_name : args ) {
 
-    // Open the current file for reading
     marley::EventFileReader efr( file_name );
     std::cout << "Opened file \"" << file_name << "\"\n";
 
-    // Temporary object to use for reading in saved events
     HepMC3::GenEvent ev;
 
-    // Event loop
     int event_num = 0;
     while ( efr >> ev ) {
 
-      // Write the vector of custom weight names to the output file on the
-      // first iteration of the event loop. We only need to do this once since
-      // the list is stored in the run information and is common to all events.
       if ( event_num == 0 ) {
-        // TODO: add error handling for when the number of weights changes,
-        // indicating that the events have inconsistent run information
         auto run_info = ev.run_info();
         auto wgt_names = run_info->weight_names();
-
-        // Drop the first weight name since it will always be the central-value
-        // weight, which is stored separately in the output TTree
         wgt_names.erase( wgt_names.begin() );
 
-        // Store the names in the output TFile
         out_tfile.WriteObject( &wgt_names,
           "MARLEY_other_weight_names", "WriteDelete" );
       }
@@ -213,8 +185,6 @@ int main( int argc, char* argv[] ) {
       auto ejectile = marley_hepmc3::get_ejectile( ev );
       pdgl = ejectile->pid();
 
-      // Object ID number for the ejectile in the event (*not* the same as the
-      // PDG code)
       int ej_id = ejectile->id();
 
       double ml = ejectile->generated_mass();
@@ -238,7 +208,6 @@ int main( int argc, char* argv[] ) {
       pyr = p4r.py();
       pzr = p4r.pz();
 
-      // TODO: add error handling here for missing attributes
       auto Ex_attr = residue->attribute< HepMC3::DoubleAttribute >( "Ex" );
       Ex = Ex_attr->value();
 
@@ -257,15 +226,10 @@ int main( int argc, char* argv[] ) {
       np = 0;
       const auto& particles = ev.particles();
       for ( const auto& p : particles ) {
-        // Only save information about final-state particles in the array of
-        // nuclear de-excitation products
         if ( p->status() != marley_hepmc3::NUHEPMC_FINAL_STATE_STATUS ) {
           continue;
         }
 
-        // Skip the ejectile since its information is already saved elsewhere in
-        // the output branches. We use the unique object ID number in the event
-        // (not the same as the PDG code) to check for this
         if ( p->id() == ej_id ) continue;
 
         ++np;
@@ -286,32 +250,25 @@ int main( int argc, char* argv[] ) {
         pZs.push_back( p4p.pz() );
 
         const HepMC3::FourVector& pos4_p = p->production_vertex()->position();
-        double tp = pos4_p.t(); // cm
-        // Convert from NuHepMC 4-position units (cm) to conventional units (s)
+        double tp = pos4_p.t();
         tp *= marley_utils::hbar / marley_utils::hbar_c
           / marley_utils::fm_to_cm;
         Ts.push_back( tp );
       }
 
-      // Make a copy of the vector of weights for the current event
       other_weights = ev.weights();
-
-      // Drop the first element and store it in the central-value weight
-      // instead
       cv_weight = other_weights.front();
       other_weights.erase( other_weights.begin() );
 
-      // All variables are ready. Fill the output TTree and advance to the next
-      // input event
       out_tree->Fill();
-
       ++event_num;
-
-    } // event loop
-  } // file loop
+    }
+  }
 
   out_tfile.cd();
   out_tree->Write();
   out_tfile.Close();
-  return 0;
+  return true;
 }
+
+#endif
