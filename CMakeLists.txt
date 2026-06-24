@@ -365,6 +365,19 @@ if(USE_ROOT)
     )
     target_sources(marley_lib PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${DICT_NAME}.cxx)
     target_include_directories(marley_lib PRIVATE ${HEPMC3_INCLUDE_DIR}/HepMC3/Data)
+    add_custom_command(TARGET marley_lib POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lib
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict_rdict.pcm
+        ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict_rdict.pcm
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict.rootmap
+        ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict.rootmap
+      COMMAND ${CMAKE_COMMAND} -E rm -f
+        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict_rdict.pcm
+      COMMAND ${CMAKE_COMMAND} -E rm -f
+        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict.rootmap
+    )
   else()
     find_program(ROOTCLING_EXECUTABLE NAMES rootcling rootcint)
     if(NOT ROOTCLING_EXECUTABLE)
@@ -379,6 +392,17 @@ if(USE_ROOT)
         -I${HEPMC3_INCLUDE_DIR}/HepMC3/Data
         ${HEPMC3_DATA_HEADERS}
         ${DICT_HEADER}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lib
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict_rdict.pcm
+        ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict_rdict.pcm
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict.rootmap
+        ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict.rootmap
+      COMMAND ${CMAKE_COMMAND} -E rm -f
+        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict_rdict.pcm
+      COMMAND ${CMAKE_COMMAND} -E rm -f
+        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict.rootmap
       DEPENDS ${DICT_HEADER}
       COMMENT "Generating ROOT dictionary"
     )
@@ -504,6 +528,12 @@ install(TARGETS marley
 if(USE_ROOT)
   install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/mroot
     DESTINATION bin
+  )
+  install(FILES
+    ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict_rdict.pcm
+    ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict.rootmap
+    DESTINATION lib
+    OPTIONAL
   )
 endif()
 

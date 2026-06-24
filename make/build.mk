@@ -292,6 +292,9 @@ $(ROOT_OBJ_DICT):
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
 	  -I$(INCLUDE_DIR) -I$(HEPMC3_INCDIR)/HepMC3/Data -fPIC \
           -o $(ROOT_OBJ_DICT) -c marley_root_dict.cc
+	@mkdir -p $(BUILD_DIR)/lib
+	mv $(BUILD_DIR)/marley_root_dict_rdict.pcm $(BUILD_DIR)/lib/ 2>/dev/null || true
+	mv $(BUILD_DIR)/marley_root_dict.rootmap $(BUILD_DIR)/lib/ 2>/dev/null || true
 	$(RM) marley_root_dict.cc
 
     endif
@@ -427,7 +430,8 @@ install: marley marley-config $(if $(filter yes,$(USE_ROOT)),mroot)
 	cp $(BUILD_DIR)/bin/marley-config $(DESTDIR)$(bindir)
 	if [ "$(USE_ROOT)" = "yes" ]; then cp $(BUILD_DIR)/bin/mroot $(DESTDIR)$(bindir); fi
 	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
-	cp marley_root_dict_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
+	cp $(BUILD_DIR)/lib/marley_root_dict_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
+	cp $(BUILD_DIR)/lib/marley_root_dict.rootmap $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp -r $(TOP_DIR)/data $(DESTDIR)$(datadir)/marley
 	cp -r $(TOP_DIR)/include/marley $(DESTDIR)$(incdir)
 ifndef FOUND_HEPMC3
@@ -447,6 +451,9 @@ endif
 	  printf '%s\n' "$(libdir)/$(SHARED_LIB_FILE)"; \
 	  if [ -f "$(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm" ]; then \
 	    printf '%s\n' "$(libdir)/marley_root_dict_rdict.pcm"; \
+	  fi; \
+	  if [ -f "$(DESTDIR)$(libdir)/marley_root_dict.rootmap" ]; then \
+	    printf '%s\n' "$(libdir)/marley_root_dict.rootmap"; \
 	  fi; \
 	  find "$(DESTDIR)$(datadir)/marley" -type f \
 	    | sed 's|^$(DESTDIR)||'; \
