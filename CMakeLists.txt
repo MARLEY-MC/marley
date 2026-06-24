@@ -302,34 +302,34 @@ if(NOT USE_ROOT)
   list(FILTER MARLEY_SOURCES EXCLUDE REGEX "OutputFilePlainRoot\\.cc$")
 endif()
 
-add_library(MARLEY SHARED ${MARLEY_SOURCES})
+add_library(marley_lib SHARED ${MARLEY_SOURCES})
 
 if(MARLEY_FOUND_GSL_DEFINE)
-  target_compile_definitions(MARLEY PRIVATE MARLEY_FOUND_GSL)
+  target_compile_definitions(marley_lib PRIVATE MARLEY_FOUND_GSL)
 endif()
 
 # Public includes and transitive deps
-target_include_directories(MARLEY PUBLIC
+target_include_directories(marley_lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
   $<BUILD_INTERFACE:${HEPMC3_INCLUDE_DIR}>
   $<INSTALL_INTERFACE:include>
 )
 
-prefer_imported_or_flags(MARLEY PUBLIC "GSL::gsl;GSL::gslcblas" GSL_CFLAGS GSL_LIBS)
+prefer_imported_or_flags(marley_lib PUBLIC "GSL::gsl;GSL::gslcblas" GSL_CFLAGS GSL_LIBS)
 
 if(USE_BUILTIN_HEPMC3)
-  target_link_libraries(MARLEY PUBLIC HepMC3_builtin)
+  target_link_libraries(marley_lib PUBLIC HepMC3_builtin)
 else()
-  target_compile_definitions(MARLEY PRIVATE MARLEY_FOUND_HEPMC3)
-  prefer_imported_or_flags(MARLEY PUBLIC "HepMC3::HepMC3" HEPMC3_CFLAGS HEPMC3_LIBS)
+  target_compile_definitions(marley_lib PRIVATE MARLEY_FOUND_HEPMC3)
+  prefer_imported_or_flags(marley_lib PUBLIC "HepMC3::HepMC3" HEPMC3_CFLAGS HEPMC3_LIBS)
 endif()
 
 if(USE_ROOT)
-  prefer_imported_or_flags(MARLEY PUBLIC "ROOT::Core;ROOT::RIO;ROOT::Hist;ROOT::Tree" ROOT_CFLAGS ROOT_LIBS)
+  prefer_imported_or_flags(marley_lib PUBLIC "ROOT::Core;ROOT::RIO;ROOT::Hist;ROOT::Tree" ROOT_CFLAGS ROOT_LIBS)
 endif()
 
-set_target_properties(MARLEY PROPERTIES
+set_target_properties(marley_lib PROPERTIES
   EXPORT_NAME MARLEY           # for MARLEY::MARLEY namespace
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
   PUBLIC_HEADER ""             # optional
@@ -352,8 +352,8 @@ if(USE_ROOT)
               -I${HEPMC3_INCLUDE_DIR}
               -I${HEPMC3_INCLUDE_DIR}/HepMC3/Data
     )
-    target_sources(MARLEY PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${DICT_NAME}.cxx)
-    target_include_directories(MARLEY PRIVATE ${HEPMC3_INCLUDE_DIR}/HepMC3/Data)
+    target_sources(marley_lib PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${DICT_NAME}.cxx)
+    target_include_directories(marley_lib PRIVATE ${HEPMC3_INCLUDE_DIR}/HepMC3/Data)
   else()
     find_program(ROOTCLING_EXECUTABLE NAMES rootcling rootcint)
     if(NOT ROOTCLING_EXECUTABLE)
@@ -371,8 +371,8 @@ if(USE_ROOT)
       DEPENDS ${DICT_HEADER}
       COMMENT "Generating ROOT dictionary"
     )
-    target_sources(MARLEY PRIVATE ${DICT_OUTPUT})
-    target_include_directories(MARLEY PRIVATE ${HEPMC3_INCLUDE_DIR}/HepMC3/Data)
+    target_sources(marley_lib PRIVATE ${DICT_OUTPUT})
+    target_include_directories(marley_lib PRIVATE ${HEPMC3_INCLUDE_DIR}/HepMC3/Data)
   endif()
 endif()
 
@@ -380,7 +380,7 @@ endif()
 # Executables (keep light; depend on MARLEY which carries transitive deps)
 # ------------------------------------------------------------------------------
 add_executable(marley ${CMAKE_SOURCE_DIR}/src/marley.cc)
-target_link_libraries(marley PRIVATE MARLEY)
+target_link_libraries(marley PRIVATE marley_lib)
 if(USE_ROOT)
   if(TARGET ROOT::Graf AND TARGET ROOT::Gpad)
     target_link_libraries(marley PRIVATE ROOT::Graf ROOT::Gpad)
@@ -459,7 +459,7 @@ set(MARLEY_BUILD_CONFIG_DIR "${CMAKE_BINARY_DIR}/lib/cmake/MARLEY")
 file(MAKE_DIRECTORY "${MARLEY_BUILD_CONFIG_DIR}")
 
 # Collect targets to export from the build tree
-set(_marley_export_targets MARLEY)
+set(_marley_export_targets marley_lib)
 if(USE_BUILTIN_HEPMC3)
   list(APPEND _marley_export_targets HepMC3_builtin)
 endif()
@@ -483,7 +483,7 @@ write_basic_package_version_file(
 )
 
 # Install-tree export
-install(TARGETS MARLEY
+install(TARGETS marley_lib
   EXPORT MARLEYTargets
   LIBRARY DESTINATION lib
 )
@@ -503,7 +503,7 @@ if(USE_BUILTIN_HEPMC3)
     LIBRARY DESTINATION lib
   )
   install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/builtin/HepMC3
-    DESTINATION include/HepMC3
+    DESTINATION include
   )
 endif()
 

@@ -396,29 +396,37 @@ docs:
 clean:
 	$(RM) -rf $(BUILD_DIR)
 
-install: marley $(if $(filter yes,$(USE_ROOT)),mroot)
+install: marley marley-config $(if $(filter yes,$(USE_ROOT)),mroot)
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(incdir)/marley
 	mkdir -p $(DESTDIR)$(datadir)/marley
 	cp $(BUILD_DIR)/bin/marley $(DESTDIR)$(bindir)
+	cp $(BUILD_DIR)/bin/marley-config $(DESTDIR)$(bindir)
 	if [ "$(USE_ROOT)" = "yes" ]; then cp $(BUILD_DIR)/bin/mroot $(DESTDIR)$(bindir); fi
 	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
 	cp marley_root_dict_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
-	cp -r $(TOP_DIR)/react $(DESTDIR)$(datadir)/marley
-	cp -r $(TOP_DIR)/structure $(DESTDIR)$(datadir)/marley
-	cp -r $(TOP_DIR)/examples $(DESTDIR)$(datadir)/marley
+	cp -r $(TOP_DIR)/data $(DESTDIR)$(datadir)/marley
 	cp -r $(TOP_DIR)/include/marley $(DESTDIR)$(incdir)
 ifndef FOUND_HEPMC3
 	cp $(HEPMC3_SHARED_LIB) $(DESTDIR)$(libdir)
+	mkdir -p $(DESTDIR)$(incdir)/HepMC3
+	cp -r $(INCLUDE_DIR)/builtin/HepMC3/. $(DESTDIR)$(incdir)/HepMC3
+	touch $(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3
 endif
 	ldconfig
 
 uninstall:
 	$(RM) $(DESTDIR)$(bindir)/marley
+	$(RM) $(DESTDIR)$(bindir)/marley-config
 	$(RM) $(DESTDIR)$(bindir)/mroot
 	$(RM) $(DESTDIR)$(libdir)/$(SHARED_LIB_FILE)
 	$(RM) $(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm
+	if [ -f $(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3 ]; then \
+	  $(RM) $(DESTDIR)$(libdir)/libHepMC3.$(SHARED_LIB_SUFFIX); \
+	  $(RM) -r $(DESTDIR)$(incdir)/HepMC3; \
+	  $(RM) $(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3; \
+	fi
 	$(RM) -r $(DESTDIR)$(datadir)/marley
 	$(RM) -r $(DESTDIR)$(incdir)/marley
 	ldconfig
