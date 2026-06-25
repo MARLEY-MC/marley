@@ -64,7 +64,10 @@ namespace marley {
 
       /// @brief Create an Event using the NeutrinoSource, Target, Reaction,
       /// and StructureDatabase objects owned by this Generator
-      std::shared_ptr< HepMC3::GenEvent > create_event();
+      /// @param attach_state Whether to attach the random number generator
+      /// state to the event as a string attribute
+      std::shared_ptr< HepMC3::GenEvent > create_event(
+        bool attach_state = false );
 
       /// @brief Get the seed used to initialize this Generator
       inline uint_fast64_t get_seed() const;
@@ -275,8 +278,11 @@ namespace marley {
       /// @param KEa The kinetic energy of the projectile (MeV)
       /// @param pdg_atom The nuclear PDG code for the atomic target
       /// @param dir_vec Direction three-vector of the projectile
+      /// @param attach_state Whether to attach the random number generator
+      /// state to the event as a string attribute
       std::shared_ptr< HepMC3::GenEvent > create_event( int pdg_a, double KEa,
-        int pdg_atom, const std::array<double, 3>& dir_vec );
+        int pdg_atom, const std::array<double, 3>& dir_vec,
+        bool attach_state = false );
 
       /// @brief Provides access to the owned ProjectileDirectionRotator
       inline marley::ProjectileDirectionRotator& get_rotator()
@@ -299,7 +305,10 @@ namespace marley {
 
       /// @brief Add final pieces of metadata (e.g., the RNG state) to an
       /// otherwise complete event
-      void finish_event_metadata( HepMC3::GenEvent& ev );
+      /// @param attach_state Whether to attach the random number generator
+      /// state to the event as a string attribute
+      void finish_event_metadata( HepMC3::GenEvent& ev,
+        bool attach_state = false );
 
       /// @brief Get a const reference to the owned Weighter object
       inline const marley::Weighter& get_weighter() const
@@ -307,6 +316,15 @@ namespace marley {
 
       /// @brief Get a non-const reference to the owned Weighter object
       inline marley::Weighter& get_weighter() { return *weighter_; }
+
+      /// @brief Attach the current random number generator state to the input
+      /// event as a string attribute
+      void add_state_to_event( HepMC3::GenEvent& ev ) const;
+
+      /// @brief Attach a user-supplied random number generator state string
+      /// to the input event as a string attribute
+      static void add_state_to_event( HepMC3::GenEvent& ev,
+        const std::string& state );
 
     private:
 

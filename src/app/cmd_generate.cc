@@ -284,6 +284,19 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
   // unnecessarily.
   bool exception_needs_reset_terminal = false;
 
+  // Create a pointer to store a buffered event and its corresponding
+  // random number generator state string. We write out the buffered
+  // event only when generation of the following event has successfully
+  // completed. This saves space by allowing the generator state to be
+  // saved only when needed at the end of a run (normal termination or
+  // an early exit in response to an interruption/exception). The state can
+  // be used to restart the MARLEY simulation job where it left off
+  // without a drift in the random number state.
+  std::shared_ptr< HepMC3::GenEvent > buffered_event;
+  std::string cached_generator_state;
+
+  std::vector< std::shared_ptr<marley::OutputFile> > output_files;
+
   try {
 
     std::string config_file_name;
@@ -338,8 +351,6 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
       }
       else status_update_interval = sui_value;
     }
-
-    std::vector< std::shared_ptr<marley::OutputFile> > output_files;
 
     if ( ex_set.has_key("output") ) {
       marley::JSON output_set = ex_set.at( "output" );
@@ -444,9 +455,23 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
       marley_hepmc3::print_event( *event, my_oss );
       MARLEY_LOG( INFO, "physics.generator" ) << my_oss.str();
 
-      for ( const auto& file : output_files ) {
-        file->write_event( event.get() );
+      // If we have a buffered event from the previous iteration, we will
+      // write it to the output file(s) now. The generator state string
+      // will not be included here to save space. We can use implicit
+      // conversion of the std::shared_ptr here since it default-constructs
+      // to a nullptr and will therefore evaluate to false if we haven't
+      // used it yet.
+      if ( buffered_event ) {
+        for ( const auto& file : output_files ) {
+          file->write_event( buffered_event.get() );
+        }
       }
+
+      // Replace the buffered event with the current event. Also cache the
+      // generator state string value corresponding to when the current
+      // event was finished.
+      buffered_event = event;
+      cached_generator_state = gen->get_state_string();
 
       if ( !g_fallback_mode
         && ( (ev_count - num_old_events) % status_update_interval == 1
@@ -458,6 +483,21 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
       }
 
     } // event loop
+
+    // We've exited the event loop, so write out the last completed event
+    // (if any), which will be stored in the buffered_event pointer.
+    // Attach the generator state string this time so that the MARLEY
+    // job can be resumed from where it left off.
+    // NOTE: This call to OutputFile::write_event() handles normal
+    // termination and interruption via the SIGINT signal. The exception
+    // exit path is handled separately below in the catch block.
+    if ( buffered_event ) {
+      marley::Generator::add_state_to_event( *buffered_event,
+        cached_generator_state );
+      for ( const auto& file : output_files ) {
+        file->write_event( buffered_event.get() );
+      }
+    }
 
     reset_terminal( g_fallback_mode ? 0 : num_status_lines );
 
@@ -491,6 +531,29 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
       reset_terminal( g_fallback_mode ? 0 : num_status_lines,
         /*clear_status=*/false );
     }
+
+    // Write out the buffered event (if any) that was successfully completed
+    // before the exception occurred. Attach the generator state string
+    // so that the MARLEY job can be restarted from the last successful
+    // event for easier debugging.
+    // NOTE: The buffered event was fully created before the exception
+    // occurred, so no exceptions are expected to be thrown in this block.
+    // Just in case, we wrap it with an additional try/catch to inform
+    // the user if writing out the buffered event fails.
+    try {
+      if ( buffered_event ) {
+        marley::Generator::add_state_to_event( *buffered_event,
+          cached_generator_state );
+        for ( const auto& file : output_files ) {
+          file->write_event( buffered_event.get() );
+        }
+      }
+    } catch ( const std::exception& except ) {
+      MARLEY_LOG( WARN, "app" ) << std::flush << "Output of buffered"
+        " MARLEY event and its generator state failed";
+      MARLEY_LOG( ERROR, "app" ) << except.what();
+    }
+
     MARLEY_LOG( ERROR, "app" ) << std::flush << error.what();
   }
 

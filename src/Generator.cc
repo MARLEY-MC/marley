@@ -74,8 +74,9 @@ void marley::Generator::print_logo() {
   }
 }
 
-std::shared_ptr< HepMC3::GenEvent > marley::Generator::create_event() {
-
+std::shared_ptr< HepMC3::GenEvent > marley::Generator::create_event(
+  bool attach_state )
+{
   // (0) Initialize the run information if it has not been set up yet
   if ( !run_info_ ) {
     this->set_up_run_info();
@@ -138,7 +139,7 @@ std::shared_ptr< HepMC3::GenEvent > marley::Generator::create_event() {
   rotator_.process_event( *ev, *this );
 
   // (5) Finish adding metadata to the event object
-  this->finish_event_metadata( *ev );
+  this->finish_event_metadata( *ev, attach_state );
 
   // Return the completed event object
   return ev;
@@ -664,7 +665,8 @@ double marley::Generator::total_xs( int pdg_a, double KEa, int pdg_atom,
 
 
 std::shared_ptr< HepMC3::GenEvent > marley::Generator::create_event(
-  int pdg_a, double KEa, int pdg_atom, const std::array<double, 3>& dir_vec )
+  int pdg_a, double KEa, int pdg_atom, const std::array<double, 3>& dir_vec,
+  bool attach_state )
 {
   // (0) Initialize the run information if it has not been set up yet
   if ( !run_info_ ) {
@@ -727,7 +729,7 @@ std::shared_ptr< HepMC3::GenEvent > marley::Generator::create_event(
   my_rotator.process_event( *ev, *this );
 
   // (5) Finish adding metadata to the event object
-  this->finish_event_metadata( *ev );
+  this->finish_event_metadata( *ev, attach_state );
 
   // Return the completed event object
   return ev;
@@ -822,8 +824,9 @@ void marley::Generator::set_up_run_info() {
 
 }
 
-void marley::Generator::finish_event_metadata( HepMC3::GenEvent& ev ) {
-
+void marley::Generator::finish_event_metadata( HepMC3::GenEvent& ev,
+  bool attach_state )
+{
   // Associate the owned run information with the event
   this->assign_run_info( ev );
 
@@ -832,9 +835,7 @@ void marley::Generator::finish_event_metadata( HepMC3::GenEvent& ev ) {
 
   // Add the generator state after the event was completed as a string
   // attribute. This allows resuming an interrupted job from where it left off.
-  ev.add_attribute( "MARLEY.GeneratorState",
-    std::make_shared< HepMC3::StringAttribute >( this->get_state_string() )
-  );
+  if ( attach_state ) this->add_state_to_event( ev );
 
   // E.R.5
   // TODO: revisit spatial position when MARLEY is interfaced with a
@@ -874,4 +875,22 @@ double marley::Generator::sample_decay_time( double partial_width ) {
   // Decay time in MeV^{-1}
   double t = -tau * std::log( r );
   return t;
+}
+
+void marley::Generator::add_state_to_event( HepMC3::GenEvent& ev ) const {
+
+  // Query the random number generator for its current state string
+  std::string state = this->get_state_string();
+
+  // Attach the random number generator state string to the event as a
+  // string attribute
+  this->add_state_to_event( ev, state );
+}
+
+void marley::Generator::add_state_to_event( HepMC3::GenEvent& ev,
+  const std::string& state )
+{
+  ev.add_attribute( "MARLEY.GeneratorState",
+    std::make_shared< HepMC3::StringAttribute >( state )
+  );
 }
