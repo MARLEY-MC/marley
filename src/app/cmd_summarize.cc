@@ -28,8 +28,8 @@
 bool marley::CommandHandler::cmd_summarize(
   std::deque< std::string >& /*args*/ )
 {
-  std::cerr << "marley: the 'summarize' command requires linking to ROOT."
-  std::cerr << "Please rebuild MARLEY against ROOT and try again.\n"
+  std::cerr << "marley: the 'summarize' command requires linking to ROOT.";
+  std::cerr << "Please rebuild MARLEY against ROOT and try again.\n";
   return false;
 }
 
