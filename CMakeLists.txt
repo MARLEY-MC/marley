@@ -637,7 +637,7 @@ if(NOT GSL_FOUND)
   list(APPEND MARLEY_TEST_SOURCES "${CMAKE_SOURCE_DIR}/src/marley_gsl.cc")
 endif()
 
-add_executable(martest ${MARLEY_TEST_SOURCES})
+add_executable(martest EXCLUDE_FROM_ALL ${MARLEY_TEST_SOURCES})
 target_link_libraries(martest PRIVATE marley_lib)
 prefer_imported_or_flags(martest PRIVATE "${GSL_IMPORTED_TARGETS}"
   GSL_CFLAGS GSL_LIBS)
