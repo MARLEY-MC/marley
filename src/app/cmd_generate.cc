@@ -451,10 +451,6 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
       auto event = gen->create_event();
       event->set_event_number( ev_count );
 
-      std::ostringstream my_oss;
-      marley_hepmc3::print_event( *event, my_oss );
-      MARLEY_LOG( INFO, "physics.generator" ) << my_oss.str();
-
       // If we have a buffered event from the previous iteration, we will
       // write it to the output file(s) now. The generator state string
       // will not be included here to save space. We can use implicit
