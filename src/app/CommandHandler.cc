@@ -65,9 +65,10 @@ namespace {
       << "  -h, --help     Print this help message\n";
   }
 
-  void print_dumpxs_help() {
-    std::cout << "Usage: marley dump-xs OUTPUT_FILE CONFIG_FILE\n\n"
-      << "Tabulate the total cross section versus projectile energy using the\n"
+  void print_xsec_help() {
+    std::cout << "Usage: marley xsec OUTPUT_FILE CONFIG_FILE\n\n"
+      << "Tabulate the total cross section versus projectile energy using the"
+      << "\n"
       << "settings in CONFIG_FILE and write the results to OUTPUT_FILE.\n\n"
       << "Options:\n"
       << "  -h, --help     Print this help message\n";
@@ -140,8 +141,8 @@ const marley::CommandHandler::CommandMap
   { "reweight", { "Reweight previously generated events",
     print_reweight_help, cmd_reweight } },
 
-  { "dump-xs", { "Tabulate total cross section vs. projectile kinetic energy",
-    print_dumpxs_help, cmd_dumpxs } },
+  { "xsec", { "Tabulate total cross section vs. projectile kinetic energy",
+    print_xsec_help, cmd_xsec } },
 
   { "decay",  { "Simulate nuclear de-excitations",
     print_decay_help, cmd_decay } },

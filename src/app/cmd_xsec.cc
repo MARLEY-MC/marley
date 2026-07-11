@@ -46,7 +46,7 @@ namespace {
 
 }
 
-bool marley::CommandHandler::cmd_dumpxs( std::deque< std::string >& args ) {
+bool marley::CommandHandler::cmd_xsec( std::deque< std::string >& args ) {
 
   // If we have an unexpected number of arguments, decide whether the
   // user intended to request help with this command
@@ -56,7 +56,7 @@ bool marley::CommandHandler::cmd_dumpxs( std::deque< std::string >& args ) {
 
     // Print the help message either way
     args.clear();
-    args.push_front( "dump-xs" );
+    args.push_front( "xsec" );
     marley::CommandHandler::cmd_help( args );
 
     // Return a boolean status based on whether the help message was

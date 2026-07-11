@@ -76,8 +76,8 @@ namespace marley {
     /// Simulate nuclear de-excitations
     static bool cmd_decay( std::deque< std::string >& args );
 
-    /// Dump energy-dependent total cross section values
-    static bool cmd_dumpxs( std::deque< std::string >& args );
+    /// Tabulate energy-dependent total cross section values
+    static bool cmd_xsec( std::deque< std::string >& args );
 
     /// Display top-level or command-specific help messages
     static bool cmd_help( std::deque< std::string >& args );
