@@ -224,7 +224,7 @@ if(NOT HEPMC3_FOUND)
     $<INSTALL_INTERFACE:include>
   )
   # Suppress deprecation warnings from sprintf usage in the amalgamated source
-  target_compile_options(HepMC3_builtin PRIVATE -Wno-deprecated-declarations)
+  target_compile_options(HepMC3_builtin PRIVATE -Wno-deprecated-declarations -Wno-strict-aliasing)
   prefer_imported_or_flags(HepMC3_builtin PUBLIC "GSL::gsl;GSL::gslcblas" GSL_CFLAGS GSL_LIBS)
   set_target_properties(HepMC3_builtin PROPERTIES
     OUTPUT_NAME HepMC3

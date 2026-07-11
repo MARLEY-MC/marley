@@ -973,6 +973,12 @@ bool marley::JSONConfig::process_extra_source_types(
     MARLEY_LOG( INFO, "init.config.source" ) << "  Emax = " << source->get_Emax() << " MeV";
     return true;
   }
+#else
+  // Avoid unused parameter warnings via these casts to void
+  (void)type;
+  (void)source_spec;
+  (void)pdg_code;
+  (void)source;
 #endif
 
   return false;

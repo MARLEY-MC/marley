@@ -222,7 +222,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
 
     # Disable warnings about deprecated declarations in the built-in HepMC3
     # library (triggered via use of sprintf)
-    marley_hepmc3.o: HEPMC3_CXXFLAGS += -Wno-deprecated-declarations
+    marley_hepmc3.o: HEPMC3_CXXFLAGS += -Wno-deprecated-declarations -Wno-strict-aliasing
   endif
 
   # The user may force the Makefile to ignore ROOT entirely by defining
