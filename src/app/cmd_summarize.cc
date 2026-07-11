@@ -19,6 +19,7 @@
 
 // MARLEY includes
 #include "marley/CommandHandler.hh"
+#include "marley/Error.hh"
 #include "marley/EventFileReader.hh"
 #include "marley/hepmc3_utils.hh"
 #include "marley/marley_utils.hh"
@@ -137,6 +138,9 @@ bool marley::CommandHandler::cmd_summarize( std::deque< std::string >& args ) {
 
   // All remaining arguments are input file names. Loop over them to process
   // the events for the output summary TTree
+  std::shared_ptr< HepMC3::GenRunInfo > first_raw_run_info;
+  bool first_file = true;
+
   for ( const auto& file_name : args ) {
 
     marley::EventFileReader efr( file_name );
@@ -148,6 +152,18 @@ bool marley::CommandHandler::cmd_summarize( std::deque< std::string >& args ) {
     while ( efr >> ev ) {
 
       if ( event_num == 0 ) {
+        if ( !first_raw_run_info ) {
+          first_raw_run_info = ev.run_info();
+        } else if ( !first_file ) {
+          std::string issue
+            = marley_hepmc3::check_run_info_compatibility(
+              *first_raw_run_info, *ev.run_info() );
+          if ( !issue.empty() ) {
+            throw marley::Error( "File '" + file_name
+              + "' has incompatible run information: " + issue );
+          }
+        }
+
         auto run_info = ev.run_info();
         auto wgt_names = run_info->weight_names();
         wgt_names.erase( wgt_names.begin() );
@@ -263,6 +279,7 @@ bool marley::CommandHandler::cmd_summarize( std::deque< std::string >& args ) {
       out_tree->Fill();
       ++event_num;
     }
+    first_file = false;
   }
 
   out_tfile.cd();

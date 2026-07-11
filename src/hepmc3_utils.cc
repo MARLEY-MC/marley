@@ -37,6 +37,7 @@
 #include "marley/hepmc3_utils.hh"
 #include "marley/Error.hh"
 #include "marley/Generator.hh"
+#include "marley/JSON.hh"
 #include "marley/Reaction.hh"
 
 namespace {
@@ -402,6 +403,53 @@ namespace marley_hepmc3 {
       std::make_shared< HepMC3::VectorStringAttribute >( marley_INSPIREs )
     );
 
+  }
+
+  std::string check_run_info_compatibility(
+    const HepMC3::GenRunInfo& ref,
+    const HepMC3::GenRunInfo& candidate )
+  {
+    if ( ref.weight_names() != candidate.weight_names() ) {
+      return "weight names differ between files";
+    }
+
+    auto ref_attr = ref.attribute< HepMC3::StringAttribute >(
+      "MARLEY.JSONconfig" );
+    auto cand_attr = candidate.attribute< HepMC3::StringAttribute >(
+      "MARLEY.JSONconfig" );
+
+    if ( ref_attr && cand_attr ) {
+      try {
+        marley::JSON ref_json = marley::JSON::load( ref_attr->value() );
+        marley::JSON cand_json = marley::JSON::load( cand_attr->value() );
+
+        auto strip_run_keys = []( marley::JSON& j ) -> marley::JSON {
+          marley::JSON result = marley::JSON::object();
+          for ( const auto& [key, value] : j.object_range() ) {
+            if ( key != "seed" && key != "executable_settings" ) {
+              result[key] = value;
+            }
+          }
+          return result;
+        };
+
+        marley::JSON ref_stripped = strip_run_keys( ref_json );
+        marley::JSON cand_stripped = strip_run_keys( cand_json );
+
+        if ( ref_stripped.dump_string() != cand_stripped.dump_string() ) {
+          return "MARLEY JSON configuration differs between files";
+        }
+      } catch ( const std::exception& e ) {
+        return "failed to parse MARLEY JSON configuration: "
+          + std::string( e.what() );
+      }
+    } else if ( static_cast< bool >( ref_attr )
+      != static_cast< bool >( cand_attr ) )
+    {
+      return "one file has MARLEY JSON configuration and the other does not";
+    }
+
+    return {};
   }
 
 }

@@ -24,6 +24,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <string>
 #include <vector>
 
 // MARLEY includes
@@ -140,4 +141,13 @@ namespace marley_hepmc3 {
   /// @param ev The event to print (const reference).
   /// @param os The output stream to write to. Defaults to std::cout.
   void print_event( const HepMC3::GenEvent& ev, std::ostream& os = std::cout );
+
+  /// @brief Check whether two GenRunInfo objects are compatible for merging
+  /// @param ref The reference run information
+  /// @param candidate The candidate run information to compare against
+  /// @return An empty string if compatible, or a human-readable description
+  /// of the first incompatibility found
+  std::string check_run_info_compatibility(
+    const HepMC3::GenRunInfo& ref,
+    const HepMC3::GenRunInfo& candidate );
 };
