@@ -1,13 +1,20 @@
 // Standard library includes
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <limits>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
 // HepMC3 includes
+#include "HepMC3/Attribute.h"
+#include "HepMC3/FourVector.h"
 #include "HepMC3/GenEvent.h"
+#include "HepMC3/GenParticle.h"
 #include "HepMC3/GenRunInfo.h"
+#include "HepMC3/GenVertex.h"
 
 // MARLEY includes
 #include "marley/CommandHandler.hh"
@@ -27,6 +34,231 @@ namespace {
     cleaned->remove_attribute("MARLEY.RNGseed");
     cleaned->remove_attribute("MARLEY.JSONconfig");
     return cleaned;
+  }
+
+  std::shared_ptr<HepMC3::GenParticle> find_legacy_residue(
+    std::shared_ptr<HepMC3::GenParticle> residue )
+  {
+    auto current = residue;
+    while ( auto vtx = current->end_vertex() ) {
+      std::shared_ptr<HepMC3::GenParticle> daughter;
+      for ( const auto& out : vtx->particles_out() ) {
+        if ( !marley_utils::is_ion( out->pid() ) ) continue;
+        if ( out->status()
+          != marley_hepmc3::NUHEPMC_FINAL_STATE_STATUS )
+        {
+          daughter = out;
+          break;
+        }
+        if ( !daughter ) daughter = out;
+      }
+      if ( !daughter ) break;
+      current = daughter;
+    }
+    return current;
+  }
+
+  struct LegacyEventView {
+    std::shared_ptr<HepMC3::GenParticle> projectile;
+    std::shared_ptr<HepMC3::GenParticle> target;
+    std::shared_ptr<HepMC3::GenParticle> ejectile;
+    std::shared_ptr<HepMC3::GenParticle> residue;
+    std::shared_ptr<HepMC3::GenParticle> legacy_residue;
+    double Ex = 0.;
+    int twoJ = 0;
+    int parity = 1;
+    std::vector< std::shared_ptr< HepMC3::GenParticle > > final_state_particles;
+  };
+
+  LegacyEventView extract_legacy_event_view( HepMC3::GenEvent& ev ) {
+    LegacyEventView v;
+    v.projectile = marley_hepmc3::get_projectile( ev );
+    v.target = marley_hepmc3::get_target( ev );
+    v.ejectile = marley_hepmc3::get_ejectile( ev );
+    v.residue = marley_hepmc3::get_residue( ev );
+
+    if ( v.residue ) {
+      auto Ex_a
+        = v.residue->attribute< HepMC3::DoubleAttribute >( "Ex" );
+      if ( Ex_a ) v.Ex = Ex_a->value();
+      auto twoJ_a
+        = v.residue->attribute< HepMC3::IntAttribute >( "twoJ" );
+      if ( twoJ_a ) v.twoJ = twoJ_a->value();
+      auto par_a
+        = v.residue->attribute< HepMC3::IntAttribute >( "parity" );
+      if ( par_a ) v.parity = par_a->value();
+    }
+
+    if ( v.residue ) v.legacy_residue = find_legacy_residue( v.residue );
+
+    v.final_state_particles
+      = marley_hepmc3::get_particles_with_status(
+        marley_hepmc3::NUHEPMC_FINAL_STATE_STATUS, ev );
+
+    return v;
+  }
+
+  void for_each_event(
+    const std::vector< std::string >& input_files,
+    std::function< void( HepMC3::GenEvent&, bool,
+      double, const std::shared_ptr< HepMC3::GenRunInfo >& ) > callback )
+  {
+    std::shared_ptr< HepMC3::GenRunInfo > first_run_info;
+    double flux_avg_xsec = 0.;
+    bool first_event = true;
+    bool first_file = true;
+
+    for ( const auto& input_file : input_files ) {
+      marley::EventFileReader reader( input_file );
+      HepMC3::GenEvent ev;
+      while ( reader >> ev ) {
+        if ( !first_run_info ) {
+          first_run_info = ev.run_info();
+          flux_avg_xsec = reader.flux_averaged_xsec( true );
+        }
+        else if ( !first_file ) {
+          std::string issue = marley_hepmc3::check_run_info_compatibility(
+            *first_run_info, *ev.run_info() );
+          if ( !issue.empty() ) {
+            throw marley::Error( "File '" + input_file
+              + "' has incompatible run information: " + issue );
+          }
+        }
+
+        callback( ev, first_event, flux_avg_xsec, first_run_info );
+        first_event = false;
+      }
+      first_file = false;
+    }
+  }
+
+  void write_old_ascii_event( std::ostream& os,
+    const LegacyEventView& v )
+  {
+    int num_final = 2;
+    for ( const auto& p : v.final_state_particles ) {
+      if ( v.ejectile && p->id() == v.ejectile->id() ) continue;
+      if ( v.legacy_residue && p->id() == v.legacy_residue->id() ) continue;
+      ++num_final;
+    }
+
+    std::ostringstream tmp;
+    tmp << std::scientific
+      << std::setprecision( std::numeric_limits< double >::max_digits10 );
+
+    tmp << "2 " << num_final << ' '
+      << v.Ex << ' ' << v.twoJ << ' ' << ( v.parity >= 0 ? '+' : '-' )
+      << '\n';
+
+    auto write_part = [ &tmp ]( const HepMC3::GenParticle& p ) {
+      const auto& m = p.momentum();
+      int q = marley_hepmc3::get_particle_charge(
+        const_cast< HepMC3::GenParticle& >( p ) );
+      tmp << p.pid() << ' ' << m.e() << ' ' << m.px() << ' '
+        << m.py() << ' ' << m.pz() << ' '
+        << p.generated_mass() << ' ' << q << '\n';
+    };
+
+    if ( v.projectile ) write_part( *v.projectile );
+    if ( v.target ) write_part( *v.target );
+    if ( v.ejectile ) write_part( *v.ejectile );
+    if ( v.legacy_residue ) write_part( *v.legacy_residue );
+    for ( const auto& p : v.final_state_particles ) {
+      if ( v.ejectile && p->id() == v.ejectile->id() ) continue;
+      if ( v.legacy_residue && p->id() == v.legacy_residue->id() ) continue;
+      write_part( *p );
+    }
+
+    os << tmp.str();
+  }
+
+  void write_hepevt_event( std::ostream& os,
+    const LegacyEventView& v, unsigned long event_num,
+    double flux_avg_xsec_natural )
+  {
+    int nhep = 5;
+    for ( const auto& p : v.final_state_particles ) {
+      if ( v.ejectile && p->id() == v.ejectile->id() ) continue;
+      if ( v.legacy_residue && p->id() == v.legacy_residue->id() ) continue;
+      ++nhep;
+    }
+
+    constexpr double MEV2GEV = 0.001;
+
+    std::ostringstream tmp;
+    tmp << std::scientific
+      << std::setprecision( std::numeric_limits< double >::max_digits10 );
+
+    tmp << event_num << ' ' << nhep << '\n';
+
+    auto dump_line = [ &tmp ]( const HepMC3::GenParticle& p,
+      int status, int jmo1 = 0, int jmo2 = 0 )
+    {
+      const auto& m = p.momentum();
+      tmp << status << ' ' << p.pid() << ' ' << jmo1 << ' ' << jmo2
+        << " 0 0 "
+        << m.px() * MEV2GEV << ' ' << m.py() * MEV2GEV << ' '
+        << m.pz() * MEV2GEV << ' ' << m.e() * MEV2GEV << ' '
+        << p.generated_mass() * MEV2GEV
+        << " 0. 0. 0. 0." << '\n';
+    };
+
+    if ( v.projectile ) dump_line( *v.projectile, 3 );
+    if ( v.target ) dump_line( *v.target, 3 );
+
+    tmp << "11 0 " << v.twoJ << ' ' << v.parity << " 0 0 "
+      << "0. 0. 0. " << v.Ex << ' ' << flux_avg_xsec_natural
+      << " 0. 0. 0. 0." << '\n';
+
+    if ( v.ejectile ) dump_line( *v.ejectile, 1 );
+    if ( v.legacy_residue ) dump_line( *v.legacy_residue, 1 );
+    for ( const auto& p : v.final_state_particles ) {
+      if ( v.ejectile && p->id() == v.ejectile->id() ) continue;
+      if ( v.legacy_residue && p->id() == v.legacy_residue->id() ) continue;
+      dump_line( *p, 1 );
+    }
+
+    os << tmp.str();
+  }
+
+  void convert_to_legacy(
+    const std::vector< std::string >& input_files,
+    const std::string& output_path )
+  {
+    std::ofstream out( output_path );
+    if ( !out ) throw marley::Error( "Could not open output file \""
+      + output_path + "\" for writing" );
+
+    out << std::scientific
+      << std::setprecision( std::numeric_limits< double >::max_digits10 );
+
+    bool header_written = false;
+    for_each_event( input_files,
+      [ & ]( HepMC3::GenEvent& ev, bool, double xsec, const auto& ) {
+        if ( !header_written ) {
+          out << xsec << '\n';
+          header_written = true;
+        }
+        write_old_ascii_event( out,
+          extract_legacy_event_view( ev ) );
+      } );
+  }
+
+  void convert_to_hepevt(
+    const std::vector< std::string >& input_files,
+    const std::string& output_path )
+  {
+    std::ofstream out( output_path );
+    if ( !out ) throw marley::Error( "Could not open output file \""
+      + output_path + "\" for writing" );
+
+    unsigned long ev_num = 0;
+    for_each_event( input_files,
+      [ & ]( HepMC3::GenEvent& ev, bool, double xsec, const auto& ) {
+        write_hepevt_event( out,
+          extract_legacy_event_view( ev ), ev_num, xsec );
+        ++ev_num;
+      } );
   }
 
 }
@@ -102,9 +334,12 @@ bool marley::CommandHandler::cmd_convert( std::deque< std::string >& args ) {
     }
   }
 
-  if ( output_format != "ascii" && output_format != "root" ) {
+  if ( output_format != "ascii" && output_format != "root"
+    && output_format != "legacy" && output_format != "hepevt" )
+  {
     std::cerr << "marley convert: invalid output format '"
-      << output_format << "'. Supported formats: ascii, root\n";
+      << output_format << "'. Supported formats:"
+      " ascii, root, legacy, hepevt\n";
     return false;
   }
 
@@ -128,6 +363,16 @@ bool marley::CommandHandler::cmd_convert( std::deque< std::string >& args ) {
     }
   }
 
+  if ( output_format == "legacy" ) {
+    convert_to_legacy( input_files, output_path );
+    return true;
+  }
+
+  if ( output_format == "hepevt" ) {
+    convert_to_hepevt( input_files, output_path );
+    return true;
+  }
+
   std::string out_config_str = "{ format: \"" + output_format
     + "\", file: \"" + output_path
     + "\", mode: \"overwrite\", force: true }";
@@ -135,35 +380,19 @@ bool marley::CommandHandler::cmd_convert( std::deque< std::string >& args ) {
   auto output_file = marley::OutputFile::make_OutputFile( out_config );
 
   bool multi_file = (input_files.size() > 1);
-  std::shared_ptr<HepMC3::GenRunInfo> first_raw_run_info;
-  std::shared_ptr<HepMC3::GenRunInfo> cleaned_run_info;
-  bool first_file = true;
-
-  for ( const auto& input_file : input_files ) {
-    marley::EventFileReader reader( input_file );
-    HepMC3::GenEvent ev;
-    while ( reader >> ev ) {
-      if ( !first_raw_run_info ) {
-        first_raw_run_info = ev.run_info();
-        if ( multi_file ) {
-          cleaned_run_info = make_cleaned_run_info( first_raw_run_info );
-        }
-      } else if ( !first_file ) {
-        std::string issue = marley_hepmc3::check_run_info_compatibility(
-          *first_raw_run_info, *ev.run_info() );
-        if ( !issue.empty() ) {
-          throw marley::Error( "File '" + input_file
-            + "' has incompatible run information: " + issue );
-        }
+  std::shared_ptr< HepMC3::GenRunInfo > cleaned_run_info;
+  for_each_event( input_files,
+    [ & ]( HepMC3::GenEvent& ev, bool first_event, double,
+      const auto& first_info )
+    {
+      if ( first_event && multi_file ) {
+        cleaned_run_info = make_cleaned_run_info( first_info );
       }
-
       if ( cleaned_run_info ) {
         ev.set_run_info( cleaned_run_info );
       }
       output_file->write_event( &ev );
-    }
-    first_file = false;
-  }
+    } );
 
   return true;
 }

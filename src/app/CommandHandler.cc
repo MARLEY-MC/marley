@@ -106,17 +106,24 @@ namespace {
   }
 
   void print_convert_help() {
-    std::cout << "Usage: marley convert [--output-format ascii|root]"
+    std::cout << "Usage: marley convert [--output-format FORMAT]"
       << " -o OUTPUT_FILE INPUT_FILES...\n\n"
       << "Convert MARLEY event files between supported formats.\n\n"
       << "  -o OUTPUT_FILE        Required: path to the output file\n"
-      << "  --output-format FORMAT Optional: \"ascii\" (default) or \"root\"\n"
+      << "  --output-format FORMAT Output format. Supported values:\n"
+      << "                          \"ascii\" (default), \"root\",\n"
+      << "                          \"legacy\", \"hepevt\"\n"
       << "  -f, --force           Overwrite the output file without"
       << " prompting\n\n"
       << "Options:\n"
       << "  -h, --help            Print this help message\n\n"
       << "Note: ROOT format conversions require a ROOT-enabled build"
-      << " of MARLEY.\n";
+      << " of MARLEY.\n"
+      << "The \"legacy\" and \"hepevt\" formats are one-way conversions"
+      << " from the\n"
+      << "current HepMC3-based format to the deprecated output formats"
+      << " used in\n"
+      << "MARLEY v1.2.1 and earlier.\n";
   }
 
 }
