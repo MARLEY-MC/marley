@@ -105,6 +105,20 @@ namespace {
       << "Print version information.\n";
   }
 
+  void print_convert_help() {
+    std::cout << "Usage: marley convert [--output-format ascii|root]"
+      << " -o OUTPUT_FILE INPUT_FILES...\n\n"
+      << "Convert MARLEY event files between supported formats.\n\n"
+      << "  -o OUTPUT_FILE        Required: path to the output file\n"
+      << "  --output-format FORMAT Optional: \"ascii\" (default) or \"root\"\n"
+      << "  -f, --force           Overwrite the output file without"
+      << " prompting\n\n"
+      << "Options:\n"
+      << "  -h, --help            Print this help message\n\n"
+      << "Note: ROOT format conversions require a ROOT-enabled build"
+      << " of MARLEY.\n";
+  }
+
 }
 
 const marley::CommandHandler::CommandMap
@@ -127,6 +141,11 @@ const marley::CommandHandler::CommandMap
 
   { "summarize", { "Create a ROOT TTree summary of event files",
     print_summarize_help, cmd_summarize, true } },
+
+  // ASCII-to-ASCII conversion does not need ROOT; ROOT I/O is
+  // guarded by runtime checks in the implementation.
+  { "convert", { "Convert event files between supported formats",
+    print_convert_help, cmd_convert, false } },
 
   { "help", { "Show this help message or help for a specific command",
     print_help_command_help, cmd_help } },

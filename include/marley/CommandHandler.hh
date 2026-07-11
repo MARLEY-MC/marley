@@ -91,6 +91,9 @@ namespace marley {
     /// Summarize an existing sample of MARLEY events as a ROOT TTree
     static bool cmd_summarize( std::deque< std::string >& args );
 
+    /// Convert MARLEY event files between supported formats
+    static bool cmd_convert( std::deque< std::string >& args );
+
   };
 
 }
