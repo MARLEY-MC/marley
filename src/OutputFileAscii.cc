@@ -15,6 +15,7 @@
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
 // Standard library includes
+#include <filesystem>
 #include <limits>
 
 // HepMC3 includes
@@ -38,7 +39,9 @@ namespace {
   // opened as the input std::fstream. Backs up until the start of the last
   // HepMC3 event stored in the file. The stream is left in a state that is
   // ready for reading in the last event using, e.g., HepMC3::ReaderAscii.
-  void seek_to_last_genevent( std::fstream& stream ) {
+  // Returns the stream position of the 'E' that begins the last event,
+  // or std::streampos(-1) if no event is found.
+  std::streampos seek_to_last_genevent( std::fstream& stream ) {
     char c = DUMMY_CHAR;
     char old_c = DUMMY_CHAR;
     stream.seekg( 0, std::ios::end );
@@ -50,9 +53,10 @@ namespace {
       if ( c == '\n' && old_c == 'E' ) {
         stream.seekg( -i + 1, std::ios::end );
         stream.clear();
-        break;
+        return stream.tellg();
       }
     }
+    return std::streampos( -1 );
   }
 
 }
@@ -149,8 +153,15 @@ bool marley::OutputFileAscii::resume( std::unique_ptr<marley::Generator>& gen,
   // Parse the prior generator configuration into a JSON object
   auto json_config = marley::JSON::load( config_str->value() );
 
-  // Move to the beginning of the last HepMC3 event in the file
-  seek_to_last_genevent( stream_ );
+  // Move to the beginning of the last HepMC3 event in the file and
+  // save its stream position for truncation
+  std::streampos last_event_pos = seek_to_last_genevent( stream_ );
+
+  if ( last_event_pos == std::streampos( -1 ) ) {
+    throw marley::Error( "Failed to find the last event in the file "
+      + name_ );
+    return false;
+  }
 
   // Parse the last HepMC3 event so that we can retrieve the generator state
   read_ok = reader_->read_event( *evt );
@@ -180,8 +191,21 @@ bool marley::OutputFileAscii::resume( std::unique_ptr<marley::Generator>& gen,
   MARLEY_LOG( INFO, "io" ) << "The previous run was initialized using"
     << " the random number generator seed " << seed_str->value();
 
-  // TODO: maybe use seekg() to back up to remove HepMC3 footer after the last
-  // event
+  // Initialize the Generator's run info now so that it is available for
+  // use below (it is normally initialized lazily inside create_event()).
+  gen->set_up_run_info();
+
+  // Defer truncation: save the event and truncation position so that
+  // the stale GeneratorState and HepMC3 footer are removed only on the
+  // first write_event() call. This ensures the GeneratorState remains in
+  // the file should an exception occur before any new event is written.
+  // Also reassign the event's run_info to the Generator's so that the
+  // pointer-identity comparison in WriterAscii::write_event() does not
+  // produce spurious "different GenRunInfo" warnings.
+  evt->set_run_info( gen->run_info() );
+  evt->remove_attribute( "MARLEY.GeneratorState" );
+  pending_truncate_pos_ = last_event_pos;
+  pending_flush_event_ = evt;
 
   return true;
 }
@@ -200,6 +224,20 @@ void marley::OutputFileAscii::write_event( HepMC3::GenEvent* event ) {
 
   if ( !event ) throw marley::Error( "Null pointer passed to"
     " OutputFileAscii::write_event()" );
+
+  if ( pending_flush_event_ ) {
+    stream_.flush();
+    std::filesystem::resize_file( name_,
+      static_cast<std::uintmax_t>( pending_truncate_pos_ ) );
+    stream_.clear();
+    stream_.seekg( pending_truncate_pos_ );
+    stream_.seekp( pending_truncate_pos_ );
+    writer_->set_run_info( pending_flush_event_->run_info() );
+    writer_->write_event( *pending_flush_event_ );
+    stream_.flush();
+    pending_flush_event_.reset();
+    pending_truncate_pos_ = std::streampos( -1 );
+  }
 
   writer_->write_event( *event );
 }

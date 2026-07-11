@@ -23,6 +23,7 @@
 #include "marley/OutputFile.hh"
 
 namespace HepMC3 {
+  class GenEvent;
   class ReaderAscii;
   class WriterAscii;
 }
@@ -63,6 +64,14 @@ namespace marley {
 
       /// Storage for the number of bytes written to disk
       int_fast64_t byte_count_ = 0;
+
+      /// Stream position at which to truncate on the first write after
+      /// resume, removing the stale GeneratorState and HepMC3 footer
+      std::streampos pending_truncate_pos_ = std::streampos( -1 );
+
+      /// Last event without its GeneratorState, to be flushed on the first
+      /// write() call after resume
+      std::shared_ptr< HepMC3::GenEvent > pending_flush_event_;
   };
 
 }
