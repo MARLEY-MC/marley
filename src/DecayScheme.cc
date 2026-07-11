@@ -174,13 +174,19 @@ void marley::DecayScheme::do_cascade( marley::Level& initial_level,
         static_cast< int >(p_current_level->parity()) )
       );
 
-      // Also store the total decay width and the partial decay width for the
-      // selected gamma-ray in attributes attached to the vertex
-      decay_vtx->add_attribute( "TotalWidth",
-        std::make_shared<HepMC3::DoubleAttribute>(level_total_width) );
+      // If the total decay width is finite (equivalently, there is a tabulated
+      // value for the level half-life), then store it in an attribute
+      // attached to the vertex
+      if ( std::isfinite(level_total_width) ) {
+        decay_vtx->add_attribute( "TotalWidth",
+          std::make_shared<HepMC3::DoubleAttribute>(level_total_width)
+        );
+      }
 
-      decay_vtx->add_attribute( "PartialWidth",
-        std::make_shared<HepMC3::DoubleAttribute>( gamma_partial_width ) );
+      // Also store the selected gamma-ray's branching ratio
+      decay_vtx->add_attribute( "GammaBranchingRatio",
+        std::make_shared< HepMC3::DoubleAttribute>( gamma_branching_ratio )
+      );
 
       // Sample a direction assuming that the gammas are emitted isotropically
       // in the nucleus's rest frame.
