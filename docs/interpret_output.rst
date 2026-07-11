@@ -479,15 +479,15 @@ MARLEY_flux_avg_xsec
 An alternative "flat" form of the ROOT output format is also available which
 may be analyzed without the need for the MARLEY class dictionaries. An output
 file containing MARLEY events in any of the four standard formats may be
-converted into a "flat" ROOT file using the ``marsum`` utility. After sourcing
-the `setup_marley.sh
+converted into a "flat" ROOT file using the ``marley summarize`` command.
+After sourcing the `setup_marley.sh
 <getting_started.html#setting-up-the-runtime-environment>`__ script, one may
 convert the MARLEY output file ``OLD_EVENTS_FILE`` into a new "flat" ROOT file,
 ``new_flat_file.root``, via the command
 
 ::
 
-  marsum new_flat_file.root OLD_EVENTS_FILE
+  marley summarize new_flat_file.root OLD_EVENTS_FILE
 
 .. |doubleType| raw:: html
 

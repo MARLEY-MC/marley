@@ -150,7 +150,6 @@ ifneq ($(MAKECMDGOALS),uninstall)
   OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc $(SRC_DIR)/app/*.cc)))
   OBJECTS := $(filter-out marley.o marley_root.o, $(OBJECTS))
   OBJECTS := $(filter-out OutputFileRoot.o, $(OBJECTS))
-  OBJECTS := $(filter-out OutputFilePlainRoot.o, $(OBJECTS))
   OBJECTS := $(filter-out marley_hepmc3.o, $(OBJECTS))
 
   # Get information about the GNU Scientific Library installation
@@ -284,7 +283,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
       ROOT_OBJ_DICT = marley_root_dict.o
 
       OBJECTS += marley_root.o OutputFileRoot.o
-      OBJECTS += OutputFilePlainRoot.o $(ROOT_OBJ_DICT)
+      OBJECTS += $(ROOT_OBJ_DICT)
 
 $(ROOT_OBJ_DICT):
 	$(RM) marley_root_dict*.*

@@ -23,7 +23,6 @@
 #include "marley/OutputFileAscii.hh"
 
 #ifdef USE_ROOT
-  #include "marley/OutputFilePlainRoot.hh"
   #include "marley/OutputFileRoot.hh"
 #endif
 
@@ -75,12 +74,6 @@ std::shared_ptr< marley::OutputFile > marley::OutputFile::make_OutputFile(
     auto out = std::make_shared< marley::OutputFileRoot >( output_config );
     MARLEY_LOG( INFO, "io" ) << "Opened output file \"" << out->name()
       << "\" (format: root)";
-    return out;
-  }
-  else if ( format == "plain-root" ) {
-    auto out = std::make_shared< marley::OutputFilePlainRoot >( output_config );
-    MARLEY_LOG( INFO, "io" ) << "Opened output file \"" << out->name()
-      << "\" (format: plain-root)";
     return out;
   }
   #endif

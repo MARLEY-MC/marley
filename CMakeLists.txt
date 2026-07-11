@@ -302,7 +302,6 @@ list(FILTER MARLEY_SOURCES EXCLUDE REGEX "marley_hepmc3\\.cc$")
 if(NOT USE_ROOT)
   list(FILTER MARLEY_SOURCES EXCLUDE REGEX "marley_root\\.cc$")
   list(FILTER MARLEY_SOURCES EXCLUDE REGEX "OutputFileRoot\\.cc$")
-  list(FILTER MARLEY_SOURCES EXCLUDE REGEX "OutputFilePlainRoot\\.cc$")
 endif()
 
 add_library(marley_lib SHARED ${MARLEY_SOURCES})
