@@ -584,8 +584,8 @@ std::string marley_utils::get_particle_symbol( int pid, bool excited ) {
     // add a macron above the nu.
     if ( is_lepton(pid) ) {
       int charge = get_particle_charge( pid );
-      if ( charge < 0 ) result += "⁻";
-      else if ( charge > 0 ) result += "⁺";
+      if ( charge < 0 ) result += "-";
+      else if ( charge > 0 ) result += "+";
       else if ( pid < 0 ) {
         static const std::string COMBINING_MACRON( "̄" );
         result = result.substr( 0, 2 ) + COMBINING_MACRON + result.back();
