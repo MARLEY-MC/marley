@@ -1,37 +1,48 @@
 #include <iostream>
 #include <string>
+#include <vector>
+
+#include "TFile.h"
+#include "TTree.h"
+#include "TH1D.h"
+#include "TCanvas.h"
+#include "TStyle.h"
 
 void fp_spect(const std::string& file_name, int pdg) {
 
-  marley::MacroEventFileReader reader( file_name );
-  marley::Event ev;
+  TFile* f = TFile::Open(file_name.c_str());
+  TTree* t = static_cast<TTree*>(f->Get("mst"));
 
-  long num_events = 0;
+  int pdgl, np;
+  double KEl;
+  std::vector<int>* pdgp = nullptr;
+  std::vector<double>* KEp = nullptr;
 
+  t->SetBranchAddress("pdgl", &pdgl);
+  t->SetBranchAddress("KEl", &KEl);
+  t->SetBranchAddress("np", &np);
+  t->SetBranchAddress("pdgp", &pdgp);
+  t->SetBranchAddress("KEp", &KEp);
+
+  Long64_t n = t->GetEntries();
   std::vector<double> KE_vec;
 
-  while ( reader >> ev ) {
+  for (Long64_t i = 0; i < n; ++i) {
+    t->GetEntry(i);
+    if (i % 1000 == 0) std::cout << "Event " << i << '\n';
 
-    if (num_events % 1000 == 0) std::cout << "Event " << num_events << '\n';
+    if (pdgl == pdg) KE_vec.push_back(KEl);
 
-    size_t num_finals = ev.final_particle_count();
-
-    for (size_t f = 0u; f < num_finals; ++f) {
-      const marley::Particle& fp = ev.final_particle( f );
-      if ( fp.pdg_code() == pdg ) {
-        KE_vec.push_back( fp.kinetic_energy() );
-      }
+    for (int j = 0; j < np; ++j) {
+      if ((*pdgp)[j] == pdg) KE_vec.push_back((*KEp)[j]);
     }
-
-    ++num_events;
   }
 
   double KE_max = -1e30;
   double KE_min = 1e30;
-  for (size_t k = 0; k < KE_vec.size(); ++k) {
-    double ke = KE_vec.at(k);
+  for (auto ke : KE_vec) {
     if (ke > KE_max) KE_max = ke;
-    else if (ke < KE_min) KE_min = ke;
+    if (ke < KE_min) KE_min = ke;
   }
 
   TString title_str;
@@ -40,12 +51,10 @@ void fp_spect(const std::string& file_name, int pdg) {
 
   TH1D* KEs = new TH1D("KEs", title_str.Data(), 100, KE_max, KE_min);
 
-  // Prevent this histogram from being automatically deleted when the
-  // current TFile is closed
   KEs->SetDirectory(NULL);
 
-  for (size_t j = 0u; j < KE_vec.size(); ++j) {
-    KEs->Fill( KE_vec.at(j) );
+  for (auto ke : KE_vec) {
+    KEs->Fill(ke);
   }
 
   TCanvas* c = new TCanvas;
@@ -59,5 +68,5 @@ void fp_spect(const std::string& file_name, int pdg) {
   KEs->Draw("hist");
 
   std::cout << "Found " << KE_vec.size() << " particles with"
-    << " pdg = " << pdg << " in " << num_events << " events\n";
+    << " pdg = " << pdg << " in " << n << " events\n";
 }

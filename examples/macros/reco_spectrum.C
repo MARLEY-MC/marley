@@ -1,22 +1,24 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <vector>
+
+#include "TFile.h"
+#include "TTree.h"
+#include "TH1D.h"
+#include "TCanvas.h"
+#include "TLegend.h"
 
 void reco_spectrum(const std::string& filename) {
 
-  // Histogram settings
   const int NUM_BINS = 110;
-  const double E_MIN = 0.; // MeV
-  const double E_MAX = 55.; // MeV
+  const double E_MIN = 0.;
+  const double E_MAX = 55.;
   const double BIN_WIDTH = ( E_MAX - E_MIN ) / NUM_BINS;
 
-  // PDG codes
   const int NEUTRON = 2112;
-  const int ELECTRON = 11;
   const int ALPHA = 1000020040;
-
-  // Difference between ground-state masses of 40K and 40Ar
-  const double Q_ground_state = 1.5044; // MeV
+  const double Q_ground_state = 1.5044;
 
   TH1D* true_Es = new TH1D("true_Es", "E_{#nu,true}",
     NUM_BINS, E_MIN, E_MAX);
@@ -39,28 +41,38 @@ void reco_spectrum(const std::string& filename) {
   size_t one_p_count = 0;
   size_t other_count = 0;
 
-  marley::MacroEventFileReader reader( filename );
-  marley::Event ev;
+  TFile* f = TFile::Open(filename.c_str());
+  TTree* t = static_cast<TTree*>(f->Get("mst"));
 
-  long num_events = 0;
+  double Ev, KEl, xsec;
+  int np;
+  std::vector<int>* pdgp = nullptr;
+  std::vector<double>* KEp = nullptr;
 
-  while ( reader >> ev ) {
+  t->SetBranchAddress("Ev", &Ev);
+  t->SetBranchAddress("KEl", &KEl);
+  t->SetBranchAddress("xsec", &xsec);
+  t->SetBranchAddress("np", &np);
+  t->SetBranchAddress("pdgp", &pdgp);
+  t->SetBranchAddress("KEp", &KEp);
 
-    if (num_events % 1000 == 0) std::cout << "Event " << num_events << '\n';
+  Long64_t num_events = t->GetEntries();
+
+  for (Long64_t i = 0; i < num_events; ++i) {
+    t->GetEntry(i);
+    if (i % 1000 == 0) std::cout << "Event " << i << '\n';
 
     double KE = 0.;
 
-    size_t num_finals = ev.final_particle_count();
-    for ( size_t f = 0; f < num_finals; ++f ) {
-      const marley::Particle& fp = ev.final_particle( f );
-      int pdg = fp.pdg_code();
-      if ( pdg != NEUTRON ) KE += fp.kinetic_energy();
-      if ( pdg == ELECTRON ) {
-        double KE_e_plus_Qgs = fp.kinetic_energy() + Q_ground_state; // e- KE + Q_gs
-        eq_Es->Fill( KE_e_plus_Qgs );
-      }
-      if ( pdg > ALPHA ) {
-        // nucleus
+    KE += KEl;
+
+    double KE_e_plus_Qgs = KEl + Q_ground_state;
+    eq_Es->Fill(KE_e_plus_Qgs);
+
+    for (int j = 0; j < np; ++j) {
+      int pdg = (*pdgp)[j];
+      if (pdg != NEUTRON) KE += (*KEp)[j];
+      if (pdg > ALPHA) {
         if (pdg == all_gamma_nuc_pdg) ++all_gamma_count;
         else if (pdg == one_n_nuc_pdg) ++one_n_count;
         else if (pdg == one_p_nuc_pdg) ++one_p_count;
@@ -68,26 +80,16 @@ void reco_spectrum(const std::string& filename) {
       }
     }
 
-    double E_true = ev.projectile().total_energy();
+    true_Es->Fill(Ev);
     double E_reco = KE + Q_ground_state;
-
-    true_Es->Fill( E_true );
-    reco_Es->Fill( E_reco );
-
-    ++num_events;
+    reco_Es->Fill(E_reco);
   }
 
-  // One operand must be a floating-point number to get a float
-  // when doing division
   double event_count = static_cast<double>(num_events);
-
-  // Normalize the event histograms so that they represent
-  // differential cross sections
-  double xsec = reader.flux_averaged_xsec(); // 10^{-42} cm^2
   double scale_factor = xsec / event_count / BIN_WIDTH;
-  true_Es->Scale( scale_factor );
-  reco_Es->Scale( scale_factor );
-  eq_Es->Scale( scale_factor );
+  true_Es->Scale(scale_factor);
+  reco_Es->Scale(scale_factor);
+  eq_Es->Scale(scale_factor);
 
   TCanvas* c = new TCanvas;
   c->cd();
@@ -100,8 +102,7 @@ void reco_spectrum(const std::string& filename) {
   double max_reco = reco_Es->GetMaximum();
   double max_true = true_Es->GetMaximum();
   double max_eq = eq_Es->GetMaximum();
-
-  double ymax = 1.05*std::max(max_reco, std::max(max_true, max_eq));
+  double ymax = 1.05 * std::max(max_reco, std::max(max_true, max_eq));
 
   reco_Es->GetXaxis()->SetTitleOffset(1.3);
   reco_Es->GetYaxis()->SetTitleOffset(1.3);
@@ -121,15 +122,11 @@ void reco_spectrum(const std::string& filename) {
 
   std::cout << "** Summary **" << '\n';
   std::cout << "e- + gammas only: " << all_gamma_count << " events ("
-    << all_gamma_count / event_count * 100
-    << "%)" << '\n';
+    << all_gamma_count / event_count * 100 << "%)" << '\n';
   std::cout << "single n: " << one_n_count << " events ("
-    << one_n_count / event_count * 100
-    << "%)" << '\n';
+    << one_n_count / event_count * 100 << "%)" << '\n';
   std::cout << "single p: " << one_p_count << " events ("
-    << one_p_count / event_count * 100
-    << "%)" << '\n';
+    << one_p_count / event_count * 100 << "%)" << '\n';
   std::cout << "other: " << other_count << " events ("
-    << other_count / event_count * 100
-    << "%)" << '\n';
+    << other_count / event_count * 100 << "%)" << '\n';
 }
