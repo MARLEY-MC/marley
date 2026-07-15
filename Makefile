@@ -55,7 +55,7 @@ ifdef DESTDIR
 PASSTHROUGH_VARS += DESTDIR='$(DESTDIR)'
 endif
 
-.PHONY: all clean debug reconfigure test docs doxygen install uninstall help
+.PHONY: all clean debug reconfigure test docs doxygen install uninstall help marg4
 
 all:
 ifdef USE_CMAKE
@@ -83,6 +83,15 @@ ifdef USE_CMAKE
 else
 	@mkdir -p build
 	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) test $(PASSTHROUGH_VARS)
+endif
+
+marg4:
+ifdef USE_CMAKE
+	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
+	cmake --build build --target marg4
+else
+	@mkdir -p build
+	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) marg4 $(PASSTHROUGH_VARS)
 endif
 
 docs:
@@ -141,4 +150,5 @@ help:
 	@echo "  make IGNORE_ROOT=1     Ignore ROOT"
 	@echo "  make IGNORE_HEPMC3=1   Ignore external HepMC3"
 	@echo "  make IGNORE_GSL=1      Use built-in GSL subset"
+	@echo "  make marg4             Build the MARLEY+Geant4 example (if Geant4 is available)"
 	@echo "  make [debug|test|docs|doxygen|install|uninstall|clean|reconfigure]"

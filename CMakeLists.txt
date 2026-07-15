@@ -340,6 +340,7 @@ if(USE_ROOT)
 endif()
 
 set_target_properties(marley_lib PROPERTIES
+  OUTPUT_NAME MARLEY           # produces libMARLEY.so (matches marley-config --libs)
   EXPORT_NAME MARLEY           # for MARLEY::MARLEY namespace
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
   PUBLIC_HEADER ""             # optional
@@ -450,7 +451,7 @@ set(MARLEY_CONFIG_OUTPUT ${CMAKE_BINARY_DIR}/bin/marley-config)
 
 set(CONFIG_VERSION        "${MARLEY_COMPUTED_VERSION}")
 set(CONFIG_GIT_REVISION   "${MARLEY_COMPUTED_GIT_REVISION}")
-set(CONFIG_CXX_STD        "${CMAKE_CXX_STANDARD}")
+set(CONFIG_CXX_STD        "c++${CMAKE_CXX_STANDARD}")
 set(CONFIG_HEPMC3_CFLAGS  "${HEPMC3_CFLAGS}")
 string(REPLACE ";" " " CONFIG_HEPMC3_CFLAGS "${CONFIG_HEPMC3_CFLAGS}")
 set(CONFIG_HEPMC3_LIBS    "${HEPMC3_LIBS}")
@@ -482,6 +483,14 @@ file(CHMOD ${MARLEY_CONFIG_OUTPUT}
               GROUP_READ GROUP_EXECUTE
               WORLD_READ WORLD_EXECUTE
 )
+
+# ------------------------------------------------------------------------------
+# Optional examples (requires Geant4)
+# ------------------------------------------------------------------------------
+find_package(Geant4 QUIET)
+if(Geant4_FOUND)
+  add_subdirectory(examples/marg4 EXCLUDE_FROM_ALL)
+endif()
 
 # ------------------------------------------------------------------------------
 # Package export (build-tree + install-tree)

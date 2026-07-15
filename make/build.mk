@@ -405,6 +405,15 @@ $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(TEST_OBJECTS)
 
+# Build the marg4 Geant4 example (requires a separate Geant4 installation).
+# Delegates to the example's own Makefile with the MARLEY environment
+# variable and PATH set so that it can find marley-config. The
+# executable is built directly into $(BUILD_DIR)/bin/.
+.PHONY: marg4
+marg4: $(SHARED_LIB) $(BUILD_DIR)/bin/marley-config
+	@PATH=$(BUILD_DIR)/bin:$$PATH MARLEY=$(TOP_DIR) \
+	  $(MAKE) -C $(TOP_DIR)/examples/marg4
+
 .PHONY: marley mroot docs clean install uninstall
 
 doxygen:

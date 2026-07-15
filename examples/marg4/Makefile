@@ -1,5 +1,7 @@
-INCLUDE_DIR = ../include
-SRC_DIR = ../src
+INCLUDE_DIR = include
+SRC_DIR = src
+BINDIR ?= $(MARLEY)/build/bin
+OBJDIR ?= $(MARLEY)/build/marg4_obj
 
 ifndef MARLEY
   $(error The MARLEY environment variable is not set. Please source the \
@@ -10,6 +12,13 @@ else
     $(error The marley-config script is not present on the system PATH. \
         Please ensure that MARLEY has been fully built and try again.)
   endif
+endif
+
+# Check that Geant4 is available before proceeding
+G4_CONFIG := $(shell command -v geant4-config 2>/dev/null)
+ifeq ($(G4_CONFIG),)
+  $(error geant4-config not found on PATH. Please source your Geant4 \
+      installation first (e.g., 'source /path/to/geant4/install/bin/geant4.sh').)
 endif
 
 # If the target is "debug", then include debugging information and build the
@@ -24,8 +33,8 @@ endif
 CXX = g++
 CXXFLAGS += -Wall -Wextra -Wpedantic -Wcast-align
 
-all: marg4
-debug: marg4
+all: $(BINDIR)/marg4
+debug: $(BINDIR)/marg4
 
 # Use the marley-config script to get the MARLEY compiler flags and
 # library names
@@ -48,20 +57,25 @@ ifneq (, $(findstring c++2a, $(G4_CXXFLAGS)))
   override CXXFLAGS += -std=c++2a
 endif
 
+# Suppress warnings from Geant4's bundled CLHEP headers
+# (-Wdeprecated-copy is default-on in GCC 15+; -Wshadow is in G4_CXXFLAGS)
+override CXXFLAGS += -Wno-deprecated-copy -Wno-shadow
+
 G4_LIBS := $(shell geant4-config --libs)
 
-OBJECTS := $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc)))
+OBJECTS := $(addprefix $(OBJDIR)/, $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/*.cc))))
 
-.INTERMEDIATE: $(OBJECTS) marg4.o
+$(OBJDIR)/%.o: $(SRC_DIR)/%.cc | $(OBJDIR)
+	$(CXX) $(G4_CXXFLAGS) $(CXXFLAGS) -I$(INCLUDE_DIR) -o $@ -c $<
 
-%.o: $(SRC_DIR)/%.cc
-	$(CXX) $(G4_CXXFLAGS) $(CXXFLAGS) -I$(INCLUDE_DIR) -o $@ -c $^
-
-marg4: $(OBJECTS)
+$(BINDIR)/marg4: $(OBJECTS) | $(BINDIR)
 	$(CXX) $(G4_CXXFLAGS) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) \
-	  $(G4_LIBS) $(OBJECTS)
+	  $(G4_LIBS) -Wl,-rpath -Wl,$(MARLEY)/build/lib $(OBJECTS)
+
+$(BINDIR) $(OBJDIR):
+	mkdir -p $@
 
 .PHONY: clean
 
 clean:
-	$(RM) *.o marg4
+	$(RM) -r $(OBJDIR)

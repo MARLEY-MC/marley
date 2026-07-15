@@ -20,7 +20,7 @@ fi
 bindir=${topdir}/build
 datadir=${topdir}/data
 incdir=${topdir}/include
-libdir=${topdir}/build
+libdir=${topdir}/build/lib
 srcdir=${topdir}/src
 
 ## Variable names surrounded by @@ will be replaced with appropriate

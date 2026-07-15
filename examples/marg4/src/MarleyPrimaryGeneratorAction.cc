@@ -28,9 +28,13 @@
 //#include "globals.hh"
 
 // MARLEY includes
-#include "marley/Event.hh"
+#include "marley/Error.hh"
 #include "marley/JSONConfig.hh"
-#include "marley/Particle.hh"
+#include "marley/hepmc3_utils.hh"
+
+// HepMC3 includes
+#include "HepMC3/GenEvent.h"
+#include "HepMC3/GenParticle.h"
 
 // marg4 includes
 #include "MarleyPrimaryGeneratorAction.hh"
@@ -51,22 +55,44 @@ void MarleyPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   G4PrimaryVertex* vertex = new G4PrimaryVertex(0., 0., 0., 0.); // x,y,z,t0
 
   // Generate a new MARLEY event using the owned marley::Generator object
-  marley::Event ev = marley_generator_.create_event();
+  auto ev = marley_generator_.create_event();
 
-  // This line, if uncommented, will print the event in ASCII format
-  // to standard output
-  //std::cout << ev << '\n';
+  // Account for possibly different systems of units for the particle
+  // 4-momenta by using this conversion factor
+  auto mom4_conv_factor = MeV;
+
+  // Query the event to determine what it uses for energy/momentum units
+  auto ev_energy_unit = ev->momentum_unit();
+  if ( ev_energy_unit == HepMC3::Units::GEV ) {
+    mom4_conv_factor = GeV;
+  }
+  else if ( ev_energy_unit != HepMC3::Units::MeV ) {
+    throw marley::Error( "Unrecognized momentum unit encountered in"
+      " MarleyPrimaryGeneratorAction::GeneratePrimaries()" );
+  }
+
+  // Collect the final-state particles from the HepMC3 event
+  auto finals = marley_hepmc3::get_particles_with_status(
+    marley_hepmc3::NUHEPMC_FINAL_STATE_STATUS, *ev);
 
   // Loop over each of the final particles in the MARLEY event
-  for ( const auto& fp : ev.get_final_particles() ) {
+  for ( const auto& fp : finals ) {
 
-    // Convert each one from a marley::Particle into a G4PrimaryParticle.
+    // Access the 4-momentum from the HepMC3 particle
+    const auto& mom = fp->momentum();
+
+    // Convert each one from a HepMC3::GenParticle into a G4PrimaryParticle.
     // Do this by first setting the PDG code and the 4-momentum components.
-    G4PrimaryParticle* particle = new G4PrimaryParticle( fp->pdg_code(),
-      fp->px(), fp->py(), fp->pz(), fp->total_energy() );
+    G4PrimaryParticle* particle = new G4PrimaryParticle( fp->pid(),
+      mom.px() * mom4_conv_factor,
+      mom.py() * mom4_conv_factor,
+      mom.pz() * mom4_conv_factor,
+      mom.e() * mom4_conv_factor );
 
-    // Also set the charge of the G4PrimaryParticle appropriately
-    particle->SetCharge( fp->charge() );
+    // Also set the charge of the G4PrimaryParticle appropriately.
+    // Use the MARLEY utility function that checks for a stored charge
+    // attribute before falling back to a PDG-code-based lookup.
+    particle->SetCharge( marley_hepmc3::get_particle_charge( *fp ) );
 
     // Add the fully-initialized G4PrimaryParticle to the primary vertex
     vertex->SetPrimary( particle );
