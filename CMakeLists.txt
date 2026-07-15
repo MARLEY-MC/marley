@@ -3,40 +3,43 @@ cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ------------------------------------------------------------------------------
-# Compute "source revision" (runtime version string) from .VERSION or Git
+# Compute version string (from .VERSION or Git) and git revision
 # ------------------------------------------------------------------------------
 if(EXISTS "${CMAKE_SOURCE_DIR}/.VERSION")
   file(STRINGS "${CMAKE_SOURCE_DIR}/.VERSION" MARLEY_COMPUTED_VERSION)
-  set(MARLEY_COMPUTED_GIT_REVISION "${MARLEY_COMPUTED_VERSION}")
   set(VERSION_PREFIX "v")
 else()
-  find_package(Git QUIET)
-  if(Git_FOUND)
-    execute_process(
-      COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-      OUTPUT_VARIABLE GIT_REVISION
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      ERROR_QUIET
-    )
-    execute_process(
-      COMMAND ${GIT_EXECUTABLE} diff-index --quiet HEAD
-      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-      RESULT_VARIABLE GIT_DIRTY
-      ERROR_QUIET
-    )
-    if(NOT GIT_DIRTY EQUAL 0)
-      set(GIT_REVISION "${GIT_REVISION}-dirty")
-    endif()
-  else()
-    set(GIT_REVISION "unknown version")
-  endif()
-  set(MARLEY_COMPUTED_VERSION "${GIT_REVISION}")
-  set(MARLEY_COMPUTED_GIT_REVISION "${GIT_REVISION}")
   set(VERSION_PREFIX "")
 endif()
-if(NOT DEFINED MARLEY_COMPUTED_GIT_REVISION)
-  set(MARLEY_COMPUTED_GIT_REVISION "${MARLEY_COMPUTED_VERSION}")
+
+# Always try to get the actual git revision (used for --git-revision)
+find_package(Git QUIET)
+if(Git_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_REVISION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+  )
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} diff-index --quiet HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    RESULT_VARIABLE GIT_DIRTY
+    ERROR_QUIET
+  )
+  if(NOT GIT_DIRTY EQUAL 0)
+    set(GIT_REVISION "${GIT_REVISION}-dirty")
+  endif()
+else()
+  set(GIT_REVISION "unknown version")
+endif()
+
+set(MARLEY_COMPUTED_GIT_REVISION "${GIT_REVISION}")
+
+# Fall back to git revision if no .VERSION file
+if(NOT DEFINED MARLEY_COMPUTED_VERSION)
+  set(MARLEY_COMPUTED_VERSION "${GIT_REVISION}")
 endif()
 
 # ------------------------------------------------------------------------------

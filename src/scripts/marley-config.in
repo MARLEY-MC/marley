@@ -17,7 +17,7 @@ else
   topdir=${MARLEY}
 fi
 
-bindir=${topdir}/build
+bindir=${topdir}/build/bin
 datadir=${topdir}/data
 incdir=${topdir}/include
 libdir=${topdir}/build/lib
