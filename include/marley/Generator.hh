@@ -260,8 +260,7 @@ namespace marley {
       /// the weighting by nuclide abundance
       /// @note This function is not used as part of the normal MARLEY
       /// workflow. It exposes the abundance-weighted total cross section
-      /// for use by the mardumpxs command-line tool
-      /// (see examples/executables/mardumpxs.cc)
+      /// for use by the "marley xsec" subcommand
       /// @param pdg_a The PDG code for the projectile
       /// @param KEa The kinetic energy of the projectile (MeV)
       /// @return Abundance-weighted total cross section (MeV<sup> -2</sup> / atom)

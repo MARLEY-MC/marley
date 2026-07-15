@@ -41,9 +41,6 @@ void setup_marley() {
   // Include the appropriate headers if we're using ROOT 6+.
   if (gROOT->GetVersionInt() >= 60000) {
     std::cout << "ROOT 6 or greater detected. Including MARLEY headers...\n";
-    //load_marley_header( "Particle.hh" );
-    //load_marley_header( "Event.hh" );
-    //load_marley_header( "MacroEventFileReader.hh" );
     load_marley_header( "Parity.hh" );
   }
 }

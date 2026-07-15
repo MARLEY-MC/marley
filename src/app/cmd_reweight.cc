@@ -43,7 +43,7 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
 
   marley::JSON rw_config = marley::JSON::load_file( config_file_name );
   if ( !rw_config.has_key("weights") ) throw marley::Error( "Missing"
-    " \"weights\" key in marreweight configuration file" );
+    " \"weights\" key in marley reweight configuration file" );
 
   const auto& json_weights = rw_config.at( "weights" );
   marley::Weighter weighter( json_weights );

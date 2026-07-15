@@ -1,6 +1,6 @@
 // Example MARLEY job configuration file
 // Steven Gardiner <gardiner@fnal.gov>
-// Revised 11 May 2020 for version 1.2.0
+// Revised 11 July 2026 for MARLEY 2.0.0
 //
 // INTRODUCTION
 //
@@ -100,20 +100,12 @@
   // configurations will be ignored in favor of the one that appears in the
   // first relevant reaction input file listed in the "reactions" array.
   //
-  // In MARLEY v1.2.0, the main process available to be simulated is
-  // charged-current scattering of electron neutrinos on 40Ar.
-  // There are three available reaction input files (stored in the
-  // folder data/react/) for this process
+  // In this version of MARLEY, the main process available to be simulated is
+  // charged-current scattering of electron neutrinos on 40Ar. Reaction input
+  // files are stored in the folder data/react/.
   //
-  //   - ve40ArCC_Bhattacharya2009.react
-  //   - ve40ArCC_Bhattacharya1998.react
-  //   - ve40ArCC_Liu1998.react
-  //
-  // See each of these files for details about their respective nuclear matrix
-  // element evaluations.
-  //
-  // Two other reaction input files are currently included in the official
-  // MARLEY source code distribution:
+  // Two reaction input files bundled with MARLEY for processes other than
+  // CC neutrino-40Ar scattering are:
   //
   //   - ES.react: Enables simulation of neutrino-electron elastic scattering
   //               on a 40Ar atomic target
@@ -138,6 +130,97 @@
   // simulation.
   //
   reactions: [ "ve40ArCC_Bhattacharya2009.react", "ES.react" ],
+
+  // ---- ADVANCED OPTIONS (all optional) ----
+  //
+  // The keys described in this section are advanced configuration options
+  // that most users will not need to adjust. Sensible defaults are used
+  // whenever these keys are omitted from the job configuration file.
+
+  // COULOMB CORRECTION METHOD (optional)
+  //
+  // The "coulomb_mode" key selects the method used to compute Coulomb
+  // corrections for charged-current nuclear reactions. Valid values are:
+  //
+  //   - "none": No Coulomb correction applied
+  //   - "Fermi": Use the Fermi function
+  //   - "EMA": Use the effective momentum approximation (EMA)
+  //   - "MEMA": Use a modified version of the EMA
+  //   - "Fermi-EMA": Interpolate between the Fermi function and the EMA
+  //   - "Fermi-MEMA": Interpolate between the Fermi function and the MEMA
+  //                   (this is the default)
+  //
+  // coulomb_mode: "Fermi-MEMA",
+
+  // NUCLEON AND NUCLEAR FORM FACTORS (optional)
+  //
+  // The "form_factors" key controls the parameterizations used for nucleon
+  // (Sachs and axial) and nuclear form factors. It may be set to an object:
+  //
+  //   form_factors: {
+  //     sachs_model: "bbba05",    // "trivial", "dipole", or "bbba05"
+  //     axial_model: "dipole",    // "trivial" or "dipole"
+  //     nuclear_model: "klein",   // "trivial", "helm", or "klein"
+  //
+  //     // When nuclear_model is "klein", an optional sub-configuration
+  //     // may be provided:
+  //     // nucl_options: { adapted: false },
+  //   },
+  //
+  // The default configuration shown above will be used when the
+  // "form_factors" key is omitted.
+  //
+  // Alternatively, this key may be set to the string "allowed", "AA", or
+  // "aa" to use the allowed approximation (trivial form factors for all
+  // three categories).
+
+  // NUCLEAR DE-EXCITATIONS (optional)
+  //
+  // Use a boolean value to enable or disable simulation of nuclear
+  // de-excitations for all reactions. The default is true.
+  //
+  // do_deexcitations: true,
+
+  // SUB-CONTINUUM MODE (optional)
+  //
+  // The "sub_continuum_mode" key controls how cross-section strength
+  // that falls below the unbound threshold is handled. Valid values are:
+  //
+  //   - "ignore": Cross-section strength below threshold is discarded
+  //   - "mirror": Strength is mirrored from above the threshold
+  //   - "accumulate": Strength accumulates at the threshold (this is
+  //                   the default)
+  //
+  // sub_continuum_mode: "accumulate",
+
+  // OPTICAL MODEL PARAMETERS (optional)
+  //
+  // The "opt_mod" key provides a custom configuration of nuclear optical
+  // model parameters, overriding the defaults. The value should be a JSON
+  // object whose format matches the optical model configuration used by
+  // the MARLEY structure database.
+  //
+  // opt_mod: { ... },
+
+  // ANGULAR MOMENTUM CUTOFFS (optional)
+  //
+  // The "fragment_lmax" key sets the maximum orbital angular momentum
+  // quantum number to consider when computing fragment decay widths
+  // (default: 2). The "gamma_lmax" key sets the maximum multipolarity
+  // for gamma-ray decay widths (default: 2). Both values are integers;
+  // gamma_lmax must be >= 1.
+  //
+  // fragment_lmax: 2,
+  // gamma_lmax: 2,
+
+  // ENERGY PDF MAXIMUM (optional)
+  //
+  // If MARLEY has difficulty automatically finding the maximum of the
+  // neutrino energy probability density function (this can happen for
+  // unusual user-defined spectra), you may provide your own estimate via
+  // the "energy_pdf_max" key. The value should be an energy in MeV.
+  //
+  // energy_pdf_max: 50.0,
 
   // NEUTRINO SOURCE SPECIFICATION (required)
   //
@@ -298,7 +381,36 @@
     neutrino: "ve",        // The source produces electron neutrinos
     type: "monoenergetic",
     energy: 15.0,          // MeV
+
+    // WEIGHT FLUX (optional)
+    //
+    // By default, MARLEY weights the incident neutrino spectrum by the
+    // total reaction cross section(s) when generating events. Set this
+    // boolean key to false to sample neutrino energies directly from the
+    // unweighted source spectrum instead.
+    //
+    // weight_flux: true,
   },
+
+  // EVENT WEIGHT CALCULATORS (optional)
+  //
+  // The "weights" JSON array configures one or more weight calculators
+  // that assign additional event weights during generation. Each entry is
+  // a JSON object with at least a "type" key and a "name" key.
+  //
+  // Available weight calculator types:
+  //
+  //   - "trivial": Returns unit weight for every event.
+  //                Required keys: type, name
+  //
+  //   - "optical_model": Recomputes Hauser-Feshbach decay widths using
+  //                      an alternative set of optical model parameters.
+  //                      Required keys: type, name, opt_mod
+  //
+  // weights: [
+  //   { type: "trivial", name: "MyWeight" },
+  //   { type: "optical_model", name: "OMP", opt_mod: { ... } },
+  // ],
 
   // EXECUTABLE SETTINGS (optional)
   //
@@ -318,6 +430,13 @@
     // If this key is omitted, a value of 1000 will be assumed.
     events: 100000,
 
+    // STATUS UPDATE INTERVAL (optional)
+    //
+    // Specifies the number of events between status display updates.
+    // The value must be a positive integer. The default is 100.
+    //
+    // status_update_interval: 100,
+
     // EVENT OUTPUT (optional)
     //
     // The "output" JSON array contains a list of JSON objects representing
@@ -331,91 +450,47 @@
     //           supported.
     //
     //   - format: The format to use when storing the events in the file.
-    //             Valid values are "ascii", "hepevt", "json", and "root".
+    //             Valid values are "ascii" and "root".
     //             Details about the format options are given below.
     //
-    //   - mode: The file I/O mode to use when writing to this file. For
-    //           the "ascii" and "hepevt" formats, valid values are
-    //           "overwrite" (erase any previously existing file contents)
-    //           and "append" (continue output immediately after any
-    //           existing file contents). For the "json" and "root" formats,
-    //           valid values are "overwrite" and "resume". If the "resume"
-    //           mode is chosen, the generator will restore its previous state
-    //           from an incomplete run (e.g., a run that was interrupted
-    //           by the user via ctrl+C) that was saved to the output file
-    //           and continue from where it left off.
+    //   - mode: The file I/O mode to use when writing to this file. Valid
+    //           values are "overwrite" (erase any previously existing file
+    //           contents) and "resume". If the "resume" mode
+    //           is chosen, the generator will restore its previous state from
+    //           an incomplete run (e.g., a run that was interrupted by the
+    //           user via ctrl+C) that was saved to the output file and
+    //           continue from where it left off.
     //
     //   - force: Boolean value used only for the "overwrite" mode. If
     //            it is true, the marley executable will not prompt the
     //            user before overwriting existing data. If this key
     //            is omitted, a value of false is assumed.
     //
-    //   - indent: Integer value used only for the "json" format. Gives the
-    //             number of spaces that should be used as a tab stop when
-    //             pretty-printing the JSON output. If this key is omitted, all
-    //             unnecessary whitespace will be suppressed. This default
-    //             behavior results in the most compact JSON-format output
-    //             files.
-    //
     // The allowed output file formats are
     //
-    //   - "ascii": The native format for MARLEY events. Files written in
-    //              this format may be read and written by the marley::Event
-    //              class using the >> and << stream operators, respectively.
+    //   - "ascii": Events are stored in the standard HepMC3 text format.
+    //              This format uses the HepMC3::WriterAscii class for output
+    //              and the HepMC3::ReaderAscii class for input. It may be
+    //              read by any HepMC3-compatible application.
     //
-    //   - "hepevt": Each event is described by a HEPEVT format record.
-    //               See section 3.1 of the StdHep manual
-    //               (http://tinyurl.com/StdHepManual) for a description
-    //               of the HEPEVT format.
+    //   - "root": Events are stored in a compressed ROOT TTree using the
+    //             HepMC3 GenEventData structure. This format is only
+    //             available if MARLEY has been built with ROOT support.
     //
-    //   - "json": The events are stored as an array of JSON objects. The
-    //             state of the generator is also written to the file when
-    //             execution terminates (either because the desired number
-    //             of events has been reached or because the user has
-    //             interrupted the run via ctrl+C). The function
-    //             marley::Event::to_json() controls the output format.
-    //
-    //   - "root": Stores the generated marley::Event objects in a ROOT
-    //             TTree. This format is only available if MARLEY has been
-    //             built with ROOT support.
-    //
-    // If this key is omitted, then the following configuration
-    // is assumed:
-    //
-    // output: [ { file: "events.ascii", format: "ascii", mode: "overwrite" } ]
-    //
-    output: [ { file: "events.ascii", format: "ascii", mode: "overwrite" } ],
+  // If this key is omitted, then the following configuration
+  // is assumed:
+  //
+  // output: [ { file: "events.hepmc3", format: "ascii", mode: "overwrite" } ]
+  //
+  output: [ { file: "events.hepmc3", format: "ascii", mode: "overwrite" } ],
   },
 
-  // LOGGER CONFIGURATION (optional)
+  // LOGGER CONFIGURATION (separate file)
   //
-  // The "log" JSON array contains a list of JSON objects representing
-  // one or more output streams that MARLEY should use to output diagnostic
-  // messages while generating events.
-  //
-  // Each entry is a JSON object with the following keys:
-  //
-  //   - file: The name of a file to receive logger output. If the value
-  //           is set to "stdout" or "stderr", then the corresponding stream
-  //           will be used instead of a file on disk.
-  //
-  //   - level: The logging level that should be used as a threshold for
-  //            writing to the stream. Valid values (in order of increasing
-  //            severity) are "debug", "info", "warning", "error", and
-  //            "disabled". Only  messages that are at least as severe as the
-  //            given logging level will be written to the stream. If this key
-  //            is omitted, a value of "info" will be assumed. A value of
-  //            "disabled" suppresses all output from MARLEY to the stream.
-  //
-  //   - overwrite: Boolean value indicating whether any previously existing
-  //                content in this stream should be erased by MARLEY (true)
-  //                or not (false). This key is ignored when using stdout or
-  //                stderr. If this key is omitted, a value of false is
-  //                assumed.
-  //
-  // If the "log" key is omitted (as it is in this file), MARLEY assumes the
-  // following configuration:
-  //
-  // log: [ { file: "stdout", level: "info" } ]
+  // MARLEY's diagnostic message output is configured separately from the
+  // job configuration file via the file data/config/logger.js (located
+  // using the MARLEY environment variable). This file uses a JSON format
+  // to configure output streams, severity levels, and logging categories.
+  // See the comments in that file for details.
 
 } // A closing curly brace should appear at the end of the file
