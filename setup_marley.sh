@@ -16,10 +16,9 @@ export PATH=${PATH}:${THIS_DIRECTORY}/build/bin
 if [ "$(uname)" = "Darwin" ]; then
   # macOS platform
   export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:${THIS_DIRECTORY}/build/lib
-else
-  # Assume a GNU/Linux platform
-  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${THIS_DIRECTORY}/build/lib
 fi
+
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${THIS_DIRECTORY}/build/lib
 
 # For using MARLEY classes in ROOT 6
 export ROOT_INCLUDE_PATH=${ROOT_INCLUDE_PATH}:${THIS_DIRECTORY}/include
