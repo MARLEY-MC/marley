@@ -17,6 +17,7 @@
 namespace {
 
   enum class PrintFormat {
+    Pretty,
     HepMC3,
     Legacy
   };
@@ -95,15 +96,17 @@ bool marley::CommandHandler::cmd_print( std::deque< std::string >& args ) {
     return marley::CommandHandler::cmd_help( args );
   }
 
-  PrintFormat format = PrintFormat::HepMC3;
-  if ( first_arg == "hepmc3" ) {
-    // HepMC3 is the default format (set above), so just
+  PrintFormat format = PrintFormat::Pretty;
+  if ( first_arg == "pretty" ) {
+    // Pretty is the default format (set above), so just
     // drop the format specifier from the input arguments
     args.pop_front();
   }
+  else if ( first_arg == "hepmc3" ) {
+    format = PrintFormat::HepMC3;
+    args.pop_front();
+  }
   else if ( first_arg == "legacy" ) {
-    // For the legacy format, we need to set the new value
-    // *and* drop the format specifier from the input arguments
     format = PrintFormat::Legacy;
     args.pop_front();
   }
@@ -123,7 +126,10 @@ bool marley::CommandHandler::cmd_print( std::deque< std::string >& args ) {
     HepMC3::GenEvent ev;
     int event_number = 0;
     while ( reader >> ev ) {
-      if ( format == PrintFormat::HepMC3 ) {
+      if ( format == PrintFormat::Pretty ) {
+        marley_hepmc3::print_event( ev );
+      }
+      else if ( format == PrintFormat::HepMC3 ) {
         std::cout << ev;
       }
       else {

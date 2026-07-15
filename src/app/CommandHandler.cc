@@ -48,11 +48,11 @@ namespace {
 
   void print_print_help() {
     std::cout << "Usage: marley print [FORMAT] INPUT_FILES...\n\n"
-      << "Print one or more MARLEY event files in a human-readable format.\n\n"
+      << "Print events from one or more MARLEY output files.\n\n"
       << "  FORMAT         Optional output format selector:\n"
-      << "                   hepmc3 (default): stream HepMC3 text to stdout\n"
-      << "                   legacy: MARLEY legacy human-readable event"
-      << " summary\n\n"
+      << "                   pretty (default): human-readable event history\n"
+      << "                   hepmc3: standard text representation of HepMC3\n"
+      << "                   legacy: MARLEY v1 legacy event summary\n\n"
       << "Options:\n"
       << "  -h, --help     Print this help message\n";
   }
