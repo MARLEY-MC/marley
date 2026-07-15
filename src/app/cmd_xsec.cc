@@ -48,40 +48,76 @@ namespace {
 
 bool marley::CommandHandler::cmd_xsec( std::deque< std::string >& args ) {
 
-  // If we have an unexpected number of arguments, decide whether the
-  // user intended to request help with this command
-  if ( args.size() != 2u ) {
-    std::string first_arg;
-    if ( !args.empty() ) first_arg = args.front();
+  std::string output_path;
+  std::string config_file_path;
+  bool force = false;
 
-    // Print the help message either way
-    args.clear();
-    args.push_front( "xsec" );
-    marley::CommandHandler::cmd_help( args );
+  while ( !args.empty() ) {
+    std::string arg = args.front();
+    args.pop_front();
 
-    // Return a boolean status based on whether the help message was
-    // explicitly requested (normal behavior) or not (an error condition)
-    if ( first_arg == "-h" || first_arg == "--help" ) return true;
-    return false;
-  }
-
-  // We know that args has exactly two elements if we make it here
-  std::string output_file_name( args.front() );
-  std::string config_file_name( args.back() );
-
-  std::ifstream temp_stream( output_file_name );
-  if ( temp_stream ) {
-    bool overwrite = marley_utils::prompt_yes_no(
-      "Really overwrite " + output_file_name + '?');
-    if ( !overwrite ) {
-      std::cout << "Total cross section dump aborted.\n";
-      return true;
+    if ( arg == "-o" || arg == "--output" ) {
+      if ( args.empty() ) {
+        std::cerr << "marley xsec: missing argument after '" << arg << "'\n";
+        return false;
+      }
+      output_path = args.front();
+      args.pop_front();
+    }
+    else if ( arg == "-f" || arg == "--force" ) {
+      force = true;
+    }
+    else if ( arg == "-h" || arg == "--help" ) {
+      args.clear();
+      args.push_front( "xsec" );
+      return marley::CommandHandler::cmd_help( args );
+    }
+    else if ( arg.front() == '-' ) {
+      std::cerr << "marley xsec: unrecognized option '" << arg << "'\n";
+      return false;
+    }
+    else if ( output_path.empty() ) {
+      output_path = arg;
+    }
+    else if ( config_file_path.empty() ) {
+      config_file_path = arg;
+    }
+    else {
+      std::cerr << "marley xsec: unexpected extra argument '"
+        << arg << "'\n";
+      return false;
     }
   }
 
-  std::ofstream out_file( output_file_name );
+  if ( output_path.empty() ) {
+    std::cerr << "marley xsec: missing required output file\n";
+    args.push_front( "xsec" );
+    marley::CommandHandler::cmd_help( args );
+    return false;
+  }
 
-  marley::JSONConfig config( config_file_name );
+  if ( config_file_path.empty() ) {
+    std::cerr << "marley xsec: missing required configuration file\n";
+    args.push_front( "xsec" );
+    marley::CommandHandler::cmd_help( args );
+    return false;
+  }
+
+  if ( !force ) {
+    std::ifstream temp_stream( output_path );
+    if ( temp_stream ) {
+      bool overwrite = marley_utils::prompt_yes_no(
+        "Really overwrite " + output_path + '?');
+      if ( !overwrite ) {
+        std::cout << "Total cross section dump aborted.\n";
+        return true;
+      }
+    }
+  }
+
+  std::ofstream out_file( output_path );
+
+  marley::JSONConfig config( config_file_path );
   marley::Generator gen = config.create_generator();
 
   double KEmin = DEFAULT_KE_MIN;

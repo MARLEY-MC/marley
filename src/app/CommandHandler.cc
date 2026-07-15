@@ -66,12 +66,13 @@ namespace {
   }
 
   void print_xsec_help() {
-    std::cout << "Usage: marley xsec OUTPUT_FILE CONFIG_FILE\n\n"
-      << "Tabulate the total cross section versus projectile energy using the"
-      << "\n"
+    std::cout << "Usage: marley xsec -o OUTPUT_FILE CONFIG_FILE\n\n"
+      << "Tabulate the total cross section versus projectile energy using the\n"
       << "settings in CONFIG_FILE and write the results to OUTPUT_FILE.\n\n"
+      << "  -o OUTPUT_FILE   Required: path to the output file\n"
+      << "  -f, --force      Overwrite the output file without prompting\n\n"
       << "Options:\n"
-      << "  -h, --help     Print this help message\n";
+      << "  -h, --help       Print this help message\n";
   }
 
   void print_decay_help() {
@@ -83,14 +84,14 @@ namespace {
   }
 
   void print_summarize_help() {
-    std::cout << "Usage: marley summarize OUTPUT_FILE INPUT_FILE...\n\n"
+    std::cout << "Usage: marley summarize -o OUTPUT_FILE INPUT_FILE...\n\n"
       << "Convert one or more MARLEY event files into a ROOT TTree"
       << " summary file\n"
       << "suitable for analysis with ROOT C++ macros or Python/PyROOT.\n\n"
-      << "  OUTPUT_FILE    Output ROOT file (will be created or overwritten)\n"
-      << "  INPUT_FILE...  One or more input MARLEY event files\n\n"
+      << "  -o OUTPUT_FILE   Required: path to the output ROOT file\n"
+      << "  -f, --force      Overwrite the output file without prompting\n\n"
       << "Options:\n"
-      << "  -h, --help     Print this help message\n\n"
+      << "  -h, --help       Print this help message\n\n"
       << "Note: this command requires a ROOT-enabled build of MARLEY.\n";
   }
 

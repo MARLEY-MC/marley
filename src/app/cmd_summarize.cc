@@ -18,6 +18,7 @@
 #endif
 
 // MARLEY includes
+#include "cmd_helpers.hh"
 #include "marley/CommandHandler.hh"
 #include "marley/Error.hh"
 #include "marley/EventFileReader.hh"
@@ -38,21 +39,67 @@ bool marley::CommandHandler::cmd_summarize(
 
 bool marley::CommandHandler::cmd_summarize( std::deque< std::string >& args ) {
 
-  // If we have too few arguments, decide whether the
-  // user intended to request help with this command
-  if ( args.size() < 2u ) {
-    std::string first_arg;
-    if ( !args.empty() ) first_arg = args.front();
+  std::string output_path;
+  bool force = false;
+  std::vector< std::string > input_files;
 
-    // Print the help message either way
-    args.clear();
+  while ( !args.empty() ) {
+    std::string arg = args.front();
+    args.pop_front();
+
+    if ( arg == "-o" || arg == "--output" ) {
+      if ( args.empty() ) {
+        std::cerr << "marley summarize: missing argument after '"
+          << arg << "'\n";
+        return false;
+      }
+      output_path = args.front();
+      args.pop_front();
+    }
+    else if ( arg == "-f" || arg == "--force" ) {
+      force = true;
+    }
+    else if ( arg == "-h" || arg == "--help" ) {
+      args.clear();
+      args.push_front( "summarize" );
+      return marley::CommandHandler::cmd_help( args );
+    }
+    else if ( arg.front() == '-' ) {
+      std::cerr << "marley summarize: unrecognized option '" << arg << "'\n";
+      return false;
+    }
+    else if ( output_path.empty() ) {
+      output_path = arg;
+    }
+    else {
+      input_files.push_back( arg );
+    }
+  }
+
+  if ( output_path.empty() ) {
+    std::cerr << "marley summarize: missing required output file\n";
     args.push_front( "summarize" );
     marley::CommandHandler::cmd_help( args );
-
-    // Return a boolean status based on whether the help message was
-    // explicitly requested (normal behavior) or not (an error condition)
-    if ( first_arg == "-h" || first_arg == "--help" ) return true;
     return false;
+  }
+
+  if ( input_files.empty() ) {
+    std::cerr << "marley summarize: no input files specified\n";
+    args.push_front( "summarize" );
+    marley::CommandHandler::cmd_help( args );
+    return false;
+  }
+
+  if ( !force ) {
+    std::ifstream test( output_path );
+    if ( test ) {
+      bool overwrite = marley_utils::prompt_yes_no(
+        "Really overwrite " + output_path + "?" );
+      if ( !overwrite ) {
+        std::cout << "Action aborted.\n";
+        return true;
+      }
+    }
   }
 
   double flux_avg_tot_xsec;
@@ -75,18 +122,7 @@ bool marley::CommandHandler::cmd_summarize( std::deque< std::string >& args ) {
   double cv_weight;
   std::vector< double > other_weights;
 
-  std::ifstream temp_stream( args.front() );
-  if ( temp_stream ) {
-    bool overwrite = marley_utils::prompt_yes_no( "Really overwrite "
-      + args.front() + '?' );
-
-    if ( !overwrite ) {
-      std::cout << "Action aborted.\n";
-      return true;
-    }
-  }
-
-  TFile out_tfile( args.front().c_str(), "recreate" );
+  TFile out_tfile( output_path.c_str(), "recreate" );
   TTree* out_tree = new TTree( "mst", "MARLEY summary tree" );
 
   out_tree->Branch( "pdgv", &pdgv, "pdgv/I" );
@@ -132,47 +168,27 @@ bool marley::CommandHandler::cmd_summarize( std::deque< std::string >& args ) {
   out_tree->Branch( "cv_weight", &cv_weight, "cv_weight/D" );
   out_tree->Branch( "other_weights", &other_weights );
 
-  // Strip off the leading argument (the output file name) now that we're
-  // done with it
-  args.pop_front();
+  constexpr double XSEC_CONV = marley_utils::hbar_c2
+    * marley_utils::fm2_to_minus40_cm2 * 1e2;
 
-  // All remaining arguments are input file names. Loop over them to process
-  // the events for the output summary TTree
-  std::shared_ptr< HepMC3::GenRunInfo > first_raw_run_info;
-  bool first_file = true;
+  bool weight_names_written = false;
+  long event_count = 0;
 
-  for ( const auto& file_name : args ) {
-
-    marley::EventFileReader efr( file_name );
-    std::cout << "Opened file \"" << file_name << "\"\n";
-
-    HepMC3::GenEvent ev;
-
-    int event_num = 0;
-    while ( efr >> ev ) {
-
-      if ( event_num == 0 ) {
-        if ( !first_raw_run_info ) {
-          first_raw_run_info = ev.run_info();
-        } else if ( !first_file ) {
-          std::string issue
-            = marley_hepmc3::check_run_info_compatibility(
-              *first_raw_run_info, *ev.run_info() );
-          if ( !issue.empty() ) {
-            throw marley::Error( "File '" + file_name
-              + "' has incompatible run information: " + issue );
-          }
-        }
-
-        auto run_info = ev.run_info();
-        auto wgt_names = run_info->weight_names();
+  for_each_event( input_files,
+    [ & ]( HepMC3::GenEvent& ev, bool first_event, double xsec_natural,
+      const auto& first_info )
+    {
+      if ( first_event && !weight_names_written ) {
+        auto wgt_names = first_info->weight_names();
         wgt_names.erase( wgt_names.begin() );
-
         out_tfile.WriteObject( &wgt_names,
           "MARLEY_other_weight_names", "WriteDelete" );
+        weight_names_written = true;
       }
 
-      if ( event_num % 1000 == 0 ) std::cout << "Event " << event_num << '\n';
+      if ( event_count % 1000 == 0 ) {
+        std::cout << "Event " << event_count << '\n';
+      }
 
       PDGs.clear();
       Es.clear();
@@ -233,7 +249,7 @@ bool marley::CommandHandler::cmd_summarize( std::deque< std::string >& args ) {
       auto parity_attr = residue->attribute< HepMC3::IntAttribute >( "parity" );
       par = parity_attr->value();
 
-      flux_avg_tot_xsec = efr.flux_averaged_xsec();
+      flux_avg_tot_xsec = xsec_natural * XSEC_CONV;
 
       auto proc_type_attr = ev.attribute< HepMC3::IntAttribute >(
         "signal_process_id" );
@@ -277,10 +293,8 @@ bool marley::CommandHandler::cmd_summarize( std::deque< std::string >& args ) {
       other_weights.erase( other_weights.begin() );
 
       out_tree->Fill();
-      ++event_num;
-    }
-    first_file = false;
-  }
+      ++event_count;
+    } );
 
   out_tfile.cd();
   out_tree->Write();
