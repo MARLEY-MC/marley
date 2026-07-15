@@ -1,6 +1,8 @@
 #include <iostream>
 
-#include "marley/Event.hh"
+#include "HepMC3/GenEvent.h"
+#include "HepMC3/PrintStreams.h"
+
 #include "marley/EventFileReader.hh"
 
 int main(int argc, char** argv) {
@@ -10,7 +12,7 @@ int main(int argc, char** argv) {
   std::string input_file_name( argv[1] );
 
   marley::EventFileReader efr( input_file_name );
-  marley::Event event;
+  HepMC3::GenEvent event;
 
   double avg_xsec = efr.flux_averaged_xsec();
   std::cout << "flux-averaged total cross section = "
