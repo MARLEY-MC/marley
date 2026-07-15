@@ -924,6 +924,47 @@ namespace {
     }
   }
 
+  // Compute the gamma-ray multipolarity string (e.g., "E1", "M2") by
+  // inspecting the spin-parity attributes of the IN and OUT particles
+  // of a gamma-cascade vertex. Returns an empty string when the needed
+  // attributes are missing.
+  //
+  // The multipolarity ℓ is approximated as the lowest value allowed
+  // by angular momentum conservation: ℓ = max(1, |J_i - J_f|).
+  // The type (E or M) is determined from the parity rule:
+  //   Electric if π_i = (-1)^ℓ × π_f, Magnetic otherwise.
+  std::string compute_gamma_multipolarity_string(
+    const HepMC3::ConstGenVertexPtr& vtx )
+  {
+    const auto& in_particles = vtx->particles_in();
+    if ( in_particles.empty() ) return {};
+
+    int twoJ_i = 0, Pi = 0;
+    if ( !get_int_attr( in_particles.front(), "twoJ",   twoJ_i ) ) return {};
+    if ( !get_int_attr( in_particles.front(), "parity", Pi     ) ) return {};
+
+    // Find the daughter nucleus (non-photon) among OUT particles
+    const auto& out_particles = vtx->particles_out();
+    HepMC3::ConstGenParticlePtr daughter = nullptr;
+    for ( const auto& p : out_particles ) {
+      if ( p->pid() != 22 ) { daughter = p; break; }
+    }
+    if ( !daughter ) return {};
+
+    int twoJ_f = 0, Pf = 0;
+    if ( !get_int_attr( daughter, "twoJ",   twoJ_f ) ) return {};
+    if ( !get_int_attr( daughter, "parity", Pf     ) ) return {};
+
+    // ℓ = max(1, |J_i - J_f|).  The factor 1/2 converts twoJ to J.
+    int ell = std::abs( twoJ_i - twoJ_f ) / 2;
+    if ( ell < 1 ) ell = 1;
+
+    int phase = ( ell % 2 == 0 ) ? 1 : -1; // (-1)^ℓ
+    char type = ( Pi == phase * Pf ) ? 'E' : 'M';
+
+    return type + std::to_string( ell );
+  }
+
   // Print the full detail block for one vertex.
   void print_vertex_block( std::ostream& os,
     const HepMC3::ConstGenVertexPtr& vtx, int vtx_index )
@@ -938,7 +979,7 @@ namespace {
     if ( vstatus == marley_hepmc3::NUHEPMC_PRIMARY_VERTEX )
       type_name = "PRIMARY INTERACTION";
     else if ( vstatus == marley_hepmc3::NUHEPMC_HF_DECAY_VERTEX )
-      type_name = "HAUSER-FESHBACH DECAY";
+      type_name = "HAUSER-FESHBACH";
     else if ( vstatus == marley_hepmc3::NUHEPMC_GAMMA_DECAY_VERTEX )
       type_name = "GAMMA CASCADE";
     else
@@ -947,22 +988,40 @@ namespace {
     std::ostringstream hdr;
     hdr << "  [V" << vtx_index << "]  " << type_name;
 
-    // Width attributes for HF/gamma vertices (Γ = U+0393 = 0xCE 0x93)
-    if ( is_deex ) {
+    // Width attributes for Hauser-Feshbach decay vertices
+    if ( vstatus == marley_hepmc3::NUHEPMC_HF_DECAY_VERTEX ) {
       double width_tot = 0., width_ec = 0.;
       bool has_tot = get_double_attr_vtx( vtx, "TotalWidth", width_tot );
       bool has_ec  = get_double_attr_vtx( vtx, "ECWidth",    width_ec  );
       if ( has_tot && has_ec ) {
-        hdr << " Γ_tot = "
-            << std::scientific << std::setprecision( 2 ) << width_tot
-            << " MeV  Γ_ec = "
+        hdr << "  Γ_ec = "
             << std::scientific << std::setprecision( 2 ) << width_ec
+            << " MeV  Γ_tot = "
+            << std::scientific << std::setprecision( 2 ) << width_tot
+            << " MeV";
+      }
+    }
+    // Additional info for gamma-cascade vertices
+    else if ( is_gamma ) {
+      {
+        std::string xl = compute_gamma_multipolarity_string( vtx );
+        if ( !xl.empty() ) hdr << "  " << xl;
+      }
+      double br = 0.;
+      if ( get_double_attr_vtx( vtx, "GammaBranchingRatio", br ) ) {
+        hdr << "  BR = " << std::scientific << std::setprecision( 2 ) << br;
+      }
+      double width_tot = 0.;
+      if ( get_double_attr_vtx( vtx, "TotalWidth", width_tot ) ) {
+        hdr << "  Γ_tot = "
+            << std::scientific << std::setprecision( 2 ) << width_tot
             << " MeV";
       }
     }
     os << hdr.str() << "\n";
 
-    // Retrieve multipolarity if this is a gamma-cascade vertex
+    // Retrieve multipolarity if this is a gamma-cascade vertex (used by
+    // print_particle_line for the photon momentum display)
     int multi = -1;
     if ( is_gamma ) get_int_attr_vtx( vtx, "multipolarity", multi );
 
