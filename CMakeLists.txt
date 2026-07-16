@@ -635,6 +635,8 @@ if(DOXYGEN_FOUND)
   add_custom_target(doxygen
     COMMAND ${CMAKE_COMMAND} -E env
       MARLEY_VERSION=${VERSION_PREFIX}${MARLEY_COMPUTED_VERSION}
+      DOXYGEN_OUTPUT_DIR=${CMAKE_BINARY_DIR}/docs/doxygen
+      BUILDDIR=${CMAKE_BINARY_DIR}/docs
       ${CMAKE_MAKE_PROGRAM} doxygen
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docs
     COMMENT "Generating Doxygen documentation"
@@ -645,6 +647,8 @@ if(SPHINX_BUILD)
   add_custom_target(docs
     COMMAND ${CMAKE_COMMAND} -E env
       MARLEY_VERSION=${VERSION_PREFIX}${MARLEY_COMPUTED_VERSION}
+      DOXYGEN_OUTPUT_DIR=${CMAKE_BINARY_DIR}/docs/doxygen
+      BUILDDIR=${CMAKE_BINARY_DIR}/docs
       ${CMAKE_MAKE_PROGRAM} html
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/docs
     COMMENT "Generating Sphinx documentation"

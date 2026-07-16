@@ -73,17 +73,9 @@ endif
 ifneq (,$(wildcard $(TOP_DIR)/.VERSION))
   MARLEY_VERSION := $(shell cat $(TOP_DIR)/.VERSION)
 
-  # Define a link to a tarball on GitHub for the current tagged release
-  TARBALL_LINK = "<a href=\"https://github.com/MARLEY-MC/marley/$\
-    archive/v$(MARLEY_VERSION).tar.gz\">here</a> or"
-
   VERSION_PREFIX="v"
 
 else
-
-  # Just link to the repository in the doxygen documentation if we're not
-  # working with a tagged release
-  TARBALL_LINK = ""
 
   # Also use the git revision as the version number in this case
   MARLEY_VERSION := $(GIT_REVISION)
@@ -414,16 +406,20 @@ marg4: $(SHARED_LIB) $(BUILD_DIR)/bin/marley-config
 	@PATH=$(BUILD_DIR)/bin:$$PATH MARLEY=$(TOP_DIR) \
 	  $(MAKE) -C $(TOP_DIR)/examples/marg4
 
+DOCS_BUILD_DIR = $(BUILD_DIR)/docs
+
 .PHONY: marley mroot docs clean install uninstall
 
 doxygen:
 	export MARLEY_VERSION=$(VERSION_PREFIX)$(MARLEY_VERSION) \
-	export TARBALL_LINK=$(TARBALL_LINK) \
+	export DOXYGEN_OUTPUT_DIR=$(DOCS_BUILD_DIR)/doxygen \
+	export BUILDDIR=$(DOCS_BUILD_DIR) \
 	&& cd $(TOP_DIR)/docs && $(MAKE) doxygen
 
 docs:
 	export MARLEY_VERSION=$(VERSION_PREFIX)$(MARLEY_VERSION) \
-	export TARBALL_LINK=$(TARBALL_LINK) \
+	export DOXYGEN_OUTPUT_DIR=$(DOCS_BUILD_DIR)/doxygen \
+	export BUILDDIR=$(DOCS_BUILD_DIR) \
 	&& cd $(TOP_DIR)/docs && $(MAKE) html
 
 clean:

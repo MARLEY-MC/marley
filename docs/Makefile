@@ -5,7 +5,8 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = _build
+BUILDDIR      ?= _build
+DOXYGEN_OUTPUT_DIR ?= doxygen
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -42,8 +43,10 @@ clean:
 	-rm -rf $(BUILDDIR)/*
 
 doxygen:
+	mkdir -p $(DOXYGEN_OUTPUT_DIR)
+	cd doxygen && doxygen
 	mkdir -p $(BUILDDIR)/html/doxygen
-	cd doxygen && doxygen && cp -r html/* ../$(BUILDDIR)/html/doxygen
+	cp -r $(DOXYGEN_OUTPUT_DIR)/html/* $(BUILDDIR)/html/doxygen
 
 html: doxygen
 	touch $(BUILDDIR)/html/.nojekyll
