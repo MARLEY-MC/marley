@@ -4,7 +4,7 @@ from sphinx.highlighting import lexers
 from pygments.lexers.web import PhpLexer
 
 project = u'MARLEY'
-copyright = u'2016-2024 Steven Gardiner'
+copyright = u'2016-2026 Steven Gardiner'
 master_doc = 'index'
 templates_path = [ '_templates' ]
 extensions = [ 'sphinxcontrib.bibtex', 'sphinxcontrib.newsfeed',

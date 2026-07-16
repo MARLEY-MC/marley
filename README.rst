@@ -54,7 +54,7 @@ Copyright and License
 
 .. |copy| unicode:: 0xA9 .. copyright sign
 
-Copyright |copy| 2016-2024 Steven Gardiner gardiner@fnal.gov
+Copyright |copy| 2016-2026 Steven Gardiner gardiner@fnal.gov
 
 MARLEY is distributed under the terms of version 3 of the `GNU General Public
 License <http://www.gnu.org/licenses/gpl-3.0-standalone.html>`__ ("GPLv3") as
