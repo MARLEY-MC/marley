@@ -30,6 +30,7 @@
 #include <limits>
 #include <sstream>
 #include <map>
+#include <memory>
 #include <string>
 #include <type_traits>
 
@@ -58,6 +59,9 @@ namespace marley {
       return output;
     }
   }
+
+  // Forward-declare the StreamReader class defined below
+  class StreamReader;
 
   class JSON
   {
@@ -249,6 +253,7 @@ namespace marley {
 
       static inline JSON load(const std::string& s);
       static inline JSON load(std::istream& is);
+      static inline JSON load(StreamReader& reader);
       static inline JSON load_file(const std::string& s);
 
       template <typename T> void append(T arg) {
@@ -710,91 +715,185 @@ namespace marley {
       DataType type_ = DataType::Null;
   };
 
+  class StreamReader {
+    public:
+      StreamReader(std::istream& stream, std::string filename = {},
+        StreamReader* parent = nullptr)
+        : stream_(&stream), filename_(std::move(filename)),
+        parent_(parent) {}
+
+      StreamReader(std::unique_ptr<std::istream> stream,
+        std::string filename = {}, StreamReader* parent = nullptr)
+        : stream_(stream.get()), owner_(std::move(stream)),
+        filename_(std::move(filename)), parent_(parent) {}
+
+      char get() {
+        if (has_putback_) {
+          has_putback_ = false;
+          char c = putback_char_;
+          if (c == '\n') { ++line_; col_ = 1; }
+          else { ++col_; }
+          return c;
+        }
+        char c;
+        if (stream_->get(c)) {
+          prev_line_ = line_; prev_col_ = col_; prev_known_ = true;
+          if (c == '\n') { ++line_; col_ = 1; }
+          else { ++col_; }
+          return c;
+        }
+        fail_ = true;
+        return '\0';
+      }
+
+      char peek() {
+        if (has_putback_) return putback_char_;
+        int ch = stream_->peek();
+        if (ch == std::char_traits<char>::eof()) {
+          fail_ = true; return '\0';
+        }
+        return static_cast<char>(ch);
+      }
+
+      void unget(char c) {
+        if (prev_known_) {
+          line_ = prev_line_; col_ = prev_col_;
+        }
+        putback_char_ = c;
+        has_putback_ = true;
+      }
+
+      bool good() const {
+        if (has_putback_) return true;
+        return !fail_ && stream_->good();
+      }
+
+      size_t line() const { return line_; }
+      size_t col() const { return col_; }
+      const std::string& filename() const { return filename_; }
+
+      std::string format_error(const std::string& message) const {
+        std::string result;
+        auto report_col = [&](const StreamReader& r) -> std::string {
+          return std::to_string(r.prev_known_ ? r.prev_line_ : r.line_)
+            + ", column " + std::to_string(r.prev_known_ ? r.prev_col_ : r.col_);
+        };
+        if (!filename_.empty()) {
+          result += "In \"" + filename_ + "\", line " + report_col(*this)
+            + ":\n";
+        }
+        std::string indent = "  ";
+        for (const StreamReader* p = parent_; p; p = p->parent_) {
+          result += indent + "(included from \"" + p->filename_
+            + "\", line " + report_col(*p) + ")\n";
+          indent += "  ";
+        }
+        result += message;
+        return result;
+      }
+
+    private:
+      std::istream* stream_ = nullptr;
+      std::unique_ptr<std::istream> owner_;
+      std::string filename_;
+      StreamReader* parent_ = nullptr;
+
+      size_t line_ = 1, col_ = 1;
+      size_t prev_line_ = 1, prev_col_ = 1;
+      bool prev_known_ = false;
+
+      char putback_char_ = 0;
+      bool has_putback_ = false;
+      bool fail_ = false;
+  };
+
   namespace {
 
-    JSON parse_next( std::istream& );
+    JSON parse_next( StreamReader& );
 
-    void issue_parse_error( char found_char, const std::string& message )
+    void issue_parse_error( char found_char, const std::string& message,
+      StreamReader& reader )
     {
       std::string msg( message );
-      if ( found_char == std::ifstream::traits_type::eof() )
-        msg += "end-of-file";
+      if ( !reader.good() ) msg += "end-of-file";
       else msg += std::string( "\'" ) + found_char + '\'';
-      throw marley::Error( msg );
+      throw marley::Error( reader.format_error( msg ) );
     }
 
     void issue_parse_error( const std::string& found_str,
-      const std::string& message, const std::istream& is )
+      const std::string& message, StreamReader& reader )
     {
       std::string msg( message );
-      if ( !is ) msg += "end-of-file";
+      if ( !reader.good() ) msg += "end-of-file";
       else msg += '\'' + found_str + '\'';
-      throw marley::Error( msg );
+      throw marley::Error( reader.format_error( msg ) );
     }
 
     // Skips single-line comments // and multi-line comments /* */
     // These are technically not valid in JSON (the standard doesn't allow
     // comments), but they are valid in Javascript object literals.
-    void skip_comment( std::istream& in, bool is_multiline = false ) {
+    void skip_comment( StreamReader& reader, bool is_multiline = false ) {
       if ( is_multiline ) {
         char c;
-        while ( in.get(c) ) {
-          if ( c == '*' && in.peek() == '/' ) {
-            in.ignore();
+        while ( c = reader.get(), reader.good() ) {
+          if ( c == '*' && reader.peek() == '/' ) {
+            reader.get();
             break;
           }
         }
       }
-      // Ignore all further characters until either a newline or end-of-file
-      else in.ignore( std::numeric_limits<std::streamsize>::max(), '\n' );
+      else {
+        char c;
+        while ( (c = reader.get(), reader.good()) && c != '\n' ) {}
+      }
     }
 
     // Skips whitespace and comments, saving the last character read to
     // read_char.
-    void skip_ws( std::istream& in, char& read_char ) {
-      while ( read_char = in.get(), std::isspace(read_char) ) continue;
+    void skip_ws( StreamReader& reader, char& read_char ) {
+      while ( read_char = reader.get(), std::isspace(read_char) ) continue;
       if ( read_char == '/' ) {
-        char c = in.peek();
+        char c = reader.peek();
         if ( c == '/' || c == '*' ) {
-          read_char = in.get();
-          skip_comment( in, c == '*' );
-          return skip_ws( in, read_char );
+          read_char = reader.get();
+          skip_comment( reader, c == '*' );
+          return skip_ws( reader, read_char );
         }
       }
     }
 
     // Removes whitespace and comments from the input stream, putting back
     // the first non-whitespace and non-comment character it finds.
-    void consume_ws( std::istream& in ) {
-      static char next;
-      skip_ws( in, next );
-      in.putback( next );
+    void consume_ws( StreamReader& reader ) {
+      char next;
+      skip_ws( reader, next );
+      reader.unget( next );
     }
 
     // Removes whitespace and comments from the input stream, returning the
     // first non-whitespace and non-comment character it finds.
-    char get_next_char( std::istream& in )
+    char get_next_char( StreamReader& reader )
     {
-      static char next;
-      skip_ws( in, next );
+      char next;
+      skip_ws( reader, next );
       return next;
     }
 
-    JSON parse_object( std::istream& in ) {
+    JSON parse_object( StreamReader& reader ) {
 
       JSON object = JSON::make( JSON::DataType::Object );
 
       for ( ;; ) {
 
-        consume_ws( in );
+        consume_ws( reader );
         JSON key;
 
-        if ( in.peek() == '}' ) {
-          in.ignore();
+        if ( reader.peek() == '}' ) {
+          reader.get();
           return object;
         }
-        else if ( in.peek() == '\"' ) {
-          key = parse_next(in);
+        else if ( reader.peek() == '\"' ) {
+          key = parse_next(reader);
         }
         // The key isn't quoted, so assume it's a single word followed
         // by a colon. Note that vanilla JSON requires all keys to be quoted,
@@ -802,9 +901,9 @@ namespace marley {
         else {
           std::string key_str;
           char c;
-          while ( in.get(c) ) {
+          while ( c = reader.get(), reader.good() ) {
             if ( c == ':' || std::isspace(c) ) {
-              in.putback( c );
+              reader.unget( c );
               break;
             }
             key_str += c;
@@ -812,21 +911,21 @@ namespace marley {
           key = key_str;
         }
 
-        char next = get_next_char( in );
+        char next = get_next_char( reader );
         if ( next != ':' ) {
-          issue_parse_error( next, "JSON object: Expected colon, found " );
+          issue_parse_error( next, "JSON object: Expected colon, found ", reader );
           break;
         }
 
-        consume_ws( in );
-        JSON value = parse_next( in );
+        consume_ws( reader );
+        JSON value = parse_next( reader );
         object[ key.to_string() ] = value;
 
-        next = get_next_char( in );
+        next = get_next_char( reader );
         if ( next == ',' ) continue;
         else if ( next == '}' ) break;
         else {
-          issue_parse_error( next, "JSON object: Expected comma, found " );
+          issue_parse_error( next, "JSON object: Expected comma, found ", reader );
           break;
         }
       }
@@ -834,27 +933,27 @@ namespace marley {
       return object;
     }
 
-    JSON parse_array(std::istream& in) {
+    JSON parse_array(StreamReader& reader) {
       JSON array = JSON::make(JSON::DataType::Array);
       unsigned index = 0;
 
       for (;;) {
 
-        consume_ws(in);
-        if (in.peek() == ']') {
-          in.ignore();
+        consume_ws(reader);
+        if (reader.peek() == ']') {
+          reader.get();
           return array;
         }
 
-        array[index++] = parse_next(in);
-        consume_ws(in);
+        array[index++] = parse_next(reader);
+        consume_ws(reader);
 
-        char next = in.get();
+        char next = reader.get();
         if (next == ',') continue;
         else if (next == ']') break;
         else {
           issue_parse_error(next, "JSON array: Expected ',' or ']'"
-            ", found ");
+            ", found ", reader);
           return JSON::make(JSON::DataType::Array);
         }
       }
@@ -862,12 +961,12 @@ namespace marley {
       return array;
     }
 
-    JSON parse_string(std::istream& in) {
+    JSON parse_string(StreamReader& reader) {
       JSON str;
       std::string val;
-      for(char c = in.get(); c != '\"' && in; c = in.get()) {
+      for(char c = reader.get(); c != '\"' && reader.good(); c = reader.get()) {
         if (c == '\\') {
-          switch( in.get() ) {
+          switch( reader.get() ) {
             case '\"': val += '\"'; break;
             case '\\': val += '\\'; break;
             case '/' : val += '/' ; break;
@@ -879,12 +978,12 @@ namespace marley {
             case 'u' : {
               val += "\\u" ;
               for(unsigned i = 1; i <= 4; ++i) {
-                c = in.get();
+                c = reader.get();
                 if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')
                   || (c >= 'A' && c <= 'F')) val += c;
                 else {
                   issue_parse_error(c, "JSON string: Expected hex character"
-                    " in unicode escape, found ");
+                    " in unicode escape, found ", reader);
                   return JSON::make(JSON::DataType::String);
                 }
               }
@@ -899,10 +998,9 @@ namespace marley {
       return str;
     }
 
-    //FIXME
-    JSON parse_number(std::istream& in, char old) {
+    JSON parse_number(StreamReader& reader, char old) {
       JSON Number;
-       std::string val, exp_str;
+      std::string val, exp_str;
       char c = old;
       bool isDouble = false;
       long exp = 0;
@@ -915,18 +1013,18 @@ namespace marley {
         }
         else
           break;
-        c = in.get();
+        c = reader.get();
       }
       if ( c == 'E' || c == 'e' ) {
-        if ( in.peek() == '-' ) { in.ignore(); exp_str += '-'; }
-        else if ( in.peek() == '+' ) { in.ignore(); }
+        if ( reader.peek() == '-' ) { reader.get(); exp_str += '-'; }
+        else if ( reader.peek() == '+' ) { reader.get(); }
         for (;;) {
-          c = in.get();
+          c = reader.get();
           if ( c >= '0' && c <= '9' )
             exp_str += c;
           else if ( !std::isspace( c ) && c != ',' && c != ']' && c != '}' ) {
             issue_parse_error(c, "JSON number: Expected a number for"
-              " exponent, found ");
+              " exponent, found ", reader);
             return JSON::make(JSON::DataType::Null);
           }
           else
@@ -935,10 +1033,10 @@ namespace marley {
         exp = std::stol( exp_str );
       }
       else if ( !std::isspace( c ) && c != ',' && c != ']' && c != '}' ) {
-        issue_parse_error(c, "JSON number: unexpected character ");
+        issue_parse_error(c, "JSON number: unexpected character ", reader);
         return JSON::make(JSON::DataType::Null);
       }
-      in.putback(c);
+      reader.unget(c);
 
       if ( isDouble )
         Number = std::stod( val ) * std::pow( 10, exp );
@@ -951,43 +1049,43 @@ namespace marley {
       return  Number ;
     }
 
-    JSON parse_bool(std::istream& in, char old) {
+    JSON parse_bool(StreamReader& reader, char old) {
       JSON b;
       std::string s(1, old);
       if (old == 't') {
-        for (size_t i = 0; i < 3; ++i) s += in.get();
+        for (size_t i = 0; i < 3; ++i) s += reader.get();
         if (s == "true") b = true;
       }
       else if (old == 'f') {
-        for (size_t i = 0; i < 4; ++i) s += in.get();
+        for (size_t i = 0; i < 4; ++i) s += reader.get();
         if (s == "false") b = false;
       }
       if (b.type() == JSON::DataType::Null) {
         // Get the entire string if the user supplied an invalid value
-        while (in.good() && !std::isspace(in.peek())) s += in.get();
+        while (reader.good() && !std::isspace(reader.peek())) s += reader.get();
         marley_utils::trim_inplace(s);
 
         issue_parse_error(s, "JSON bool: Expected 'true' or 'false', found ",
-          in);
+          reader);
         return JSON::make(JSON::DataType::Null);
       }
       return b;
     }
 
-    JSON parse_null(std::istream& in) {
+    JSON parse_null(StreamReader& reader) {
       JSON null;
       std::string s(1, 'n');
-      for (size_t i = 0; i < 3; ++i) s += in.get();
+      for (size_t i = 0; i < 3; ++i) s += reader.get();
       if ( s != "null") {
-        issue_parse_error("JSON null: Expected 'null', found ", s, in);
+        issue_parse_error("JSON null: Expected 'null', found ", s, reader);
         return JSON::make(JSON::DataType::Null);
       }
       return null;
     }
 
-    JSON parse_include( std::istream& in ) {
+    JSON parse_include( StreamReader& reader ) {
       std::string s( 1, '#' );
-      for (size_t i = 0; i < 9; ++i) s += in.get();
+      for (size_t i = 0; i < 9; ++i) s += reader.get();
       if ( s != "#include:\"") {
         throw marley::Error( "JSON include: Expected 'include:\"', found '"
           + s + '\'' );
@@ -996,7 +1094,7 @@ namespace marley {
 
       // Parse the included file name into a temporary JSON object, then find
       // the full path to the file
-      JSON file_name_json = parse_string( in );
+      JSON file_name_json = parse_string( reader );
       std::string file_name = file_name_json.to_string();
 
       const auto& fm = marley::FileManager::Instance();
@@ -1010,34 +1108,40 @@ namespace marley {
       }
 
       // Open the file for reading and check that it is ready to use
-      std::ifstream included_file_stream( full_file_name );
-      if ( !included_file_stream.good() ) {
+      auto included_file_stream
+        = std::make_unique<std::ifstream>( full_file_name );
+      if ( !included_file_stream->good() ) {
         throw marley::Error( "Could not read from the included JSON file \""
           + full_file_name + '\"' );
       }
 
+      // Create a child reader for the included file, chaining it via
+      // the parent pointer to enable include-stack error traces
+      StreamReader child_reader( std::move( included_file_stream ),
+        full_file_name, &reader );
+
       // Use a recursive call to parse_next() to interpret the JSON in the
       // file, allowing for the possibility of nested #include commands
-      return parse_next( included_file_stream );
+      return parse_next( child_reader );
     }
 
-    JSON parse_next( std::istream& in ) {
-      char value = get_next_char( in );
+    JSON parse_next( StreamReader& reader ) {
+      char value = get_next_char( reader );
       switch(value) {
-        case '[' : return parse_array(in);
-        case '{' : return parse_object(in);
-        case '\"': return parse_string(in);
+        case '[' : return parse_array(reader);
+        case '{' : return parse_object(reader);
+        case '\"': return parse_string(reader);
         case 't' :
-        case 'f' : return parse_bool(in, value);
-        case 'n' : return parse_null(in);
-        case '#' : return parse_include(in);
+        case 'f' : return parse_bool(reader, value);
+        case 'n' : return parse_null(reader);
+        case '#' : return parse_include(reader);
         default  :
           if ((value <= '9' && value >= '0') || value == '-')
-            return parse_number(in, value);
+            return parse_number(reader, value);
       }
       // Complain and throw an error if there was a problem
-      if (!in) throw marley::Error("Unexpected end of JSON configuration"
-        " file found\n");
+      if (!reader.good()) throw marley::Error("Unexpected end of JSON"
+        " configuration file found\n");
       else throw marley::Error(std::string("JSON parse:")
         + " Unknown starting character '" + value + "'\n");
       return JSON();
@@ -1045,8 +1149,11 @@ namespace marley {
   }
 
   inline JSON JSON::load_file(const std::string& filename) {
-    std::ifstream in(filename);
-    if (in.good()) return load(in);
+    auto stream = std::make_unique<std::ifstream>(filename);
+    if (stream->good()) {
+      StreamReader reader(std::move(stream), filename);
+      return load(reader);
+    }
     else {
       throw marley::Error("Could not open the file \"" + filename + "\"");
       return JSON::make(JSON::DataType::Null);
@@ -1054,15 +1161,20 @@ namespace marley {
   }
 
   inline JSON JSON::load(std::istream& in) {
-    char first = get_next_char( in );
+    StreamReader reader(in);
+    return load(reader);
+  }
+
+  inline JSON JSON::load(StreamReader& reader) {
+    char first = get_next_char( reader );
     if (first != '{') {
       throw marley::Error("Missing '{' at beginning of JSON object");
-      in.putback(first);
-      return parse_object(in);
+      reader.unget(first);
+      return parse_object(reader);
     }
     else {
-      in.putback(first);
-      return parse_next(in);
+      reader.unget(first);
+      return parse_next(reader);
     }
   }
 
