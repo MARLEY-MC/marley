@@ -8,9 +8,9 @@
 # ProcessType code, nuclear target PDG code, use tabulated responses, Delta
 4 1000180400 1 -5.377
 # List of nuclear response tables
-responses_ar40_crpa_J0_G3.dat
-responses_ar40_crpa_J1_G3.dat
-responses_ar40_crpa_J2_G3.dat
-responses_ar40_crpa_J3_G3.dat
-responses_ar40_crpa_J4_G3.dat
-responses_ar40_crpa_J5_G3.dat
+crpa/responses_ar40_crpa_J0_G3.dat
+crpa/responses_ar40_crpa_J1_G3.dat
+crpa/responses_ar40_crpa_J2_G3.dat
+crpa/responses_ar40_crpa_J3_G3.dat
+crpa/responses_ar40_crpa_J4_G3.dat
+crpa/responses_ar40_crpa_J5_G3.dat
