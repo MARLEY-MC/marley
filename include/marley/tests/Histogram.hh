@@ -30,6 +30,7 @@
 
 // MARLEY includes
 #include "marley/Error.hh"
+#include "marley/Logger.hh"
 #include "marley/marley_utils.hh"
 
 namespace marley {

@@ -17,6 +17,7 @@
 
 
 #include "marley/Error.hh"
+#include "marley/Logger.hh"
 #include "marley/Target.hh"
 #include "marley/marley_utils.hh"
 

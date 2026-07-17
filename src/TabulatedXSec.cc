@@ -20,6 +20,7 @@
 // MARLEY includes
 #include "marley/Error.hh"
 #include "marley/FileManager.hh"
+#include "marley/Logger.hh"
 #include "marley/MassTable.hh"
 #include "marley/Reaction.hh"
 #include "marley/TabulatedXSec.hh"

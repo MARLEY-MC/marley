@@ -211,10 +211,6 @@ void marley::Logger::configure( const marley::JSON& config ) {
 }
 
 marley::Logger::Logger() {
-  // To protect against recursive initialization,
-  // temporarily disable auto-logging of uncaught marley::Error exceptions
-  marley::Error::set_logging_status( false );
-
   // This is usually done with the FileManager, but we need to avoid logging
   // messages in this constructor (to avoid recursive initialization). So we
   // do it without the FileManager here.
@@ -227,9 +223,6 @@ marley::Logger::Logger() {
   std::string config_file_name = std::string( mar ) + "/data/config/logger.js";
   auto json_config = marley::JSON::load_file( config_file_name );
   this->configure( json_config );
-
-  // Restore the usual auto-logging behavior of marley::Error
-  marley::Error::set_logging_status( true );
 }
 
 marley::Logger& marley::Logger::Instance() {

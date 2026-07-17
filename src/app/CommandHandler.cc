@@ -20,6 +20,7 @@
 
 // MARLEY includes
 #include "marley/CommandHandler.hh"
+#include "marley/Logger.hh"
 #include "marley/marley_utils.hh"
 
 namespace {
@@ -211,7 +212,13 @@ bool marley::CommandHandler::execute() {
     // resolve the command name.
     cmds_.pop_front();
     // Call the function corresponding to the chosen command
-    return cmd_iter->second.cmd_( cmds_ );
+    try {
+      return cmd_iter->second.cmd_( cmds_ );
+    } catch ( const std::exception& e ) {
+      // If we encountered an uncaught exception, log the error message
+      MARLEY_LOG( ERROR, "app" ) << std::flush << e.what();
+      return false;
+    }
   }
 
   // The 'marley' command is an easter egg that doesn't appear in the official

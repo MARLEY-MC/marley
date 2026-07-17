@@ -19,6 +19,7 @@
 // Standard library includes
 #include <fstream>
 #include <functional>
+#include <memory>
 #include <vector>
 
 // MARLEY includes

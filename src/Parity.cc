@@ -15,6 +15,7 @@
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
 // Standard library includes
+#include <istream>
 #include <string>
 
 // MARLEY includes

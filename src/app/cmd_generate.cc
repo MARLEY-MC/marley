@@ -288,8 +288,6 @@ namespace {
 
 bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
 
-  marley::Error::set_logging_status( false );
-
   // Declared here so the catch block can pass it to reset_terminal().
   // Remains 0 if an exception is thrown before output_files is populated.
   int num_status_lines = 0;
