@@ -1,0 +1,61 @@
+# MARLEY reaction input file for neutrino CC on 40Ar
+# Prepared 23 July 2018 by Steven Gardiner
+#
+# Particle IDs conform to the 2017 revision of the
+# Particle Data Group Monte Carlo Particle Numbering Scheme
+# (see http://pdg.lbl.gov/2018/reviews/rpp2018-rev-monte-carlo-numbering.pdf)
+#
+# B(GT) values for levels below 7.0 MeV were taken from W.
+# Liu, et al., Phys. Rev. C 58, 2677 (1998). 40K excitation energies
+# in this energy range were assigned using known levels tabulated in J. Chen,
+# Nucl. Data Sheets 140, 1 (2017). That publication corresponds to the February
+# 2017 revision of ENSDF (https://www.nndc.bnl.gov/ensdf/) for A = 40.
+#
+# B(GT) values for levels above 7 MeV are theoretical estimates from a QRPA
+# calculation reported in M. Cheoun, et al., Eur. Phys. J. A 48, 137 (2012) and
+# obtained for use with MARLEY via a private communication. The definition of
+# B(GT) used in the QRPA calculation did not include the weak axial-vector
+# coupling g_A, which was taken to be g_A = 1.23 by the authors when computing
+# neutrino cross sections. Therefore, the QRPA B(GT) strengths taken from that
+# paper were multiplied by a factor of g_A^2 = (1.23)^2 before being included
+# in this file.
+#
+# The threshold for using theoretical B(GT) values was determined by choosing
+# the first level from the QRPA calculation for which the QRPA integrated
+# B(GT) strength exceeded the experimental integrated B(GT) strength at the
+# highest measured experimental level.
+#
+# ProcessType code and nuclear target PDG code
+0 1000180400 0
+# Experimental Ex, B(GT) pairs taken from
+# W. Liu, et al., Phys. Rev. C 58, 2677 (1998)
+2.289868 0.83              1
+2.730357 1.40              1
+2.9509   0.03              1
+3.10956  0.06              1
+3.14650  0.16              1
+3.293    0.11              1
+3.43918  0.05              1
+3.517    0.06              1
+3.73849  0.13              1
+3.79748  0.40              1
+3.996    0.07              1
+4.080    0.10              1
+4.25170  0.15              1
+# B(F) strength to isobaric analog state at 4.384 MeV
+# Assumed to be equal to the sum-rule value g_V^2*(N_i - Z_i) with g_V = 1
+4.3837   4.00              0
+4.508    0.14              1
+4.697    0.33              1
+4.765    0.26              1
+4.930    0.24              1
+5.06337  0.25              1
+5.18989  0.20              1
+5.2471   0.19              1
+5.48865  0.07              1
+5.681    0.21              1
+5.870    0.17              1
+6.118    0.13              1
+# We only keep nuclear levels up to the unbound threshold
+# which is = 6.43847 MeV for 40K
+#6.790    0.11              1
