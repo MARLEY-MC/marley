@@ -17,6 +17,7 @@
 // Standard library includes
 #include <chrono>
 #include <csignal>
+#include <cstdlib>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
@@ -25,9 +26,11 @@
 #include <string>
 #include <vector>
 
-// POSIX includes
+// POSIX includes (available on Linux, macOS, and other Unix-like systems)
+#if __has_include(<sys/ioctl.h>)
 #include <sys/ioctl.h>
 #include <unistd.h>
+#endif
 
 // HepMC3 includes
 #include "HepMC3/GenEvent.h"
@@ -74,10 +77,15 @@ namespace {
     int cols;
   };
 
-  // Query terminal dimensions via ioctl. Returns {0, 0} when stdout is not a
-  // TTY (e.g., piped to a file), which callers treat as a signal to enter
-  // fallback mode and suppress escape sequences.
+  // Query terminal dimensions. On POSIX systems uses ioctl for accurate live
+  // size and TTY detection. Falls back to the COLUMNS and LINES environment
+  // variables (set by bash, zsh, etc.). Returns {0, 0} when no source is
+  // available, which callers treat as a signal to enter fallback mode and
+  // suppress escape sequences.
   TermSize get_terminal_size() {
+#if __has_include(<sys/ioctl.h>)
+    // POSIX path: ioctl provides accurate live terminal dimensions and also
+    // detects whether stdout is a TTY (fails for pipes).
     struct winsize w;
     if ( ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0
          && w.ws_row > 0 && w.ws_col > 0 )
@@ -85,6 +93,24 @@ namespace {
       return { static_cast< int >( w.ws_row ),
         static_cast< int >( w.ws_col ) };
     }
+#endif
+
+    // Env var fallback: COLUMNS and LINES are set by bash, zsh, and other
+    // shells for interactive terminal sessions.
+    const char* cols_str = std::getenv( "COLUMNS" );
+    const char* lines_str = std::getenv( "LINES" );
+    if ( cols_str != nullptr && lines_str != nullptr ) {
+      char* end = nullptr;
+      const long cols = std::strtol( cols_str, &end, 10 );
+      if ( end != cols_str && cols > 0 ) {
+        const long rows = std::strtol( lines_str, &end, 10 );
+        if ( end != lines_str && rows > 0 ) {
+          return { static_cast< int >( rows ),
+            static_cast< int >( cols ) };
+        }
+      }
+    }
+
     return { 0, 0 };
   }
 
