@@ -53,9 +53,12 @@ namespace marley {
 
       /// @brief Searches for a file in the given directories
       /// @details The search is non-recursive, i.e., no subdirectories
-      /// are included in the search
+      /// are included in the search. If base_name contains directory
+      /// separators, it is treated as a relative path and resolved
+      /// against each search directory.
       /// @param base_name The base name (file name without any path)
-      /// of the desired file
+      /// of the desired file, or a relative path containing directory
+      /// separators
       /// @param search_dirs A vector of strings specifying the directories
       /// that should be searched for the file
       /// @return The full path to the file, or an empty string if

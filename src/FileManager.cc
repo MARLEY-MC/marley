@@ -110,6 +110,15 @@ std::string marley::FileManager::find_file(const std::string& base_name,
   // full path was supplied instead of the base name)
   if ( file_exists(base_name) ) return base_name;
 
+  // If the file name contains directory separators, try resolving
+  // the relative path against each search directory
+  if ( base_name.find('/') != std::string::npos ) {
+    for (const auto& dir : search_dirs) {
+      std::string candidate = dir + '/' + base_name;
+      if ( file_exists(candidate) ) return candidate;
+    }
+  }
+
   // Search the directories in the order listed. In each directory,
   // compare all regular file names to the given base name. If a match
   // is found, stop the search and store the result in full_path_to_file.
