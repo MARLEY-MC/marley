@@ -9814,7 +9814,11 @@ namespace {
 
 #elif defined( CATCH_CONFIG_COLOUR_ANSI ) //////////////////////////////////////
 
+// [MARLEY] Vendored Catch2 modification: guarded with __has_include to
+// support building on platforms without POSIX headers.
+#if __has_include(<unistd.h>)
 #include <unistd.h>
+#endif
 
 namespace Catch {
 namespace {
@@ -9863,10 +9867,18 @@ namespace {
 #ifdef CATCH_PLATFORM_MAC
             !isDebuggerActive() &&
 #endif
-#if !(defined(__DJGPP__) && defined(__STRICT_ANSI__))
+// [MARLEY] Vendored Catch2 modification: guarded with __has_include to
+// support building on platforms without POSIX headers. When POSIX is
+// unavailable we optimistically assume a TTY (ANSI escapes are harmless
+// when piped to a file or pager).
+#if __has_include(<unistd.h>)
+#  if !(defined(__DJGPP__) && defined(__STRICT_ANSI__))
             isatty(STDOUT_FILENO)
-#else
+#  else
             false
+#  endif
+#else
+            true
 #endif
             ;
     }
