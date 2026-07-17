@@ -15,11 +15,7 @@
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
 #include <cstdlib>
-
-/// @todo Replace with more portable commands from the C++17 filesystem
-/// library (avoided for now to maintain support for old compilers)
-#include "dirent.h"
-#include "sys/stat.h"
+#include <filesystem>
 
 #include "marley/Error.hh"
 #include "marley/FileManager.hh"
@@ -31,12 +27,8 @@ namespace {
   // marley::FileManager
   constexpr char SEARCH_PATH_DELIMITER = ':';
 
-  // A stat-based method for checking that a file exists. See
-  // https://tinyurl.com/stat-exist.
-  /// @todo Add check that it's a regular file (not a directory)
   bool file_exists(const std::string& file_name) {
-    struct stat dummy;
-    return ( stat(file_name.c_str(), &dummy) == 0 );
+    return std::filesystem::is_regular_file(file_name);
   }
 
   //bool file_is_readable(const std::string& file_name) {
@@ -183,44 +175,37 @@ std::vector<std::string> marley::FileManager::list_all_files(
 bool marley::FileManager::dir_iterate(const std::string& dir_name,
   const std::function<bool(const std::string&, const std::string&)>& func)
 {
-  // Open the directory for reading
-  DIR* directory = opendir( dir_name.c_str() );
+  std::error_code ec;
+  std::filesystem::directory_iterator it(dir_name,
+    std::filesystem::directory_options::skip_permission_denied, ec);
 
-  if ( !directory ) {
-    MARLEY_LOG( WARN, "io" ) << "Could not read from the directory \""
+  if (ec) {
+    MARLEY_LOG(WARN, "io") << "Could not read from the directory \""
       << dir_name << '\"';
     return false;
   }
 
-  // Loop through the files in the directory one by one
-  dirent* file = nullptr;
+  std::filesystem::directory_iterator end;
   bool stop_iterations = false;
-  while ( file = readdir(directory), !stop_iterations && file ) {
+  while (!stop_iterations && it != end) {
+    const auto& entry = *it;
+    std::string full_file_name = entry.path().string();
+    std::string base_name = entry.path().filename().string();
 
-    // Get information about the current file using the stat() function
-    struct stat file_stat;
-    std::string base_name = file->d_name;
-    std::string full_file_name = dir_name + '/' + base_name;
-
-    MARLEY_LOG( TRACE, "io" ) << "marley::FileManager found file \""
+    MARLEY_LOG(TRACE, "io") << "marley::FileManager found file \""
       << full_file_name << '\"';
 
-    // If we had a problem, complain and try the next file
-    if ( stat(full_file_name.c_str(), &file_stat) ) {
-      MARLEY_LOG( DEBUG, "io" ) << "Couldn't stat the file \""
-        << full_file_name << '\"';
-      continue;
+    if (entry.is_regular_file()) {
+      stop_iterations = func(full_file_name, base_name);
     }
 
-    // If the file is a regular file (as opposed to, e.g., a subdirectory),
-    // then call the function with it as an argument
-    if ( file_stat.st_mode & S_IFREG ) {
-      stop_iterations = func( full_file_name, base_name );
+    it.increment(ec);
+    if (ec) {
+      MARLEY_LOG(DEBUG, "io") << "Couldn't access a file in directory \""
+        << dir_name << '\"';
+      ec.clear();
     }
-
   }
-
-  closedir( directory );
 
   return stop_iterations;
 }
