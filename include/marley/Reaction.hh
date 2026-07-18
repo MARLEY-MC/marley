@@ -49,6 +49,10 @@ namespace marley {
 
       virtual ~Reaction() = default;
 
+      /// @brief Construct a Reaction with the resolved path of the data file
+      /// @param source_file Resolved path of the reaction data file
+      Reaction( const std::string& source_file );
+
       /// @brief Enumerated type describing the kind of scattering process
       /// represented by a Reaction
       enum ProcessType {
@@ -93,6 +97,10 @@ namespace marley {
 
       /// @brief Get the process type for this reaction
       inline ProcessType process_type() const { return process_type_; }
+
+      /// @brief Get the resolved path of the reaction data file used to
+      /// construct this Reaction
+      inline const std::string& source_file() const { return source_file_; }
 
       static std::string proc_type_to_string( const ProcessType& pt );
 
@@ -198,6 +206,9 @@ namespace marley {
       /// Returns a vector of PDG codes for projectiles that participate
       /// in a particular ProcessType
       static const std::vector<int>& get_projectiles( ProcessType proc_type );
+
+      /// @brief Resolved path of the reaction data file
+      const std::string source_file_;
   };
 
 }

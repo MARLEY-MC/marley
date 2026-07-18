@@ -27,8 +27,9 @@ namespace {
 
 }
 
-marley::ElectronReaction::ElectronReaction(int pdg_a, int target_atom_pdg)
-  : atom_( target_atom_pdg )
+marley::ElectronReaction::ElectronReaction(int pdg_a, int target_atom_pdg,
+  const std::string& source_file)
+  : Reaction( source_file ), atom_( target_atom_pdg )
 {
   process_type_ = ProcessType::NuElectronElastic;
 

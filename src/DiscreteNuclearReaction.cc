@@ -14,12 +14,18 @@
 // Please respect the MCnet academic usage guidelines. See GUIDELINES
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
+// Standard library includes
 #include <cmath>
 #include <complex>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
+// HepMC3 includes
+#include "HepMC3/Attribute.h"
+#include "HepMC3/GenEvent.h"
+
+// MARLEY includes
 #include "marley/DiscreteNuclearReaction.hh"
 #include "marley/Error.hh"
 #include "marley/Generator.hh"
@@ -45,8 +51,10 @@ namespace {
 marley::DiscreteNuclearReaction::DiscreteNuclearReaction(
   ProcType pt, int pdg_a, int pdg_b, int pdg_c, int pdg_d, int q_d,
   const std::shared_ptr< std::vector<marley::MatrixElement> >& mat_els,
-  marley::CoulombCorrector::CoulombMode mode, const marley::JSON& ff_config )
-  : marley::NuclearReaction( pt, pdg_a, pdg_b, pdg_c, pdg_d, q_d ),
+  marley::CoulombCorrector::CoulombMode mode, const marley::JSON& ff_config,
+  const std::string& source_file )
+  : marley::NuclearReaction( pt, pdg_a, pdg_b, pdg_c, pdg_d, q_d,
+      source_file ),
   matrix_elements_( mat_els ), coulomb_corrector_( pdg_c, pdg_d, mode ),
   nucleon_form_factors_( ff_config )
 {
@@ -257,6 +265,11 @@ std::shared_ptr< HepMC3::GenEvent > marley::DiscreteNuclearReaction
   // de-excitation of the residual nucleus)
   auto event = this->make_event_object( KEa, pc_cm, cos_theta_c_cm, phi_c_cm,
     Ec_cm, Ed_cm, E_level, twoJ, P );
+
+  // Store the matrix element index for use by weight calculators
+  event->add_attribute( "me_index",
+    std::make_shared< HepMC3::IntAttribute >(
+      static_cast<int>( me_index ) ) );
 
   // Return the preliminary event object (to be processed later by the
   // NucleusDecayer class)

@@ -59,7 +59,8 @@ namespace marley {
       DiscreteNuclearReaction( ProcessType pt, int pdg_a, int pdg_b,
         int pdg_c, int pdg_d, int q_d,
         const std::shared_ptr<std::vector<marley::MatrixElement> >& mat_els,
-        CoulombCorrector::CoulombMode mode, const JSON& ff_config );
+        CoulombCorrector::CoulombMode mode, const JSON& ff_config,
+        const std::string& source_file );
 
       virtual std::shared_ptr< HepMC3::GenEvent > create_event(
         int particle_id_a, double KEa, marley::Generator& gen ) const override;

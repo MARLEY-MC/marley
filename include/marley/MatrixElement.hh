@@ -69,12 +69,23 @@ namespace marley {
       /// @param strength Numerical value (dimensionless) of the matrix element
       /// @param type Type of nuclear transition (e.g., Fermi, Gamow-Teller)
       /// represented by the matrix element
+      /// @param err_low Lower uncertainty on the strength (default 0)
+      /// @param err_high Upper uncertainty on the strength (default 0,
+      /// if equal to err_low then the uncertainty is symmetric)
       /// @param final_level Pointer to the Level object that represents the
       /// final nuclear level
       inline MatrixElement(double level_energy, double strength, TransitionType
+        type, double err_low, double err_high,
+        marley::Level* final_level = nullptr)
+        : level_energy_(level_energy), strength_(strength),
+        strength_err_low_(err_low), strength_err_high_(err_high),
+        type_(type), final_level_(final_level) {}
+
+      /// @brief Construct a MatrixElement without uncertainty information
+      /// (errors default to zero)
+      inline MatrixElement(double level_energy, double strength, TransitionType
         type, marley::Level* final_level = nullptr)
-        : level_energy_(level_energy), strength_(strength), type_(type),
-        final_level_(final_level) {}
+        : MatrixElement(level_energy, strength, type, 0., 0., final_level) {}
 
       /// @brief Get the excitation energy (MeV) of the final-state nuclear
       /// level accessed by the matrix element
@@ -105,6 +116,12 @@ namespace marley {
 
       /// @brief Get the numerical value (dimensionless) of the matrix element
       inline double strength() const { return strength_; }
+
+      /// @brief Get the lower uncertainty on the matrix element strength
+      inline double strength_err_low() const { return strength_err_low_; }
+
+      /// @brief Get the upper uncertainty on the matrix element strength
+      inline double strength_err_high() const { return strength_err_high_; }
 
       /// @brief Get the kind of nuclear transition (e.g., Fermi, Gamow-Teller)
       /// represented by the matrix element
@@ -173,6 +190,14 @@ namespace marley {
 
       /// @brief Numerical value of the matrix element (dimensionless)
       double strength_;
+
+      /// @brief Lower uncertainty on the matrix element strength
+      /// (zero if not specified)
+      double strength_err_low_ = 0.;
+
+      /// @brief Upper uncertainty on the matrix element strength
+      /// (zero if not specified)
+      double strength_err_high_ = 0.;
 
       /// @brief The kind of transition represented by this matrix element
       /// (Fermi, Gamow-Teller, etc.)

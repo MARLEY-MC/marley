@@ -34,6 +34,7 @@ namespace marley {
     public:
 
       WeightCalculator( const marley::JSON& config );
+      WeightCalculator( const std::string& name );
       virtual ~WeightCalculator() = default;
 
       virtual double weight( HepMC3::GenEvent& event,

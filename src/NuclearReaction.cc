@@ -29,8 +29,8 @@
 using ProcType = marley::Reaction::ProcessType;
 
 marley::NuclearReaction::NuclearReaction( ProcType pt, int pdg_a, int pdg_b,
-  int pdg_c, int pdg_d, int q_d )
-  : q_d_( q_d )
+  int pdg_c, int pdg_d, int q_d, const std::string& source_file )
+  : Reaction( source_file ), q_d_( q_d )
 {
   // Initialize the process type (NC, neutrino/antineutrino CC)
   process_type_ = pt;

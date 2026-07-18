@@ -33,3 +33,6 @@ marley::WeightCalculator::WeightCalculator( const marley::JSON& config )
 
   name_ = config.at( "name" ).to_string();
 }
+
+marley::WeightCalculator::WeightCalculator( const std::string& name )
+  : name_( name ) {}

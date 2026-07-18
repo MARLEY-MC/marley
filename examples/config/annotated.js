@@ -421,9 +421,27 @@
   //                      an alternative set of optical model parameters.
   //                      Required keys: type, name, opt_mod
   //
+  //   - "strength_variation": Uses a dimidiated (bifurcated) Gaussian
+  //                            probability density function to vary
+  //                            nuclear matrix element strengths according
+  //                            to their experimental uncertainties as
+  //                            specified in the reaction input file. Event
+  //                            weights are computed as the ratio of the
+  //                            varied strength to the nominal strength for
+  //                            events corresponding to discrete nuclear
+  //                            transitions.
+  //                            Required keys: type, name, num_variations,
+  //                            reaction_file
+  //                            Optional keys: seed (default 0; separate
+  //                            from the main MARLEY RNG seed set by the
+  //                            top-level "seed" key)
+  //
   // weights: [
   //   { type: "trivial", name: "MyWeight" },
   //   { type: "optical_model", name: "OMP", opt_mod: { ... } },
+  //   { type: "strength_variation", name: "StrengthVar",
+  //     num_variations: 2,
+  //     reaction_file: "my_reaction.react", seed: 12345 },
   // ],
 
   // EXECUTABLE SETTINGS (optional)

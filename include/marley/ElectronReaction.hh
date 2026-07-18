@@ -36,7 +36,8 @@ namespace marley {
 
     public:
 
-      ElectronReaction(int pdg_a, int target_atom_pdg);
+      ElectronReaction(int pdg_a, int target_atom_pdg,
+        const std::string& source_file);
 
       inline virtual marley::TargetAtom atomic_target() const override final
         { return atom_; }

@@ -368,6 +368,9 @@ const std::vector<int>& marley::Reaction::get_projectiles(ProcType pt) {
   return proc_type_to_nu_pdg.at( pt );
 }
 
+marley::Reaction::Reaction( const std::string& source_file )
+  : source_file_( source_file ) {}
+
 std::vector< std::unique_ptr<marley::Reaction> >
   marley::Reaction::load_from_file( const std::string& filename,
   marley::StructureDatabase& db, CoulombCorrector::CoulombMode coulomb_mode,
@@ -413,7 +416,8 @@ std::vector< std::unique_ptr<marley::Reaction> >
         // Loop over neutrino species
         for ( const int& pdg_a : get_projectiles(proc_type) ) {
           loaded_reactions.emplace_back(
-            std::make_unique<marley::ElectronReaction>(pdg_a, target_pdg) );
+            std::make_unique<marley::ElectronReaction>(pdg_a, target_pdg,
+              filename) );
         }
       }
 
@@ -477,6 +481,16 @@ std::vector< std::unique_ptr<marley::Reaction> >
         " dataset. Level energies must be unique and must be given in"
         " ascending order." );
 
+      // Read optional uncertainty columns:
+      //   4 columns: symmetric uncertainty (err_low = err_high = err)
+      //   5 columns: asymmetric uncertainties (err_low, err_high)
+      //   3 columns (legacy): no uncertainty (both default to zero)
+      double err_low = 0., err_high = 0.;
+      if ( iss >> err_low ) {
+        err_high = err_low; // default to symmetric
+        iss >> err_high;    // try for asymmetric (fails silently)
+      }
+
       // @todo Right now, 0 corresponds to a Fermi transition, and 1
       // corresponds to a Gamow-Teller transition. As you add new matrix
       // element types, consider changing the convention and its
@@ -484,7 +498,8 @@ std::vector< std::unique_ptr<marley::Reaction> >
       // will initially be set to nullptr. This may be changed later if
       // discrete level data can be found for the residual nucleus.
       matrix_elements->emplace_back( energy, strength,
-        static_cast<ME_Type>(integer_me_type), nullptr );
+        static_cast<ME_Type>(integer_me_type), err_low, err_high,
+        nullptr );
       old_energy = energy;
     }
 
@@ -509,7 +524,7 @@ std::vector< std::unique_ptr<marley::Reaction> >
       loaded_reactions.emplace_back(
         std::make_unique< marley::DiscreteNuclearReaction >( proc_type,
           pdg_a, pdg_b, pdg_c, pdg_d, q_d, matrix_elements, coulomb_mode,
-          ff_config )
+          ff_config, filename )
       );
     }
   }
@@ -553,7 +568,7 @@ std::vector< std::unique_ptr<marley::Reaction> >
 
       loaded_reactions.emplace_back(
         std::make_unique< marley::ContinuumNuclearReaction >( proc_type, pdg_a,
-          pdg_b, pdg_c, pdg_d, q_d, txsec )
+          pdg_b, pdg_c, pdg_d, q_d, txsec, filename )
       );
     }
 

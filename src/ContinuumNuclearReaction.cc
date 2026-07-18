@@ -44,8 +44,10 @@ const std::map< SubContinuumMode, std::string >
 
 marley::ContinuumNuclearReaction::ContinuumNuclearReaction(
   Reaction::ProcessType pt, int pdg_a, int pdg_b, int pdg_c, int pdg_d,
-  int q_d, const std::shared_ptr<TabulatedXSec>& txsec )
-  : marley::NuclearReaction( pt, pdg_a, pdg_b, pdg_c, pdg_d, q_d ),
+  int q_d, const std::shared_ptr<TabulatedXSec>& txsec,
+  const std::string& source_file )
+  : marley::NuclearReaction( pt, pdg_a, pdg_b, pdg_c, pdg_d, q_d,
+      source_file ),
   xsec_( txsec )
 {
 }

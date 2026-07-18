@@ -46,7 +46,7 @@ namespace marley {
       /// @param q_d Charge of the residue after the prompt 2->2 scatter
       /// represented by this NuclearReaction object
       NuclearReaction( ProcessType pt, int pdg_a, int pdg_b, int pdg_c,
-        int pdg_d, int q_d );
+        int pdg_d, int q_d, const std::string& source_file );
 
       inline virtual marley::TargetAtom atomic_target() const override final
         { return marley::TargetAtom( pdg_b_ ); }
