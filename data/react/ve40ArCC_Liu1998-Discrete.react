@@ -1,5 +1,6 @@
 # MARLEY reaction input file for neutrino CC on 40Ar
 # Prepared 23 July 2018 by Steven Gardiner
+# Experimental uncertainties added 18 July 2026 by Steven Gardiner
 #
 # Particle IDs conform to the 2017 revision of the
 # Particle Data Group Monte Carlo Particle Numbering Scheme
@@ -29,33 +30,34 @@
 0 1000180400 0
 # Experimental Ex, B(GT) pairs taken from
 # W. Liu, et al., Phys. Rev. C 58, 2677 (1998)
-2.289868 0.83              1
-2.730357 1.40              1
-2.9509   0.03              1
-3.10956  0.06              1
-3.14650  0.16              1
-3.293    0.11              1
-3.43918  0.05              1
-3.517    0.06              1
-3.73849  0.13              1
-3.79748  0.40              1
-3.996    0.07              1
-4.080    0.10              1
-4.25170  0.15              1
+2.289868 0.83              1  0.08
+2.730357 1.40              1  0.10
+2.9509   0.03              1  0.01
+3.10956  0.06              1  0.03
+3.14650  0.16              1  0.04
+3.293    0.11              1  0.08
+3.43918  0.05              1  0.02
+3.517    0.06              1  0.02
+3.73849  0.13              1  0.07
+3.79748  0.40              1  0.16
+3.996    0.07              1  0.04
+4.080    0.10              1  0.06
+4.25170  0.15              1  0.04
 # B(F) strength to isobaric analog state at 4.384 MeV
 # Assumed to be equal to the sum-rule value g_V^2*(N_i - Z_i) with g_V = 1
-4.3837   4.00              0
-4.508    0.14              1
-4.697    0.33              1
-4.765    0.26              1
-4.930    0.24              1
-5.06337  0.25              1
-5.18989  0.20              1
-5.2471   0.19              1
-5.48865  0.07              1
-5.681    0.21              1
-5.870    0.17              1
-6.118    0.13              1
+# Uncertainty derived from the fractional error of the measured
+# B(F+GT) = 4.01 +/- 0.31 (Liu et al. 1998)
+4.3837   4.00              0  0.31
+4.508    0.14              1  0.05
+4.697    0.33              1  0.09
+4.765    0.26              1  0.11
+4.930    0.24              1  0.10
+5.06337  0.25              1  0.11
+5.18989  0.20              1  0.06
+5.2471   0.19              1  0.07
+5.48865  0.07              1  0.04
+5.681    0.21              1  0.15
+5.870    0.17              1  0.07
+6.118    0.13              1  0.07
 # We only keep nuclear levels up to the unbound threshold
 # which is = 6.43847 MeV for 40K
-#6.790    0.11              1
