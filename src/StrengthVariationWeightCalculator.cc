@@ -101,7 +101,7 @@ marley::StrengthVariationWeightCalculator
     double sigma_factor, const std::string& resolved_reaction_file )
   : WeightCalculator( name ), rng_( nullptr ),
   resolved_reaction_file_( resolved_reaction_file ),
-  mode_( VariationMode::sigma_shift ),
+  mode_( VariationMode::shift ),
   sigma_factor_( sigma_factor )
 {}
 
@@ -200,17 +200,17 @@ std::vector< std::shared_ptr<
             rng, resolved_reaction_file ) ) );
     }
   }
-  else if ( mode_str == "sigma_shift" ) {
+  else if ( mode_str == "shift" ) {
 
-    // Reject keys inappropriate for sigma_shift
+    // Reject keys inappropriate for shift
     if ( config.has_key( "num_variations" ) ) {
       throw marley::Error( "The \"num_variations\" key is not allowed"
-        " in sigma_shift mode for strength_variation weight"
+        " in shift mode for strength_variation weight"
         " calculators" );
     }
     if ( config.has_key( "seed" ) ) {
       throw marley::Error( "The \"seed\" key is not allowed"
-        " in sigma_shift mode for strength_variation weight"
+        " in shift mode for strength_variation weight"
         " calculators" );
     }
 
@@ -218,7 +218,7 @@ std::vector< std::shared_ptr<
     if ( !config.has_key( "sigma_factor" ) ) {
       throw marley::Error( "Missing \"sigma_factor\" key in a"
         " strength_variation weight calculator JSON configuration"
-        " with sigma_shift mode" );
+        " with shift mode" );
     }
     const auto& sf = config.at( "sigma_factor" );
 
@@ -370,7 +370,7 @@ std::vector< std::shared_ptr<
   else {
     throw marley::Error( "Unrecognized variation mode \""
       + mode_str + "\" for strength_variation weight calculator."
-      " Allowed values are \"multisim\", \"sigma_shift\","
+      " Allowed values are \"multisim\", \"shift\","
       " and \"unisim\"" );
   }
 
@@ -434,7 +434,7 @@ void marley::StrengthVariationWeightCalculator::ensure_initialized(
         varied_.push_back( varied );
       }
     }
-    else if ( mode_ == VariationMode::sigma_shift ) {
+    else if ( mode_ == VariationMode::shift ) {
       for ( const auto& me : matrix_els ) {
         double nom = me.strength();
         double err_low = me.strength_err_low();

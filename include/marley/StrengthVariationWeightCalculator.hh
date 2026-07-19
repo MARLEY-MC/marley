@@ -39,7 +39,7 @@ namespace marley {
   /// @brief WeightCalculator that varies nuclear matrix element strengths
   /// according to their experimental uncertainties. Three modes are
   /// available: "multisim" (dimidiated Gaussian random draws),
-  /// "sigma_shift" (deterministic systematic shifts of all matrix
+  /// "shift" (deterministic systematic shifts of all matrix
   /// elements), and "unisim" (deterministic systematic shifts of a
   /// single matrix element at a time).
   class StrengthVariationWeightCalculator : public WeightCalculator {
@@ -47,7 +47,7 @@ namespace marley {
     public:
 
       /// @brief Supported variation modes
-      enum class VariationMode { multisim, sigma_shift, unisim };
+      enum class VariationMode { multisim, shift, unisim };
 
       /// @brief Static factory: validates JSON configuration and creates
       /// all variation instances. Called by the Weighter for each
@@ -73,7 +73,7 @@ namespace marley {
         std::shared_ptr< std::mt19937_64 > rng,
         const std::string& resolved_reaction_file );
 
-      /// @brief Constructor for sigma_shift mode
+      /// @brief Constructor for shift mode
       StrengthVariationWeightCalculator( const std::string& name,
         double sigma_factor,
         const std::string& resolved_reaction_file );
@@ -98,7 +98,7 @@ namespace marley {
       /// @brief Variation mode for this instance
       VariationMode mode_;
 
-      /// @brief Signed sigma factor for systematic shifts (sigma_shift
+      /// @brief Signed sigma factor for systematic shifts (shift
       /// and unisim modes)
       double sigma_factor_ = 0.;
 

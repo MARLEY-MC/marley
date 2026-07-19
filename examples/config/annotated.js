@@ -340,8 +340,6 @@
   // REACTION INPUT FILES section above) will reproduce the predictions of the
   // MARLEY v1.2.0 physics model (https://doi.org/10.1103/PhysRevC.103.044604).
 
-/////////// STOPPED HERE
-
   // NEUTRINO SOURCE SPECIFICATION (required)
   //
   // The "source" JSON object describes the incident neutrino spectrum. The
@@ -374,7 +372,7 @@
   //   Monoenergetic                          "mono", "monoenergetic"
   //
   //   Muon decay-at-rest                     "dar", "decay-at-rest"
-  //   (ve and vu only)
+  //   (electron and muon flavors only)
   //
   //   User-defined histogram                 "hist", "histogram"
   //
@@ -460,7 +458,7 @@
   //    Emax: 40.,                        // Upper edge of the final bin (MeV)
   //  },
   //
-  //  Within a histogram bin, energies are sampled uniformly on the
+  //  Within a histogram bin, energies are distributed uniformly on the
   //  half-open interval [ Ebin_left, Ebin_right ).
   //
   //  GRID
@@ -521,7 +519,9 @@
     // By default, MARLEY weights the incident neutrino spectrum by the
     // total reaction cross section(s) when generating events. Set this
     // boolean key to false to sample neutrino energies directly from the
-    // unweighted source spectrum instead.
+    // unweighted source spectrum instead. The weight_flux key may be used
+    // with any neutrino source type. Most MARLEY use cases should keep the
+    // default value of true.
     //
     // weight_flux: true,
   },
@@ -535,78 +535,120 @@
   // Available weight calculator types:
   //
   //   - "trivial": Returns unit weight for every event.
-  //                Required keys: type, name
   //
-  //   - "optical_model": Recomputes Hauser-Feshbach decay widths using
-  //                      an alternative set of optical model parameters.
-  //                      Required keys: type, name, opt_mod
+  //   - "optical_model": Recomputes Hauser-Feshbach decay widths using an
+  //       alternative set of optical model parameters specified using the
+  //       required "opt_mod" key.
   //
-   //   - "strength_variation": Varies nuclear matrix element strengths
-   //                            according to their experimental
-   //                            uncertainties. Three modes are available:
-   //
-   //     "multisim" (default): Uses a dimidiated (bifurcated) Gaussian
-   //                            probability density function to draw
-   //                            random variations. Event weights are
-   //                            computed as the ratio of the varied
-   //                            strength to the nominal strength for
-   //                            events corresponding to discrete nuclear
-   //                            transitions.
-   //                            Required keys: type, name, num_variations,
-   //                            reaction_file
-   //                            Optional keys: mode, seed (default 0;
-   //                            separate from the main MARLEY RNG seed set
-   //                            by the top-level "seed" key)
-   //
-   //     "sigma_shift":       Applies a deterministic +k or -k sigma shift
-   //                            to each matrix element strength, where k
-   //                            is given by sigma_factor and sigma is the
-   //                            experimental uncertainty. Intended for
-   //                            systematic variation studies. Two weight
-   //                            calculators are created per sigma_factor
-   //                            value: "<name>-up@<k>" and
-   //                            "<name>-down@<k>".
-   //                            Required keys: type, name, reaction_file,
-   //                            sigma_factor (scalar or array of positive
-   //                            numbers)
-   //                            Optional keys: mode
-   //
-   //     "unisim":            Applies a deterministic +k or -k sigma shift
-   //                            to one individual matrix element at a time,
-   //                            leaving all others at their nominal values.
-   //                            Intended for univariate sensitivity studies
-   //                            to identify which transitions drive the
-   //                            overall uncertainty. Two weight calculators
-   //                            are created per sigma_factor value per
-   //                            matrix element: "<name>-me<m>_up@<k>" and
-   //                            "<name>-me<m>_down@<k>", where <m> is the
-   //                            zero-based matrix element index.
-   //                            Required keys: type, name, reaction_file,
-   //                            sigma_factor (scalar or array of positive
-   //                            numbers)
-   //                            Optional keys: mode
-   //
-   // weights: [
-   //   { type: "trivial", name: "MyWeight" },
-   //   { type: "optical_model", name: "OMP", opt_mod: { ... } },
-   //
-   //   // Multisim mode (default): random Gaussian variations
-   //   { type: "strength_variation", name: "MultisimVar",
-   //     num_variations: 100,
-   //     reaction_file: "my_reaction.react", seed: 12345 },
-   //
-   //   // Sigma_shift mode: deterministic systematic shifts
-   //   { type: "strength_variation", name: "SysShift",
-   //     mode: "sigma_shift",
-   //     sigma_factor: [0.5, 1.0, 2.0],
-   //     reaction_file: "my_reaction.react" },
-   //
-   //   // Unisim mode: one-at-a-time systematic shifts
-   //   { type: "strength_variation", name: "UniShift",
-   //     mode: "unisim",
-   //     sigma_factor: [0.5, 1.0, 2.0],
-   //     reaction_file: "my_reaction.react" },
-   // ],
+  //   - "strength_variation": Varies nuclear matrix elements for discrete
+  //       allowed transitions according to their experimental uncertainties.
+  //       Event weights are computed as the ratio of the varied strength to the
+  //       nominal strength for the discrete nuclear transition that occurred.
+  //
+  //       The reaction input file corresponding to the interaction channel of
+  //       interest must be specified using the "reaction_file" key and must
+  //       match one of the files listed in the top-level "reactions" array in
+  //       the same job configuration (see REACTION INPUT FILE(S) section
+  //       above). The matrix element uncertainties are specified as part of
+  //       the reaction input file.
+  //
+  //       Only the (anti-)ν CC (Discrete) and NC (Discrete) reaction types are
+  //       allowed for this weight calculator; events involving other reaction
+  //       types will always be assigned unit weight.
+  //
+  //       Strength variation event weights may be evaluated according to one
+  //       of three settings for the "mode" key associated with this weight
+  //       calculator:
+  //
+  //       * "multisim" (default): Uses a dimidiated (bifurcated) Gaussian
+  //           probability density function to draw random variations of each
+  //           tabulated matrix element according to its (possibly asymmetric)
+  //           uncertainty. The variations are handled independently for
+  //           each nuclear transition, i.e., there are no correlations between
+  //           distinct matrix elements. A single event weight calculated by this
+  //           mode corresponds to an independent random throw of each matrix
+  //           element of interest.
+  //
+  //           A required "num_variations" key for this mode specifies a
+  //           positive integer number of random draws, each corresponding to
+  //           one output event weight. The names of the individual weights in
+  //           the event output will appear as "<name>_<j>", where <name> is
+  //           the value of the required "name" key and <j> is the zero-based
+  //           variation index (0, 1, ..., num_variations - 1).
+  //
+  //           An optional "seed" key may be used to specify an integer seed
+  //           for the random number generator used to perform the multisim
+  //           variations. The seed format follows the same rules as the
+  //           main MARLEY seed described in the RANDOM NUMBER SEED section
+  //           above. However, the random numbers sampled for this weight
+  //           calculator are entirely independent from those used for
+  //           event generation. If the "seed" key is omitted for the multisim
+  //           mode, then a default value of 0 is used.
+  //
+  //       * "shift": Applies a consistent, deterministic ±kσ shift to all
+  //           discrete transition matrix elements of interest, where σ is the
+  //           experimental uncertainty and the value of k is given by the
+  //           required "sigma_factor" key. Multiple k values may be defined
+  //           simultaneously by setting "sigma_factor" to a JSON array of
+  //           positive numbers.
+  //
+  //           Two event weights are computed in the output per sigma_factor
+  //           value. The +kσ variation weight has a label of the form
+  //           "<name>-up@<k>", while the -kσ variation uses "<name>-down@<k>".
+  //
+  //       * "unisim": Applies a deterministic ±kσ shift to one matrix element
+  //           at a time, leaving all others at their nominal values. The
+  //           "sigma_factor" key is used to specify the value(s) of k and
+  //           follows the same format rules as the "shift" mode.
+  //
+  //           Two event weights are computed in the output per matrix element
+  //           per sigma_factor value. Labels of the form "<name>-me<m>_up@<k>"
+  //           and "<name>-me<m>_down@<k>" are used for the +kσ and -kσ
+  //           variation weights, respectively, where <m> is the zero-based
+  //           index of the matrix element that was varied.
+  //
+  // Example configurations for each of the allowed weight calculator types are
+  // given below:
+  //
+  // weights: [
+  //
+  //  // Produces a unit weight for every event
+  //  { type: "trivial", name: "MyTrivialWeight" },
+  //
+  //  // The default MARLEY v2 nuclear optical potential is the KDUQ Federal
+  //  // evaluation from https://doi.org/10.1103/PhysRevC.107.014602 (settings
+  //  // in data/optical_model/optical_model_kduq_federal_cv.js). This weight
+  //  // calculator computes event weights for switching to the MARLEY v1
+  //  // default, which was based on the earlier KD global fit from
+  //  // https://doi.org/10.1016/S0375-9474(02)01321-0 (settings in
+  //  // data/optical_model/optical_model_kd_global.js). Details on the
+  //  // parameter settings specified under the opt_mod key are available in
+  //  // the example configuration file for the "marley reweight" command
+  //  // (examples/config/reweight_config.js).
+  //  { type: "optical_model", name: "KD-global-OMP",
+  //    opt_mod: #include:"optical_model_kd_global.js" },
+  //
+  //  // multisim mode (default): uncorrelated random Gaussian variations
+  //  { type: "strength_variation", name: "MultisimStrengthVar",
+  //    num_variations: 100, seed: 1234567,
+  //    reaction_file: "ve40ArCC_Bhattacharya2009-Discrete.react" },
+  //
+  //  // shift mode: deterministic shifts of all matrix elements together
+  //  { type: "strength_variation", name: "ShiftStrengthVar",
+  //    mode: "shift", sigma_factor: [0.5, 1.0, 2.0],
+  //    reaction_file: "ve40ArCC_Bhattacharya2009-Discrete.react" },
+  //
+  //  // unisim mode: deterministic shifts of one matrix element at a time
+  //  { type: "strength_variation", name: "UnisimStrengthVar",
+  //    mode: "unisim", sigma_factor: [0.5, 1.0, 2.0],
+  //    reaction_file: "ve40ArCC_Bhattacharya2009-Discrete.react" },
+  // ],
+  //
+  // While event weights may be calculated at generation time, they may also be
+  // evaluated for existing events using the "marley reweight" command, which
+  // uses the same JSON format to configure weight calculators. Further details
+  // about weight calculator settings are given in the example "marley reweight"
+  // configuration file (examples/config/reweight_config.js).
 
   // EXECUTABLE SETTINGS (optional)
   //
