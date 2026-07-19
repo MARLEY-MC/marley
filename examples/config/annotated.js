@@ -46,8 +46,8 @@
 
   // RANDOM NUMBER SEED (optional)
   //
-  // The "seed" key provides a 64-bit unsigned integer (between 0
-  // and 2^64 - 1, inclusive) that will be used to seed MARLEY's random
+  // The "seed" key provides a nonnegative 63-bit integer (between 0
+  // and 2^63 - 1, inclusive) that will be used to seed MARLEY's random
   // number generator.
   //
   // If this key is omitted, MARLEY will use the system time since the
@@ -661,8 +661,8 @@
     // EVENT COUNT (optional)
     //
     // Specifies the number of events to produce before terminating the
-    // program. The JSON parser expects this entry to be an integer literal,
-    // so scientific notation is not currently allowed.
+    // simulation job. The JSON parser expects this entry to be an integer
+    // literal, so scientific notation is not currently allowed.
     //
     // If this key is omitted, a value of 1000 will be assumed.
     events: 100000,
@@ -677,82 +677,72 @@
     // EVENT OUTPUT (optional)
     //
     // The "output" JSON array contains a list of JSON objects representing
-    // zero or more output streams that will receive the events generated
-    // by the marley command-line executable
+    // zero or more streams that will receive the event output.
     //
     // Each entry is a JSON object with the following keys:
     //
     //   - file: The name of a file that will store the generated events.
-    //           Streaming events to stdout or stderr is not currently
-    //           supported.
+    //       Streaming events to stdout or stderr is not currently supported.
     //
     //   - format: The format to use when storing the events in the file.
-    //             Valid values are "ascii" and "root".
-    //             Details about the format options are given below.
+    //       Valid values are "ascii" and "root". Details about the format
+    //       options are given below.
     //
     //   - mode: The file I/O mode to use when writing to this file. Valid
-    //           values are "overwrite" (erase any previously existing file
-    //           contents) and "resume". If the "resume" mode
-    //           is chosen, the generator will restore its previous state from
-    //           an incomplete run (e.g., a run that was interrupted by the
-    //           user via ctrl+C) that was saved to the output file and
-    //           continue from where it left off.
+    //       values are "overwrite" (erase any previously existing file
+    //       contents) and "resume". If the "resume" mode is chosen, the
+    //       generator will restore its previous state from an incomplete run
+    //       (e.g., a run that was interrupted by the user via ctrl+C) that was
+    //       saved to the output file and continue from where it left off.
     //
-    //           At most one output file may use the "resume" mode. If
-    //           multiple output file entries specify mode: "resume",
-    //           then the marley executable will report an error.
+    //       At most one output file may use the "resume" mode. If multiple
+    //       output file entries specify mode: "resume", then the marley
+    //       executable will report an error.
     //
     //   - force: Boolean value used only for the "overwrite" mode.
-    //            If the output file already exists and force is not
-    //            set to true, the marley executable will prompt the
-    //            user before overwriting it. If the user declines,
-    //            execution stops with an error message that suggests
-    //            how to adjust the configuration (set "force" to
-    //            true to overwrite automatically, or use
-    //            "mode": "resume" to append to the existing file).
-    //            If this key is omitted, a value of false is assumed.
+    //       If the output file already exists and force is not set to true,
+    //       the marley executable will prompt the user before overwriting it.
+    //       If the user declines, execution stops with an error message that
+    //       suggests how to adjust the configuration (set "force" to true to
+    //       overwrite automatically, or use "mode": "resume" to append to the
+    //       existing file). If this key is omitted, a value of false is
+    //       assumed.
     //
     // The allowed output file formats are
     //
     //   - "ascii": Events are stored in the standard HepMC3 text format
-    //              with full floating-point precision. This format uses the
-    //              HepMC3::WriterAscii class for output and the
-    //              HepMC3::ReaderAscii class for input. The output is
-    //              compliant with the NuHepMC v1.0.0 standard for neutrino
-    //              event generators, making it readable by any
-    //              HepMC3-compatible application.
+    //       with full floating-point precision. This format uses the
+    //       HepMC3::WriterAscii class for output and the HepMC3::ReaderAscii
+    //       class for input. The output is compliant with the NuHepMC v1.0.0
+    //       standard for neutrino event generators, making it readable by any
+    //       HepMC3-compatible application.
     //
     //   - "root": Events are stored in a compressed ROOT TTree named
-    //             "MARLEY_event_tree" using the HepMC3 GenEventData POD
-    //             structure. Because GenEventData is a plain-old-data struct
-    //             with an associated ROOT dictionary distributed with HepMC3,
-    //             the output file can be read without loading MARLEY-specific
-    //             shared libraries. This format is only available if MARLEY
-    //             has been built with ROOT support.
+    //       "MARLEY_event_tree" using the HepMC3 GenEventData structure. The
+    //       output file can be read by ROOT without loading MARLEY-specific
+    //       shared libraries. This format is only available if MARLEY has been
+    //       built with ROOT support.
     //
-  // If this key is omitted, then the following configuration
-  // is assumed:
-  //
-  // output: [ { file: "events.hepmc3", format: "ascii", mode: "overwrite",
-  //             force: false } ]
-  //
-  output: [ { file: "events.hepmc3", format: "ascii", mode: "overwrite" } ],
+    // If the "output" key is omitted, then the following default configuration
+    // is assumed:
+    output: [ { file: "events.hepmc3", format: "ascii", mode: "overwrite",
+                force: false } ],
   },
 
-  // LOGGER CONFIGURATION (separate file)
+  // NUCLEAR DE-EXCITATIONS (optional)
   //
-  // MARLEY's diagnostic message output is configured separately from the
-  // job configuration file via the file data/config/logger.js (located
-  // using the MARLEY environment variable). This file uses a JSON format
-  // to configure output streams, severity levels, and logging categories.
-  // See the comments in that file for details.
+  // In cases where only the primary interaction is of interest, the user may
+  // disable the simulation of subsequent nuclear de-excitations by setting the
+  // do_deexcitations key to false. The default value of true is recommended in
+  // all other situations.
+  //
+  // do_deexcitations: true,
 
+  // ADVANCED OPTIONS *********************************************************
   //
-  // ---- ADVANCED OPTIONS (all optional) ----
-  //
-  // The keys described in this section are advanced configuration options
-  // that most users will not need to adjust. Sensible defaults are used
-  // whenever these keys are omitted from the job configuration file.
+  // The remaining sections describe configuration keys that most users will
+  // not need to adjust. Recommended defaults are used whenever these keys are
+  // omitted from the job configuration file.
 
   // COULOMB CORRECTION METHOD (optional)
   //
@@ -765,56 +755,68 @@
   //   - "MEMA": Use a modified version of the EMA
   //   - "Fermi-EMA": Interpolate between the Fermi function and the EMA
   //   - "Fermi-MEMA": Interpolate between the Fermi function and the MEMA
-  //                   (this is the default)
+  //
+  // The default recommended treatment is "Fermi-MEMA". More information about
+  // MARLEY's approach to Coulomb corrections may be found in
+  // https://doi.org/10.1103/PhysRevC.103.044604 and
+  // https://arxiv.org/abs/2604.26801. Note that the handling of Coulomb
+  // corrections in the v2 release series is unchanged from v1.2.0.
   //
   // coulomb_mode: "Fermi-MEMA",
 
-  // NUCLEAR DE-EXCITATIONS (optional)
-  //
-  // Use a boolean value to enable or disable simulation of nuclear
-  // de-excitations for all reactions. The default is true.
-  //
-  // do_deexcitations: true,
-
   // SUB-CONTINUUM MODE (optional)
   //
-  // The "sub_continuum_mode" key controls how cross-section strength
+  // The "sub_continuum_mode" key controls how HF-CRPA cross-section strength
   // that falls below the unbound threshold is handled. Valid values are:
   //
   //   - "ignore": Cross-section strength below threshold is discarded
   //   - "mirror": Strength is mirrored from above the threshold
-  //   - "accumulate": Strength accumulates at the threshold (this is
-  //                   the default)
+  //   - "accumulate": Strength accumulates at the threshold (default)
+  //
+  // The physics issue that is addressed using this setting is explained in
+  // Sec. II F 3 of https://arxiv.org/abs/2604.26801.
   //
   // sub_continuum_mode: "accumulate",
 
-  // OPTICAL MODEL PARAMETERS (optional)
-  //
-  // The "opt_mod" key provides a custom configuration of nuclear optical
-  // model parameters, overriding the defaults. The value should be a JSON
-  // object whose format matches the optical model configuration used by
-  // the MARLEY structure database.
-  //
-  // opt_mod: { ... },
-
   // ANGULAR MOMENTUM CUTOFFS (optional)
   //
-  // The "fragment_lmax" key sets the maximum orbital angular momentum
-  // quantum number to consider when computing fragment decay widths
-  // (default: 2). The "gamma_lmax" key sets the maximum multipolarity
-  // for gamma-ray decay widths (default: 2). Both values are integers;
-  // gamma_lmax must be >= 1.
+  // The "fragment_lmax" key sets the maximum orbital angular momentum quantum
+  // number to consider when computing fragment decay widths in the continuum
+  // (default: 5). The "gamma_lmax" key sets the maximum multipolarity for
+  // continuum gamma-ray decay widths (default: 5). Both values are nonnegative
+  // integers; gamma_lmax must be >= 1.
   //
-  // fragment_lmax: 2,
-  // gamma_lmax: 2,
+  // fragment_lmax: 5,
+  // gamma_lmax: 5,
 
   // ENERGY PDF MAXIMUM (optional)
   //
-  // If MARLEY has difficulty automatically finding the maximum of the
-  // neutrino energy probability density function (this can happen for
-  // unusual user-defined spectra), you may provide your own estimate via
-  // the "energy_pdf_max" key. The value should be an energy in MeV.
+  // If MARLEY has difficulty automatically finding the maximum of the neutrino
+  // energy probability density function (this can happen for unusual
+  // user-defined spectra), you may provide your own estimate via the
+  // "energy_pdf_max" key. The value has units of probability density (1/MeV).
+  // As described in Sec. 5.4.1 of https://doi.org/10.1016/j.cpc.2021.108123,
+  // this is only necessary when MARLEY detects a rejection sampling problem.
+  // The printed error message that accompanies such a detection will provide a
+  // suggested value for the energy_pdf_max key. Apart from addressing this
+  // specific failure mode, the energy_pdf_max key should not be used.
   //
   // energy_pdf_max: 50.0,
+
+  // OPTICAL MODEL PARAMETERS (optional)
+  //
+  // The "opt_mod" key provides a custom configuration of nuclear optical model
+  // parameters, overriding the defaults. The value should be a JSON object
+  // whose format matches the configuration used in the files that appear under
+  // the data/optical_model/ directory. Switching the configuration to match
+  // the settings in any of these files may most easily be done using the
+  // #include syntax shown below. The file given in this example corresponds
+  // to the default optical model potential for MARLEY v2.
+  //
+  // More information about the optical model configuration format is provided
+  // in the example configuration file for the "marley reweight" command
+  // (examples/config/reweight_config.js).
+  //
+  // opt_mod: #include:"optical_model_kduq_federal_cv.js"
 
 } // A closing curly brace should appear at the end of the file
