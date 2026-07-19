@@ -20,7 +20,7 @@ provides some basic resources for those who would like to get involved.
 Starter guide
 -------------
 
-The MARLEY source code is written in `C++14
+The MARLEY source code is written in `C++17
 <https://en.wikipedia.org/wiki/C%2B%2B14>`__ with a small number of helper
 scripts written for the `Bash <https://www.gnu.org/software/bash/>`__ shell.
 `Git <https://git-scm.com/>`__ is used for version control, and the official

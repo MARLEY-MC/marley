@@ -1,6 +1,6 @@
 // Example MARLEY job configuration file
 // Steven Gardiner <gardiner@fnal.gov>
-// Revised 11 July 2026 for MARLEY 2.0.0
+// Revised 17 July 2026 for MARLEY 2.0.0
 //
 // INTRODUCTION
 //
@@ -16,16 +16,31 @@
 //
 //   - A trailing comma is allowed at the end of JSON objects and arrays
 //
-//  The JSON parser included with MARLEY will print an error message
-//  if parsing the job configuration file fails. This message will
-//  provide some (hopefully useful) guidance in troubleshooting
-//  formatting mistakes. To simplify writing their own configuration files,
-//  users are encouraged to copy the examples (particularly
-//  "examples/COPY_ME.js") and modify them to suit their needs.
+//   - The contents of another configuration file may be assigned to a
+//     key (as a JSON object value) via the following syntax:
+//
+//       key: #include:"my_included_file.js"
+//
+//     Note that included files may themselves make use of the #include syntax,
+//     with as many nested levels as desired by the user.
+//
+//  The JSON parser included with MARLEY will print an error message if it
+//  fails to process the job configuration file. This message will provide some
+//  (hopefully useful) guidance in troubleshooting formatting mistakes. This
+//  includes information about the position in the current file (and any parent
+//  files in the #include stack) where the JSON parsing problem was
+//  encountered.
+//
+//  To simplify writing their own configuration files, users are encouraged to
+//  copy the examples (particularly "examples/config/COPY_ME.js") and modify
+//  them to suit their needs.
 //
 //  A file extension of ".js" is recommended for MARLEY configuration files
 //  because typical syntax highlighting settings for JavaScript work well with
 //  the configuration file format.
+//
+//  The configuration examples below are relevant for the "marley generate"
+//  command, which is the default command invoked by the MARLEY executable.
 //
 { // An opening curly brace begins the configuration file content
 
@@ -71,7 +86,7 @@
   //
   // If the "target" object is omitted from the job configuration file,
   // then every nuclide that appears in the initial state of at least one
-  // configured reaction (see the REACTION INPUT FILES(S) section below)
+  // configured reaction (see the REACTION INPUT FILE(S) section below)
   // will be assumed to be present with equal abundance.
   target: {
     nuclides: [ 1000180400 ],
@@ -80,147 +95,199 @@
 
   // REACTION INPUT FILE(S) (required)
   //
-  // For simulating neutrino-nucleus reactions, MARLEY relies on tables of
-  // precomputed nuclear matrix elements to compute neutrino reaction cross
-  // sections. The nuclear matrix elements to use in any particular simulation
-  // job are specified using a JSON array stored under the "reactions" key.
-  // Each entry in the array is the name of a data file that contains a set of
-  // nuclear matrix elements to use when calculating cross sections for a
-  // particular scattering mode on a particular target nuclide. Note that the
-  // file names must be simple strings; MARLEY configuration files currently do
-  // not support the use of environment variables, bash globs, etc.
+  // MARLEY relies on a system of reaction input files to determine which
+  // physics processes should be included in a simulation job. The names of the
+  // reaction input files of interest appear in a JSON array assigned to the
+  // "reactions" key. Note that file names here and elsewhere in the job
+  // configuration must be simple strings; MARLEY configuration files currently
+  // do not support the use of environment variables, bash globs, etc. However,
+  // relative paths may be specified as part of each file name.
 
-  // MARLEY also uses an input file to configure neutrino-electron
-  // elastic scattering (ES) reactions. In this case, the file provides a list
-  // of the nuclides for which the ES process should be simulated.
-
-  // Although multiple reaction input files may be available for a particular
+  // Although multiple reaction input files may be available for a given
   // process, only a single configuration is allowed for any particular
-  // combination of target nucleus and scattering mode. Conflicting
-  // configurations will be ignored in favor of the one that appears in the
-  // first relevant reaction input file listed in the "reactions" array.
+  // combination of target nucleus and reaction type. This restriction prevents
+  // double-counting. Conflicting configurations will be ignored in favor of
+  // the one that appears in the first relevant reaction input file listed in
+  // the "reactions" array. A printed warning will alert the user when this
+  // situation occurs.
   //
-  // In this version of MARLEY, the main process available to be simulated is
-  // charged-current scattering of electron neutrinos on 40Ar. Reaction input
-  // files are stored in the folder data/react/.
+  // MARLEY treats the following reaction types as distinct physical processes
+  // that may be configured separately:
   //
-  // Two reaction input files bundled with MARLEY for processes other than
-  // CC neutrino-40Ar scattering are:
+  //   - ν CC (Discrete) = Charged-current neutrino scattering on a nucleus
+  //     that induces a transition to a discrete (bound) nuclear energy level
   //
-  //   - ES.react: Enables simulation of neutrino-electron elastic scattering
-  //               on a 40Ar atomic target
+  //   - anti-ν CC (Discrete) = Same as above but with an incident antineutrino
   //
-  //   - CEvNS40Ar.react: Enables simulation of coherent elastic
-  //                      neutrino-nucleus scattering on a 40Ar target. The
-  //                      q^2 dependence of the nuclear form factor is
-  //                      neglected.
+  //   - ν CC (Continuum) = Charged-current neutrino scattering on a nucleus
+  //     that induces a transition to the unbound continuum at excitation
+  //     energies above the particle-emission threshold
+  //
+  //   - anti-ν CC (Continuum) = Same as above but with an incident antineutrino
+  //
+  //   - NC (Discrete) = Neutral-current (anti-)neutrino scattering on a nucleus
+  //     that populates a discrete (bound) energy level of the outgoing nucleus
+  //
+  //   - NC (Continuum) = Neutral-current (anti-)neutrino scattering on a nucleus
+  //     that populates the unbound continuum
+  //
+  //   - (anti-)ν + e- ES = Elastic scattering of (anti-)neutrinos on atomic
+  //     electrons
+  //
+  // Only a single configuration is allowed for each combination of one of
+  // these reaction types and a specific target nuclide (identified by its
+  // nuclear PDG code). Deduplication logic applied by MARLEY during
+  // initialization will enforce this rule.
+  //
+  // While MARLEY can be used to simulate interactions with other nuclides, all
+  // official reaction input files currently distributed with the code use ⁴⁰Ar
+  // as the neutrino target.
+  //
+  // The main process simulated by MARLEY is charged-current absorption of
+  // electron neutrinos on ⁴⁰Ar. The updated model for this process in v2.0.0
+  // is described in https://arxiv.org/abs/2604.26801 and combines a
+  // Hartree-Fock Continuum Random Phase Approximation (HF-CRPA) calculation
+  // for ν CC (Continuum) and a data-driven approach for ν CC (Discrete).
+  //
+  // The recommended set of reaction input files to use with the current MARLEY
+  // release is shown below. All of these files are automatically found in
+  // data/react/ by MARLEY using its standard runtime search path.
+  reactions: [ "ve40ArCC_HF-CRPA.react",
+    "ve40ArCC_Bhattacharya2009-Discrete.react", "ES.react" ],
+
+  // The example array above contains the following entries:
+  //
+  //   - ve40ArCC_HF-CRPA.react:
+  //
+  //       This file configures HF-CRPA as the charged-current cross-section
+  //       model to use in the high-lying continuum of nuclear excitation
+  //       energy. The MARLEY code treats ν CC (Continuum) and ν CC (Discrete)
+  //       as separate channels, so selection of HF-CRPA here does not supply
+  //       any cross-section strength to bound nuclear energy levels. Details
+  //       about the HF-CRPA model as implemented in MARLEY are available in
+  //       Sec. II F of https://arxiv.org/abs/2604.26801.
+  //
+  //   - ve40ArCC_Bhattacharya2009-Discrete.react:
+  //
+  //       This file enables a treatment of the charged-current cross section
+  //       for discrete nuclear transitions that is based on a measurement of
+  //       the (p,n) reaction on ⁴⁰Ar at scattering angles close to 0° (see
+  //       https://doi.org/10.1103/PhysRevC.80.055501). Only measured Fermi and
+  //       Gamow-Teller strengths for transitions to bound nuclear levels are
+  //       included.
+  //
+  //       Two alternative evaluations of the B(F) and B(GT) strengths, both
+  //       based on allowed β⁺ decays of ⁴⁰Ti, may be used to model the
+  //       ν CC (Discrete) portion of the vₑ-⁴⁰Ar cross section. To adopt one of
+  //       these alternative treatments, the user should replace the second
+  //       reaction input file in the JSON array above with one of the
+  //       following files:
+  //
+  //         * ve40ArCC_Bhattacharya1998-Discrete.react: Evaluated nuclear
+  //           matrix elements based on https://doi.org/10.1103/PhysRevC.58.3677
+  //
+  //           NOTE: To facilitate direct comparisons with a previous MARLEY
+  //           publication describing the v1.2.0 physics model
+  //           (https://doi.org/10.1103/PhysRevC.103.044604), the results shown
+  //           in https://arxiv.org/abs/2604.26801 were calculated using this
+  //           ν CC (Discrete) reaction input file rather than the recommended
+  //           one above.
+  //
+  //         * ve40ArCC_Liu1998-Discrete.react: Evaluated nuclear matrix
+  //           elements based on https://doi.org/10.1103/PhysRevC.58.2677
+  //
+  //       Only one of the "-Discrete.react" files mentioned here should be
+  //       used in order to avoid double-counting the discrete contribution to
+  //       the CC cross section. A description of the MARLEY v2 updates to the
+  //       model of discrete nuclear transitions is given in Sec. II E of
+  //       https://arxiv.org/abs/2604.26801.
+  //
+  //   - ES.react:
+  //
+  //       Enables elastic scattering of neutrinos on atomic electrons. The
+  //       official version of this file assumes that ⁴⁰Ar is the atom of
+  //       interest, but it can easily be edited for different target
+  //       configurations.
+  //
+  //       Users who are only interested in simulating neutrino-nucleus
+  //       interactions with MARLEY may simply omit this file from the
+  //       "reactions" array in the job configuration.
+  //
+  // There is also a reaction input file provided with the code that will
+  // enable coherent elastic neutrino-nucleus scattering (CEvNS), a
+  // neutral-current process that leaves the struck nucleus in its ground
+  // state:
+  //
+  //   - CEvNS40Ar.react:
+  //
+  //     Although this file is written for ⁴⁰Ar, minor edits would enable
+  //     comparable CEvNS simulations for any nuclear target with a 0⁺ ground
+  //     state. The choice of nuclear form factor is handled by a separate
+  //     part of the job configuration; see the NUCLEON AND NUCLEAR FORM FACTORS
+  //     section below.
+  //
+  //     In MARLEY's current reaction type system, the CEvNS reaction is simply
+  //     a specific transition (ground-state to ground-state) that falls within
+  //     the NC (Discrete) category. A full treatment of inelastic NC
+  //     (Discrete) transitions within the v2 physics model is not yet
+  //     implemented.
+  //
+  //     Because the CEvNS process has a much larger cross section than other
+  //     reactions simulated by MARLEY, use of this reaction input file with
+  //     the others listed above is not recommended in most cases.
   //
   // The full path to the file does not need to be given in each element of the
   // "reactions" JSON array. After searching in the working directory, MARLEY's
   // default behavior is to search for reaction input files in the directories
-  // ${MARLEY}/data, ${MARLEY}/data/react/, and ${MARLEY}/data/structure/,
-  // where ${MARLEY} is the value of the MARLEY environment variable (typically
-  // set by sourcing the setup_marley.sh bash script). The list of search
-  // directories beyond the working directory can be changed from the default
-  // by setting the MARLEY_SEARCH_PATH environment variable to a ':'-separated
-  // list of directories.
+  // ${MARLEY}/data, ${MARLEY}/data/react/, ${MARLEY}/data/structure/, and
+  // ${MARLEY}/data/optical_model/, where ${MARLEY} is the value of the MARLEY
+  // environment variable (typically set by sourcing the setup_marley.sh bash
+  // script). The list of search directories beyond the working directory can
+  // be changed from the default by setting the MARLEY_SEARCH_PATH environment
+  // variable to a ':'-separated list of directories.
+  //
+  // For backward compatibility, the charged-current vₑ-⁴⁰Ar reaction input
+  // files from MARLEY v1 have been preserved in the folder data/react/v1/.
+  // These include theoretical Gamow-Teller strengths up to high excitation
+  // energies and thus treat the unbound continuum as if it were discrete.
+  // These files should therefore not be used together with the HF-CRPA file to
+  // avoid double-counting the continuum contribution to the cross section.
+  // Predictions of the MARLEY v1.2.0 physics model can be reproduced by
+  // choosing one of these files and using the "allowed approximation"
+  // configuration mentioned in the NUCLEON AND NUCLEAR FORM FACTORS section
+  // below. Note that the v1/ subfolder is not included in the default MARLEY
+  // search path, so the relative path to these files should be included in
+  // the "reactions" configuration (e.g., "v1/ve40ArCC_Bhattacharya2009.react").
   //
   // Unless a particular reaction channel is represented by a data file given
   // in the "reactions" JSON array, it will not be included in the MARLEY
-  // simulation.
-  //
-  reactions: [ "ve40ArCC_Bhattacharya2009.react", "ES.react" ],
+  // simulation job.
 
-  // ---- ADVANCED OPTIONS (all optional) ----
-  //
-  // The keys described in this section are advanced configuration options
-  // that most users will not need to adjust. Sensible defaults are used
-  // whenever these keys are omitted from the job configuration file.
-
-  // COULOMB CORRECTION METHOD (optional)
-  //
-  // The "coulomb_mode" key selects the method used to compute Coulomb
-  // corrections for charged-current nuclear reactions. Valid values are:
-  //
-  //   - "none": No Coulomb correction applied
-  //   - "Fermi": Use the Fermi function
-  //   - "EMA": Use the effective momentum approximation (EMA)
-  //   - "MEMA": Use a modified version of the EMA
-  //   - "Fermi-EMA": Interpolate between the Fermi function and the EMA
-  //   - "Fermi-MEMA": Interpolate between the Fermi function and the MEMA
-  //                   (this is the default)
-  //
-  // coulomb_mode: "Fermi-MEMA",
-
+/////////////////////////////// STOPPED HERE
   // NUCLEON AND NUCLEAR FORM FACTORS (optional)
   //
   // The "form_factors" key controls the parameterizations used for nucleon
   // (Sachs and axial) and nuclear form factors. It may be set to an object:
   //
   //   form_factors: {
-  //     sachs_model: "bbba05",    // "trivial", "dipole", or "bbba05"
-  //     axial_model: "dipole",    // "trivial" or "dipole"
-  //     nuclear_model: "klein",   // "trivial", "helm", or "klein"
+  //     sachs_model: "bbba05",   // "trivial", "dipole", or "bbba05"
+  //     axial_model: "dipole",   // "trivial" or "dipole"
+  //     nuclear_model: "klein",  // "trivial", "helm", or "klein"
   //
   //     // When nuclear_model is "klein", an optional sub-configuration
   //     // may be provided:
-  //     // nucl_options: { adapted: false },
+  //     nucl_options: { adapted: false },
   //   },
   //
   // The default configuration shown above will be used when the
   // "form_factors" key is omitted.
   //
-  // Alternatively, this key may be set to the string "allowed", "AA", or
-  // "aa" to use the allowed approximation (trivial form factors for all
-  // three categories).
-
-  // NUCLEAR DE-EXCITATIONS (optional)
-  //
-  // Use a boolean value to enable or disable simulation of nuclear
-  // de-excitations for all reactions. The default is true.
-  //
-  // do_deexcitations: true,
-
-  // SUB-CONTINUUM MODE (optional)
-  //
-  // The "sub_continuum_mode" key controls how cross-section strength
-  // that falls below the unbound threshold is handled. Valid values are:
-  //
-  //   - "ignore": Cross-section strength below threshold is discarded
-  //   - "mirror": Strength is mirrored from above the threshold
-  //   - "accumulate": Strength accumulates at the threshold (this is
-  //                   the default)
-  //
-  // sub_continuum_mode: "accumulate",
-
-  // OPTICAL MODEL PARAMETERS (optional)
-  //
-  // The "opt_mod" key provides a custom configuration of nuclear optical
-  // model parameters, overriding the defaults. The value should be a JSON
-  // object whose format matches the optical model configuration used by
-  // the MARLEY structure database.
-  //
-  // opt_mod: { ... },
-
-  // ANGULAR MOMENTUM CUTOFFS (optional)
-  //
-  // The "fragment_lmax" key sets the maximum orbital angular momentum
-  // quantum number to consider when computing fragment decay widths
-  // (default: 2). The "gamma_lmax" key sets the maximum multipolarity
-  // for gamma-ray decay widths (default: 2). Both values are integers;
-  // gamma_lmax must be >= 1.
-  //
-  // fragment_lmax: 2,
-  // gamma_lmax: 2,
-
-  // ENERGY PDF MAXIMUM (optional)
-  //
-  // If MARLEY has difficulty automatically finding the maximum of the
-  // neutrino energy probability density function (this can happen for
-  // unusual user-defined spectra), you may provide your own estimate via
-  // the "energy_pdf_max" key. The value should be an energy in MeV.
-  //
-  // energy_pdf_max: 50.0,
+  // Alternatively, this key may be set to the string "allowed", "AA", or "aa"
+  // to use the allowed approximation (trivial form factors for all three
+  // categories). Using the "AA" configuration together with one of the
+  // charged-current vₑ-⁴⁰Ar reaction input files in data/react/v1/ (see
+  // REACTION INPUT FILES section above) will reproduce the predictions of the
+  // MARLEY v1.2.0 physics model (https://doi.org/10.1103/PhysRevC.103.044604).
 
   // NEUTRINO SOURCE SPECIFICATION (required)
   //
@@ -585,5 +652,75 @@
   // using the MARLEY environment variable). This file uses a JSON format
   // to configure output streams, severity levels, and logging categories.
   // See the comments in that file for details.
+
+  //
+  // ---- ADVANCED OPTIONS (all optional) ----
+  //
+  // The keys described in this section are advanced configuration options
+  // that most users will not need to adjust. Sensible defaults are used
+  // whenever these keys are omitted from the job configuration file.
+
+  // COULOMB CORRECTION METHOD (optional)
+  //
+  // The "coulomb_mode" key selects the method used to compute Coulomb
+  // corrections for charged-current nuclear reactions. Valid values are:
+  //
+  //   - "none": No Coulomb correction applied
+  //   - "Fermi": Use the Fermi function
+  //   - "EMA": Use the effective momentum approximation (EMA)
+  //   - "MEMA": Use a modified version of the EMA
+  //   - "Fermi-EMA": Interpolate between the Fermi function and the EMA
+  //   - "Fermi-MEMA": Interpolate between the Fermi function and the MEMA
+  //                   (this is the default)
+  //
+  // coulomb_mode: "Fermi-MEMA",
+
+  // NUCLEAR DE-EXCITATIONS (optional)
+  //
+  // Use a boolean value to enable or disable simulation of nuclear
+  // de-excitations for all reactions. The default is true.
+  //
+  // do_deexcitations: true,
+
+  // SUB-CONTINUUM MODE (optional)
+  //
+  // The "sub_continuum_mode" key controls how cross-section strength
+  // that falls below the unbound threshold is handled. Valid values are:
+  //
+  //   - "ignore": Cross-section strength below threshold is discarded
+  //   - "mirror": Strength is mirrored from above the threshold
+  //   - "accumulate": Strength accumulates at the threshold (this is
+  //                   the default)
+  //
+  // sub_continuum_mode: "accumulate",
+
+  // OPTICAL MODEL PARAMETERS (optional)
+  //
+  // The "opt_mod" key provides a custom configuration of nuclear optical
+  // model parameters, overriding the defaults. The value should be a JSON
+  // object whose format matches the optical model configuration used by
+  // the MARLEY structure database.
+  //
+  // opt_mod: { ... },
+
+  // ANGULAR MOMENTUM CUTOFFS (optional)
+  //
+  // The "fragment_lmax" key sets the maximum orbital angular momentum
+  // quantum number to consider when computing fragment decay widths
+  // (default: 2). The "gamma_lmax" key sets the maximum multipolarity
+  // for gamma-ray decay widths (default: 2). Both values are integers;
+  // gamma_lmax must be >= 1.
+  //
+  // fragment_lmax: 2,
+  // gamma_lmax: 2,
+
+  // ENERGY PDF MAXIMUM (optional)
+  //
+  // If MARLEY has difficulty automatically finding the maximum of the
+  // neutrino energy probability density function (this can happen for
+  // unusual user-defined spectra), you may provide your own estimate via
+  // the "energy_pdf_max" key. The value should be an energy in MeV.
+  //
+  // energy_pdf_max: 50.0,
 
 } // A closing curly brace should appear at the end of the file

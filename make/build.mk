@@ -124,11 +124,6 @@ ifneq ($(MAKECMDGOALS),uninstall)
     ifneq (,$(or $(findstring GCC,$(CXXVERSION)), $(findstring g++,$(CXXVERSION))))
       # gcc
       $(info Compiling using version $(COMPILER_VERSION) of GCC)
-      ifneq (,$(findstring $(COMPILER_VERSION), 4.9.))
-        # g++ 4.9 gives many false positives for -Wshadow, so disable it
-        # for now.
-        override CXXFLAGS += -Wno-shadow
-      endif
       # Linking to ROOT libraries can be problematic on distributions (e.g.,
       # Ubuntu) that set the g++ flag -Wl,--as-needed by default (see
       # http://www.bnikolic.co.uk/blog/gnu-ld-as-needed.html for details), so

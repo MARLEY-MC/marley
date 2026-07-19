@@ -3,24 +3,22 @@ MARLEY (Model of Argon Reaction Low Energy Yields)
 
 |platform| |License: GPL v3| |DOI|
 
-|Build Status| |rel| |commits since|
+|rel| |commits since|
 
 Introduction
 ------------
 
 .. overview-start
 
-.. |gamma| unicode:: 0x3B3 .. lowercase gamma
-
 **MARLEY** (Model of Argon Reaction Low Energy Yields) is a Monte Carlo event
 generator for neutrino-nucleus interactions at energies of tens-of-MeV and
 below. The current version computes inclusive neutrino-nucleus cross sections
-employing the *allowed approximation*: the nuclear matrix elements are
-evaluated while neglecting Fermi motion and applying the long-wavelength (zero
-momentum transfer) limit. De-excitations of the final-state nucleus emerging
-from the primary interaction are simulated using a combination of tabulated
-|gamma|-ray decay schemes and an original implementation of the Hauser-Feshbach
-statistical model.
+using a hybrid model; a Hartree-Fock Continuum Random Phase Approximation
+approach is used for induced transitions to unbound nuclear energy levels, while
+a data-driven recipe is applied for transitions to bound states. De-excitations
+of the final-state nucleus emerging from the primary interaction are simulated
+using a combination of tabulated γ-ray decay schemes and an original
+implementation of the Hauser-Feshbach statistical model.
 
 Input files are provided with the code that are suitable for simulating the
 charged-current process
@@ -42,10 +40,7 @@ MARLEY follows an open-source development model and welcomes contributions of
 new input files and code improvements from the community. A partial list of
 potential projects for future MARLEY development is available on the developer
 documentation `webpage
-<http://www.marleygen.org/dev_docs.html#development-wish-list>`__.
-
-See the `FILEMAP <FILEMAP>`__ file for a description of the full contents
-of the MARLEY source code distribution.
+<https://www.marleygen.org/dev_docs.html#development-wish-list>`__.
 
 Copyright and License
 ---------------------
@@ -57,7 +52,7 @@ Copyright and License
 Copyright |copy| 2016-2026 Steven Gardiner gardiner@fnal.gov
 
 MARLEY is distributed under the terms of version 3 of the `GNU General Public
-License <http://www.gnu.org/licenses/gpl-3.0-standalone.html>`__ ("GPLv3") as
+License <https://www.gnu.org/licenses/gpl-3.0-standalone.html>`__ ("GPLv3") as
 published by the Free Software Foundation. For the full text of that license,
 please see the `COPYING <COPYING>`__ file.
 
@@ -81,31 +76,24 @@ S. Gardiner, Simulating low-energy neutrino interactions with MARLEY,
 <https://doi.org/10.1016/j.cpc.2021.108123>`__,
 `arXiv:2101.11867 [nucl-th] <https://arxiv.org/abs/2101.11867>`__ (2021).
 
-In publications which use the official reaction input files for
-charged-current scattering on argon-40 (i.e., any of the files
-in ``data/react`` whose names begin with ``ve40ArCC``), please also
-cite the paper describing their preparation:
+In publications which use the recommended physics configuration for
+charged-current vₑ-⁴⁰Ar scattering (see the REACTION INPUT FILES section of
+examples/config/annotated.js), please also cite the paper describing the MARLEY
+v2 model of this reaction:
 
-.. |endOfPaperTitle| raw:: html
-
-   &nu;<sub>e</sub> scattering on <sup>40</sup>Ar,
-
-S. Gardiner, Nuclear de-excitations in low-energy charged-current
-|endOfPaperTitle|
-`Phys. Rev. C 103, 044604
-<https://doi.org/10.1103/PhysRevC.103.044604>`__,
-`arXiv:2010.02393 [nucl-th] <https://arxiv.org/abs/2010.02393>`__ (2021).
+S. Gardiner *et al.*, Continuum contribution to charged-current absorption of
+low-energy vₑ on ⁴⁰Ar, `arXiv:2604.26801 [hep-ph]
+<https://arxiv.org/abs/2604.26801>`__ (2026).
 
 Providing a citation for the MARLEY code itself is also encouraged and
 appreciated. To maximize reproducibility of published calculations, such
-citations should include the digital object identifier (DOI) associated with
-the code release that was used. The DOIs for recent versions of MARLEY are
-listed on the GitHub `releases webpage
-<https://github.com/MARLEY-MC/marley/releases>`__ and in the right-hand column
-of the Zenodo "concept DOI" `webpage
+citations should include the digital object identifier (DOI) associated with the
+code release that was used. The DOIs for recent versions of MARLEY are listed on
+the GitHub `releases webpage <https://github.com/MARLEY-MC/marley/releases>`__
+and in the right-hand column of the Zenodo "concept DOI" `webpage
 <https://doi.org/10.5281/zenodo.3901933>`__.
 
-For convenience, recommended `BibTeX <http://www.bibtex.org/>`__ citations to
+For convenience, recommended `BibTeX <https://www.bibtex.org/>`__ citations to
 use for the latest MARLEY release are given in the `CITATION.bib
 <CITATION.bib>`__ file.
 
@@ -121,15 +109,14 @@ Getting Started
 
 .. getting-started-start1
 
-MARLEY is regularly `tested <https://travis-ci.org/github/MARLEY-MC/marley>`__
-on both Linux and macOS platforms and is expected to work in any Unix-like
-environment in which the prerequisites are installed. Building and running
-MARLEY on Windows is not currently supported.
+MARLEY is regularly tested on both Linux and macOS platforms and is expected to
+work in any Unix-like environment in which the prerequisites are installed.
+Building and running MARLEY on Windows is not currently supported.
 
 Prerequisites
 ~~~~~~~~~~~~~
 
-There are three prerequisites needed to build MARLEY:
+There are two prerequisites needed to build MARLEY:
 
 .. getting-started-end1
 
@@ -137,30 +124,17 @@ There are three prerequisites needed to build MARLEY:
 
 .. getting-started-start2
 
-.. |gte| unicode:: 0x2265 .. greater than or equal to sign
-
-*  A C++14-compliant compiler. The following compilers are officially
+*  A C++17-compliant compiler. The following compilers are officially
    supported:
 
-   -  `GNU Compiler Collection <https://gcc.gnu.org>`__ (GCC) |gte| 4.9.4
+   -  `GNU Compiler Collection <https://gcc.gnu.org>`__ (GCC) ≥ 9.1.0
 
-   -  `Clang <https://clang.llvm.org>`__ |gte| 3.5.2
+   -  `Clang <https://clang.llvm.org>`__ ≥ 9.0.0
 
 *  `GNU Make <https://www.gnu.org/software/make/>`__
 
-*  `GNU Scientific Library <https://www.gnu.org/software/gsl/>`__ (GSL)
-
-   - MARLEY's ``Makefile`` verifies that GSL is installed by
-     checking that the ``gsl-config`` script is available on the system
-     ``PATH``.
-
-On Linux machines, all three of these prerequisites will likely be available
-through the standard package manager. On macOS, installing GSL may be done
-using `Homebrew <https://brew.sh/>`__:
-
-::
-
-  brew install gsl
+On both Linux and macOS, these prerequisites will likely be available
+through the standard package manager.
 
 Although it is not required in order to build or use MARLEY, the popular `ROOT
 <https://root.cern.ch>`__ data analysis framework provides convenient tools for
@@ -177,48 +151,64 @@ enabled automatically if the ``root-config`` script is present on the system
 Building MARLEY
 ~~~~~~~~~~~~~~~
 
-To build the code, enter the ``build/`` folder
-
-::
-
-    cd build
-
-and then run GNU make
+To build the code, run ``make`` from the top-level MARLEY directory:
 
 ::
 
     make
 
-If the build is successful, then executing
+The top-level ``Makefile`` will auto-detect `CMake <https://cmake.org/>`__ and
+use it as the build backend if available; otherwise it falls back to the
+included GNU Make recipe (``make/build.mk``). The ``build/`` directory is
+created automatically by either backend and is removed by running ``make
+clean``.
+
+If the build is successful, the ``marley`` executable will be located at
+``build/bin/marley``. Running it without arguments
 
 ::
 
-    ./marley
+    build/bin/marley
 
 should produce the following output:
 
 ::
 
-    Usage: marley [OPTION...] CONFIG_FILE
+    Usage: marley <command> [options]
 
-      -h, --help     Print this help message
-      -v, --version  Print version and exit
+    Commands:
+      convert     Convert event files between supported formats
+      decay       Simulate nuclear de-excitations
+      generate    Generate Monte Carlo events
+      help        Show this help message or help for a specific command
+      print       Print existing events in a human-readable format
+      reweight    Reweight previously generated events
+      summarize   Create a ROOT TTree summary of event files  [requires ROOT]
+      version     Print version information
+      xsec        Tabulate total cross section vs. projectile kinetic energy
 
-    MARLEY home page: <http://www.marleygen.org>
-    E-mail bug reports to: <support@marleygen.org>
+    Options:
+      -h, --help     Show top-level help
+      -v, --version  Print version information
+
+    Run 'marley help <command>' or 'marley <command> --help' for details.
+    MARLEY home page: <https://www.marleygen.org>
 
 Setting up the runtime environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``marley`` executable relies on the system environment variable ``MARLEY``
 to store the full path to the root folder of the source code. This variable may
-be set automatically by executing ("sourcing") the ``setup_marley.sh`` Bash
-script using the ``source`` command. From within the ``build/`` folder, for
-example, one may source the setup script via
+be set automatically by sourcing the ``setup_marley.sh`` Bash script:
 
 ::
 
-    source ../setup_marley.sh
+    source setup_marley.sh
+
+For user convenience, this script also adds ``build/bin`` to the system
+``PATH`` and adds ``build/lib`` to ``LD_LIBRARY_PATH`` and, on macOS,
+``DYLD_LIBRARY_PATH``. After sourcing the setup script, the ``marley``
+command may be run from any directory.
 
 If generation of events is attempted without setting the ``MARLEY`` environment
 variable first, then MARLEY will halt after printing the error message
@@ -228,44 +218,37 @@ variable first, then MARLEY will halt after printing the error message
     [ERROR]: The MARLEY environment variable is not set. Please set it (e.g.,
     by sourcing the setup_marley.sh script) and try again.
 
-For user convenience, the ``setup_marley.sh`` script also adds the ``build/``
-folder to the system ``PATH`` and to either ``LD_LIBRARY_PATH`` (Linux) or
-``DYLD_LIBRARY_PATH`` (macOS).
-
 Generating events
 ~~~~~~~~~~~~~~~~~
 
-The ``marley`` executable allows the user to adjust simulation parameters via
-job configuration files written in a `JSON
+The ``marley`` executable allows the user to adjust simulation parameters
+via job configuration files written in a `JSON
 <https://www.json.org/json-en.html>`__-like format. The name of the
-configuration file to use appears as the first (and only) command-line
-argument:
+configuration file to use appears as the first argument after the
+``generate`` subcommand:
 
 ::
 
-  marley CONFIG_FILE
+  marley generate CONFIG_FILE
 
 To generate events using an example configuration file, execute the following
-command from within the ``build/`` folder after sourcing the
-``setup_marley.sh`` script:
+command after sourcing the ``setup_marley.sh`` script:
 
 ::
 
-    marley ../examples/config/annotated.js
+    marley generate examples/config/annotated.js
 
 The program will display the MARLEY logo and diagnostic messages as it runs the
-simulation. When the program terminates, a new file named ``events.ascii`` will
-be present in the ``build/`` folder. This file contains the generated events
-in MARLEY's native ASCII output format.
+simulation. When the program terminates, a new file named ``events.hepmc3`` will
+be present in the working directory. This file contains the generated events in
+the standard ASCII representation of the `HepMC3
+<https://doi.org/10.1016/j.cpc.2020.107310>`__ data format.
 
 The ``annotated.js`` configuration file mentioned above is heavily commented
 with explanations of the most commonly-used input parameters. Reading it serves
 as a good next step for new users. When you are ready to start writing your own
 configuration files, editing a copy of ``examples/config/COPY_ME.js`` is
 recommended.
-
-Full documentation for configuring MARLEY is available in section 6 of the
-MARLEY `implementation paper <http://arxiv.org/abs/2101.11867>`__.
 
 .. getting-started-end3
 
@@ -284,7 +267,7 @@ Website
 -------
 
 Further documentation for the latest version of MARLEY may be found on the
-official webpage at http://www.marleygen.org/.
+official webpage at https://www.marleygen.org/.
 
 Acknowledgements
 ----------------
@@ -293,7 +276,7 @@ Special thanks go to
 
 .. class:: open
 
-- The `TALYS <http://talys.eu>`__ developers (Arjan Koning, Stéphane
+- The `TALYS <https://talys.eu>`__ developers (Arjan Koning, Stéphane
   Hilaire, and Marieke Duijvestijn) for sharing their nuclear structure data
 
 - Zero Anixter for providing an illustration of Bob Marley to be used
@@ -306,9 +289,6 @@ Special thanks go to
 
 .. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3901933.svg
    :target: https://doi.org/10.5281/zenodo.3901933
-
-.. |Build Status| image:: https://travis-ci.org/MARLEY-MC/marley.svg?branch=main
-   :target: https://travis-ci.org/MARLEY-MC/marley
 
 .. |rel| image:: https://img.shields.io/github/v/release/MARLEY-MC/marley?include_prereleases
    :target: https://github.com/MARLEY-MC/marley/releases
