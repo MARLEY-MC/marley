@@ -68,7 +68,7 @@ std::shared_ptr< marley::NuclearFormFactor > marley::NuclearFormFactor::create(
       "nucl_options", ff_config, ok, marley::JSON::object() );
 
     // Set the "adapted" option from the parameters if it is present
-    bool adapted = assign_from_json< bool >( "adapted", nucl_opt, ok, false );
+    bool adapted = assign_from_json< bool >( "adapted", nucl_opt, ok, true );
 
     nuclear_ff = std::make_shared< marley
       ::KleinNystrandNuclearFormFactor >( Z, A, adapted );

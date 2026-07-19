@@ -249,21 +249,20 @@
   // For backward compatibility, the charged-current vₑ-⁴⁰Ar reaction input
   // files from MARLEY v1 have been preserved in the folder data/react/v1/.
   // These include theoretical Gamow-Teller strengths up to high excitation
-  // energies and thus treat the unbound continuum as if it were discrete.
-  // These files should therefore not be used together with the HF-CRPA file to
-  // avoid double-counting the continuum contribution to the cross section.
+  // energies and thus treat the unbound continuum as if it were discrete. These
+  // files should therefore not be used together with the HF-CRPA file to avoid
+  // double-counting the continuum contribution to the cross section.
   // Predictions of the MARLEY v1.2.0 physics model can be reproduced by
-  // choosing one of these files and using the "allowed approximation"
-  // configuration mentioned in the NUCLEON AND NUCLEAR FORM FACTORS section
-  // below. Note that the v1/ subfolder is not included in the default MARLEY
-  // search path, so the relative path to these files should be used in
-  // the "reactions" configuration (e.g., "v1/ve40ArCC_Bhattacharya2009.react").
+  // choosing one of these files and using the "allowed" configuration mentioned
+  // in the NUCLEON AND NUCLEAR FORM FACTORS section below. Note that the v1/
+  // subfolder is not included in the default MARLEY search path, so the
+  // relative path to these files should be used in the "reactions"
+  // configuration (e.g., "v1/ve40ArCC_Bhattacharya2009.react").
   //
   // Unless a particular reaction channel is represented by a data file given
   // in the "reactions" JSON array, it will not be included in the MARLEY
   // simulation job.
 
-/////////////////////////////// STOPPED HERE
   // NUCLEON AND NUCLEAR FORM FACTORS (optional)
   //
   // The "form_factors" key controls the parameterizations used for nucleon
@@ -276,18 +275,72 @@
   //
   //     // When nuclear_model is "klein", an optional sub-configuration
   //     // may be provided:
-  //     nucl_options: { adapted: false },
+  //     nucl_options: { adapted: true },
   //   },
   //
-  // The default configuration shown above will be used when the
-  // "form_factors" key is omitted.
+  // The default configuration shown above is recommended and will be used when
+  // the "form_factors" key is omitted.
   //
-  // Alternatively, this key may be set to the string "allowed", "AA", or "aa"
-  // to use the allowed approximation (trivial form factors for all three
-  // categories). Using the "AA" configuration together with one of the
-  // charged-current vₑ-⁴⁰Ar reaction input files in data/react/v1/ (see
+  // The "sachs_model" key controls the choice of parameterization for the form
+  // factors associated with the nucleon vector current. Three values are
+  // currently allowed:
+  //
+  //   "bbba05" (default): BBBA05 parameterization
+  //   (https://doi.org/10.1016/j.nuclphysbps.2006.08.028). Q²-dependent
+  //   functions for GEp, GMp, GEn, and GMn determined from a fit to electron
+  //   scattering data. Magnetic moments from the 2023 PDG.
+  //
+  //   "dipole": Standard dipole = 1/(1+Q²/Mᵥ²)² with vector mass Mᵥ = 0.84 GeV.
+  //   GEp = gᵥ·dipole, GEn = 0, GMp = μₚ·dipole, GMn = μₙ·dipole.
+  //
+  //   "trivial": Q²-independent. GEp = gᵥ = 1, GEn = 0, GMp = μₚ, GMn = μₙ.
+  //
+  // The "axial_model" key controls the form factors in the nucleon axial
+  // current. Two values are allowed:
+  //
+  //   "dipole" (default): Standard dipole parameterization
+  //   FA(Q²) = -gₐ/(1+Q²/Mₐ²)² with gₐ = 1.262 and axial mass
+  //   Mₐ = 1.032 GeV. The pseudoscalar form factor FP is determined via
+  //   the partially-conserved axial-vector current (PCAC) relation:
+  //   FP = 2 m_N FA / (m_π² + Q²).
+  //
+  //   "trivial": Q²-independent. FA = -gₐ, FP = -2 gₐ m_N / m_π².
+  //
+  // The "nuclear_model" key determines the nuclear form factor to use for
+  // simulating coherent elastic neutrino-nucleus scattering (CEvNS). This form
+  // factor is also used to apply approximate corrections for momentum-transfer
+  // dependence in the MARLEY v2 model of (anti-)ν CC (Discrete) scattering
+  // (see Sec. II E of https://arxiv.org/abs/2604.26801). Three options
+  // are allowed:
+  //
+  //   "klein" (default): Klein-Nystrand parameterization
+  //   (https://doi.org/10.1103/PhysRevC.60.014903). Uses
+  //   F(κ) = 3 j₁(κ·R) / ((1 + κ²a²)·κ·R) where κ is the magnitude of the
+  //   3-momentum transfer and a = 0.7 fm. Two variants of the estimated
+  //   nuclear radius R are available:
+  //
+  //     * Standard (adapted: false): R = 1.23·A^(1/3) fm
+  //     * Adapted (adapted: true, default): R = sqrt(5 r₀²/3 - 10 a²)
+  //       where r₀ is the measured RMS nuclear charge radius from
+  //       https://doi.org/10.1016/j.adt.2011.12.006. See also the description
+  //       of this "adapted" form in https://doi.org/10.3390/universe9050207.
+  //
+  //   "helm": Helm form factor (https://doi.org/10.1103/PhysRev.104.1466).
+  //   F(κ) = 3 j₁(κ·R)·exp(-κ² s²/2) / (κ·R) with
+  //   parameters s = 0.9 fm, a = 0.52 fm, c = 1.23*A^(1/3) - 0.6 fm,
+  //   and R = sqrt(c² + 7π² a²/3 - 5 s²). The parameter values are based on
+  //   https://doi.org/10.3390/universe9050207 and references therein.
+  //
+  //   "trivial": F(κ) = 1 for all κ (allowed approximation).
+  //
+  // Alternatively, the "form_factors" key may be set to the string "allowed",
+  // "AA", or "aa" to use the allowed approximation (trivial form factors for
+  // all three categories). Using the "AA" configuration together with one of
+  // the charged-current vₑ-⁴⁰Ar reaction input files in data/react/v1/ (see
   // REACTION INPUT FILES section above) will reproduce the predictions of the
   // MARLEY v1.2.0 physics model (https://doi.org/10.1103/PhysRevC.103.044604).
+
+/////////// STOPPED HERE
 
   // NEUTRINO SOURCE SPECIFICATION (required)
   //
