@@ -45,7 +45,7 @@ endif()
 # ------------------------------------------------------------------------------
 # Semantic project version (for packaging + find_package version checks)
 # ------------------------------------------------------------------------------
-project(MARLEY VERSION 1.2.0 LANGUAGES CXX)
+project(MARLEY VERSION 2.0.0 LANGUAGES CXX)
 
 # ------------------------------------------------------------------------------
 # Build configuration / warnings

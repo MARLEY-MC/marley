@@ -10,7 +10,7 @@ templates_path = [ '_templates' ]
 extensions = [ 'sphinxcontrib.bibtex', 'sphinxcontrib.newsfeed',
   'sphinx.ext.todo' ]
 source_suffix = '.rst'
-version = '1.2.0'
+version = '2.0.0'
 exclude_patterns = ['_build']
 
 highlight_language = 'none'
