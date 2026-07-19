@@ -95,18 +95,15 @@ guidelines.
 Dependencies
 ^^^^^^^^^^^^
 
-External dependencies have deliberately been kept to a minimum throughout
-MARLEY's history. Beyond the C++ Standard Library itself, the only required
-external dependency is the `GNU Scientific Library
-<https://www.gnu.org/software/gsl/>`__ (GSL). Even for GSL, only those portions
-needed to compute the `Coulomb wavefunctions <https://dlmf.nist.gov/33.2>`__ are
-actually used by MARLEY.
+Dependencies have deliberately been kept to a minimum throughout MARLEY's
+history. Beyond the C++ Standard Library itself, no external dependencies are
+required to build the main executable and shared library.
 
 New features that impact core MARLEY functionality should avoid introducing new
 external dependencies if at all possible. Use of `ROOT <https://root.cern.ch>`__
 classes is acceptable only in analysis macros (e.g., ``examples/macros/``) and
 in optionally-built portions of the code designed specifically to interface with
-ROOT (e.g., ``src/RootEventFileReader.cc``).
+ROOT (e.g., ``src/OutputFileRoot.cc``).
 
 Coding style
 ^^^^^^^^^^^^
@@ -120,7 +117,7 @@ code that is "correct, beautiful, [and] fast (`in that order
 
 * When in doubt, imitate the conventions used in the existing MARLEY source
   code
-* Member variable names end with an underscore character (``_``) 
+* Member variable names end with an underscore character (``_``)
 * Class names and enumeration types are written in `UpperCamelCase
   <https://en.wikipedia.org/wiki/Camel_case>`__
 * Variable and function names are written in `snake_case
@@ -136,7 +133,7 @@ code that is "correct, beautiful, [and] fast (`in that order
   Use ``MACRO_CASE`` for the names of both of these entities.
 * Prefer ``'\n'`` to ``std::endl`` when writing newlines to output
   streams (see `explanation <https://tinyurl.com/ccpcore-endl>`__ in the
-  CppCoreGuidelines) 
+  CppCoreGuidelines)
 * C++ source files have the filename extension ``.cc``. Header files have the
   filename extension ``.hh``. An exception to the latter rule occurs for
   header files original to another code base (e.g.,
@@ -266,30 +263,15 @@ Physics
     :superscript:`56`\Fe, :superscript:`63`\Cu, :superscript:`127`\I,
     :superscript:`208`\Pb, others?
 
-* Implementation of an inclusive cross section model that includes forbidden
-  nuclear transitions. A new class derived from ``marley::Reaction`` will
-  likely be required.
-
-* Handling of new job configuration file keys to vary the parameters used in the
-  nuclear optical model, etc.
-
-  - As an application of the new configuration options, event reweighting could
-    be implemented to facilitate assessments of theoretical uncertainties on the
-    MARLEY physics models. A prerequisite to the reweighting would be upgrades
-    to the ``marley::Event`` class to allow storage of the full de-excitation
-    history.
-
 * Refinements of the nuclear de-excitation model
 
   - Pre-equilibrium particle emission
 
   - Internal conversion
 
-  - Neutrino-induced fission 
+  - Neutrino-induced fission
 
   - Realistic angular distributions for evaporated particles
-
-  - Finite particle emission times
 
 * Non-neutrino projectiles (e.g., electrons, MeV-scale dark matter)
 

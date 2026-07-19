@@ -8,6 +8,7 @@ Overview
     copyright
     citing
     getting_started
+    commands
     interpret_output
     Bibliography <pubs>
     GitHub repository <https://github.com/MARLEY-MC/marley>

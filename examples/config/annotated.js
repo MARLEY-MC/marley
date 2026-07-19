@@ -256,7 +256,7 @@
   // choosing one of these files and using the "allowed approximation"
   // configuration mentioned in the NUCLEON AND NUCLEAR FORM FACTORS section
   // below. Note that the v1/ subfolder is not included in the default MARLEY
-  // search path, so the relative path to these files should be included in
+  // search path, so the relative path to these files should be used in
   // the "reactions" configuration (e.g., "v1/ve40ArCC_Bhattacharya2009.react").
   //
   // Unless a particular reaction channel is represented by a data file given

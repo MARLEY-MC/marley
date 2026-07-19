@@ -11,4 +11,4 @@ Copyright and License
 
 .. include:: ../README.rst
    :start-after: copyright-start-2
-   :end-before: See the `GUIDELINES
+   :end-before: Citing MARLEY

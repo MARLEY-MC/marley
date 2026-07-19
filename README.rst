@@ -11,12 +11,12 @@ Introduction
 .. overview-start
 
 **MARLEY** (Model of Argon Reaction Low Energy Yields) is a Monte Carlo event
-generator for neutrino-nucleus interactions at energies of tens-of-MeV and
-below. The current version computes inclusive neutrino-nucleus cross sections
-using a hybrid model; a Hartree-Fock Continuum Random Phase Approximation
-approach is used for induced transitions to unbound nuclear energy levels, while
-a data-driven recipe is applied for transitions to bound states. De-excitations
-of the final-state nucleus emerging from the primary interaction are simulated
+generator for neutrino interactions at energies of tens-of-MeV and below. The
+current version computes inclusive neutrino-nucleus cross sections using a
+hybrid model; a Hartree-Fock Continuum Random Phase Approximation approach is
+used for induced transitions to unbound nuclear energy levels, while a
+data-driven recipe is applied for transitions to bound states. De-excitations of
+the final-state nucleus emerging from the primary interaction are simulated
 using a combination of tabulated γ-ray decay schemes and an original
 implementation of the Hauser-Feshbach statistical model.
 
@@ -47,9 +47,7 @@ Copyright and License
 
 .. copyright-start-1
 
-.. |copy| unicode:: 0xA9 .. copyright sign
-
-Copyright |copy| 2016-2026 Steven Gardiner gardiner@fnal.gov
+Copyright © 2016-2026 Steven Gardiner gardiner@fnal.gov
 
 MARLEY is distributed under the terms of version 3 of the `GNU General Public
 License <https://www.gnu.org/licenses/gpl-3.0-standalone.html>`__ ("GPLv3") as
@@ -62,6 +60,12 @@ the `MCnet Guidelines <https://www.montecarlonet.org/GUIDELINES>`__ for Event
 Generator Authors and Users. Nevertheless, these guidelines are not legally
 binding and do not limit your rights guaranteed under the GPLv3.
 See the `GUIDELINES <GUIDELINES>`__ file for more details.
+
+Neither the United States nor the United States Department of Energy, nor any of
+their employees, makes any warranty, express or implied, or assumes any legal
+liability or responsibility for the accuracy, completeness, or usefulness of any
+data, apparatus, product, or process disclosed, or represents that its use would
+not infringe privately owned rights.
 
 Citing MARLEY
 -------------
@@ -144,6 +148,12 @@ building MARLEY. At build time, the optional MARLEY interface to ROOT is
 enabled automatically if the ``root-config`` script is present on the system
 ``PATH``.
 
+MARLEY has two additional dependencies that are both optional: the `GNU
+Scientific Library <https://www.gnu.org/software/gsl/>`__ (GSL) and the `HepMC3
+<https://gitlab.cern.ch/hepmc/HepMC3>`__ event record library. If these
+dependencies are not detected on the host system at build time, then built-in
+versions will be used instead.
+
 .. getting-started-end2
 
 .. getting-started-start3
@@ -163,7 +173,7 @@ included GNU Make recipe (``make/build.mk``). The ``build/`` directory is
 created automatically by either backend and is removed by running ``make
 clean``.
 
-If the build is successful, the ``marley`` executable will be located at
+If the build is successful, then the ``marley`` executable will be located at
 ``build/bin/marley``. Running it without arguments
 
 ::
@@ -193,6 +203,20 @@ should produce the following output:
 
     Run 'marley help <command>' or 'marley <command> --help' for details.
     MARLEY home page: <https://www.marleygen.org>
+
+From the top-level Makefile, the user can optionally direct the build system
+to ignore CMake (thus falling back to a pure GNU Make recipe) as well as
+any of the optional dependencies. Invoking ``make`` with the settings
+
+::
+
+    make IGNORE_CMAKE=1 IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1
+
+will bypass CMake when building the code, disable the ROOT interface even if a
+ROOT installation is successfully detected, and force the use of built-in
+versions of GSL and HepMC3 even if system installations are available for both
+of these libraries. Any combination of these ``make`` options may be used
+in any order according to the user's preferences.
 
 Setting up the runtime environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -263,11 +287,14 @@ See also the list of `contributors
 <https://github.com/MARLEY-MC/marley/contributors>`__ who participated in this
 project.
 
-Website
--------
+Further documentation
+---------------------
 
-Further documentation for the latest version of MARLEY may be found on the
-official webpage at https://www.marleygen.org/.
+* :doc:`commands` -- complete reference for all ``marley`` subcommands
+* :doc:`getting_started` -- compilation and usage guide
+* :doc:`interpret_output` -- output file format documentation
+* :doc:`dev_docs` -- development documentation and code structure
+* Official webpage: https://www.marleygen.org/
 
 Acknowledgements
 ----------------
