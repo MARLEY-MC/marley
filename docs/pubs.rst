@@ -28,3 +28,9 @@ Publications using MARLEY
 
 .. bibliography:: external_pubs.bib
    :all:
+
+References to the MARLEY model
+------------------------------
+
+.. bibliography:: external_pubs_refs.bib
+   :all:

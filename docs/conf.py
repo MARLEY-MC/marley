@@ -53,7 +53,7 @@ html_static_path = [ '_static' ]
 html_extra_path = [ '../CITATION.bib', './CNAME' ]
 
 # Bibliography files used by the sphinxcontrib.bibtex extension
-bibtex_bibfiles = [ 'marley_pubs.bib', 'external_pubs.bib' ]
+bibtex_bibfiles = [ 'marley_pubs.bib', 'external_pubs.bib', 'external_pubs_refs.bib' ]
 
 
 def setup(app):
