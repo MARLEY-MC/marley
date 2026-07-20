@@ -565,9 +565,9 @@
   //           tabulated matrix element according to its (possibly asymmetric)
   //           uncertainty. The variations are handled independently for
   //           each nuclear transition, i.e., there are no correlations between
-  //           distinct matrix elements. A single event weight calculated by this
-  //           mode corresponds to an independent random throw of each matrix
-  //           element of interest.
+  //           distinct matrix elements. A single event weight calculated by
+  //           this mode corresponds to an independent random throw of each
+  //           matrix element of interest.
   //
   //           A required "num_variations" key for this mode specifies a
   //           positive integer number of random draws, each corresponding to
