@@ -1,0 +1,13 @@
+/* Prevent Bootstrap's .container from constraining Sphinx's docutils
+   container to a fixed width wider than #right-column */
+.docutils.container {
+    width: auto;
+    max-width: 100%;
+}
+
+/* Citation labels: Bootstrap's .label makes them white-on-white, but
+   they still occupy vertical space via inline anonymous block boxes.
+   Remove them entirely to tighten spacing between entries. */
+div.citation > span {
+    display: none;
+}

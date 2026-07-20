@@ -43,6 +43,7 @@ html_theme_options = {
 }
 
 #html_add_permalinks = None
+html_css_files = [ 'custom.css' ]
 html_static_path = [ '_static' ]
 html_extra_path = [ '../CITATION.bib', './CNAME' ]
 
