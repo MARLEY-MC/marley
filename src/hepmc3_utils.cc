@@ -79,7 +79,7 @@ namespace {
       { 151, "NC-continuum", "neutral-current (anti)neutrino-nucleus"
         " scattering via continuum transitions" } },
     { marley::Reaction::ProcessType::StandaloneDecay,
-      { 700, "standalone-decay", "standalone nuclear de-excitation"
+      { 800, "standalone-decay", "standalone nuclear de-excitation"
         " with no simulated primary reaction" } },
   };
 
