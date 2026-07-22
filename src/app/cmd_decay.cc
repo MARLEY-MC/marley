@@ -373,7 +373,6 @@ bool marley::CommandHandler::cmd_decay( std::deque< std::string >& args ) {
     // Target nucleus — at rest, ground-state mass
     auto target = marley_hepmc3::make_particle( nucleus_pdg,
       marley_hepmc3::NUHEPMC_TARGET_STATUS, gs_mass );
-    marley_hepmc3::set_particle_charge( *target, net_charge );
 
     // Dummy ejectile — clone of projectile (PDG 0, zero 4-momentum), final-state
     auto ejectile = marley_hepmc3::make_particle( 0, 0., 0., 0., 0.,
@@ -384,18 +383,22 @@ bool marley::CommandHandler::cmd_decay( std::deque< std::string >& args ) {
     auto residue = marley_hepmc3::make_particle( nucleus_pdg, 0., 0., 0.,
       m_residue, marley_hepmc3::NUHEPMC_UNDECAYED_RESIDUE_STATUS, m_residue );
 
+    prim_vtx->add_particle_in( projectile );
+    prim_vtx->add_particle_in( target );
+    prim_vtx->add_particle_out( ejectile );
+    prim_vtx->add_particle_out( residue );
+
+    // Set attributes for the target + residue now that these particles
+    // are attached to the event
+    marley_hepmc3::set_particle_charge( *target, net_charge );
+    marley_hepmc3::set_particle_charge( *residue, net_charge );
+
     residue->add_attribute( "Ex",
       std::make_shared< HepMC3::DoubleAttribute >( Ex ) );
     residue->add_attribute( "twoJ",
       std::make_shared< HepMC3::IntAttribute >( twoJ ) );
     residue->add_attribute( "parity",
       std::make_shared< HepMC3::IntAttribute >( static_cast<int>(parity) ) );
-    marley_hepmc3::set_particle_charge( *residue, net_charge );
-
-    prim_vtx->add_particle_in( projectile );
-    prim_vtx->add_particle_in( target );
-    prim_vtx->add_particle_out( ejectile );
-    prim_vtx->add_particle_out( residue );
 
     // --- Run de-excitation cascade ----------------------------------------
     marley::NucleusDecayer nd;
