@@ -1,6 +1,6 @@
 // Example MARLEY job configuration file for the "marley decay" command
 // Steven Gardiner <gardiner@fnal.gov>
-// Revised 20 July 2026 for MARLEY 2.0.0
+// Revised 22 July 2026 for MARLEY 2.0.0
 //
 // INTRODUCTION
 //
@@ -98,11 +98,10 @@
       // override the user-specified "twoJ" and "parity" values for that
       // event. A one-time warning is printed whenever a snap occurs.
       //
-      // Example: fixed excitation energy of 5.0 MeV
-      Ex: 5.0,
-      //
-      // Alternative: uniform sampling from 4.0 to 6.0 MeV
-      // Ex_min: 4.0, Ex_max: 6.0,
+      // Example: uniform sampling from 5.0 to 30.0 MeV
+      Ex_min: 5.0, Ex_max: 30.0,
+      // Alternative: fixed excitation energy of 40.0 MeV
+      //Ex: 40.0,
 
       // NUCLEAR SPIN (required)
       //
@@ -117,7 +116,7 @@
       // above).
       //
       // Example: a single spin-1 state (2J = 2)
-      twoJ: [2],
+      twoJ: [ 2 ],
       //
       // Example: uniform sampling of spin-0, spin-2, or spin-4
       // twoJ: [0, 4, 8],
@@ -148,11 +147,9 @@
       // tabulated atomic mass: nuclear mass = atomic mass
       //   - net_charge * electron mass.
       //
-      // Most users will want to leave this at the default.
-      //
       // net_charge: 0,
 
-    }, // end nucleus
+    },
 
     // OUTPUT CONFIGURATION (optional)
     //
@@ -164,7 +161,7 @@
     output: [ { file: "decay_events.hepmc3", format: "ascii",
       mode: "overwrite" } ],
 
-  }, // end decay
+  },
 
   // ADVANCED OPTIONS *********************************************************
   //
