@@ -359,6 +359,8 @@ bool marley::CommandHandler::cmd_decay( std::deque< std::string >& args ) {
     auto event = std::make_shared< HepMC3::GenEvent >(
       HepMC3::Units::MEV, HepMC3::Units::CM );
 
+    event->set_event_number( evnum + 1 );
+
     event->add_attribute( "signal_process_id",
       std::make_shared< HepMC3::IntAttribute >( signal_proc_id ) );
 
