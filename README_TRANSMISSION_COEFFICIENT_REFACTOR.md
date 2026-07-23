@@ -101,8 +101,7 @@ same repeated-\(J_f\) optical solve.
   object.
 
 This state isolation makes the C++ calculation path suitable for a future
-concurrent batch implementation. It does not by itself guarantee that external
-numerical libraries called by the solver are thread-safe.
+concurrent batch implementation. 
 
 ## Performance Scope
 
@@ -115,19 +114,6 @@ The batch API supplies a stable boundary for a later optimized backend. Such a
 backend must preserve request/result ordering and verify the thread safety of
 all numerical-library calls used by the optical solver.
 
-## Physics Invariants
-
-The refactor does not change:
-
-- the Koning-Delaroche equations or model parameters;
-- the definition of \(T_{\ell j}\);
-- the allowed orbital and total-angular-momentum channels;
-- the \(J_f\)-dependent level-density calculation;
-- final-state parity selection;
-- the width normalization or accumulation order; or
-- the scalar `transmission_coefficient()` interface.
-
-Only a calculation whose inputs are identical while \(J_f\) changes is reused.
 
 ## Validation
 
@@ -152,5 +138,4 @@ a serial default implementation. However, this is an ABI-changing update:
 - `KoningDelarocheOpticalModel` has a different object layout after its
   temporary members move into `WorkingState`.
 
-Applications and libraries linked against MARLEY should perform a complete
-rebuild after adopting these changes.
+
