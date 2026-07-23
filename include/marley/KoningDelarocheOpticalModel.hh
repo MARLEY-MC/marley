@@ -59,36 +59,40 @@ namespace marley {
 
     private:
 
-      /// Total CM frame kinetic energy of both particles
-      double total_CM_frame_KE_;
-      /// Mass of the fragment
-      double fragment_mass_;
-      /// Fragment kinetic energy in the laboratory frame (rest frame of the
-      /// target nucleus represented by this optical potential)
-      double fragment_KE_lab_;
-      /// 3-momentum of either particle in the CM frame
-      double CM_frame_momentum_squared_;
+      /// @brief Request-local state used by optical-model calculations
+      /// @details This removes mutable calculation state from the model object.
+      /// External numerical-library calls require their own thread-safety
+      /// guarantees before calculations can safely run concurrently.
+      struct WorkingState {
+        double total_CM_frame_KE = 0.;
+        double fragment_mass = 0.;
+        double fragment_KE_lab = 0.;
+        double CM_frame_momentum_squared = 0.;
+        double target_mass = 0.;
 
-      // Storage for the mass of the nuclear target represented by this
-      // optical model potential. Its value will be adjusted based on
-      // the ionization state of the target.
-      double target_mass_;
+        double Rv = 0., av = 0., Rd = 0., ad = 0.;
+        double Rso = 0., aso = 0.;
+        double Vv = 0., Wv = 0., Wd = 0., Vso = 0., Wso = 0.;
+        double spin_orbit_eigenvalue = 0.;
+        int z = 0;
+      };
 
       // Helper function for computing optical model transmission coefficients
       // and cross sections
       std::complex<double> s_matrix_element(int fragment_pdg, int two_j,
-        int l, int two_s);
+        int l, int two_s, WorkingState state) const;
 
       // Helper functions for computing the optical model potential
       void calculate_om_parameters(int fragment_pdg, int two_j, int l,
-        int two_s);
+        int two_s, WorkingState& state) const;
 
       // Compute the optical model potential at radius r
-      std::complex<double> omp(double r) const;
+      std::complex<double> omp(double r, const WorkingState& state) const;
 
       // Computes the optical model potential minus the Coulomb potential at
       // radius r
-      std::complex<double> omp_minus_Vc(double r) const;
+      std::complex<double> omp_minus_Vc(double r,
+        const WorkingState& state) const;
 
       // Woods-Saxon shape
       double f(double r, double R, double a) const;
@@ -102,11 +106,13 @@ namespace marley {
 
       // Non-derivative radial Schrödinger equation terms to use for computing
       // transmission coefficients via the Numerov method
-      std::complex<double> a(double r, int l);
+      std::complex<double> a(double r, int l,
+        const WorkingState& state) const;
 
       // Version of Schrodinger equation terms with the optical model potential
       // U pre-computed
-      std::complex<double> a(double r, int l, std::complex<double> U) const;
+      std::complex<double> a(double r, int l, std::complex<double> U,
+        const WorkingState& state) const;
 
       // Neutron parameters
       double v1n, v2n, v3n, v4n, w1n, w2n, d1n, d2n, d3n, vso1n, vso2n;
@@ -122,12 +128,6 @@ namespace marley {
       // Squared pion Compton wavelength
       static constexpr double lambda_piplus2 = (marley_utils::hbar_c
         / mpiplus) * (marley_utils::hbar_c / mpiplus); // fm
-
-      // Temporary storage for optical model calculations
-      double Rv, av, Rd, ad, Rso, aso; // Geometrical parameters
-      double Vv, Wv, Wd, Vso, Wso; // Energy-dependent terms in the potential
-      double spin_orbit_eigenvalue; // Eigenvalue of the spin-orbit operator
-      int z; // Fragment atomic number
 
       // Threshold for abs(U - Vc) used to find a suitable matching radius for
       // computing transmission coefficients.
@@ -146,8 +146,11 @@ namespace marley {
       static constexpr double DEFAULT_NUMEROV_STEP_SIZE_ = 0.1;
 
       // More helper functions
-      void calculate_kinematic_variables(double KE_tot_CM, int fragment_pdg);
-      void update_target_mass(int target_charge);
+      WorkingState make_working_state(double KE_tot_CM, int fragment_pdg,
+        double target_mass) const;
+      void calculate_kinematic_variables(double KE_tot_CM, int fragment_pdg,
+        WorkingState& state) const;
+      double target_mass_for_charge(int target_charge) const;
   };
 
 }

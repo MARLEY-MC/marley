@@ -240,36 +240,55 @@ double marley::FragmentContinuumExitChannel::differential_width( double Exf,
   int two_s = f.get_two_s(); // two times the fragment spin
   marley::Parity Pa = f.get_parity(); // intrinsic parity
 
-  // Final nuclear parity
-  marley::Parity Pf;
-  // The orbital parity starts as (-1)^0 = 1. Rather than applying parity
-  // conservation each time, just find the final state parity Pf for l = 0.
-  // Then we can safely flip Pf without further thought for each new l value in
-  // the loop.
-  if (Pi_ == Pa) Pf = 1;
-  else Pf = -1;
-  // For each new iteration, increment l and flip the final-state parity
-  for (int l = 0; l <= l_max_; ++l, !Pf) {
+  // Final nuclear parity for even orbital angular momentum. Odd values of l
+  // flip this parity.
+  marley::Parity even_l_parity;
+  // Parity conservation fixes the final nuclear parity for l = 0.
+  if (Pi_ == Pa) even_l_parity = 1;
+  else even_l_parity = -1;
+
+  std::vector<marley::TransmissionCoefficientRequest> tc_requests;
+
+  for (int l = 0; l <= l_max_; ++l) {
     int two_l = 2*l;
     for (int two_j = std::abs(two_l - two_s);
       two_j <= two_l + two_s; two_j += 2)
     {
-      for (int twoJf = std::abs(twoJi_ - two_j);
-        twoJf <= twoJi_ + two_j; twoJf += 2)
-      {
-        double Tlj = om.transmission_coefficient( total_KE_CM_frame,
-          fragment_pdg_, two_j, l, two_s );
+      marley::TransmissionCoefficientRequest request;
+      request.total_KE_CM = total_KE_CM_frame;
+      request.fragment_pdg = fragment_pdg_;
+      request.two_j = two_j;
+      request.l = l;
+      request.two_s = two_s;
+      tc_requests.push_back( request );
+    }
+  }
 
-        double rho_f = ldm.level_density( Exf, twoJf, Pf );
+  const auto coefficients = om.transmission_coefficients( tc_requests );
+  if ( coefficients.size() != tc_requests.size() ) {
+    throw marley::Error( "Optical model returned an invalid transmission"
+      " coefficient batch size" );
+  }
 
-        double term = one_over_two_pi_rho_i_ * Tlj * rho_f;
+  for ( size_t request_index = 0; request_index < coefficients.size();
+    ++request_index )
+  {
+    const double Tlj = coefficients.at( request_index );
+    const auto& request = tc_requests.at( request_index );
+    const marley::Parity final_parity = request.l % 2
+      ? -even_l_parity : even_l_parity;
+    for (int twoJf = std::abs(twoJi_ - request.two_j);
+      twoJf <= twoJi_ + request.two_j; twoJf += 2)
+    {
+      double rho_f = ldm.level_density( Exf, twoJf, final_parity );
 
-        diff_width += term;
+      double term = one_over_two_pi_rho_i_ * Tlj * rho_f;
 
-        if ( store_jpi_widths ) {
-          jpi_widths_table_.emplace_back( twoJf, Pf, term );
-          // TODO: include (l, two_j) in cached term
-        }
+      diff_width += term;
+
+      if ( store_jpi_widths ) {
+        jpi_widths_table_.emplace_back( twoJf, final_parity, term );
+        // TODO: include (l, two_j) in cached term
       }
     }
   }

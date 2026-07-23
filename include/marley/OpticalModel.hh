@@ -16,8 +16,19 @@
 
 #pragma once
 #include <complex>
+#include <vector>
 
 namespace marley {
+
+  /// @brief Inputs for one optical-model transmission-coefficient calculation
+  struct TransmissionCoefficientRequest {
+    double total_KE_CM;
+    int fragment_pdg;
+    int two_j;
+    int l;
+    int two_s;
+    int target_charge = 0;
+  };
 
   /// @brief Abstract base class for nuclear optical model implementations
   class OpticalModel {
@@ -78,6 +89,23 @@ namespace marley {
       /// @returns Energy-averaged total scattering cross section (MeV<sup> -2</sup>)
       virtual double total_cross_section(double fragment_KE_lab,
         int fragment_pdg, int two_s, size_t l_max, int target_charge = 0) = 0;
+
+      /// @brief Calculate an ordered batch of transmission coefficients
+      /// @details Returns one coefficient per request in the same order. The
+      /// default implementation evaluates each request serially using
+      /// transmission_coefficient().
+      virtual std::vector<double> transmission_coefficients(
+        const std::vector<TransmissionCoefficientRequest>& requests)
+      {
+        std::vector<double> results;
+        results.reserve( requests.size() );
+        for ( const auto& request : requests ) {
+          results.push_back( transmission_coefficient(request.total_KE_CM,
+            request.fragment_pdg, request.two_j, request.l, request.two_s,
+            request.target_charge) );
+        }
+        return results;
+      }
 
       /// @brief Get the atomic number
       inline int Z() const;
