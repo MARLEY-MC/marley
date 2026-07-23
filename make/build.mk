@@ -273,14 +273,29 @@ ifneq ($(MAKECMDGOALS),uninstall)
       OBJECTS += $(ROOT_OBJ_DICT)
 
 $(ROOT_OBJ_DICT):
-	$(RM) marley_root_dict*.*
-	$(ROOTCLING) -f marley_root_dict.cc -c $(ROOT_DICT_INCLUDES)
+	$(RM) marley_root_dict*.* libMARLEY_rdict.pcm libMARLEY.rootmap
+	# NOTE: "-s <lib>" alone embeds the owning-library name in the .pcm but
+	# does not, by itself, guarantee a .rootmap file is written (this varies
+	# across ROOT/rootcling versions). "-rml <lib>" and "-rmf <file>" are the
+	# same flags ROOT's own ROOT_GENERATE_DICTIONARY() CMake macro uses
+	# internally (see cmake/modules/RootMacros.cmake upstream) to force
+	# generation of a correctly-named .rootmap, so we mirror that here for
+	# robustness across ROOT versions. (Note: this requires a Cling-based
+	# "rootcling" from ROOT6+; the legacy ROOT5 "rootcint" fallback used
+	# above does not support these flags and is not supported for ROOT
+	# dictionary autoloading.)
+	$(ROOTCLING) -f marley_root_dict.cc -c \
+	  -s $(SHARED_LIB_FILE) -rml $(SHARED_LIB_FILE) -rmf libMARLEY.rootmap \
+	  $(ROOT_DICT_INCLUDES)
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
 	  -I$(INCLUDE_DIR) -I$(HEPMC3_INCDIR)/HepMC3/Data -fPIC \
           -o $(ROOT_OBJ_DICT) -c marley_root_dict.cc
 	@mkdir -p $(BUILD_DIR)/lib
-	mv $(BUILD_DIR)/marley_root_dict_rdict.pcm $(BUILD_DIR)/lib/ 2>/dev/null || true
-	mv $(BUILD_DIR)/marley_root_dict.rootmap $(BUILD_DIR)/lib/ 2>/dev/null || true
+	# NOTE: because "-s $(SHARED_LIB_FILE)" is passed above, rootcling names
+	# the generated pcm/rootmap files after that library (libMARLEY), not
+	# after the "marley_root_dict" dictionary source file name.
+	mv $(BUILD_DIR)/libMARLEY_rdict.pcm $(BUILD_DIR)/lib/ 2>/dev/null || true
+	mv $(BUILD_DIR)/libMARLEY.rootmap $(BUILD_DIR)/lib/ 2>/dev/null || true
 	$(RM) marley_root_dict.cc
 
     endif
@@ -429,8 +444,8 @@ install: marley marley-config $(if $(filter yes,$(USE_ROOT)),mroot)
 	cp $(BUILD_DIR)/bin/marley-config $(DESTDIR)$(bindir)
 	if [ "$(USE_ROOT)" = "yes" ]; then cp $(BUILD_DIR)/bin/mroot $(DESTDIR)$(bindir); fi
 	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
-	cp $(BUILD_DIR)/lib/marley_root_dict_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
-	cp $(BUILD_DIR)/lib/marley_root_dict.rootmap $(DESTDIR)$(libdir) 2> /dev/null || true
+	cp $(BUILD_DIR)/lib/libMARLEY_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
+	cp $(BUILD_DIR)/lib/libMARLEY.rootmap $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp -r $(TOP_DIR)/data $(DESTDIR)$(datadir)/marley
 	cp -r $(TOP_DIR)/include/marley $(DESTDIR)$(incdir)
 ifndef FOUND_HEPMC3
@@ -448,11 +463,11 @@ endif
 	  printf '%s\n' "$(bindir)/marley-config"; \
 	  if [ "$(USE_ROOT)" = "yes" ]; then printf '%s\n' "$(bindir)/mroot"; fi; \
 	  printf '%s\n' "$(libdir)/$(SHARED_LIB_FILE)"; \
-	  if [ -f "$(DESTDIR)$(libdir)/marley_root_dict_rdict.pcm" ]; then \
-	    printf '%s\n' "$(libdir)/marley_root_dict_rdict.pcm"; \
+	  if [ -f "$(DESTDIR)$(libdir)/libMARLEY_rdict.pcm" ]; then \
+	    printf '%s\n' "$(libdir)/libMARLEY_rdict.pcm"; \
 	  fi; \
-	  if [ -f "$(DESTDIR)$(libdir)/marley_root_dict.rootmap" ]; then \
-	    printf '%s\n' "$(libdir)/marley_root_dict.rootmap"; \
+	  if [ -f "$(DESTDIR)$(libdir)/libMARLEY.rootmap" ]; then \
+	    printf '%s\n' "$(libdir)/libMARLEY.rootmap"; \
 	  fi; \
 	  find "$(DESTDIR)$(datadir)/marley" -type f \
 	    | sed 's|^$(DESTDIR)||'; \

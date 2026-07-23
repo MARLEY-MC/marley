@@ -392,8 +392,19 @@ if(USE_ROOT)
   include(ROOTGenerateDictionary OPTIONAL)
   if(COMMAND ROOT_GENERATE_DICTIONARY)
     set(DICT_NAME G__marley_root_dict)
+    # The dictionary source generated here is compiled directly into
+    # marley_lib (which is built as libMARLEY.{so,dylib}, see the
+    # OUTPUT_NAME property set above) rather than into a standalone
+    # library of its own. Without an explicit MODULE argument, the
+    # generated .rootmap file would incorrectly advertise a
+    # "libmarley_root_dict" library that is never actually built,
+    # causing ROOT's TClass autoloading to fail for the HepMC3 Data
+    # classes (e.g. HepMC3::GenEventData) in ordinary ROOT/PyROOT
+    # sessions. Setting MODULE to the real output library name fixes
+    # the autoload entries to point at libMARLEY instead.
     ROOT_GENERATE_DICTIONARY(${DICT_NAME}
       ${HEPMC3_DATA_HEADERS}
+      MODULE MARLEY
       LINKDEF ${DICT_HEADER}
       OPTIONS -I${CMAKE_SOURCE_DIR}/include
               -I${HEPMC3_INCLUDE_DIR}
@@ -401,18 +412,20 @@ if(USE_ROOT)
     )
     target_sources(marley_lib PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${DICT_NAME}.cxx)
     target_include_directories(marley_lib PRIVATE ${HEPMC3_INCLUDE_DIR}/HepMC3/Data)
+    # NOTE: because MODULE MARLEY was given above, ROOT names the generated
+    # pcm/rootmap files after the module (libMARLEY), not after DICT_NAME.
     add_custom_command(TARGET marley_lib POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lib
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict_rdict.pcm
-        ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict_rdict.pcm
+        ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY_rdict.pcm
+        ${CMAKE_BINARY_DIR}/lib/libMARLEY_rdict.pcm
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict.rootmap
-        ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict.rootmap
+        ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY.rootmap
+        ${CMAKE_BINARY_DIR}/lib/libMARLEY.rootmap
       COMMAND ${CMAKE_COMMAND} -E rm -f
-        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict_rdict.pcm
+        ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY_rdict.pcm
       COMMAND ${CMAKE_COMMAND} -E rm -f
-        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict.rootmap
+        ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY.rootmap
     )
   else()
     find_program(ROOTCLING_EXECUTABLE NAMES rootcling rootcint)
@@ -420,9 +433,22 @@ if(USE_ROOT)
       message(FATAL_ERROR "ROOT dictionary helper not found and rootcling is missing.")
     endif()
     set(DICT_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/marley_root_dict.cc)
+    # See the comment above the ROOT_GENERATE_DICTIONARY() call for why the
+    # "-s" flag (naming the actual output library, libMARLEY) is needed here:
+    # without it, the generated .rootmap advertises a nonexistent
+    # "libmarley_root_dict" library and ROOT's autoloader fails to find the
+    # HepMC3 Data class dictionaries in ordinary ROOT/PyROOT sessions.
+    # "-rml"/"-rmf" are additionally required on some ROOT/rootcling versions
+    # to actually force generation of the .rootmap file itself ("-s" alone
+    # only embeds the library name in the .pcm on those versions). These are
+    # the same flags used internally by ROOT's own ROOT_GENERATE_DICTIONARY()
+    # CMake macro (see upstream cmake/modules/RootMacros.cmake), so they
+    # should be robust across ROOT6 versions.
+    set(DICT_LIB_NAME ${CMAKE_SHARED_LIBRARY_PREFIX}MARLEY${CMAKE_SHARED_LIBRARY_SUFFIX})
     add_custom_command(
       OUTPUT ${DICT_OUTPUT}
       COMMAND ${ROOTCLING_EXECUTABLE} -f ${DICT_OUTPUT} -c
+        -s ${DICT_LIB_NAME} -rml ${DICT_LIB_NAME} -rmf libMARLEY.rootmap
         -I${CMAKE_SOURCE_DIR}/include
         -I${HEPMC3_INCLUDE_DIR}
         -I${HEPMC3_INCLUDE_DIR}/HepMC3/Data
@@ -430,15 +456,15 @@ if(USE_ROOT)
         ${DICT_HEADER}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lib
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict_rdict.pcm
-        ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict_rdict.pcm
+        ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY_rdict.pcm
+        ${CMAKE_BINARY_DIR}/lib/libMARLEY_rdict.pcm
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict.rootmap
-        ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict.rootmap
+        ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY.rootmap
+        ${CMAKE_BINARY_DIR}/lib/libMARLEY.rootmap
       COMMAND ${CMAKE_COMMAND} -E rm -f
-        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict_rdict.pcm
+        ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY_rdict.pcm
       COMMAND ${CMAKE_COMMAND} -E rm -f
-        ${CMAKE_CURRENT_BINARY_DIR}/libmarley_root_dict.rootmap
+        ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY.rootmap
       DEPENDS ${DICT_HEADER}
       COMMENT "Generating ROOT dictionary"
     )
@@ -574,8 +600,8 @@ if(USE_ROOT)
     DESTINATION bin
   )
   install(FILES
-    ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict_rdict.pcm
-    ${CMAKE_BINARY_DIR}/lib/libmarley_root_dict.rootmap
+    ${CMAKE_BINARY_DIR}/lib/libMARLEY_rdict.pcm
+    ${CMAKE_BINARY_DIR}/lib/libMARLEY.rootmap
     DESTINATION lib
     OPTIONAL
   )
