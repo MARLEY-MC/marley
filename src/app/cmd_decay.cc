@@ -210,6 +210,11 @@ bool marley::CommandHandler::cmd_decay( std::deque< std::string >& args ) {
   for ( const auto& tJ : twoJ_vec ) {
     if ( tJ < 0 ) throw marley::Error( "Negative 2J value encountered"
       " in \"twoJ\" array" );
+    bool even_A = ( A % 2 == 0 );
+    bool even_twoJ = ( tJ % 2 == 0 );
+    if ( even_A != even_twoJ ) throw marley::Error( "Unphysical twoJ = "
+      + std::to_string( tJ ) + " encountered for A = "
+      + std::to_string( A ) );
   }
 
   std::vector< double > twoJ_weights( twoJ_vec.size(), 1. );

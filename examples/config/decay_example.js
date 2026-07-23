@@ -59,13 +59,13 @@
       // The nuclide may be specified using either (or both) of two
       // equivalent representations:
       //
-      //   Option A: integer keys "Z" (proton number) and "A" (mass number)
+      //   Option A: integer keys "Z" (proton number) and "A" (nucleon number)
       //   Option B: integer key "pdg" (nuclear PDG code = 10000*Z + 10*A
       //             + 1000000000; this is also the code stored in the
       //             output event record)
       //
       // At least one representation must be present. If both are given,
-      // a marley::Error is thrown if they are inconsistent.
+      // a fatal error will be issued if they are inconsistent.
       //
       // Examples:
       //   Z: 18, A: 40          -> 40Ar  (nuclear PDG code 1000180400)
@@ -84,19 +84,19 @@
       // There are two ways to specify the excitation energy of the
       // initial nuclear state:
       //
-      //   1. Fixed value: Use the "Ex" key with a single non-negative
+      //   1. Fixed value: Use the "Ex" key with a single nonnegative
       //      excitation energy in MeV.
       //
       //   2. Uniform sampling: Use both "Ex_min" and "Ex_max" keys.
       //      For each event the excitation energy is sampled uniformly
       //      from the interval [Ex_min, Ex_max] in MeV.
       //
-      // When the excitation energy is below the unbound threshold for
-      // the nuclide AND discrete level data are available in MARLEY's
-      // structure database, the initial state is snapped to the nearest
-      // tabulated discrete level. The level's spin and parity then
-      // override the user-specified "twoJ" and "parity" values for that
-      // event. A one-time warning is printed whenever a snap occurs.
+      // When discrete level data are available for the configured nuclide and
+      // the excitation energy is below the unbound threshold, the initial
+      // state is "snapped" to the nearest tabulated discrete level. The
+      // level's spin and parity then override the user-specified "twoJ" and
+      // "parity" values for that event. A one-time warning is printed when
+      // this occurs.
       //
       // Example: uniform sampling from 5.0 to 30.0 MeV
       Ex_min: 5.0, Ex_max: 30.0,
@@ -111,15 +111,19 @@
       // values are given, the spin is sampled uniformly from the array
       // for each event.
       //
-      // Note: when the initial state is snapped to a discrete level, the
-      // level's spin overrides the sampled value (see EXCITATION ENERGY
-      // above).
+      // Because nucleons are spin-1/2, twoJ and the nucleon number A
+      // must either both be even or both be odd nonnegative integers.
+      // Values of twoJ that do respect this constraint are rejected with
+      // an error message.
       //
-      // Example: a single spin-1 state (2J = 2)
-      twoJ: [ 2 ],
+      // Note: when the initial state is snapped to a discrete level, the
+      // level's spin overrides the configured twoJ value (see EXCITATION
+      // ENERGY above).
       //
       // Example: uniform sampling of spin-0, spin-2, or spin-4
-      // twoJ: [0, 4, 8],
+      twoJ: [0, 4, 8],
+      // Alternative: a single spin-1 state (2J = 2)
+      //twoJ: [ 2 ],
 
       // INTRINSIC PARITY (optional)
       //
