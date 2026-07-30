@@ -202,7 +202,7 @@ in which Doxygen is installed. To create the HTML files, simply execute
    make doxygen
 
 from within the ``build/`` folder. After Doxygen executes, open the file
-``docs/_build/html/doxygen/index.html`` in a browser to view the local copy of
+``build/docs/doxygen/html/index.html`` in a browser to view the local copy of
 the API documentation website.
 
 With the exception of the API webpages described above, all other content for
@@ -252,7 +252,7 @@ MARLEY webpages by navigating to the ``build/`` folder and using the command
   make docs
 
 When the build completes, an offline copy of the MARLEY website may be viewed
-by opening the file ``docs/_build/html/index.html`` in a browser.
+by opening the file ``build/docs/html/index.html`` in a browser.
 
 Development wish list
 ---------------------
@@ -264,17 +264,13 @@ contents of this list, including suggestions for new items, is welcome.
 Physics
 ~~~~~~~
 
-.. |nuebar| raw:: html
-
-   &#x1d708;&#x304;<sub>e</sub>
-
 * Additional reaction input files
 
-  - New channels for :superscript:`40`\Ar: NC, |nuebar| CC
+  - New channels for :math:`^{40}\mathrm{Ar}`: NC, :math:`\bar{\nu}_e` CC
 
-  - New nuclear targets: :superscript:`12`\C, :superscript:`16`\O,
-    :superscript:`56`\Fe, :superscript:`63`\Cu, :superscript:`127`\I,
-    :superscript:`208`\Pb, others?
+  - New nuclear targets: :math:`^{12}\mathrm{C}`, :math:`^{16}\mathrm{O}`,
+    :math:`^{56}\mathrm{Fe}`, :math:`^{63}\mathrm{Cu}`, :math:`^{127}\mathrm{I}`,
+    :math:`^{208}\mathrm{Pb}`, others?
 
 * Refinements of the nuclear de-excitation model
 

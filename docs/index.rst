@@ -8,8 +8,8 @@ Overview
     copyright
     citing
     getting_started
-    commands
     interpret_output
+    commands
     Bibliography <pubs>
     GitHub repository <https://github.com/MARLEY-MC/marley>
     Developer documentation <dev_docs>
@@ -25,6 +25,14 @@ Overview
 
 .. include:: ../README.rst
    :start-after: overview-start
+   :end-before: overview-math-start
+
+.. rst-class:: center
+
+   :math:`\nu_e + \, ^{40}\mathrm{Ar} \to e^{-} + \, ^{40}\mathrm{K}^*`
+
+.. include:: ../README.rst
+   :start-after: overview-math-end
    :end-before: overview-end
 
 The material presented here focuses on the practical aspects of MARLEY:
@@ -36,5 +44,3 @@ MARLEY follows an open-source development model and welcomes contributions of
 new input files and code improvements from the community. A partial list of
 potential projects for future MARLEY development is available on the developer
 documentation `webpage <dev_docs.html#development-wish-list>`__.
-
-

@@ -6,8 +6,8 @@ Publication in Phys. Rev. C
    :author: Steven Gardiner
 
 I am pleased to announce that the first peer-reviewed journal article
-presenting the MARLEY treatment of charged-current |ve| scattering
-on |40Ar| was `published <https://doi.org/10.1103/PhysRevC.103.044604>`__
+presenting the MARLEY treatment of charged-current :math:`\nu_e` scattering
+on :math:`^{40}\mathrm{Ar}` was `published <https://doi.org/10.1103/PhysRevC.103.044604>`__
 this morning in Physical Review C.
 
 .. cut::
@@ -32,11 +32,3 @@ still under review.
 
 Many thanks to all who have supported this work over the last six years of
 development!
-
-.. |ve| raw:: html
-
-   &nu;<sub>e</sub>
-
-.. |40Ar| raw:: html
-
-   <sup>40</sup>Ar

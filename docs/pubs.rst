@@ -7,15 +7,11 @@ categories:
 
 1. References discussing MARLEY itself
 
-2. Publications that use MARLEY in some way, e.g.,
+2. Publications that directly use MARLEY in some way, e.g., experimental
+   sensitivity studies based upon MARLEY simulations
 
-   * New results (e.g., experimental sensitivity estimates) obtained using
-     MARLEY simulations
-
-   * Comparisons of MARLEY to competing theoretical models
-
-3. Publications that use MARLEY predictions or cross-section calculations as
-   a reference point without running the code directly
+3. Publications that refer to MARLEY predictions without running the code
+   directly
 
 User contributions to this list are strongly encouraged. If you have written a
 publication, thesis, etc. in which MARLEY is used, please `send me
@@ -29,15 +25,15 @@ About MARLEY
 .. bibliography:: marley_pubs.bib
    :all:
 
-Publications using MARLEY
--------------------------
+Applications of the MARLEY code
+-------------------------------
 
 .. bibliography:: external_pubs.bib
    :all:
    :labelprefix: B
 
-References to the MARLEY model
-------------------------------
+References to MARLEY predictions
+--------------------------------
 
 .. bibliography:: external_pubs_refs.bib
    :all:

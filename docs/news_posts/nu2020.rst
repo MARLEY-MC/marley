@@ -35,15 +35,11 @@ related to MARLEY, the code is nevertheless having quite a showing at the
 conference. I've counted eight posters so far that include results calculated
 using MARLEY:
 
-.. |I-127| raw:: html
-
-   <sup>127</sup>I
-
 * Avinay Bhat for MicroBooNE, "MeV-scale physics in MicroBooNE,"
   poster `#4 <https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=4>`__
 
 * Peibo An for COHERENT, "A machine learning approach to study the neutrino
-  charged-current interaction on |I-127|," poster `#13
+  charged-current interaction on :math:`^{127}\mathrm{I}`," poster `#13
   <https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=13>`__
 
 * Ivan Lepetic *et al*., "Seeing the invisible: benefits and capabilities of

@@ -23,16 +23,15 @@ implementation of the Hauser-Feshbach statistical model.
 Input files are provided with the code that are suitable for simulating the
 charged-current process
 
+.. overview-math-start
+
 |ve40ArCC|
+
+.. overview-math-end
 
 coherent elastic neutrino-nucleus scattering (CEvNS) on spin-zero target
 nuclei, and neutrino-electron elastic scattering on any atomic target.
 Inclusion of additional reactions and targets is planned for the future.
-
-.. |ve40ArCC| raw:: html
-
-   <p align="center">&nu;<sub>e</sub>&nbsp;+&nbsp;<sup>40</sup>Ar&nbsp;&rarr;
-   &nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup>,</p>
 
 .. overview-end
 
@@ -80,14 +79,18 @@ S. Gardiner, Simulating low-energy neutrino interactions with MARLEY,
 <https://doi.org/10.1016/j.cpc.2021.108123>`__,
 `arXiv:2101.11867 [nucl-th] <https://arxiv.org/abs/2101.11867>`__ (2021).
 
+.. citing-math-start
+
 In publications which use the recommended physics configuration for
-charged-current vₑ-⁴⁰Ar scattering (see the REACTION INPUT FILES section of
+charged-current νₑ-⁴⁰Ar scattering (see the REACTION INPUT FILES section of
 examples/config/annotated.js), please also cite the paper describing the MARLEY
 v2 model of this reaction:
 
 S. Gardiner *et al.*, Continuum contribution to charged-current absorption of
-low-energy vₑ on ⁴⁰Ar, `arXiv:2604.26801 [hep-ph]
+low-energy νₑ on ⁴⁰Ar, `arXiv:2604.26801 [hep-ph]
 <https://arxiv.org/abs/2604.26801>`__ (2026).
+
+.. citing-math-end
 
 Providing a citation for the MARLEY code itself is also encouraged and
 appreciated. To maximize reproducibility of published calculations, such
@@ -137,8 +140,10 @@ There are two prerequisites needed to build MARLEY:
 
 *  `GNU Make <https://www.gnu.org/software/make/>`__
 
-On both Linux and macOS, these prerequisites will likely be available
-through the standard package manager.
+On both Linux and macOS, these prerequisites will likely be available through
+the standard package manager. Note that when `CMake <https://cmake.org/>`__ is
+available on the host system, it is used by default. However, an equivalent
+build configuration using only GNU Make is also provided for user convenience.
 
 Although it is not required in order to build or use MARLEY, the popular `ROOT
 <https://root.cern.ch>`__ data analysis framework provides convenient tools for
@@ -169,9 +174,9 @@ To build the code, run ``make`` from the top-level MARLEY directory:
 
 The top-level ``Makefile`` will auto-detect `CMake <https://cmake.org/>`__ and
 use it as the build backend if available; otherwise it falls back to the
-included GNU Make recipe (``make/build.mk``). The ``build/`` directory is
-created automatically by either backend and is removed by running ``make
-clean``.
+included `GNU Make <https://www.gnu.org/software/make/>`__ recipe
+(``make/build.mk``). The ``build/`` directory is created automatically by
+either backend and is removed by running ``make clean``.
 
 If the build is successful, then the ``marley`` executable will be located at
 ``build/bin/marley``. Running it without arguments
@@ -193,7 +198,7 @@ should produce the following output:
       help        Show this help message or help for a specific command
       print       Print existing events in a human-readable format
       reweight    Reweight previously generated events
-      summarize   Create a ROOT TTree summary of event files  [requires ROOT]
+      summarize   Create a ROOT TTree summary of event files [requires ROOT]
       version     Print version information
       xsec        Tabulate total cross section vs. projectile kinetic energy
 
@@ -249,7 +254,7 @@ The ``marley`` executable allows the user to adjust simulation parameters
 via job configuration files written in a `JSON
 <https://www.json.org/json-en.html>`__-like format. The name of the
 configuration file to use appears as the first argument after the
-``generate`` subcommand:
+``generate`` command:
 
 ::
 
@@ -287,14 +292,11 @@ See also the list of `contributors
 <https://github.com/MARLEY-MC/marley/contributors>`__ who participated in this
 project.
 
-Further documentation
----------------------
+Website
+-------
 
-* :doc:`commands` -- complete reference for all ``marley`` subcommands
-* :doc:`getting_started` -- compilation and usage guide
-* :doc:`interpret_output` -- output file format documentation
-* :doc:`dev_docs` -- development documentation and code structure
-* Official webpage: https://www.marleygen.org/
+Further documentation for the latest version of MARLEY may be found on the
+official website at `https://www.marleygen.org/ <https://www.marleygen.org>`__.
 
 Acknowledgements
 ----------------
@@ -308,6 +310,11 @@ Special thanks go to
 
 - Zero Anixter for providing an illustration of Bob Marley to be used
   in the official MARLEY logo
+
+.. |ve40ArCC| raw:: html
+
+   <p align="center">&nu;<sub>e</sub>&nbsp;+&nbsp;<sup>40</sup>Ar&nbsp;&rarr;
+   &nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup>,</p>
 
 .. |platform| image:: https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey
 
