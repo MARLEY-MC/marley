@@ -731,6 +731,31 @@ void marley::JSONConfig::prepare_neutrino_source( marley::Generator& gen ) const
     MARLEY_LOG( INFO, "init.config.source" ) << "  average energy = " << Emean << " MeV";
     MARLEY_LOG( INFO, "init.config.source" ) << "  beta = " << beta;
   }
+  else if ( type == "af" || type == "alpha" || type == "alpha-fit" ) {
+    double Emin = source_get_double( "Emin", source_spec, "alpha-fit" );
+    double Emax = source_get_double( "Emax", source_spec, "alpha-fit" );
+    double Emean = source_get_double( "Emean", source_spec, "alpha-fit" );
+
+    double alpha = 2.;
+    if ( source_spec.has_key("alpha") ) {
+      alpha = source_get_double( "alpha", source_spec, "alpha-fit" );
+    }
+
+    source_check_nonnegative( Emin, "Emin", "alpha-fit" );
+    source_check_positive( Emean, "Emean", "alpha-fit" );
+
+    if ( Emax <= Emin ) throw marley::Error( "Emax <= Emin for an alpha-fit"
+      " neutrino source" );
+
+    source = std::make_unique< marley::AlphaFitNeutrinoSource >( pdg, Emin,
+      Emax, Emean, alpha );
+    MARLEY_LOG( INFO, "init.config.source" ) << "Created alpha-fit "
+      << marley_utils::get_particle_symbol( pdg ) << " source with parameters";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  Emin = " << Emin << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  Emax = " << Emax << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  average energy = " << Emean << " MeV";
+    MARLEY_LOG( INFO, "init.config.source" ) << "  alpha = " << alpha;
+  }
   else if ( type == "hist" || type == "histogram" ) {
 
     std::vector< double > Es = get_vector( "E_bin_lefts", source_spec,

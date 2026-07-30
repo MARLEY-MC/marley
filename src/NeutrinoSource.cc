@@ -17,7 +17,23 @@
 #include <limits>
 
 #include "marley/Generator.hh"
+#include "marley/Logger.hh"
 #include "marley/NeutrinoSource.hh"
+
+namespace {
+  /// @brief Shared gamma-distribution kernel for alpha-fit and beta-fit PDFs
+  /// @details The unnormalized PDF is
+  /// @f$ (E/\langle E \rangle)^{\alpha} \exp(-(\alpha+1)E/\langle E \rangle) @f$.
+  /// For the beta-fit form, use @f$ \alpha = \beta - 1 @f$.
+  double gamma_pdf_unnorm(double E, double Emean, double alpha,
+    double Emin, double Emax)
+  {
+    if (E < Emin || E > Emax) return 0.;
+    if (E == 0. && alpha < 0.) return 0.;
+    return std::pow(E / Emean, alpha)
+      * std::exp(-(alpha + 1.) * E / Emean);
+  }
+}
 
 marley::NeutrinoSource::NeutrinoSource(int particle_id) {
   if (!pdg_is_allowed(particle_id)) throw marley::Error(
@@ -69,16 +85,51 @@ double marley::FermiDiracNeutrinoSource::pdf(double E) const {
     / (1 + std::exp((E / temperature_) - eta_)));
 }
 
+marley::AlphaFitNeutrinoSource::AlphaFitNeutrinoSource(int particle_id,
+  double Emin, double Emax, double Emean, double alpha)
+  : NeutrinoSource(particle_id), Emin_(Emin), Emax_(Emax), Emean_(Emean),
+  alpha_(alpha), C_(1.)
+{
+  if ( alpha_ <= -1. ) {
+    throw marley::Error("For an \"alpha-fit\" neutrino source, alpha must be"
+      " > -1. This condition is required for the energy distribution to be"
+      " normalizable.");
+  }
+
+  if ( alpha_ < 0. && Emin_ == 0. ) {
+    MARLEY_LOG(WARN, "init.config.source") << "For an alpha-fit source with"
+      " alpha < 0 and Emin = 0, the PDF diverges at E = 0.";
+  }
+
+  // Normalize the source spectrum (not strictly necessary, but having the
+  // spectrum approximately normalized makes the default rejection sampling
+  // tolerance of 1e-8 reliable for finding the maximum of the spectrum)
+  double integral = marley_utils::num_integrate(
+    [this](double E) -> double { return this->pdf(E); }, Emin_, Emax_);
+
+  // Update the normalization constant, thereby normalizing this object's
+  // pdf in the process.
+  C_ /= integral;
+}
+
+double marley::AlphaFitNeutrinoSource::pdf(double E) const {
+  return C_ * gamma_pdf_unnorm(E, Emean_, alpha_, Emin_, Emax_);
+}
+
 marley::BetaFitNeutrinoSource::BetaFitNeutrinoSource(int particle_id,
   double Emin, double Emax, double Emean, double beta)
   : NeutrinoSource(particle_id), Emin_(Emin), Emax_(Emax), Emean_(Emean),
-  beta_(beta), C_(1.)
+  alpha_(beta - 1.), C_(1.)
 {
-  if ( beta_ < 1. ) {
+  if ( beta <= 0. ) {
     throw marley::Error("For a \"beta-fit\" neutrino source, a value of"
-      " the fit parameter beta < 1 is unphysical. It causes the neutrino energy"
-      " distribution to diverge near zero. Please choose another value and"
-      " try again.");
+      " the fit parameter beta <= 0 prevents normalization of the"
+      " energy distribution. Please choose a positive value and try again.");
+  }
+
+  if ( alpha_ < 0. && Emin_ == 0. ) {
+    MARLEY_LOG(WARN, "init.config.source") << "For a beta-fit source with"
+      " beta < 1 (i.e., alpha < 0) and Emin = 0, the PDF diverges at E = 0.";
   }
 
   // Normalize the source spectrum (not strictly necessary, but having the
@@ -93,11 +144,7 @@ marley::BetaFitNeutrinoSource::BetaFitNeutrinoSource(int particle_id,
 }
 
 double marley::BetaFitNeutrinoSource::pdf(double E) const {
-  if (E < Emin_ || E > Emax_) return 0.;
-  // Guard against NaNs in the std::pow factor below
-  else if ( E == 0. && beta_ < 1. ) return 0.;
-  else return C_ * std::pow(E / Emean_, beta_ - 1.)
-    * std::exp(-beta_ * E / Emean_);
+  return C_ * gamma_pdf_unnorm(E, Emean_, alpha_, Emin_, Emax_);
 }
 
 marley::FunctionNeutrinoSource::FunctionNeutrinoSource(int particle_id,

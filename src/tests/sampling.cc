@@ -42,6 +42,7 @@
 #include "marley/JSONConfig.hh"
 #include "marley/FileManager.hh"
 #include "marley/Logger.hh"
+#include "marley/NeutrinoSource.hh"
 #include "marley/Reaction.hh"
 #include "marley/hepmc3_utils.hh"
 #include "marley/marley_kinematics.hh"
@@ -790,5 +791,62 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
     #endif
 
     CHECK( passed );
+  }
+}
+
+TEST_CASE( "AlphaFit and BetaFit neutrino sources", "[source]" ) {
+
+  SECTION( "AlphaFitNeutrinoSource validates alpha > -1" ) {
+    CHECK_THROWS_AS( marley::AlphaFitNeutrinoSource(
+      marley_utils::ELECTRON_NEUTRINO, 0., 50., 13., -1. ),
+      marley::Error );
+    CHECK_THROWS_AS( marley::AlphaFitNeutrinoSource(
+      marley_utils::ELECTRON_NEUTRINO, 0., 50., 13., -2. ),
+      marley::Error );
+    CHECK_NOTHROW( marley::AlphaFitNeutrinoSource(
+      marley_utils::ELECTRON_NEUTRINO, 0., 50., 13., -0.5 ) );
+  }
+
+  SECTION( "BetaFitNeutrinoSource validates beta > 0" ) {
+    CHECK_THROWS_AS( marley::BetaFitNeutrinoSource(
+      marley_utils::ELECTRON_NEUTRINO, 0., 50., 13., 0. ),
+      marley::Error );
+    CHECK_THROWS_AS( marley::BetaFitNeutrinoSource(
+      marley_utils::ELECTRON_NEUTRINO, 0., 50., 13., -1. ),
+      marley::Error );
+    CHECK_NOTHROW( marley::BetaFitNeutrinoSource(
+      marley_utils::ELECTRON_NEUTRINO, 0., 50., 13., 0.5 ) );
+  }
+
+  SECTION( "PDFs agree for alpha = beta - 1" ) {
+    double Emean = 15.;
+    double beta = 3.67;
+    double alpha = beta - 1.; // = 2.67
+
+    marley::AlphaFitNeutrinoSource alpha_src(
+      marley_utils::ELECTRON_NEUTRINO, 0., 60., Emean, alpha );
+    marley::BetaFitNeutrinoSource beta_src(
+      marley_utils::ELECTRON_NEUTRINO, 0., 60., Emean, beta );
+
+    std::vector<double> test_energies = { 1., 5., 10., 15., 20., 30., 45. };
+    for ( double E : test_energies ) {
+      CHECK( alpha_src.pdf(E) == Approx( beta_src.pdf(E) ).epsilon(1e-10) );
+    }
+  }
+
+  SECTION( "AlphaFit PDF normalizes to unity" ) {
+    marley::AlphaFitNeutrinoSource src(
+      marley_utils::ELECTRON_NEUTRINO, 0., 60., 15., 2.5 );
+    double integral = marley_utils::num_integrate(
+      [&src](double E) -> double { return src.pdf(E); }, 0., 60. );
+    CHECK( integral == Approx(1.).epsilon(1e-6) );
+  }
+
+  SECTION( "BetaFit PDF normalizes to unity" ) {
+    marley::BetaFitNeutrinoSource src(
+      marley_utils::ELECTRON_NEUTRINO, 0., 60., 15., 3.5 );
+    double integral = marley_utils::num_integrate(
+      [&src](double E) -> double { return src.pdf(E); }, 0., 60. );
+    CHECK( integral == Approx(1.).epsilon(1e-6) );
   }
 }

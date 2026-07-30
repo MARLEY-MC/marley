@@ -149,12 +149,55 @@ namespace marley {
       double C_; ///< normalization constant (MeV<sup>2</sup>)
   };
 
+  /// @brief "Alpha-fit" neutrino source
+  /// @details Neutrino energies from this source are sampled from an
+  /// "alpha-fit" spectrum (see, for example, equation 14 in <a
+  /// href="https://arxiv.org/abs/astro-ph/0208035">Keil, Raffelt, &amp;
+  /// Janka, Astrophys. J. 590, 971 (2003)</a>) with mean neutrino energy
+  /// @f$\langle E \rangle@f$ and fit parameter @f$\alpha@f$. The
+  /// probability density function is given by @f{align*}{
+  /// P(E) &= C\left(E/\langle E \rangle\right)^{\alpha}
+  /// \exp\left(-(\alpha+1)\,E/\langle E \rangle\right)
+  /// & \text{E}_\text{min} \leq E \leq \text{E}_\text{max} @f}
+  /// where @f$C@f$ is a normalization constant.
+  class AlphaFitNeutrinoSource : public NeutrinoSource {
+    public:
+      /// @param particle_id PDG particle ID for the neutrinos produced by this
+      /// source
+      /// @param Emin minimum allowed neutrino energy (MeV)
+      /// @param Emax maximum allowed neutrino energy (MeV)
+      /// @param Emean mean neutrino energy (MeV)
+      /// @param alpha dimensionless pinching parameter
+      AlphaFitNeutrinoSource(int particle_id
+        = marley_utils::ELECTRON_NEUTRINO, double Emin = 0.,
+        double Emax = 50., double Emean = 13., double alpha = 2.);
+
+      inline virtual double get_Emin() const override;
+      inline virtual double get_Emax() const override;
+
+      virtual double pdf(double E) const override;
+
+    protected:
+      double Emin_; ///< minimum neutrino energy (MeV)
+      double Emax_; ///< maximum neutrino energy (MeV)
+      /// @brief mean neutrino energy
+      /// @note This is exactly the mean neutrino energy only if @f$
+      /// E_\text{min} = 0 @f$ and @f$ Emax = \infty @f$. Truncating the
+      /// distribution may alter the mean value appreciably.
+      double Emean_;
+      double alpha_; ///< dimensionless pinching parameter
+      double C_; ///< dimensionless normalization constant
+  };
+
   /// @brief "Beta-fit" neutrino source
   /// @details Neutrino energies from this source are sampled from a "beta-fit"
-  /// spectrum (see, for example, equation 7 in this <a
-  /// href="http://arxiv.org/abs/1511.00806">preprint</a>) with mean
-  /// neutrino energy @f$E_\text{mean}@f$ and fit parameter
-  /// @f$\beta@f$.  The probability density function is given by @f{align*}{
+  /// spectrum (see, for example, equation 7 in
+  /// <a href="https://doi.org/10.1088/1674-1137/40/7/073102">Huang, Guo,
+  /// &amp; Young, Chinese Physics C, 40, 073102 (2016)</a>)
+  /// with mean neutrino energy @f$E_\text{mean}@f$ and fit parameter
+  /// @f$\beta@f$. This parameterization is related to the alpha-fit form by
+  /// @f$\alpha = \beta - 1@f$. The probability density function is given by
+  /// @f{align*}{
   /// P(E) &= C\left(E/\,E_\text{mean}\right)^{\beta - 1}
   /// \exp\left(-\beta\,E/\,E_\text{mean}\right) & \text{E}_\text{min} \leq E
   /// \leq \text{E}_\text{max} @f} where @f$C@f$ is a normalization constant.
@@ -183,7 +226,7 @@ namespace marley {
       /// E_\text{min} = 0 @f$ and @f$ Emax = \infty @f$. Truncating the
       /// distribution may alter the mean value appreciably.
       double Emean_;
-      double beta_; ///< pinching parameter
+      double alpha_; ///< pinching parameter (stored as alpha = beta - 1)
       double C_; ///< dimensionless normalization constant
   };
 
@@ -299,6 +342,9 @@ namespace marley {
 
   inline double FermiDiracNeutrinoSource::get_Emax() const { return Emax_; }
   inline double FermiDiracNeutrinoSource::get_Emin() const { return Emin_; }
+
+  inline double AlphaFitNeutrinoSource::get_Emax() const { return Emax_; }
+  inline double AlphaFitNeutrinoSource::get_Emin() const { return Emin_; }
 
   inline double BetaFitNeutrinoSource::get_Emax() const { return Emax_; }
   inline double BetaFitNeutrinoSource::get_Emin() const { return Emin_; }

@@ -243,10 +243,13 @@
   //   Fermi-Dirac                            "fd", "fermi-dirac",
   //                                          "fermi_dirac"
   //
+  //   "Alpha-fit"                            "af", "alpha", "alpha-fit"
+  //   (see, e.g.,
+  //   https://arxiv.org/abs/astro-ph/0208035)
   //
   //   "Beta-fit"                             "bf", "beta", "beta-fit"
   //   (see, e.g.,
-  //   http://arxiv.org/abs/1511.00806)
+  //   https://arxiv.org/abs/1511.00806)
   //
   //   Monoenergetic                          "mono", "monoenergetic"
   //
@@ -288,6 +291,17 @@
   //    Emax: 60,          // Maximum neutrino energy (MeV)
   //    temperature: 3.5,  // Temperature (MeV)
   //    eta: 4             // Pinching parameter (dimensionless, default 0)
+  //  },
+  //
+  // "ALPHA FIT"
+  //
+  //  source: {
+  //    type: "alpha-fit",
+  //    neutrino: "ve",
+  //    Emin: 0,           // Minimum neutrino energy (MeV)
+  //    Emax: 60,          // Maximum neutrino energy (MeV)
+  //    Emean: 15,         // Mean neutrino energy (MeV)
+  //    alpha: 2.0,        // Pinching parameter (dimensionless, default 2.0)
   //  },
   //
   // "BETA FIT"
