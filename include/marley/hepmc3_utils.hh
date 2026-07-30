@@ -46,27 +46,27 @@ namespace HepMC3 {
 namespace marley_hepmc3 {
 
   // G.R.2
-  constexpr int NUHEPMC_MAJOR_VERSION = 0;
-  constexpr int NUHEPMC_MINOR_VERSION = 9;
+  constexpr int NUHEPMC_MAJOR_VERSION = 1;
+  constexpr int NUHEPMC_MINOR_VERSION = 0;
   constexpr int NUHEPMC_PATCH_VERSION = 0;
 
-  // G.R.4
+  // G.R.8
   void prepare_process_metadata( HepMC3::GenRunInfo& run_info );
 
   // E.C.1
   int get_nuhepmc_proc_id( const marley::Reaction::ProcessType pt );
   marley::Reaction::ProcessType from_nuhepmc_proc_id( const int proc_id );
 
-  // G.R.5
+  // G.R.9
   void prepare_vertex_status_metadata( HepMC3::GenRunInfo& run_info );
 
-  // G.R.6
+  // G.R.10
   void prepare_particle_status_metadata( HepMC3::GenRunInfo& run_info );
 
-  // G.R.8
+  // G.R.11
   void prepare_non_standard_pdg_code_metadata( HepMC3::GenRunInfo& run_info );
 
-  // G.C.1, G.C.4, G.C.5, G.C.6
+  // G.R.4, G.R.6, G.C.2, G.C.3
   void apply_nuhepmc_runinfo_conventions( HepMC3::GenRunInfo& run_info,
     const double flux_avg_xsec );
 

@@ -118,14 +118,14 @@ std::shared_ptr< HepMC3::GenEvent > marley::Generator::create_event(
   // Convert to picobarns
   totXS *= marley_utils::hbar_c2 * marley_utils::fm2_to_picobarn;
 
-  ev->add_attribute( "TotXS",
+  ev->add_attribute( "tot_xs",
     std::make_shared< HepMC3::DoubleAttribute >( totXS )
   );
 
   double procXS = r.total_xs( pdg_a, E_nu ) * marley_utils::hbar_c2
     * marley_utils::fm2_to_picobarn;
 
-  ev->add_attribute( "ProcXS",
+  ev->add_attribute( "proc_xs",
     std::make_shared< HepMC3::DoubleAttribute >( procXS )
   );
 
@@ -701,14 +701,14 @@ std::shared_ptr< HepMC3::GenEvent > marley::Generator::create_event(
   double totXS = tot_xsec * marley_utils::hbar_c2
     * marley_utils::fm2_to_picobarn;
 
-  ev->add_attribute( "TotXS",
+  ev->add_attribute( "tot_xs",
     std::make_shared< HepMC3::DoubleAttribute >( totXS )
   );
 
   double procXS = xsecs.at( sampled_index ) * marley_utils::hbar_c2
     * marley_utils::fm2_to_picobarn;
 
-  ev->add_attribute( "ProcXS",
+  ev->add_attribute( "proc_xs",
     std::make_shared< HepMC3::DoubleAttribute >( procXS )
   );
 
@@ -793,23 +793,23 @@ void marley::Generator::set_up_run_info() {
       MARLEY_GIT_REVISION }
   );
 
-  // G.R.4
+  // G.R.8
   marley_hepmc3::prepare_process_metadata( *run_info_ );
 
-  // G.R.5
+  // G.R.9
   marley_hepmc3::prepare_vertex_status_metadata( *run_info_ );
 
-  // G.R.6
+  // G.R.10
   marley_hepmc3::prepare_particle_status_metadata( *run_info_ );
 
   // G.R.7
   const auto& wgt_names = weighter_->get_weight_names();
   run_info_->set_weight_names( wgt_names );
 
-  // G.R.8
+  // G.R.11
   marley_hepmc3::prepare_non_standard_pdg_code_metadata( *run_info_ );
 
-  // G.C.1, G.C.4, G.C.5, G.C.6
+  // G.R.4, G.R.6, G.C.2, G.C.3
   double avg_xsec = this->flux_averaged_total_xs(); // MeV^{-2}
   marley_hepmc3::apply_nuhepmc_runinfo_conventions( *run_info_, avg_xsec );
 
@@ -841,7 +841,7 @@ void marley::Generator::finish_event_metadata( HepMC3::GenEvent& ev,
   // TODO: revisit spatial position when MARLEY is interfaced with a
   // detector geometry simulation
   const std::vector< double > lab_pos = { 0., 0., 0. };
-  ev.add_attribute( "LabPos",
+  ev.add_attribute( "lab_pos",
     std::make_shared< HepMC3::VectorDoubleAttribute >( lab_pos )
   );
 

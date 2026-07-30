@@ -44,7 +44,7 @@ namespace {
 
   constexpr int DUMMY_NUHEPMC_PROC_ID = 0;
 
-  // G.R.4 and E.C.1
+  // G.R.8 and E.C.1
   struct NuHepMCProcess {
     NuHepMCProcess( int procID, std::string name, std::string description )
       : id_( procID ), name_( name ), desc_( description ) {}
@@ -80,7 +80,7 @@ namespace {
         " scattering via continuum transitions" } },
   };
 
-  // G.R.5
+  // G.R.9
   std::map< int, std::pair< std::string, std::string > >
     vertex_status_map =
   {
@@ -98,7 +98,7 @@ namespace {
 
   };
 
-  // G.R.6 and P.R.1
+  // G.R.10 and P.R.1
   std::map< int, std::pair< std::string, std::string > >
     particle_status_map =
   {
@@ -122,9 +122,13 @@ namespace {
 
   };
 
-  // G.C.1
+  // G.R.4
   std::vector< std::string > nuhepmc_convention_vec = {
-    "G.C.1", "G.C.4", "G.C.5", "G.C.6", "E.C.1", "E.C.2", "E.C.3"
+    "G.C.2", // flux-averaged total cross section stored on GenRunInfo
+    "G.C.3", // citation metadata for MARLEY publications
+    "E.C.1", // process ID categorization
+    "E.C.2", // total cross section per event
+    "E.C.3", // process-specific cross section per event
   };
 
 }
@@ -271,7 +275,7 @@ namespace marley_hepmc3 {
       marley_hepmc3::NUHEPMC_UNDECAYED_RESIDUE_STATUS, ev );
   }
 
-  // G.R.4
+  // G.R.8
   void prepare_process_metadata( HepMC3::GenRunInfo& run_info ) {
     std::vector< int > proc_id_vec;
     for ( const auto& pair : ptype_to_nuhepmc_proc ) {
@@ -292,7 +296,7 @@ namespace marley_hepmc3 {
       std::make_shared< HepMC3::VectorIntAttribute >(proc_id_vec) );
   }
 
-  // G.R.5
+  // G.R.9
   void prepare_vertex_status_metadata( HepMC3::GenRunInfo& run_info ) {
     std::vector< int > status_vec;
     for ( const auto& pair : vertex_status_map ) {
@@ -313,7 +317,7 @@ namespace marley_hepmc3 {
       std::make_shared< HepMC3::VectorIntAttribute >(status_vec) );
   }
 
-  // G.R.6
+  // G.R.10
   void prepare_particle_status_metadata( HepMC3::GenRunInfo& run_info ) {
     std::vector< int > status_vec;
     for ( const auto& pair : particle_status_map ) {
@@ -334,7 +338,7 @@ namespace marley_hepmc3 {
       std::make_shared< HepMC3::VectorIntAttribute >(status_vec) );
   }
 
-  // G.R.8
+  // G.R.11
   // MARLEY currently doesn't use any non-standard PDG codes, so this step is
   // trivial
   void prepare_non_standard_pdg_code_metadata( HepMC3::GenRunInfo& run_info )
@@ -353,29 +357,29 @@ namespace marley_hepmc3 {
     const double flux_avg_xsec )
   {
 
-    // G.C.1
+    // G.R.4
     run_info.add_attribute( "NuHepMC.Conventions",
       std::make_shared< HepMC3::VectorStringAttribute >(
         nuhepmc_convention_vec )
     );
 
-    // G.C.4
+    // G.R.6
     run_info.add_attribute( "NuHepMC.Units.CrossSection.Unit",
       std::make_shared< HepMC3::StringAttribute >( "pb" )
     );
 
     run_info.add_attribute( "NuHepMC.Units.CrossSection.TargetScale",
-      std::make_shared< HepMC3::StringAttribute >( "PerTargetAtom" )
+      std::make_shared< HepMC3::StringAttribute >( "PerAtom" )
     );
 
-    // G.C.5
+    // G.C.2
     double xsec_picobarn = flux_avg_xsec * marley_utils::hbar_c2
       * marley_utils::fm2_to_picobarn;
     run_info.add_attribute( "NuHepMC.FluxAveragedTotalCrossSection",
       std::make_shared< HepMC3::DoubleAttribute >( xsec_picobarn )
     );
 
-    // G.C.6
+    // G.C.3
     std::vector< std::string > marley_DOIs = {
       "10.1103/PhysRevC.103.044604",
       "10.1016/j.cpc.2021.108123"
@@ -387,7 +391,8 @@ namespace marley_hepmc3 {
 
     std::vector< std::string > marley_arXivs = {
       "2010.02393",
-      "2101.11867"
+      "2101.11867",
+      "2604.26801"
     };
 
     run_info.add_attribute( "NuHepMC.Citations.Generator.arXiv",
@@ -1093,8 +1098,8 @@ void marley_hepmc3::print_event( const HepMC3::GenEvent& ev,
   // σ = U+03C3 = 0xCF 0x83
   os << THICK_SEP << "\n";
   {
-    auto proc_attr = ev.attribute< HepMC3::DoubleAttribute >( "ProcXS" );
-    auto tot_attr  = ev.attribute< HepMC3::DoubleAttribute >( "TotXS"  );
+    auto proc_attr = ev.attribute< HepMC3::DoubleAttribute >( "proc_xs" );
+    auto tot_attr  = ev.attribute< HepMC3::DoubleAttribute >( "tot_xs"  );
     double proc_xs = proc_attr ? proc_attr->value() : 0.;
     double tot_xs  = tot_attr  ? tot_attr->value()  : 0.;
     os << "  σ[" << proc_name << "] = "
