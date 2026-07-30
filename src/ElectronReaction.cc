@@ -98,6 +98,9 @@ double marley::ElectronReaction::total_xs(int pdg_a, double KEa) const {
   // If we're below threshold, then just return zero
   if ( KEa < KEa_threshold_ ) return 0.;
 
+  // If the kinetic energy is not positive, then just return zero
+  if ( KEa <= 0. ) return 0.;
+
   // Mandelstam s (square of the total center of momentum frame energy)
   double s = std::pow(ma_ + mb_, 2) + 2.*mb_*KEa;
 
@@ -128,6 +131,9 @@ double marley::ElectronReaction::diff_xs(int pdg_a, double KEa,
 
   // If we're below threshold, then just return zero
   if ( KEa < KEa_threshold_ ) return 0.;
+
+  // If the kinetic energy is not positive, then just return zero
+  if ( KEa <= 0. ) return 0.;
 
   // Mandelstam s (square of the total center of momentum frame energy)
   double s = std::pow(ma_ + mb_, 2) + 2.*mb_*KEa;
