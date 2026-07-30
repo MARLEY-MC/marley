@@ -213,12 +213,20 @@ text files are written in the `reStructuredText
 `Sphinx <https://www.sphinx-doc.org/en/master/index.html>`__ documentation
 generator is used with the `Guzzle theme
 <https://github.com/guzzle/guzzle_sphinx_theme>`__ to produce HTML webpages
-from the reST files. Two Sphinx extensions are required to fully build the
+from the reST files. Three Sphinx extensions are required to fully build the
 website. The `sphinxcontrib-bibtex
 <https://sphinxcontrib-bibtex.readthedocs.io/en/latest/>`__ extension is used
 to handle citations (see, e.g., the online `bibliography <pubs.html>`__). The
 `sphinxcontrib-newsfeed <https://pypi.org/project/sphinxcontrib-newsfeed/>`__
 extension is used to manage the posts on the `news webpage <news.html>`__.
+Finally, the `sphinxcontrib-katex
+<https://sphinxcontrib-katex.readthedocs.io/en/latest/>`__ extension is used
+to render LaTeX math expressions found in BibTeX entries (e.g., on the
+`publication list page <pubs.html>`__). KaTeX rendering is performed
+automatically at build time. A custom Sphinx transform handles the conversion
+of ``$...$`` math delimiters to math nodes before KaTeX rendering, since the
+``pybtex`` library (used internally by ``sphinxcontrib-bibtex``) does not
+understand them.
 
 Installation of the prerequisites needed to use Sphinx will vary somewhat
 across different systems. Typically, however, the standard package manager
@@ -228,8 +236,13 @@ running macOS and Python 3, for instance, `Homebrew <https://brew.sh/>`__
 may be used to install Sphinx and its extensions via the commands
 ::
 
-  brew install sphinx-doc
-  pip3 install guzzle-sphinx-theme sphinxcontrib-bibtex sphinxcontrib-newsfeed
+  brew install sphinx-doc node
+  pip3 install guzzle-sphinx-theme sphinxcontrib-bibtex sphinxcontrib-newsfeed sphinxcontrib-katex
+  npm install -g katex
+
+The build-time rendering of LaTeX math by ``sphinxcontrib-katex`` requires
+`Node.js <https://nodejs.org/>`__ (available via most package managers) and
+the `KaTeX <https://katex.org/>`__ npm package (``katex``).
 
 After these components (and Doxygen) have been installed, one may build the
 MARLEY webpages by navigating to the ``build/`` folder and using the command
