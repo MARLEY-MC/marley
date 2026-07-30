@@ -54,6 +54,7 @@ namespace {
     { ProcType::NeutrinoCC_Continuum, "\u03BD CC (Continuum)" },
     { ProcType::AntiNeutrinoCC_Continuum, "anti-\u03BD CC (Continuum)" },
     { ProcType::NC_Continuum, "NC (Continuum)" },
+    { ProcType::StandaloneDecay, "Standalone Decay" },
   };
 
   // Defines the neutrino species that can participate in each type

@@ -1,6 +1,6 @@
 // Example MARLEY job configuration file for the "marley decay" command
 // Steven Gardiner <gardiner@fnal.gov>
-// Revised 19 July 2026 for MARLEY 2.0.0
+// Revised 20 July 2026 for MARLEY 2.0.0
 //
 // INTRODUCTION
 //
@@ -16,11 +16,9 @@
 // A "marley decay" configuration file uses the same JSON-like format as
 // the "marley generate" command (see examples/config/annotated.js for a
 // full description of that format and its syntax rules). The "reactions"
-// key must be present but may be set to null — unlike "marley generate",
-// where it must contain at least one reaction input file name. The
-// "source" key may be omitted entirely or set to null, and the "generate"
-// key is ignored. A separate "decay" top-level object (described below)
-// controls the run parameters specific to this command.
+// and "source" keys are not required and, if present, will be ignored.
+// A separate "decay" top-level object (described below) controls the
+// run parameters specific to this command.
 //
 { // An opening curly brace begins the configuration file content
 
@@ -33,22 +31,6 @@
   // If this key is omitted, MARLEY will use the system time since the
   // Unix epoch as its random number seed.
   seed: 123456,
-
-  // REACTION INPUT FILES (required; may be null for decay)
-  //
-  // The "reactions" key must be present in the configuration file and
-  // have a value that is either a JSON array of reaction file names
-  // or null. Set it to null to skip reaction file loading, which is
-  // the recommended setting for the decay command because no primary
-  // neutrino-nucleus reactions are simulated.
-  reactions: null,
-
-  // NEUTRINO SOURCE SPECIFICATION (optional; may be null for decay)
-  //
-  // The "source" key may be omitted entirely or set to null. The decay
-  // command does not rely on a neutrino source because it constructs
-  // each excited nuclear state directly from the decay parameters below.
-  source: null,
 
   // DECAY-SPECIFIC CONFIGURATION (required)
   //
@@ -65,95 +47,112 @@
     // omitted, a value of 1000 will be assumed.
     events: 10000,
 
-    // PROJECTILE PDG CODE (optional)
+    // INITIAL NUCLEAR STATE (required)
     //
-    // PDG code of the notional projectile for this decay. Together with
-    // the "proc_type" key (see below), this determines the PDG code of
-    // the ejectile particle that is written into the output event record,
-    // ensuring consistency with the HepMC3 event format produced by
-    // "marley generate". For example, a projectile of 12 (νₑ) with a
-    // CC process type yields an ejectile of 11 (e⁻), whereas a NC
-    // process type yields an ejectile of 12 (νₑ). The projectile itself
-    // is given zero momentum in the event record.
-    //
-    // The default value is 12 (electron neutrino, νₑ).
-    //
-    // projectile: 12,
+    // The "nucleus" object specifies the nuclide and quantum numbers of
+    // the excited nuclear state from which each de-excitation cascade
+    // begins.
+    nucleus: {
 
-    // TARGET NUCLIDE (required)
-    //
-    // The target_Z and target_A keys define the nuclide that is
-    // initially excited. For example, Z=18, A=40 corresponds to 40Ar.
-    target_Z: 18,
-    target_A: 40,
+      // NUCLIDE SPECIFICATION (required)
+      //
+      // The nuclide may be specified using either (or both) of two
+      // equivalent representations:
+      //
+      //   Option A: integer keys "Z" (proton number) and "A" (mass number)
+      //   Option B: integer key "pdg" (nuclear PDG code = 10000*Z + 10*A
+      //             + 1000000000; this is also the code stored in the
+      //             output event record)
+      //
+      // At least one representation must be present. If both are given,
+      // a marley::Error is thrown if they are inconsistent.
+      //
+      // Examples:
+      //   Z: 18, A: 40          -> 40Ar  (nuclear PDG code 1000180400)
+      //   pdg: 1000260560       -> 56Fe
+      //   pdg: 1000060120       -> 12C
+      //
+      // Special cases: neutron (Z=0, A=1, pdg=2112) and proton
+      //                (Z=1, A=1, pdg=2212) are also valid.
+      //
+      Z: 18,
+      A: 40,
+      // pdg: 1000180400,  // equivalent to Z=18, A=40
 
-    // PROCESS TYPE (optional)
-    //
-    // An integer code representing the type of nuclear reaction that
-    // populates the excited state. This determines the ejectile PDG
-    // code and the change in proton number (Delta Z = projectile charge
-    // - ejectile charge). The residue is defined as the daughter nucleus
-    // after the ejectile has been emitted.
-    //
-    // Valid process types (only nuclear reaction types are allowed):
-    //
-    //   0  = NeutrinoCC_Discrete       1  = AntiNeutrinoCC_Discrete
-    //   2  = NC_Discrete
-    //   4  = NeutrinoCC_Continuum      5  = AntiNeutrinoCC_Continuum
-    //   6  = NC_Continuum (default)
-    //
-    // The elastic scattering type (3 = NuElectronElastic) is not
-    // allowed for the decay command.
-    //
-    // For CC reactions, the ejectile is a charged lepton (e-, mu-, or
-    // tau-, depending on the projectile) and the residue has one more
-    // proton than the target. For NC reactions, the ejectile is a
-    // neutrino and the residue has the same Z as the target.
-    //
-    // proc_type: 6,
+      // EXCITATION ENERGY (required; exactly one scheme)
+      //
+      // There are two ways to specify the excitation energy of the
+      // initial nuclear state:
+      //
+      //   1. Fixed value: Use the "Ex" key with a single non-negative
+      //      excitation energy in MeV.
+      //
+      //   2. Uniform sampling: Use both "Ex_min" and "Ex_max" keys.
+      //      For each event the excitation energy is sampled uniformly
+      //      from the interval [Ex_min, Ex_max] in MeV.
+      //
+      // When the excitation energy is below the unbound threshold for
+      // the nuclide AND discrete level data are available in MARLEY's
+      // structure database, the initial state is snapped to the nearest
+      // tabulated discrete level. The level's spin and parity then
+      // override the user-specified "twoJ" and "parity" values for that
+      // event. A one-time warning is printed whenever a snap occurs.
+      //
+      // Example: fixed excitation energy of 5.0 MeV
+      Ex: 5.0,
+      //
+      // Alternative: uniform sampling from 4.0 to 6.0 MeV
+      // Ex_min: 4.0, Ex_max: 6.0,
 
-    // EXCITATION ENERGY (conditionally required)
-    //
-    // There are two ways to specify the excitation energy of the
-    // initial nuclear state:
-    //
-    //   1. Fixed value: Use the "Ex" key with a single non-negative
-    //      excitation energy in MeV.
-    //
-    //   2. Uniform sampling: Use both "Ex_min" and "Ex_max" keys.
-    //      For each event, the excitation energy is sampled uniformly
-    //      from the interval [Ex_min, Ex_max].
-    //
-    // Example: fixed excitation energy of 5.0 MeV
-    Ex: 5.0,
-    //
-    // Alternative: uniform sampling from 4.0 to 6.0 MeV
-    // Ex_min: 4.0, Ex_max: 6.0,
+      // NUCLEAR SPIN (required)
+      //
+      // The "twoJ" key must be a JSON array of one or more nonnegative
+      // integers representing two times the total nuclear spin (so that
+      // half-integer spins can be represented as integers). If multiple
+      // values are given, the spin is sampled uniformly from the array
+      // for each event.
+      //
+      // Note: when the initial state is snapped to a discrete level, the
+      // level's spin overrides the sampled value (see EXCITATION ENERGY
+      // above).
+      //
+      // Example: a single spin-1 state (2J = 2)
+      twoJ: [2],
+      //
+      // Example: uniform sampling of spin-0, spin-2, or spin-4
+      // twoJ: [0, 4, 8],
 
-    // NUCLEAR SPIN (required)
-    //
-    // The "twoJ" key must be a JSON array of one or more nonnegative
-    // integers representing two times the total nuclear spin (so that
-    // half-integer spins can be represented as integers). If multiple
-    // values are given, the spin is sampled uniformly from the array for
-    // each event.
-    //
-    // Example: a single spin-1 state
-    twoJ: [2],
-    //
-    // Example: uniform sampling of spin-0, spin-2, or spin-4
-    // twoJ: [0, 4, 8],
+      // INTRINSIC PARITY (optional)
+      //
+      // Parity of the initial nuclear state. Allowed values:
+      //
+      //   "+"      Positive parity (default)
+      //   "-"      Negative parity
+      //   "random" Randomly sample "+" or "-" with equal probability
+      //            for each event
+      //
+      // Note: when the initial state is snapped to a discrete level, the
+      // level's parity overrides this value (see EXCITATION ENERGY above).
+      //
+      // parity: "+",
 
-    // INTRINSIC PARITY (optional)
-    //
-    // Parity of the initial nuclear state. Allowed values:
-    //
-    //   "+"      Positive parity (default)
-    //   "-"      Negative parity
-    //   "random" Randomly sample "+" or "-" with equal probability
-    //            for each event
-    //
-    // parity: "+",
+      // NET IONIC CHARGE (optional)
+      //
+      // Net ionic charge of the nucleus in units of the proton charge
+      // (i.e., number of protons minus number of electrons). A value of
+      // 0 corresponds to a neutral atom and is the default. A bare
+      // (fully stripped) nucleus has net_charge = Z. A singly ionised
+      // atom has net_charge = 1, and so on.
+      //
+      // The net charge is used to compute the nuclear mass from the
+      // tabulated atomic mass: nuclear mass = atomic mass
+      //   - net_charge * electron mass.
+      //
+      // Most users will want to leave this at the default.
+      //
+      // net_charge: 0,
+
+    }, // end nucleus
 
     // OUTPUT CONFIGURATION (optional)
     //
@@ -164,7 +163,8 @@
     // error will be reported if it is requested).
     output: [ { file: "decay_events.hepmc3", format: "ascii",
       mode: "overwrite" } ],
-  },
+
+  }, // end decay
 
   // ADVANCED OPTIONS *********************************************************
   //
@@ -172,8 +172,6 @@
   // are accepted by the decay command but have no effect on the stand-alone
   // de-excitation simulation: direction, target, form_factors, generate,
   // coulomb_mode, do_deexcitations, sub_continuum_mode, energy_pdf_max.
-  // The status_update_interval key (available within the "generate" object
-  // for "marley generate") is likewise not supported by "marley decay".
   //
   // The following top-level keys DO affect the de-excitation cascade:
   //

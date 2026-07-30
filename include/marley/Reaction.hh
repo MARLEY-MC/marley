@@ -64,6 +64,7 @@ namespace marley {
         NeutrinoCC_Continuum = 4,     ///< Nuclear matrix elements contain @f$ t_{-} @f$ for a transition to a continuum of nuclear levels
         AntiNeutrinoCC_Continuum = 5, ///< Nuclear matrix elements contain @f$ t_{+} @f$ for a transition to a continuum of nuclear levels
         NC_Continuum = 6,             ///< Nuclear matrix elements contain @f$ t_{3} @f$ for a transition to a continuum of nuclear levels
+        StandaloneDecay = 7, ///< Standalone nuclear de-excitation with no simulated primary reaction (used by "marley decay")
       };
 
       /// @brief Enumerated type describing the file format for reaction data

@@ -496,6 +496,7 @@ namespace marley_utils {
   // Lookup table for particle symbols (keys are PDG particle IDs,
   // values are symbols).
   const std::unordered_map<int, std::string> particle_symbols = {
+    {          0, "∅" }, // dummy/absent particle (non-standard PDG code 0)
     {         12, "νe" },
     {         14, "νμ" },
     {         16, "ντ" },
@@ -520,15 +521,16 @@ namespace marley_utils {
   // Lookup table for particle electric charges (keys are PDG particle IDs,
   // values are charges expressed as integer multiples of the proton charge).
   const std::unordered_map<int, int> particle_electric_charges = {
-    { 11,  -1 },
-    { 12,   0 },
-    { 13,  -1 },
-    { 14,   0 },
-    { 15,  -1 },
-    { 16,   0 },
-    { 22,   0 },
-    { 2112, 0 },
-    { 2212, 1 }
+    {    0,  0 }, // dummy/absent particle (non-standard PDG code 0)
+    {   11, -1 },
+    {   12,  0 },
+    {   13, -1 },
+    {   14,  0 },
+    {   15, -1 },
+    {   16,  0 },
+    {   22,  0 },
+    { 2112,  0 },
+    { 2212,  1 }
   };
 
   // Looks up the electric charge of a particle based on its PDG particle ID
