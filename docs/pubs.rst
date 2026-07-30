@@ -2,14 +2,20 @@
 MARLEY Bibliography
 ===================
 
-This bibliography attempts to collect a full list of (1) references discussing
-MARLEY itself and (2) publications that use MARLEY calculations in some way.
-Examples of the latter category include
+This bibliography attempts to collect a full list of publications in three
+categories:
 
-* New results (e.g., experimental sensitivity estimates) obtained using MARLEY
-  simulations
+1. References discussing MARLEY itself
 
-* Comparisons of MARLEY to competing theoretical models
+2. Publications that use MARLEY in some way, e.g.,
+
+   * New results (e.g., experimental sensitivity estimates) obtained using
+     MARLEY simulations
+
+   * Comparisons of MARLEY to competing theoretical models
+
+3. Publications that use MARLEY predictions or cross-section calculations as
+   a reference point without running the code directly
 
 User contributions to this list are strongly encouraged. If you have written a
 publication, thesis, etc. in which MARLEY is used, please `send me
@@ -28,9 +34,11 @@ Publications using MARLEY
 
 .. bibliography:: external_pubs.bib
    :all:
+   :labelprefix: B
 
 References to the MARLEY model
 ------------------------------
 
 .. bibliography:: external_pubs_refs.bib
    :all:
+   :labelprefix: C
