@@ -36,28 +36,42 @@ namespace marley {
   class Generator;
   class JSON;
 
-  /// @brief WeightCalculator that propagates experimental uncertainties
-  /// on allowed nuclear matrix elements using a dimidiated (bifurcated)
-  /// Gaussian probability density function
+  /// @brief WeightCalculator that varies nuclear matrix element strengths
+  /// according to their experimental uncertainties. Two modes are
+  /// available: "multisim" (dimidiated Gaussian random draws) and
+  /// "sigma_shift" (deterministic systematic shifts).
   class StrengthVariationWeightCalculator : public WeightCalculator {
 
     public:
 
+      /// @brief Supported variation modes
+      enum class VariationMode { multisim, sigma_shift };
+
+      /// @brief Static factory: validates JSON configuration and creates
+      /// all variation instances. Called by the Weighter for each
+      /// strength_variation entry in the weights config array.
       /// @param config JSON configuration for this calculator
-      /// @param instance_index Zero-based index of this variation instance
-      /// @param rng Shared random number generator (seeded externally,
-      /// shared by all instances from the same config entry)
-      /// @param resolved_reaction_file Resolved path to the .react file
-      /// for the reaction whose matrix elements should be varied
-      StrengthVariationWeightCalculator( const marley::JSON& config,
-        long instance_index,
-        std::shared_ptr< std::mt19937_64 > rng,
-        const std::string& resolved_reaction_file );
+      /// @return Vector of shared pointers to the created instances
+      static std::vector< std::shared_ptr<
+        StrengthVariationWeightCalculator > >
+        create_instances( const marley::JSON& config );
 
       virtual ~StrengthVariationWeightCalculator() = default;
 
       virtual double weight( HepMC3::GenEvent& event,
         marley::Generator& gen ) const override;
+
+    private:
+
+      /// @brief Constructor for multisim mode
+      StrengthVariationWeightCalculator( const std::string& name,
+        std::shared_ptr< std::mt19937_64 > rng,
+        const std::string& resolved_reaction_file );
+
+      /// @brief Constructor for sigma_shift mode
+      StrengthVariationWeightCalculator( const std::string& name,
+        double sigma_factor,
+        const std::string& resolved_reaction_file );
 
     protected:
 
@@ -70,8 +84,11 @@ namespace marley {
       /// @brief Resolved path of the reaction input file of interest
       std::string resolved_reaction_file_;
 
-      /// @brief Standard normal distribution for dimidiated Gaussian
-      mutable std::normal_distribution< double > normal_dist_;
+      /// @brief Variation mode for this instance
+      VariationMode mode_;
+
+      /// @brief Signed sigma factor for systematic shifts (sigma_shift mode)
+      double sigma_factor_ = 0.;
 
       /// @brief Whether lazy initialization has been completed
       mutable bool initialized_ = false;

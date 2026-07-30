@@ -14,12 +14,14 @@
 // Please respect the MCnet academic usage guidelines. See GUIDELINES
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
+// Standard library includes
+#include <unordered_set>
+
 // HepMC3 includes
 #include "HepMC3/GenEvent.h"
 
 // MARLEY includes
 #include "marley/Error.hh"
-#include "marley/FileManager.hh"
 #include "marley/Generator.hh"
 #include "marley/JSON.hh"
 #include "marley/OMPWeightCalculator.hh"
@@ -37,6 +39,9 @@ marley::Weighter::Weighter( const marley::JSON& config ) {
   // weights, and add it to the vector of owned calculators
   auto cv_wgt = make_cv_weight_calc();
   calc_vec_.push_back( cv_wgt );
+
+  // Track all used weight names to detect duplicates
+  std::unordered_set< std::string > used_names{ CV_WEIGHT_NAME };
 
   // Now parse the JSON configuration to instantiate any other requested
   // weight calculators
@@ -71,64 +76,19 @@ marley::Weighter::Weighter( const marley::JSON& config ) {
     }
     else if ( type == "strength_variation" ) {
 
-      // Read and validate the number of variations
-      if ( !obj.has_key( "num_variations" ) ) {
-        throw marley::Error( "Missing \"num_variations\" key in a"
-          " strength_variation weight calculator JSON configuration" );
-      }
-      const auto& nv = obj.at( "num_variations" );
-      if ( !nv.is_integer() ) {
-        throw marley::Error( "The \"num_variations\" value must be a"
-          " positive integer" );
-      }
-      long num_instances = nv.to_long();
-      if ( num_instances <= 0 ) {
-        throw marley::Error( "The \"num_variations\" value must be a"
-          " positive integer" );
-      }
+      // Delegate all config parsing to the static factory
+      auto instances = marley::StrengthVariationWeightCalculator
+        ::create_instances( obj );
 
-      // Read the reaction file and resolve it via FileManager
-      if ( !obj.has_key( "reaction_file" ) ) {
-        throw marley::Error( "Missing \"reaction_file\" key in a"
-          " strength_variation weight calculator JSON configuration" );
-      }
-      std::string reaction_file = obj.at( "reaction_file" ).to_string();
-      std::string resolved_file = marley::FileManager::Instance()
-        .find_file( reaction_file );
-      if ( resolved_file.empty() ) {
-        throw marley::Error( "Could not find reaction data file \""
-          + reaction_file + "\" requested by a strength_variation"
-          " weight calculator" );
-      }
-
-      // Read the optional seed (default 0)
-      long seed = 0;
-      if ( obj.has_key( "seed" ) ) {
-        seed = obj.at( "seed" ).to_long();
-      }
-
-      // Create one shared RNG for all instances
-      auto rng = std::make_shared< std::mt19937_64 >(
-        static_cast< std::mt19937_64::result_type >( seed ) );
-
-      // Create num_instances weight calculators, each sharing the RNG
-      for ( long idx = 0; idx < num_instances; ++idx ) {
-        auto svc = std::make_shared<
-          marley::StrengthVariationWeightCalculator >(
-            obj, idx, rng, resolved_file );
-
-        // Double-check that we don't have a requested weight calculator
-        // with the same name as the required central-value one
-        if ( svc->name() == CV_WEIGHT_NAME ) {
-          throw marley::Error( "The weight calculator name \""
-            + CV_WEIGHT_NAME + "\" is reserved for internal MARLEY use" );
+      for ( auto& svc : instances ) {
+        if ( !used_names.insert( svc->name() ).second ) {
+          throw marley::Error( "Duplicate weight calculator name \""
+            + svc->name() + "\"" );
         }
-
         calc_vec_.push_back( svc );
       }
 
-      // Skip the generic add at the bottom of the loop since we've already
-      // added all instances
+      // Skip the generic add at the bottom of the loop
       continue;
     }
     // TODO: add more weight calculator types here
@@ -137,11 +97,10 @@ marley::Weighter::Weighter( const marley::JSON& config ) {
         " specification \"" + type + '\"' );
     }
 
-    // Double-check that we don't have a requested weight calculator with
-    // the same name as the required central-value one
-    if ( wc->name() == CV_WEIGHT_NAME ) {
-      throw marley::Error( "The weight calculator name \"" + CV_WEIGHT_NAME
-        + "\" is reserved for internal MARLEY use" );
+    // Check for duplicate weight names
+    if ( !used_names.insert( wc->name() ).second ) {
+      throw marley::Error( "Duplicate weight calculator name \""
+        + wc->name() + "\"" );
     }
 
     // Add the completed WeightCalculator object to the owned vector
