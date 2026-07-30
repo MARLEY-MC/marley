@@ -231,6 +231,13 @@ bool marley::CommandHandler::cmd_decay( std::deque< std::string >& args ) {
     output_files.push_back( marley::OutputFile::make_OutputFile(out_config) );
   }
 
+  for ( const auto& file : output_files ) {
+    if ( file->mode_is_resume() ) {
+      throw marley::Error( "The \"resume\" output mode is not supported"
+        " by the \"marley decay\" command" );
+    }
+  }
+
   for ( long evnum = 0; evnum < num_events; ++evnum ) {
 
     const auto& mt = marley::MassTable::Instance();

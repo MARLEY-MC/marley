@@ -11,27 +11,27 @@
 // excitation energy, spin, and parity) and simulates the subsequent
 // de-excitation cascade using MARLEY's nuclear de-excitation models.
 //
-// This is useful for studying the de-excitation behavior of specific
-// nuclear levels in isolation, for generating de-excitation-only event
-// samples, or for producing input to detector simulation frameworks.
-//
 // CONFIGURATION STRUCTURE
 //
-// A decay config file uses the same top-level format as the generate
-// command and is parsed by the same JSONConfig class. The "reactions"
-// key must be present but may be set to null (unlike for generate,
-// where it must contain at least one reaction file). The "source" key
-// may be omitted or set to null. The "generate" key is
-// also ignored. Instead, a separate "decay" top-level object
-// controls the run parameters for the decay command.
+// A "marley decay" configuration file uses the same JSON-like format as
+// the "marley generate" command (see examples/config/annotated.js for a
+// full description of that format and its syntax rules). The "reactions"
+// key must be present but may be set to null — unlike "marley generate",
+// where it must contain at least one reaction input file name. The
+// "source" key may be omitted entirely or set to null, and the "generate"
+// key is ignored. A separate "decay" top-level object (described below)
+// controls the run parameters specific to this command.
 //
 { // An opening curly brace begins the configuration file content
 
   // RANDOM NUMBER SEED (optional)
   //
-  // The "seed" key provides a 64-bit unsigned integer that will be used
-  // to seed MARLEY's random number generator. If omitted, the system
-  // time since the Unix epoch is used.
+  // The "seed" key provides a nonnegative 63-bit integer (between 0
+  // and 2^63 - 1, inclusive) that will be used to seed MARLEY's random
+  // number generator.
+  //
+  // If this key is omitted, MARLEY will use the system time since the
+  // Unix epoch as its random number seed.
   seed: 123456,
 
   // REACTION INPUT FILES (required; may be null for decay)
@@ -47,7 +47,7 @@
   //
   // The "source" key may be omitted entirely or set to null. The decay
   // command does not rely on a neutrino source because it constructs
-  // each excited nuclear state directly from the decays parameters below.
+  // each excited nuclear state directly from the decay parameters below.
   source: null,
 
   // DECAY-SPECIFIC CONFIGURATION (required)
@@ -60,18 +60,23 @@
     // EVENT COUNT (optional)
     //
     // The number of de-excitation events to generate before terminating.
-    // Must be a positive integer. Default: 1000
+    // The JSON parser expects this entry to be an integer literal, so
+    // scientific notation is not currently allowed. If this key is
+    // omitted, a value of 1000 will be assumed.
     events: 10000,
 
     // PROJECTILE PDG CODE (optional)
     //
-    // PDG code of the projectile that would cause the nuclear reaction
-    // in a full scattering simulation. This is used only to determine
-    // the ejectile PDG code via Reaction::get_ejectile_pdg(). The
-    // resulting ejectile is stored in the HepMC3 event record for
-    // consistency with the data format used by "marley generate".
+    // PDG code of the notional projectile for this decay. Together with
+    // the "proc_type" key (see below), this determines the PDG code of
+    // the ejectile particle that is written into the output event record,
+    // ensuring consistency with the HepMC3 event format produced by
+    // "marley generate". For example, a projectile of 12 (νₑ) with a
+    // CC process type yields an ejectile of 11 (e⁻), whereas a NC
+    // process type yields an ejectile of 12 (νₑ). The projectile itself
+    // is given zero momentum in the event record.
     //
-    // The default value is 12 (electron neutrino, nu_e).
+    // The default value is 12 (electron neutrino, νₑ).
     //
     // projectile: 12,
 
@@ -127,10 +132,11 @@
 
     // NUCLEAR SPIN (required)
     //
-    // The "twoJ" key must be a JSON array of one or more positive
+    // The "twoJ" key must be a JSON array of one or more nonnegative
     // integers representing two times the total nuclear spin (so that
-    // half-integer spins are represented). If multiple values are given,
-    // the spin is sampled uniformly from the array for each event.
+    // half-integer spins can be represented as integers). If multiple
+    // values are given, the spin is sampled uniformly from the array for
+    // each event.
     //
     // Example: a single spin-1 state
     twoJ: [2],
@@ -151,66 +157,54 @@
 
     // OUTPUT CONFIGURATION (optional)
     //
-    // The output array follows the same format as the
-    // generate.output array used by "marley generate".
-    // Each entry is a JSON object with the following keys:
-    //
-    //   file    (string, optional)  Output file name.
-    //                               Default: "decay_events.hepmc3"
-    //
-    //   format  (string, optional)  Output format. Valid values are
-    //                               "ascii" and "root".
-    //                               Default: "ascii"
-    //
-    //   mode    (string, optional)  File I/O mode. Valid values are
-    //                               "overwrite" (default) and "resume".
-    //                               Note: the decay command does not
-    //                               implement resume/restore logic, so
-    //                               the "resume" mode should not be used.
-    //
-    //   force   (bool,   optional)  Overwrite without prompting.
-    //                               Default: false
-    //
+    // The "output" JSON array uses the same format as the
+    // "generate.output" array described in examples/config/annotated.js,
+    // with two differences: the default output file name is
+    // "decay_events.hepmc3", and "resume" mode is not supported (an
+    // error will be reported if it is requested).
     output: [ { file: "decay_events.hepmc3", format: "ascii",
       mode: "overwrite" } ],
   },
 
-  // Note on shared parameters:
+  // ADVANCED OPTIONS *********************************************************
   //
-  // The following top-level keys accepted by JSONConfig are also
-  // accepted by the decay command but have no effect on the
-  // stand-alone de-excitation simulation: direction, target,
-  // form_factors, generate, coulomb_mode,
-  // do_deexcitations, sub_continuum_mode, energy_pdf_max.
+  // The following top-level keys from the "marley generate" configuration
+  // are accepted by the decay command but have no effect on the stand-alone
+  // de-excitation simulation: direction, target, form_factors, generate,
+  // coulomb_mode, do_deexcitations, sub_continuum_mode, energy_pdf_max.
+  // The status_update_interval key (available within the "generate" object
+  // for "marley generate") is likewise not supported by "marley decay".
   //
-  // Parameters that DO affect the de-excitation cascade:
+  // The following top-level keys DO affect the de-excitation cascade:
   //
-  //   opt_mod  (object, optional)
-  //     Custom nuclear optical model parameters used in the
-  //     Hauser-Feshbach decay width calculation. Alternative
-  //     parameter sets will change the computed decay widths and
-  //     branching ratios. See the "opt_mod" section of
-  //     examples/config/annotated.js for details.
+  // OPTICAL MODEL PARAMETERS (optional)
   //
-  //   weights  (array, optional)
-  //     Configures additional event weight calculators for the
-  //     de-excitation simulation. These are the same weight
-  //     calculators described in the "weights" section of
-  //     examples/config/annotated.js. The resulting weights will
-  //     be computed for each event and written to the output file,
-  //     making them available for later use (e.g., by the
-  //     "marley reweight" command).
+  // The "opt_mod" key provides a custom configuration of nuclear optical
+  // model parameters used in the Hauser-Feshbach decay width calculation.
+  // Changing the parameter set alters the computed decay widths and
+  // branching ratios. The format and available parameter sets are described
+  // in the OPTICAL MODEL PARAMETERS section of examples/config/annotated.js
+  // and in the full "opt_mod" documentation in
+  // examples/config/reweight_example.js.
   //
-  //   fragment_lmax  (int, optional, default 2)
-  //     Maximum orbital angular momentum quantum number to consider
-  //     when computing fragment (neutron, proton, alpha, etc.)
-  //     decay widths in the continuum. Higher values increase
-  //     computation time but may improve accuracy for high-energy
-  //     transitions.
+  // opt_mod: #include:"optical_model_kduq_federal_cv.js"
   //
-  //   gamma_lmax  (int, optional, default 2, minimum 1)
-  //     Maximum multipolarity to consider for gamma-ray decay
-  //     widths. Higher values include higher-order electromagnetic
-  //     transitions (E3, M3, etc.) at increased computational cost.
+  // EVENT WEIGHT CALCULATORS (optional)
+  //
+  // The "weights" JSON array configures one or more weight calculators for the
+  // de-excitation simulation, using the same types and format described in the
+  // EVENT WEIGHT CALCULATORS section of examples/config/annotated.js. The
+  // resulting weights are computed for each event and included in the output.
+  //
+  // ANGULAR MOMENTUM CUTOFFS (optional)
+  //
+  // The "fragment_lmax" key sets the maximum orbital angular momentum
+  // quantum number to consider when computing fragment decay widths in the
+  // continuum (default: 5). The "gamma_lmax" key sets the maximum
+  // multipolarity for continuum gamma-ray decay widths (default: 5). Both
+  // values are nonnegative integers; gamma_lmax must be >= 1.
+  //
+  // fragment_lmax: 5,
+  // gamma_lmax: 5,
 
 } // A closing curly brace should appear at the end of the file
