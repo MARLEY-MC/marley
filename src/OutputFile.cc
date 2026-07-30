@@ -21,6 +21,7 @@
 #include "marley/Logger.hh"
 #include "marley/OutputFile.hh"
 #include "marley/OutputFileAscii.hh"
+#include "marley/marley_utils.hh"
 
 #ifdef USE_ROOT
   #include "marley/OutputFileRoot.hh"
@@ -51,6 +52,23 @@ std::unique_ptr< marley::Generator > marley::OutputFile::restore_generator(
   marley::JSONConfig jc( config );
   auto gen = std::make_unique< marley::Generator >( jc.create_generator() );
   return gen;
+}
+
+void marley::OutputFile::prompt_before_overwrite() {
+  if ( mode_ == Mode::OVERWRITE && check_if_file_exists( name_ )
+    && !force_ )
+  {
+    bool overwrite = marley_utils::prompt_yes_no(
+      "Overwrite file " + name_ );
+    if ( !overwrite ) {
+      throw marley::Error( "The output file \"" + name_
+        + "\" already exists. To overwrite it automatically,"
+        " add \"force\": true to this output file's"
+        " configuration entry. To append new events to the"
+        " existing file, use \"mode\": \"resume\" instead"
+        " of \"mode\": \"overwrite\"." );
+    }
+  }
 }
 
 // Factory method that constructs an appropriate derived object given the

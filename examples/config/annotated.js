@@ -475,26 +475,43 @@
     //           user via ctrl+C) that was saved to the output file and
     //           continue from where it left off.
     //
-    //   - force: Boolean value used only for the "overwrite" mode. If
-    //            it is true, the marley executable will not prompt the
-    //            user before overwriting existing data. If this key
-    //            is omitted, a value of false is assumed.
+    //           At most one output file may use the "resume" mode. If
+    //           multiple output file entries specify mode: "resume",
+    //           then the marley executable will report an error.
+    //
+    //   - force: Boolean value used only for the "overwrite" mode.
+    //            If the output file already exists and force is not
+    //            set to true, the marley executable will prompt the
+    //            user before overwriting it. If the user declines,
+    //            execution stops with an error message that suggests
+    //            how to adjust the configuration (set "force" to
+    //            true to overwrite automatically, or use
+    //            "mode": "resume" to append to the existing file).
+    //            If this key is omitted, a value of false is assumed.
     //
     // The allowed output file formats are
     //
-    //   - "ascii": Events are stored in the standard HepMC3 text format.
-    //              This format uses the HepMC3::WriterAscii class for output
-    //              and the HepMC3::ReaderAscii class for input. It may be
-    //              read by any HepMC3-compatible application.
+    //   - "ascii": Events are stored in the standard HepMC3 text format
+    //              with full floating-point precision. This format uses the
+    //              HepMC3::WriterAscii class for output and the
+    //              HepMC3::ReaderAscii class for input. The output is
+    //              compliant with the NuHepMC v1.0.0 standard for neutrino
+    //              event generators, making it readable by any
+    //              HepMC3-compatible application.
     //
-    //   - "root": Events are stored in a compressed ROOT TTree using the
-    //             HepMC3 GenEventData structure. This format is only
-    //             available if MARLEY has been built with ROOT support.
+    //   - "root": Events are stored in a compressed ROOT TTree named
+    //             "MARLEY_event_tree" using the HepMC3 GenEventData POD
+    //             structure. Because GenEventData is a plain-old-data struct
+    //             with an associated ROOT dictionary distributed with HepMC3,
+    //             the output file can be read without loading MARLEY-specific
+    //             shared libraries. This format is only available if MARLEY
+    //             has been built with ROOT support.
     //
   // If this key is omitted, then the following configuration
   // is assumed:
   //
-  // output: [ { file: "events.hepmc3", format: "ascii", mode: "overwrite" } ]
+  // output: [ { file: "events.hepmc3", format: "ascii", mode: "overwrite",
+  //             force: false } ]
   //
   output: [ { file: "events.hepmc3", format: "ascii", mode: "overwrite" } ],
   },

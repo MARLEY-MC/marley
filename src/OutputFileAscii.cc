@@ -76,23 +76,14 @@ marley::OutputFileAscii::OutputFileAscii( const marley::JSON& output_config )
 
 void marley::OutputFileAscii::open() {
 
-  bool file_exists = check_if_file_exists( name_ );
+  this->prompt_before_overwrite();
 
   auto open_mode_flag = std::ios::in | std::ios::out | std::ios::trunc;
 
-  if ( mode_ == Mode::OVERWRITE && file_exists && !force_ ) {
-    bool overwrite = marley_utils::prompt_yes_no( "Overwrite file " + name_ );
-    if ( !overwrite ) {
-      MARLEY_LOG( INFO, "io" ) << "Cancelling overwrite of output file \""
-        << name_ << '\"';
-      open_mode_flag = std::ios::in | std::ios::out;
-      mode_ = Mode::RESUME;
-    }
-  }
-
   if ( mode_ == Mode::RESUME ) {
-    if ( !file_exists ) throw marley::Error( "Cannot resume run. Could"
-      " not open the file \"" + name_ + '\"' );
+    if ( !check_if_file_exists( name_ ) )
+      throw marley::Error( "Cannot resume run. Could"
+        " not open the file \"" + name_ + '\"' );
     else open_mode_flag = std::ios::in | std::ios::out;
   }
   else if ( mode_ != Mode::OVERWRITE ) {

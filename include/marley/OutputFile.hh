@@ -83,6 +83,12 @@ namespace marley {
         return test_stream.good();
       }
 
+      /// @brief If mode_ is OVERWRITE and the output file already exists
+      /// and force_ is false, prompt the user before overwriting. If the
+      /// user declines, throw a marley::Error with a diagnostic message
+      /// suggesting the "force" and "mode" configuration keys.
+      void prompt_before_overwrite();
+
       /// @brief Helper function for resume() that instantiates a
       /// marley::Generator object given the previous JSON configuration object
       std::unique_ptr< marley::Generator > restore_generator(

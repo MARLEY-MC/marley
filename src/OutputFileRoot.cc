@@ -43,6 +43,12 @@ marley::OutputFileRoot::~OutputFileRoot() {
 
 void marley::OutputFileRoot::open() {
 
+  this->prompt_before_overwrite();
+
+  if ( mode_ == Mode::RESUME && !check_if_file_exists( name_ ) )
+    throw marley::Error( "Cannot resume run. Could"
+      " not open the file \"" + name_ + '\"' );
+
   std::string open_mode_str( "update" );
   if ( mode_ == Mode::OVERWRITE ) open_mode_str = "recreate";
 
