@@ -1023,7 +1023,7 @@ void marley::JSONConfig::prepare_weights( marley::Generator& gen ) const {
   }
 
   // Initialize the Weighter object owned by the generator
-  gen.weighter_ = std::make_shared< marley::Weighter >( wgt_config );
+  gen.weighter_ = std::make_shared< marley::Weighter >( wgt_config, gen );
 
 }
 

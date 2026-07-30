@@ -33,7 +33,8 @@
 // standard
 const std::string marley::Weighter::CV_WEIGHT_NAME = "CV";
 
-marley::Weighter::Weighter( const marley::JSON& config ) {
+marley::Weighter::Weighter( const marley::JSON& config,
+  marley::Generator& gen ) {
 
   // Always create a trivial weight calculator to handle the central-value
   // weights, and add it to the vector of owned calculators
@@ -78,7 +79,7 @@ marley::Weighter::Weighter( const marley::JSON& config ) {
 
       // Delegate all config parsing to the static factory
       auto instances = marley::StrengthVariationWeightCalculator
-        ::create_instances( obj );
+        ::create_instances( obj, gen );
 
       for ( auto& svc : instances ) {
         if ( !used_names.insert( svc->name() ).second ) {

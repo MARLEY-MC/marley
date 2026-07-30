@@ -33,7 +33,8 @@ namespace marley {
 
     public:
 
-      Weighter( const marley::JSON& config );
+      Weighter( const marley::JSON& config,
+        marley::Generator& gen );
 
       inline virtual ~Weighter() = default;
 

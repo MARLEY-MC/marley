@@ -423,7 +423,7 @@
   //
    //   - "strength_variation": Varies nuclear matrix element strengths
    //                            according to their experimental
-   //                            uncertainties. Two modes are available:
+   //                            uncertainties. Three modes are available:
    //
    //     "multisim" (default): Uses a dimidiated (bifurcated) Gaussian
    //                            probability density function to draw
@@ -450,7 +450,22 @@
    //                            sigma_factor (scalar or array of positive
    //                            numbers)
    //                            Optional keys: mode
-  //
+   //
+   //     "unisim":            Applies a deterministic +k or -k sigma shift
+   //                            to one individual matrix element at a time,
+   //                            leaving all others at their nominal values.
+   //                            Intended for univariate sensitivity studies
+   //                            to identify which transitions drive the
+   //                            overall uncertainty. Two weight calculators
+   //                            are created per sigma_factor value per
+   //                            matrix element: "<name>-me<m>_up@<k>" and
+   //                            "<name>-me<m>_down@<k>", where <m> is the
+   //                            zero-based matrix element index.
+   //                            Required keys: type, name, reaction_file,
+   //                            sigma_factor (scalar or array of positive
+   //                            numbers)
+   //                            Optional keys: mode
+   //
    // weights: [
    //   { type: "trivial", name: "MyWeight" },
    //   { type: "optical_model", name: "OMP", opt_mod: { ... } },
@@ -463,6 +478,12 @@
    //   // Sigma_shift mode: deterministic systematic shifts
    //   { type: "strength_variation", name: "SysShift",
    //     mode: "sigma_shift",
+   //     sigma_factor: [0.5, 1.0, 2.0],
+   //     reaction_file: "my_reaction.react" },
+   //
+   //   // Unisim mode: one-at-a-time systematic shifts
+   //   { type: "strength_variation", name: "UniShift",
+   //     mode: "unisim",
    //     sigma_factor: [0.5, 1.0, 2.0],
    //     reaction_file: "my_reaction.react" },
    // ],

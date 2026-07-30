@@ -106,12 +106,26 @@ marley::StrengthVariationWeightCalculator
 {}
 
 // -------------------------------------------------------------------
+// Unisim constructor
+// -------------------------------------------------------------------
+marley::StrengthVariationWeightCalculator
+  ::StrengthVariationWeightCalculator( const std::string& name,
+    double sigma_factor, size_t matrix_element_index,
+    const std::string& resolved_reaction_file )
+  : WeightCalculator( name ), rng_( nullptr ),
+  resolved_reaction_file_( resolved_reaction_file ),
+  mode_( VariationMode::unisim ),
+  sigma_factor_( sigma_factor ),
+  me_idx_( matrix_element_index )
+{}
+
+// -------------------------------------------------------------------
 // Static factory: create_instances
 // -------------------------------------------------------------------
 std::vector< std::shared_ptr<
   marley::StrengthVariationWeightCalculator > >
   marley::StrengthVariationWeightCalculator::create_instances(
-    const marley::JSON& config )
+    const marley::JSON& config, marley::Generator& gen )
 {
   // Resolve the reaction file
   if ( !config.has_key( "reaction_file" ) ) {
@@ -256,10 +270,108 @@ std::vector< std::shared_ptr<
             -k, resolved_reaction_file ) ) );
     }
   }
+  else if ( mode_str == "unisim" ) {
+
+    // Reject keys inappropriate for unisim
+    if ( config.has_key( "num_variations" ) ) {
+      throw marley::Error( "The \"num_variations\" key is not allowed"
+        " in unisim mode for strength_variation weight calculators" );
+    }
+    if ( config.has_key( "seed" ) ) {
+      throw marley::Error( "The \"seed\" key is not allowed"
+        " in unisim mode for strength_variation weight calculators" );
+    }
+
+    // Read and validate sigma_factor
+    if ( !config.has_key( "sigma_factor" ) ) {
+      throw marley::Error( "Missing \"sigma_factor\" key in a"
+        " strength_variation weight calculator JSON configuration"
+        " with unisim mode" );
+    }
+    const auto& sf = config.at( "sigma_factor" );
+
+    std::vector< double > factors;
+    if ( sf.is_array() ) {
+      for ( const auto& elem : sf.array_range() ) {
+        factors.push_back( elem.to_double_or_throw() );
+      }
+      if ( factors.empty() ) {
+        throw marley::Error( "The \"sigma_factor\" array must have"
+          " at least one element" );
+      }
+    }
+    else {
+      factors.push_back( sf.to_double_or_throw() );
+    }
+
+    // Reject duplicate sigma_factor values (exact equality)
+    {
+      std::set< double > seen;
+      for ( double f : factors ) {
+        if ( !seen.insert( f ).second ) {
+          throw marley::Error( "Duplicate sigma_factor value \""
+            + std::to_string( f ) + "\" in strength_variation"
+            " weight calculator configuration" );
+        }
+      }
+    }
+
+    // Find the matching DiscreteNuclearReaction from the Generator
+    const DiscreteNuclearReaction* dnr = nullptr;
+    for ( const auto& rptr : gen.get_reactions() ) {
+      if ( rptr->source_file() != resolved_reaction_file ) continue;
+      auto pt = rptr->process_type();
+      if ( pt != Reaction::ProcessType::NeutrinoCC_Discrete
+        && pt != Reaction::ProcessType::AntiNeutrinoCC_Discrete
+        && pt != Reaction::ProcessType::NC_Discrete )
+      {
+        continue;
+      }
+      dnr = dynamic_cast< const DiscreteNuclearReaction* >(
+        rptr.get() );
+      if ( !dnr ) throw marley::Error( "Reaction data file \""
+        + resolved_reaction_file + "\" was loaded as a discrete nuclear"
+        " reaction type but the corresponding Reaction object is not a"
+        " DiscreteNuclearReaction. This should not happen and likely"
+        " indicates a bug in MARLEY." );
+      break;
+    }
+    if ( !dnr ) throw marley::Error( "Could not find a discrete nuclear"
+      " reaction with the source file \"" + resolved_reaction_file
+      + "\" in the Generator." );
+
+    size_t M = dnr->matrix_elements().size();
+
+    // Generate shortest roundtrip labels for all factors
+    auto labels = shortest_roundtrip_labels( factors );
+
+    // Create two instances per factor per matrix element
+    for ( size_t i = 0; i < factors.size(); ++i ) {
+      double k = factors[ i ];
+      for ( size_t m = 0; m < M; ++m ) {
+        // +k "up" instance for this matrix element
+        instances.push_back( std::shared_ptr<
+          StrengthVariationWeightCalculator >(
+            new StrengthVariationWeightCalculator(
+              base_name + "-me" + std::to_string( m )
+                + "_up@" + labels[ i ],
+              +k, m, resolved_reaction_file ) ) );
+
+        // -k "down" instance for this matrix element
+        instances.push_back( std::shared_ptr<
+          StrengthVariationWeightCalculator >(
+            new StrengthVariationWeightCalculator(
+              base_name + "-me" + std::to_string( m )
+                + "_down@" + labels[ i ],
+              -k, m, resolved_reaction_file ) ) );
+      }
+    }
+  }
   else {
     throw marley::Error( "Unrecognized variation mode \""
       + mode_str + "\" for strength_variation weight calculator."
-      " Allowed values are \"multisim\" and \"sigma_shift\"" );
+      " Allowed values are \"multisim\", \"sigma_shift\","
+      " and \"unisim\"" );
   }
 
   return instances;
@@ -322,7 +434,7 @@ void marley::StrengthVariationWeightCalculator::ensure_initialized(
         varied_.push_back( varied );
       }
     }
-    else { // sigma_shift
+    else if ( mode_ == VariationMode::sigma_shift ) {
       for ( const auto& me : matrix_els ) {
         double nom = me.strength();
         double err_low = me.strength_err_low();
@@ -338,6 +450,21 @@ void marley::StrengthVariationWeightCalculator::ensure_initialized(
           if ( varied < 0. ) varied = 0.;
         }
         varied_.push_back( varied );
+      }
+    }
+    else { // unisim
+      for ( const auto& me : matrix_els ) {
+        varied_.push_back( me.strength() );
+      }
+      const auto& target_me = matrix_els[ me_idx_ ];
+      double nom = target_me.strength();
+      double err_low = target_me.strength_err_low();
+      double err_high = target_me.strength_err_high();
+      if ( err_low != 0. || err_high != 0. ) {
+        double sigma = ( sigma_factor_ >= 0. ) ? err_high : err_low;
+        double varied = nom + sigma_factor_ * sigma;
+        if ( varied < 0. ) varied = 0.;
+        varied_[ me_idx_ ] = varied;
       }
     }
 

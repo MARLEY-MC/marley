@@ -62,8 +62,6 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
     " \"weights\" key in marley reweight configuration file" );
 
   const auto& json_weights = rw_config.at( "weights" );
-  marley::Weighter weighter( json_weights );
-  weighter.set_use_cv_weight( false );
 
   std::string input_file_name( args.back() );
   marley::EventFileReader efr( input_file_name );
@@ -73,6 +71,22 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
 
   auto run_info = ev.run_info();
   const std::vector< std::string > wgt_names = run_info->weight_names();
+
+  // Reconstruct the original Generator from the saved configuration
+  auto prior_config_str = run_info->attribute< HepMC3::StringAttribute >(
+    "MARLEY.JSONconfig" );
+
+  if ( !prior_config_str ) {
+    throw marley::Error( "Failed to retrieve previous generator"
+      " configuration from the input file \"" + input_file_name + "\"" );
+  }
+
+  auto prior_json_config = marley::JSON::load( prior_config_str->value() );
+  marley::JSONConfig jc( prior_json_config );
+  auto gen = std::make_unique< marley::Generator >( jc.create_generator() );
+
+  marley::Weighter weighter( json_weights, *gen );
+  weighter.set_use_cv_weight( false );
 
   auto& calc_vec = weighter.get_weight_calculators();
   size_t num_new_weights = calc_vec.size();
@@ -89,18 +103,6 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
   }
 
   auto full_name_vec = weighter.get_weight_names();
-
-  auto prior_config_str = run_info->attribute< HepMC3::StringAttribute >(
-    "MARLEY.JSONconfig" );
-
-  if ( !prior_config_str ) {
-    throw marley::Error( "Failed to retrieve previous generator"
-      " configuration from the input file \"" + input_file_name + "\"" );
-  }
-
-  auto prior_json_config = marley::JSON::load( prior_config_str->value() );
-  marley::JSONConfig jc( prior_json_config );
-  auto gen = std::make_unique< marley::Generator >( jc.create_generator() );
 
   std::vector< std::shared_ptr<marley::OutputFile> > output_files;
 
