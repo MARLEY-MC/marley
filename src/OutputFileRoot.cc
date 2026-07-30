@@ -27,6 +27,7 @@
 // MARLEY includes
 #include "marley/Error.hh"
 #include "marley/Generator.hh"
+#include "marley/JSON.hh"
 #include "marley/JSONConfig.hh"
 #include "marley/OutputFileRoot.hh"
 
@@ -136,6 +137,12 @@ bool marley::OutputFileRoot::resume(
 
   // Restore the random number generator state of the generator
   gen->seed_using_state_string( state_str );
+
+  // If the file has reweight provenance, merge the accumulated weight
+  // calculator configurations into the Generator's Weighter before
+  // assigning the run info. This ensures new events have the correct
+  // number of weight slots to match the existing events in the file.
+  merge_reweight_provenance_weights( *run_info_, *gen );
 
   // Use the retrieved run information for making new events
   gen->set_run_info( run_info_ );

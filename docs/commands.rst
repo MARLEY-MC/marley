@@ -92,17 +92,15 @@ reweight
 
 Usage::
 
-  marley reweight CONFIG_FILE INPUT_FILE
+  marley reweight CONFIG_FILE INPUT_FILE...
 
 Reweight previously generated MARLEY events using weight-calculation settings
-from a configuration file. The input event file (in HepMC3 format) is read,
-and for each event a weight is computed and written to the output along with
-the original event data.
+from a configuration file. One or more input event files (in HepMC3 format) are
+read, and for each event weight(s) are computed and written to the output along
+with the original event data.
 
-The configuration file should contain a ``weights`` key specifying the
-weight calculator(s) to apply, along with any associated parameters.
-The most commonly used weight calculator applies systematic variations
-to tabulated nuclear matrix elements.
+The configuration file should contain a ``weights`` key specifying the weight
+calculator(s) to run, along with any associated parameters.
 
 Examples
 ~~~~~~~~

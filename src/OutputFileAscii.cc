@@ -29,6 +29,7 @@
 #include "marley/OutputFileAscii.hh"
 #include "marley/Error.hh"
 #include "marley/Generator.hh"
+#include "marley/JSON.hh"
 #include "marley/JSONConfig.hh"
 
 namespace {
@@ -181,6 +182,12 @@ bool marley::OutputFileAscii::resume( std::unique_ptr<marley::Generator>& gen,
 
   MARLEY_LOG( INFO, "io" ) << "The previous run was initialized using"
     << " the random number generator seed " << seed_str->value();
+
+  // If the file has reweight provenance, merge the accumulated weight
+  // calculator configurations into the Generator's Weighter before
+  // setting up run info. This ensures new events have the correct
+  // number of weight slots to match the existing events in the file.
+  merge_reweight_provenance_weights( *run_info, *gen );
 
   // Initialize the Generator's run info now so that it is available for
   // use below (it is normally initialized lazily inside create_event()).

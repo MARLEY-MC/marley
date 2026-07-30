@@ -49,7 +49,6 @@ namespace {
   {
     auto cleaned = std::make_shared<HepMC3::GenRunInfo>(*original);
     cleaned->remove_attribute("MARLEY.RNGseed");
-    cleaned->remove_attribute("MARLEY.JSONconfig");
     return cleaned;
   }
 

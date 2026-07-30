@@ -316,6 +316,10 @@ namespace marley {
       /// @brief Get a non-const reference to the owned Weighter object
       inline marley::Weighter& get_weighter() { return *weighter_; }
 
+      /// @brief Replace the owned Weighter object
+      inline void set_weighter(std::shared_ptr<marley::Weighter> w)
+        { weighter_ = w; }
+
       /// @brief Attach the current random number generator state to the input
       /// event as a string attribute
       void add_state_to_event( HepMC3::GenEvent& ev ) const;

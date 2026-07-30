@@ -14,13 +14,19 @@
 // Please respect the MCnet academic usage guidelines. See GUIDELINES
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
+// HepMC3 includes
+#include "HepMC3/Attribute.h"
+#include "HepMC3/GenRunInfo.h"
+
 // MARLEY includes
 #include "marley/Error.hh"
 #include "marley/Generator.hh"
+#include "marley/JSON.hh"
 #include "marley/JSONConfig.hh"
 #include "marley/Logger.hh"
 #include "marley/OutputFile.hh"
 #include "marley/OutputFileAscii.hh"
+#include "marley/Weighter.hh"
 #include "marley/marley_utils.hh"
 
 #ifdef USE_ROOT
@@ -69,6 +75,44 @@ void marley::OutputFile::prompt_before_overwrite() {
         " of \"mode\": \"overwrite\"." );
     }
   }
+}
+
+void marley::OutputFile::merge_reweight_provenance_weights(
+  HepMC3::GenRunInfo& run_info, marley::Generator& gen )
+{
+  auto count_attr = run_info.attribute< HepMC3::IntAttribute >(
+    "MARLEY.ReweightConfig.count" );
+  if ( !count_attr ) return;
+  int rw_count = count_attr->value();
+  if ( rw_count == 0 ) return;
+
+  auto config_attr = run_info.attribute< HepMC3::StringAttribute >(
+    "MARLEY.JSONconfig" );
+  if ( !config_attr ) return;
+
+  marley::JSON gen_json = marley::JSON::load( config_attr->value() );
+
+  marley::JSON combined_weights = marley::JSON::array();
+  if ( gen_json.has_key("weights") && gen_json.at("weights").is_array() ) {
+    for ( const auto& w : gen_json.at("weights").array_range() )
+      combined_weights.append( w );
+  }
+
+  for ( int i = 0; i < rw_count; ++i ) {
+    auto rw_attr = run_info.attribute< HepMC3::StringAttribute >(
+      "MARLEY.ReweightConfig." + std::to_string( i ) );
+    if ( !rw_attr ) continue;
+
+    marley::JSON rw_json = marley::JSON::load( rw_attr->value() );
+    if ( rw_json.has_key("weights") && rw_json.at("weights").is_array() ) {
+      for ( const auto& w : rw_json.at("weights").array_range() )
+        combined_weights.append( w );
+    }
+  }
+
+  auto combined_weighter = std::make_shared< marley::Weighter >(
+    combined_weights, gen );
+  gen.set_weighter( combined_weighter );
 }
 
 // Factory method that constructs an appropriate derived object given the

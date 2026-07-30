@@ -4,18 +4,20 @@
 //
 // INTRODUCTION
 //
-// The "marley reweight" command assigns systematic event weights to a
-// previously generated HepMC3 event file. It reads a configuration file
-// (see below) that specifies one or more weight calculators, applies them
-// to each event in the input file, and writes the reweighted events to an
-// output file.
+// The "marley reweight" command assigns weights to a previously generated
+// sample of Monte Carlo events. It reads a configuration file that specifies
+// one or more weight calculators, applies them to each event in one or more
+// input HepMC3-format files, and writes the weights together with the original
+// event data to an output file.
 //
 // The configuration format for the "marley reweight" command uses the same
-// JSON-like syntax as the other MARLEY commands. The "weights" top-level
-// key specifies the weight calculator(s) to apply, while the optional
-// "reweight" section may be used to configure output settings. All other
-// parameters needed by the Generator are automatically restored from the
-// "MARLEY.JSONconfig" attribute saved in the input event file.
+// JSON-like syntax as the other MARLEY commands. The "weights" top-level key
+// specifies the weight calculator(s) to run, while the optional "reweight"
+// section may be used to configure output settings. All other parameters needed
+// by the Generator are automatically restored from the "MARLEY.JSONconfig"
+// attribute saved in the first input event file. For multiple input files,
+// compatibility of their saved run configurations is checked, and the reweight
+// job will abort if discrepancies are found.
 //
 { // An opening curly brace begins the configuration file content
 
@@ -179,9 +181,16 @@
     // Common parameters for all modes:
     //   type           (string, required)  Must be "strength_variation"
     //   name           (string, required)  Base name for weight columns
-    //   reaction_file  (string, required)  Path to a reaction input file
-    //                     that contains discrete nuclear transitions with
-    //                     experimental strength uncertainties
+  //   reaction_file  (string, required)  Name of a reaction input file
+  //                     that contains discrete nuclear transitions with
+  //                     experimental strength uncertainties. The name must
+  //                     match one of the reaction files listed in the
+  //                     "reactions" array of the original generation
+  //                     configuration (as saved in the MARLEY.JSONconfig
+  //                     attribute of the input events). The transition
+  //                     data are loaded from that generation configuration
+  //                     at run time; this setting identifies which
+  //                     reaction to vary.
     //
     // Multisim mode (default):
     //   Draws strength variations from a dimidiated (bifurcated) Gaussian

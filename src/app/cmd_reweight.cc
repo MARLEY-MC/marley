@@ -27,6 +27,7 @@
 #include "HepMC3/GenRunInfo.h"
 
 // MARLEY includes
+#include "cmd_helpers.hh"
 #include "marley/CommandHandler.hh"
 #include "marley/EventFileReader.hh"
 #include "marley/Generator.hh"
@@ -38,9 +39,9 @@
 
 bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
 
-  // If we have an unexpected number of arguments, decide whether the
+  // If we have fewer than two arguments, decide whether the
   // user intended to request help with this command
-  if ( args.size() != 2u ) {
+  if ( args.size() < 2u ) {
     std::string first_arg;
     if ( !args.empty() ) first_arg = args.front();
 
@@ -55,9 +56,12 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
     return false;
   }
 
-  // If we make it here, then we know that args has exactly two elements
+  // Extract the configuration file name and collect all input files
   std::string config_file_name( args.front() );
+  args.pop_front();
+  std::vector< std::string > input_files( args.begin(), args.end() );
 
+  // Load the reweight configuration
   marley::JSON rw_config = marley::JSON::load_file( config_file_name );
   if ( !rw_config.has_key("weights") ) throw marley::Error( "Missing"
     " \"weights\" key in marley reweight configuration file \""
@@ -65,35 +69,37 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
 
   const auto& json_weights = rw_config.at( "weights" );
 
-  std::string input_file_name( args.back() );
-  marley::EventFileReader efr( input_file_name );
+  // Read the first event from the first input file to extract the run
+  // information needed to reconstruct the Generator and check weight names.
+  marley::EventFileReader first_reader( input_files[0] );
+  HepMC3::GenEvent first_ev;
+  if ( !(first_reader >> first_ev) ) {
+    throw marley::Error( "Failed to read the first event from input file \""
+      + input_files[0] + "\". The file may be empty or corrupt." );
+  }
 
-  HepMC3::GenEvent ev;
-  efr >> ev;
-
-  auto run_info = ev.run_info();
-  const std::vector< std::string > wgt_names = run_info->weight_names();
+  auto first_run_info = first_ev.run_info();
+  const std::vector< std::string > wgt_names = first_run_info->weight_names();
 
   // Reconstruct the original Generator from the saved configuration
-  auto prior_config_str = run_info->attribute< HepMC3::StringAttribute >(
+  auto prior_config_str = first_run_info->attribute< HepMC3::StringAttribute >(
     "MARLEY.JSONconfig" );
 
   if ( !prior_config_str ) {
     throw marley::Error( "Failed to retrieve previous generator"
-      " configuration from the input file \"" + input_file_name + "\"" );
+      " configuration from the input file \"" + input_files[0] + "\"" );
   }
 
   auto prior_json_config = marley::JSON::load( prior_config_str->value() );
   marley::JSONConfig jc( prior_json_config );
   auto gen = std::make_unique< marley::Generator >( jc.create_generator() );
 
+  // Create the Weighter and check for name conflicts
   marley::Weighter weighter( json_weights, *gen );
   weighter.set_use_cv_weight( false );
 
   auto& calc_vec = weighter.get_weight_calculators();
 
-  // Check that new calculator names do not conflict with existing weight
-  // names from the input file
   for ( const auto& wc : calc_vec ) {
     if ( std::find( wgt_names.cbegin(), wgt_names.cend(), wc->name() )
       != wgt_names.cend() )
@@ -104,8 +110,9 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
     }
   }
 
-  size_t num_new_weights = calc_vec.size();
-
+  // Prepend TrivialWeightCalculators for the existing weight names so that
+  // the Weighter preserves them in the output. Iterate in reverse order
+  // and insert at the beginning to maintain the original ordering.
   for ( auto riter = wgt_names.crbegin();
     riter != wgt_names.crend(); ++riter )
   {
@@ -156,10 +163,23 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
     output_files.push_back( marley::OutputFile::make_OutputFile(out_config) );
   }
 
+  // Build the reweighted GenRunInfo from a copy of the first file's run info
+  bool multi_file = ( input_files.size() > 1 );
+  auto reweighted_run_info = std::make_shared< HepMC3::GenRunInfo >(
+    *first_run_info );
+  reweighted_run_info->set_weight_names( full_name_vec );
+
+  // For multi-file reweight, strip the RNG seed to prevent unsafe resume.
+  // Single-file reweight preserves the seed so that resume remains possible
+  // (the accumulated Weighter will be reconstructed from the saved reweight
+  // provenance attributes when needed).
+  if ( multi_file ) reweighted_run_info->remove_attribute(
+    "MARLEY.RNGseed" );
+
   // Save the reweight configuration as run info provenance attributes
   {
     int rw_index = 0;
-    auto count_attr = run_info->attribute< HepMC3::IntAttribute >(
+    auto count_attr = first_run_info->attribute< HepMC3::IntAttribute >(
       "MARLEY.ReweightConfig.count" );
     if ( count_attr ) rw_index = count_attr->value();
 
@@ -171,40 +191,45 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
       prov_obj["reweight"] = rw_section;
     }
 
-    auto rw_prov_attr = std::make_shared< HepMC3::StringAttribute >(
-      prov_obj.dump_string() );
-    run_info->add_attribute(
+    reweighted_run_info->add_attribute(
       "MARLEY.ReweightConfig." + std::to_string( rw_index ),
-      rw_prov_attr );
+      std::make_shared< HepMC3::StringAttribute >(
+        prov_obj.dump_string() ) );
 
-    auto new_count_attr = std::make_shared< HepMC3::IntAttribute >(
-      rw_index + 1 );
-    run_info->add_attribute( "MARLEY.ReweightConfig.count",
-      new_count_attr );
+    reweighted_run_info->add_attribute(
+      "MARLEY.ReweightConfig.count",
+      std::make_shared< HepMC3::IntAttribute >( rw_index + 1 ) );
   }
 
+  // Process all events across all input files
   int event_count = 0;
-  do {
+  for_each_event( input_files,
+    [ & ]( HepMC3::GenEvent& ev, bool /*first_event*/,
+      double /*flux_avg_xsec*/, const auto& /*first_info*/ )
+    {
+      std::cout << "Event " << event_count << '\n';
 
-    std::cout << "Event " << event_count << '\n';
+      // Save the original weight values before set_run_info resizes
+      // the event's weight vector to match the reweighted run info.
+      auto orig_weights = ev.weights();
 
-    run_info->set_weight_names( full_name_vec );
+      // Apply the reweighted GenRunInfo. HepMC3's set_run_info resizes
+      // m_weights to match the weight_names count, filling with 1.0.
+      ev.set_run_info( reweighted_run_info );
 
-    auto& ev_wgt_vec = ev.weights();
-    for ( size_t w = 0u; w < num_new_weights; ++w ) {
-      ev_wgt_vec.push_back( 1. );
-    }
+      // Restore the original weight values into the first slots
+      for ( size_t i = 0; i < orig_weights.size(); ++i )
+        ev.weights()[ i ] = orig_weights[ i ];
 
-    weighter.process_event( ev, *gen );
+      // Compute the new weight values
+      weighter.process_event( ev, *gen );
 
-    for ( const auto& file : output_files ) {
-      file->write_event( &ev );
-    }
+      // Write the event to all output files
+      for ( const auto& file : output_files )
+        file->write_event( &ev );
 
-    run_info->set_weight_names( wgt_names );
-    ++event_count;
-
-  } while ( efr >> ev );
+      ++event_count;
+    } );
 
   return true;
 }

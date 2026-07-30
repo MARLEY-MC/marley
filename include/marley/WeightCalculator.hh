@@ -37,6 +37,21 @@ namespace marley {
       WeightCalculator( const std::string& name );
       virtual ~WeightCalculator() = default;
 
+      /// @brief Compute the weight for the given event.
+      ///
+      /// @note If a derived class uses random numbers, it MUST own its own
+      /// random number generator (seeded with a fixed value from its JSON
+      /// config) rather than using the Generator's RNG. Random numbers MUST
+      /// also only be used by derived classes during initialization, not on an
+      /// event-by-event basis. These rules ensure that the calculated weights
+      /// remain deterministic and replayable regardless of when or in what
+      /// context the calculator is used. In particular, this allows
+      /// the "resume" behavior of the "marley generate" command to be
+      /// correct even after reweighting has been run on an existing sample.
+      ///
+      /// @todo Revisit this constraint if a clear use case is found for
+      /// event-by-event random numbers sampled within a WeightCalculator
+      /// derived class implementation.
       virtual double weight( HepMC3::GenEvent& event,
         marley::Generator& gen ) const = 0;
 

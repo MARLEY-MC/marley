@@ -21,6 +21,10 @@
 #include <memory>
 #include <string>
 
+namespace HepMC3 {
+  class GenRunInfo;
+}
+
 namespace marley {
 
   class Generator;
@@ -93,6 +97,14 @@ namespace marley {
       /// marley::Generator object given the previous JSON configuration object
       std::unique_ptr< marley::Generator > restore_generator(
         const marley::JSON& config );
+
+      /// @brief When resuming from a file that has been through one or more
+      /// reweight passes, merge the reweight provenance weight calculator
+      /// configurations with the original generate-time weights. Builds a
+      /// combined Weighter and gives the Generator ownership. If no reweight
+      /// provenance is found, this function is a no-op.
+      static void merge_reweight_provenance_weights(
+        HepMC3::GenRunInfo& run_info, marley::Generator& gen );
 
       // Modes to use when writing output to files that are not initially empty
       // OVERWRITE = removes any previous contents of the file, then writes new

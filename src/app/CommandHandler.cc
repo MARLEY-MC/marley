@@ -59,8 +59,9 @@ namespace {
   }
 
   void print_reweight_help() {
-    std::cout << "Usage: marley reweight CONFIG_FILE INPUT_FILE\n\n"
-      << "Reweight previously generated MARLEY events in INPUT_FILE using the\n"
+    std::cout << "Usage: marley reweight CONFIG_FILE INPUT_FILE...\n\n"
+      << "Reweight previously generated MARLEY events in one or more INPUT_FILEs"
+      << " using the\n"
       << "weight-calculation settings in CONFIG_FILE.\n\n"
       << "Options:\n"
       << "  -h, --help     Print this help message\n";
