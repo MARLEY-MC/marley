@@ -59,16 +59,11 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
   std::string config_file_name( args.front() );
 
   marley::JSON rw_config = marley::JSON::load_file( config_file_name );
-  if ( !rw_config.has_key("reweight") ) throw marley::Error( "Missing"
-    " \"reweight\" section in marley reweight configuration file \""
+  if ( !rw_config.has_key("weights") ) throw marley::Error( "Missing"
+    " \"weights\" key in marley reweight configuration file \""
     + config_file_name + "\"" );
 
-  const marley::JSON& rw_section = rw_config.at( "reweight" );
-  if ( !rw_section.has_key("weights") ) throw marley::Error( "Missing"
-    " \"weights\" key in the \"reweight\" section of the marley reweight"
-    " configuration file \"" + config_file_name + "\"" );
-
-  const auto& json_weights = rw_section.at( "weights" );
+  const auto& json_weights = rw_config.at( "weights" );
 
   std::string input_file_name( args.back() );
   marley::EventFileReader efr( input_file_name );
@@ -124,9 +119,21 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
 
   auto full_name_vec = weighter.get_weight_names();
 
+  // Read output settings from the optional "reweight" section (if present)
+  marley::JSON rw_section;
+  bool has_rw_section = false;
+  if ( rw_config.has_key("reweight") ) {
+    const marley::JSON& rw_section_ref = rw_config.at( "reweight" );
+    if ( !rw_section_ref.is_object() ) throw marley::Error(
+      "The \"reweight\" section in the marley reweight configuration"
+      " file \"" + config_file_name + "\" must be a JSON object" );
+    rw_section = rw_section_ref;
+    has_rw_section = true;
+  }
+
   std::vector< std::shared_ptr<marley::OutputFile> > output_files;
 
-  if ( rw_section.has_key("output") ) {
+  if ( has_rw_section && rw_section.has_key("output") ) {
     marley::JSON output_set = rw_section.at( "output" );
     if ( !output_set.is_array() ) throw marley::Error( "The"
       " \"output\" key in the reweighting configuration must have a value"
@@ -156,8 +163,16 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
       "MARLEY.ReweightConfig.count" );
     if ( count_attr ) rw_index = count_attr->value();
 
+    // Build a combined provenance object with the weights array and
+    // (if present) the reweight section containing output settings
+    marley::JSON prov_obj = marley::JSON::object();
+    prov_obj["weights"] = json_weights;
+    if ( has_rw_section ) {
+      prov_obj["reweight"] = rw_section;
+    }
+
     auto rw_prov_attr = std::make_shared< HepMC3::StringAttribute >(
-      rw_section.dump_string() );
+      prov_obj.dump_string() );
     run_info->add_attribute(
       "MARLEY.ReweightConfig." + std::to_string( rw_index ),
       rw_prov_attr );

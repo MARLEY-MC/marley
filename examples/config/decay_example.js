@@ -175,13 +175,13 @@
       mode: "overwrite" } ],
   },
 
-  // Note on unused shared parameters:
+  // Note on shared parameters:
   //
   // The following top-level keys accepted by JSONConfig are also
   // accepted by the decay command but have no effect on the
   // stand-alone de-excitation simulation: direction, target,
   // form_factors, generate, coulomb_mode,
-  // do_deexcitations, sub_continuum_mode, energy_pdf_max, weights.
+  // do_deexcitations, sub_continuum_mode, energy_pdf_max.
   //
   // Parameters that DO affect the de-excitation cascade:
   //
@@ -191,6 +191,15 @@
   //     parameter sets will change the computed decay widths and
   //     branching ratios. See the "opt_mod" section of
   //     examples/config/annotated.js for details.
+  //
+  //   weights  (array, optional)
+  //     Configures additional event weight calculators for the
+  //     de-excitation simulation. These are the same weight
+  //     calculators described in the "weights" section of
+  //     examples/config/annotated.js. The resulting weights will
+  //     be computed for each event and written to the output file,
+  //     making them available for later use (e.g., by the
+  //     "marley reweight" command).
   //
   //   fragment_lmax  (int, optional, default 2)
   //     Maximum orbital angular momentum quantum number to consider
