@@ -99,10 +99,10 @@ from a configuration file. The input event file (in HepMC3 format) is read,
 and for each event a weight is computed and written to the output along with
 the original event data.
 
-The configuration file should contain a ``weights`` section specifying the
-weight calculator(s) to apply, along with any associated parameters. The most
-commonly used weight calculator applies systematic variations to tabulated
-nuclear matrix elements.
+The configuration file should contain a top-level ``reweight`` section
+with a ``weights`` subsection specifying the weight calculator(s) to apply,
+along with any associated parameters. The most commonly used weight calculator
+applies systematic variations to tabulated nuclear matrix elements.
 
 Examples
 ~~~~~~~~
@@ -111,9 +111,9 @@ Reweight an existing event file using a weight configuration::
 
   marley reweight weight_config.js events.hepmc3
 
-The output file name and format are controlled by the ``output`` settings in
-the weight configuration file, following the same conventions as the
-``generate`` command.
+The output file name and format are controlled by the ``output`` settings
+within the ``reweight`` section of the weight configuration file, following
+the same conventions as the ``generate`` command.
 
 ----
 xsec

@@ -624,7 +624,7 @@
   //  // data/optical_model/optical_model_kd_global.js). Details on the
   //  // parameter settings specified under the opt_mod key are available in
   //  // the example configuration file for the "marley reweight" command
-  //  // (examples/config/reweight_config.js).
+  //  // (examples/config/reweight_example.js).
   //  { type: "optical_model", name: "KD-global-OMP",
   //    opt_mod: #include:"optical_model_kd_global.js" },
   //
@@ -648,7 +648,7 @@
   // evaluated for existing events using the "marley reweight" command, which
   // uses the same JSON format to configure weight calculators. Further details
   // about weight calculator settings are given in the example "marley reweight"
-  // configuration file (examples/config/reweight_config.js).
+  // configuration file (examples/config/reweight_example.js).
 
   // GENERATE (optional)
   //
@@ -815,7 +815,7 @@
   //
   // More information about the optical model configuration format is provided
   // in the example configuration file for the "marley reweight" command
-  // (examples/config/reweight_config.js).
+  // (examples/config/reweight_example.js).
   //
   // opt_mod: #include:"optical_model_kduq_federal_cv.js"
 

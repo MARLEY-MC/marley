@@ -15,6 +15,7 @@
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
 // Standard library includes
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -58,10 +59,16 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
   std::string config_file_name( args.front() );
 
   marley::JSON rw_config = marley::JSON::load_file( config_file_name );
-  if ( !rw_config.has_key("weights") ) throw marley::Error( "Missing"
-    " \"weights\" key in marley reweight configuration file" );
+  if ( !rw_config.has_key("reweight") ) throw marley::Error( "Missing"
+    " \"reweight\" section in marley reweight configuration file \""
+    + config_file_name + "\"" );
 
-  const auto& json_weights = rw_config.at( "weights" );
+  const marley::JSON& rw_section = rw_config.at( "reweight" );
+  if ( !rw_section.has_key("weights") ) throw marley::Error( "Missing"
+    " \"weights\" key in the \"reweight\" section of the marley reweight"
+    " configuration file \"" + config_file_name + "\"" );
+
+  const auto& json_weights = rw_section.at( "weights" );
 
   std::string input_file_name( args.back() );
   marley::EventFileReader efr( input_file_name );
@@ -89,6 +96,19 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
   weighter.set_use_cv_weight( false );
 
   auto& calc_vec = weighter.get_weight_calculators();
+
+  // Check that new calculator names do not conflict with existing weight
+  // names from the input file
+  for ( const auto& wc : calc_vec ) {
+    if ( std::find( wgt_names.cbegin(), wgt_names.cend(), wc->name() )
+      != wgt_names.cend() )
+    {
+      throw marley::Error( "Weight name \"" + wc->name()
+        + "\" from the reweight configuration file \"" + config_file_name
+        + "\" conflicts with an existing weight in the input file" );
+    }
+  }
+
   size_t num_new_weights = calc_vec.size();
 
   for ( auto riter = wgt_names.crbegin();
@@ -106,8 +126,8 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
 
   std::vector< std::shared_ptr<marley::OutputFile> > output_files;
 
-  if ( rw_config.has_key("output") ) {
-    marley::JSON output_set = rw_config.at( "output" );
+  if ( rw_section.has_key("output") ) {
+    marley::JSON output_set = rw_section.at( "output" );
     if ( !output_set.is_array() ) throw marley::Error( "The"
       " \"output\" key in the reweighting configuration must have a value"
       " that is a JSON array." );
@@ -127,6 +147,25 @@ bool marley::CommandHandler::cmd_reweight( std::deque< std::string >& args ) {
     auto out_config = marley::JSON::load( out_config_str );
 
     output_files.push_back( marley::OutputFile::make_OutputFile(out_config) );
+  }
+
+  // Save the reweight configuration as run info provenance attributes
+  {
+    int rw_index = 0;
+    auto count_attr = run_info->attribute< HepMC3::IntAttribute >(
+      "MARLEY.ReweightConfig.count" );
+    if ( count_attr ) rw_index = count_attr->value();
+
+    auto rw_prov_attr = std::make_shared< HepMC3::StringAttribute >(
+      rw_section.dump_string() );
+    run_info->add_attribute(
+      "MARLEY.ReweightConfig." + std::to_string( rw_index ),
+      rw_prov_attr );
+
+    auto new_count_attr = std::make_shared< HepMC3::IntAttribute >(
+      rw_index + 1 );
+    run_info->add_attribute( "MARLEY.ReweightConfig.count",
+      new_count_attr );
   }
 
   int event_count = 0;
