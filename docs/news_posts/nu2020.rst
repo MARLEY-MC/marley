@@ -7,7 +7,7 @@ New website and Neutrino 2020
 
 After several years of existence as an uninviting landing page for MARLEY's
 `Doxygen <https://www.doxygen.nl/index.html>`__-based API documentation, the
-`marleygen.org <http://www.marleygen.org>`__ website has now been completely
+`marleygen.org <https://www.marleygen.org>`__ website has now been completely
 revamped.
 
 .. cut::

@@ -1,5 +1,10 @@
 #!/bin/bash
 # Script based on http://tinyurl.com/lwvvgsn
+# NOTE: This script is currently non-functional as it depends on Travis CI
+# environment variables (TRAVIS_TAG, TRAVIS_PULL_REQUEST, GH_TOKEN) that are
+# no longer provided by any active CI pipeline. It is retained as a reference
+# for when GitHub Actions-based documentation deployment is set up.
+# TODO: Replace with a GHA workflow that deploys docs on release tags.
 
 set -o errexit -o nounset
 

@@ -21,7 +21,7 @@ Starter guide
 -------------
 
 The MARLEY source code is written in `C++17
-<https://en.wikipedia.org/wiki/C%2B%2B14>`__ with a small number of helper
+<https://en.wikipedia.org/wiki/C%2B%2B17>`__ with a small number of helper
 scripts written for the `Bash <https://www.gnu.org/software/bash/>`__ shell.
 `Git <https://git-scm.com/>`__ is used for version control, and the official
 source code repository is hosted on GitHub. For new contributors who are
@@ -206,7 +206,7 @@ from within the ``build/`` folder. After Doxygen executes, open the file
 the API documentation website.
 
 With the exception of the API webpages described above, all other content for
-the official MARLEY website (http://www.marleygen.org) is produced from a set
+the official MARLEY website (https://www.marleygen.org) is produced from a set
 of text files stored in the ``docs/`` folder of the source code tree. These
 text files are written in the `reStructuredText
 <https://docutils.sourceforge.io/rst.html>`__ (reST) markup language. The
