@@ -120,7 +120,7 @@
   ],
   "gen_state" : {
     "config" : {
-      "executable_settings" : {
+      "generate" : {
         "events" : 2,
         "output" : [
           {

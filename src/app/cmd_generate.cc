@@ -372,7 +372,7 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
 
     long num_old_events = 0;
 
-    marley::JSON ex_set = json.get_object( "executable_settings" );
+    marley::JSON ex_set = json.get_object( "generate", false );
     long num_events = ex_set.get_long( "events", 1e3 );
 
     MARLEY_LOG( INFO, "app" ) << "Requested events: " << num_events
@@ -395,7 +395,7 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
     if ( ex_set.has_key("output") ) {
       marley::JSON output_set = ex_set.at( "output" );
       if ( !output_set.is_array() ) throw marley::Error( "The"
-        " \"output\" key in the executable settings must have a value that"
+        " \"output\" key in the \"generate\" section must have a value that"
         " is a JSON array." );
       else for ( const auto& el : output_set.array_range() ) {
         output_files.push_back( marley::OutputFile::make_OutputFile(el) );

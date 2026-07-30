@@ -705,7 +705,7 @@ namespace marley {
       {
         check_if_object( key );
         if ( has_key(key) ) return this->at( key );
-        else if ( throw_error ) marley::Error(
+        else if ( throw_error ) throw marley::Error(
           "Missing JSON key '" + key + '\'' );
         return JSON::make( JSON::DataType::Object );
       }

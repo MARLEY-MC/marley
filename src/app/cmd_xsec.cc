@@ -34,32 +34,6 @@ namespace {
   constexpr int DEFAULT_NUM_STEPS = 10000;
   constexpr int DEFAULT_PDG = marley_utils::ELECTRON_NEUTRINO;
 
-  void get_double_dump_param( const marley::JSON& json,
-    const std::string& param_key, double& value )
-  {
-    if ( !json.has_key(param_key) ) return;
-
-    const auto& temp_js = json.at( param_key );
-    bool ok = false;
-    value = temp_js.to_double( ok );
-    if ( !ok ) throw marley::Error("Unrecognized " + param_key
-      + " value " + temp_js.to_string() + " encountered in the"
-      " job configuration file.");
-  }
-
-  void get_int_dump_param( const marley::JSON& json,
-    const std::string& param_key, int& value )
-  {
-    if ( !json.has_key(param_key) ) return;
-
-    const auto& temp_js = json.at( param_key );
-    bool ok = false;
-    value = temp_js.to_long( ok );
-    if ( !ok ) throw marley::Error("Unrecognized " + param_key
-      + " value " + temp_js.to_string() + " encountered in the"
-      " job configuration file.");
-  }
-
 }
 
 bool marley::CommandHandler::cmd_xsec( std::deque< std::string >& args ) {
@@ -143,11 +117,41 @@ bool marley::CommandHandler::cmd_xsec( std::deque< std::string >& args ) {
 
   const marley::JSON& json = config.get_json();
 
-  get_double_dump_param( json, "xsec_dump_KEmin", KEmin );
-  get_double_dump_param( json, "xsec_dump_KEmax", KEmax );
+  if ( json.has_key("xsec") ) {
+    const marley::JSON& xsec_settings = json.at( "xsec" );
 
-  get_int_dump_param( json, "xsec_dump_steps", num_steps );
-  get_int_dump_param( json, "xsec_dump_pdg", projectile_pdg );
+    if ( xsec_settings.has_key("KEmin") ) {
+      bool ok = false;
+      KEmin = xsec_settings.at("KEmin").to_double( ok );
+      if ( !ok ) throw marley::Error("Unrecognized KEmin value "
+        + xsec_settings.at("KEmin").to_string() + " encountered in the"
+        " \"xsec\" section of the job configuration file.");
+    }
+
+    if ( xsec_settings.has_key("KEmax") ) {
+      bool ok = false;
+      KEmax = xsec_settings.at("KEmax").to_double( ok );
+      if ( !ok ) throw marley::Error("Unrecognized KEmax value "
+        + xsec_settings.at("KEmax").to_string() + " encountered in the"
+        " \"xsec\" section of the job configuration file.");
+    }
+
+    if ( xsec_settings.has_key("steps") ) {
+      bool ok = false;
+      num_steps = xsec_settings.at("steps").to_long( ok );
+      if ( !ok ) throw marley::Error("Unrecognized steps value "
+        + xsec_settings.at("steps").to_string() + " encountered in the"
+        " \"xsec\" section of the job configuration file.");
+    }
+
+    if ( xsec_settings.has_key("pdg") ) {
+      bool ok = false;
+      projectile_pdg = xsec_settings.at("pdg").to_long( ok );
+      if ( !ok ) throw marley::Error("Unrecognized pdg value "
+        + xsec_settings.at("pdg").to_string() + " encountered in the"
+        " \"xsec\" section of the job configuration file.");
+    }
+  }
 
   double delta_KE_step = ( KEmax - KEmin ) / num_steps;
   double KE = KEmin;

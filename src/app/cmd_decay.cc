@@ -115,23 +115,23 @@ bool marley::CommandHandler::cmd_decay( std::deque< std::string >& args ) {
   const marley::JSON& json = jc.get_json();
   bool ok;
 
-  const std::string decay_config_label( "decays" );
+  const std::string decay_config_label( "decay" );
 
-  marley::JSON decays;
-  ok = get_from_json< marley::JSON >( decay_config_label, json, decays );
+  marley::JSON decay_config;
+  ok = get_from_json< marley::JSON >( decay_config_label, json, decay_config );
   if ( !ok ) throw marley::Error( "Missing key '" + decay_config_label
     + "' in job configuration file" );
 
-  long num_events = assign_from_json< long >( "events", decays, ok, 1000 );
+  long num_events = assign_from_json< long >( "events", decay_config, ok, 1000 );
 
-  int projectile_pdg = assign_from_json< int >( "projectile", decays,
+  int projectile_pdg = assign_from_json< int >( "projectile", decay_config,
     ok, marley_utils::ELECTRON_NEUTRINO );
 
-  int Zi = assign_from_json< int >( "target_Z", decays, ok );
-  int Ai = assign_from_json< int >( "target_A", decays, ok );
+  int Zi = assign_from_json< int >( "target_Z", decay_config, ok );
+  int Ai = assign_from_json< int >( "target_A", decay_config, ok );
 
   auto proc_type = static_cast< ProcType >(
-    assign_from_json< int >( "proc_type", decays, ok,
+    assign_from_json< int >( "proc_type", decay_config, ok,
       static_cast<int>(ProcType::NC_Continuum) )
   );
 
@@ -148,13 +148,13 @@ bool marley::CommandHandler::cmd_decay( std::deque< std::string >& args ) {
   double Ex = 0.;
   double Ex_min = 0.;
   double Ex_max = 0.;
-  bool sample_Ex = decays.has_key( "Ex_max" );
+  bool sample_Ex = decay_config.has_key( "Ex_max" );
   if ( !sample_Ex ) {
-    Ex = assign_from_json< double >( "Ex", decays, ok, -1.0 );
+    Ex = assign_from_json< double >( "Ex", decay_config, ok, -1.0 );
   }
   else {
-    Ex_min = assign_from_json< double >( "Ex_min", decays, ok, -1.0 );
-    Ex_max = assign_from_json< double >( "Ex_max", decays, ok, -1.0 );
+    Ex_min = assign_from_json< double >( "Ex_min", decay_config, ok, -1.0 );
+    Ex_max = assign_from_json< double >( "Ex_max", decay_config, ok, -1.0 );
   }
 
   if ( Ex < 0. || Ex_min < 0. || Ex_max < 0. ) {
@@ -165,11 +165,11 @@ bool marley::CommandHandler::cmd_decay( std::deque< std::string >& args ) {
   }
 
   std::vector< int > twoJ_vec;
-  if ( !decays.has_key("twoJ") ) {
+  if ( !decay_config.has_key("twoJ") ) {
     throw marley::Error( "Missing \"twoJ\" key specifying the nuclear spin" );
   }
   else {
-    const marley::JSON& twoJ_obj = decays.at( "twoJ" );
+    const marley::JSON& twoJ_obj = decay_config.at( "twoJ" );
     if ( !twoJ_obj.is_array() ) {
      throw marley::Error( "The \"twoJ\" key must have a value that"
        " is a JSON array." );
@@ -189,7 +189,7 @@ bool marley::CommandHandler::cmd_decay( std::deque< std::string >& args ) {
   const auto twoJ_end = twoJ_sampling_weights.cend();
   std::discrete_distribution< size_t > twoJ_dist( twoJ_begin, twoJ_end );
 
-  auto parity_str = assign_from_json< std::string >( "parity", decays,
+  auto parity_str = assign_from_json< std::string >( "parity", decay_config,
     ok, "+" );
   if ( parity_str != "+" && parity_str != "-" && parity_str != "random" ) {
     throw marley::Error( "Invalid parity setting \"" + parity_str + '\"' );
@@ -215,8 +215,8 @@ bool marley::CommandHandler::cmd_decay( std::deque< std::string >& args ) {
 
   std::vector< std::shared_ptr<marley::OutputFile> > output_files;
 
-  if ( decays.has_key("output") ) {
-    marley::JSON output_set = decays.at( "output" );
+  if ( decay_config.has_key("output") ) {
+    marley::JSON output_set = decay_config.at( "output" );
     if ( !output_set.is_array() ) throw marley::Error( "The"
       " \"output\" key must have a value that is a JSON array." );
     else for ( const auto& el : output_set.array_range() ) {

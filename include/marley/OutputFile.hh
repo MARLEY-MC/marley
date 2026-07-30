@@ -33,7 +33,7 @@ namespace marley {
     protected:
 
       // The input JSON object typically appears under the "output" key in the
-      // "executable_settings" section of a MARLEY job configuration file
+      // "generate" section of a MARLEY job configuration file
       OutputFile( const JSON& output_config );
 
     public:

@@ -431,7 +431,7 @@ namespace marley_hepmc3 {
         auto strip_run_keys = []( marley::JSON& j ) -> marley::JSON {
           marley::JSON result = marley::JSON::object();
           for ( const auto& [key, value] : j.object_range() ) {
-            if ( key != "seed" && key != "executable_settings" ) {
+            if ( key != "seed" && key != "generate" ) {
               result[key] = value;
             }
           }

@@ -25,8 +25,8 @@
   // Incident neutrino direction 3-vector
   direction: { x: 0.0, y: 0.0, z: 1.0 },
 
-  // Settings for marley command-line executable
-  executable_settings: {
+  // Settings for the "marley generate" command
+  generate: {
 
     // The number of events to generate
     events: 10000,

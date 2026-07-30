@@ -650,14 +650,13 @@
   // about weight calculator settings are given in the example "marley reweight"
   // configuration file (examples/config/reweight_config.js).
 
-  // EXECUTABLE SETTINGS (optional)
+  // GENERATE (optional)
   //
-  // The entries within the executable_settings JSON object are used to
-  // control the marley command-line executable. They are ignored if
-  // the job configuration file is used to initialize MARLEY outside of that
-  // context (e.g., within a Geant4 application that links to the MARLEY
-  // shared libraries).
-  executable_settings: {
+  // The entries within the "generate" JSON object are used to control execution
+  // of the "marley generate" command. They are ignored if the job configuration
+  // file is used to initialize MARLEY outside of that context (e.g., within a
+  // Geant4 application that links to the MARLEY shared libraries).
+  generate: {
 
     // EVENT COUNT (optional)
     //
