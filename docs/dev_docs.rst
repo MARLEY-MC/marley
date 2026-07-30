@@ -237,7 +237,7 @@ may be used to install Sphinx and its extensions via the commands
 ::
 
   brew install sphinx-doc node
-  pip3 install guzzle-sphinx-theme sphinxcontrib-bibtex sphinxcontrib-newsfeed sphinxcontrib-katex
+  pip3 install guzzle-sphinx-theme sphinx-math-dollar sphinxcontrib-bibtex sphinxcontrib-newsfeed sphinxcontrib-katex
   npm install -g katex
 
 The build-time rendering of LaTeX math by ``sphinxcontrib-katex`` requires

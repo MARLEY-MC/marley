@@ -1,7 +1,8 @@
-import sys, os, subprocess
+import sys, os, subprocess, re
 
 from sphinx.highlighting import lexers
 from pygments.lexers.web import PhpLexer
+from sphinx_math_dollar import split_dollars
 
 project = u'MARLEY'
 copyright = u'2016-2026 Steven Gardiner'
@@ -56,16 +57,53 @@ bibtex_bibfiles = [ 'marley_pubs.bib', 'external_pubs.bib' ]
 
 
 def setup(app):
-    import re
     from docutils.nodes import FixedTextElement, Text, literal, math, Element
     from sphinx.transforms.post_transforms import SphinxPostTransform
+
+    # ── Phase 1: protect $...$ in parsed bib entries before pybtex formats them ──
+
+    app._math_placeholder_map = {}
+
+    def _protect_bib_math_after_parse(app):
+        dom = app.env.get_domain('cite')
+        if dom is None:
+            return
+        bibdata = dom.data.get('bibdata')
+        if bibdata is None:
+            return
+
+        counter = [0]
+        math_map = {}
+
+        def _hash_math(m):
+            counter[0] += 1
+            ph = '@@' + str(counter[0]) + '@@'  # digits-only, survives case changes
+            math_map[ph] = m.group(0)
+            return ph
+
+        for entry in bibdata.data.entries.values():
+            for field_name in list(entry.fields.keys()):
+                value = entry.fields[field_name]
+                if not isinstance(value, str):
+                    continue
+                protected = re.sub(r'\$\$[^$]+\$\$', _hash_math, value)
+                protected = re.sub(r'\$[^$]+\$', _hash_math, protected)
+                if protected != value:
+                    entry.fields[field_name] = protected
+
+        app._math_placeholder_map = math_map
+
+    app.connect('builder-inited', _protect_bib_math_after_parse, priority=501)
+
+    # ── Phase 2: restore placeholders and create math nodes ──
 
     class MathDollarPostTransform(SphinxPostTransform):
         default_priority = 11
 
-        _re_math = re.compile(r'\$([^$]+)\$')
-
         def run(self, **kwargs):
+            math_map = getattr(
+                self.document.settings.env.app, '_math_placeholder_map', {})
+
             for parent in list(self.document.traverse(Element)):
                 if isinstance(parent, (FixedTextElement, literal, math)):
                     continue
@@ -89,22 +127,25 @@ def setup(app):
                     while j < len(children) and isinstance(children[j], Text):
                         j += 1
                     merged = ''.join(str(c) for c in children[i:j])
-                    parts = []
-                    last_end = 0
-                    has_math = False
-                    for m in self._re_math.finditer(merged):
-                        if m.start() > last_end:
-                            parts.append(Text(merged[last_end:m.start()]))
-                        parts.append(math(m.group(1), Text(m.group(1))))
-                        has_math = True
-                        last_end = m.end()
+
+                    for ph, orig in math_map.items():
+                        merged = merged.replace(ph, orig)
+
+                    fragments = split_dollars(merged)
+                    has_math = any(t != 'text' for t, _ in fragments)
                     if has_math:
-                        if last_end < len(merged):
-                            parts.append(Text(merged[last_end:]))
-                        for idx in range(j - 1, i - 1, -1):
-                            parent.remove(children[idx])
-                        for idx, p in enumerate(parts):
-                            parent.insert(i + idx, p)
+                        parts = []
+                        for typ, content in fragments:
+                            if typ == 'text':
+                                if content:
+                                    parts.append(Text(content))
+                            else:
+                                parts.append(math(content, Text(content)))
+                        if parts:
+                            for idx in range(j - 1, i - 1, -1):
+                                parent.remove(children[idx])
+                            for idx, p in enumerate(parts):
+                                parent.insert(i + idx, p)
                     i = j
 
     app.add_post_transform(MathDollarPostTransform)
