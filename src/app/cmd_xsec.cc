@@ -66,9 +66,6 @@ bool marley::CommandHandler::cmd_xsec( std::deque< std::string >& args ) {
       std::cerr << "marley xsec: unrecognized option '" << arg << "'\n";
       return false;
     }
-    else if ( output_path.empty() ) {
-      output_path = arg;
-    }
     else if ( config_file_path.empty() ) {
       config_file_path = arg;
     }
@@ -153,12 +150,10 @@ bool marley::CommandHandler::cmd_xsec( std::deque< std::string >& args ) {
     }
   }
 
-  double delta_KE_step = ( KEmax - KEmin ) / num_steps;
   double KE = KEmin;
+  int steps = num_steps;
 
-  for ( int s = 0; s < num_steps; ++s ) {
-
-    KE += delta_KE_step;
+  if ( steps <= 1 ) {
     double xsec = gen.total_xs( projectile_pdg, KE );
     xsec *= marley_utils::hbar_c2 * marley_utils::fm2_to_minus40_cm2 * 1e2;
 
@@ -167,7 +162,20 @@ bool marley::CommandHandler::cmd_xsec( std::deque< std::string >& args ) {
     MARLEY_LOG( INFO, "app" ) << "KE = " << KE
       << " MeV, abundance-weighted total xsec = "
       << xsec << " × 10^{-42} cm^2 / atom";
+  }
+  else {
+    double delta = ( KEmax - KEmin ) / ( steps - 1 );
+    for ( int s = 0; s < steps; ++s ) {
+      KE = KEmin + s * delta;
+      double xsec = gen.total_xs( projectile_pdg, KE );
+      xsec *= marley_utils::hbar_c2 * marley_utils::fm2_to_minus40_cm2 * 1e2;
 
+      out_file << KE << ' ' << xsec << '\n';
+
+      MARLEY_LOG( INFO, "app" ) << "KE = " << KE
+        << " MeV, abundance-weighted total xsec = "
+        << xsec << " × 10^{-42} cm^2 / atom";
+    }
   }
 
   return true;
