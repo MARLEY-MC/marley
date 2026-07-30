@@ -15,7 +15,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean doxygen html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -40,13 +40,22 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -rf $(BUILDDIR)/*
+	-rm -rf $(BUILDDIR)/* $(DOXYGEN_STAMP)
 
-doxygen:
+# Doxygen stamp file for dependency tracking: Doxygen only re-runs when
+# the Doxyfile or any source/header file is newer than the stamp.
+DOXYGEN_STAMP = $(BUILDDIR)/.doxygen.stamp
+DOXYGEN_INPUT_DIRS = ../src ../include ../docs/doxygen
+DOXYGEN_SOURCES = $(shell find $(DOXYGEN_INPUT_DIRS) -type f 2>/dev/null)
+
+$(DOXYGEN_STAMP): doxygen/Doxyfile $(DOXYGEN_SOURCES)
 	mkdir -p $(DOXYGEN_OUTPUT_DIR)
 	cd doxygen && doxygen
 	mkdir -p $(BUILDDIR)/html/doxygen
 	cp -r $(DOXYGEN_OUTPUT_DIR)/html/* $(BUILDDIR)/html/doxygen
+	touch $@
+
+doxygen: $(DOXYGEN_STAMP)
 
 html: doxygen
 	touch $(BUILDDIR)/html/.nojekyll
