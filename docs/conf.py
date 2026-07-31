@@ -1,7 +1,5 @@
 import sys, os, subprocess, re
 
-from sphinx.highlighting import lexers
-from pygments.lexers.web import PhpLexer
 from sphinx_math_dollar import split_dollars
 
 # ---------------------------------------------------------------------------
@@ -491,13 +489,42 @@ html_sidebars = {
 
 import guzzle_sphinx_theme
 
+def _marley_create_sitemap(app, exception):
+    """Path-safe replacement for guzzle_sphinx_theme.create_sitemap.
+
+    The stock version builds the output path with ``app.outdir +
+    "/sitemap.xml"``.  Modern Sphinx makes ``app.outdir`` a pathlib-based
+    object whose ``+`` operator emits a RemovedInSphinx10Warning (and will
+    raise TypeError in Sphinx 10).  Using os.fspath() keeps this working
+    on every Sphinx version.
+    """
+    if (not app.config['html_theme_options'].get('base_url', '') or
+            exception is not None or not app.sitemap_links):
+        return
+
+    import xml.etree.ElementTree as ET
+    filename = os.path.join(os.fspath(app.outdir), 'sitemap.xml')
+    print('Generating sitemap.xml in %s' % filename)
+
+    root = ET.Element('urlset')
+    root.set('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
+    for link in app.sitemap_links:
+        url = ET.SubElement(root, 'url')
+        ET.SubElement(url, 'loc').text = link
+    ET.ElementTree(root).write(filename)
+
+# guzzle_sphinx_theme.setup() looks up these handler names in the module
+# namespace when it runs, so replacing them here takes effect before the
+# extension registers its event handlers.
+guzzle_sphinx_theme.create_sitemap = _marley_create_sitemap
+
 extensions.append("guzzle_sphinx_theme")
 html_theme_path = guzzle_sphinx_theme.html_theme_path()
 html_theme = 'guzzle_sphinx_theme'
 
 # Guzzle theme options (see theme.conf for more information)
 html_theme_options = {
-    "base_url": "www.marleygen.org",
+    "base_url": "https://www.marleygen.org/",
 }
 
 #html_add_permalinks = None
