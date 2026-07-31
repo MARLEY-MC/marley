@@ -552,6 +552,23 @@ def setup(app):
         if bibdata is None:
             return
 
+        entries = list(bibdata.data.entries.values())
+
+        # Undo placeholders left in the cached entries by a previous build so
+        # that protection is idempotent across incremental builds. Without
+        # this, the mutated fields are pickled into the environment, later
+        # builds find no '$...$' to protect, and the raw '@@N@@' placeholders
+        # leak into the HTML output.
+        prev_map = getattr(app.env, '_marley_math_placeholder_map', {})
+        if prev_map:
+            for entry in entries:
+                for field_name in list(entry.fields.keys()):
+                    value = entry.fields[field_name]
+                    if isinstance(value, str) and '@@' in value:
+                        for ph, orig in prev_map.items():
+                            value = value.replace(ph, orig)
+                        entry.fields[field_name] = value
+
         counter = [0]
         math_map = {}
 
@@ -561,7 +578,7 @@ def setup(app):
             math_map[ph] = m.group(0)
             return ph
 
-        for entry in bibdata.data.entries.values():
+        for entry in entries:
             for field_name in list(entry.fields.keys()):
                 value = entry.fields[field_name]
                 if not isinstance(value, str):
@@ -573,6 +590,11 @@ def setup(app):
 
         app._math_placeholder_map = math_map
 
+        # Persist the map on the environment (which Sphinx pickles at the end
+        # of the build) so that a future incremental build can undo these
+        # placeholders and re-protect cleanly.
+        app.env._marley_math_placeholder_map = math_map
+
     app.connect('builder-inited', _protect_bib_math_after_parse, priority=501)
 
     # ── Phase 2: restore placeholders and create math nodes ──
@@ -581,8 +603,11 @@ def setup(app):
         default_priority = 11
 
         def run(self, **kwargs):
-            math_map = getattr(
-                self.document.settings.env.app, '_math_placeholder_map', {})
+            env = self.document.settings.env
+            math_map = getattr(env.app, '_math_placeholder_map', None)
+            if not math_map:
+                math_map = getattr(
+                    env, '_marley_math_placeholder_map', {})
 
             for parent in list(self.document.traverse(Element)):
                 if isinstance(parent, (FixedTextElement, literal, math)):
@@ -627,5 +652,18 @@ def setup(app):
                             for idx, p in enumerate(parts):
                                 parent.insert(i + idx, p)
                     i = j
+
+            # Restore placeholders in hover-tooltip title attributes (e.g.
+            # the 'reftitle' set by sphinxcontrib-bibtex on :cite: reference
+            # links). These are node attributes rather than Text children, so
+            # the loop above cannot reach them.
+            for node in list(self.document.traverse(Element)):
+                for attr in ('reftitle', 'title'):
+                    value = node.get(attr)
+                    if not isinstance(value, str) or '@@' not in value:
+                        continue
+                    for ph, orig in math_map.items():
+                        value = value.replace(ph, orig)
+                    node[attr] = value
 
     app.add_post_transform(MathDollarPostTransform)
