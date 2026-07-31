@@ -72,6 +72,13 @@ namespace {
   // Reset to false at the start of each cmd_generate() call.
   static bool g_fallback_mode = false;
 
+  // True once setup_scroll_region() has been called and the ANSI scroll region
+  // is active. Used to distinguish the first call (which must scroll existing
+  // log content clear of the status zone) from subsequent resize calls (which
+  // must not inject spurious blank lines into the log zone).
+  // Reset to false at the start of each cmd_generate() call.
+  static bool g_status_region_active = false;
+
   struct TermSize {
     int rows;
     int cols;
@@ -147,11 +154,25 @@ namespace {
   }
 
   // Declare (or re-declare) the scroll region and prepare the status zone.
-  // Only the status zone rows are cleared; pre-existing log content above is
-  // preserved. Safe to call both at startup and after a terminal resize.
+  // On the first call (no scroll region active yet), scrolls existing terminal
+  // content up by num_status_lines rows so that log output from before this
+  // call is not overwritten when the status zone is claimed and cleared.
+  // On subsequent calls (e.g. after a terminal resize), the scroll region is
+  // already active so no scroll-push is needed; only the status zone rows are
+  // cleared. Safe to call both at initial setup and after a terminal resize.
   void setup_scroll_region( int num_status_lines ) {
     TermSize ts = get_terminal_size();
     int log_zone_end = ts.rows - num_status_lines;
+
+    if ( !g_status_region_active ) {
+      // No scroll region is active yet. Move to the very last row of the
+      // terminal and emit num_status_lines newlines. Because the cursor is at
+      // the bottom and no scroll region constrains the scroll, each newline
+      // scrolls the entire terminal up by one row, leaving exactly
+      // num_status_lines blank rows at the bottom for the status zone.
+      std::cout << "\033[" << ts.rows << ";1H"; // move to last row
+      for ( int i = 0; i < num_status_lines; ++i ) std::cout << '\n';
+    }
 
     std::cout << "\033[1;" << log_zone_end << "r"; // declare scroll region
 
@@ -160,6 +181,8 @@ namespace {
 
     std::cout << "\033[" << log_zone_end << ";1H";  // park cursor at base of log zone
     std::flush( std::cout );
+
+    g_status_region_active = true;
   }
 
   // Reset scroll region on every exit path.
@@ -198,6 +221,7 @@ namespace {
       std::cout << "\033[r"; // reset scroll region; leave cursor in place
     }
     std::flush( std::cout );
+    g_status_region_active = false;
   }
 
   // Switch to plain streaming output with no status display. Safe to call when
@@ -205,6 +229,7 @@ namespace {
   void enter_fallback_mode() {
     if ( g_fallback_mode ) return;
     g_fallback_mode = true;
+    g_status_region_active = false;
     TermSize ts = get_terminal_size();
     if ( ts.rows > 0 ) {
       std::cout << "\033[r"  // reset scroll region (no-op if never set)
@@ -410,6 +435,25 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
         out_config ) );
     }
 
+    // Fixed status line count for this run (computed once; used for scroll
+    // region sizing and fallback threshold throughout).
+    const int file_lines = ( output_files.size() <= MAX_FILE_STATUS_LINES )
+      ? static_cast< int >( output_files.size() ) : 1;
+    num_status_lines = 3 + file_lines;
+
+    // Reset module-level state in case cmd_generate is called more than once.
+    interrupted = false;
+    terminal_resized = false;
+    g_fallback_mode = false;
+    g_status_region_active = false;
+
+    std::signal( SIGINT,   signal_handler );
+    std::signal( SIGWINCH, sigwinch_handler );
+
+    // Create the generator before setting up the scroll region so that
+    // initialization logging (including the active-reaction summary printed
+    // at the end of create_generator()) appears before the status zone is
+    // claimed. This avoids truncation of those log messages.
     std::unique_ptr< marley::Generator > gen;
 
     bool need_to_resume = false;
@@ -429,22 +473,15 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
     if ( !need_to_resume ) gen = std::make_unique<marley::Generator>(
       jc.create_generator() );
 
-    // Fixed status line count for this run (computed once; used for scroll
-    // region sizing and fallback threshold throughout).
-    const int file_lines = ( output_files.size() <= MAX_FILE_STATUS_LINES )
-      ? static_cast< int >( output_files.size() ) : 1;
-    num_status_lines = 3 + file_lines;
+    // Reset the start timestamp after generator creation so that rate and ETA
+    // calculations exclude initialization overhead.
+    start_time_point = std::chrono::system_clock::now();
+    start_time = std::chrono::system_clock::to_time_t( start_time_point );
 
-    // Reset module-level state in case cmd_generate is called more than once.
-    interrupted = false;
-    terminal_resized = false;
-    g_fallback_mode = false;
+    exception_needs_reset_terminal = true;
 
-    std::signal( SIGINT,   signal_handler );
-    std::signal( SIGWINCH, sigwinch_handler );
-
-    // Initialize display before the event loop. Enter fallback mode if stdout
-    // is not a TTY or the terminal is too small for the status zone.
+    // Initialize the terminal display now that generator construction is done.
+    // Enter fallback mode if stdout is not a TTY or the terminal is too small.
     {
       TermSize ts = get_terminal_size();
       if ( ts.rows == 0 || ts.rows < num_status_lines + 2 ) {
@@ -454,14 +491,7 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
       }
     }
 
-    exception_needs_reset_terminal = true;
-
     long ev_count = 1 + num_old_events;
-
-    // Reset the start timestamp now that display setup is complete,
-    // so rate and ETA calculations exclude initialization overhead.
-    start_time_point = std::chrono::system_clock::now();
-    start_time = std::chrono::system_clock::to_time_t( start_time_point );
 
     auto last_resize_time = std::chrono::steady_clock::time_point{};
 
@@ -563,7 +593,7 @@ bool marley::CommandHandler::cmd_generate( std::deque< std::string >& args ) {
   }
 
   catch ( const std::exception& error ) {
-    if ( exception_needs_reset_terminal ) {
+    if ( exception_needs_reset_terminal && g_status_region_active ) {
       reset_terminal( g_fallback_mode ? 0 : num_status_lines,
         /*clear_status=*/false );
     }

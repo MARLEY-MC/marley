@@ -344,11 +344,11 @@ marley::Generator marley::JSONConfig::create_generator() const
       if ( no_flux ) temp_oss << "\u001b[30m";
       temp_oss << ')';
 
-      MARLEY_LOG( INFO, "init.config" ) << "  " << proc_type_str << ": "
+      MARLEY_LOG( NOTICE, "init.config" ) << "  " << proc_type_str << ": "
         << r->get_description() << " (KE @ threshold: "
         << temp_oss.str();
-      if ( no_flux ) MARLEY_LOG( NOTICE, "init.config" )
-        << "  WARNING: reaction \"" << r->get_description() << "\" threshold"
+      if ( no_flux ) MARLEY_LOG( WARN, "init.config" )
+        << "Reaction \"" << r->get_description() << "\" threshold"
         << " (" << threshold_KE << " MeV) exceeds the maximum source energy ("
         << gen.get_source().get_Emax() << " MeV). No events will be generated"
         << " via this reaction.";
