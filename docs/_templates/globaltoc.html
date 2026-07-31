@@ -1,0 +1,17 @@
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>{{ _('Table Of Contents') }}</h2>
+  </div>
+  <div class="sidebar-toc">
+    {% if pagename == 'interpret_output' %}
+      {% set toctree = toctree(maxdepth=3, collapse=True, includehidden=True) %}
+    {% else %}
+      {% set toctree = toctree(maxdepth=2, collapse=True, includehidden=True) %}
+    {% endif %}
+    {% if toctree %}
+      {{ toctree }}
+    {% else %}
+      {{ toc }}
+    {% endif %}
+  </div>
+</div>
