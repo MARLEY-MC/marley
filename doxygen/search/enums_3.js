@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['interpolationmethod_938',['InterpolationMethod',['../classmarley_1_1_interpolation_grid.html#ae5168c850d65b47d2cafad055fa6651d',1,'marley::InterpolationGrid']]]
+  ['fileformat_0',['FileFormat',['../classmarley_1_1_decay_scheme.html#aa75467c6e05ac55f00784c7cece8fd19',1,'marley::DecayScheme']]]
 ];

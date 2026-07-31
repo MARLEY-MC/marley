@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 
-<html>
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   
   <!-- Licensed under the Apache 2.0 License -->
   <link rel="stylesheet" type="text/css" href="_static/fonts/open-sans/stylesheet.css" />
@@ -15,23 +15,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
     <title>MARLEY Bibliography &#8212; MARLEY  documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/guzzle.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <link rel="shortcut icon" href="_static/mar.png"/>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8e8a900e" />
+    <link rel="stylesheet" type="text/css" href="_static/guzzle.css?v=ee5bbeb1" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/katex-math.css?v=05624691" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b87e984e" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="icon" href="_static/mar.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="copyright" title="Copyright" href="copyright.html" />
     <link rel="next" title="Developer documentation" href="dev_docs.html" />
-    <link rel="prev" title="Interpreting the output" href="interpret_output.html" />
+    <link rel="prev" title="Command reference" href="commands.html" />
   
    
 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -41,7 +43,7 @@
           <a href="dev_docs.html" title="Developer documentation"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="interpret_output.html" title="Interpreting the output"
+          <a href="commands.html" title="Command reference"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">MARLEY  documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MARLEY Bibliography</a></li> 
@@ -62,12 +64,13 @@
       alt="MARLEY logo" width=200 style="margin: 0px 0px"/>
   <p style="color:black;margin-bottom:40px"> <b>Model of Argon Reaction <br>
   Low Energy Yields</b> </p> </a>
-</div>
-<div class="sidebar-block">
+</div><div class="sidebar-block">
   <div class="sidebar-wrapper">
     <h2>Table Of Contents</h2>
   </div>
   <div class="sidebar-toc">
+    
+      
     
     
       <ul class="current">
@@ -75,9 +78,11 @@
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing MARLEY</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interpret_output.html">Interpreting the output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Command reference</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Bibliography</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#about-marley">About MARLEY</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#publications-using-marley">Publications using MARLEY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#applications-of-the-marley-code">Applications of the MARLEY code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references-to-marley-predictions">References to MARLEY predictions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/MARLEY-MC/marley">GitHub repository</a></li>
@@ -96,7 +101,8 @@
       <ul>
 <li><a class="reference internal" href="#">MARLEY Bibliography</a><ul>
 <li><a class="reference internal" href="#about-marley">About MARLEY</a></li>
-<li><a class="reference internal" href="#publications-using-marley">Publications using MARLEY</a></li>
+<li><a class="reference internal" href="#applications-of-the-marley-code">Applications of the MARLEY code</a></li>
+<li><a class="reference internal" href="#references-to-marley-predictions">References to MARLEY predictions</a></li>
 </ul>
 </li>
 </ul>
@@ -132,68 +138,178 @@
           
           <div class="document clearer body">
             
-  <div class="section" id="marley-bibliography">
-<h1>MARLEY Bibliography<a class="headerlink" href="#marley-bibliography" title="Permalink to this headline">¶</a></h1>
-<p>This bibliography attempts to collect a full list of (1) references discussing
-MARLEY itself and (2) publications that use MARLEY calculations in some way.
-Examples of the latter category include</p>
-<ul class="simple">
-<li><p>New results (e.g., experimental sensitivity estimates) obtained using MARLEY
-simulations</p></li>
-<li><p>Comparisons of MARLEY to competing theoretical models</p></li>
-</ul>
+  <section id="marley-bibliography">
+<h1>MARLEY Bibliography<a class="headerlink" href="#marley-bibliography" title="Link to this heading">¶</a></h1>
+<p>This bibliography attempts to collect a full list of publications in three
+categories:</p>
+<ol class="arabic simple">
+<li><p>References discussing MARLEY itself</p></li>
+<li><p>Publications that directly use MARLEY in some way, e.g., experimental
+sensitivity studies based upon MARLEY simulations</p></li>
+<li><p>Publications that refer to MARLEY predictions without running the code
+directly</p></li>
+</ol>
 <p>User contributions to this list are strongly encouraged. If you have written a
 publication, thesis, etc. in which MARLEY is used, please <a class="reference external" href="mailto:support&#37;&#52;&#48;marleygen&#46;org?cc=gardiner&#37;&#52;&#48;fnal&#46;gov&amp;subject=Citation%20for%20MARLEY%20bibliography">send me</a> a citation (<a class="reference external" href="http://www.bibtex.org">BibTeX</a> format
 preferred) to advertise on this page.</p>
-<div class="section" id="about-marley">
-<h2>About MARLEY<a class="headerlink" href="#about-marley" title="Permalink to this headline">¶</a></h2>
-<p id="id1"><dl class="citation">
-<dt class="label" id="id4"><span class="brackets">Gar18</span></dt>
-<dd><p>S. Gardiner. <em>Nuclear Effects in Neutrino Detection</em>. PhD thesis, University of California, Davis, 2018. <a class="reference external" href="https://doi.org/10.5281/zenodo.3903986">doi:10.5281/zenodo.3903986</a>.</p>
-</dd>
-<dt class="label" id="id3"><span class="brackets">Gar21a</span></dt>
-<dd><p>S. Gardiner. Nuclear de-excitations in low-energy charged-current νₑ scattering on ⁴⁰Ar. <em>Phys. Rev. C</em>, 103:044604, Apr 2021. <a class="reference external" href="https://arxiv.org/abs/2010.02393">arXiv:2010.02393</a>, <a class="reference external" href="https://doi.org/10.1103/PhysRevC.103.044604">doi:10.1103/PhysRevC.103.044604</a>.</p>
-</dd>
-<dt class="label" id="id2"><span class="brackets">Gar21b</span></dt>
-<dd><p>S. Gardiner. Simulating low-energy neutrino interactions with MARLEY. <em>Comput. Phys. Commun.</em>, 269:108123, Aug 2021. <a class="reference external" href="https://arxiv.org/abs/2101.11867">arXiv:2101.11867</a>, <a class="reference external" href="https://doi.org/10.1016/j.cpc.2021.108123">doi:10.1016/j.cpc.2021.108123</a>.</p>
-</dd>
-</dl>
-</p>
+<section id="about-marley">
+<h2>About MARLEY<a class="headerlink" href="#about-marley" title="Link to this heading">¶</a></h2>
+<div class="docutils container" id="id1">
+<div role="list" class="citation-list">
+<div class="citation" id="id2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>S. Gardiner, P. Barham Alzás, A. Nikolakopoulos <em>et al.</em>, Continuum contribution to charged-current absorption of low-energy <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ν</mi><mi>e</mi></msub></mrow><annotation encoding="application/x-tex">\nu_e</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0637em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">e</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> on <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>40</mn></msup></mrow><annotation encoding="application/x-tex">^{40}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">40</span></span></span></span></span></span></span></span></span></span></span></span></span>Ar, (2026), <a class="reference external" href="https://arxiv.org/abs/2604.26801">arXiv:2604.26801 [hep-ph]</a>.</p>
 </div>
-<div class="section" id="publications-using-marley">
-<h2>Publications using MARLEY<a class="headerlink" href="#publications-using-marley" title="Permalink to this headline">¶</a></h2>
-<p id="id5"><dl class="citation">
-<dt class="label" id="id10"><span class="brackets">CFL+20</span></dt>
-<dd><p>W. Castiglioni, W. Foreman, I. Lepetic, B. R. Littlejohn, M. Malaker, and A. Mastbaum. Benefits of MeV-scale reconstruction capabilities in large liquid argon time projection chambers. <em>Phys. Rev. D</em>, 102(9):092010, Nov 2020. <a class="reference external" href="https://arxiv.org/abs/2006.14675">arXiv:2006.14675</a>, <a class="reference external" href="https://doi.org/10.1103/physrevd.102.092010">doi:10.1103/physrevd.102.092010</a>.</p>
-</dd>
-<dt class="label" id="id7"><span class="brackets">dGouveaMSS20</span></dt>
-<dd><p>A. de Gouvêa, I. Martinez-Soler, and M. Sen. Impact of neutrino decays on the supernova neutronization-burst flux. <em>Phys. Rev. D</em>, 101(4):043013, Feb 2020. <a class="reference external" href="https://arxiv.org/abs/1910.01127">arXiv:1910.01127</a>, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.101.043013">doi:10.1103/PhysRevD.101.043013</a>.</p>
-</dd>
-<dt class="label" id="id11"><span class="brackets">dGMSPGS20</span></dt>
-<dd><p>A. de Gouvêa, I. Martinez-Soler, Y. F. Perez-Gonzalez, and M. Sen. Fundamental physics with the diffuse supernova background neutrinos. <em>Phys. Rev. D</em>, 102(12):123012, Dec 2020. <a class="reference external" href="https://arxiv.org/abs/2007.13748">arXiv:2007.13748</a>, <a class="reference external" href="https://doi.org/10.1103/physrevd.102.123012">doi:10.1103/physrevd.102.123012</a>.</p>
-</dd>
-<dt class="label" id="id14"><span class="brackets">LRB21</span></dt>
-<dd><p>S. W. Li, L. F. Roberts, and J. F. Beacom. Exciting prospects for detecting late-time neutrinos from core-collapse supernovae. <em>Phys. Rev. D</em>, 103:023016, Jan 2021. <a class="reference external" href="https://arxiv.org/abs/2008.04340">arXiv:2008.04340</a>, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.103.023016">doi:10.1103/PhysRevD.103.023016</a>.</p>
-</dd>
-<dt class="label" id="id12"><span class="brackets">MSPGS21</span></dt>
-<dd><p>I. Martinez-Soler, Y. F. Perez-Gonzalez, and M. Sen. SN1987A still shining: A quest for pseudo-Dirac neutrinos. May 2021. <a class="reference external" href="https://arxiv.org/abs/2105.12736">arXiv:2105.12736</a>.</p>
-</dd>
-<dt class="label" id="id8"><span class="brackets">VDJN19</span></dt>
-<dd><p>N. Van Dessel, N. Jachowicz, and A. Nikolakopoulos. Forbidden transitions in neutral- and charged-current interactions between low-energy neutrinos and argon. <em>Phys. Rev. C</em>, 100(5):055503, Nov 2019. <a class="reference external" href="https://arxiv.org/abs/1903.07726">arXiv:1903.07726</a>, <a class="reference external" href="https://doi.org/10.1103/PhysRevC.100.055503">doi:10.1103/PhysRevC.100.055503</a>.</p>
-</dd>
-<dt class="label" id="id9"><span class="brackets">VDNJ20</span></dt>
-<dd><p>N. Van Dessel, A. Nikolakopoulos, and N. Jachowicz. Lepton kinematics in low-energy neutrino-argon interactions. <em>Phys. Rev. C</em>, 101(4):045502, Apr 2020. <a class="reference external" href="https://arxiv.org/abs/1912.10714">arXiv:1912.10714</a>, <a class="reference external" href="https://doi.org/10.1103/PhysRevC.101.045502">doi:10.1103/PhysRevC.101.045502</a>.</p>
-</dd>
-<dt class="label" id="id13"><span class="brackets">COHERENTCollaboration21</span></dt>
-<dd><p>COHERENT Collaboration. Measurement of the coherent elastic neutrino-nucleus scattering cross section on CsI by COHERENT. Oct 2021. <a class="reference external" href="https://arxiv.org/abs/2110.07730">arXiv:2110.07730</a>.</p>
-</dd>
-<dt class="label" id="id6"><span class="brackets">DUNECollaboration21</span></dt>
-<dd><p>DUNE Collaboration. Supernova neutrino burst detection with the Deep Underground Neutrino Experiment. <em>Eur. Phys. J. C</em>, 81(5):423, May 2021. <a class="reference external" href="https://arxiv.org/abs/2008.06647">arXiv:2008.06647</a>, <a class="reference external" href="https://doi.org/10.1140/epjc/s10052-021-09166-w">doi:10.1140/epjc/s10052-021-09166-w</a>.</p>
-</dd>
-</dl>
-</p>
+<div class="citation" id="id4" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>S. Gardiner, Nuclear de-excitations in low-energy charged-current <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ν</mi><mi>e</mi></msub></mrow><annotation encoding="application/x-tex">\nu_e</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0637em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">e</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> scattering on <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>40</mn></msup></mrow><annotation encoding="application/x-tex">^{40}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">40</span></span></span></span></span></span></span></span></span></span></span></span></span>Ar, <a class="reference external" href="https://doi.org/10.1103/PhysRevC.103.044604"><em>Phys. Rev. C</em> <strong>103</strong>, 044604 (2021)</a>, <a class="reference external" href="https://arxiv.org/abs/2010.02393">arXiv:2010.02393 [nucl-th]</a>.</p>
+</div>
+<div class="citation" id="id3" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></span>
+<p>S. Gardiner, Simulating low-energy neutrino interactions with MARLEY, <a class="reference external" href="https://doi.org/10.1016/j.cpc.2021.108123"><em>Comput. Phys. Commun.</em> <strong>269</strong>, 108123 (2021)</a>, <a class="reference external" href="https://arxiv.org/abs/2101.11867">arXiv:2101.11867 [nucl-th]</a>.</p>
+</div>
+<div class="citation" id="id5" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></span>
+<p>S. J. Gardiner, Nuclear Effects in Neutrino Detection, <a class="reference external" href="https://doi.org/10.2172/1637626">(PhD thesis, UC, Davis, 2018)</a>.</p>
 </div>
 </div>
+</div>
+</section>
+<section id="applications-of-the-marley-code">
+<h2>Applications of the MARLEY code<a class="headerlink" href="#applications-of-the-marley-code" title="Link to this heading">¶</a></h2>
+<div class="docutils container" id="id6">
+<div role="list" class="citation-list">
+<div class="citation" id="id12" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B1<span class="fn-bracket">]</span></span>
+<p>J. Folkerts, N. Solomey, B. Hartsock <em>et al.</em>, Method to reduce noise for measurement of <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">^{7}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">7</span></span></span></span></span></span></span></span></span></span></span></span></span>Be and <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>8</mn></msup></mrow><annotation encoding="application/x-tex">^{8}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">8</span></span></span></span></span></span></span></span></span></span></span></span></span>B solar neutrinos on gallium-71, <a class="reference external" href="https://doi.org/10.1016/j.nima.2024.170116"><em>Nucl. Instrum. Meth. A</em> <strong>1072</strong>, 170116 (2025)</a>, <a class="reference external" href="https://arxiv.org/abs/2312.10157">arXiv:2312.10157 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id9" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B2<span class="fn-bracket">]</span></span>
+<p>S. Manthey Corchado (DUNE Collaboration), DUNE's low energy physics searches, <a class="reference external" href="https://doi.org/10.22323/1.476.0217"><em>PoS</em> <strong>ICHEP2024</strong>, 217 (2025)</a>, <a class="reference external" href="https://arxiv.org/abs/2410.08251">arXiv:2410.08251 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id10" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B3<span class="fn-bracket">]</span></span>
+<p>A. Abed Abud <em>et al.</em> (DUNE Collaboration), Supernova pointing capabilities of DUNE, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.111.092006"><em>Phys. Rev. D</em> <strong>111</strong>, 092006 (2025)</a>, <a class="reference external" href="https://arxiv.org/abs/2407.10339">arXiv:2407.10339 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id7" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B4<span class="fn-bracket">]</span></span>
+<p>W. Shi, X. Ning, D. Pershey <em>et al.</em>, Physics prospects with MeV neutrino-argon charged current interactions using enhanced photon detection in future LArTPCs, <a class="reference external" href="https://doi.org/10.1103/f3t7-5vmd"><em>Phys. Rev. D</em> <strong>112</strong>, 012019 (2025)</a>, <a class="reference external" href="https://arxiv.org/abs/2502.18498">arXiv:2502.18498 [physics.ins-det]</a>.</p>
+</div>
+<div class="citation" id="id8" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B5<span class="fn-bracket">]</span></span>
+<p>B. Hartsock, N. Solomey, J. Folkerts <em>et al.</em>, Segment geometry optimization and prototype studies of a multi-coincidence GAGG solar neutrino detector, <a class="reference external" href="https://doi.org/10.1016/j.nima.2025.170597"><em>Nucl. Instrum. Meth. A</em> <strong>1078</strong>, 170597 (2025)</a>, <a class="reference external" href="https://arxiv.org/abs/2502.05095">arXiv:2502.05095 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id13" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B6<span class="fn-bracket">]</span></span>
+<p>C. Cuesta Soria (DUNE Collaboration), Supernova and solar neutrino searches at DUNE, <a class="reference external" href="https://doi.org/10.22323/1.441.0168"><em>PoS</em> <strong>TAUP2023</strong>, 168 (2024)</a>, <a class="reference external" href="https://arxiv.org/abs/2311.06134">arXiv:2311.06134 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id11" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B7<span class="fn-bracket">]</span></span>
+<p>S. Hedges <em>et al.</em> (nEXO Collaboration), Supernova electron-neutrino interactions with xenon in the nEXO detector, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.110.093002"><em>Phys. Rev. D</em> <strong>110</strong>, 093002 (2024)</a>, <a class="reference external" href="https://arxiv.org/abs/2405.19419">arXiv:2405.19419 [hep-ph]</a>.</p>
+</div>
+<div class="citation" id="id16" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B8<span class="fn-bracket">]</span></span>
+<p>P. An <em>et al.</em> (COHERENT Collaboration), Measurement of <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mrow><mi mathvariant="normal">n</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">t</mi></mrow></msup></mrow><annotation encoding="application/x-tex">^{\mathrm{nat}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7936em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7936em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">nat</span></span></span></span></span></span></span></span></span></span></span></span></span></span>Pb<span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">(</mo><msub><mi>ν</mi><mi>e</mi></msub><mo separator="true">,</mo><mi>X</mi><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(\nu_e, Xn)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0637em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">e</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">X</span><span class="mord mathnormal">n</span><span class="mclose">)</span></span></span></span></span> production with a stopped-pion neutrino source, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.108.072001"><em>Phys. Rev. D</em> <strong>108</strong>, 072001 (2023)</a>, <a class="reference external" href="https://arxiv.org/abs/2212.11295">arXiv:2212.11295 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id17" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B9<span class="fn-bracket">]</span></span>
+<p>M. R. Buckley, A. Mastbaum, and G. Mohlabeng, Directional neutrino searches for Galactic Center dark matter at large underground LArTPCs, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.107.092006"><em>Phys. Rev. D</em> <strong>107</strong>, 092006 (2023)</a>, <a class="reference external" href="https://arxiv.org/abs/2210.04920">arXiv:2210.04920 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id14" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B10<span class="fn-bracket">]</span></span>
+<p>P. An <em>et al.</em> (COHERENT Collaboration), Measurement of Electron-Neutrino Charged-Current Cross Sections on <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>127</mn></msup></mrow><annotation encoding="application/x-tex">^{127}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">127</span></span></span></span></span></span></span></span></span></span></span></span></span>I with the COHERENT NaI<span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ν</mi></mrow><annotation encoding="application/x-tex">\nu</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span></span></span></span></span>E Detector, <a class="reference external" href="https://doi.org/10.1103/PhysRevLett.131.221801"><em>Phys. Rev. Lett.</em> <strong>131</strong>, 221801 (2023)</a>, <a class="reference external" href="https://arxiv.org/abs/2305.19594">arXiv:2305.19594 [nucl-ex]</a>.</p>
+</div>
+<div class="citation" id="id15" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B11<span class="fn-bracket">]</span></span>
+<p>A. Abed Abud <em>et al.</em> (DUNE Collaboration), Impact of cross-section uncertainties on supernova neutrino spectral parameter fitting in the Deep Underground Neutrino Experiment, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.107.112012"><em>Phys. Rev. D</em> <strong>107</strong>, 112012 (2023)</a>, <a class="reference external" href="https://arxiv.org/abs/2303.17007">arXiv:2303.17007 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id20" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B12<span class="fn-bracket">]</span></span>
+<p>D. Akimov <em>et al.</em> (COHERENT Collaboration), Measurement of the Coherent Elastic Neutrino-Nucleus Scattering Cross Section on CsI by COHERENT, <a class="reference external" href="https://doi.org/10.1103/PhysRevLett.129.081801"><em>Phys. Rev. Lett.</em> <strong>129</strong>, 081801 (2022)</a>, <a class="reference external" href="https://arxiv.org/abs/2110.07730">arXiv:2110.07730 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id21" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B13<span class="fn-bracket">]</span></span>
+<p>I. Martinez-Soler, Y. F. Perez-Gonzalez, and M. Sen, Signs of pseudo-Dirac neutrinos in SN1987A data, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.105.095019"><em>Phys. Rev. D</em> <strong>105</strong>, 095019 (2022)</a>, <a class="reference external" href="https://arxiv.org/abs/2105.12736">arXiv:2105.12736 [hep-ph]</a>.</p>
+</div>
+<div class="citation" id="id18" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B14<span class="fn-bracket">]</span></span>
+<p>A. Mastbaum, F. Psihas, and J. Zennamo, Xenon-doped liquid argon TPCs as a neutrinoless double beta decay platform, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.106.092002"><em>Phys. Rev. D</em> <strong>106</strong>, 092002 (2022)</a>, <a class="reference external" href="https://arxiv.org/abs/2203.14700">arXiv:2203.14700 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id19" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B15<span class="fn-bracket">]</span></span>
+<p>S. Kubota <em>et al.</em> (Q-Pix Collaboration), Enhanced low-energy supernova burst detection in large liquid argon time projection chambers enabled by Q-Pix, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.106.032011"><em>Phys. Rev. D</em> <strong>106</strong>, 032011 (2022)</a>, <a class="reference external" href="https://arxiv.org/abs/2203.12109">arXiv:2203.12109 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id22" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B16<span class="fn-bracket">]</span></span>
+<p>B. Abi <em>et al.</em> (DUNE Collaboration), Supernova neutrino burst detection with the Deep Underground Neutrino Experiment, <a class="reference external" href="https://doi.org/10.1140/epjc/s10052-021-09166-w"><em>Eur. Phys. J. C</em> <strong>81</strong>, 423 (2021)</a>, <a class="reference external" href="https://arxiv.org/abs/2008.06647">arXiv:2008.06647 [hep-ex]</a>.</p>
+</div>
+<div class="citation" id="id25" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B17<span class="fn-bracket">]</span></span>
+<p>N. Van Dessel, A. Nikolakopoulos, and N. Jachowicz, Lepton kinematics in low energy neutrino-Argon interactions, <a class="reference external" href="https://doi.org/10.1103/PhysRevC.101.045502"><em>Phys. Rev. C</em> <strong>101</strong>, 045502 (2020)</a>, <a class="reference external" href="https://arxiv.org/abs/1912.10714">arXiv:1912.10714 [nucl-th]</a>.</p>
+</div>
+<div class="citation" id="id26" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B18<span class="fn-bracket">]</span></span>
+<p>A. de Gouvêa, I. Martinez-Soler, and M. Sen, Impact of neutrino decays on the supernova neutronization-burst flux, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.101.043013"><em>Phys. Rev. D</em> <strong>101</strong>, 043013 (2020)</a>, <a class="reference external" href="https://arxiv.org/abs/1910.01127">arXiv:1910.01127 [hep-ph]</a>.</p>
+</div>
+<div class="citation" id="id23" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B19<span class="fn-bracket">]</span></span>
+<p>A. De Gouvêa, I. Martinez-Soler, Y. F. Perez-Gonzalez <em>et al.</em>, Fundamental physics with the diffuse supernova background neutrinos, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.102.123012"><em>Phys. Rev. D</em> <strong>102</strong>, 123012 (2020)</a>, <a class="reference external" href="https://arxiv.org/abs/2007.13748">arXiv:2007.13748 [hep-ph]</a>.</p>
+</div>
+<div class="citation" id="id24" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B20<span class="fn-bracket">]</span></span>
+<p>W. Castiglioni, W. Foreman, I. Lepetic <em>et al.</em>, Benefits of MeV-scale reconstruction capabilities in large liquid argon time projection chambers, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.102.092010"><em>Phys. Rev. D</em> <strong>102</strong>, 092010 (2020)</a>, <a class="reference external" href="https://arxiv.org/abs/2006.14675">arXiv:2006.14675 [physics.ins-det]</a>.</p>
+</div>
+<div class="citation" id="id27" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>B21<span class="fn-bracket">]</span></span>
+<p>N. Van Dessel, N. Jachowicz, and A. Nikolakopoulos, Forbidden transitions in neutral and charged current interactions between low-energy neutrinos and Argon, <a class="reference external" href="https://doi.org/10.1103/PhysRevC.100.055503"><em>Phys. Rev. C</em> <strong>100</strong>, 055503 (2019)</a>, <a class="reference external" href="https://arxiv.org/abs/1903.07726">arXiv:1903.07726 [nucl-th]</a>.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="references-to-marley-predictions">
+<h2>References to MARLEY predictions<a class="headerlink" href="#references-to-marley-predictions" title="Link to this heading">¶</a></h2>
+<div class="docutils container" id="id28">
+<div role="list" class="citation-list">
+<div class="citation" id="id29" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>C1<span class="fn-bracket">]</span></span>
+<p>S. A. Meighen-Berger, J. L. Newstead, J. F. Beacom <em>et al.</em>, Enhancing DUNE's solar neutrino capabilities with neutral-current detection, <a class="reference external" href="https://doi.org/10.1103/htfm-tbdq"><em>Phys. Rev. Lett.</em> <strong>135</strong>, 011803 (2025)</a>, <a class="reference external" href="https://arxiv.org/abs/2410.00330">arXiv:2410.00330 [hep-ph]</a>.</p>
+</div>
+<div class="citation" id="id30" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>C2<span class="fn-bracket">]</span></span>
+<p>S.-F. Ge, C.-F. Kong, and A. Y. Smirnov, Testing the Origins of Neutrino Mass with Supernova-Neutrino Time Delay, <a class="reference external" href="https://doi.org/10.1103/PhysRevLett.133.121802"><em>Phys. Rev. Lett.</em> <strong>133</strong>, 121802 (2024)</a>, <a class="reference external" href="https://arxiv.org/abs/2404.17352">arXiv:2404.17352 [hep-ph]</a>.</p>
+</div>
+<div class="citation" id="id31" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>C3<span class="fn-bracket">]</span></span>
+<p>M. M. Saez, E. Rrapaj, A. Harada <em>et al.</em>, Correlations and Distinguishability Challenges in Supernova Models: Insights from Future Neutrino Detectors, (2024), <a class="reference external" href="https://arxiv.org/abs/2401.02531">arXiv:2401.02531 [astro-ph.HE]</a>.</p>
+</div>
+<div class="citation" id="id32" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>C4<span class="fn-bracket">]</span></span>
+<p>M. M. Saez, Exploring Neutrino Mass Orderings through Supernova Neutrino Detection, <a class="reference external" href="https://doi.org/10.3390/universe9110464"><em>Universe</em> <strong>9</strong>, 464 (2023)</a>, <a class="reference external" href="https://arxiv.org/abs/2310.19939">arXiv:2310.19939 [astro-ph.HE]</a>.</p>
+</div>
+<div class="citation" id="id33" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>C5<span class="fn-bracket">]</span></span>
+<p>F. Pompa, F. Capozzi, O. Mena <em>et al.</em>, Absolute <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ν</mi></mrow><annotation encoding="application/x-tex">\nu</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span></span></span></span></span> mass measurement with the DUNE experiment, <a class="reference external" href="https://doi.org/10.1103/PhysRevLett.129.121802"><em>Phys. Rev. Lett.</em> <strong>129</strong>, 121802 (2022)</a>, <a class="reference external" href="https://arxiv.org/abs/2203.00024">arXiv:2203.00024 [hep-ph]</a>.</p>
+</div>
+<div class="citation" id="id37" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>C6<span class="fn-bracket">]</span></span>
+<p>S. W. Li, L. F. Roberts, and J. F. Beacom, Exciting Prospects for Detecting Late-Time Neutrinos from Core-Collapse Supernovae, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.103.023016"><em>Phys. Rev. D</em> <strong>103</strong>, 023016 (2021)</a>, <a class="reference external" href="https://arxiv.org/abs/2008.04340">arXiv:2008.04340 [astro-ph.HE]</a>.</p>
+</div>
+<div class="citation" id="id34" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>C7<span class="fn-bracket">]</span></span>
+<p>V. De Romeri, P. Martínez-Miravé, and M. Tórtola, Signatures of primordial black hole dark matter at DUNE and THEIA, <a class="reference external" href="https://doi.org/10.1088/1475-7516/2021/10/051"><em>JCAP</em> <strong>10</strong>, 051 (2021)</a>, <a class="reference external" href="https://arxiv.org/abs/2106.05013">arXiv:2106.05013 [hep-ph]</a>.</p>
+</div>
+<div class="citation" id="id35" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>C8<span class="fn-bracket">]</span></span>
+<p>K. J. Kelly, P. A. N. Machado, A. Marchionni <em>et al.</em>, LEvEL: Low-Energy Neutrino Experiment at the LHC, <a class="reference external" href="https://doi.org/10.1007/JHEP08(2021)087"><em>JHEP</em> <strong>08</strong>, 087 (2021)</a>, <a class="reference external" href="https://arxiv.org/abs/2103.00009">arXiv:2103.00009 [hep-ph]</a>.</p>
+</div>
+<div class="citation" id="id36" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>C9<span class="fn-bracket">]</span></span>
+<p>M. Bendahman <em>et al.</em>, Exploring the Potential of Multi-Detector Analyses for Core-Collapse Supernova Neutrino Detection, <a class="reference external" href="https://doi.org/10.22323/1.395.1090"><em>PoS</em> <strong>ICRC2021</strong>, 1090 (2021)</a>.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
 
 
           </div>
@@ -201,7 +317,7 @@ preferred) to advertise on this page.</p>
   <div class="footer-relations">
     
       <div class="pull-left">
-        <a class="btn btn-default" href="interpret_output.html" title="previous chapter (use the left arrow)">Interpreting the output</a>
+        <a class="btn btn-default" href="commands.html" title="previous chapter (use the left arrow)">Command reference</a>
       </div>
     
       <div class="pull-right">
@@ -213,7 +329,7 @@ preferred) to advertise on this page.</p>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -223,7 +339,7 @@ preferred) to advertise on this page.</p>
           <a href="dev_docs.html" title="Developer documentation"
              >next</a> |</li>
         <li class="right" >
-          <a href="interpret_output.html" title="Interpreting the output"
+          <a href="commands.html" title="Command reference"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">MARLEY  documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">MARLEY Bibliography</a></li> 
@@ -236,7 +352,7 @@ preferred) to advertise on this page.</p>
 </script>
 <script type="text/javascript" src="_static/js/bootstrap.js"></script>
   <div class="footer">
-    &copy; Copyright 2016-2021 Steven Gardiner
+    &copy; Copyright 2016-2026 Steven Gardiner
   </div>
   </body>
 </html>

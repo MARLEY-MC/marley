@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['level_492',['Level',['../classmarley_1_1_level.html',1,'marley']]],
-  ['leveldensitymodel_493',['LevelDensityModel',['../classmarley_1_1_level_density_model.html',1,'marley']]],
-  ['logger_494',['Logger',['../classmarley_1_1_logger.html',1,'marley']]]
+  ['kleinnystrandnuclearformfactor_0',['KleinNystrandNuclearFormFactor',['../classmarley_1_1_klein_nystrand_nuclear_form_factor.html',1,'marley']]],
+  ['koningdelarocheopticalmodel_1',['KoningDelarocheOpticalModel',['../classmarley_1_1_koning_delaroche_optical_model.html',1,'marley']]]
 ];

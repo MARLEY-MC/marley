@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['transitiontype_941',['TransitionType',['../classmarley_1_1_gamma_strength_function_model.html#a79bf9ecf600ba8b55ef435668e3cc720',1,'marley::GammaStrengthFunctionModel::TransitionType()'],['../classmarley_1_1_matrix_element.html#a68fecd6d0f0cc5bbcd45b565f149e231',1,'marley::MatrixElement::TransitionType()']]]
+  ['momentumunit_0',['MomentumUnit',['../class_hep_m_c3_1_1_units.html#a8704bf97af93c6b6f23733c87642c124',1,'HepMC3::Units']]]
 ];

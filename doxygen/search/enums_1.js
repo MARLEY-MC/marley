@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['extrapolationmethod_936',['ExtrapolationMethod',['../classmarley_1_1_interpolation_grid.html#a12102e27f1cad372ea091eeb01d338ff',1,'marley::InterpolationGrid']]]
+  ['dataformat_0',['DataFormat',['../classmarley_1_1_reaction.html#a80a5ff517c11e0f648da9f8b5295d1a6',1,'marley::Reaction']]]
 ];

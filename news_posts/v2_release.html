@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+  <!-- Licensed under the Apache 2.0 License -->
+  <link rel="stylesheet" type="text/css" href="../_static/fonts/open-sans/stylesheet.css" />
+  <!-- Licensed under the SIL Open Font License -->
+  <link rel="stylesheet" type="text/css" href="../_static/fonts/source-serif-pro/source-serif-pro.css" />
+  <link rel="stylesheet" type="text/css" href="../_static/css/bootstrap.min.css" />
+  <link rel="stylesheet" type="text/css" href="../_static/css/bootstrap-theme.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>MARLEY v2 &#8212; MARLEY  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8e8a900e" />
+    <link rel="stylesheet" type="text/css" href="../_static/guzzle.css?v=ee5bbeb1" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=b87e984e" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="icon" href="../_static/mar.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="copyright" title="Copyright" href="../copyright.html" />
+    <link rel="next" title="New paper, DEAP-3600, and COHERENT CsI[Na]" href="cpc_and_others.html" />
+    <link rel="prev" title="MARLEY News" href="../news.html" />
+  
+   
+
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="cpc_and_others.html" title="New paper, DEAP-3600, and COHERENT CsI[Na]"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../news.html" title="MARLEY News"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">MARLEY  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../news.html" accesskey="U">MARLEY News</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MARLEY v2</a></li> 
+      </ul>
+    </div>
+    <div class="container-wrapper">
+
+      <div id="mobile-toggle">
+        <a href="#"><span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span></a>
+      </div>
+  <div id="left-column">
+    <div class="sphinxsidebar"><a href="
+    ../index.html" class="text-logo">MARLEY User Guide</a>
+<div class="align-center">
+  <a href="
+    ../index.html">
+    <img src="../doxygen/marley_diagram.svg"
+      alt="MARLEY logo" width=200 style="margin: 0px 0px"/>
+  <p style="color:black;margin-bottom:40px"> <b>Model of Argon Reaction <br>
+  Low Energy Yields</b> </p> </a>
+</div><div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Table Of Contents</h2>
+  </div>
+  <div class="sidebar-toc">
+    
+      
+    
+    
+      <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../copyright.html">Copyright and License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing MARLEY</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../interpret_output.html">Interpreting the output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands.html">Command reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pubs.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/MARLEY-MC/marley">GitHub repository</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev_docs.html">Developer documentation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../news.html">News</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">MARLEY v2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpc_and_others.html">New paper, DEAP-3600, and COHERENT CsI[Na]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prc40Ar.html">Publication in Phys. Rev. C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nu2020.html">New website and Neutrino 2020</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+</ul>
+
+    
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <h2>Contents</h2>
+    <div class="sidebar-localtoc">
+      <ul>
+<li><a class="reference internal" href="#">MARLEY v2</a><ul>
+<li><a class="reference internal" href="#physics-updates">Physics updates</a></li>
+<li><a class="reference internal" href="#technical-updates">Technical updates</a></li>
+<li><a class="reference internal" href="#outlook">Outlook</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+  </div>
+</div>
+<div class="sidebar-block">
+  <div class="sidebar-wrapper">
+    <div id="main-search">
+      <form class="form-inline" action="../search.html" method="GET" role="form">
+        <div class="input-group">
+          <input name="q" type="text" class="form-control" placeholder="Search...">
+        </div>
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>
+      
+    </div>
+  </div>
+        <div id="right-column">
+          
+          <div role="navigation" aria-label="breadcrumbs navigation">
+            <ol class="breadcrumb">
+              <li><a href="../index.html">Docs</a></li>
+              
+                <li><a href="../news.html">MARLEY News</a></li>
+              
+              <li>MARLEY v2</li>
+            </ol>
+          </div>
+          
+          <div class="document clearer body">
+            
+  <section id="marley-v2">
+<h1>MARLEY v2<a class="headerlink" href="#marley-v2" title="Link to this heading">¶</a></h1>
+<p class="feed-meta">Published by <em class="feed-author">Steven Gardiner</em> on <em class="feed-date">2026-08-01 15:11:00</em></p>
+<p>I am pleased to announce <a class="reference external" href="https://github.com/MARLEY-MC/marley/releases/tag/v2.0.0">version 2.0.0</a> of MARLEY, the
+first official update to the code since November 2023. This major release
+implements an improved model of the <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ν</mi><mi>e</mi></msub><msup><mtext>-</mtext><mn>40</mn></msup><mrow><mi mathvariant="normal">A</mi><mi mathvariant="normal">r</mi></mrow></mrow><annotation encoding="application/x-tex">\nu_e\text{-}^{40}\mathrm{Ar}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9641em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0637em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">e</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord text"><span class="mord">-</span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">40</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathrm">Ar</span></span></span></span></span></span>
+charged-current cross section that is described in <a class="reference external" href="https://arxiv.org/abs/2604.26801">arXiv:2604.26801 [hep-ph]</a>. The previous MARLEY
+output format has been entirely replaced by the <a class="reference external" href="https://arxiv.org/abs/1912.08005">HepMC3</a> event record. The representation of
+neutrino interactions within HepMC3 data structures follows the recommendations
+of version 1.0.0 of the <a class="reference external" href="https://doi.org/10.21468/SciPostPhysCodeb.57">NuHepMC</a> standard.</p>
+<section id="physics-updates">
+<h2>Physics updates<a class="headerlink" href="#physics-updates" title="Link to this heading">¶</a></h2>
+<p>The headline change in v2.0.0 is an overhaul of MARLEY’s neutrino cross-section
+calculation that removes the rough <em>allowed approximation</em> (AA) treatment used
+in the v1 release series. In MARLEY v2, neutrino-induced transitions to
+high-lying nuclear excitation energies are modeled using a Hartree-Fock
+Continuum Random Phase Approximation (HF-CRPA) approach, including forbidden
+nuclear matrix elements. The data-driven strategy from v1 is retained for
+transitions to discrete nuclear levels, but approximate corrections for
+momentum-transfer dependence are introduced to avoid taking the <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">q \to 0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">q</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span></span>
+limit from the AA that was used previously. The updated hybrid model of the
+charged-current interaction is discussed at length in <a class="reference external" href="https://arxiv.org/abs/2604.26801">arXiv:2604.26801 [hep-ph]</a>.</p>
+<p>Hauser-Feshbach statistical de-excitation calculations in MARLEY v2 still use
+the 46-parameter nuclear optical potential developed for the 2003
+Koning-Delaroche <a class="reference external" href="https://doi.org/10.1016/S0375-9474(02)01321-0">global fit</a>. However, the default
+parameter values have now been updated to match the “federal” <a class="reference external" href="https://doi.org/10.1103/PhysRevC.107.014602">KDUQ</a> re-evaluation published in
+2023. All parameters used in the nuclear optical model are now configurable via
+the JSON job configuration file used to run MARLEY.</p>
+<p>Output events now contain the full nuclear de-excitation history rather than
+merely vectors of the initial- and final-state particles. Each binary decay
+vertex in the de-excitation cascade is explicitly recorded. Metadata fields in
+the event record are used to store properties of the intermediate nuclear
+states (excitation energy, spin, parity) as well as the total and partial decay
+widths associated with each sampled transition.</p>
+<p>Rather than treating nuclear de-excitations as instantaneous (as was done in
+v1), MARLEY v2 adds tracking of particle emission times to the simulation of
+continuum decays and (where half-life data are available) γ-ray transitions
+between discrete levels. This functionality had to be introduced externally to
+support an exciting recent analysis by DEAP-3600 that reported first evidence
+for charged-current absorption of <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>8</mn></msup><mi mathvariant="normal">B</mi></mrow><annotation encoding="application/x-tex">^{8}\mathrm{B}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">8</span></span></span></span></span></span></span></span></span><span class="mord mathrm">B</span></span></span></span></span> solar neutrinos on an
+argon target: <a class="reference external" href="https://arxiv.org/abs/2605.12769">arXiv:2605.12769 [hep-ex]</a>. It is now available “out of the box” for all users.</p>
+<p>New code infrastructure for event reweighting has been added that enables
+evaluation of systematic uncertainties without re-running the simulation. A
+full uncertainty budget for MARLEY predictions has not yet been developed, but
+weight calculators for two classes of uncertainties (related to discrete
+transition matrix elements and the KDUQ nuclear optical potential) are
+available for the first time in version 2.0.0.</p>
+</section>
+<section id="technical-updates">
+<h2>Technical updates<a class="headerlink" href="#technical-updates" title="Link to this heading">¶</a></h2>
+<p>The MARLEY-specific output format used in v1 has been deprecated in favor of
+<a class="reference external" href="https://arxiv.org/abs/1912.08005">HepMC3</a>, a highly-flexible event record
+definition that is widely used for collider physics simulations. Recent
+community discussions about neutrino event generator data formats led to
+creation of <a class="reference external" href="https://doi.org/10.21468/SciPostPhysCodeb.57">NuHepMC</a>, a set
+of conventions for describing simulated neutrino reactions within the HepMC3
+framework. The updated MARLEY event format follows version 1.0.0 of the NuHepMC
+standard. <strong>This is a breaking change</strong> from v1 that will typically require
+updates to later stages of experimental simulation chains and downstream
+analysis code. The <a class="reference external" href="../interpret_output.html">interpreting the output</a>
+webpage provides details about the new format and MARLEY’s built-in
+capabilities for conversions to other representations of the simulation
+results.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">marley</span></code> executable now provides a unified command-line interface that
+accepts multiple commands: <code class="docutils literal notranslate"><span class="pre">generate</span></code>, <code class="docutils literal notranslate"><span class="pre">decay</span></code>, <code class="docutils literal notranslate"><span class="pre">convert</span></code>, <code class="docutils literal notranslate"><span class="pre">print</span></code>,
+<code class="docutils literal notranslate"><span class="pre">reweight</span></code>, <code class="docutils literal notranslate"><span class="pre">summarize</span></code>, <code class="docutils literal notranslate"><span class="pre">xsec</span></code>, <code class="docutils literal notranslate"><span class="pre">help</span></code>, and <code class="docutils literal notranslate"><span class="pre">version</span></code>. These
+commands replace the previous system of several different executables and
+helper scripts. For backwards compatibility, <code class="docutils literal notranslate"><span class="pre">marley</span> <span class="pre">CONFIG_FILE</span></code> still works
+as shorthand for <code class="docutils literal notranslate"><span class="pre">marley</span> <span class="pre">generate</span> <span class="pre">CONFIG_FILE</span></code>. A new <a class="reference external" href="../commands.html">command reference</a> webpage provides documentation for all of the new
+commands.</p>
+<p>MARLEY can now be built using <a class="reference external" href="https://cmake.org">CMake</a> in addition to
+plain GNU Make. For convenience, the top-level <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> will delegate to
+CMake automatically if it is available and will fall back to a standalone GNU
+Make recipe otherwise; users who prefer to invoke CMake directly are free to
+follow the usual CMake build procedure instead. Note that a C++17-compliant
+compiler (GCC ≥ 9.1.0 or Clang ≥ 9.0.0) is now required to build MARLEY.</p>
+<p>The JSON-like job configuration file format has been extended to support an
+<code class="docutils literal notranslate"><span class="pre">#include:&quot;file&quot;</span></code> directive, allowing MARLEY’s runtime configuration to be
+split across multiple files. Error messages produced by the JSON parser now
+report the file name and the line/column position at which a problem was
+encountered, making configuration mistakes easier to diagnose and fix.</p>
+</section>
+<section id="outlook">
+<h2>Outlook<a class="headerlink" href="#outlook" title="Link to this heading">¶</a></h2>
+<p>Thanks to a 2025 Early Career <a class="reference external" href="https://news.fnal.gov/2026/04/steven-gardiner-receives-early-career-award-to-advance-low-energy-neutrino-research-at-dune/">award</a> from the U.S. Department of Energy,
+MARLEY has recently returned to a state of active development. Further details
+about physics model improvements in MARLEY v2 can be found in my
+Neutrino 2026 <a class="reference external" href="https://indico.global/event/15740/contributions/147631/attachments/72141/139992/Neutrino-2026-Poster-final.pdf">poster</a> presentation and <a class="reference external" href="https://indico.fnal.gov/event/72820/contributions/341239/attachments/199988/278787/marley-v2-aps-dpf.pdf">this talk</a> from the July 2026
+APS DPF <a class="reference external" href="https://indico.fnal.gov/event/72820/">meeting</a>.</p>
+<p>For the v2.0.0 release, I thank all the co-authors of <a class="reference external" href="https://arxiv.org/abs/2604.26801">arXiv:2604.26801 [hep-ph]</a> for their
+scientific collaboration. I am also grateful for help with the implementation
+of new MARLEY features from Pablo Barham Alzás and Luca Abu El-Haj
+(cross-section improvements, optical potential reweighting) as well as Everardo
+Granados Vázquez (γ-ray emission timing).</p>
+<p>The MARLEY code remains enthusiastically open-source. <a class="reference external" href="../contact.html">Feedback</a> and <a class="reference external" href="../dev_docs.html">contributions</a> from the
+community are both valued and welcomed. I look forward with excitement as you
+give MARLEY v2.0.0 a try!</p>
+</section>
+</section>
+
+
+          </div>
+            
+  <div class="footer-relations">
+    
+      <div class="pull-left">
+        <a class="btn btn-default" href="../news.html" title="previous chapter (use the left arrow)">MARLEY News</a>
+      </div>
+    
+      <div class="pull-right">
+        <a class="btn btn-default" href="cpc_and_others.html" title="next chapter (use the right arrow)">New paper, DEAP-3600, and COHERENT CsI[Na]</a>
+      </div>
+    </div>
+    <div class="clearer"></div>
+  
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="cpc_and_others.html" title="New paper, DEAP-3600, and COHERENT CsI[Na]"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../news.html" title="MARLEY News"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">MARLEY  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../news.html" >MARLEY News</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">MARLEY v2</a></li> 
+      </ul>
+    </div>
+<script type="text/javascript">
+  $("#mobile-toggle a").click(function () {
+    $("#left-column").toggle();
+  });
+</script>
+<script type="text/javascript" src="../_static/js/bootstrap.js"></script>
+  <div class="footer">
+    &copy; Copyright 2016-2026 Steven Gardiner
+  </div>
+  </body>
+</html>

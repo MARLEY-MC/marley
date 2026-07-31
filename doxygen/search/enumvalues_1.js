@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['fermi_943',['FERMI',['../classmarley_1_1_matrix_element.html#a68fecd6d0f0cc5bbcd45b565f149e231a8177a25f404ae4d2fa3b6c929ed105c0',1,'marley::MatrixElement']]]
+  ['discretestrengths_0',['DiscreteStrengths',['../classmarley_1_1_reaction.html#a80a5ff517c11e0f648da9f8b5295d1a6a66d1d208bcf4348bcb07bb77d9b82e6e',1,'marley::Reaction']]]
 ];

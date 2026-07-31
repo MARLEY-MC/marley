@@ -1,11 +1,11 @@
 var searchData=
 [
-  ['weak_5fnuclear_5fcharge_819',['weak_nuclear_charge',['../classmarley_1_1_nuclear_reaction.html#a185b95eab0e2d1ec62c7fb65b73f69e6',1,'marley::NuclearReaction']]],
-  ['weisskopfsingleparticlemodel_820',['WeisskopfSingleParticleModel',['../classmarley_1_1_weisskopf_single_particle_model.html#ac1ea4a1faa5b0012cba22fd41de3221a',1,'marley::WeisskopfSingleParticleModel']]],
-  ['what_821',['what',['../classmarley_1_1_error.html#a52330a4b43d44ae957ab79e192e50cbc',1,'marley::Error']]],
-  ['width_822',['width',['../classmarley_1_1_exit_channel.html#a7b6bc085258cbb3d394dbe0b13f33843',1,'marley::ExitChannel']]],
-  ['write_5fevent_823',['write_event',['../classmarley_1_1_output_file.html#a3f559bcb76194115f0ef450a5fbcd359',1,'marley::OutputFile::write_event()'],['../classmarley_1_1_text_output_file.html#a855114fd1336b4694ffd4cc5e8e07160',1,'marley::TextOutputFile::write_event()']]],
-  ['write_5fflux_5favg_5ftot_5fxsec_824',['write_flux_avg_tot_xsec',['../classmarley_1_1_output_file.html#a1c757ca7869283d2a43a61b08e9ac388',1,'marley::OutputFile::write_flux_avg_tot_xsec()'],['../classmarley_1_1_text_output_file.html#a8a865181bfe86107ffc1e3e26cd3414e',1,'marley::TextOutputFile::write_flux_avg_tot_xsec()'],['../classmarley_1_1_root_output_file.html#af54bccbe7751e021ce4fa0a7425dbc15',1,'marley::RootOutputFile::write_flux_avg_tot_xsec()']]],
-  ['write_5fgenerator_5fstate_825',['write_generator_state',['../classmarley_1_1_output_file.html#a2c5ce46e9a87f25c4be4c4593602f367',1,'marley::OutputFile::write_generator_state()'],['../classmarley_1_1_text_output_file.html#a6b7c52be4eadb5a045564cfa00b1db40',1,'marley::TextOutputFile::write_generator_state()']]],
-  ['write_5fhepevt_826',['write_hepevt',['../classmarley_1_1_event.html#ac868412e5ceb2c30aa3612c1273dcede',1,'marley::Event']]]
+  ['uintattribute_0',['UIntAttribute',['../class_hep_m_c3_1_1_u_int_attribute.html#a13e1395dcb115247a437db06a5fbe33c',1,'HepMC3::UIntAttribute::UIntAttribute()'],['../class_hep_m_c3_1_1_u_int_attribute.html#ac75e0f488e02ec113d057e41059fd610',1,'HepMC3::UIntAttribute::UIntAttribute(unsigned int val)']]],
+  ['ulongattribute_1',['ULongAttribute',['../class_hep_m_c3_1_1_u_long_attribute.html#ae87c142dbebe10c6bd26526d8e64aa04',1,'HepMC3::ULongAttribute::ULongAttribute()'],['../class_hep_m_c3_1_1_u_long_attribute.html#aacd9c65aba8b9c0eefb29dda1f921c92',1,'HepMC3::ULongAttribute::ULongAttribute(unsigned long val)']]],
+  ['ulonglongattribute_2',['ULongLongAttribute',['../class_hep_m_c3_1_1_u_long_long_attribute.html#ab37040664b2df3bd1792167431afd934',1,'HepMC3::ULongLongAttribute::ULongLongAttribute()'],['../class_hep_m_c3_1_1_u_long_long_attribute.html#a1ef8a795dd990e0a465bf4e575afe2f9',1,'HepMC3::ULongLongAttribute::ULongLongAttribute(unsigned long long val)']]],
+  ['unbound_5fthreshold_3',['unbound_threshold',['../classmarley_1_1_mass_table.html#ac3abe208670268e6fc69adfd29c9fd08',1,'marley::MassTable::unbound_threshold(const int Zi, const int Ai) const'],['../classmarley_1_1_mass_table.html#aed1e82fb5b3fa81eda72cb5e8d3adf28',1,'marley::MassTable::unbound_threshold(const int initial_nucleus_pdg) const']]],
+  ['uniform_5frandom_5fdouble_4',['uniform_random_double',['../classmarley_1_1_generator.html#a0f589845050dad9b4640ab25750db4ca',1,'marley::Generator']]],
+  ['unparsed_5fstring_5',['unparsed_string',['../class_hep_m_c3_1_1_attribute.html#a4660c33e8288a2aa2233f38d402e6d24',1,'HepMC3::Attribute']]],
+  ['unset_5fgenerated_5fmass_6',['unset_generated_mass',['../class_hep_m_c3_1_1_gen_particle.html#a9afb35e0ae1e2df65c475931b515e1c3',1,'HepMC3::GenParticle']]],
+  ['upper_5fbound_7',['upper_bound',['../classmarley_1_1_interpolation_grid.html#aef1830ac59f836a52cac220b83f70c29',1,'marley::InterpolationGrid']]]
 ];

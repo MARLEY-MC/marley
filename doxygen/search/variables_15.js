@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['z_5f_930',['Z_',['../classmarley_1_1_backshifted_fermi_gas_model.html#a36d8c99f14aa9646d91a1bc331e8b0a0',1,'marley::BackshiftedFermiGasModel::Z_()'],['../classmarley_1_1_decay_scheme.html#a3e0cba0f7c61ed211628029e604f3708',1,'marley::DecayScheme::Z_()'],['../classmarley_1_1_gamma_strength_function_model.html#ad2795137e9c07314fa7fa4c0b9e4ab03',1,'marley::GammaStrengthFunctionModel::Z_()']]],
-  ['zf_5f_931',['Zf_',['../classmarley_1_1_nuclear_reaction.html#ad7620e5bedebacd302946f74d7bbc93c',1,'marley::NuclearReaction']]],
-  ['zi_5f_932',['Zi_',['../classmarley_1_1_nuclear_reaction.html#ab0e49941e652268c0a4396eb92620a24',1,'marley::NuclearReaction']]]
+  ['weight_5fnames_0',['weight_names',['../struct_hep_m_c3_1_1_gen_run_info_data.html#a337242cec635f423c286d46f2c04da51',1,'HepMC3::GenRunInfoData']]],
+  ['weights_1',['weights',['../struct_hep_m_c3_1_1_gen_event_data.html#ad67f018bccd731a0bb791b76159ec213',1,'HepMC3::GenEventData']]],
+  ['width_5f_2',['width_',['../classmarley_1_1_exit_channel.html#a4c1dd582e6d15aad2630c446b03109cc',1,'marley::ExitChannel']]],
+  ['writer_5f_3',['writer_',['../classmarley_1_1_output_file_ascii.html#ae78cd79a77e1743ca198cdec9e09058d',1,'marley::OutputFileAscii']]],
+  ['wvec_5f_4',['wvec_',['../classmarley_1_1_response_table.html#a28479a3af14b147e8491901836c91725',1,'marley::ResponseTable']]]
 ];

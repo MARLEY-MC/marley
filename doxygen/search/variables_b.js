@@ -1,12 +1,23 @@
 var searchData=
 [
-  ['ma_5f_883',['ma_',['../classmarley_1_1_reaction.html#aea3c67ae0b64f048b0e728900200f96c',1,'marley::Reaction']]],
-  ['marley_5fdir_5f_884',['marley_dir_',['../classmarley_1_1_file_manager.html#a4baeafb219dc94a3193bedc9ba14cb34',1,'marley::FileManager']]],
-  ['mass_5f_885',['mass_',['../classmarley_1_1_particle.html#a71ecb16b4bcabba0117e2e6f89fe2a2c',1,'marley::Particle']]],
-  ['matrix_5f_886',['matrix_',['../classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f',1,'marley::RotationMatrix']]],
-  ['matrix_5felements_5f_887',['matrix_elements_',['../classmarley_1_1_nuclear_reaction.html#aeada84bbffeacc79cd256b79348767e5',1,'marley::NuclearReaction']]],
-  ['mb_5f_888',['mb_',['../classmarley_1_1_reaction.html#af3c38e0a9e08525685a2ee8de212d17a',1,'marley::Reaction']]],
-  ['mc_5f_889',['mc_',['../classmarley_1_1_reaction.html#a383a684d06e3ca1e791394b95a758fe4',1,'marley::Reaction']]],
-  ['md_5f_890',['md_',['../classmarley_1_1_reaction.html#a2a253c917efbb94aefe65806d9343a81',1,'marley::Reaction']]],
-  ['md_5fgs_5f_891',['md_gs_',['../classmarley_1_1_nuclear_reaction.html#ad93300e94630b62181178acc327d0347',1,'marley::NuclearReaction']]]
+  ['m_5foptions_0',['m_options',['../class_hep_m_c3_1_1_reader.html#a1f475690e22eaf66195bc16ebb2f295d',1,'HepMC3::Reader::m_options'],['../class_hep_m_c3_1_1_writer.html#a00dbabe1840b804828fda224d425b3ba',1,'HepMC3::Writer::m_options']]],
+  ['ma_5f_1',['Ma_',['../classmarley_1_1_dipole_axial_form_factors.html#a9a84f93f71d4f6f697ddd06662f77e4a',1,'marley::DipoleAxialFormFactors']]],
+  ['ma_5f_2',['ma_',['../classmarley_1_1_reaction.html#aea3c67ae0b64f048b0e728900200f96c',1,'marley::Reaction']]],
+  ['marley_5fdir_5f_3',['marley_dir_',['../classmarley_1_1_file_manager.html#a4baeafb219dc94a3193bedc9ba14cb34',1,'marley::FileManager']]],
+  ['mass_4',['mass',['../struct_hep_m_c3_1_1_gen_particle_data.html#a02a20a59e58620e956c4d2d780a5192b',1,'HepMC3::GenParticleData']]],
+  ['matrix_5f_5',['matrix_',['../classmarley_1_1_rotation_matrix.html#ac1e04913d31ea0cc69574d217aea720f',1,'marley::RotationMatrix']]],
+  ['matrix_5felements_5f_6',['matrix_elements_',['../classmarley_1_1_discrete_nuclear_reaction.html#a75f8811a31118e656f23fa672dab45f0',1,'marley::DiscreteNuclearReaction']]],
+  ['max_5ftotal_5fke_5fcm_7',['MAX_TOTAL_KE_CM',['../classmarley_1_1_cached_optical_model.html#ab44a5cfbefca265d6fba5edd9bd82276',1,'marley::CachedOpticalModel']]],
+  ['mb_5f_8',['mb_',['../classmarley_1_1_reaction.html#af3c38e0a9e08525685a2ee8de212d17a',1,'marley::Reaction']]],
+  ['mc_5f_9',['mc_',['../classmarley_1_1_coulomb_corrector.html#a314aa76b2fde5d5280ea09086bf25f7a',1,'marley::CoulombCorrector::mc_'],['../classmarley_1_1_reaction.html#a383a684d06e3ca1e791394b95a758fe4',1,'marley::Reaction::mc_']]],
+  ['md_5f_10',['md_',['../classmarley_1_1_reaction.html#a2a253c917efbb94aefe65806d9343a81',1,'marley::Reaction']]],
+  ['md_5fgs_5f_11',['md_gs_',['../classmarley_1_1_nuclear_reaction.html#ad93300e94630b62181178acc327d0347',1,'marley::NuclearReaction']]],
+  ['me_5fidx_5f_12',['me_idx_',['../classmarley_1_1_strength_variation_weight_calculator.html#a1035138590928b14ee9c0d26866c5d24',1,'marley::StrengthVariationWeightCalculator']]],
+  ['min_5ftotal_5fke_5fcm_13',['MIN_TOTAL_KE_CM',['../classmarley_1_1_cached_optical_model.html#a44bc55d7a0eacc2eb014bd1f38018d51',1,'marley::CachedOpticalModel']]],
+  ['mode_5f_14',['mode_',['../classmarley_1_1_strength_variation_weight_calculator.html#a98549833b858b249bc73a76c05b2dba6',1,'marley::StrengthVariationWeightCalculator']]],
+  ['momentum_15',['momentum',['../struct_hep_m_c3_1_1_gen_particle_data.html#ac33c2f557b61b394a22d2508951c9c0a',1,'HepMC3::GenParticleData']]],
+  ['momentum_5funit_16',['momentum_unit',['../struct_hep_m_c3_1_1_gen_event_data.html#aefe7010190613cf59f2fa6138eaf1575',1,'HepMC3::GenEventData']]],
+  ['mtx_5f_17',['mtx_',['../classmarley_1_1_logger_1_1_message.html#ae3456a9efa748e8e4f39b738798ba6da',1,'marley::Logger::Message']]],
+  ['multipolarity_18',['multipolarity',['../structmarley_1_1_gamma_continuum_exit_channel_1_1_gamma_spin_parity_width.html#a1548042de79dd453b426cc041230089e',1,'marley::GammaContinuumExitChannel::GammaSpinParityWidth']]],
+  ['mv_5f_19',['Mv_',['../classmarley_1_1_dipole_sachs_form_factors.html#a70b26f9298d107989cf6b9eeb69b7e23',1,'marley::DipoleSachsFormFactors']]]
 ];

@@ -1,6 +1,21 @@
 var searchData=
 [
-  ['n_5f_892',['N_',['../classmarley_1_1_chebyshev_interpolating_function.html#a69de6329efb98cf8cfd3a1e3c87d8095',1,'marley::ChebyshevInterpolatingFunction']]],
-  ['n_5fmax_5f_893',['N_MAX_',['../classmarley_1_1_chebyshev_interpolating_function.html#a2e2bd24b8ea7dafcfb2741b300abd5e7',1,'marley::ChebyshevInterpolatingFunction']]],
-  ['name_5f_894',['name_',['../classmarley_1_1_output_file.html#afda7cede670a500ac038481bf0e322c8',1,'marley::OutputFile']]]
+  ['n_5f_0',['N_',['../classmarley_1_1_chebyshev_interpolating_function.html#a69de6329efb98cf8cfd3a1e3c87d8095',1,'marley::ChebyshevInterpolatingFunction']]],
+  ['n_5fmax_5f_1',['N_MAX_',['../classmarley_1_1_chebyshev_interpolating_function.html#a2e2bd24b8ea7dafcfb2741b300abd5e7',1,'marley::ChebyshevInterpolatingFunction']]],
+  ['n_5fnwounded_5fcollisions_2',['N_Nwounded_collisions',['../class_hep_m_c3_1_1_gen_heavy_ion.html#ab97c77e42f99dee34c5b0107f830777b',1,'HepMC3::GenHeavyIon']]],
+  ['name_3',['name',['../class_hep_m_c3_1_1_gen_run_info.html#ada7f4c24b235b7d1b5e030e5869adba0',1,'HepMC3::GenRunInfo::ToolInfo']]],
+  ['name_5f_4',['name_',['../classmarley_1_1_output_file.html#afda7cede670a500ac038481bf0e322c8',1,'marley::OutputFile::name_'],['../classmarley_1_1_weight_calculator.html#afae566c05184df9a902174bc3e5271f6',1,'marley::WeightCalculator::name_']]],
+  ['ncoll_5',['Ncoll',['../class_hep_m_c3_1_1_gen_heavy_ion.html#a510bec91c8ef9ab25509c27b074ff34f',1,'HepMC3::GenHeavyIon']]],
+  ['ncoll_5fhard_6',['Ncoll_hard',['../class_hep_m_c3_1_1_gen_heavy_ion.html#ae5e248ceee775bc15889943ba0c6fe7f',1,'HepMC3::GenHeavyIon']]],
+  ['npart_5fproj_7',['Npart_proj',['../class_hep_m_c3_1_1_gen_heavy_ion.html#a1cec1946ff5474ee8fbe98e6481e6aae',1,'HepMC3::GenHeavyIon']]],
+  ['npart_5ftarg_8',['Npart_targ',['../class_hep_m_c3_1_1_gen_heavy_ion.html#a3d2bc3e1e7f09b642eb407372cf0faac',1,'HepMC3::GenHeavyIon']]],
+  ['nspec_5fproj_5fn_9',['Nspec_proj_n',['../class_hep_m_c3_1_1_gen_heavy_ion.html#aebd0d3529f57930ea8e01e3c26222325',1,'HepMC3::GenHeavyIon']]],
+  ['nspec_5fproj_5fp_10',['Nspec_proj_p',['../class_hep_m_c3_1_1_gen_heavy_ion.html#ab29ee41eaa1f2341df20fbdc17222218',1,'HepMC3::GenHeavyIon']]],
+  ['nspec_5ftarg_5fn_11',['Nspec_targ_n',['../class_hep_m_c3_1_1_gen_heavy_ion.html#abd682bd3e822fe798ed63646b3babe72',1,'HepMC3::GenHeavyIon']]],
+  ['nspec_5ftarg_5fp_12',['Nspec_targ_p',['../class_hep_m_c3_1_1_gen_heavy_ion.html#a6fda21351ee2694cb2ca9dfb88384be5',1,'HepMC3::GenHeavyIon']]],
+  ['nuclear_5fff_5f_13',['nuclear_ff_',['../classmarley_1_1_discrete_nuclear_reaction.html#a3acbc0fee4234c3a327bee63f990e476',1,'marley::DiscreteNuclearReaction']]],
+  ['nucleon_5fform_5ffactors_5f_14',['nucleon_form_factors_',['../classmarley_1_1_discrete_nuclear_reaction.html#a050cde1e6ed13248ad0c29047ff8320c',1,'marley::DiscreteNuclearReaction']]],
+  ['nucleon_5fradii_5f_15',['nucleon_radii_',['../classmarley_1_1_discrete_nuclear_reaction.html#a85a6fa643f5d95516bcf18632057e970',1,'marley::DiscreteNuclearReaction']]],
+  ['nwounded_5fn_5fcollisions_16',['Nwounded_N_collisions',['../class_hep_m_c3_1_1_gen_heavy_ion.html#a965b8e27ced6035ddca28b3fa02956a2',1,'HepMC3::GenHeavyIon']]],
+  ['nwounded_5fnwounded_5fcollisions_17',['Nwounded_Nwounded_collisions',['../class_hep_m_c3_1_1_gen_heavy_ion.html#a8f4a9963b7d250871fbf7422817ff699',1,'HepMC3::GenHeavyIon']]]
 ];

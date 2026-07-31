@@ -1,0 +1,63 @@
+/* Prevent Bootstrap's .container from constraining Sphinx's docutils
+   container to a fixed width wider than #right-column */
+.docutils.container {
+    width: auto;
+    max-width: 100%;
+}
+
+/* Citation labels: Bootstrap's .label makes them white-on-white, but
+   they still occupy vertical space via inline anonymous block boxes.
+   Remove them entirely to tighten spacing between entries. */
+div.citation > span {
+    display: none;
+}
+
+/* Center text */
+.center {
+    text-align: center;
+}
+
+/* PDG code table: match the look of the previous raw-HTML table
+   (centered, ~30% width, borderless, with space between rows) */
+table.pdg-table {
+    width: 30%;
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: separate;
+    border-spacing: 0 5px;
+}
+table.pdg-table.table-bordered {
+    border: none;
+}
+table.pdg-table.table-bordered th,
+table.pdg-table.table-bordered td {
+    border: none;
+}
+table.pdg-table th,
+table.pdg-table td {
+    text-align: center;
+}
+
+/* Process ID table: clean reference-table look (borderless with row
+   spacing, like pdg-table) adapted for a text-heavy, full-width table */
+table.proc-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+table.proc-table.table-bordered {
+    border: none;
+}
+table.proc-table.table-bordered th,
+table.proc-table.table-bordered td {
+    border: none;
+}
+table.proc-table th,
+table.proc-table td {
+    text-align: left;
+    vertical-align: top;
+}
+table.proc-table th:first-child,
+table.proc-table td:first-child {
+    text-align: center;
+}

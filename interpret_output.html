@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 
-<html>
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   
   <!-- Licensed under the Apache 2.0 License -->
   <link rel="stylesheet" type="text/css" href="_static/fonts/open-sans/stylesheet.css" />
@@ -15,30 +15,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
     <title>Interpreting the output &#8212; MARLEY  documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/guzzle.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <link rel="shortcut icon" href="_static/mar.png"/>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8e8a900e" />
+    <link rel="stylesheet" type="text/css" href="_static/guzzle.css?v=ee5bbeb1" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/katex-math.css?v=05624691" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b87e984e" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="icon" href="_static/mar.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="copyright" title="Copyright" href="copyright.html" />
-    <link rel="next" title="MARLEY Bibliography" href="pubs.html" />
+    <link rel="next" title="Command reference" href="commands.html" />
     <link rel="prev" title="Getting started" href="getting_started.html" />
   
    
 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="pubs.html" title="MARLEY Bibliography"
+          <a href="commands.html" title="Command reference"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="getting_started.html" title="Getting started"
@@ -62,12 +64,13 @@
       alt="MARLEY logo" width=200 style="margin: 0px 0px"/>
   <p style="color:black;margin-bottom:40px"> <b>Model of Argon Reaction <br>
   Low Energy Yields</b> </p> </a>
-</div>
-<div class="sidebar-block">
+</div><div class="sidebar-block">
   <div class="sidebar-wrapper">
     <h2>Table Of Contents</h2>
   </div>
   <div class="sidebar-toc">
+    
+      
     
     
       <ul class="current">
@@ -76,9 +79,18 @@
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Interpreting the output</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#pdg-codes">PDG codes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#output-file-formats">Output file formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-hepmc3-event-graph">The HepMC3 event graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-file-formats">Output file formats</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ascii-hepmc3">ASCII HepMC3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#root-hepmc3">ROOT HepMC3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#summary-root-ttree">Summary ROOT TTree</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#legacy-marley-v1-format">Legacy MARLEY v1 format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hepevt">HEPEVT</a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Command reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pubs.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/MARLEY-MC/marley">GitHub repository</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_docs.html">Developer documentation</a></li>
@@ -96,16 +108,24 @@
       <ul>
 <li><a class="reference internal" href="#">Interpreting the output</a><ul>
 <li><a class="reference internal" href="#pdg-codes">PDG codes</a></li>
+<li><a class="reference internal" href="#the-hepmc3-event-graph">The HepMC3 event graph</a></li>
 <li><a class="reference internal" href="#output-file-formats">Output file formats</a><ul>
-<li><a class="reference internal" href="#ascii">ASCII</a></li>
-<li><a class="reference internal" href="#hepevt">HEPEVT</a></li>
-<li><a class="reference internal" href="#json">JSON</a></li>
-<li><a class="reference internal" href="#root">ROOT</a><ul>
-<li><a class="reference internal" href="#conventions-used-in-the-event-objects">Conventions used in the event objects</a></li>
-<li><a class="reference internal" href="#metadata">Metadata</a></li>
-<li><a class="reference internal" href="#flat-root-files">“Flat” ROOT files</a></li>
+<li><a class="reference internal" href="#ascii-hepmc3">ASCII HepMC3</a><ul>
+<li><a class="reference internal" href="#run-info-block">Run-info block</a></li>
+<li><a class="reference internal" href="#per-event-blocks">Per-event blocks</a></li>
+<li><a class="reference internal" href="#worked-example">Worked example</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#root-hepmc3">ROOT HepMC3</a><ul>
+<li><a class="reference internal" href="#opening-a-marley-root-hepmc3-file">Opening a MARLEY ROOT HepMC3 file</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#summary-root-ttree">Summary ROOT TTree</a><ul>
+<li><a class="reference internal" href="#branch-listing">Branch listing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#legacy-marley-v1-format">Legacy MARLEY v1 format</a></li>
+<li><a class="reference internal" href="#hepevt">HEPEVT</a></li>
 </ul>
 </li>
 </ul>
@@ -143,218 +163,677 @@
           
           <div class="document clearer body">
             
-  <div class="section" id="interpreting-the-output">
-<h1>Interpreting the output<a class="headerlink" href="#interpreting-the-output" title="Permalink to this headline">¶</a></h1>
-<p>This page provides a guide to the contents of the output files produced by the
-<code class="docutils literal notranslate"><span class="pre">marley</span></code> executable. Following a brief description of the <em>PDG codes</em> used to
-identify particle types in MARLEY, documentation for all four available output
-formats is given below.</p>
-<div class="section" id="pdg-codes">
-<h2>PDG codes<a class="headerlink" href="#pdg-codes" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference external" href="http://pdg.lbl.gov/index.html">Particle Data Group</a> (PDG) has defined a
-standard numbering scheme for representing particle species in Monte Carlo
+  <section id="interpreting-the-output">
+<h1>Interpreting the output<a class="headerlink" href="#interpreting-the-output" title="Link to this heading">¶</a></h1>
+<p>This page provides detailed guidance for parsing and analyzing output files
+produced by the <code class="docutils literal notranslate"><span class="pre">marley</span></code> command-line executable. It begins with a
+description of the standard <em>PDG codes</em> used to identify particle types in all
+MARLEY simulation results. This is followed by documentation for each available
+output file format.</p>
+<section id="pdg-codes">
+<span id="id1"></span><h2>PDG codes<a class="headerlink" href="#pdg-codes" title="Link to this heading">¶</a></h2>
+<p>The <a class="reference external" href="https://pdg.lbl.gov/index.html">Particle Data Group</a> (PDG) has defined
+a standard numbering scheme for representing particle species in Monte Carlo
 event generators. Each kind of particle is assigned a unique positive integer
 as an identifier. The corresponding antiparticle is assigned a negative integer
 with the same absolute value. A full description of the numbering scheme is
-available <a class="reference external" href="http://pdg.lbl.gov/current/mc-particle-id">here</a>.</p>
-<p>Like nearly all modern particle physics generators, MARLEY adopts the integer
-<em>PDG codes</em> for particle identification and uses them both internally and in
-output files. For convenience, a table of the PDG codes most relevant for
-MARLEY is given below.</p>
-   <head>
-   <style>
-     table.mytable {
-       border-collapse: separate;
-       border-spacing: 0 5px;
-     }
-     table.mytable th, td {
-       text-align: center;
-     }
-   </style>
-   </head>
-
- <table align="center" style="width:30%" class="mytable">
-
-   <tr>
-     <th>PDG code</th>
-     <th>Particle</th>
-   </tr>
-
-   <tr>
-     <td>11</td>
-     <td>e<sup>&minus;</sup></td>
-   </tr>
-
-   <tr>
-     <td>12</td>
-     <td>&nu;<sub>e</sub></td>
-   </tr>
-
-   <tr>
-     <td>13</td>
-     <td>&mu;<sup>&minus;</sup></td>
-   </tr>
-
-   <tr>
-     <td>14</td>
-     <td>&nu;<sub>&mu;</sub></td>
-   </tr>
-
-   <tr>
-     <td>15</td>
-     <td>&tau;<sup>&minus;</sup></td>
-   </tr>
-
-   <tr>
-     <td>16</td>
-     <td>&nu;<sub>&tau;</sub></td>
-   </tr>
-
-   <tr>
-     <td>22</td>
-     <td>&gamma;</td>
-   </tr>
-
-   <tr>
-     <td>2112</td>
-     <td>n</td>
-   </tr>
-
-   <tr>
-     <td>2212</td>
-     <td>p</td>
-   </tr>
-
-   <tr>
-     <td>1000010020</td>
-     <td>d</td>
-   </tr>
-
-   <tr>
-     <td>1000010030</td>
-     <td>t</td>
-   </tr>
-
-   <tr>
-     <td>1000020030</td>
-     <td>h</td>
-   </tr>
-
-
-   <tr>
-     <td>1000020040</td>
-     <td>&alpha;</td>
-   </tr>
-
-</table><p>In general, a PDG code of the form 100ZZZAAA0 represents a nuclide with proton
-number Z and mass number A. For example, <sup>40</sup>Ar is represented by
-the PDG code 1000180400.</p>
-</div>
-<div class="section" id="output-file-formats">
-<h2>Output file formats<a class="headerlink" href="#output-file-formats" title="Permalink to this headline">¶</a></h2>
-<p>The neutrino scattering events generated by the <code class="docutils literal notranslate"><span class="pre">marley</span></code> executable may be
-saved to disk in four distinct output formats. Descriptions of each of these
-formats are given below.</p>
-<div class="section" id="ascii">
-<h3>ASCII<a class="headerlink" href="#ascii" title="Permalink to this headline">¶</a></h3>
-<p>The ASCII format is MARLEY’s native text-based format for event input and
-output. It is produced and parsed by applying the stream insertion (<code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code>) and
-extraction (<code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code>) operators, respectively, to the <code class="docutils literal notranslate"><span class="pre">marley::Event</span></code> class in
-the C++ source code.</p>
-<p>An ASCII-format output file begins with the line</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>FluxAvgXSec
+available <a class="reference external" href="https://pdg.lbl.gov/current/mc-particle-id">here</a>.</p>
+<p>Like nearly all modern event generators used in particle physics, MARLEY adopts
+the integer <em>PDG codes</em> for particle identification and uses them both
+internally and in output files. For convenience, a table of the PDG codes most
+relevant for MARLEY is given below.</p>
+<table class="pdg-table docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>PDG code</p></th>
+<th class="head"><p>Particle</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>11</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mo>−</mo></msup></mrow><annotation encoding="application/x-tex">e^-</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7713em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7713em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">−</span></span></span></span></span></span></span></span></span></span></span></span></p></td>
+</tr>
+<tr class="row-odd"><td><p>12</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ν</mi><mi>e</mi></msub></mrow><annotation encoding="application/x-tex">\nu_e</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0637em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">e</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></p></td>
+</tr>
+<tr class="row-even"><td><p>13</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>μ</mi><mo>−</mo></msup></mrow><annotation encoding="application/x-tex">\mu^-</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9658em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">μ</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7713em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">−</span></span></span></span></span></span></span></span></span></span></span></span></p></td>
+</tr>
+<tr class="row-odd"><td><p>14</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ν</mi><mi>μ</mi></msub></mrow><annotation encoding="application/x-tex">\nu_\mu</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7167em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0637em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">μ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span></span></span></p></td>
+</tr>
+<tr class="row-even"><td><p>15</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>τ</mi><mo>−</mo></msup></mrow><annotation encoding="application/x-tex">\tau^-</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7713em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7713em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">−</span></span></span></span></span></span></span></span></span></span></span></span></p></td>
+</tr>
+<tr class="row-odd"><td><p>16</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ν</mi><mi>τ</mi></msub></mrow><annotation encoding="application/x-tex">\nu_\tau</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0637em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.1132em;">τ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></p></td>
+</tr>
+<tr class="row-even"><td><p>22</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi></mrow><annotation encoding="application/x-tex">\gamma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span></span></span></span></span></p></td>
+</tr>
+<tr class="row-odd"><td><p>2112</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi></mrow><annotation encoding="application/x-tex">n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">n</span></span></span></span></span></p></td>
+</tr>
+<tr class="row-even"><td><p>2212</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span></span></p></td>
+</tr>
+<tr class="row-odd"><td><p>1000010020</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi></mrow><annotation encoding="application/x-tex">d</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">d</span></span></span></span></span></p></td>
+</tr>
+<tr class="row-even"><td><p>1000010030</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span></span></span></span></span></p></td>
+</tr>
+<tr class="row-odd"><td><p>1000020030</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi></mrow><annotation encoding="application/x-tex">h</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord mathnormal">h</span></span></span></span></span></p></td>
+</tr>
+<tr class="row-even"><td><p>1000020040</p></td>
+<td><p><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span></span></p></td>
+</tr>
+</tbody>
+</table>
+<p>In general, a PDG code of the form 100ZZZAAA0 represents a nuclide with proton
+number Z and mass number A. For example, <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>40</mn></msup><mrow><mi mathvariant="normal">A</mi><mi mathvariant="normal">r</mi></mrow></mrow><annotation encoding="application/x-tex">^{40}\mathrm{Ar}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">40</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathrm">Ar</span></span></span></span></span></span> is
+represented by the PDG code 1000180400.</p>
+</section>
+<section id="the-hepmc3-event-graph">
+<h2>The HepMC3 event graph<a class="headerlink" href="#the-hepmc3-event-graph" title="Link to this heading">¶</a></h2>
+<p>The data structures defined by the <a class="reference external" href="https://arxiv.org/abs/1912.08005">HepMC3</a> event record <a class="reference external" href="https://gitlab.cern.ch/hepmc/HepMC3">library</a> are used to implement the canonical
+representation of physics events in MARLEY v2.0.0 and later. To facilitate
+interoperability with other software tools used in neutrino physics, MARLEY
+also implements version 1.0.0 of the <a class="reference external" href="https://doi.org/10.21468/SciPostPhysCodeb.57">NuHepMC</a> standard, which defines a set
+of conventions for representing neutrino interaction events within the HepMC3
+infrastructure in a generator-agnostic way.</p>
+<p>A key concept for reading MARLEY output files is the HepMC3 <em>event graph</em>. Each
+event is represented as a directed graph in which <strong>particles</strong> are the edges
+and <strong>vertices</strong> are the nodes. A vertex groups one or more incoming particles
+with one or more outgoing particles and typically represents a physical
+interaction. Every particle in a HepMC3 event is assigned a unique positive
+integer ID, and every vertex is assigned a unique negative integer ID. A
+particle that has no production vertex (i.e., an initial-state particle) is
+indicated by a production vertex ID of zero. Note that these IDs are used to
+index individual particles in the event graph; they are distinct from the
+<a class="reference internal" href="#pdg-codes"><span class="std std-ref">PDG codes</span></a> mentioned above that are used to differentiate
+particle species.</p>
+<p>In a typical MARLEY neutrino-nucleus scattering event, the HepMC3 graph
+contains two kinds of vertices. The primary vertex represents the hard 2-to-2
+interaction that produces the final-state lepton and outgoing nucleus. One or
+more de-excitation vertices may also be present in which the outgoing nucleus
+emits γ-rays, nucleons, or light complex fragments. Vertices representing
+particle emissions from the unbound continuum and from discrete nuclear levels
+are assigned distinct status codes, and a separate vertex is added to the event
+record for each binary decay step in the de-excitation cascade until the
+nuclear ground state is reached.</p>
+</section>
+<section id="output-file-formats">
+<h2>Output file formats<a class="headerlink" href="#output-file-formats" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">generate</span></code>, <code class="docutils literal notranslate"><span class="pre">reweight</span></code>, and <code class="docutils literal notranslate"><span class="pre">decay</span></code> commands accepted by the
+<code class="docutils literal notranslate"><span class="pre">marley</span></code> executable produce output files containing physics events stored
+within HepMC3 data structures. The generic description of a HepMC3 event graph
+can be serialized in multiple ways, and MARLEY currently supports both an ASCII
+text representation and (when built with ROOT enabled) a binary ROOT-based
+representation as official, full-featured output formats. The <code class="docutils literal notranslate"><span class="pre">convert</span></code>
+command can translate between these equivalent formats and also provide one-way
+conversions to some of the deprecated event formats used in MARLEY v1.2.1 and
+earlier. The <code class="docutils literal notranslate"><span class="pre">summarize</span></code> command creates a simplified “flat” ROOT <a class="reference external" href="https://root.cern/doc/master/group__tree.html">TTree</a> that stores a subset of the
+full event information for more convenient analysis. It replaces the
+functionality provided by the <code class="docutils literal notranslate"><span class="pre">marsum</span></code> executable that existed in the MARLEY
+v1 release series. Descriptions of the various output formats produced by these
+commands are given below.</p>
+<section id="ascii-hepmc3">
+<h3>ASCII HepMC3<a class="headerlink" href="#ascii-hepmc3" title="Link to this heading">¶</a></h3>
+<p>A file in the ASCII HepMC3 format begins with a two-line header:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>HepMC::Version 3.02.07
+HepMC::Asciiv3-START_EVENT_LISTING
 </pre></div>
 </div>
-<p>where <code class="docutils literal notranslate"><span class="pre">FluxAvgXSec</span></code> is the flux-averaged total cross section in natural units
-(MeV<sup> &minus;2</sup> per atom). This quantity may be used together with the
-events themselves to compute differential cross sections.</p>
-<p>One or more event records appear in the remainder of the output file. Each
-event record begins with a header of the form</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Ni Nf Ex twoJ P
+<p>followed by a single run-info block and then one event block per simulated
+event. The file ends with the line:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>HepMC::Asciiv3-END_EVENT_LISTING
 </pre></div>
 </div>
-<p>where <code class="docutils literal notranslate"><span class="pre">Ni</span></code> (<code class="docutils literal notranslate"><span class="pre">Nf</span></code>) is the number of particles in the initial (final) state.
-The three remaining fields in the event header report properties of the
-final-state nucleus following the primary scattering reaction but before
-de-excitations. The <code class="docutils literal notranslate"><span class="pre">Ex</span></code> field gives the nuclear excitation energy (MeV),
-<code class="docutils literal notranslate"><span class="pre">twoJ</span></code> gives the nuclear spin multiplied by two (to allow half-integer spins
-to be represented by a C++ <code class="docutils literal notranslate"><span class="pre">int</span></code>), and <code class="docutils literal notranslate"><span class="pre">P</span></code> is a single character
-representing a positive (<code class="docutils literal notranslate"><span class="pre">+</span></code>) or negative (<code class="docutils literal notranslate"><span class="pre">-</span></code>) parity state.</p>
-<p>On the lines following the event header, each of the particles belonging to the
-event is described by a single line of the form</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>PDG Etot Px Py Pz M Q
+<section id="run-info-block">
+<h4>Run-info block<a class="headerlink" href="#run-info-block" title="Link to this heading">¶</a></h4>
+<p>The run-info block appears once at the start of the file and records information
+about the MARLEY run as a whole. Each line begins with a single-character tag.</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">W</span></code> — weight names</dt><dd><p>A backslash-pipe (<code class="docutils literal notranslate"><span class="pre">\|</span></code>) separated list of the weight names defined for
+this run. MARLEY always declares at least <code class="docutils literal notranslate"><span class="pre">CV</span></code> (central value). If weight
+calculators were configured and used during a <code class="docutils literal notranslate"><span class="pre">generate</span></code> or <code class="docutils literal notranslate"><span class="pre">reweight</span></code>
+job, then additional weight names may appear later on this line:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>W CV
 </pre></div>
 </div>
-<p>where <code class="docutils literal notranslate"><span class="pre">PDG</span></code> is the PDG code identifying the particle species and <code class="docutils literal notranslate"><span class="pre">Etot</span></code>,
-<code class="docutils literal notranslate"><span class="pre">Px</span></code>, <code class="docutils literal notranslate"><span class="pre">Py</span></code>, and <code class="docutils literal notranslate"><span class="pre">Pz</span></code> are, respectively, the total energy and the x-, y-,
-and z-components of the particle 3-momentum (MeV). The particle mass <code class="docutils literal notranslate"><span class="pre">M</span></code>
-(MeV) and (net) electric charge <code class="docutils literal notranslate"><span class="pre">Q</span></code> (in units of the elementary charge)
-appear at the end of each line. The first <code class="docutils literal notranslate"><span class="pre">Ni</span></code> lines following the event
-header describe the initial-state particles. The remaining <code class="docutils literal notranslate"><span class="pre">Nf</span></code> lines
-describe the final-state particles and complete the event record.</p>
-<div>
-<head><style>
-table.highlighttable {
-  display: block;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-table.highlighttable td.linenos {
-  text-align: left;
-}
-table.hightlighttable td.code {
-  text-align: left;
-}
-</style>
-</head><div class="highlight-none notranslate"><table class="highlighttable" id="ascii-format-example"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14</pre></div></td><td class="code"><div class="highlight" style="text-align: left;"><pre>5.98368867447267264e-19
-2 4 3.79748000000000019e+00 2 +
-12 1.00000000000000000e+01 0.00000000000000000e+00 0.00000000000000000e+00 1.00000000000000000e+01 0.00000000000000000e+00 0
-1000180400 3.72247225431518091e+04 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 3.72247225431518091e+04 0
-11 5.20690886815266740e+00 -4.63535385338761508e+00 1.35706546730579314e+00 -1.87687187323011373e+00 5.10998927645907708e-01 -1
-1000190400 3.72257175068044089e+04 4.98066184879143847e+00 -2.27058729207187593e+00 9.28456410767741858e+00 3.72257159465162476e+04 1
-22 1.53694352434620662e+00 -1.11400145523226901e+00 9.50751758100756628e-01 4.66119350851738223e-01 0.00000000000000000e+00 0
-22 2.26118395490673985e+00 7.68693459828445835e-01 -3.72299333346743089e-02 2.12618841470095354e+00 0.00000000000000000e+00 0
-2 3 1.03964200000000009e+01 2 +
-12 2.99304885549511290e+01 0.00000000000000000e+00 0.00000000000000000e+00 2.99304885549511290e+01 0.00000000000000000e+00 0
-1000180400 3.72247225431518091e+04 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 3.72247225431518091e+04 0
-11 1.85223477954320721e+01 -9.86795370224160173e+00 -1.55256312663347771e+01 -2.09630900945355991e+00 5.10998927645907708e-01 -1
-1000190390 3.62940260743929030e+04 -1.74322423197586254e+01 -4.21863040207651636e+01 5.85225771236273147e+01 3.62939501877290750e+04 1
-2112 9.42104609518426400e+02 2.73001960220002289e+01 5.77119352870999407e+01 -2.64957795592226226e+01 9.39565378653339735e+02 0
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">T</span></code> — tool identification</dt><dd><p>The generator name (MARLEY), version, and git commit hash, separated by
+backslash-pipes.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">A</span></code> — run-level attributes</dt><dd><p>Each <code class="docutils literal notranslate"><span class="pre">A</span></code> line stores one named attribute as <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&lt;name&gt;</span> <span class="pre">&lt;value&gt;</span></code>.
+MARLEY writes the following run-level attributes:</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">MARLEY.JSONconfig</span></code></dt><dd><p>The complete job configuration used to generate the events, serialized
+as a JSON string. This makes the file self-describing: all settings
+(reaction files, neutrino source, random seed, output paths, etc.) are
+recorded.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">MARLEY.RNGseed</span></code></dt><dd><p>The integer seed that was used to initialize the random number generator.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">MARLEY.ReweightConfig.&lt;n&gt;</span></code> (reweighted files only)</dt><dd><p>The reweighting configuration applied by <code class="docutils literal notranslate"><span class="pre">marley</span> <span class="pre">reweight</span></code>, serialized as
+JSON. One attribute (indexed by the integer <code class="docutils literal notranslate"><span class="pre">&lt;n&gt;</span></code>) is written per
+reweighting pass applied.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">NuHepMC.Version.{Major,Minor,Patch}</span></code></dt><dd><p>The version of the NuHepMC standard implemented (currently 1, 0, 0).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">NuHepMC.Conventions</span></code></dt><dd><p>A space-separated list of the NuHepMC convention labels that MARLEY
+follows. For v2.0.0 output this is always:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>G.C.2 G.C.3 E.C.1 E.C.2 E.C.3
 </pre></div>
-</td></tr></table></div>
-</div><p>The listing above shows an example MARLEY output file in ASCII format. Line 1
-gives the value of 5.984&times;10<sup>&minus;19</sup> MeV<sup> &minus;2</sup> =
-2.330&times;10<sup>&minus;40</sup> cm<sup>2</sup> for the flux-averaged total cross section per atom.
-Line 2 gives the header for the first event, which involves a transition to the
-<sup>40</sup>K nuclear level with an excitation energy of 3.797 MeV above the ground
-state and spin-parity 1<sup>&plus;</sup>. Lines 3–4 describe the initial state: a 10-MeV
-&nu;<sub>e</sub> traveling in the +z direction toward a <sup>40</sup>Ar atom at rest. Lines 5–8
-describe the final-state particles: a 5.2 MeV electron, a <sup>40</sup>K ion, and two
-de-excitation γ-rays with energies of 1.54 and 2.26 MeV. The second and final
-event in the file, which appears on lines 9–14, involves a &nu;<sub>e</sub>-<sup>40</sup>Ar
-collision which produces an electron, a <sup>39</sup>K ion, and a neutron.</p>
 </div>
-<div class="section" id="hepevt">
-<h3>HEPEVT<a class="headerlink" href="#hepevt" title="Permalink to this headline">¶</a></h3>
+<p>These labels have the following meaning:</p>
+<ul class="simple">
+<li><p><strong>G.C.2</strong>: The flux-averaged total cross section <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">⟨</mo><mi>σ</mi><mo stretchy="false">⟩</mo></mrow><annotation encoding="application/x-tex">\langle \sigma
+\rangle</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">⟨</span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="mclose">⟩</span></span></span></span></span> is known before the run begins and is stored once in the run-info
+block (see <code class="docutils literal notranslate"><span class="pre">NuHepMC.FluxAveragedTotalCrossSection</span></code> below), rather than
+being updated in each event as the generator runs.</p></li>
+<li><p><strong>G.C.3</strong>: Citation metadata for MARLEY’s physics models is embedded in
+the run-info block (see <code class="docutils literal notranslate"><span class="pre">NuHepMC.Citations.*</span></code> below).</p></li>
+<li><p><strong>E.C.1</strong>: Process IDs follow the NuHepMC recommended identifier ranges
+(100–199 for low-energy nuclear scattering, etc.; see the process ID
+table in the <code class="docutils literal notranslate"><span class="pre">marley</span> <span class="pre">summarize</span></code> section below).</p></li>
+<li><p><strong>E.C.2</strong>: Each event records the total interaction cross section for
+the projectile at its sampled energy (<code class="docutils literal notranslate"><span class="pre">tot_xs</span></code>).</p></li>
+<li><p><strong>E.C.3</strong>: Each event records the partial cross section for the selected
+primary interaction process (<code class="docutils literal notranslate"><span class="pre">proc_xs</span></code>).</p></li>
+</ul>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">NuHepMC.FluxAveragedTotalCrossSection</span></code></dt><dd><p>The flux-averaged total cross section <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">⟨</mo><mi>σ</mi><mo stretchy="false">⟩</mo></mrow><annotation encoding="application/x-tex">\langle \sigma \rangle</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">⟨</span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span><span class="mclose">⟩</span></span></span></span></span> for the
+run, in picobarns per target atom. This is the quantity needed to convert a
+distribution of simulated events into a cross-section prediction.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">NuHepMC.Citations.Generator.{DOI,InspireHEP,arXiv}</span></code></dt><dd><p>Space-separated lists of the DOIs, InspireHEP keys, and arXiv identifiers
+for the papers describing MARLEY’s physics models. These should be cited
+whenever MARLEY output is used in a publication.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">NuHepMC.ProcessIDs</span></code> and <code class="docutils literal notranslate"><span class="pre">NuHepMC.ProcessInfo[&lt;ID&gt;].{Name,Description}</span></code></dt><dd><p>The complete list of process IDs that may appear in events from this run,
+together with a name and description for each. Reading these entries
+directly from the file is the definitive way to interpret the
+<code class="docutils literal notranslate"><span class="pre">signal_process_id</span></code> event attribute.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">NuHepMC.VertexStatusIDs</span></code> and <code class="docutils literal notranslate"><span class="pre">NuHepMC.VertexStatusInfo[&lt;ID&gt;].{Name,Description}</span></code></dt><dd><p>The vertex status codes used in the file and their meanings. MARLEY
+uses three codes: 1 (<code class="docutils literal notranslate"><span class="pre">Primary</span></code>, the primary interaction vertex), 22
+(<code class="docutils literal notranslate"><span class="pre">HFDecay</span></code>, a continuum de-excitation step), and 23
+(<code class="docutils literal notranslate"><span class="pre">GammaDecay</span></code>, a de-excitation step from a bound nuclear energy level).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">NuHepMC.ParticleStatusIDs</span></code> and <code class="docutils literal notranslate"><span class="pre">NuHepMC.ParticleStatusInfo[&lt;ID&gt;].{Name,Description}</span></code></dt><dd><p>The particle status codes used in the file and their meanings. MARLEY
+uses five codes: 1 (<code class="docutils literal notranslate"><span class="pre">Final-state</span></code>), 4 (<code class="docutils literal notranslate"><span class="pre">Projectile</span></code>), 20
+(<code class="docutils literal notranslate"><span class="pre">Target</span></code>), 27 (<code class="docutils literal notranslate"><span class="pre">UndecayedRemnant</span></code>, a nuclear residue before
+de-excitation begins), and 28 (<code class="docutils literal notranslate"><span class="pre">IntermediateRemnant</span></code>, a nucleus
+undergoing a de-excitation cascade).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">NuHepMC.Units.CrossSection.Unit</span></code> and <code class="docutils literal notranslate"><span class="pre">NuHepMC.Units.CrossSection.TargetScale</span></code></dt><dd><p>The units for all cross section values in the file. MARLEY always uses
+picobarns (<code class="docutils literal notranslate"><span class="pre">pb</span></code>) per target atom (<code class="docutils literal notranslate"><span class="pre">PerAtom</span></code>).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">NuHepMC.AdditionalParticleNumbers</span></code> (and <code class="docutils literal notranslate"><span class="pre">NuHepMC.AdditionalParticleNumbers[&lt;PDG&gt;].{Name,Description}</span></code>)</dt><dd><p>Particle codes used in the file that are not in the standard PDG
+numbering scheme. MARLEY declares PDG code 0, the <code class="docutils literal notranslate"><span class="pre">Absent</span></code> dummy
+projectile used in <code class="docutils literal notranslate"><span class="pre">marley</span> <span class="pre">decay</span></code> output (where there is no real
+incoming beam particle).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="per-event-blocks">
+<h4>Per-event blocks<a class="headerlink" href="#per-event-blocks" title="Link to this heading">¶</a></h4>
+<p>The first event block begins immediately after the run-info block on a line
+starting with an <code class="docutils literal notranslate"><span class="pre">E</span></code> character. An event block ends at the next <code class="docutils literal notranslate"><span class="pre">E</span></code> line or
+the end-of-file marker. The lines within an event block have the following
+structure.</p>
+<p><code class="docutils literal notranslate"><span class="pre">E</span></code> — event header:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>E &lt;event_number&gt; &lt;vertex_count&gt; &lt;particle_count&gt;
+</pre></div>
+</div>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">E</span> <span class="pre">1</span> <span class="pre">5</span> <span class="pre">12</span></code> opens event number 1, which contains 5 vertices
+and 12 particles.</p>
+<p><code class="docutils literal notranslate"><span class="pre">U</span></code> — units:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>U MEV CM
+</pre></div>
+</div>
+<p>MARLEY always uses MeV for energies and cm for positions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">W</span></code> — event weights:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>W 1.0000000000000000000000e+00
+</pre></div>
+</div>
+<p>One space-delimited weight value for each name declared in the run-info <code class="docutils literal notranslate"><span class="pre">W</span></code>
+line. For unweighted output from <code class="docutils literal notranslate"><span class="pre">marley</span> <span class="pre">generate</span></code>, only the <code class="docutils literal notranslate"><span class="pre">CV</span></code> (for
+“central-value”) weight appears and is always exactly one. In cases where
+additional event weight have been computed, their numerical values appear in the
+same order as the weight names listed in the run information.</p>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">A</span></code> — per-event and per-particle attributes</dt><dd><p>Each attribute line has the form <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&lt;scope&gt;</span> <span class="pre">&lt;name&gt;</span> <span class="pre">&lt;value&gt;</span></code>, where the
+scope identifies the object to which the attribute belongs:</p>
+<ul class="simple">
+<li><p><strong>0</strong>: an event-level attribute.</p></li>
+<li><p><strong>Positive integer</strong>: an attribute attached to the particle with this ID.</p></li>
+<li><p><strong>Negative integer</strong>: an attribute attached to the vertex with this ID.</p></li>
+</ul>
+<p><em>Event-level attributes (scope 0):</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">lab_pos</span></code></dt><dd><p>The interaction position in the lab frame as three space-separated values
+(x, y, and z; all in cm). Zeros are always given unless MARLEY has been
+interfaced with a separate detetor simulation.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">signal_process_id</span></code></dt><dd><p>An integer code identifying the primary interaction type for this event. The
+meaning of each signal_process_id value is defined in the run-info block.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">tot_xs</span></code></dt><dd><p>The total interaction cross section summed over all active processes,
+evaluated at the projectile’s sampled energy for the current event (pb per
+atom).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">proc_xs</span></code></dt><dd><p>The partial cross section for the specific process selected as the primary
+interaction. This is evaluated at the projectile’s sampled energy for the
+current event (pb per atom).</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">MARLEY.GeneratorState</span></code></dt><dd><p>A serialized snapshot of the random number generator state. This attribute
+is written only by the <code class="docutils literal notranslate"><span class="pre">generate</span></code> command, and it appears only on the last
+event in the file. It is saved upon normal job completion or early
+termination (unhandled exception or user interrupt via ctrl+C). Its purpose
+is to support the <code class="docutils literal notranslate"><span class="pre">resume</span></code> output mode, which allows an interrupted
+<code class="docutils literal notranslate"><span class="pre">generate</span></code> job to continue exactly where it left off. For information
+about how to configure the <code class="docutils literal notranslate"><span class="pre">resume</span></code> output mode, see the example
+<code class="docutils literal notranslate"><span class="pre">generate</span></code> job configuration file (<code class="docutils literal notranslate"><span class="pre">examples/config/annotated.js</span></code>).</p>
+</dd>
+</dl>
+<p><em>Particle attributes (positive scope = particle ID):</em></p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">Ex</span></code></dt><dd><p>Nuclear excitation energy (MeV). This attribute is stored for particles
+representing an atomic nucleus. A value of 0 indicates the ground state.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">twoJ</span></code></dt><dd><p>Two times the nuclear spin quantum number J. Doubling the value of J allows
+half-integer spins to be represented as integers. This attribute is stored
+for particles representing an atomic nucleus.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">parity</span></code></dt><dd><p>Intrinsic parity (±1). This attribute is stored for particles representing
+an atomic nucleus.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">charge</span></code></dt><dd><p>Net electric charge of the particle (integer, in units of the elementary
+charge). Written on atomic/ionic particles: the target atom and the outgoing
+nucleus at each stage of the de-excitation cascade. This records the charge
+of the atom or ion as a whole rather than of the bare nucleus, which is
+already encoded in the PDG code. When the particle’s charge can be
+unambiguously determined by PDG code (as it can for elementary particles),
+this attribute is not stored.</p>
+</dd>
+</dl>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">P</span></code> — particle lines</dt><dd><p>Each particle in the event is described by a <code class="docutils literal notranslate"><span class="pre">P</span></code> line:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>P &lt;id&gt; &lt;prod_vtx_id&gt; &lt;pdg&gt; &lt;px&gt; &lt;py&gt; &lt;pz&gt; &lt;E&gt; &lt;mass&gt; &lt;status&gt;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">id</span></code> is the particle’s unique positive integer identifier within the event.
+<code class="docutils literal notranslate"><span class="pre">prod_vtx_id</span></code> is the ID of the vertex that produced this particle (negative
+integer), or 0 for initial-state particles that have no production vertex.
+<code class="docutils literal notranslate"><span class="pre">pdg</span></code> is the particle’s PDG code, <code class="docutils literal notranslate"><span class="pre">px</span></code>, <code class="docutils literal notranslate"><span class="pre">py</span></code>, <code class="docutils literal notranslate"><span class="pre">pz</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">mass</span></code> are the 3-momentum components, total energy, and mass, all in MeV.
+<code class="docutils literal notranslate"><span class="pre">status</span></code> is one of the particle status codes defined in the run-info block.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">V</span></code> — vertex lines</dt><dd><p>Each vertex is described by a <code class="docutils literal notranslate"><span class="pre">V</span></code> line:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>V &lt;id&gt; &lt;status&gt; [&lt;parent_particle_ids&gt;]
+</pre></div>
+</div>
+<p>or, for vertices with a non-zero spacetime position:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>V &lt;id&gt; &lt;status&gt; [&lt;parent_particle_ids&gt;] @ &lt;x&gt; &lt;y&gt; &lt;z&gt; &lt;t&gt;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">id</span></code> is the unique negative integer identifier for the vertex. <code class="docutils literal notranslate"><span class="pre">status</span></code> is
+one of the vertex status codes defined in the run-info block. The bracketed
+list gives the IDs of the particles entering this vertex (i.e., particles for
+which this is their end vertex). The optional <code class="docutils literal notranslate"><span class="pre">&#64;</span> <span class="pre">x</span> <span class="pre">y</span> <span class="pre">z</span> <span class="pre">t</span></code> suffix gives the
+spacetime position in cm and cm/c; it is present for de-excitation vertices
+that have a non-zero time delay and omitted otherwise.</p>
+</dd>
+</dl>
+</section>
+<section id="worked-example">
+<h4>Worked example<a class="headerlink" href="#worked-example" title="Link to this heading">¶</a></h4>
+<p>The following ASCII-format HepMC3 event represents a charged-current primary
+interaction <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ν</mi><mi>e</mi></msub><mo>+</mo><mtext> </mtext><msup><mrow></mrow><mn>40</mn></msup><mrow><mi mathvariant="normal">A</mi><mi mathvariant="normal">r</mi></mrow><mo>→</mo><msup><mi>e</mi><mo lspace="0em" rspace="0em">−</mo></msup><mo>+</mo><mtext> </mtext><msup><mrow></mrow><mn>40</mn></msup><msup><mi mathvariant="normal">K</mi><mo>∗</mo></msup></mrow><annotation encoding="application/x-tex">\nu_e + \, ^{40}\mathrm{Ar} \to e^{-} + \, ^{40}\mathrm{K}^*</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0637em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">e</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">40</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathrm">Ar</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8547em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7713em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">40</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathrm">K</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6887em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span></span></span></span></span></span></span></span></span>
+followed by a chain of four γ-ray emissions from nuclear de-excitations. Momenta
+and energies in the <code class="docutils literal notranslate"><span class="pre">P</span></code> lines are rounded to three decimal places for
+readability; an actual MARLEY output file would use enough digits to preserve
+full double-precision for all floating-point numbers.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>E 1 5 12
+U MEV CM
+W 1.0000000000000000000000e+00
+A 4 Ex 4.3837
+A 6 Ex 2.28987
+A 8 Ex 1.64364
+A 10 Ex 0.0298299
+A 12 Ex 0
+A -5 GammaBranchingRatio 1
+A -4 GammaBranchingRatio 0.803859
+A -3 GammaBranchingRatio 0.562746
+A -2 GammaBranchingRatio 0.757576
+A -5 TotalWidth 1.07350060716826e-13
+A -4 TotalWidth 1.35785047037652e-15
+A -3 TotalWidth 5.4968404583917e-09
+A 2 charge 0
+A 4 charge 1
+A 6 charge 1
+A 8 charge 1
+A 10 charge 1
+A 12 charge 1
+A 0 lab_pos 0.000000 0.000000 0.000000
+A 4 parity 1
+A 6 parity 1
+A 8 parity 1
+A 10 parity -1
+A 12 parity -1
+A 0 proc_xs 6.05325088059723e-05
+A 0 signal_process_id 100
+A 0 tot_xs 7.45272521695649e-05
+A 4 twoJ 0
+A 6 twoJ 2
+A 8 twoJ 0
+A 10 twoJ 6
+A 12 twoJ 8
+P 1 0 12 0.000 0.000 21.200 21.200 0.000 4
+P 2 0 1000180400 0.000 0.000 0.000 37224.7 37224.7 20
+V -1 1 [1,2]
+P 3 -1 11 -7.848 -7.396 11.564 15.821 0.511 1
+P 4 -1 1000190400 7.848 7.396 9.636 37230.1 37230.1 27
+V -2 23 [4]
+P 5 -2 22 0.134 1.298 -1.637 2.094 0.000 1
+P 6 -2 1000190400 7.713 6.098 11.273 37228.0 37228.0 28
+V -3 23 [6] @ 0.000 0.000 0.000 1.001e-03
+P 7 -3 22 0.373 -0.320 0.419 0.646 0.000 1
+P 8 -3 1000190400 7.340 6.419 10.854 37227.4 37227.4 28
+V -4 23 [8] @ 0.000 0.000 0.000 4.150e+03
+P 9 -4 22 -0.834 -0.559 1.264 1.614 0.000 1
+P 10 -4 1000190400 8.174 6.978 9.590 37225.7 37225.7 28
+V -5 23 [10] @ 0.000 0.000 0.000 4.294e+03
+P 11 -5 22 0.019 -0.021 0.010 0.030 0.000 1
+P 12 -5 1000190400 8.154 6.999 9.580 37225.7 37225.7 1
+</pre></div>
+</div>
+<p>Walking through this event:</p>
+<ul class="simple">
+<li><p><strong>Particles 1 and 2</strong> are the initial-state particles: an electron neutrino
+(PDG 12, status 4 = Projectile) with kinetic energy ≈ 21.2 MeV travelling
+along the z-axis, and a stationary <sup>40</sup>Ar nucleus (PDG 1000180400,
+status 20 = Target) with rest mass ≈ 37224.7 MeV. Their production vertex
+ID is 0, indicating they are initial-state particles with no production
+vertex in the graph.</p></li>
+<li><p><strong>Vertex −1</strong> (status 1 = Primary) represents the primary interaction,
+with particles 1 and 2 as inputs. It produces two outgoing particles.</p></li>
+<li><p><strong>Particle 3</strong> is the final-state electron (PDG 11, status 1 = Final-state,
+mass ≈ 0.511 MeV). <strong>Particle 4</strong> is the <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>40</mn></msup><msup><mi mathvariant="normal">K</mi><mo>∗</mo></msup></mrow><annotation encoding="application/x-tex">^{40}\mathrm{K}^*</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">40</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathrm">K</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6887em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span></span></span></span></span></span></span></span></span> nuclear
+residue (PDG 1000190400, status 27 = UndecayedRemnant) in an excited state
+with excitation energy <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mi>x</mi></msub><mo>=</mo><mn>4.3837</mn><mtext>  </mtext><mrow><mi mathvariant="normal">M</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">V</mi></mrow></mrow><annotation encoding="application/x-tex">E_x = 4.3837 \; \mathrm{MeV}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">E</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0576em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">x</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord">4.3837</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathrm" style="margin-right:0.01389em;">MeV</span></span></span></span></span></span>,
+spin <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>J</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">J = 0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.09618em;">J</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span></span> (<code class="docutils literal notranslate"><span class="pre">twoJ</span></code> = 0), and positive parity. This discrete nuclear
+level is the isobaric analog of the <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>40</mn></msup><mrow><mi mathvariant="normal">A</mi><mi mathvariant="normal">r</mi></mrow></mrow><annotation encoding="application/x-tex">^{40}\mathrm{Ar}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">40</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathrm">Ar</span></span></span></span></span></span> ground state.</p></li>
+<li><p><strong>Vertices −2 through −5</strong> (all status 23 = GammaDecay) are successive
+de-excitation steps simulated using tabulated γ-ray branching ratios. Each
+takes the intermediate nuclear remnant (status 28) as input and produces one
+γ-ray (PDG 22, status 1) and a new remnant at a lower excitation energy.
+Vertices −3, −4, and −5 carry an <code class="docutils literal notranslate"><span class="pre">&#64;</span> <span class="pre">…</span> <span class="pre">t</span></code> suffix showing the time of each
+de-excitation step in cm/c; the first step (vertex −2) has no time suffix,
+meaning it is treated as instantaneous (due to an unknown nuclear level
+half-life). The <code class="docutils literal notranslate"><span class="pre">Ex</span></code> attributes on particles 4, 6, 8, 10, and 12 trace the
+excitation energy at each stage of the cascade: 4.3837 → 2.28987 → 1.64364 →
+0.0298299 → 0 MeV.</p></li>
+<li><p><strong>Particle 12</strong> (status 1 = Final-state) is the <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>40</mn></msup><mi mathvariant="normal">K</mi></mrow><annotation encoding="application/x-tex">^{40}\mathrm{K}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">40</span></span></span></span></span></span></span></span></span><span class="mord mathrm">K</span></span></span></span></span>
+nucleus in its ground state after the cascade is complete.</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">signal_process_id</span></code> of 100 identifies this as a charged-current
+interaction that populates a discrete nuclear energy level
+(<code class="docutils literal notranslate"><span class="pre">vCC-discrete</span></code> as defined in the run-info block).
+The <code class="docutils literal notranslate"><span class="pre">proc_xs</span></code> and <code class="docutils literal notranslate"><span class="pre">tot_xs</span></code> attributes give the cross sections at this
+event’s neutrino energy: the process cross section ≈ 6.05 × 10<sup>−5</sup> pb
+and the total cross section ≈ 7.45 × 10<sup>−5</sup> pb per target atom.</p>
+</section>
+</section>
+<section id="root-hepmc3">
+<h3>ROOT HepMC3<a class="headerlink" href="#root-hepmc3" title="Link to this heading">¶</a></h3>
+<p>If MARLEY has been built with ROOT support (see the <a class="reference internal" href="getting_started.html"><span class="doc">Getting started</span></a> page
+for build instructions), full HepMC3 events can also be stored in ROOT’s
+compressed binary format. The ROOT HepMC3 format is an equally full-featured
+representation of the events, not merely a subset or summary.</p>
+<p>MARLEY uses its own reader/writer classes (<code class="docutils literal notranslate"><span class="pre">OutputFileRoot</span></code> and
+<code class="docutils literal notranslate"><span class="pre">EventFileReader</span></code>) built around the <code class="docutils literal notranslate"><span class="pre">HepMC3::GenEventData</span></code> and
+<code class="docutils literal notranslate"><span class="pre">HepMC3::GenRunInfoData</span></code> plain-data structs from the official HepMC3 library.
+It does not use HepMC3’s <code class="docutils literal notranslate"><span class="pre">WriterRoot</span></code> or <code class="docutils literal notranslate"><span class="pre">ReaderRoot</span></code> classes.</p>
+<p>A ROOT HepMC3 file produced by MARLEY contains:</p>
+<ul class="simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">TTree</span></code> named <code class="docutils literal notranslate"><span class="pre">MARLEY_event_tree</span></code> with a single branch named <code class="docutils literal notranslate"><span class="pre">event</span></code>
+holding one <code class="docutils literal notranslate"><span class="pre">HepMC3::GenEventData</span></code> object per event.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">HepMC3::GenRunInfoData</span></code> object named <code class="docutils literal notranslate"><span class="pre">MARLEY_run_info</span></code>
+containing the run-level metadata (the same information as the run-info
+block in the ASCII HepMC3 format).</p></li>
+</ul>
+<section id="opening-a-marley-root-hepmc3-file">
+<h4>Opening a MARLEY ROOT HepMC3 file<a class="headerlink" href="#opening-a-marley-root-hepmc3-file" title="Link to this heading">¶</a></h4>
+<p>After sourcing the <code class="docutils literal notranslate"><span class="pre">setup_marley.sh</span></code> environment script, one may open a
+MARLEY ROOT file directly in a ROOT session:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>source setup_marley.sh
+root -l some_events.root
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">libMARLEY</span></code> library and its ROOT dictionary are loaded automatically by
+ROOT’s autoload mechanism. One can then browse the raw event data, for
+example:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>MARLEY_event_tree-&gt;Scan(&quot;particles.pid:particles.status&quot;, &quot;&quot;, &quot;&quot;, 20)
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">GenEventData</span></code> struct fields available for browsing include
+<code class="docutils literal notranslate"><span class="pre">particles</span></code> (a vector of <code class="docutils literal notranslate"><span class="pre">GenParticleData</span></code> structs with fields
+<code class="docutils literal notranslate"><span class="pre">pid</span></code>, <code class="docutils literal notranslate"><span class="pre">momentum</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code>, etc.), <code class="docutils literal notranslate"><span class="pre">vertices</span></code> (a vector of
+<code class="docutils literal notranslate"><span class="pre">GenVertexData</span></code> structs), and <code class="docutils literal notranslate"><span class="pre">event_number</span></code>, among others.</p>
+<p>For most analysis purposes, the recommended approach is to use one of
+MARLEY’s built-in tools rather than navigating the HepMC3 data structures
+directly:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">marley</span> <span class="pre">print</span></code> — display events in a human-readable format.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">marley</span> <span class="pre">convert</span></code> — translate between output formats.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">marley</span> <span class="pre">summarize</span></code> — produce a flat ROOT ntuple (described below)
+for convenient histogram-level analysis.</p></li>
+</ul>
+<p>Advanced users who need more complete access can write their own analysis code
+that links against the HepMC3 library (<code class="docutils literal notranslate"><span class="pre">libHepMC3</span></code>) directly, using
+<code class="docutils literal notranslate"><span class="pre">HepMC3::GenEvent::read_data()</span></code> to reconstruct full event objects from the
+stored <code class="docutils literal notranslate"><span class="pre">GenEventData</span></code> structs. This requires the HepMC3 headers and shared
+library to be available at build time and runtime.</p>
+</section>
+</section>
+<section id="summary-root-ttree">
+<span id="summary-ntuple-format"></span><h3>Summary ROOT TTree<a class="headerlink" href="#summary-root-ttree" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">summarize</span></code> command reads one or more MARLEY HepMC3 event files (in either
+the ASCII or ROOT format) and writes a flat ROOT ntuple suitable for quick
+analysis. This is a convenience projection of the full HepMC3 event record: it
+removes many details of the event history while exposing the most
+commonly-needed information. The summary ROOT TTree cannot be converted back
+into the full HepMC3 event format.</p>
+<p>Usage:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>marley summarize -o summary.root events.hepmc3
+</pre></div>
+</div>
+<p>Multiple input files may be given; they are concatenated in the order specified
+after checking for consistency of the configurations given in each run-info
+block. The output file contains a single <code class="docutils literal notranslate"><span class="pre">TTree</span></code> named <code class="docutils literal notranslate"><span class="pre">mst</span></code> (“MARLEY
+summary tree”) with one row per event. A <code class="docutils literal notranslate"><span class="pre">std::vector&lt;</span> <span class="pre">std::string</span> <span class="pre">&gt;</span></code> object
+called <code class="docutils literal notranslate"><span class="pre">MARLEY_other_weight_names</span></code> also appears in the file and stores the
+names of any weights beyond the central-value weight (<code class="docutils literal notranslate"><span class="pre">CV</span></code>) that appeared in
+the original HepMC3 events.</p>
+<p>The example ROOT macros in <code class="docutils literal notranslate"><span class="pre">examples/macros/</span></code> all consume the <code class="docutils literal notranslate"><span class="pre">mst</span></code> tree
+produced by <code class="docutils literal notranslate"><span class="pre">marley</span> <span class="pre">summarize</span></code>; see <code class="docutils literal notranslate"><span class="pre">examples/macros/README.md</span></code> for details.
+None of these example macros operate on raw ROOT HepMC3 files directly.</p>
+<section id="branch-listing">
+<h4>Branch listing<a class="headerlink" href="#branch-listing" title="Link to this heading">¶</a></h4>
+<p>The primary interaction is a 2-to-2 collision (projectile + target → ejectile +
+residue), where the projectile (target) is the lighter (heavier) initial-state
+particle. Four-momenta are evaluated in the laboratory frame (where the target
+particle is at rest). The ejectile (residue) is the lighter (heavier)
+final-state particle. De-excitation products (γ-rays, neutrons, etc.) are the
+particles produced after the primary reaction.</p>
+<p><em>Projectile</em></p>
+<dl class="simple">
+<dt>pdgv <i style="font-weight: normal;">(int)</i></dt><dd><p>PDG code of the projectile.</p>
+</dd>
+<dt>Ev <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile total energy (MeV).</p>
+</dd>
+<dt>KEv <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile kinetic energy (MeV).</p>
+</dd>
+<dt>pxv, pyv, pzv <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile 3-momentum components (MeV).</p>
+</dd>
+</dl>
+<p><em>Target</em></p>
+<dl class="simple">
+<dt>pdgt <i style="font-weight: normal;">(int)</i></dt><dd><p>PDG code of the target.</p>
+</dd>
+<dt>Mt <i style="font-weight: normal;">(double)</i></dt><dd><p>Target mass (MeV).</p>
+</dd>
+</dl>
+<p><em>Ejectile</em></p>
+<dl class="simple">
+<dt>pdgl <i style="font-weight: normal;">(int)</i></dt><dd><p>PDG code of the ejectile.</p>
+</dd>
+<dt>El <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile total energy (MeV).</p>
+</dd>
+<dt>KEl <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile kinetic energy (MeV).</p>
+</dd>
+<dt>pxl, pyl, pzl <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile 3-momentum components (MeV).</p>
+</dd>
+</dl>
+<p><em>Residue</em></p>
+<dl class="simple">
+<dt>pdgr <i style="font-weight: normal;">(int)</i></dt><dd><p>PDG code of the residue.</p>
+</dd>
+<dt>Er <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue total energy (MeV).</p>
+</dd>
+<dt>KEr <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue kinetic energy (MeV).</p>
+</dd>
+<dt>pxr, pyr, pzr <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue 3-momentum components (MeV).</p>
+</dd>
+</dl>
+<p><em>Residue state immediately following the primary interaction</em></p>
+<dl class="simple">
+<dt>Ex <i style="font-weight: normal;">(double)</i></dt><dd><p>Excitation energy of the residue immediately after the hard
+interaction and before any de-excitations (MeV).</p>
+</dd>
+<dt>twoJ <i style="font-weight: normal;">(int)</i></dt><dd><p>Two times the spin J of the residue.</p>
+</dd>
+<dt>parity <i style="font-weight: normal;">(int)</i></dt><dd><p>Parity of the residue (±1).</p>
+</dd>
+</dl>
+<p><em>De-excitation products</em></p>
+<dl class="simple">
+<dt>np <i style="font-weight: normal;">(int)</i></dt><dd><p>Number of de-excitation products (γ-rays, neutrons, protons, etc.)
+produced during the nuclear de-excitation cascade.</p>
+</dd>
+<dt>pdgp <i style="font-weight: normal;">(std::vector&lt;int&gt;)</i></dt><dd><p>PDG codes of the de-excitation products.</p>
+</dd>
+<dt>Ep, KEp <i style="font-weight: normal;">(std::vector&lt;double&gt;)</i></dt><dd><p>Total energies and kinetic energies of the de-excitation products (MeV).</p>
+</dd>
+<dt>pxp, pyp, pzp <i style="font-weight: normal;">(std::vector&lt;double&gt;)</i></dt><dd><p>3-momentum components of the de-excitation products (MeV).</p>
+</dd>
+<dt>tp <i style="font-weight: normal;">(std::vector&lt;double&gt;)</i></dt><dd><p>Production time for each de-excitation product (seconds). The primary
+interaction occurs at time <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">t = 0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6151em;"></span><span class="mord mathnormal">t</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span></span>.</p>
+</dd>
+</dl>
+<p><em>Cross section and process information</em></p>
+<dl>
+<dt>xsec <i style="font-weight: normal;">(double)</i></dt><dd><p>Flux-averaged total cross section for the run (10<sup>&minus;42</sup> cm<sup>2</sup> per atom).
+This value is the same for every event in a given run; it is stored
+per-row for convenience.</p>
+</dd>
+<dt>proc <i style="font-weight: normal;">(int)</i></dt><dd><p>Process ID indicating the kind of primary interaction that occurred in
+the current event. The recognized codes are given in the table below.</p>
+<table class="proc-table docutils align-default">
+<colgroup>
+<col style="width: 8.0%" />
+<col style="width: 24.0%" />
+<col style="width: 68.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>ID</p></th>
+<th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>100</p></td>
+<td><p>vCC-discrete</p></td>
+<td><p>Charged-current neutrino scattering on a nucleus
+that induces a transition to a discrete (bound)
+nuclear energy level</p></td>
+</tr>
+<tr class="row-odd"><td><p>101</p></td>
+<td><p>vCC-continuum</p></td>
+<td><p>Charged-current neutrino scattering on a nucleus
+that induces a transition to the unbound continuum
+at excitation energies above the particle-emission
+threshold</p></td>
+</tr>
+<tr class="row-even"><td><p>110</p></td>
+<td><p>anti-vCC-discrete</p></td>
+<td><p>Same as vCC-discrete (100) but with an incident
+antineutrino</p></td>
+</tr>
+<tr class="row-odd"><td><p>111</p></td>
+<td><p>anti-vCC-continuum</p></td>
+<td><p>Same as vCC-continuum (101) but with an incident
+antineutrino</p></td>
+</tr>
+<tr class="row-even"><td><p>150</p></td>
+<td><p>NC-discrete</p></td>
+<td><p>Neutral-current (anti-)neutrino scattering on a
+nucleus that populates a discrete (bound) energy
+level of the outgoing nucleus</p></td>
+</tr>
+<tr class="row-odd"><td><p>151</p></td>
+<td><p>NC-continuum</p></td>
+<td><p>Neutral-current (anti-)neutrino scattering on a
+nucleus that populates the unbound continuum</p></td>
+</tr>
+<tr class="row-even"><td><p>700</p></td>
+<td><p>v-e</p></td>
+<td><p>Elastic scattering of (anti-)neutrinos on atomic
+electrons</p></td>
+</tr>
+<tr class="row-odd"><td><p>800</p></td>
+<td><p>standalone-decay</p></td>
+<td><p>Standalone nuclear de-excitation
+(<code class="docutils literal notranslate"><span class="pre">decay</span></code> command; no primary interaction)</p></td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+<p><em>Event weights</em></p>
+<dl class="simple">
+<dt>cv_weight <i style="font-weight: normal;">(double)</i></dt><dd><p>The central-value (<code class="docutils literal notranslate"><span class="pre">CV</span></code>) event weight. For normal event generation with
+MARLEY, the central-value weight is always unity.</p>
+</dd>
+<dt>other_weights <i style="font-weight: normal;">(std::vector&lt;double&gt;)</i></dt><dd><p>Any additional weights assigned during a <code class="docutils literal notranslate"><span class="pre">generate</span></code> or <code class="docutils literal notranslate"><span class="pre">reweight</span></code> job.
+These appear in the same order as the strings in the
+<code class="docutils literal notranslate"><span class="pre">MARLEY_other_weight_names</span></code> vector mentioned above. The <code class="docutils literal notranslate"><span class="pre">other_weights</span></code>
+vector may be empty if <code class="docutils literal notranslate"><span class="pre">MARLEY_other_weight_names</span></code> is also empty.</p>
+</dd>
+</dl>
+</section>
+</section>
+<section id="legacy-marley-v1-format">
+<h3>Legacy MARLEY v1 format<a class="headerlink" href="#legacy-marley-v1-format" title="Link to this heading">¶</a></h3>
+<p>MARLEY can produce event files in the native text format used in v1.2.1 and
+earlier via <code class="docutils literal notranslate"><span class="pre">marley</span> <span class="pre">convert</span> <span class="pre">--output-format</span> <span class="pre">legacy</span></code>. This is a one-way
+conversion provided for backward compatibility; the legacy format is deprecated
+and cannot be produced by the <code class="docutils literal notranslate"><span class="pre">generate</span></code> command.</p>
+</section>
+<section id="hepevt">
+<h3>HEPEVT<a class="headerlink" href="#hepevt" title="Link to this heading">¶</a></h3>
 <p>The legacy <a class="reference external" href="https://home.fnal.gov/~mrenna/lutp0613man2/node49.html">HEPEVT</a>
-format is designed for interfacing event generators with each other and with
-other software. Compatibility with this event format is maintained in many
-modern high energy physics software libraries. The description presented here
-covers only those aspects of the HEPEVT format needed to interpret the output
-of MARLEY. Further details are available on pages 327–330 of <a class="reference external" href="https://doi.org/10.5170/CERN-1989-008-V-3">this document</a>.</p>
+output format was officially supported in the MARLEY v1 release series and is
+still available as an option for the <code class="docutils literal notranslate"><span class="pre">convert</span></code> command. The description
+presented here covers only those aspects of the HEPEVT format needed to
+interpret the output of MARLEY. Further details are available on pages 327–330
+of <a class="reference external" href="https://doi.org/10.5170/CERN-1989-008-V-3">this document</a>.</p>
 <p>A HEPEVT-format output file consists of one or more text-based event records.
 Each of these records begins with the header</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>NEVHEP NHEP
@@ -381,21 +860,15 @@ particle 3-momentum, while <code class="docutils literal notranslate"><span clas
 the particle mass (all in GeV). Entries <code class="docutils literal notranslate"><span class="pre">VHEP1</span></code> through <code class="docutils literal notranslate"><span class="pre">VHEP3</span></code> store the
 x, y, and z positions of the particle production vertex (mm), and <code class="docutils literal notranslate"><span class="pre">VHEP4</span></code>
 gives the production time (mm/c).</p>
-<p>Because MARLEY currently treats all nuclear de-excitations as instantaneous and
-does not perform any particle tracking, <code class="docutils literal notranslate"><span class="pre">VHEP1</span></code> through <code class="docutils literal notranslate"><span class="pre">VHEP4</span></code> are always
-identically zero in HEPEVT output files. Intermediate de-excitation steps are
-also not currently stored in the event record, so <code class="docutils literal notranslate"><span class="pre">JMOHEP1</span></code>, <code class="docutils literal notranslate"><span class="pre">JMOHEP2</span></code>,
-<code class="docutils literal notranslate"><span class="pre">JDAHEP1</span></code>, and <code class="docutils literal notranslate"><span class="pre">JDAHEP2</span></code> are also identically zero in most cases.</p>
 <p>In addition to the initial- and final-state particles, MARLEY adds a dummy
 particle with <code class="docutils literal notranslate"><span class="pre">ISTHEP</span></code> = 11 to each HEPEVT event record. All data fields are
 zero for this particle except for (1) <code class="docutils literal notranslate"><span class="pre">JMOHEP1</span></code>, which contains the nuclear
-spin multiplied by two, (2) <code class="docutils literal notranslate"><span class="pre">JMOHEP2</span></code>, which reports the parity of the
-nucleus as an integer, (3) <code class="docutils literal notranslate"><span class="pre">PHEP4</span></code>, which gives the excitation energy of the
-nucleus (MeV), and (4) <code class="docutils literal notranslate"><span class="pre">PHEP5</span></code>, which records the flux-averaged total cross
-section in units of MeV<sup> &minus;2</sup> per atom. As is the case for the
-ASCII format, the excitation energy, spin, and parity values refer to the
-nuclear state that is formed after the primary scattering reaction but before
-any de-excitations have occurred.</p>
+spin multiplied by two, (2) <code class="docutils literal notranslate"><span class="pre">JMOHEP2</span></code>, which reports the parity of the nucleus
+as an integer, (3) <code class="docutils literal notranslate"><span class="pre">PHEP4</span></code>, which gives the excitation energy of the nucleus
+(MeV), and (4) <code class="docutils literal notranslate"><span class="pre">PHEP5</span></code>, which records the flux-averaged total cross section in
+units of MeV:sup:<cite>-2</cite> per atom. The excitation energy, spin, and parity values
+in the HEPEVT record refer to the nuclear state that is formed after the primary
+interaction but before any de-excitations have occurred.</p>
 <div class="highlight-none notranslate" id="hepevt-format-example"><div class="highlight"><pre><span></span>0 7
 3 12 0 0 0 0 0.00000000000000000e+00 0.00000000000000000e+00 1.00000000000000002e-02 1.00000000000000002e-02 0.00000000000000000e+00 0. 0. 0. 0.
 3 1000180400 0 0 0 0 0.00000000000000000e+00 0.00000000000000000e+00 0.00000000000000000e+00 3.72247225431518061e+01 3.72247225431518061e+01 0. 0. 0. 0.
@@ -413,223 +886,10 @@ any de-excitations have occurred.</p>
 1 2112 0 0 0 0 2.73001960220002303e-02 5.77119352870999400e-02 -2.64957795592226236e-02 9.42104609518426450e-01 9.39565378653339778e-01 0. 0. 0. 0.
 </pre></div>
 </div>
-<p>The listing above shows an example MARLEY output file in HEPEVT format. The
-same two events from the ASCII-format <a class="reference external" href="#ascii-format-example">example file</a>
-are used for easy comparison of the formats.</p>
-</div>
-<div class="section" id="json">
-<h3>JSON<a class="headerlink" href="#json" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference external" href="https://json.org/json-en.html">JSON</a> (JavaScript Object Notation) is a
-text-based data-interchange format used for a wide variety of applications. The
-grammar of JSON is based on two data structures. A JSON <em>object</em> is an
-unordered set of key-value pairs enclosed in curly braces (<code class="docutils literal notranslate"><span class="pre">{}</span></code>). A JSON
-<em>array</em> is an ordered list of values enclosed in square brackets (<code class="docutils literal notranslate"><span class="pre">[]</span></code>). Each
-<em>key</em> is an arbitrary string delimited by double quotes (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>) and separated
-from its corresponding value by a colon (<code class="docutils literal notranslate"><span class="pre">:</span></code>). Each <em>value</em> may be a string,
-a number, an object, an array, or one of the words (without surrounding double
-quotes) <code class="docutils literal notranslate"><span class="pre">true</span></code>, <code class="docutils literal notranslate"><span class="pre">false</span></code>, or <code class="docutils literal notranslate"><span class="pre">null</span></code>. Neighboring values within an array
-and key-value pairs within an object are separated from each other by a comma
-(<code class="docutils literal notranslate"><span class="pre">,</span></code>).</p>
-<p>The JSON-format output files produced by MARLEY contain a single object with
-two top-level keys. The <code class="docutils literal notranslate"><span class="pre">events</span></code> key is used to label an array of event
-objects, while the <code class="docutils literal notranslate"><span class="pre">gen_state</span></code> key is associated with an object describing
-the state of the generator at the moment that the file was created.</p>
-<p>Each element of the <code class="docutils literal notranslate"><span class="pre">events</span></code> array is a JSON object containing five key-value
-pairs. The first three of these, <code class="docutils literal notranslate"><span class="pre">Ex</span></code>, <code class="docutils literal notranslate"><span class="pre">twoJ</span></code>, and <code class="docutils literal notranslate"><span class="pre">parity</span></code>, provide the
-excitation energy (MeV), two times the total spin, and the parity of the final
-nucleus after the primary interaction but before any de-excitations have taken
-place. The other two keys, <code class="docutils literal notranslate"><span class="pre">initial_particles</span></code> and <code class="docutils literal notranslate"><span class="pre">final_particles</span></code>, are
-used store arrays of particles represented as JSON objects. Each particle
-object defines the following keys:</p>
-<dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">charge</span></code></dt><dd><p>The (net) electric charge (in units of the elementary charge)</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">pdg</span></code></dt><dd><p>PDG code identifying the particle type</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">E</span></code></dt><dd><p>Total energy</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">px</span></code></dt><dd><p>Momentum x-component</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">py</span></code></dt><dd><p>Momentum y-component</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">pz</span></code></dt><dd><p>Momentum z-component</p>
-</dd>
-<dt><code class="docutils literal notranslate"><span class="pre">mass</span></code></dt><dd><p>Mass</p>
-</dd>
-</dl>
-<p>The particle 4-momentum components and mass are all given in natural units
-(MeV).</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">gen_state</span></code> JSON object includes several key-value pairs. The <code class="docutils literal notranslate"><span class="pre">config</span></code>
-key refers to a JSON object which reproduces the full contents (except for
-comments) of the job configuration file used to generate the events. The
-<code class="docutils literal notranslate"><span class="pre">event_count</span></code>, <code class="docutils literal notranslate"><span class="pre">flux_avg_xsec</span></code>, and <code class="docutils literal notranslate"><span class="pre">seed</span></code> keys label the total number of
-events generated at the time the file was written, the flux-averaged total
-cross section (MeV<sup> &minus;2</sup> per atom), and the integer random
-number seed used to initialize the event generator. A final key,
-<code class="docutils literal notranslate"><span class="pre">generator_state_string</span></code>, records a string representation of the internal
-state of the <a class="reference external" href="http://www.cplusplus.com/reference/random/mt19937_64/">std::mt19937_64</a> object used by
-MARLEY to obtain pseudorandom numbers.</p>
-<p>An example JSON output file is available <a class="reference external" href="_static/example.json">here</a>.
-It contains the same two events as the <a class="reference external" href="#ascii-format-example">ASCII</a>-
-and <a class="reference external" href="#hepevt-format-example">HEPEVT</a>-format examples above.</p>
-</div>
-<div class="section" id="root">
-<h3>ROOT<a class="headerlink" href="#root" title="Permalink to this headline">¶</a></h3>
-<p>If MARLEY has been built against the appropriate shared libraries from the
-<a class="reference external" href="https://root.cern.ch">ROOT</a> data analysis framework (see the description of
-MARLEY’s installation prerequisites <a class="reference external" href="getting_started.html#prerequisites">here</a>), then output files in ROOT’s
-compressed binary format may also be produced.</p>
-<p>Within a ROOT-format output file, access to the generated events is managed by
-an instance of the ROOT <a class="reference external" href="https://root.cern.ch/trees-five-steps">TTree</a>
-class, which provides a hierarchical data structure for storing many objects
-belonging to the same C++ type. In general, a <code class="docutils literal notranslate"><span class="pre">TTree</span></code> may own one or more
-branches (represented by the <code class="docutils literal notranslate"><span class="pre">TBranch</span></code> class), each of which owns one or more
-leaves (represented by <code class="docutils literal notranslate"><span class="pre">TLeaf</span></code>).</p>
-<p>The ROOT-format output files generated by MARLEY contain a single <code class="docutils literal notranslate"><span class="pre">TTree</span></code>
-called <code class="docutils literal notranslate"><span class="pre">MARLEY_event_tree</span></code>. This <code class="docutils literal notranslate"><span class="pre">TTree</span></code> has a single branch called
-<code class="docutils literal notranslate"><span class="pre">event</span></code> which stores one <code class="docutils literal notranslate"><span class="pre">marley::Event</span></code> object per tree entry. Example
-ROOT <a class="reference external" href="https://root.cern.ch/working-macros">macros</a> that demonstrate the
-recommended procedure for accessing and manipulating the events stored in this
-format are provided in the folder <code class="docutils literal notranslate"><span class="pre">examples/macros/</span></code> of the MARLEY source
-code.</p>
-<p>In order to properly interpret <code class="docutils literal notranslate"><span class="pre">marley::Event</span></code> objects, ROOT requires shared
-libraries containing <a class="reference external" href="https://root.cern.ch/interacting-shared-libraries-rootcling">dictionaries</a> for the MARLEY
-classes to be loaded at runtime. Whenever MARLEY is successfully built against
-ROOT, a helper script called <code class="docutils literal notranslate"><span class="pre">mroot</span></code> is installed in the <code class="docutils literal notranslate"><span class="pre">build/</span></code> folder.
-Running this script will start the interactive ROOT C++ interpreter after
-automatically loading the needed class dictionaries.</p>
-<div class="section" id="conventions-used-in-the-event-objects">
-<h4>Conventions used in the event objects<a class="headerlink" href="#conventions-used-in-the-event-objects" title="Permalink to this headline">¶</a></h4>
-<p>When analyzing <code class="docutils literal notranslate"><span class="pre">marley::Event</span></code> objects (or their alternative “flat”
-representation discussed <a class="reference external" href="#flat-root-files">below</a>), it is helpful to be
-aware of MARLEY’s nomenclature for the particles involved in each event’s 2 → 2
-primary interaction
-<p style="text-align: center;"> 𝑎 + 𝑏 → 𝑐 + 𝑑 .</p></p>
-<p>Here the particles 𝑎, 𝑏, 𝑐, and 𝑑 are labeled as, respectively, the
-<em>projectile</em>, <em>target</em>, <em>ejectile</em>, and <em>residue</em>. Where a mass difference
-exists, MARLEY chooses the projectile (ejectile) to be the lighter of the two
-particles in the initial (final) state. Otherwise, the choice is arbitrary. All
-four-vector components stored in a MARLEY event record are expressed in the
-laboratory frame, i.e., the rest frame of the target. If simulation of nuclear
-de-excitations is enabled (as it is by default) and the residue is a nucleus,
-its 4-momentum and net charge are stored in the event record after it has
-reached the ground state.</p>
-</div>
-<div class="section" id="metadata">
-<h4>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h4>
-<p>Four pieces of metadata are saved in a ROOT-format output file alongside the
-events themselves:</p>
-<dl class="simple">
-<dt>MARLEY_config</dt><dd><p>A JSON-format string which stores the contents (except for comments) of the
-job configuration file used to generate the events</p>
-</dd>
-<dt>MARLEY_state</dt><dd><p>A string giving the serialized internal state (obtained using the stream
-insertion operator <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code>) of the <a class="reference external" href="http://www.cplusplus.com/reference/random/mt19937_64/">std::mt19937_64</a> object used to
-generate random numbers when creating the events.</p>
-</dd>
-<dt>MARLEY_seed</dt><dd><p>A string representation of the integer random number seed used to initialize
-the simulation</p>
-</dd>
-<dt>MARLEY_flux_avg_xsec</dt><dd><p>A <a class="reference external" href="https://root.cern/root/html528/TParameter_double_.html">TParameter&lt;double&gt;</a> which stores the
-flux-averaged total cross section (MeV<sup> &minus;2</sup> per atom)</p>
-</dd>
-</dl>
-</div>
-<div class="section" id="flat-root-files">
-<h4>“Flat” ROOT files<a class="headerlink" href="#flat-root-files" title="Permalink to this headline">¶</a></h4>
-<p>An alternative “flat” form of the ROOT output format is also available which
-may be analyzed without the need for the MARLEY class dictionaries. An output
-file containing MARLEY events in any of the four standard formats may be
-converted into a “flat” ROOT file using the <code class="docutils literal notranslate"><span class="pre">marsum</span></code> utility. After sourcing
-the <a class="reference external" href="getting_started.html#setting-up-the-runtime-environment">setup_marley.sh</a> script, one may
-convert the MARLEY output file <code class="docutils literal notranslate"><span class="pre">OLD_EVENTS_FILE</span></code> into a new “flat” ROOT file,
-<code class="docutils literal notranslate"><span class="pre">new_flat_file.root</span></code>, via the command</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>marsum new_flat_file.root OLD_EVENTS_FILE
-</pre></div>
-</div>
-<p>The new file will contain
-a single ROOT <code class="docutils literal notranslate"><span class="pre">TTree</span></code> called <code class="docutils literal notranslate"><span class="pre">mst</span></code>
-(for <u>M</u>ARLEY <u>s</u>ummary <u>t</u>ree) with the following branches:</p>
-<dl class="simple">
-<dt>pdgv <i style="font-weight: normal;">(int)</i></dt><dd><p>Projectile PDG code</p>
-</dd>
-<dt>Ev <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile total energy (MeV)</p>
-</dd>
-<dt>KEv <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile kinetic energy (MeV)</p>
-</dd>
-<dt>pxv <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile 3-momentum x-component (MeV)</p>
-</dd>
-<dt>pyv <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile 3-momentum y-component (MeV)</p>
-</dd>
-<dt>pzv <i style="font-weight: normal;">(double)</i></dt><dd><p>Projectile 3-momentum z-component (MeV)</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>pdgt <i style="font-weight: normal;">(int)</i></dt><dd><p>Target PDG code</p>
-</dd>
-<dt>Mt <i style="font-weight: normal;">(double)</i></dt><dd><p>Target mass (MeV)</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>pdgl <i style="font-weight: normal;">(int)</i></dt><dd><p>Ejectile PDG code</p>
-</dd>
-<dt>El <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile total energy (MeV)</p>
-</dd>
-<dt>KEl <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile kinetic energy (MeV)</p>
-</dd>
-<dt>pxl <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile 3-momentum x-component (MeV)</p>
-</dd>
-<dt>pyl <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile 3-momentum y-component (MeV)</p>
-</dd>
-<dt>pzl <i style="font-weight: normal;">(double)</i></dt><dd><p>Ejectile 3-momentum z-component (MeV)</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>pdgr <i style="font-weight: normal;">(int)</i></dt><dd><p>Residue PDG code</p>
-</dd>
-<dt>Er <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue total energy (MeV)</p>
-</dd>
-<dt>KEr <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue kinetic energy (MeV)</p>
-</dd>
-<dt>pxr <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue 3-momentum x-component (MeV)</p>
-</dd>
-<dt>pyr <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue 3-momentum y-component (MeV)</p>
-</dd>
-<dt>pzr <i style="font-weight: normal;">(double)</i></dt><dd><p>Residue 3-momentum z-component (MeV)</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>Ex <i style="font-weight: normal;">(double)</i></dt><dd><p>Initial residue excitation energy (MeV)</p>
-</dd>
-<dt>twoJ <i style="font-weight: normal;">(int)</i></dt><dd><p>Two times the initial residue spin</p>
-</dd>
-<dt>parity <i style="font-weight: normal;">(int)</i></dt><dd><p>Initial residue parity</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>np <i style="font-weight: normal;">(int)</i></dt><dd><p>Number of de-excitation products</p>
-</dd>
-<dt>pdgp <i style="font-weight: normal;">(int[np])</i></dt><dd><p>De-excitation product PDG codes</p>
-</dd>
-<dt>Ep <i style="font-weight: normal;">(double[np])</i></dt><dd><p>De-excitation product total energies (MeV)</p>
-</dd>
-<dt>KEp <i style="font-weight: normal;">(double[np])</i></dt><dd><p>De-excitation product kinetic energies (MeV)</p>
-</dd>
-<dt>pxp <i style="font-weight: normal;">(double[np])</i></dt><dd><p>De-excitation product 3-momentum x-components (MeV)</p>
-</dd>
-<dt>pyp <i style="font-weight: normal;">(double[np])</i></dt><dd><p>De-excitation product 3-momentum y-components (MeV)</p>
-</dd>
-<dt>pzp <i style="font-weight: normal;">(double[np])</i></dt><dd><p>De-excitation product 3-momentum z-components (MeV)</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>xsec <i style="font-weight: normal;">(double)</i></dt><dd><p>Flux-averaged total cross section (10<sup>&minus;42</sup> cm<sup>2</sup> per atom)</p>
-</dd>
-</dl>
-</div>
-</div>
-</div>
-</div>
+<p>The listing above shows an example MARLEY output file in HEPEVT format.</p>
+</section>
+</section>
+</section>
 
 
           </div>
@@ -641,7 +901,7 @@ a single ROOT <code class="docutils literal notranslate"><span class="pre">TTree
       </div>
     
       <div class="pull-right">
-        <a class="btn btn-default" href="pubs.html" title="next chapter (use the right arrow)">MARLEY Bibliography</a>
+        <a class="btn btn-default" href="commands.html" title="next chapter (use the right arrow)">Command reference</a>
       </div>
     </div>
     <div class="clearer"></div>
@@ -649,14 +909,14 @@ a single ROOT <code class="docutils literal notranslate"><span class="pre">TTree
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="pubs.html" title="MARLEY Bibliography"
+          <a href="commands.html" title="Command reference"
              >next</a> |</li>
         <li class="right" >
           <a href="getting_started.html" title="Getting started"
@@ -672,7 +932,7 @@ a single ROOT <code class="docutils literal notranslate"><span class="pre">TTree
 </script>
 <script type="text/javascript" src="_static/js/bootstrap.js"></script>
   <div class="footer">
-    &copy; Copyright 2016-2021 Steven Gardiner
+    &copy; Copyright 2016-2026 Steven Gardiner
   </div>
   </body>
 </html>

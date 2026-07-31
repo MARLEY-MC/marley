@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 
-<html>
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   
   <!-- Licensed under the Apache 2.0 License -->
   <link rel="stylesheet" type="text/css" href="../_static/fonts/open-sans/stylesheet.css" />
@@ -15,13 +15,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
     <title>New website and Neutrino 2020 &#8212; MARLEY  documentation</title>
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/guzzle.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <link rel="shortcut icon" href="../_static/mar.png"/>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8e8a900e" />
+    <link rel="stylesheet" type="text/css" href="../_static/guzzle.css?v=ee5bbeb1" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=b87e984e" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="icon" href="../_static/mar.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="copyright" title="Copyright" href="../copyright.html" />
@@ -31,7 +33,7 @@
    
 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -63,12 +65,13 @@
       alt="MARLEY logo" width=200 style="margin: 0px 0px"/>
   <p style="color:black;margin-bottom:40px"> <b>Model of Argon Reaction <br>
   Low Energy Yields</b> </p> </a>
-</div>
-<div class="sidebar-block">
+</div><div class="sidebar-block">
   <div class="sidebar-wrapper">
     <h2>Table Of Contents</h2>
   </div>
   <div class="sidebar-toc">
+    
+      
     
     
       <ul class="current">
@@ -76,10 +79,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing MARLEY</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interpret_output.html">Interpreting the output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands.html">Command reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pubs.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/MARLEY-MC/marley">GitHub repository</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dev_docs.html">Developer documentation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../news.html">News</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="v2_release.html">MARLEY v2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cpc_and_others.html">New paper, DEAP-3600, and COHERENT CsI[Na]</a></li>
 <li class="toctree-l2"><a class="reference internal" href="prc40Ar.html">Publication in Phys. Rev. C</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">New website and Neutrino 2020</a></li>
@@ -121,12 +126,12 @@
           
           <div class="document clearer body">
             
-  <div class="section" id="new-website-and-neutrino-2020">
-<h1>New website and Neutrino 2020<a class="headerlink" href="#new-website-and-neutrino-2020" title="Permalink to this headline">¶</a></h1>
+  <section id="new-website-and-neutrino-2020">
+<h1>New website and Neutrino 2020<a class="headerlink" href="#new-website-and-neutrino-2020" title="Link to this heading">¶</a></h1>
 <p class="feed-meta">Published by <em class="feed-author">Steven Gardiner</em> on <em class="feed-date">2020-06-29 21:55:00</em></p>
 <p>After several years of existence as an uninviting landing page for MARLEY’s
 <a class="reference external" href="https://www.doxygen.nl/index.html">Doxygen</a>-based API documentation, the
-<a class="reference external" href="http://www.marleygen.org">marleygen.org</a> website has now been completely
+<a class="reference external" href="https://www.marleygen.org">marleygen.org</a> website has now been completely
 revamped.</p>
 <p>Fans of the old site can still find an updated version of the API
 documentation <a class="reference external" href="../doxygen/index.html">here</a>.</p>
@@ -147,7 +152,7 @@ using MARLEY:</p>
 <li><p>Avinay Bhat for MicroBooNE, “MeV-scale physics in MicroBooNE,”
 poster <a class="reference external" href="https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=4">#4</a></p></li>
 <li><p>Peibo An for COHERENT, “A machine learning approach to study the neutrino
-charged-current interaction on <sup>127</sup>I,” poster <a class="reference external" href="https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=13">#13</a></p></li>
+charged-current interaction on <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>127</mn></msup><mi mathvariant="normal">I</mi></mrow><annotation encoding="application/x-tex">^{127}\mathrm{I}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">127</span></span></span></span></span></span></span></span></span><span class="mord mathrm">I</span></span></span></span></span>,” poster <a class="reference external" href="https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=13">#13</a></p></li>
 <li><p>Ivan Lepetic <em>et al</em>., “Seeing the invisible: benefits and capabilities of
 MeV-scale reconstruction in single-phase LArTPCs,” poster
 <a class="reference external" href="https://nusoft.fnal.gov/nova/nu2020postersession/?posterID=88">#88</a></p></li>
@@ -168,7 +173,7 @@ scattering measurements,” poster <a class="reference external" href="https://n
 If I’ve missed your MARLEY-related poster, please send me an <a class="reference external" href="mailto:gardiner&#37;&#52;&#48;fnal&#46;gov">email</a> about it!</p>
 <p>A final tag for MARLEY v1.2.0 and an associated paper on the <a class="reference external" href="https://arxiv.org">arXiv</a> are both just around the corner. Stay tuned and happy
 remainder of Neutrino 2020!</p>
-</div>
+</section>
 
 
           </div>
@@ -188,7 +193,7 @@ remainder of Neutrino 2020!</p>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -212,7 +217,7 @@ remainder of Neutrino 2020!</p>
 </script>
 <script type="text/javascript" src="../_static/js/bootstrap.js"></script>
   <div class="footer">
-    &copy; Copyright 2016-2021 Steven Gardiner
+    &copy; Copyright 2016-2026 Steven Gardiner
   </div>
   </body>
 </html>

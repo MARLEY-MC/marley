@@ -1,10 +1,24 @@
 var searchData=
 [
-  ['sdb_5f_913',['sdb_',['../classmarley_1_1_exit_channel.html#a4c9631ea711dd81c7977e87df746c0f0',1,'marley::ExitChannel']]],
-  ['sigma_5f_914',['sigma_',['../classmarley_1_1_backshifted_fermi_gas_model.html#a889e32bc2f07a20e23455f645b2f2f3e',1,'marley::BackshiftedFermiGasModel']]],
-  ['sigma_5fd_5fglobal_5f_915',['sigma_d_global_',['../classmarley_1_1_backshifted_fermi_gas_model.html#af947d80f6af12690dc92d2d831a5291f',1,'marley::BackshiftedFermiGasModel']]],
-  ['skip_5fjpi_5fsampling_5f_916',['skip_jpi_sampling_',['../classmarley_1_1_continuum_exit_channel.html#a5097b8e640c7db89456b5aea4ce39361',1,'marley::ContinuumExitChannel']]],
-  ['sn_5f_917',['Sn_',['../classmarley_1_1_backshifted_fermi_gas_model.html#a08ec01c6f72356b43ac3b4596923cc1c',1,'marley::BackshiftedFermiGasModel']]],
-  ['start_5flevel_5f_918',['start_level_',['../classmarley_1_1_gamma.html#a578acc272af5b3ae36cfc5a3c355e7a5',1,'marley::Gamma']]],
-  ['strength_5f_919',['strength_',['../classmarley_1_1_matrix_element.html#a27e5f8ff35a986a073f4556e3f03f54d',1,'marley::MatrixElement']]]
+  ['s_5f_0',['s_',['../classmarley_1_1_helm_nuclear_form_factor.html#a93027a8b14c5789043059afa6b6031d2',1,'marley::HelmNuclearFormFactor']]],
+  ['sc_5fmode_5f_1',['sc_mode_',['../classmarley_1_1_continuum_nuclear_reaction.html#a359a2a61fa97b300bfd145922d0f2e72',1,'marley::ContinuumNuclearReaction']]],
+  ['sc_5fmode_5fstring_5fmap_5f_2',['sc_mode_string_map_',['../classmarley_1_1_continuum_nuclear_reaction.html#aabe71d7c69d0dd99671795a8acd68ce3',1,'marley::ContinuumNuclearReaction']]],
+  ['scale_3',['scale',['../class_hep_m_c3_1_1_gen_pdf_info.html#acda273e9015a751355844daebc904dd2',1,'HepMC3::GenPdfInfo']]],
+  ['sdb_5f_4',['sdb_',['../classmarley_1_1_exit_channel.html#a4c9631ea711dd81c7977e87df746c0f0',1,'marley::ExitChannel::sdb_'],['../classmarley_1_1_o_m_p_weight_calculator.html#a68aa54bcba26a7cebe0633f1cc226424',1,'marley::OMPWeightCalculator::sdb_']]],
+  ['sigma_5f_5',['sigma_',['../classmarley_1_1_backshifted_fermi_gas_model.html#a889e32bc2f07a20e23455f645b2f2f3e',1,'marley::BackshiftedFermiGasModel']]],
+  ['sigma_5fd_5fglobal_5f_6',['sigma_d_global_',['../classmarley_1_1_backshifted_fermi_gas_model.html#af947d80f6af12690dc92d2d831a5291f',1,'marley::BackshiftedFermiGasModel']]],
+  ['sigma_5ffactor_5f_7',['sigma_factor_',['../classmarley_1_1_strength_variation_weight_calculator.html#a37f87e6c139ada2a3936bbe61129174c',1,'marley::StrengthVariationWeightCalculator']]],
+  ['sigma_5finel_5fnn_8',['sigma_inel_NN',['../class_hep_m_c3_1_1_gen_heavy_ion.html#af62f1296089485a490eb965ee29a29e2',1,'HepMC3::GenHeavyIon']]],
+  ['skip_5fjpi_5fsampling_5f_9',['skip_jpi_sampling_',['../classmarley_1_1_continuum_exit_channel.html#a5097b8e640c7db89456b5aea4ce39361',1,'marley::ContinuumExitChannel']]],
+  ['sn_5f_10',['Sn_',['../classmarley_1_1_backshifted_fermi_gas_model.html#a08ec01c6f72356b43ac3b4596923cc1c',1,'marley::BackshiftedFermiGasModel']]],
+  ['source_5ffile_5f_11',['source_file_',['../classmarley_1_1_reaction.html#aa85d5d3f4fc7ddf0de00edc946257f86',1,'marley::Reaction']]],
+  ['spectator_5fneutrons_12',['spectator_neutrons',['../class_hep_m_c3_1_1_gen_heavy_ion.html#aea1db7a6a1d0b7e2929b186181677c21',1,'HepMC3::GenHeavyIon']]],
+  ['spectator_5fprotons_13',['spectator_protons',['../class_hep_m_c3_1_1_gen_heavy_ion.html#ac7cb92ff8ab8bbeb373bd73fcf10e8a3',1,'HepMC3::GenHeavyIon']]],
+  ['start_5flevel_5f_14',['start_level_',['../classmarley_1_1_gamma.html#a578acc272af5b3ae36cfc5a3c355e7a5',1,'marley::Gamma']]],
+  ['status_15',['status',['../struct_hep_m_c3_1_1_gen_particle_data.html#aeb6b95dda27ea50c5a3c0ba8966b0f5d',1,'HepMC3::GenParticleData::status'],['../struct_hep_m_c3_1_1_gen_vertex_data.html#ac8e58f6b5acd41d2b56ca2aca2c0f5bb',1,'HepMC3::GenVertexData::status']]],
+  ['stream_5f_16',['stream_',['../classmarley_1_1_output_file_ascii.html#a359bbbabb38851cf0b505fa618c4f6ba',1,'marley::OutputFileAscii']]],
+  ['strength_5f_17',['strength_',['../classmarley_1_1_matrix_element.html#a27e5f8ff35a986a073f4556e3f03f54d',1,'marley::MatrixElement']]],
+  ['strength_5ferr_5fhigh_5f_18',['strength_err_high_',['../classmarley_1_1_matrix_element.html#ab5101230ee19256082e64a6b8fe656bb',1,'marley::MatrixElement']]],
+  ['strength_5ferr_5flow_5f_19',['strength_err_low_',['../classmarley_1_1_matrix_element.html#ae49c67c0bc9ecd28d141118f2fcaa4e4',1,'marley::MatrixElement']]],
+  ['summary_5f_20',['summary_',['../classmarley_1_1_command_handler.html#af17201f519b7723126fa94e48b17f878',1,'marley::CommandHandler::CommandInfo']]]
 ];

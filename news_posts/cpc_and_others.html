@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 
-<html>
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   
   <!-- Licensed under the Apache 2.0 License -->
   <link rel="stylesheet" type="text/css" href="../_static/fonts/open-sans/stylesheet.css" />
@@ -15,23 +15,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
     <title>New paper, DEAP-3600, and COHERENT CsI[Na] &#8212; MARLEY  documentation</title>
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/guzzle.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <link rel="shortcut icon" href="../_static/mar.png"/>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8e8a900e" />
+    <link rel="stylesheet" type="text/css" href="../_static/guzzle.css?v=ee5bbeb1" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=b87e984e" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="icon" href="../_static/mar.png"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="copyright" title="Copyright" href="../copyright.html" />
     <link rel="next" title="Publication in Phys. Rev. C" href="prc40Ar.html" />
-    <link rel="prev" title="MARLEY News" href="../news.html" />
+    <link rel="prev" title="MARLEY v2" href="v2_release.html" />
   
    
 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -41,7 +43,7 @@
           <a href="prc40Ar.html" title="Publication in Phys. Rev. C"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="../news.html" title="MARLEY News"
+          <a href="v2_release.html" title="MARLEY v2"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">MARLEY  documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../news.html" accesskey="U">MARLEY News</a> &#187;</li>
@@ -63,12 +65,13 @@
       alt="MARLEY logo" width=200 style="margin: 0px 0px"/>
   <p style="color:black;margin-bottom:40px"> <b>Model of Argon Reaction <br>
   Low Energy Yields</b> </p> </a>
-</div>
-<div class="sidebar-block">
+</div><div class="sidebar-block">
   <div class="sidebar-wrapper">
     <h2>Table Of Contents</h2>
   </div>
   <div class="sidebar-toc">
+    
+      
     
     
       <ul class="current">
@@ -76,10 +79,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing MARLEY</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../interpret_output.html">Interpreting the output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands.html">Command reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pubs.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/MARLEY-MC/marley">GitHub repository</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dev_docs.html">Developer documentation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../news.html">News</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="v2_release.html">MARLEY v2</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">New paper, DEAP-3600, and COHERENT CsI[Na]</a></li>
 <li class="toctree-l2"><a class="reference internal" href="prc40Ar.html">Publication in Phys. Rev. C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="nu2020.html">New website and Neutrino 2020</a></li>
@@ -121,19 +126,19 @@
           
           <div class="document clearer body">
             
-  <div class="section" id="new-paper-deap-3600-and-coherent-csi-na">
-<h1>New paper, DEAP-3600, and COHERENT CsI[Na]<a class="headerlink" href="#new-paper-deap-3600-and-coherent-csi-na" title="Permalink to this headline">¶</a></h1>
+  <section id="new-paper-deap-3600-and-coherent-csi-na">
+<h1>New paper, DEAP-3600, and COHERENT CsI[Na]<a class="headerlink" href="#new-paper-deap-3600-and-coherent-csi-na" title="Link to this heading">¶</a></h1>
 <p class="feed-meta">Published by <em class="feed-author">Steven Gardiner</em> on <em class="feed-date">2021-11-04 17:30:00</em></p>
 <p>Since my last news post, the MARLEY v1.2.0 <a class="reference external" href="https://doi.org/10.1016/j.cpc.2021.108123">implementation paper</a> was published by Computer
 Physics Communications. The <a class="reference external" href="../citing.html">recommended citations</a> to use
 for MARLEY have been updated accordingly.</p>
-<p>New MARLEY-based simulations of <sup>8</sup>B solar neutrino events in the <a class="reference external" href="http://deap3600.ca/">DEAP-3600</a> liquid argon dark matter experiment were reported in a
+<p>New MARLEY-based simulations of <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>8</mn></msup><mi mathvariant="normal">B</mi></mrow><annotation encoding="application/x-tex">^{8}\mathrm{B}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">8</span></span></span></span></span></span></span></span></span><span class="mord mathrm">B</span></span></span></span></span> solar neutrino events in the <a class="reference external" href="http://deap3600.ca/">DEAP-3600</a> liquid argon dark matter experiment were reported in a
 recent <a class="reference external" href="https://indico.physics.ucsd.edu/event/1/contributions/73/attachments/36/55/LIDINE_poster2021_AE-2.pdf">poster</a>
 presented by Andrew Erlandson at <a class="reference external" href="https://indico.physics.ucsd.edu/event/1/overview">LIDINE 2021</a>. By combining MARLEY with
 <a class="reference external" href="https://rat-pac.readthedocs.io/en/latest/index.html">RAT-PAC</a> to simulate
 the detector response and apply a realistic event selection, the DEAP-3600
 collaboration obtains an estimated rate of 7.34 ± 0.66 charged-current solar
-&nu;<sub>e</sub> events in a 7.20 tonne-year exposure assuming 100% acceptance. If
+<span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ν</mi><mi>e</mi></msub></mrow><annotation encoding="application/x-tex">\nu_e</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0637em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">e</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span> events in a 7.20 tonne-year exposure assuming 100% acceptance. If
 follow-up studies of backgrounds and acceptance conclude favorably, there could
 be an exciting opportunity for DEAP-3600 to achieve a first detection of these
 neutrinos in liquid argon.</p>
@@ -146,13 +151,13 @@ potentially leading to spurious CEvNS-like signals in the detector. While a
 data-driven estimate of the rate of these neutrino-induced neutrons (NINs) was
 used in the CEvNS cross-section analysis, the NIN energy spectrum was
 approximated using the results of a MARLEY simulation. No official reaction
-input files have been released yet for <sup>208</sup>Pb (or any of the other Pb
+input files have been released yet for <span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mrow></mrow><mn>208</mn></msup><mrow><mi mathvariant="normal">P</mi><mi mathvariant="normal">b</mi></mrow></mrow><annotation encoding="application/x-tex">^{208}\mathrm{Pb}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">208</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathrm">Pb</span></span></span></span></span></span> (or any of the other Pb
 isotopes), but user-defined ones may be provided (see appendix B of the MARLEY
 v1.2.0 <a class="reference external" href="https://doi.org/10.1016/j.cpc.2021.108123">paper</a>), as was done in
 this analysis.</p>
 <p>It continues to be fun to learn about new and exciting applications of MARLEY.
 Please keep them coming!</p>
-</div>
+</section>
 
 
           </div>
@@ -160,7 +165,7 @@ Please keep them coming!</p>
   <div class="footer-relations">
     
       <div class="pull-left">
-        <a class="btn btn-default" href="../news.html" title="previous chapter (use the left arrow)">MARLEY News</a>
+        <a class="btn btn-default" href="v2_release.html" title="previous chapter (use the left arrow)">MARLEY v2</a>
       </div>
     
       <div class="pull-right">
@@ -172,7 +177,7 @@ Please keep them coming!</p>
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -182,7 +187,7 @@ Please keep them coming!</p>
           <a href="prc40Ar.html" title="Publication in Phys. Rev. C"
              >next</a> |</li>
         <li class="right" >
-          <a href="../news.html" title="MARLEY News"
+          <a href="v2_release.html" title="MARLEY v2"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="../index.html">MARLEY  documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../news.html" >MARLEY News</a> &#187;</li>
@@ -196,7 +201,7 @@ Please keep them coming!</p>
 </script>
 <script type="text/javascript" src="../_static/js/bootstrap.js"></script>
   <div class="footer">
-    &copy; Copyright 2016-2021 Steven Gardiner
+    &copy; Copyright 2016-2026 Steven Gardiner
   </div>
   </body>
 </html>

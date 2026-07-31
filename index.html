@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 
-<html>
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   
   <!-- Licensed under the Apache 2.0 License -->
   <link rel="stylesheet" type="text/css" href="_static/fonts/open-sans/stylesheet.css" />
@@ -15,13 +15,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
     <title>Overview &#8212; MARLEY  documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/guzzle.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <link rel="shortcut icon" href="_static/mar.png"/>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8e8a900e" />
+    <link rel="stylesheet" type="text/css" href="_static/guzzle.css?v=ee5bbeb1" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="_static/katex-math.css?v=05624691" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b87e984e" />
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="icon" href="_static/mar.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="copyright" title="Copyright" href="copyright.html" />
@@ -30,7 +32,7 @@
    
 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -58,12 +60,13 @@
       alt="MARLEY logo" width=200 style="margin: 0px 0px"/>
   <p style="color:black;margin-bottom:40px"> <b>Model of Argon Reaction <br>
   Low Energy Yields</b> </p> </a>
-</div>
-<div class="sidebar-block">
+</div><div class="sidebar-block">
   <div class="sidebar-wrapper">
     <h2>Table Of Contents</h2>
   </div>
   <div class="sidebar-toc">
+    
+      
     
     
       <ul>
@@ -71,6 +74,7 @@
 <li class="toctree-l1"><a class="reference internal" href="citing.html">Citing MARLEY</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interpret_output.html">Interpreting the output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Command reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pubs.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/MARLEY-MC/marley">GitHub repository</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dev_docs.html">Developer documentation</a></li>
@@ -109,23 +113,22 @@
           
           <div class="document clearer body">
             
-  <div class="section" id="overview">
-<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
+  <section id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
 <p><strong>MARLEY</strong> (Model of Argon Reaction Low Energy Yields) is a Monte Carlo event
-generator for neutrino-nucleus interactions at energies of tens-of-MeV and
-below. The current version computes inclusive neutrino-nucleus cross sections
-employing the <em>allowed approximation</em>: the nuclear matrix elements are
-evaluated while neglecting Fermi motion and applying the long-wavelength (zero
-momentum transfer) limit. De-excitations of the final-state nucleus emerging
-from the primary interaction are simulated using a combination of tabulated
-γ-ray decay schemes and an original implementation of the Hauser-Feshbach
-statistical model.</p>
+generator for neutrino interactions at energies of tens-of-MeV and below. The
+current version computes inclusive neutrino-nucleus cross sections using a
+hybrid model; a Hartree-Fock Continuum Random Phase Approximation approach is
+used for induced transitions to unbound nuclear energy levels, while a
+data-driven recipe is applied for transitions to bound states. De-excitations of
+the final-state nucleus emerging from the primary interaction are simulated
+using a combination of tabulated γ-ray decay schemes and an original
+implementation of the Hauser-Feshbach statistical model.</p>
 <p>Input files are provided with the code that are suitable for simulating the
 charged-current process</p>
-<p><p align="center">&nu;<sub>e</sub>&nbsp;+&nbsp;<sup>40</sup>Ar&nbsp;&rarr;
-&nbsp;e<sup>&minus;</sup>&nbsp;+&nbsp;<sup>40</sup>K<sup>&ast;</sup>,</p></p>
+<p class="center"><span class="math"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ν</mi><mi>e</mi></msub><mo>+</mo><mtext> </mtext><msup><mrow></mrow><mn>40</mn></msup><mrow><mi mathvariant="normal">A</mi><mi mathvariant="normal">r</mi></mrow><mo>→</mo><msup><mi>e</mi><mo lspace="0em" rspace="0em">−</mo></msup><mo>+</mo><mtext> </mtext><msup><mrow></mrow><mn>40</mn></msup><msup><mi mathvariant="normal">K</mi><mo>∗</mo></msup></mrow><annotation encoding="application/x-tex">\nu_e + \, ^{40}\mathrm{Ar} \to e^{-} + \, ^{40}\mathrm{K}^*</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.06366em;">ν</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0637em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">e</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">40</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathrm">Ar</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8547em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7713em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">40</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathrm">K</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6887em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span></span></span></span></span></span></span></span></span></p>
 <p>coherent elastic neutrino-nucleus scattering (CEvNS) on spin-zero target
 nuclei, and neutrino-electron elastic scattering on any atomic target.
 Inclusion of additional reactions and targets is planned for the future.</p>
@@ -137,7 +140,7 @@ references in the online <a class="reference external" href="pubs.html">bibliogr
 new input files and code improvements from the community. A partial list of
 potential projects for future MARLEY development is available on the developer
 documentation <a class="reference external" href="dev_docs.html#development-wish-list">webpage</a>.</p>
-</div>
+</section>
 
 
           </div>
@@ -153,7 +156,7 @@ documentation <a class="reference external" href="dev_docs.html#development-wish
         </div>
         <div class="clearfix"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -173,7 +176,7 @@ documentation <a class="reference external" href="dev_docs.html#development-wish
 </script>
 <script type="text/javascript" src="_static/js/bootstrap.js"></script>
   <div class="footer">
-    &copy; Copyright 2016-2021 Steven Gardiner
+    &copy; Copyright 2016-2026 Steven Gardiner
   </div>
   </body>
 </html>
