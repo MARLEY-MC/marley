@@ -38,9 +38,8 @@ namespace {
 
   void print_generate_help() {
     std::cout << "Usage: marley generate CONFIG_FILE\n\n"
-      << "Generate Monte Carlo neutrino interaction events according to the\n"
-      << "settings in CONFIG_FILE (a MARLEY JSON-based job configuration"
-      << " file).\n\n"
+      << "Simulate neutrino interaction events according to the\n"
+      << "settings in CONFIG_FILE.\n\n"
       << "This is the default command: 'marley CONFIG_FILE' is equivalent to\n"
       << "'marley generate CONFIG_FILE'.\n\n"
       << "Options:\n"
@@ -52,7 +51,7 @@ namespace {
       << "Print events from one or more MARLEY output files.\n\n"
       << "  FORMAT         Optional output format selector:\n"
       << "                   pretty (default): human-readable event history\n"
-      << "                   hepmc3: standard text representation of HepMC3\n"
+      << "                   hepmc3: text representation of HepMC3\n"
       << "                   legacy: MARLEY v1 legacy event summary\n\n"
       << "Options:\n"
       << "  -h, --help     Print this help message\n";
@@ -69,8 +68,9 @@ namespace {
 
   void print_xsec_help() {
     std::cout << "Usage: marley xsec -o OUTPUT_FILE CONFIG_FILE\n\n"
-      << "Tabulate the total cross section versus projectile energy using the\n"
-      << "settings in CONFIG_FILE and write the results to OUTPUT_FILE.\n\n"
+      << "Tabulate the total cross section versus projectile kinetic energy\n"
+      << "using the settings in CONFIG_FILE. Write the results to"
+      << " OUTPUT_FILE.\n\n"
       << "  -o OUTPUT_FILE   Required: path to the output file\n"
       << "  -f, --force      Overwrite the output file without prompting\n\n"
       << "Options:\n"
@@ -79,7 +79,7 @@ namespace {
 
   void print_decay_help() {
     std::cout << "Usage: marley decay CONFIG_FILE\n\n"
-      << "Simulate stand-alone nuclear de-excitations according to the decays\n"
+      << "Simulate stand-alone nuclear de-excitations according to the\n"
       << "settings in CONFIG_FILE.\n\n"
       << "Options:\n"
       << "  -h, --help     Print this help message\n";
@@ -87,9 +87,9 @@ namespace {
 
   void print_summarize_help() {
     std::cout << "Usage: marley summarize -o OUTPUT_FILE INPUT_FILE...\n\n"
-      << "Convert one or more MARLEY event files into a ROOT TTree"
-      << " summary file\n"
-      << "suitable for analysis with ROOT C++ macros or Python/PyROOT.\n\n"
+      << "Convert one or more MARLEY event files into a"
+      << " summary file containing\n"
+      << "a flat TTree suitable for analysis with ROOT.\n\n"
       << "  -o OUTPUT_FILE   Required: path to the output ROOT file\n"
       << "  -f, --force      Overwrite the output file without prompting\n\n"
       << "Options:\n"
@@ -113,14 +113,14 @@ namespace {
     std::cout << "Usage: marley convert [--output-format FORMAT]"
       << " -o OUTPUT_FILE INPUT_FILES...\n\n"
       << "Convert MARLEY event files between supported formats.\n\n"
-      << "  -o OUTPUT_FILE        Required: path to the output file\n"
-      << "  --output-format FORMAT Output format. Supported values:\n"
-      << "                          \"ascii\" (default), \"root\",\n"
-      << "                          \"legacy\", \"hepevt\"\n"
-      << "  -f, --force           Overwrite the output file without"
+      << "  -o OUTPUT_FILE          Required: path to the output file\n"
+      << "  --output-format FORMAT  Output format. Supported values:\n"
+      << "                            \"ascii\" (default), \"root\",\n"
+      << "                            \"legacy\", \"hepevt\"\n"
+      << "  -f, --force             Overwrite the output file without"
       << " prompting\n\n"
       << "Options:\n"
-      << "  -h, --help            Print this help message\n\n"
+      << "  -h, --help              Print this help message\n\n"
       << "Note: ROOT format conversions require a ROOT-enabled build"
       << " of MARLEY.\n"
       << "The \"legacy\" and \"hepevt\" formats are one-way conversions"
@@ -172,7 +172,7 @@ bool marley::CommandHandler::print_top_level_help() {
   for ( const auto& [name, info] : command_map_ ) {
     std::cout << "  " << std::left << std::setw(12) << name
       << info.summary_;
-    if ( info.requires_root_ ) std::cout << "  [requires ROOT]";
+    if ( info.requires_root_ ) std::cout << " [requires ROOT]";
     std::cout << '\n';
   }
 
