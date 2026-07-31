@@ -263,8 +263,8 @@ std::shared_ptr< HepMC3::GenEvent > marley::DiscreteNuclearReaction
 
   // Create the preliminary event object (after 2-->2 scattering, but before
   // de-excitation of the residual nucleus)
-  auto event = this->make_event_object( KEa, pc_cm, cos_theta_c_cm, phi_c_cm,
-    Ec_cm, Ed_cm, E_level, twoJ, P );
+  auto event = this->make_nuclear_event_object( KEa, pc_cm, cos_theta_c_cm,
+    phi_c_cm, Ec_cm, Ed_cm, E_level, twoJ, P );
 
   // Store the matrix element index for use by weight calculators
   event->add_attribute( "me_index",
@@ -626,19 +626,6 @@ double marley::DiscreteNuclearReaction::sample_cos_theta_c_cm(
     [ &mat_el, KEa, &beta_c_cm, this ]( double cos_theta_cm ) -> double
     { return this->diff_xs( mat_el, KEa, cos_theta_cm, beta_c_cm, false ); },
     -1., 1., max );
-}
-
-std::shared_ptr< HepMC3::GenEvent > marley::DiscreteNuclearReaction
-  ::make_event_object( double KEa, double pc_cm, double cos_theta_c_cm,
-  double phi_c_cm, double Ec_cm, double Ed_cm, double E_level, int twoJ,
-  const marley::Parity& P ) const
-{
-  auto event = marley::Reaction::make_event_object( KEa, pc_cm,
-    cos_theta_c_cm, phi_c_cm, Ec_cm, Ed_cm, E_level, twoJ, P );
-
-  this->set_charge_attributes( event );
-
-  return event;
 }
 
 // Adds an indication of whether the reaction populates excited levels of the

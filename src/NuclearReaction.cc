@@ -16,6 +16,9 @@
 
 #include <cmath>
 
+#include "HepMC3/Attribute.h"
+#include "HepMC3/GenEvent.h"
+#include "HepMC3/GenParticle.h"
 #include "marley/hepmc3_utils.hh"
 #include "marley/marley_utils.hh"
 #include "marley/Error.hh"
@@ -24,6 +27,7 @@
 #include "marley/Logger.hh"
 #include "marley/MatrixElement.hh"
 #include "marley/NucleusDecayer.hh"
+#include "marley/Parity.hh"
 #include "marley/Reaction.hh"
 
 using ProcType = marley::Reaction::ProcessType;
@@ -129,4 +133,60 @@ void marley::NuclearReaction::set_charge_attributes(
   // Assign the correct charge to the residue
   auto residue = marley_hepmc3::get_residue( *event );
   marley_hepmc3::set_particle_charge( *residue, q_d_ );
+}
+
+void marley::NuclearReaction::set_nuclear_residue_attributes(
+  const std::shared_ptr< HepMC3::GenParticle >& residue,
+  double E_level, int twoJ, const marley::Parity& P ) const
+{
+  // Add attributes needed to keep track of the nuclear de-excitation state
+  residue->add_attribute( "Ex",
+    std::make_shared< HepMC3::DoubleAttribute >(E_level) );
+  residue->add_attribute( "twoJ",
+    std::make_shared< HepMC3::IntAttribute >(twoJ) );
+  residue->add_attribute( "parity",
+    std::make_shared< HepMC3::IntAttribute >(static_cast<int>( P )) );
+}
+
+std::shared_ptr< HepMC3::GenEvent >
+  marley::NuclearReaction::make_nuclear_event_object(
+  double KEa, double pc_cm, double cos_theta_c_cm, double phi_c_cm,
+  double Ec_cm, double Ed_cm, double E_level, int twoJ,
+  const marley::Parity& P ) const
+{
+  // Create the event skeleton, marking the residue as an undecayed
+  // intermediate state (it will be allowed to decay later if nuclear
+  // de-excitation is enabled)
+  auto event = marley::Reaction::make_event_object( KEa, pc_cm,
+    cos_theta_c_cm, phi_c_cm, Ec_cm, Ed_cm,
+    marley_hepmc3::NUHEPMC_UNDECAYED_RESIDUE_STATUS );
+
+  // Attach the charge attributes for the target and residue
+  this->set_charge_attributes( event );
+
+  // Add the nuclear level attributes needed to keep track of the residue's
+  // de-excitation state
+  auto residue = marley_hepmc3::get_residue( *event );
+  this->set_nuclear_residue_attributes( residue, E_level, twoJ, P );
+
+  return event;
+}
+
+std::shared_ptr< HepMC3::GenEvent >
+  marley::NuclearReaction::make_nuclear_event_object(
+  double KEa, const std::shared_ptr< HepMC3::GenParticle >& ejectile,
+  const std::shared_ptr< HepMC3::GenParticle >& residue,
+  double E_level, int twoJ, const marley::Parity& P ) const
+{
+  // Create the event skeleton from the pre-made final-state particles
+  auto event = marley::Reaction::make_event_object( KEa, ejectile, residue );
+
+  // Attach the charge attributes for the target and residue
+  this->set_charge_attributes( event );
+
+  // Add the nuclear level attributes needed to keep track of the residue's
+  // de-excitation state
+  this->set_nuclear_residue_attributes( residue, E_level, twoJ, P );
+
+  return event;
 }

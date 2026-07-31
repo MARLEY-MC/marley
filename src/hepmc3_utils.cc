@@ -613,7 +613,7 @@ namespace {
         tag += " NC ";
         break;
       case marley::Reaction::ProcessType::NuElectronElastic:
-        tag += "+e⁻ ";
+        tag += "+e- ";
         break;
       case marley::Reaction::ProcessType::StandaloneDecay:
         return " dcay ";

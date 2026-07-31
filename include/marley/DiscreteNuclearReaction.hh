@@ -134,12 +134,6 @@ namespace marley {
 
       virtual void set_description() override;
 
-      /// Helper function used by DiscreteNuclearReaction::create_event()
-      virtual std::shared_ptr< HepMC3::GenEvent > make_event_object(
-        double KEa, double pc_cm, double cos_theta_c_cm, double phi_c_cm,
-        double Ec_cm, double Ed_cm, double E_level, int twoJ,
-        const marley::Parity& P ) const override;
-
       /// @brief Samples a polar angle cosine for the ejectile using
       /// the relevant portion of the reaction nuclear matrix element
       /// @param m_type Integer representing the type of transition

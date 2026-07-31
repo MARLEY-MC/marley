@@ -175,20 +175,22 @@ namespace marley {
       /// @brief Helper function that makes an event object.
       /// @details This function should be called by
       /// marley::Reaction::create_event() after CM frame scattering angles
-      /// have been sampled for the ejectile.
+      /// have been sampled for the ejectile. The two outgoing particles are
+      /// treated as generic final-state particles. Subclasses that need to
+      /// attach particle-specific metadata to the residue (e.g., nuclear
+      /// excitation information) should wrap this function (or the overload
+      /// below) and add the desired attributes afterwards.
       /// @param KEa Lab-frame kinetic energy (MeV) of the projectile
       /// @param pc_cm Ejectile 3-momentum magnitude (MeV) in the CM frame
       /// @param cos_theta_c_cm Cosine of ejectile's CM frame polar angle
       /// @param phi_c_cm Ejectile's CM frame azimuthal angle (radians)
       /// @param Ec_cm Ejectile total energy (MeV) in the CM frame
       /// @param Ed_cm Residue total energy (MeV) in the CM frame
-      /// @param E_level Residue excitation energy (MeV)
-      /// @param twoJ Two times the residue spin
-      /// @param P Intrinsic parity of the residue
+      /// @param residue_status NuHepMC status code to assign to the residue
+      /// particle (the final-state particle that recoils against the ejectile)
       virtual std::shared_ptr< HepMC3::GenEvent > make_event_object(
         double KEa, double pc_cm, double cos_theta_c_cm, double phi_c_cm,
-        double Ec_cm, double Ed_cm, double E_level, int twoJ,
-        const marley::Parity& P ) const;
+        double Ec_cm, double Ed_cm, int residue_status ) const;
 
       /// @brief Helper function that makes an event object.
       /// @details This function expects pre-made HepMC3::GenParticle
@@ -196,13 +198,9 @@ namespace marley {
       /// @param KEa Lab-frame kinetic energy (MeV) of the projectile
       /// @param ejectile GenParticle object for the ejectile
       /// @param residue GenParticle object for the residue
-      /// @param E_level Residue excitation energy (MeV)
-      /// @param twoJ Two times the residue spin
-      /// @param P Intrinsic parity of the residue
       virtual std::shared_ptr< HepMC3::GenEvent > make_event_object(
         double KEa, const std::shared_ptr< HepMC3::GenParticle >& ejectile,
-        const std::shared_ptr< HepMC3::GenParticle >& residue,
-        double E_level, int twoJ, const marley::Parity& P ) const;
+        const std::shared_ptr< HepMC3::GenParticle >& residue ) const;
 
       /// Returns a vector of PDG codes for projectiles that participate
       /// in a particular ProcessType

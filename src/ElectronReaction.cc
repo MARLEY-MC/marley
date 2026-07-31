@@ -18,6 +18,7 @@
 #include "marley/ElectronReaction.hh"
 #include "marley/Generator.hh"
 #include "marley/Logger.hh"
+#include "marley/hepmc3_utils.hh"
 
 namespace {
 
@@ -226,7 +227,6 @@ std::shared_ptr< HepMC3::GenEvent > marley::ElectronReaction::create_event(
     << ", phi_cm = " << phi_c_cm;
 
   // Create and return the completed event object
-  // Note: electrons have spin 1/2 and positive intrinsic parity
   return make_event_object( KEa, pc_cm, cos_theta_c_cm, phi_c_cm, Ec_cm, Ed_cm,
-    0., 1, marley::Parity(true) );
+    marley_hepmc3::NUHEPMC_FINAL_STATE_STATUS );
 }

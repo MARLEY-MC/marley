@@ -50,7 +50,7 @@ namespace {
     { ProcType::NeutrinoCC_Discrete, "\u03BD CC (Discrete)" },
     { ProcType::AntiNeutrinoCC_Discrete, "anti-\u03BD CC (Discrete)" },
     { ProcType::NC_Discrete, "NC (Discrete)" },
-    { ProcType::NuElectronElastic, "(anti-)\u03BD + e\u207B ES" },
+    { ProcType::NuElectronElastic, "(anti-)\u03BD + e- ES" },
     { ProcType::NeutrinoCC_Continuum, "\u03BD CC (Continuum)" },
     { ProcType::AntiNeutrinoCC_Continuum, "anti-\u03BD CC (Continuum)" },
     { ProcType::NC_Continuum, "NC (Continuum)" },
@@ -246,8 +246,7 @@ void marley::Reaction::two_two_scatter(double KEa, double& s, double& Ec_cm,
 
 std::shared_ptr< HepMC3::GenEvent > marley::Reaction::make_event_object(
   double KEa, double pc_cm, double cos_theta_c_cm, double phi_c_cm,
-  double Ec_cm, double Ed_cm, double E_level, int twoJ,
-  const marley::Parity& P) const
+  double Ec_cm, double Ed_cm, int residue_status ) const
 {
   // Determine the Cartesian components of the ejectile's CM frame momentum
   double sin_theta_c_cm = real_sqrt( 1. - std::pow(cos_theta_c_cm, 2) );
@@ -262,7 +261,7 @@ std::shared_ptr< HepMC3::GenEvent > marley::Reaction::make_event_object(
     pc_cm_z, Ec_cm, marley_hepmc3::NUHEPMC_FINAL_STATE_STATUS, mc_ );
 
   auto residue = marley_hepmc3::make_particle( pdg_d_, -pc_cm_x, -pc_cm_y,
-    -pc_cm_z, Ed_cm, marley_hepmc3::NUHEPMC_UNDECAYED_RESIDUE_STATUS, md_ );
+    -pc_cm_z, Ed_cm, residue_status, md_ );
 
   // Get the lab-frame total energy of the projectile
   double Ea = KEa + ma_;
@@ -278,13 +277,12 @@ std::shared_ptr< HepMC3::GenEvent > marley::Reaction::make_event_object(
   // Now that we have the outgoing particles defined in the lab frame, delegate
   // the remaining tasks for creation of the event to this overloaded version
   // of the function
-  return this->make_event_object( KEa, ejectile, residue, E_level, twoJ, P );
+  return this->make_event_object( KEa, ejectile, residue );
 }
 
 std::shared_ptr< HepMC3::GenEvent > marley::Reaction::make_event_object(
   double KEa, const std::shared_ptr< HepMC3::GenParticle >& ejectile,
-  const std::shared_ptr< HepMC3::GenParticle >& residue,
-  double E_level, int twoJ, const marley::Parity& P ) const
+  const std::shared_ptr< HepMC3::GenParticle >& residue ) const
 {
   // NuHepMC E.R.4
   auto event = std::make_shared< HepMC3::GenEvent >( HepMC3::Units::MEV,
@@ -324,14 +322,6 @@ std::shared_ptr< HepMC3::GenEvent > marley::Reaction::make_event_object(
 
   prim_vtx->add_particle_out( ejectile );
   prim_vtx->add_particle_out( residue );
-
-  // Add attributes needed to keep track of the nuclear de-excitation state
-  residue->add_attribute( "Ex",
-    std::make_shared< HepMC3::DoubleAttribute >(E_level) );
-  residue->add_attribute( "twoJ",
-    std::make_shared< HepMC3::IntAttribute >(twoJ) );
-  residue->add_attribute( "parity",
-    std::make_shared< HepMC3::IntAttribute >(static_cast<int>( P )) );
 
   return event;
 }

@@ -124,16 +124,16 @@ bool marley::CommandHandler::cmd_summarize( std::deque< std::string >& args ) {
   double Ev, KEv, pxv, pyv, pzv;
   double Mt;
   double El, KEl, pxl, pyl, pzl;
-  double Er, KEr, pxr, pyr, pzr;
-  int pdgv, pdgt, pdgl, pdgr;
+  double Er = 0., KEr = 0., pxr = 0., pyr = 0., pzr = 0.;
+  int pdgv, pdgt, pdgl, pdgr = 0;
   int np;
 
   std::vector< int > PDGs;
   std::vector< double > Es, KEs, pXs, pYs, pZs, Ts;
 
-  double Ex;
-  int twoJ;
-  int par;
+  double Ex = 0.;
+  int twoJ = 0;
+  int par = 0;
 
   double cv_weight;
   std::vector< double > other_weights;
@@ -245,25 +245,27 @@ bool marley::CommandHandler::cmd_summarize( std::deque< std::string >& args ) {
       pzl = p4l.pz();
 
       auto residue = marley_hepmc3::get_residue( ev );
-      pdgr = residue->pid();
+      if ( residue ) {
+        pdgr = residue->pid();
 
-      double mr = residue->generated_mass();
-      const HepMC3::FourVector& p4r = residue->momentum();
+        double mr = residue->generated_mass();
+        const HepMC3::FourVector& p4r = residue->momentum();
 
-      Er = p4r.e();
-      KEr = std::max( 0., Er - mr );
-      pxr = p4r.px();
-      pyr = p4r.py();
-      pzr = p4r.pz();
+        Er = p4r.e();
+        KEr = std::max( 0., Er - mr );
+        pxr = p4r.px();
+        pyr = p4r.py();
+        pzr = p4r.pz();
 
-      auto Ex_attr = residue->attribute< HepMC3::DoubleAttribute >( "Ex" );
-      Ex = Ex_attr->value();
+        auto Ex_attr = residue->attribute< HepMC3::DoubleAttribute >( "Ex" );
+        Ex = Ex_attr->value();
 
-      auto twoJ_attr = residue->attribute< HepMC3::IntAttribute >( "twoJ" );
-      twoJ = twoJ_attr->value();
+        auto twoJ_attr = residue->attribute< HepMC3::IntAttribute >( "twoJ" );
+        twoJ = twoJ_attr->value();
 
-      auto parity_attr = residue->attribute< HepMC3::IntAttribute >( "parity" );
-      par = parity_attr->value();
+        auto parity_attr = residue->attribute< HepMC3::IntAttribute >( "parity" );
+        par = parity_attr->value();
+      }
 
       flux_avg_tot_xsec = xsec_natural * XSEC_CONV;
 

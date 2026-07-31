@@ -76,14 +76,15 @@ namespace {
       if ( twoJ_attr ) twoJ = twoJ_attr->value();
       auto parity_attr = residue->attribute< HepMC3::IntAttribute >( "parity" );
       if ( parity_attr ) parity = parity_attr->value();
-    }
-    bool twoJ_is_odd = ( twoJ % 2 == 1 );
 
-    std::cout << "The residual nucleus initially had excitation energy "
-      << Ex << " MeV and spin-parity ";
-    if ( twoJ_is_odd ) std::cout << twoJ << "/2";
-    else std::cout << twoJ / 2;
-    std::cout << ( parity >= 0 ? '+' : '-' ) << '\n';
+      bool twoJ_is_odd = ( twoJ % 2 == 1 );
+
+      std::cout << "The residual nucleus initially had excitation energy "
+        << Ex << " MeV and spin-parity ";
+      if ( twoJ_is_odd ) std::cout << twoJ << "/2";
+      else std::cout << twoJ / 2;
+      std::cout << ( parity >= 0 ? '+' : '-' ) << '\n';
+    }
 
     std::cout << "Initial particles" << '\n';
     for ( const auto& particle_i : initials_proj ) {

@@ -265,10 +265,10 @@ std::shared_ptr< HepMC3::GenEvent > marley::ContinuumNuclearReaction
   auto residue = marley_hepmc3::make_particle( pdg_d_, pd_x, pd_y, pd_z, Ed,
     marley_hepmc3::NUHEPMC_UNDECAYED_RESIDUE_STATUS, md_ );
 
-  // Make event object and set charge attributes
-  auto event = marley::Reaction::make_event_object( KEa, ejectile, residue, Ex,
+  // Make the event object (this also sets the charge and nuclear level
+  // attributes)
+  auto event = this->make_nuclear_event_object( KEa, ejectile, residue, Ex,
     twoJ, P );
-  this->set_charge_attributes( event );
 
   return event;
 }

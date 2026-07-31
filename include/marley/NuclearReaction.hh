@@ -22,6 +22,9 @@
 #include <string>
 #include <vector>
 
+#include "HepMC3/Attribute.h"
+#include "HepMC3/GenEvent.h"
+#include "HepMC3/GenParticle.h"
 #include "marley/DecayScheme.hh"
 #include "marley/Level.hh"
 #include "marley/MassTable.hh"
@@ -78,6 +81,55 @@ namespace marley {
       /// and residue in an otherwise complete event record
       void set_charge_attributes( std::shared_ptr< HepMC3::GenEvent >& event )
         const;
+
+      /// @brief Helper function that adds the nuclear level attributes
+      /// (@f$ E_x @f$, @f$ 2J @f$, and parity) needed to keep track of the
+      /// residue's de-excitation state to an otherwise complete event record
+      /// @param residue GenParticle object for the residue
+      /// @param E_level Residue excitation energy (MeV)
+      /// @param twoJ Two times the residue spin
+      /// @param P Intrinsic parity of the residue
+      void set_nuclear_residue_attributes(
+        const std::shared_ptr< HepMC3::GenParticle >& residue,
+        double E_level, int twoJ, const marley::Parity& P ) const;
+
+      /// @brief Helper function that makes a complete event object for a
+      /// nuclear reaction
+      /// @details This function should be called by
+      /// marley::NuclearReaction::create_event() after CM frame scattering
+      /// angles have been sampled for the ejectile. In addition to creating
+      /// the event skeleton (by delegating to
+      /// marley::Reaction::make_event_object()), it attaches the charge and
+      /// nuclear level attributes needed to keep track of the residue's
+      /// de-excitation state.
+      /// @param KEa Lab-frame kinetic energy (MeV) of the projectile
+      /// @param pc_cm Ejectile 3-momentum magnitude (MeV) in the CM frame
+      /// @param cos_theta_c_cm Cosine of ejectile's CM frame polar angle
+      /// @param phi_c_cm Ejectile's CM frame azimuthal angle (radians)
+      /// @param Ec_cm Ejectile total energy (MeV) in the CM frame
+      /// @param Ed_cm Residue total energy (MeV) in the CM frame
+      /// @param E_level Residue excitation energy (MeV)
+      /// @param twoJ Two times the residue spin
+      /// @param P Intrinsic parity of the residue
+      virtual std::shared_ptr< HepMC3::GenEvent > make_nuclear_event_object(
+        double KEa, double pc_cm, double cos_theta_c_cm, double phi_c_cm,
+        double Ec_cm, double Ed_cm, double E_level, int twoJ,
+        const marley::Parity& P ) const;
+
+      /// @brief Helper function that makes a complete event object for a
+      /// nuclear reaction
+      /// @details This function expects pre-made HepMC3::GenParticle
+      /// objects as input that have four-momenta expressed in the lab frame.
+      /// @param KEa Lab-frame kinetic energy (MeV) of the projectile
+      /// @param ejectile GenParticle object for the ejectile
+      /// @param residue GenParticle object for the residue
+      /// @param E_level Residue excitation energy (MeV)
+      /// @param twoJ Two times the residue spin
+      /// @param P Intrinsic parity of the residue
+      virtual std::shared_ptr< HepMC3::GenEvent > make_nuclear_event_object(
+        double KEa, const std::shared_ptr< HepMC3::GenParticle >& ejectile,
+        const std::shared_ptr< HepMC3::GenParticle >& residue,
+        double E_level, int twoJ, const marley::Parity& P ) const;
 
       double md_gs_; ///< Ground state mass (MeV) of the residue
 
