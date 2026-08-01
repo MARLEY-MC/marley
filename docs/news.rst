@@ -7,6 +7,7 @@ MARLEY News
 .. feed::
    :title: MARLEY News
 
+   news_posts/v2_release
    news_posts/cpc_and_others
    news_posts/prc40Ar
    news_posts/nu2020
