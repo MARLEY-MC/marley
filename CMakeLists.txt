@@ -694,20 +694,19 @@ add_custom_target(uninstall
 )
 
 # ------------------------------------------------------------------------------
-# CTest integration
-# Builds the Catch2-based test executable (martest) and registers it with CTest.
-# Run with: ctest --test-dir build
-# The MARLEY env-var must point at the source root so that FileManager can find
-# data files (same requirement as the GNU Make 'make test' path).
+# Test executable
+#
+# 'make test' (via the custom target below) builds martest without running it,
+# mirroring the GNU Make path in make/build.mk where 'test' depends only on
+# the test executable.  Run the tests manually with:
+#   MARLEY=<source_root> ./build/bin/martest
 # ------------------------------------------------------------------------------
-enable_testing()
-
 file(GLOB MARLEY_TEST_SOURCES
   "${CMAKE_SOURCE_DIR}/src/tests/*.cc"
 )
 if(NOT GSL_FOUND)
   # If the system GSL library was not found (or it was ignored), then we need
-  # to include the built-in GSL code when building the test executable
+  # to include the built-in GSL code when building the test executable.
   list(APPEND MARLEY_TEST_SOURCES "${CMAKE_SOURCE_DIR}/src/marley_gsl.cc")
 endif()
 
@@ -735,12 +734,7 @@ if(USE_ROOT)
   endif()
 endif()
 
-add_test(
-  NAME martest
-  COMMAND martest
-  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-)
-# Point the test at the source root so FileManager finds data/ and data/tests/
-set_tests_properties(martest PROPERTIES
-  ENVIRONMENT "MARLEY=${CMAKE_SOURCE_DIR}"
-)
+# 'make test' builds the test executable without running it, consistent with
+# the GNU Make path.  CMake's built-in 'test' target (from enable_testing()) is
+# intentionally not used so that both build systems share the same semantics.
+add_custom_target(test DEPENDS martest)

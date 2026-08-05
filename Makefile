@@ -78,8 +78,7 @@ endif
 test:
 ifdef USE_CMAKE
 	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
-	$(MAKE) -C build martest
-	cd $(CURDIR) && MARLEY=$(CURDIR) ctest --test-dir build --output-on-failure
+	$(MAKE) -C build test
 else
 	@mkdir -p build
 	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) test $(PASSTHROUGH_VARS)
