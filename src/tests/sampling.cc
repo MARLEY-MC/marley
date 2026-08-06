@@ -577,8 +577,6 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
       const auto& cec = dynamic_cast<const marley::ContinuumExitChannel&>(*ec);
 
-      double width = cec.width();
-
       // Skip sampling a final nuclear spin-parity value during calls
       // to marley::ContinuumExitChannel::do_decay(), since all we care about
       // for this test is the final nuclear excitation energy
@@ -599,9 +597,9 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
       int remnant_pdg = cec.final_nucleus_pdg();
 
-      // Approximate the ground state mass of the ion formed when the fragment is
-      // emitted by subtracting qf electron masses from the atomic mass for the
-      // final nuclide.
+      // Approximate the ground state mass of the ion formed when the fragment
+      // is emitted by subtracting qf electron masses from the atomic mass for
+      // the final nuclide.
       double mf_gs = mt.get_atomic_mass( remnant_pdg ) - qf*me;
 
       // Mass and PDG code of the emitted fragment (or gamma-ray)
@@ -673,6 +671,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 
       // If we've built the tests against ROOT, then make a plot
       #ifdef USE_ROOT
+      double width = cec.width();
       std::string fragment_symbol = pdg_to_bin_label.at( pdg_frag );
       std::string ddw_title("MARLEY differential decay width;"
         "CM frame kinetic energy T_{" + fragment_symbol + "} (MeV);"
