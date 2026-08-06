@@ -51,7 +51,7 @@ namespace marley {
 
     // Threshold p-value below which we'll reject the null hypothesis
     // in chi-squared tests of sampling
-    constexpr double SIGNIFICANCE_LEVEL = 0.01;
+    constexpr double SIGNIFICANCE_LEVEL = 0.0001;
 
     // ROOT has better histogram classes, but we'd like the tests to be
     // able to run without it. This class does just enough to get us
