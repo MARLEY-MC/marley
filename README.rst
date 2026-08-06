@@ -321,7 +321,7 @@ Special thanks go to
 .. |License: GPL v3| image:: https://img.shields.io/badge/License-GPLv3-blue.svg
    :target: https://www.gnu.org/licenses/gpl-3.0
 
-.. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3901933.svg
+.. |DOI| image:: https://img.shields.io/badge/DOI-10.5281%2Fzenodo.3901933-blue
    :target: https://doi.org/10.5281/zenodo.3901933
 
 .. |Build Status| image:: https://github.com/MARLEY-MC/marley/actions/workflows/ci.yml/badge.svg?branch=main
