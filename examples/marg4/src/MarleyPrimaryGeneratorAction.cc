@@ -66,7 +66,7 @@ void MarleyPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
   if ( ev_energy_unit == HepMC3::Units::GEV ) {
     mom4_conv_factor = GeV;
   }
-  else if ( ev_energy_unit != HepMC3::Units::MeV ) {
+  else if ( ev_energy_unit != HepMC3::Units::MEV ) {
     throw marley::Error( "Unrecognized momentum unit encountered in"
       " MarleyPrimaryGeneratorAction::GeneratePrimaries()" );
   }
