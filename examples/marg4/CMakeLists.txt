@@ -6,7 +6,8 @@ add_executable(marg4
   src/marg4.cc
   src/DetectorConstruction.cc
   src/EventAction.cc
-  src/MarleyPrimaryGeneratorAction.cc
+  src/PhysicsList.cc
+  src/NeutronSource.cc
 )
 
 target_link_libraries(marg4 PRIVATE marley_lib ${Geant4_LIBRARIES})
@@ -18,7 +19,7 @@ target_include_directories(marg4 PRIVATE
 
 # Suppress -Wdeprecated-copy from Geant4's bundled CLHEP headers
 # (GCC 15+ makes this warning default-on)
-target_compile_options(marg4 PRIVATE -Wno-deprecated-copy)
+target_compile_options(marg4 PRIVATE -Wno-deprecated-copy -Wno-unused-private-field)
 
 set_target_properties(marg4 PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin

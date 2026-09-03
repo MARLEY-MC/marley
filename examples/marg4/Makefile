@@ -59,7 +59,7 @@ endif
 
 # Suppress warnings from Geant4's bundled CLHEP headers
 # (-Wdeprecated-copy is default-on in GCC 15+; -Wshadow is in G4_CXXFLAGS)
-override CXXFLAGS += -Wno-deprecated-copy -Wno-shadow
+override CXXFLAGS += -Wno-deprecated-copy -Wno-shadow -Wno-unused-private-field
 
 G4_LIBS := $(shell geant4-config --libs)
 

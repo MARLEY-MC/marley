@@ -18,13 +18,12 @@
 #include <memory>
 
 // Geant4 includes
-#include "G4PhysListFactory.hh"
 #include "G4RunManager.hh"
-#include "G4VModularPhysicsList.hh"
 
 // marg4 includes
 #include "DetectorConstruction.hh"
-#include "MarleyPrimaryGeneratorAction.hh"
+#include "NeutronSource.hh"
+#include "PhysicsList.hh"
 #include "EventAction.hh"
 
 namespace {
@@ -63,17 +62,14 @@ namespace {
 
 int main( int argc, char* argv[] ) {
 
-  if ( argc <= 2 ) {
-    std::cout << "Usage: marg4 NUM_EVENTS MARLEY_CONFIG_FILE\n";
+  if ( argc <= 1 ) {
+    std::cout << "Usage: marg4 NUM_EVENTS\n";
     return 1;
   }
 
   int num_events = 0;
   bool num_ok = get_num_events( argv[1], num_events );
   if ( !num_ok ) return 2;
-
-  // Retrieve the configuration file name from the command-line argument
-  std::string config_file_name( argv[2] );
 
   // Initialize the Geant4 run manager
   std::unique_ptr<G4RunManager> rm( new G4RunManager );
@@ -83,22 +79,15 @@ int main( int argc, char* argv[] ) {
   DetectorConstruction* det = new DetectorConstruction();
   rm->SetUserInitialization( det );
 
-  // Set up the built-in QGSP_BIC_HP physics list
-  // Note: High-precision tracking of neutrons is set up by standard
-  // physics lists with the "_HP" suffix. Transport of neutrons generated
-  // by MARLEY will not be trustworthy unless the high-precision tracking
-  // is enabled.
-  G4PhysListFactory factory;
-  G4VModularPhysicsList* refList
-    = factory.GetReferencePhysList( "QGSP_BIC_HP" );
-  rm->SetUserInitialization( refList );
+  // Set up the physics list with Bertini Cascade for neutrons
+  PhysicsList* physics_list = new PhysicsList();
+  rm->SetUserInitialization( physics_list );
 
   // ** Set user actions **
 
-  // The primary generator action interfaces with MARLEY
-  MarleyPrimaryGeneratorAction* mpga
-    = new MarleyPrimaryGeneratorAction( config_file_name );
-  rm->SetUserAction( mpga );
+  // Neutron source at the center of the detector
+  NeutronSource* neutron_source = new NeutronSource();
+  rm->SetUserAction( neutron_source );
 
   // The event action prints the current event number at the beginning of
   // every hundredth event without doing anything else.
