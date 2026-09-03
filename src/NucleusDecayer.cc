@@ -67,7 +67,7 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
   auto proc_type = marley_hepmc3::from_nuhepmc_proc_id( proc_id );
   bool is_continuum_channel = false;
   if ( proc_type == marley::Reaction::ProcessType::NeutrinoCC_Continuum
-    || proc_type == marley::Reaction::ProcessType::AntiNeutrinoCC_Continuum 
+    || proc_type == marley::Reaction::ProcessType::AntiNeutrinoCC_Continuum
     || proc_type == marley::Reaction::ProcessType::NC_Continuum )
   {
     is_continuum_channel = true;
@@ -84,7 +84,7 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
 
     // If the residue is in its ground state, then there's nothing for us to do.
     // Just continue the loop without comment.
-    if ( Ex == 0. ) continue;
+    if ( Ex == 0. || Ex < 1e-6 ) continue;
 
     MARLEY_LOG( DEBUG, "physics.deexcitation" ) << "De-exciting residue PDG "
       << residue->pid() << ": Ex = " << Ex << " MeV, 2J = " << twoJ

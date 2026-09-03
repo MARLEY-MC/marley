@@ -56,6 +56,7 @@ double marley::ContinuumNuclearReaction::total_xs( int pdg_a,
   double KEa ) const
 {
   if ( pdg_a != pdg_a_ ) return 0.;
+  if ( KEa < KEa_threshold_ ) return 0.;
   return xsec_->integral( pdg_a, KEa );
 }
 
@@ -312,6 +313,7 @@ bool marley::ContinuumNuclearReaction::reassign_sub_continuum( double& w,
   // Get the "unbound threshold" used to determine the start of the continuum
   const auto& mt = marley::MassTable::Instance();
   double unbound_threshold = mt.unbound_threshold( pdg_d_ );
+  if ( unbound_threshold < 0. ) unbound_threshold = 0.;
 
   // If the excitation energy corresponding to the sampled energy transfer
   // is already within the continuum, no special action is needed. Just return
