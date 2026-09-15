@@ -855,13 +855,13 @@ void marley::Generator::assign_run_info( HepMC3::GenEvent& event ) const {
   event.set_run_info( run_info_ );
 }
 
-// Sample a random decay time given a partial decay width
-double marley::Generator::sample_decay_time( double partial_width ) {
-  if ( partial_width <= 0. ) throw marley::Error( "Non-positive partial decay"
+// Sample a random decay time given a total decay width
+double marley::Generator::sample_decay_time( double total_width ) {
+  if ( total_width <= 0. ) throw marley::Error( "Non-positive total decay"
     " width passed to marley::Generator::sample_decay_time()" );
 
   // Mean lifetime (1/MeV)
-  double tau = 1. / partial_width;
+  double tau = 1. / total_width;
 
   // Find the double value that comes immediately after zero. This allows us
   // exclude zero and sample uniformly on (0, 1]. Including zero would lead to
