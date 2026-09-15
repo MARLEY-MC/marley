@@ -468,12 +468,12 @@ namespace marley_hepmc3 {
 }
 
 // Handles sampling and storing a random decay time for a binary decay vertex
-void marley_hepmc3::store_decay_time( double partial_width,
+void marley_hepmc3::store_decay_time( double total_width,
   marley::Generator& gen, std::shared_ptr< HepMC3::GenVertex >& decay_vtx,
   const std::shared_ptr< HepMC3::GenParticle >& parent )
 {
   // Sample a decay time (MeV^{-1}) to assign to the decay vertex
-  double decay_time = gen.sample_decay_time( partial_width );
+  double decay_time = gen.sample_decay_time( total_width );
   MARLEY_LOG( TRACE, "physics.deexcitation.gamma" ) << "decay_time = "
     << marley_utils::hbar * decay_time << " s";
 

@@ -124,11 +124,10 @@ namespace marley {
       double inverse_transform_sample( const std::function<double(double)>& f,
         double xmin, double xmax, double bisection_tolerance = 1e-12 );
 
-      /// @brief Sample a random decay time given a partial decay width
-      /// @param partial_width Partial decay width (MeV) for the decay process
-      ///   of interest
+      /// @brief Sample a random decay time given a total decay width
+      /// @param total_width Total decay width (MeV) of the decaying state
       /// @return Time for a decay via this process to occur (MeV<sup> -1</sup>)
-      double sample_decay_time( double partial_width );
+      double sample_decay_time( double total_width );
 
       /// @brief Get a reference to the StructureDatabase owned by this
       /// Generator
