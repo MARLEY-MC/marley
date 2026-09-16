@@ -416,7 +416,7 @@ double marley::DiscreteNuclearReaction::diff_xs(
   // @todo Reduce code duplication with a similar implementation of these (in
   // the lab frame) within the TabulatedXSec class. Note that there are
   // different conventions used there.
-  int helicity = marley_utils::get_particle_helicity( pdg_a_ );
+  int chirality = marley_utils::get_particle_chirality( pdg_a_ );
   double sin2_theta_c_cm = 1. - cos_theta_c_cm*cos_theta_c_cm;
   double vcc = 1. + beta_c_cm * cos_theta_c_cm;
   double vll = vcc - 2.*Ea_cm*Ec_cm*sin2_theta_c_cm
@@ -424,7 +424,7 @@ double marley::DiscreteNuclearReaction::diff_xs(
   double vcl = -1.* ( omega_cm*vcc/kappa_cm + mc_*mc_/Ec_cm/kappa_cm );
   double vT = 1. - beta_c_cm*cos_theta_c_cm + Ea_cm*Ec_cm
     * beta_c_cm*beta_c_cm*sin2_theta_c_cm/kappa_cm/kappa_cm;
-  double vTprime = helicity * ( (Ea_cm + Ec_cm)
+  double vTprime = -1. * chirality * ( (Ea_cm + Ec_cm)
     * (1. - beta_c_cm*cos_theta_c_cm)/kappa_cm - mc_*mc_/kappa_cm/Ec_cm );
   marley::LeptonFactors lf( vcc, vll, vcl, vT, vTprime );
 

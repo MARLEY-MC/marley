@@ -540,11 +540,11 @@ std::string marley_utils::nucid_to_symbol(std::string nucid) {
   return marley_utils::trim_copy(nucid);
 }
 
-// Assign a helicity value based on the PDG code and check its validity
-int marley_utils::get_particle_helicity( const int pdg ) {
+// Assign a chirality value based on the PDG code and check its validity
+int marley_utils::get_particle_chirality( const int pdg ) {
 
   // Unphysical, just used as a placeholder
-  constexpr int DUMMY_HELICITY = 0;
+  constexpr int DUMMY_CHIRALITY = 0;
   // Helicity value for antineutrinos (right-handed)
   constexpr int RIGHT_HANDED = 1;
   // Helicity value for neutrinos (left-handed)
@@ -566,9 +566,9 @@ int marley_utils::get_particle_helicity( const int pdg ) {
   }
   else throw marley::Error( "Handling of particles with PDG code = "
     + std::to_string(pdg) + " is unimplemented in marley_utils::"
-    "get_particle_helicity()" );
+    "get_particle_chirality()" );
 
-  return DUMMY_HELICITY;
+  return DUMMY_CHIRALITY;
 }
 
 std::string marley_utils::get_particle_symbol( int pid, bool excited ) {

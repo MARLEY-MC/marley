@@ -222,8 +222,8 @@ namespace marley_utils {
     return is_a_lepton;
   }
 
-  // Assign a helicity value based on the PDG code and check its validity
-  int get_particle_helicity( const int pdg );
+  // Assign a chirality value based on the PDG code and check its validity
+  int get_particle_chirality( const int pdg );
 
   /// @brief Checks whether the input PDG code represents
   /// an ion

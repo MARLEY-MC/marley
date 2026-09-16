@@ -116,7 +116,7 @@ void marley::TabulatedXSec::add_table( const std::string& file_name )
 double marley::TabulatedXSec::diff_xsec( int pdg_a, double KEa, double omega,
   double cos_theta, const marley::TabulatedXSec::MultipoleLabel& ml ) const
 {
-  int helicity = marley_utils::get_particle_helicity( pdg_a );
+  int chirality = marley_utils::get_particle_chirality( pdg_a );
 
   // Look up the masses of the projectile and ejectile
   int pdg_c = marley::Reaction::get_ejectile_pdg( pdg_a, proc_type_ );
@@ -161,7 +161,7 @@ double marley::TabulatedXSec::diff_xsec( int pdg_a, double KEa, double omega,
   double vll = vcc - 2.*Ea*Ec*sin_theta2*beta*beta/q2;
   double vcl = -2. * ( omega*vcc/q + mc*mc/Ec/q );
   double vT = 1. - beta*cos_theta + Ea*Ec*beta*beta*sin_theta2/q2;
-  double vTprime = 2. * helicity * ( (Ea + Ec)*(1 - beta*cos_theta)/q
+  double vTprime = 2. * chirality * ( (Ea + Ec)*(1 - beta*cos_theta)/q
     - mc*mc/q/Ec );
   LeptonFactors lf( vcc, vll, vcl, vT, vTprime );
 
