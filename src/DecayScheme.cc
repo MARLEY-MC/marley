@@ -151,8 +151,7 @@ void marley::DecayScheme::do_cascade( marley::Level& initial_level,
       decay_vtx->add_particle_out( nucleus );
 
       // Sample a decay time (MeV^{-1}) for emission of the chosen gamma-ray
-      // and store this timing information in the new binary decay vertex.
-      // The decay time is sampled using the total level width.
+      // and store this timing information in the new binary decay vertex
       marley_hepmc3::store_decay_time( level_total_width, gen, decay_vtx,
         residue );
 

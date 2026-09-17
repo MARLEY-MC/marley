@@ -207,8 +207,7 @@ void marley::NucleusDecayer::process_event( HepMC3::GenEvent& event,
         decay_vtx->add_particle_out( second );
 
         // Sample a decay time (MeV^{-1}) for emission of the chosen particle
-        // and store this timing information in the new binary decay vertex.
-        // The decay time is sampled using the total compound nucleus width.
+        // and store this timing information in the new binary decay vertex
         marley_hepmc3::store_decay_time( width_tot, gen, decay_vtx, residue );
 
         // Add the decay vertex to the event record

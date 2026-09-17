@@ -130,7 +130,8 @@ namespace marley_hepmc3 {
 
   /// Handles sampling and storing a random decay time for a particle decay
   /// vertex
-  /// @param total_width Total decay width (MeV) of the decaying state
+  /// @param total_width Total width (MeV) of the parent particle, including
+  /// contributions from all decay channels
   void store_decay_time( double total_width, marley::Generator& gen,
     std::shared_ptr< HepMC3::GenVertex >& decay_vtx,
     const std::shared_ptr< HepMC3::GenParticle >& parent );

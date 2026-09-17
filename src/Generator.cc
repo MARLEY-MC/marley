@@ -863,7 +863,7 @@ double marley::Generator::sample_decay_time( double total_width ) {
   // Mean lifetime (1/MeV)
   double tau = 1. / total_width;
 
-  // Find the double value that comes immediately after zero. This allows us
+  // Find the double value that comes immediately after zero. This allows us to
   // exclude zero and sample uniformly on (0, 1]. Including zero would lead to
   // the possibility of an infinite decay time. See http://tinyurl.com/n3ocg3p
   // for more information.
