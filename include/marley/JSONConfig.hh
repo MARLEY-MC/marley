@@ -27,26 +27,28 @@
 
 namespace marley {
 
+  enum class SubContinuumMode;
+
   class JSONConfig {
 
     public:
 
-      using InterpMethod = marley::InterpolationGrid<double>
+      using InterpMethod = InterpolationGrid<double>
         ::InterpolationMethod;
 
-      explicit JSONConfig( const marley::JSON& object );
+      explicit JSONConfig( const JSON& object );
       explicit JSONConfig( const std::string& json_filename );
 
-      marley::Generator create_generator() const;
+      Generator create_generator() const;
 
-      void prepare_direction( marley::Generator& gen ) const;
-      void prepare_neutrino_source( marley::Generator& gen ) const;
-      void prepare_reactions( marley::Generator& gen,
-        marley::CoulombCorrector::CoulombMode coulomb_mode,
-        const marley::JSON& ff_config ) const;
-      void prepare_structure( marley::Generator& gen ) const;
-      void prepare_target( marley::Generator& gen ) const;
-      void prepare_weights( marley::Generator& gen ) const;
+      void prepare_direction( Generator& gen ) const;
+      void prepare_neutrino_source( Generator& gen ) const;
+      void prepare_reactions( Generator& gen,
+        CoulombCorrector::CoulombMode coulomb_mode,
+        const JSON& ff_config, const SubContinuumMode sc_mode ) const;
+      void prepare_structure( Generator& gen ) const;
+      void prepare_target( Generator& gen ) const;
+      void prepare_weights( Generator& gen ) const;
 
       InterpMethod get_interpolation_method( const std::string& rule ) const;
       int neutrino_pdg( const std::string& nu ) const;
@@ -56,37 +58,34 @@ namespace marley {
       /// @detail This function is a no-op when MARLEY is built without
       /// ROOT support
       bool process_extra_source_types( const std::string& type,
-        const marley::JSON& source_spec, int pdg_code,
-        std::unique_ptr< marley::NeutrinoSource >& source ) const;
+        const JSON& source_spec, int pdg_code,
+        std::unique_ptr< NeutrinoSource >& source ) const;
 
       /// Helper function that checks whether an input JSON object representing
       /// the form factor configuration corresponds to a valid request for the
       /// allowed approximation to be used
       static bool check_for_allowed_approximation(
-        const marley::JSON& ff_config );
+        const JSON& ff_config );
 
-      inline const marley::JSON& get_json() const;
-      inline void set_json( const marley::JSON& json );
+      inline const JSON& get_json() const;
+      inline void set_json( const JSON& json );
 
       static void handle_json_error( const std::string& name,
-        const marley::JSON& json );
+        const JSON& json );
 
     protected:
 
       /// @brief Helper function for loading strings from the JSON
       /// configuration
-      std::string source_get( const char* name,
-        const marley::JSON& source_spec, const char* description,
-        const char* default_str ) const;
+      std::string source_get( const char* name, const JSON& source_spec,
+        const char* description, const char* default_str ) const;
 
       /// @brief JSON object describing this configuration
-      marley::JSON json_;
+      JSON json_;
   };
 
-  inline const marley::JSON& marley::JSONConfig::get_json() const
-    { return json_; }
+  inline const JSON& JSONConfig::get_json() const { return json_; }
 
-  inline void marley::JSONConfig::set_json( const marley::JSON& json )
-    { json_ = json; }
+  inline void JSONConfig::set_json( const JSON& json ) { json_ = json; }
 
 }

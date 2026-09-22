@@ -25,6 +25,7 @@
 #include "HepMC3/GenParticle.h"
 
 // MARLEY includes
+#include "marley/ContinuumNuclearReaction.hh"
 #include "marley/DiscreteNuclearReaction.hh"
 #include "marley/ElectronReaction.hh"
 #include "marley/HauserFeshbachDecay.hh"
@@ -34,12 +35,12 @@
 #include "marley/Reaction.hh"
 #include "marley/StructureDatabase.hh"
 #include "marley/hepmc3_utils.hh"
-#include "marley/ContinuumNuclearReaction.hh"
 #include "marley/marley_kinematics.hh"
 #include "marley/marley_utils.hh"
 
 using ProcType = marley::Reaction::ProcessType;
 using ME_Type = marley::MatrixElement::TransitionType;
+using SubContinuumMode = marley::SubContinuumMode;
 
 namespace {
 
@@ -365,7 +366,7 @@ marley::Reaction::Reaction( const std::string& source_file )
 std::vector< std::unique_ptr<marley::Reaction> >
   marley::Reaction::load_from_file( const std::string& filename,
   marley::StructureDatabase& db, CoulombCorrector::CoulombMode coulomb_mode,
-  const marley::JSON& ff_config )
+  const marley::JSON& ff_config, const SubContinuumMode sc_mode )
 {
   // Create an empty vector to start
   std::vector< std::unique_ptr<marley::Reaction> > loaded_reactions;
@@ -559,7 +560,7 @@ std::vector< std::unique_ptr<marley::Reaction> >
 
       loaded_reactions.emplace_back(
         std::make_unique< marley::ContinuumNuclearReaction >( proc_type, pdg_a,
-          pdg_b, pdg_c, pdg_d, q_d, txsec, filename )
+          pdg_b, pdg_c, pdg_d, q_d, txsec, sc_mode, filename )
       );
     }
 

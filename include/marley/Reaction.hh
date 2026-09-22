@@ -33,6 +33,7 @@ namespace marley {
   class Generator;
   class JSON;
   class Parity;
+  enum class SubContinuumMode;
   class StructureDatabase;
 
   /// @brief Abstract base class that represents a 2 &rarr; 2 scattering
@@ -126,7 +127,8 @@ namespace marley {
       /// Reaction objects given a file with matrix element data
       static std::vector< std::unique_ptr< Reaction > >
         load_from_file( const std::string& filename, StructureDatabase& db,
-        CoulombCorrector::CoulombMode coulomb_mode, const JSON& ff_config );
+        CoulombCorrector::CoulombMode coulomb_mode, const JSON& ff_config,
+        const SubContinuumMode sub_continuum_mode );
 
       /// Function that returns the ejectile PDG code given the projectile
       /// PDG code and the ProcessType

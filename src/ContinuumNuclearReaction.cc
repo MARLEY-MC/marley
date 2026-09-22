@@ -26,12 +26,7 @@
 #include "marley/marley_utils.hh"
 #include "marley/hepmc3_utils.hh"
 
-using SubContinuumMode = marley::ContinuumNuclearReaction::SubContinuumMode;
-
-// Initialize the static class member defining how to deal with sub-continuum
-// cross-section strength. By default, we pick the "accumulate" option.
-SubContinuumMode marley::ContinuumNuclearReaction::sc_mode_
-  = SubContinuumMode::ACCUMULATE;
+using SubContinuumMode = marley::SubContinuumMode;
 
 // Initialize the static class member specifying a mapping between strings
 // and SubContinuumMode enum values
@@ -44,18 +39,35 @@ const std::map< SubContinuumMode, std::string >
 
 marley::ContinuumNuclearReaction::ContinuumNuclearReaction(
   Reaction::ProcessType pt, int pdg_a, int pdg_b, int pdg_c, int pdg_d,
-  int q_d, const std::shared_ptr<TabulatedXSec>& txsec,
-  const std::string& source_file )
+  int q_d, const std::shared_ptr< TabulatedXSec >& txsec,
+  SubContinuumMode sc_mode, const std::string& source_file )
   : marley::NuclearReaction( pt, pdg_a, pdg_b, pdg_c, pdg_d, q_d,
-      source_file ),
-  xsec_( txsec )
+    source_file ),
+  xsec_( txsec ), sc_mode_( sc_mode )
 {
+  // Compute the projectile kinetic energy at threshold for this reaction
+  // directly from the tabulated multipole nuclear response functions
+  KEa_threshold_ = txsec->threshold_kinetic_energy( pdg_a );
+
+  // If we're shifting cross-section strength from below the continuum, then
+  // also check the threshold corresponding to an excitation energy equal
+  // to the "unbound threshold" for the daughter nucleus. Note that the
+  // ionization state of the final atom is already taken into account in
+  // the mass stored in md_gs_ (see NuclearReaction.cc for the implementation).
+  if ( sc_mode_ != SubContinuumMode::IGNORE ) {
+    const auto& mt = marley::MassTable::Instance();
+    double Ex_ub = mt.unbound_threshold( pdg_d );
+    double thresh_unbound = this->get_KEa_threshold( Ex_ub );
+
+    KEa_threshold_ = std::max( thresh_unbound, KEa_threshold_ );
+  }
 }
 
 double marley::ContinuumNuclearReaction::total_xs( int pdg_a,
   double KEa ) const
 {
   if ( pdg_a != pdg_a_ ) return 0.;
+  if ( KEa < KEa_threshold_ ) return 0.;
   return xsec_->integral( pdg_a, KEa );
 }
 
@@ -349,22 +361,19 @@ bool marley::ContinuumNuclearReaction::reassign_sub_continuum( double& w,
 
   // Solve for the new outgoing lepton total energy given the updated
   // excitation energy value. Update the value of Ec with the solution.
-  Ec = this->get_Ec_from_Ex( Ex, ctl, KEa );
+  bool solve_ok = this->get_Ec_from_Ex( Ec, Ex, ctl, KEa );
+  if ( !solve_ok ) return false;
 
   // Now update the energy transfer accordingly
   w = Ea - Ec;
 
-  // If the total energy of the outgoing lepton is now below its rest mass,
-  // then the reassignment procedure failed due to the kinematic threshold.
-  // Indicate this failure in the return value.
-  if ( Ec < mc_ ) return false;
-
-  // Otherwise, everything worked out, so indicate success.
+  // Everything worked out, so indicate success.
   return true;
 }
 
-double marley::ContinuumNuclearReaction::get_Ec_from_Ex( const double Ex,
-  const double cos_theta, const double KEa, double* jacobian ) const
+bool marley::ContinuumNuclearReaction::get_Ec_from_Ex( double& Ec,
+  const double Ex, const double cos_theta, const double KEa,
+  double* jacobian ) const
 {
   // Mass of the final-state ion (including excitation energy)
   double md = md_gs_ + Ex;
@@ -380,6 +389,51 @@ double marley::ContinuumNuclearReaction::get_Ec_from_Ex( const double Ex,
   double help = md*md - mc_*mc_ + pa*pa - Etot*Etot;
   double other_help = 4.*pa*pa*cos_theta*cos_theta;
 
+  // Check whether a solution actually exists before solving the quadratic
+  // equation below. The way to check is to determine whether we are above
+  // threshold for emitting the ejectile at the sampled angle and producing the
+  // residue with the needed excitation energy.
+  //
+  // The trick to make the check easy is to boost along the chosen ejectile
+  // direction until we reach the ejectile rest frame. Then the transverse
+  // component of the residue 3-momentum is the same value (pT = pa * sin_theta)
+  // as in the lab frame (the boost doesn't change orthogonal components). For
+  // forward ejectile directions (cos_theta > 0), we can find an ejectile energy
+  // Ec such that the boost to its rest frame also brings the residue's
+  // longitudinal momentum to zero in the same frame. Then the residue's total
+  // energy in the ejectile rest frame takes its smallest possible value: its
+  // "transverse mass" (Ed = mT_d = sqrt{ m_d^2 + pT^2 }).
+  //
+  // This situation corresponds to a threshold value of Mandelstam s:
+  //
+  // s = ( mc + Ed )^2 - pd^2 = mc^2 + md^2 + 2*mc*Ed with Ed = mT_d.
+  //
+  // For backward ejectile directions (cos_theta < 0), this is no longer
+  // possible because the projectile introduces a total momentum for the system
+  // that points in the forward direction. In the rest frame of the ejectile,
+  // the residue must therefore acquire a negative longitudinal component to
+  // conserve the total momentum. For that case, increasing Ec only increases
+  // the size of the residue's compensatory longitudinal momentum component. The
+  // threshold for backwards angles therefore corresponds to the case where the
+  // ejectile is produced at rest and the entire projectile momentum pa is
+  // imparted to the residue, bringing its "transverse mass" to the value
+  // sqrt{ m_d^2 + pa^2 }. The two angular regions coincide at the exact
+  // boundary since, for cos_theta = 0, sin_theta = 1 and pT = pa.
+
+  // Get the relevant "transverse mass" for the residue (use the cos_theta = 0
+  // value for backward angles as explained by the discussion above).
+  double ct = std::max( cos_theta, 0. );
+  double mT_d = std::sqrt( md*md + pa*pa*( 1. - ct*ct ) );
+
+  // Compute Mandelstam s
+  double s = ( ma_ + mb_ )*( ma_ + mb_ ) + 2.*mb_*KEa;
+
+  // Check whether a valid solution of the quadratic equation below will exist
+  // for the input projectile kinetic energy KEa, ejectile scattering cosine
+  // cos_theta, and residue excitation energy Ex. If one doesn't, indicate
+  // failure and return early.
+  if ( s < mc_*mc_ + md*md + 2.*mc_*mT_d ) return false;
+
   // Quadratic coefficients (a*Ec^2 + b*Ec + c == 0)
   double a = 4.*Etot*Etot - other_help;
   double b = 4.*Etot*help;
@@ -390,20 +444,25 @@ double marley::ContinuumNuclearReaction::get_Ec_from_Ex( const double Ex,
   marley_utils::solve_quadratic_equation( a, b, c,
     sol_plus, sol_minus );
 
-  // Now for a trick: due to the way we derived the results above,
-  // the two solutions correspond to positive (sol_plus) and
-  // negative (sol_minus) values of cos_theta, with the two
-  // solutions exactly equal when cos_theta == 0. Choose the
-  // appropriate one to return here.
-  double Ec = sol_plus;
+  // For backward angles there is at most one valid solution and it is
+  // sol_minus. For forward angles sol_plus is always valid, and sometimes
+  // sol_minus is too; taking sol_plus is all we need for the reassignment. At
+  // cos_theta = 0, the two solutions coincide, so the choice becomes
+  // unimportant.
   if ( cos_theta < 0. ) Ec = sol_minus;
+  else Ec = sol_plus;
+
+  // If the total energy of the outgoing lepton is now below its rest mass,
+  // then the reassignment procedure failed due to the kinematic threshold.
+  // Indicate this failure in the return value.
+  if ( Ec < mc_ ) return false;
 
   if ( jacobian ) {
     double pc = marley_utils::real_sqrt( Ec*Ec - mc_*mc_ );
     *jacobian = md / ( Ea + mb_ - pa*Ec*cos_theta/pc );
   }
 
-  return Ec;
+  return true;
 }
 
 // Convert a string to a SubContinuumMode value

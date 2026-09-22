@@ -25,40 +25,43 @@
 
 namespace marley {
 
+  /// Defines the approach to handling possible reassignment of
+  /// cross-section strength that falls below the excitation energy
+  /// threshold for the continuum
+  /// @details Defined outside of ContinuumNuclearReaction so that
+  /// it can be forward-declared
+  enum class SubContinuumMode { IGNORE, MIRROR, ACCUMULATE };
+
   /// @brief Generates inclusive scattering events and computes cross
   /// sections using tabulated nuclear responses
   class ContinuumNuclearReaction : public NuclearReaction {
 
     public:
 
-      /// Defines the approach to handling possible reassignment of
-      /// cross-section strength that falls below the excitation energy
-      /// threshold for the continuum
-      enum class SubContinuumMode { IGNORE, MIRROR, ACCUMULATE };
-
       ContinuumNuclearReaction( Reaction::ProcessType pt, int pdg_a,
         int pdg_b, int pdg_c, int pdg_d, int q_d,
-        const std::shared_ptr<TabulatedXSec>& txsec,
-        const std::string& source_file );
+        const std::shared_ptr< TabulatedXSec >& txsec,
+        SubContinuumMode sc_mode, const std::string& source_file );
 
       virtual std::shared_ptr< HepMC3::GenEvent > create_event(
         int particle_id_a, double KEa, marley::Generator& gen ) const override;
 
       virtual double total_xs( int pdg_a, double KEa ) const override;
 
+      inline double threshold_kinetic_energy() const override
+        { return KEa_threshold_; }
+
       inline const TabulatedXSec& get_tabulated_xsec() const
         { return *xsec_; }
 
       /// Gets the approach to handling sub-continuum cross-section strength
-      static inline SubContinuumMode sub_continuum_mode() { return sc_mode_; }
+      inline SubContinuumMode sub_continuum_mode() const { return sc_mode_; }
 
-      /// Sets the approach to handling sub-continuum cross-section strength
-      static inline void set_sub_continuum_mode( SubContinuumMode scm )
-        { sc_mode_ = scm; }
-
+      /// Converts a string to a SubContinuumMode enum value
       static SubContinuumMode sub_continuum_mode_from_string(
         const std::string& sc_mode_str );
 
+      /// Converts a SubContinuumMode enum value to a string
       static std::string string_from_sub_continuum_mode(
         const SubContinuumMode sc_mode );
 
@@ -85,13 +88,15 @@ namespace marley {
       /// @brief Helper function for reassign_sub_continuum() that solves
       /// for the outgoing lepton total energy that corresponds to the input
       /// kinematic variables.
+      /// @param[out] Ec The outgoing lepton total energy (MeV)
       /// @param[in] Ex Nuclear excitation energy (MeV)
       /// @param[in] cos_theta Lepton scattering cosine
-      /// @param[in] KEa Projectile kinetic energy
+      /// @param[in] KEa Projectile kinetic energy (MeV)
       /// @param[out] jacobian If this argument is not nullptr, then
       /// the target double will be filled with the value of the Jacobian needed
       /// to convert from @f$ d\sigma/dE_\ell @f$ to @f$ d\sigma/dE_x @f$.
-      double get_Ec_from_Ex( const double Ex, const double cos_theta,
+      /// @return Returns true if a valid solution was found, or false otherwise
+      bool get_Ec_from_Ex( double& Ec, const double Ex, const double cos_theta,
         const double KEa, double* jacobian = nullptr) const;
 
       /// @brief Helper object that handles cross section calculations
@@ -99,11 +104,16 @@ namespace marley {
 
       /// @brief Indicates the desired method for handling events with
       /// excitation energies originally sampled below the continuum threshold
-      static SubContinuumMode sc_mode_;
+      const SubContinuumMode sc_mode_ = SubContinuumMode::ACCUMULATE;
 
       /// @brief Helper map used for conversions between a SubContinuumMode
       /// value and a std::string
-      static const std::map< SubContinuumMode, std::string > sc_mode_string_map_;
+      static const std::map< SubContinuumMode, std::string >
+        sc_mode_string_map_;
+
+      /// @brief Kinetic energy (MeV) of the projectile in the lab frame at
+      /// the threshold for this reaction
+      double KEa_threshold_;
   };
 
 }

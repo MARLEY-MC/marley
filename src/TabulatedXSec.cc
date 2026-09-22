@@ -16,6 +16,7 @@
 
 // Standard library includes
 #include <fstream>
+#include <limits>
 
 // MARLEY includes
 #include "marley/Error.hh"
@@ -25,6 +26,10 @@
 #include "marley/Reaction.hh"
 #include "marley/TabulatedXSec.hh"
 #include "marley/marley_utils.hh"
+
+namespace {
+  constexpr double NO_THRESHOLD_FOUND = -1.0;
+}
 
 marley::TabulatedXSec::TabulatedXSec( int target_pdg,
   marley::Reaction::ProcessType p_type, CoulombCorrector::CoulombMode mode,
@@ -363,60 +368,108 @@ double marley::TabulatedXSec::integral( int pdg_a, double KEa ) const
   return integ;
 }
 
+double marley::TabulatedXSec::find_KEa_threshold( int pdg_a,
+  const marley::TabulatedXSec::MultipoleLabel& ml, const double tol ) const
+{
+  // We don't need a great initial guess for the threshold, just a reasonable
+  // upper bound. Once we find a non-vanishing total cross section, we will
+  // use a binary search to narrow the window around the threshold to the
+  // specified input tolerance.
+  constexpr double INITIAL_GUESS = 100.; // MeV
+  constexpr double GROWTH_FACTOR = 2.;
+  constexpr int MAX_MULTIPLICATIONS = 20; // Just needs to be some sane cutoff
+
+  // Grow the lower bound for the threshold until we hit a nonzero value
+  // for the total cross section
+  double dummy;
+  double low_KEa = 0.;
+  double high_KEa = INITIAL_GUESS;
+  bool found_nonzero_xsec = false;
+
+  for ( int a = 0; a < MAX_MULTIPLICATIONS; ++a ) {
+    // Compute the total cross section for this iteration
+    double xsec = this->integral( pdg_a, high_KEa, ml, dummy );
+
+    // If it's nonzero, we've grown the upper bound enough, so exit the loop
+    if ( xsec > 0. ) {
+      found_nonzero_xsec = true;
+      break;
+    }
+
+    // Otherwise, advance to the next iteration after growing
+    low_KEa = high_KEa;
+    high_KEa *= GROWTH_FACTOR;
+  }
+
+  if ( !found_nonzero_xsec ) {
+    MARLEY_LOG( DEBUG, "physics.reaction.xsec" ) << "Failed to find"
+      " a nonzero cross-section";
+    return NO_THRESHOLD_FOUND;
+  }
+
+  // Now that we have a bracketing interval that contains the reaction
+  // threshold for the requested multipole, do a binary search to narrow the
+  // interval to the given tolerance.
+  do {
+
+    // Check the total cross section at the midpoint of the current
+    // bracketing interval
+    double cur_KEa = (low_KEa + high_KEa) / 2.;
+    double xsec = this->integral( pdg_a, cur_KEa, ml, dummy );
+
+    // If it vanishes, move the lower bound up
+    if ( xsec <= 0. ) low_KEa = cur_KEa;
+
+    // If it doesn't, move the upper bound down
+    else high_KEa = cur_KEa;
+
+    // Continue until the bracketing interval is no larger than the
+    // input tolerance
+  } while ( std::abs(high_KEa - low_KEa) > tol );
+
+  // Adopt the lower bound of the bracketing interval as the threshold
+  return low_KEa;
+}
+
 void marley::TabulatedXSec::optimize( int pdg_a, double max_KEa ) {
+
   MARLEY_LOG( INFO, "physics.reaction.xsec" ) << "Optimizing CRPA cross"
     " section up to " << max_KEa << " MeV";
+
   // Loop over each of the multipoles
   for ( const auto& pair : responses_ ) {
+
     const auto& ml = pair.first;
 
-    double min_KEa = 0.;
+    // Default to trivially-zero functions over the whole range. Use these
+    // unless the threshold kinetic energy is successfully found
     std::function<double(double)> tot_xsec_func = [](double)
       -> double { return 0.; };
     std::function<double(double)> max_diff_xsec_func = tot_xsec_func;
 
     // Verify that the total cross section for this multipole is non-vanishing
     // for the requested maximum projectile kinetic energy KEa. If it vanishes,
-    // then just skip the current multipole.
-    double dummy;
-    double xsec_at_max = this->integral( pdg_a, max_KEa, ml, dummy );
+    // then find_KEa_threshold() will return the sentinel value
+    // NO_THRESHOLD_FOUND and we can just skip the current multipole.
+    double min_KEa = this->find_KEa_threshold( pdg_a, ml );
 
-    if ( xsec_at_max > 0. ) {
-      // Do a binary search to find the threshold for this multipole. Continue
-      // until we've found it within the given tolerance.
-      constexpr double thresh_tol = 1e-6; // MeV
-      // Set up the bounds of a bracketing interval that will contain the
-      // kinetic energy threshold
-      double low_KEa = 0.;
-      double high_KEa = max_KEa;
-      do {
-        // Check the total cross section at the midpoint of the current
-        // bracketing interval
-        double cur_KEa = (low_KEa + high_KEa) / 2.;
-        double xsec = this->integral( pdg_a, cur_KEa, ml, dummy );
-        // If it vanishes, move the lower bound up
-        if ( xsec <= 0. ) low_KEa = cur_KEa;
-        // If it doesn't, move the upper bound down
-        else high_KEa = cur_KEa;
-        // Continue until the bracketing interval is no larger than the
-        // tolerance defined above
-      } while ( std::abs(high_KEa - low_KEa) > thresh_tol );
+    if ( min_KEa != NO_THRESHOLD_FOUND && min_KEa < max_KEa ) {
 
-      // Adopt the lower bound of the bracketing interval as the threshold
-      min_KEa = low_KEa;
-
-      tot_xsec_func = [&, this](double KEa)
-        -> double { return this->integral( pdg_a, KEa, ml, dummy ); };
+      tot_xsec_func = [&, this](double KEa) -> double {
+        double dummy_max_diff;
+        return this->integral( pdg_a, KEa, ml, dummy_max_diff );
+      };
 
       max_diff_xsec_func = [&, this](double KEa) -> double {
         double max_diff;
         this->integral( pdg_a, KEa, ml, max_diff );
         return max_diff;
       };
+
     }
 
-    MARLEY_LOG( DEBUG, "physics.reaction.xsec" ) << "Optimizing total cross section for "
-      << ml.J_ << ml.Pi_ << " over KE in ["
+    MARLEY_LOG( DEBUG, "physics.reaction.xsec" ) << "Optimizing total cross"
+      << " section for " << ml.J_ << ml.Pi_ << " over KE in ["
       << min_KEa << ", " << max_KEa << "] MeV";
 
     // Now we're ready to build the Chebyshev interpolating functions for
@@ -451,4 +504,43 @@ double marley::TabulatedXSec::delta_ias() const {
   double result = 0.;
   if ( is_charged_current ) result = delta_ias_;
   return result;
+}
+
+// Computes the threshold kinetic energy including all loaded multipoles.
+// If the optimization map is populated, uses cached values from it with direct
+// calculation as a fallback.
+double marley::TabulatedXSec::threshold_kinetic_energy( int pdg_a ) const {
+
+  // Default to an infinite value (just in case nothing is loaded)
+  constexpr double INFINITE = std::numeric_limits< double >::infinity();
+  double min_thresh = INFINITE;
+
+  // Iterate over each of the loaded multipoles
+  for ( const auto& pair : responses_ ) {
+
+    // Check whether the threshold is already cached in the optimization map
+    const auto& ml = pair.first;
+    marley::TabulatedXSec::OptimizationMapKey key( pdg_a, ml );
+    auto iter = optimization_map_.find( key );
+
+    double check_thresh = INFINITE;
+    if ( iter != optimization_map_.end() ) {
+      // We found the current multipole in the map, so retrieve the cached
+      // threshold value
+      check_thresh = iter->second.tot_xsec_.x_min();
+    }
+    else {
+      // If we didn't find a threshold in the cache, then manually compute it
+      check_thresh = this->find_KEa_threshold( pdg_a, ml );
+    }
+
+    // If the threshold value is OK for this multipole, then update the
+    // minimum threshold for the overall search
+    if ( check_thresh != NO_THRESHOLD_FOUND ) {
+      min_thresh = std::min( min_thresh, check_thresh );
+    }
+  }
+
+  // The loop over multipoles is complete, so return the final value
+  return min_thresh;
 }

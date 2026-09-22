@@ -54,11 +54,6 @@ namespace marley {
       inline virtual marley::TargetAtom atomic_target() const override final
         { return marley::TargetAtom( pdg_b_ ); }
 
-      /// @brief Get the minimum lab-frame kinetic energy (MeV) of the
-      /// projectile that allows this reaction to proceed via a transition to
-      /// the residue's ground state
-      double threshold_kinetic_energy() const override;
-
       /// @brief Get the maximum possible excitation energy (MeV) of the
       /// final-state residue that is kinematically allowed
       /// @param KEa Projectile lab-frame kinetic energy (MeV)
@@ -70,6 +65,12 @@ namespace marley {
       /// neutron (proton) number of the target nucleus and
       /// @f$ \theta_W @f$ is the weak mixing angle.
       double weak_nuclear_charge() const;
+
+      /// @brief Computes the projectile kinetic energy threshold in the lab
+      /// frame given an input excitation energy for the daughter nucleus
+      /// @param[in] Ex The excitation energy (MeV) of the daughter nucleus
+      /// immediately after the primary interaction
+      double get_KEa_threshold( double Ex ) const;
 
     protected:
 
@@ -141,11 +142,6 @@ namespace marley {
       /// @brief Net charge of the residue (in units of the proton charge)
       /// following this reaction
       int q_d_;
-
-      /// @brief Lab-frame kinetic energy of the projectile at threshold for
-      /// this reaction (i.e., the residue is produced in its ground state, and
-      /// all final-state particles are at rest in the CM frame)
-      double KEa_threshold_;
   };
 
 }

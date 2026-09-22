@@ -120,7 +120,20 @@ namespace marley {
         double& diff_max,
         std::vector< IntegralTerm >* integral_terms = nullptr ) const;
 
+      /// @brief Computes the minimum threshold kinetic energy (MeV) of the
+      /// projectile in the laboratory frame for all loaded multipoles
+      /// @param[in] pdg_a The particle ID code identifying the projectile
+      double threshold_kinetic_energy( int pdg_a ) const;
+
     protected:
+
+      /// @brief Finds the projectile kinetic energy threshold (MeV, lab-frame)
+      /// for the reaction to proceed via the input multipole
+      /// @param[in] pdg_a The particle ID code identifying the projectile
+      /// @param[in] ml The multipole for which the threshold should be evaluated
+      /// @param[in] tol The numerical tolerance for finding the threshold (MeV)
+      double find_KEa_threshold( int pdg_a, const MultipoleLabel& ml,
+        const double tol = 1e-6 ) const;
 
       struct OptimizationMapKey {
         OptimizationMapKey( int pdg_a, MultipoleLabel ml )

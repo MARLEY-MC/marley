@@ -40,7 +40,7 @@
 using InterpMethod = marley::InterpolationGrid<double>::InterpolationMethod;
 using ProcType = marley::Reaction::ProcessType;
 using CMode = marley::CoulombCorrector::CoulombMode;
-using SubContinuumMode = marley::ContinuumNuclearReaction::SubContinuumMode;
+using SubContinuumMode = marley::SubContinuumMode;
 
 // anonymous namespace for helper functions, etc.
 namespace {
@@ -188,6 +188,19 @@ marley::Generator marley::JSONConfig::create_generator() const
     ff_config[ "nuclear_model" ] = "klein";
   }
 
+  // If specified by the user, set the approach to continuum strength leaking
+  // below the unbound threshold. The default setting is "accumulate."
+  SubContinuumMode sc_mode = SubContinuumMode::ACCUMULATE;
+  if ( json_.has_key("sub_continuum_mode") ) {
+    const auto& sc_mode_str = json_.at( "sub_continuum_mode" );
+    if ( !sc_mode_str.is_string() ) throw marley::Error( "Invalid sub-continuum"
+      " mode specification " + sc_mode_str.dump_string() );
+
+    std::string my_mode = sc_mode_str.to_string();
+    sc_mode = marley::ContinuumNuclearReaction
+      ::sub_continuum_mode_from_string( my_mode );
+  }
+
   // Turn off calls to Generator::normalize_E_pdf() until we
   // have set up all the needed pieces
   gen.dont_normalize_E_pdf_ = true;
@@ -196,7 +209,7 @@ marley::Generator marley::JSONConfig::create_generator() const
   prepare_direction( gen );
   prepare_structure( gen );
   prepare_neutrino_source( gen );
-  prepare_reactions( gen, coulomb_mode, ff_config );
+  prepare_reactions( gen, coulomb_mode, ff_config, sc_mode );
   prepare_target( gen );
   prepare_weights( gen );
 
@@ -215,19 +228,6 @@ marley::Generator marley::JSONConfig::create_generator() const
 
   // Save a copy of the JSON settings used to configure the generator
   gen.set_json_config( json_ );
-
-  // If specified by the user, set the approach to continuum strength leaking
-  // below the unbound threshold. The default setting is "accumulate."
-  if ( json_.has_key("sub_continuum_mode") ) {
-    const auto& sc_mode_str = json_.at( "sub_continuum_mode" );
-    if ( !sc_mode_str.is_string() ) throw marley::Error( "Invalid sub-continuum"
-      " mode specification " + sc_mode_str.dump_string() );
-    std::string my_mode = sc_mode_str.to_string();
-    SubContinuumMode sc_mode = marley::ContinuumNuclearReaction
-      ::sub_continuum_mode_from_string( my_mode );
-
-    marley::ContinuumNuclearReaction::set_sub_continuum_mode( sc_mode );
-  }
 
   // Skip the rest of initialization if we've disabled all reactions.
   // This can be used to partially initialize the Generator in unusual
@@ -272,15 +272,13 @@ marley::Generator marley::JSONConfig::create_generator() const
   if ( found_cc ) {
     std::string cmode_str = marley::CoulombCorrector
       ::string_from_coulomb_mode( coulomb_mode );
-    MARLEY_LOG( INFO, "init.config" ) << "Configured Coulomb correction method: " << cmode_str;
+    MARLEY_LOG( INFO, "init.config" ) << "Configured Coulomb correction"
+      << " method: " << cmode_str;
   }
 
   // If at least one continuum nuclear reaction is configured, then inform the
   // user about the active sub-continuum mode
   if ( found_continuum ) {
-    SubContinuumMode sc_mode
-      = marley::ContinuumNuclearReaction::sub_continuum_mode();
-
     MARLEY_LOG( INFO, "init.config" ) << "Configured sub-continuum mode: "
       << marley::ContinuumNuclearReaction
       ::string_from_sub_continuum_mode( sc_mode );
@@ -422,7 +420,8 @@ void marley::JSONConfig::prepare_direction( marley::Generator& gen ) const {
 }
 
 void marley::JSONConfig::prepare_reactions( marley::Generator& gen,
-  CMode coulomb_mode, const marley::JSON& ff_config ) const
+  CMode coulomb_mode, const marley::JSON& ff_config,
+  const SubContinuumMode sc_mode ) const
 {
   const auto& fm = marley::FileManager::Instance();
 
@@ -462,7 +461,7 @@ void marley::JSONConfig::prepare_reactions( marley::Generator& gen,
 
           auto reacts = marley::Reaction::load_from_file(
             full_file_name, gen.get_structure_db(), coulomb_mode,
-            ff_config );
+            ff_config, sc_mode );
 
           if ( reacts.empty() ) throw marley::Error( "Failed to load"
             " any reactions from the file " + full_file_name + ". Please"

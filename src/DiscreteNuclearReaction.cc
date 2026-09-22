@@ -71,6 +71,18 @@ marley::DiscreteNuclearReaction::DiscreteNuclearReaction(
   // this, then set the corresponding flag to true.
   allowed_approx_ = marley::JSONConfig
     ::check_for_allowed_approximation( ff_config );
+
+  // Determine the lab-frame threshold kinetic energy of the projectile. Use
+  // the first (assumed to be lowest-excitation-energy) matrix element as the
+  // minimum excitation energy. If the vector of matrix elements is empty, then
+  // assume a ground-state transition is possible when calculating the
+  // threshold.
+  double Ex_min = 0.;
+  if ( !matrix_elements_->empty() ) {
+    Ex_min = matrix_elements_->front().level_energy();
+  }
+
+  KEa_threshold_ = this->get_KEa_threshold( Ex_min );
 }
 
 // Creates an event object by sampling the appropriate quantities and
@@ -532,9 +544,9 @@ double marley::DiscreteNuclearReaction::summed_xs_helper( int pdg_a,
   // not, then just return 0.
   if ( differential && std::abs(cos_theta_c_cm) > 1. ) return 0.;
 
-  // If the projectile kinetic energy is zero (or negative), then
-  // just return zero.
-  if ( KEa <= 0. ) return 0.;
+  // If the projectile kinetic energy is below threshold, then just return
+  // zero.
+  if ( KEa < KEa_threshold_ ) return 0.;
 
   // If we've been passed a vector to load with the partial cross sections
   // to each nuclear level, then clear it before storing them

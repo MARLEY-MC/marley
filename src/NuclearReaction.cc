@@ -76,9 +76,6 @@ marley::NuclearReaction::NuclearReaction( ProcType pt, int pdg_a, int pdg_b,
     md_gs_ = mt.get_particle_mass( pdg_d_ );
   }
 
-  KEa_threshold_ = ( std::pow(mc_ + md_gs_, 2)
-    - std::pow(ma_ + mb_, 2) ) / ( 2.*mb_ );
-
   this->set_description();
 }
 
@@ -97,10 +94,6 @@ double marley::NuclearReaction::max_level_energy( double KEa ) const {
   // total CM energy leaves us with the energy available to create
   // an excited level in the residue (particle d).
   return E_CM - mc_ - md_gs_;
-}
-
-double marley::NuclearReaction::threshold_kinetic_energy() const {
-  return KEa_threshold_;
 }
 
 // Factor that appears in the cross section for coherent elastic
@@ -189,4 +182,10 @@ std::shared_ptr< HepMC3::GenEvent >
   this->set_nuclear_residue_attributes( residue, E_level, twoJ, P );
 
   return event;
+}
+
+double marley::NuclearReaction::get_KEa_threshold( double Ex ) const {
+  double KEa_threshold = ( std::pow(mc_ + md_gs_ + Ex, 2)
+    - std::pow(ma_ + mb_, 2) ) / ( 2.*mb_ );
+  return KEa_threshold;
 }

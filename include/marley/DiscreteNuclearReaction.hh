@@ -130,6 +130,9 @@ namespace marley {
       inline const std::vector< marley::MatrixElement >& matrix_elements() const
         { return *matrix_elements_; }
 
+      inline virtual double threshold_kinetic_energy() const override
+        { return KEa_threshold_; }
+
     protected:
 
       virtual void set_description() override;
@@ -183,6 +186,10 @@ namespace marley {
       /// @brief Flag that indicates whether to include aditional terms beyond
       /// the q->0 limit
       bool allowed_approx_ = false;
+
+      /// @brief Lab-frame kinetic energy of the projectile at threshold for
+      /// this reaction
+      double KEa_threshold_;
   };
 
 }
