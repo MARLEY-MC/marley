@@ -198,14 +198,27 @@ bool marley::CommandHandler::execute() {
   // MARLEY_LOG is safe either way: a missing file leaves the constructor's
   // defaults untouched, and a malformed one is rejected atomically by
   // configure(), so the Logger is always in a usable state here.
-  try {
-    const auto& fm = marley::FileManager::Instance();
-    auto& logger = marley::Logger::Instance();
-    logger.configure_from_file( fm.find_file("logger.js", "config").string() );
+  // resolve() rather than find_file(): this lookup happens *before* the
+  // logging configuration it is fetching has been applied, so routing it
+  // through find_file()'s io.resolve reporting would print one line that
+  // logger.js itself can never suppress. The pure form gives the caller
+  // control, which is what it exists for.
+  const auto& fm = marley::FileManager::Instance();
+  auto log_cfg = marley::FileManager::resolve( "logger.js", "config", {},
+    fm.roots(), fm.working_directory() );
+
+  if ( !log_cfg ) {
+    MARLEY_LOG( WARN, "app" ) << "Could not find logger.js; continuing with"
+      " default logging settings.";
   }
-  catch ( const std::exception& e ) {
-    MARLEY_LOG( WARN, "app" ) << "Continuing with default logging settings: "
-      << e.what();
+  else {
+    try {
+      marley::Logger::Instance().configure_from_file( log_cfg.path.string() );
+    }
+    catch ( const std::exception& e ) {
+      MARLEY_LOG( WARN, "app" ) << "Ignoring the logging configuration in \""
+        << log_cfg.path.string() << "\": " << e.what();
+    }
   }
 
   // If we don't have any command-line arguments, then just print the
