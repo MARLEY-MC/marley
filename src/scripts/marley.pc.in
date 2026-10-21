@@ -25,10 +25,13 @@
 #   publishes (design spec 6.2).
 #
 # What this file carries is therefore exactly what marley-config --cflags and
-# --libs carry, with one deliberate difference: no rpath. A hand-written
-# Makefile has no other way to make its binary runnable, while a packaging
-# toolchain manages rpath itself and an unexpected one is an obstacle
-# (design spec 6.3).
+# --libs carry, with one deliberate difference: no rpath. That covers both
+# MARLEY's own -Wl,-rpath and the one root-config emits for ROOT's library
+# directory, which is filtered out when this file is generated. A
+# hand-written Makefile has no other way to make its binary runnable, while
+# a packaging toolchain manages rpath itself -- and an inherited rpath
+# naming the build machine's ROOT would travel into a redistributed binary
+# and work only on the machine it was built on (design spec 6.3).
 prefix=${pcfiledir}/../..
 exec_prefix=${prefix}
 libdir=${prefix}/@libdir_rel@

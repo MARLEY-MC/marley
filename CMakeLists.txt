@@ -783,7 +783,16 @@ set(pc_cflags_extra "")
 set(pc_libs_extra "")
 if(USE_ROOT)
   string(APPEND pc_cflags_extra " -DUSE_ROOT ${MARLEY_ROOT_CFLAGS_STR}")
-  string(APPEND pc_libs_extra " ${MARLEY_ROOT_LIBS_STR}")
+  # ROOT's own -Wl,-rpath is stripped here and nowhere else. marley-config
+  # may carry it, because a hand-written Makefile has no other way to make
+  # its binary runnable; a .pc file must not, because a packager's toolchain
+  # manages rpath itself and this one would bake the build machine's ROOT
+  # location into a redistributed binary (design spec 6.3).
+  string(REGEX REPLACE "-Wl,-rpath,[^ \t]*" "" _pc_root_libs
+    "${MARLEY_ROOT_LIBS_STR}")
+  string(REGEX REPLACE "  +" " " _pc_root_libs "${_pc_root_libs}")
+  string(STRIP "${_pc_root_libs}" _pc_root_libs)
+  string(APPEND pc_libs_extra " ${_pc_root_libs}")
 endif()
 if(USE_BUILTIN_HEPMC3)
   string(PREPEND pc_cflags_extra " -I\${includedir}/marley/builtin")

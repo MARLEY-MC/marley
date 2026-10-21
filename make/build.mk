@@ -389,6 +389,16 @@ or build against the bundled HepMC3 subset with IGNORE_HEPMC3=1)
       ROOT_PUBLIC_CFLAGS := $(filter-out -std=%,$(ROOT_CXXFLAGS))
       ROOT_PUBLIC_LIBS := $(shell $(ROOTCONFIG) --libs)
 
+      # The same flags again with ROOT's own -Wl,-rpath removed, for
+      # marley.pc. root-config emits an rpath pointing at ROOT's library
+      # directory; marley-config may carry it, because a hand-written
+      # Makefile has no other way to make its binary runnable. A .pc file
+      # must not: a packager's toolchain manages rpath itself, and this one
+      # would bake the build machine's ROOT location into a redistributed
+      # binary -- working on that machine and nowhere else (spec 6.3).
+      comma := ,
+      ROOT_PC_LIBS := $(filter-out -Wl$(comma)-rpath$(comma)%,$(ROOT_PUBLIC_LIBS))
+
       # If ROOT was built with a later C++ standard, switch to building MARLEY
       # with it as well, just in case. Later -std options take precedence, so
       # just tack on a new one to keep things simple.
@@ -603,7 +613,7 @@ PC_CFLAGS_EXTRA := $(strip \
   $(if $(FOUND_HEPMC3),$(HEPMC3_PUBLIC_CFLAGS),-I$${includedir}/marley/builtin))
 PC_LIBS_EXTRA := $(strip \
   $(if $(FOUND_HEPMC3),$(HEPMC3_PUBLIC_LIBS),-lMARLEYHepMC3) \
-  $(if $(filter yes,$(USE_ROOT)),$(ROOT_PUBLIC_LIBS)))
+  $(if $(filter yes,$(USE_ROOT)),$(ROOT_PC_LIBS)))
 
 marley-pc: $(BUILD_LIBDIR)/pkgconfig/marley.pc
 
