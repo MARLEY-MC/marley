@@ -326,6 +326,14 @@ or build against the bundled HepMC3 subset with IGNORE_HEPMC3=1)
     $(info Ignoring any HepMC3 installations that may be present.)
   endif
 
+  # The flags MARLEY publishes for an external HepMC3. MARLEY_FOUND_HEPMC3 is
+  # an internal build switch -- no installed header tests it -- so it must not
+  # reach a consumer's compiler (design spec 6.2). Empty on a vendored build,
+  # where the include root is MARLEY's own and the body derives it.
+  HEPMC3_PUBLIC_CFLAGS = $(if $(FOUND_HEPMC3),\
+    $(filter-out -DMARLEY_FOUND_HEPMC3,$(HEPMC3_CXXFLAGS)))
+  HEPMC3_PUBLIC_LIBS = $(if $(FOUND_HEPMC3),$(HEPMC3_LDFLAGS))
+
   ifndef FOUND_HEPMC3
     # Use the built-in HepMC3 subset (implementation in src/marley_hepmc3.cc,
     # headers in include/builtin/HepMC3/).
@@ -368,6 +376,18 @@ or build against the bundled HepMC3 subset with IGNORE_HEPMC3=1)
       $(info MARLEY will be built with ROOT support.)
       override CXXFLAGS += -DUSE_ROOT
       ROOT_CXXFLAGS := $(shell $(ROOTCONFIG) --cflags)
+
+      # The flags MARLEY *publishes* for ROOT, as distinct from the link line
+      # MARLEY uses for itself. These are root-config's own output, captured
+      # once and emitted verbatim thereafter, so that marley-config and
+      # marley.pc describe the ROOT that MARLEY was compiled against rather
+      # than whatever root-config says at the moment a consumer runs them.
+      #
+      # -std= is filtered out because cxx_std is authoritative: it is the
+      # maximum of MARLEY's floor, any requested standard, and ROOT's, so
+      # ROOT's own -std can only duplicate it or contradict it.
+      ROOT_PUBLIC_CFLAGS := $(filter-out -std=%,$(ROOT_CXXFLAGS))
+      ROOT_PUBLIC_LIBS := $(shell $(ROOTCONFIG) --libs)
 
       # If ROOT was built with a later C++ standard, switch to building MARLEY
       # with it as well, just in case. Later -std options take precedence, so
@@ -548,10 +568,10 @@ $(BUILD_DIR)/bin/marley-config: $(SRC_DIR)/scripts/marley-config-body.sh $(MARLE
 	  "use_root='$(USE_ROOT)'" \
 	  "hepmc3_mode='$(if $(FOUND_HEPMC3),external,builtin)'" \
 	  "gsl_mode='$(if $(FOUND_GSL),external,builtin)'" \
-	  "root_cflags='$(ROOT_CXXFLAGS)'" \
-	  "root_libs='$(ROOT_LDFLAGS)'" \
-	  "ext_hepmc3_cflags='$(if $(FOUND_HEPMC3),$(HEPMC3_CXXFLAGS))'" \
-	  "ext_hepmc3_libs='$(if $(FOUND_HEPMC3),$(HEPMC3_LDFLAGS))'" \
+	  "root_cflags='$(ROOT_PUBLIC_CFLAGS)'" \
+	  "root_libs='$(ROOT_PUBLIC_LIBS)'" \
+	  "ext_hepmc3_cflags='$(HEPMC3_PUBLIC_CFLAGS)'" \
+	  "ext_hepmc3_libs='$(HEPMC3_PUBLIC_LIBS)'" \
 	  "ext_gsl_cflags='$(if $(FOUND_GSL),$(GSL_CXXFLAGS))'" \
 	  "ext_gsl_libs='$(if $(FOUND_GSL),$(GSL_LDFLAGS))'" \
 	  "new_dtags='$(NEW_DTAGS)'" \
@@ -571,13 +591,19 @@ $(BUILD_DIR)/bin/marley-config: $(SRC_DIR)/scripts/marley-config-body.sh $(MARLE
 # GSL appears only as Requires.private: it is used by src/marley_gsl.cc and
 # named in no installed header, so a consumer neither needs nor sees it.
 # HepMC3 is public -- MARLEY's event type is an HepMC3 type.
-PC_CFLAGS_EXTRA := $(strip $(if $(filter yes,$(USE_ROOT)),-DUSE_ROOT) \
-  $(if $(FOUND_HEPMC3),,-I$${includedir}/marley/builtin))
-PC_LIBS_EXTRA := $(if $(FOUND_HEPMC3),,-lMARLEYHepMC3)
-# No Requires: on a vendored build -- there is no HepMC3.pc on a system that
-# forced the vendored copy, which is why it was used.
-PC_REQUIRES := $(if $(FOUND_HEPMC3),HepMC3)
-PC_REQUIRES_PRIVATE := $(if $(FOUND_GSL),gsl)
+# marley.pc carries the same flags marley-config does, minus the rpath. It
+# has no Requires: line, because neither HepMC3 nor ROOT ships a pkg-config
+# file and GSL is private -- see the template for the full reasoning.
+#
+# -DUSE_ROOT is not separable from ROOT's include path: EventFileReader.hh
+# includes TFile.h and TTree.h under that macro, so publishing the macro
+# without the -I hands the consumer a public header that cannot be parsed.
+PC_CFLAGS_EXTRA := $(strip \
+  $(if $(filter yes,$(USE_ROOT)),-DUSE_ROOT $(ROOT_PUBLIC_CFLAGS)) \
+  $(if $(FOUND_HEPMC3),$(HEPMC3_PUBLIC_CFLAGS),-I$${includedir}/marley/builtin))
+PC_LIBS_EXTRA := $(strip \
+  $(if $(FOUND_HEPMC3),$(HEPMC3_PUBLIC_LIBS),-lMARLEYHepMC3) \
+  $(if $(filter yes,$(USE_ROOT)),$(ROOT_PUBLIC_LIBS)))
 
 marley-pc: $(BUILD_LIBDIR)/pkgconfig/marley.pc
 
@@ -589,8 +615,6 @@ $(BUILD_LIBDIR)/pkgconfig/marley.pc: $(SRC_DIR)/scripts/marley.pc.in $(MARLEY_LI
 	  -e 's|@cxx_std@|$(CXX_STD)|g' \
 	  -e 's|@pc_cflags_extra@|$(PC_CFLAGS_EXTRA)|g' \
 	  -e 's|@pc_libs_extra@|$(PC_LIBS_EXTRA)|g' \
-	  -e 's|@pc_requires@|$(PC_REQUIRES)|g' \
-	  -e 's|@pc_requires_private@|$(PC_REQUIRES_PRIVATE)|g' \
 	  $< > $@
 
 $(BUILD_DIR)/bin/marley: $(MARLEY_LIBS) marley.o $(BUILD_DIR)/bin/marley-config $(if $(filter yes,$(USE_ROOT)),$(BUILD_DIR)/bin/mroot)

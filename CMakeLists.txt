@@ -643,16 +643,37 @@ set(MARLEY_CONFIG_OUTPUT ${CMAKE_BINARY_DIR}/bin/marley-config)
 # against -- a consumer would then compile successfully and misbehave. Frozen
 # flags can go stale instead, which fails loudly by naming a path that is no
 # longer there.
+# Both discovery paths ask root-config, so the published flags are the same
+# parse in both build systems rather than two reconstructions that drift. On
+# the config-package path there are no flat flags to reuse -- only imported
+# targets -- so root-config is located explicitly; it lives in ROOT's bindir
+# and is present in every ROOT installation that provides the CMake package.
 set(MARLEY_ROOT_CFLAGS "")
 set(MARLEY_ROOT_LIBS   "")
 if(USE_ROOT)
-  if(DEFINED ROOT_CFLAGS AND NOT "${ROOT_CFLAGS}" STREQUAL "")
-    # root-config discovery path: the flat flags are already in hand.
-    set(MARLEY_ROOT_CFLAGS "${ROOT_CFLAGS}")
-    set(MARLEY_ROOT_LIBS   "${ROOT_LIBS}")
+  if(DEFINED ROOT_CONFIG_EXECUTABLE AND ROOT_CONFIG_EXECUTABLE)
+    set(_rootconfig "${ROOT_CONFIG_EXECUTABLE}")
   else()
-    # Config-package discovery path: there are no flat flags here, only
-    # imported targets, so reconstruct the same set the Make path emits.
+    find_program(MARLEY_ROOTCONFIG root-config
+      HINTS ${ROOT_BINDIR} ${ROOT_bindir} $ENV{ROOTSYS}/bin)
+    set(_rootconfig "${MARLEY_ROOTCONFIG}")
+  endif()
+
+  if(_rootconfig)
+    execute_process(COMMAND ${_rootconfig} --cflags
+      OUTPUT_VARIABLE _root_cflags OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${_rootconfig} --libs
+      OUTPUT_VARIABLE MARLEY_ROOT_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
+    # cxx_std is authoritative -- it is the maximum of MARLEY's floor, any
+    # requested standard and ROOT's -- so ROOT's own -std can only duplicate
+    # it or contradict it.
+    string(REGEX REPLACE "-std=[^ \t]*" "" MARLEY_ROOT_CFLAGS "${_root_cflags}")
+    string(REGEX REPLACE "  +" " " MARLEY_ROOT_CFLAGS "${MARLEY_ROOT_CFLAGS}")
+    string(STRIP "${MARLEY_ROOT_CFLAGS}" MARLEY_ROOT_CFLAGS)
+  else()
+    # Fall back to the include directories alone. This is incomplete -- it
+    # omits -pthread and anything else ROOT considers necessary -- so say so
+    # rather than publishing quietly degraded flags.
     foreach(_d IN LISTS ROOT_INCLUDE_DIRS)
       list(APPEND MARLEY_ROOT_CFLAGS "-I${_d}")
     endforeach()
@@ -660,6 +681,9 @@ if(USE_ROOT)
       list(APPEND MARLEY_ROOT_LIBS "-L${ROOT_LIBRARY_DIR}")
     endif()
     list(APPEND MARLEY_ROOT_LIBS -lCore -lRIO -lHist -lTree)
+    message(WARNING "root-config was not found, so marley-config and "
+      "marley.pc will publish approximate ROOT flags (include and library "
+      "directories only).")
   endif()
 endif()
 
@@ -678,8 +702,12 @@ if(USE_BUILTIN_HEPMC3)
   set(MARLEY_EXT_HEPMC3_LIBS_STR   "")
 else()
   set(MARLEY_HEPMC3_MODE "external")
-  marley_flatten_flags(HEPMC3_CFLAGS MARLEY_EXT_HEPMC3_CFLAGS_STR)
-  marley_flatten_flags(HEPMC3_LIBS   MARLEY_EXT_HEPMC3_LIBS_STR)
+  # MARLEY_FOUND_HEPMC3 is an internal build switch -- no installed header
+  # tests it -- so it must not reach a consumer's compiler (design spec 6.2).
+  set(_hepmc3_public ${HEPMC3_CFLAGS})
+  list(REMOVE_ITEM _hepmc3_public "-DMARLEY_FOUND_HEPMC3")
+  marley_flatten_flags(_hepmc3_public MARLEY_EXT_HEPMC3_CFLAGS_STR)
+  marley_flatten_flags(HEPMC3_LIBS    MARLEY_EXT_HEPMC3_LIBS_STR)
 endif()
 
 if(GSL_FOUND)
@@ -738,31 +766,34 @@ file(CHMOD ${MARLEY_CONFIG_OUTPUT}
               WORLD_READ WORLD_EXECUTE
 )
 
-# marley.pc. The conditional fields are whole-string substitution keys
-# rather than a bracket notation, because configure_file cannot express a
-# conditional and both build systems must produce the same file.
+# marley.pc carries the same flags marley-config does, minus the rpath. The
+# conditional fields are whole-string substitution keys rather than a bracket
+# notation, because configure_file cannot express a conditional and both
+# build systems must produce the same file.
 #
-# GSL is Requires.private: it is used by src/marley_gsl.cc and named in no
-# installed header. HepMC3 is public, because MARLEY's event type is an
-# HepMC3 type -- but a vendored build gets no Requires: line, since there is
-# no HepMC3.pc on a system that forced the vendored copy.
+# There is no Requires: line at all -- see the template for why. The short
+# version: neither HepMC3 nor ROOT ships a pkg-config file, and listing GSL
+# as Requires.private would push GSL's -I back into "pkg-config --cflags",
+# since pkg-config includes private Cflags unconditionally.
+#
+# -DUSE_ROOT travels with ROOT's include path and cannot be separated from
+# it: EventFileReader.hh includes TFile.h and TTree.h under that macro, so
+# publishing the macro alone yields a public header that will not parse.
 set(pc_cflags_extra "")
 set(pc_libs_extra "")
-set(pc_requires "")
-set(pc_requires_private "")
 if(USE_ROOT)
-  string(APPEND pc_cflags_extra "-DUSE_ROOT")
+  string(APPEND pc_cflags_extra " -DUSE_ROOT ${MARLEY_ROOT_CFLAGS_STR}")
+  string(APPEND pc_libs_extra " ${MARLEY_ROOT_LIBS_STR}")
 endif()
 if(USE_BUILTIN_HEPMC3)
-  string(APPEND pc_cflags_extra " -I\${includedir}/marley/builtin")
-  set(pc_libs_extra "-lMARLEYHepMC3")
+  string(PREPEND pc_cflags_extra " -I\${includedir}/marley/builtin")
+  string(PREPEND pc_libs_extra " -lMARLEYHepMC3")
 else()
-  set(pc_requires "HepMC3")
-endif()
-if(GSL_FOUND)
-  set(pc_requires_private "gsl")
+  string(PREPEND pc_cflags_extra " ${MARLEY_EXT_HEPMC3_CFLAGS_STR}")
+  string(PREPEND pc_libs_extra " ${MARLEY_EXT_HEPMC3_LIBS_STR}")
 endif()
 string(STRIP "${pc_cflags_extra}" pc_cflags_extra)
+string(STRIP "${pc_libs_extra}" pc_libs_extra)
 
 set(libdir_rel     "${MARLEY_LIBDIR_REL}")
 set(includedir_rel "${MARLEY_INCLUDEDIR_REL}")

@@ -5,10 +5,30 @@
 # lib and lib64 alike because the install-directory interface guarantees the
 # library directory is exactly one segment below the prefix (design spec 4.3).
 #
-# No rpath is emitted here, deliberately. marley-config --libs carries one
-# because a hand-written Makefile has no other way to make its binary
-# runnable; a packaging toolchain manages rpath itself, and an unexpected one
-# is an obstacle (design spec 6.3).
+# There is no Requires: or Requires.private: line, and that is a statement
+# about MARLEY's dependencies rather than an omission:
+#
+#   HepMC3 ships no pkg-config file. Not upstream (its CMakeLists installs
+#   HepMC3Config.cmake, HepMC3Targets and the HepMC3-config script, and
+#   nothing else), not in Debian, not in Homebrew. "Requires: HepMC3" would
+#   name a package that does not exist, and pkg-config fails hard on an
+#   unresolvable Requires -- so every query against this file would fail.
+#   The dependency is carried as flat flags below instead.
+#
+#   ROOT ships no pkg-config file either, and is handled the same way.
+#
+#   GSL does ship gsl.pc, but it is a private dependency: it is used by
+#   src/marley_gsl.cc and named in no installed header. Listing it as
+#   Requires.private would put GSL's -I back into "pkg-config --cflags",
+#   because pkg-config includes private dependencies' Cflags unconditionally
+#   -- undoing the decision to keep GSL out of the compiler flags MARLEY
+#   publishes (design spec 6.2).
+#
+# What this file carries is therefore exactly what marley-config --cflags and
+# --libs carry, with one deliberate difference: no rpath. A hand-written
+# Makefile has no other way to make its binary runnable, while a packaging
+# toolchain manages rpath itself and an unexpected one is an obstacle
+# (design spec 6.3).
 prefix=${pcfiledir}/../..
 exec_prefix=${prefix}
 libdir=${prefix}/@libdir_rel@
@@ -20,5 +40,3 @@ URL: https://www.marleygen.org
 Version: @version@
 Cflags: -I${includedir} -std=@cxx_std@ @pc_cflags_extra@
 Libs: -L${libdir} -lMARLEY @pc_libs_extra@
-Requires: @pc_requires@
-Requires.private: @pc_requires_private@
