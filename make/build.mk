@@ -661,13 +661,17 @@ uninstall:
 	done < $(MARLEY_MANIFEST)
 	# Remove the manifest itself.
 	rm -f $(MARLEY_MANIFEST)
-	# Prune directories that may now be empty.  Use plain rmdir (POSIX) rather
-	# than the GNU-specific --ignore-fail-on-non-empty flag so this works on
-	# non-Linux systems (e.g. macOS/BSD).  The '|| true' suppresses the exit
-	# code that rmdir emits when a directory is not empty.  The header tree is
-	# walked with find -depth so that the nested builtin/HepMC3 subdirectories
-	# are removed before the marley/ root that contains them.
-	rmdir -p "$(DESTDIR)$(datadir)/marley" 2>/dev/null || true
+	# Prune directories that may now be empty.  Both trees are nested several
+	# levels deep (data/react/crpa, examples/marg4/include,
+	# include/marley/builtin/HepMC3), so each is walked with find -depth:
+	# that removes children before parents, where 'rmdir -p <root>' would
+	# fail on the first non-empty level and prune nothing at all.  Plain
+	# rmdir is used rather than the GNU-specific
+	# --ignore-fail-on-non-empty so this works on macOS/BSD, and the
+	# '|| true' suppresses the exit code it returns for a directory that is
+	# still occupied -- which is the expected case for a shared prefix.
+	find "$(DESTDIR)$(datadir)/marley" -depth -type d \
+	  -exec rmdir {} + 2>/dev/null || true
 	find "$(DESTDIR)$(includedir)/marley" -depth -type d \
 	  -exec rmdir {} + 2>/dev/null || true
 	$(LDCONFIG_CMD)
