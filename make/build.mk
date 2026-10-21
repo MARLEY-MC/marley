@@ -142,6 +142,18 @@ else
   HEPMC3_INSTALL_NAME_FLAG =
 endif
 
+# ldconfig refreshes the Linux shared-library cache. It does not exist on
+# macOS, where calling it unguarded made 'make install' fail outright, and it
+# is meaningless when staging into DESTDIR, since nothing is at its final
+# location yet. It is also a no-op for any prefix the cache does not cover and
+# an error for an unprivileged user, so it is never fatal: refreshing a cache
+# is not part of installing the files.
+ifeq ($(UNAME_S),Darwin)
+  LDCONFIG_CMD := true
+else
+  LDCONFIG_CMD := $(if $(DESTDIR),true,ldconfig 2> /dev/null || true)
+endif
+
 # If available, use git to determine the hash of the current version
 # of MARLEY. If not, set it to the string "unknown version"
 
@@ -609,6 +621,9 @@ endif
 	# matching the convention used by CMake's install_manifest.txt.  The manifest
 	# records every file actually placed on disk so that "make uninstall" can
 	# remove them precisely without touching unrelated files or directories.
+	# The single find under $(includedir)/marley covers the vendored HepMC3
+	# headers too, since they are now nested beneath it rather than installed
+	# as a sibling $(includedir)/HepMC3.
 	{ \
 	  printf '%s\n' "$(bindir)/marley"; \
 	  printf '%s\n' "$(bindir)/marley-config"; \
@@ -626,12 +641,10 @@ endif
 	    | sed 's|^$(DESTDIR)||'; \
 	  if [ -f "$(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3" ]; then \
 	    printf '%s\n' "$(libdir)/libMARLEYHepMC3.$(SHARED_LIB_SUFFIX)"; \
-	    find "$(DESTDIR)$(includedir)/HepMC3" -type f \
-	      | sed 's|^$(DESTDIR)||'; \
 	    printf '%s\n' "$(libdir)/.marley-installed-builtin-hepmc3"; \
 	  fi; \
 	} > $(MARLEY_MANIFEST)
-	ldconfig
+	$(LDCONFIG_CMD)
 
 uninstall:
 	@if [ ! -f "$(MARLEY_MANIFEST)" ]; then \
@@ -651,8 +664,10 @@ uninstall:
 	# Prune directories that may now be empty.  Use plain rmdir (POSIX) rather
 	# than the GNU-specific --ignore-fail-on-non-empty flag so this works on
 	# non-Linux systems (e.g. macOS/BSD).  The '|| true' suppresses the exit
-	# code that rmdir emits when a directory is not empty.
+	# code that rmdir emits when a directory is not empty.  The header tree is
+	# walked with find -depth so that the nested builtin/HepMC3 subdirectories
+	# are removed before the marley/ root that contains them.
 	rmdir -p "$(DESTDIR)$(datadir)/marley" 2>/dev/null || true
-	rmdir "$(DESTDIR)$(includedir)/marley" 2>/dev/null || true
-	rmdir "$(DESTDIR)$(includedir)/HepMC3" 2>/dev/null || true
-	ldconfig
+	find "$(DESTDIR)$(includedir)/marley" -depth -type d \
+	  -exec rmdir {} + 2>/dev/null || true
+	$(LDCONFIG_CMD)
