@@ -263,8 +263,12 @@ for p in /tmp/m5 /tmp/m4; do
   "$p/bin/mroot" -b -q \
     -e 'printf("USE_ROOT reached cling: %d\n", (int)gInterpreter->Declare("#ifndef USE_ROOT\n#error USE_ROOT is not defined\n#endif\n"));' \
     -e '#include "marley/EventFileReader.hh"' \
-    -e 'printf("HEADER PARSED OK\n");' >> "$LOG" 2>&1 < /dev/null
+    -e 'printf("HEADER PARSED OK\n");' \
+    -e '(int)0;' >> "$LOG" 2>&1 < /dev/null
   quiet "[exit $?]"
+  # The trailing '(int)0' matters: root -q exits with the value of the LAST
+  # -e expression, and printf returns its character count -- which made a
+  # clean run look like it exited 17.
 done
 
 head2 "C. no build-tree or source-tree path in any published interface"
