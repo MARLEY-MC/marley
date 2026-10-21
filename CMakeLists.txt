@@ -637,14 +637,21 @@ set(MARLEY_BUILD_INCLUDE_REL "include")
 if(USE_BUILTIN_HEPMC3)
   set(MARLEY_BUILD_BUILTIN_REL   "include/builtin")
   set(MARLEY_INSTALL_BUILTIN_REL "${MARLEY_INCLUDEDIR_REL}/marley/builtin")
+  set(MARLEY_HEPMC3_INCLUDE "")
 else()
   set(MARLEY_BUILD_BUILTIN_REL   "")
   set(MARLEY_INSTALL_BUILTIN_REL "")
+  # Baked rather than derived: an external HepMC3 belongs to something MARLEY
+  # does not own and cannot locate relative to itself. cling reads
+  # ROOT_INCLUDE_PATH rather than any -I, so without this an interactive
+  # session cannot parse MARLEY's public headers.
+  set(MARLEY_HEPMC3_INCLUDE "${HEPMC3_INCLUDE_DIR}")
 endif()
 
 function(marley_generate_script template out_path bin_rel include_rel
                                 builtin_rel)
   set(lib_rel "${MARLEY_LIBDIR_REL}")
+  set(hepmc3_include "${MARLEY_HEPMC3_INCLUDE}")
   configure_file("${CMAKE_SOURCE_DIR}/src/scripts/${template}" "${out_path}"
     @ONLY)
   file(CHMOD "${out_path}"

@@ -22,6 +22,7 @@
 #include <string>
 
 namespace HepMC3 {
+  class GenEvent;
   class GenRunInfo;
 }
 

@@ -30,6 +30,7 @@ _marley_bin_rel='@bin_rel@'
 _marley_lib_rel='@lib_rel@'
 _marley_include_rel='@include_rel@'
 _marley_builtin_rel='@builtin_rel@'
+_marley_hepmc3_include='@hepmc3_include@'
 
 # Every entry is PREPENDED. Sourcing this script is a statement about which
 # MARLEY you mean, so it has to win over one that is already on the path.
@@ -52,8 +53,16 @@ if [ -n "${_marley_builtin_rel}" ]; then
   export ROOT_INCLUDE_PATH="${_marley_root}/${_marley_builtin_rel}:${ROOT_INCLUDE_PATH}"
 fi
 
+# An EXTERNAL HepMC3 needs its include root here for exactly the same
+# reason. Unlike every other path in this script it is baked rather than
+# derived, because it belongs to something MARLEY does not own and cannot
+# locate relative to itself.
+if [ -n "${_marley_hepmc3_include}" ]; then
+  export ROOT_INCLUDE_PATH="${_marley_hepmc3_include}:${ROOT_INCLUDE_PATH}"
+fi
+
 # Lets CMake's find_package(MARLEY) work.
 export CMAKE_PREFIX_PATH="${_marley_root}${CMAKE_PREFIX_PATH:+:${CMAKE_PREFIX_PATH}}"
 
 unset _marley_here _marley_root _marley_bin_rel _marley_lib_rel
-unset _marley_include_rel _marley_builtin_rel
+unset _marley_include_rel _marley_builtin_rel _marley_hepmc3_include

@@ -580,6 +580,7 @@ define gen_script
 	  -e 's|@lib_rel@|$(libdir_rel)|g' \
 	  -e 's|@include_rel@|$(2)|g' \
 	  -e 's|@builtin_rel@|$(3)|g' \
+	  -e 's|@hepmc3_include@|$(if $(FOUND_HEPMC3),$(HEPMC3_INCDIR))|g' \
 	  $< > $@
 	chmod +x $@
 endef

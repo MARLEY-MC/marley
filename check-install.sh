@@ -190,6 +190,12 @@ cat /tmp/m4/lib/pkgconfig/marley.pc >> "$LOG" 2>&1
 run env PKG_CONFIG_PATH=/tmp/m4/lib/pkgconfig pkg-config --cflags marley
 run env PKG_CONFIG_PATH=/tmp/m4/lib/pkgconfig pkg-config --libs marley
 
+head2 "B3a. build-tree copy of the scripts, vendored build"
+quiet "builtin_rel must be include/builtin here (install tree uses"
+quiet "include/marley/builtin), and hepmc3_include must be empty."
+run sh -c "grep -E \"(builtin_rel|hepmc3_include)=\" \
+  build/bin/setup_marley.sh build/bin/mroot"
+
 head2 "B4. relocation"
 mv "$REPO/build" "$REPO/build.stashed"
 mkdir -p /tmp/marley-reloc/b4
@@ -221,6 +227,41 @@ fi
 cat /tmp/m5/lib/pkgconfig/marley.pc >> "$LOG" 2>&1
 run env PKG_CONFIG_PATH=/tmp/m5/lib/pkgconfig pkg-config --cflags marley
 run env PKG_CONFIG_PATH=/tmp/m5/lib/pkgconfig pkg-config --libs marley
+
+head2 "G. generated shell scripts (design spec 6.4)"
+quiet ""
+quiet "--- installed mroot and setup_marley.sh, external-HepMC3 build ---"
+cat /tmp/m5/bin/setup_marley.sh >> "$LOG" 2>&1
+quiet ""
+run sh -c "grep -E \"^(exec|lib_rel|include_rel|builtin_rel)\" /tmp/m5/bin/mroot"
+quiet ""
+quiet "--- vendored build: builtin_rel must be include/marley/builtin ---"
+run sh -c "grep -E \"builtin_rel=\" /tmp/m4/bin/mroot /tmp/m4/bin/setup_marley.sh"
+quiet ""
+quiet "--- external-HepMC3 build: hepmc3_include must be the HepMC3 prefix ---"
+run sh -c "grep -E \"(builtin_rel|hepmc3_include)=\" \
+  /tmp/m5/bin/setup_marley.sh /tmp/m5/bin/mroot"
+quiet ""
+quiet "--- sourcing the installed script must set no MARLEY variable ---"
+run sh -c "unset MARLEY; . /tmp/m5/bin/setup_marley.sh >/dev/null 2>&1; \
+  echo \"MARLEY=[\${MARLEY-<unset>}]\"; \
+  echo \"PATH head=\$( echo \"\$PATH\" | cut -d: -f1 )\"; \
+  echo \"ROOT_INCLUDE_PATH head=\$( echo \"\$ROOT_INCLUDE_PATH\" | cut -d: -f1 )\""
+quiet ""
+quiet "--- repo-root wrapper, with no build directory present ---"
+mv "$REPO/build" "$REPO/build.stashed"
+run sh -c ". $REPO/setup_marley.sh"
+mv "$REPO/build.stashed" "$REPO/build"
+quiet ""
+quiet "--- mroot must load the library and parse a MARLEY header ---"
+for p in /tmp/m5 /tmp/m4; do
+  quiet ""
+  quiet "\$ $p/bin/mroot -b -q  (parse marley/EventFileReader.hh)"
+  "$p/bin/mroot" -b -q \
+    -e '#include "marley/EventFileReader.hh"' \
+    -e 'printf("HEADER PARSED OK\n");' >> "$LOG" 2>&1 < /dev/null
+  quiet "[exit $?]"
+done
 
 head2 "C. no build-tree or source-tree path in any published interface"
 quiet ""
