@@ -342,6 +342,28 @@ endif()
 
 add_library(marley_lib SHARED ${MARLEY_SOURCES})
 
+# dladdr() is used for self-location (design spec 2.1). CMAKE_DL_LIBS is
+# "dl" on glibc and empty on macOS, where dladdr lives in libSystem --
+# hence the guard: target_link_libraries() with nothing after PRIVATE is an
+# error, not a no-op.
+if(CMAKE_DL_LIBS)
+  target_link_libraries(marley_lib PRIVATE ${CMAKE_DL_LIBS})
+endif()
+
+# Make the build tree mirror the install layout, so that the single hop taken
+# by self-location works before installation. Created at configure time;
+# safe as a one-time step because the top-level Makefile's `clean` removes
+# the whole build directory and so forces a reconfigure. The links are
+# removed first because file(CREATE_LINK) fails if the destination exists,
+# which it does on every reconfigure after the first.
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/share/marley")
+file(REMOVE "${CMAKE_BINARY_DIR}/include"
+            "${CMAKE_BINARY_DIR}/share/marley/data")
+file(CREATE_LINK "${CMAKE_SOURCE_DIR}/include" "${CMAKE_BINARY_DIR}/include"
+  SYMBOLIC)
+file(CREATE_LINK "${CMAKE_SOURCE_DIR}/data"
+  "${CMAKE_BINARY_DIR}/share/marley/data" SYMBOLIC)
+
 if(MARLEY_FOUND_GSL_DEFINE)
   target_compile_definitions(marley_lib PRIVATE MARLEY_FOUND_GSL)
 else()

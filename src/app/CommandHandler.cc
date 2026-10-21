@@ -20,6 +20,7 @@
 
 // MARLEY includes
 #include "marley/CommandHandler.hh"
+#include "marley/FileManager.hh"
 #include "marley/Logger.hh"
 #include "marley/marley_utils.hh"
 
@@ -186,6 +187,26 @@ bool marley::CommandHandler::print_top_level_help() {
 }
 
 bool marley::CommandHandler::execute() {
+
+  // Apply the shipped logging configuration. This is deliberately explicit:
+  // the Logger's constructor installs a working default and does nothing
+  // else, so nothing here is required for MARLEY to run.
+  //
+  // It needs its own try/catch. The handler further down wraps command
+  // *dispatch* only, and this runs before any command executes, so an
+  // exception escaping here would reach main(). Reporting through
+  // MARLEY_LOG is safe either way: a missing file leaves the constructor's
+  // defaults untouched, and a malformed one is rejected atomically by
+  // configure(), so the Logger is always in a usable state here.
+  try {
+    const auto& fm = marley::FileManager::Instance();
+    auto& logger = marley::Logger::Instance();
+    logger.configure_from_file( fm.find_file("logger.js", "config").string() );
+  }
+  catch ( const std::exception& e ) {
+    MARLEY_LOG( WARN, "app" ) << "Continuing with default logging settings: "
+      << e.what();
+  }
 
   // If we don't have any command-line arguments, then just print the
   // standard top-level help message

@@ -26,13 +26,21 @@ else
 endif
 
 UNAME_S := $(shell uname -s)
+# DL_LIBS: dladdr() is used for self-location (design spec 2.1). On glibc
+# older than 2.34 it lives in libdl and needs the flag; from 2.34 libdl was
+# folded into libc and the flag is harmless. MARLEY targets Scientific
+# Linux 7 (glibc 2.17), so it is passed unconditionally on Linux. On macOS
+# dladdr is in libSystem, which is always linked.
 ifeq ($(UNAME_S),Darwin)
   SHARED_LIB_SUFFIX=dylib
+  DL_LIBS :=
 else ifeq ($(UNAME_S),Linux)
   SHARED_LIB_SUFFIX=so
+  DL_LIBS := -ldl
 else
   $(warning Unrecognized operating system encountered.)
   SHARED_LIB_SUFFIX=so
+  DL_LIBS := -ldl
 endif
 
 # If available, use git to determine the hash of the current version
@@ -363,10 +371,26 @@ $(HEPMC3_SHARED_LIB): marley_hepmc3.o
 
 endif
 
-$(SHARED_LIB): $(HEPMC3_SHARED_LIB) $(OBJECTS)
+# Make the build tree mirror the install layout, so that the single hop taken
+# by self-location (see the design spec, 2.2) works before installation and
+# the whole "works in the build tree, breaks when installed" class of defects
+# cannot arise. Absolute link targets; -n so that re-running does not create a
+# link *inside* an existing one. An order-only prerequisite rather than a
+# one-time setup step, because `clean` is `$(RM) -rf $(BUILD_DIR)`.
+BUILD_TREE_LINKS := $(BUILD_DIR)/include $(BUILD_DIR)/share/marley/data
+
+$(BUILD_DIR)/include:
+	@mkdir -p $(BUILD_DIR)
+	@ln -sfn $(abspath $(INCLUDE_DIR)) $@
+
+$(BUILD_DIR)/share/marley/data:
+	@mkdir -p $(BUILD_DIR)/share/marley
+	@ln -sfn $(abspath $(TOP_DIR)/data) $@
+
+$(SHARED_LIB): $(HEPMC3_SHARED_LIB) $(OBJECTS) | $(BUILD_TREE_LINKS)
 	@mkdir -p $(BUILD_DIR)/lib
 	$(CXX) $(CXXFLAGS) $(ROOT_CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) $(GSL_LDFLAGS) $(ROOT_LDFLAGS) $(HEPMC3_LDFLAGS) \
-	-fPIC -shared -o $@ $(OBJECTS)
+	-fPIC -shared -o $@ $(OBJECTS) $(DL_LIBS)
 
 marley: $(BUILD_DIR)/bin/marley
 
