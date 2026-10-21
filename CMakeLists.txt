@@ -330,17 +330,28 @@ if(NOT HEPMC3_FOUND)
   add_library(HepMC3_builtin SHARED ${CMAKE_SOURCE_DIR}/src/marley_hepmc3.cc)
   target_include_directories(HepMC3_builtin PUBLIC
     $<BUILD_INTERFACE:${HEPMC3_INCLUDE_DIR}>
-    $<INSTALL_INTERFACE:include>
+    # Must track the install destination below, or the exported target hands
+    # consumers an include path with no HepMC3/ beneath it
+    $<INSTALL_INTERFACE:${MARLEY_INCLUDEDIR_REL}/marley/builtin>
   )
   # Suppress deprecation warnings from sprintf usage in the amalgamated source
   target_compile_options(HepMC3_builtin PRIVATE -Wno-deprecated-declarations -Wno-strict-aliasing)
   prefer_imported_or_flags(HepMC3_builtin PUBLIC "GSL::gsl;GSL::gslcblas" GSL_CFLAGS GSL_LIBS)
   set_target_properties(HepMC3_builtin PROPERTIES
-    OUTPUT_NAME HepMC3
+    # Renamed from "HepMC3": a libHepMC3 of ours in a shared prefix collides
+    # with a real one, and the amalgamated copy does not implement all of it.
+    # The exported *target* keeps the name HepMC3_builtin, which says why it
+    # exists; nobody types it, and target names differing from file names is
+    # ordinary in CMake.
+    OUTPUT_NAME MARLEYHepMC3
     LIBRARY_OUTPUT_DIRECTORY ${MARLEY_BUILD_LIBDIR}
+    INSTALL_RPATH "${MARLEY_ORIGIN}"
+    BUILD_RPATH   "${MARLEY_ORIGIN}"
+    MACOSX_RPATH ON
+    INSTALL_NAME_DIR "@rpath"
   )
   set(HEPMC3_CFLAGS -I${HEPMC3_INCLUDE_DIR})
-  set(HEPMC3_LIBS   -L${MARLEY_BUILD_LIBDIR} -lHepMC3)
+  set(HEPMC3_LIBS   -L${MARLEY_BUILD_LIBDIR} -lMARLEYHepMC3)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -514,10 +525,8 @@ if(USE_ROOT)
       LINKDEF ${DICT_HEADER}
       OPTIONS -I${CMAKE_SOURCE_DIR}/include
               -I${HEPMC3_INCLUDE_DIR}
-              -I${HEPMC3_INCLUDE_DIR}/HepMC3/Data
     )
     target_sources(marley_lib PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${DICT_NAME}.cxx)
-    target_include_directories(marley_lib PRIVATE ${HEPMC3_INCLUDE_DIR}/HepMC3/Data)
     # NOTE: because MODULE MARLEY was given above, ROOT names the generated
     # pcm/rootmap files after the module (libMARLEY), not after DICT_NAME.
     add_custom_command(TARGET marley_lib POST_BUILD
@@ -557,7 +566,6 @@ if(USE_ROOT)
         -s ${DICT_LIB_NAME} -rml ${DICT_LIB_NAME} -rmf libMARLEY.rootmap
         -I${CMAKE_SOURCE_DIR}/include
         -I${HEPMC3_INCLUDE_DIR}
-        -I${HEPMC3_INCLUDE_DIR}/HepMC3/Data
         ${HEPMC3_DATA_HEADERS}
         ${DICT_HEADER}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${MARLEY_BUILD_LIBDIR}
@@ -575,7 +583,6 @@ if(USE_ROOT)
       COMMENT "Generating ROOT dictionary"
     )
     target_sources(marley_lib PRIVATE ${DICT_OUTPUT})
-    target_include_directories(marley_lib PRIVATE ${HEPMC3_INCLUDE_DIR}/HepMC3/Data)
   endif()
 endif()
 
@@ -689,7 +696,7 @@ export(TARGETS ${_marley_export_targets}
 configure_package_config_file(
   "${CMAKE_SOURCE_DIR}/cmake/MARLEYConfig.cmake.in"
   "${MARLEY_BUILD_CONFIG_DIR}/MARLEYConfig.cmake"
-  INSTALL_DESTINATION "lib/cmake/MARLEY"
+  INSTALL_DESTINATION "${MARLEY_LIBDIR_REL}/cmake/MARLEY"
 )
 write_basic_package_version_file(
   "${MARLEY_BUILD_CONFIG_DIR}/MARLEYConfigVersion.cmake"
@@ -700,54 +707,90 @@ write_basic_package_version_file(
 # Install-tree export
 install(TARGETS marley_lib
   EXPORT MARLEYTargets
-  LIBRARY DESTINATION lib
+  LIBRARY DESTINATION ${MARLEY_LIBDIR_REL}
 )
 install(TARGETS marley
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION ${MARLEY_BINDIR_REL}
 )
 if(USE_ROOT)
   install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/mroot
-    DESTINATION bin
+    DESTINATION ${MARLEY_BINDIR_REL}
   )
   install(FILES
     ${MARLEY_BUILD_LIBDIR}/libMARLEY_rdict.pcm
     ${MARLEY_BUILD_LIBDIR}/libMARLEY.rootmap
-    DESTINATION lib
+    DESTINATION ${MARLEY_LIBDIR_REL}
     OPTIONAL
   )
 endif()
 
-# If built-in HepMC3 is used, install & export it (and its headers) for a clean install package
+# If built-in HepMC3 is used, install & export it (and its headers).
+#
+# Both the library name and the header location are deliberately MARLEY's,
+# not HepMC3's. This is an amalgamated, partial HepMC3 built from
+# src/marley_hepmc3.cc, produced only when no system HepMC3 was found -- but
+# nothing stops a real HepMC3 arriving in the same prefix later, and
+# /usr/local and Spack views make that ordinary. Two different libHepMC3, or
+# two different include/HepMC3, fail *silently*: whichever is reached first
+# wins, and this one does not implement all of HepMC3.
+#
+# Nesting the headers also means no #include directive changes anywhere --
+# the -I root travels with them, so "HepMC3/FourVector.h" is spelled
+# identically before and after.
 if(USE_BUILTIN_HEPMC3)
   install(TARGETS HepMC3_builtin
     EXPORT MARLEYTargets
-    LIBRARY DESTINATION lib
+    LIBRARY DESTINATION ${MARLEY_LIBDIR_REL}
   )
   install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/builtin/HepMC3
-    DESTINATION include
+    DESTINATION ${MARLEY_INCLUDEDIR_REL}/marley/builtin
   )
 endif()
 
 install(PROGRAMS ${MARLEY_CONFIG_OUTPUT}
-  DESTINATION bin
+  DESTINATION ${MARLEY_BINDIR_REL}
 )
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
-  DESTINATION include
+# Only MARLEY's own headers. The previous rule swept include/ for "*.hh",
+# which also installed include/builtin/marley_gsl.hh to <prefix>/include/
+# builtin/ -- a top-level entry MARLEY does not own, and a divergence from
+# the Make path, which copies only include/marley. marley_gsl.hh is an
+# internal GSL shim; the one test that needs it includes it by relative path.
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/marley
+  DESTINATION ${MARLEY_INCLUDEDIR_REL}
   FILES_MATCHING PATTERN "*.hh"
 )
+# data/tests/ is used only by martest, which runs from the build tree
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/data/
   DESTINATION share/marley/data
+  PATTERN "tests" EXCLUDE
+)
+# examples/ ships: the documentation references it 15 times across 5 files,
+# including commands users are told to type verbatim, and
+# examples/config/annotated.js is the primary job-configuration reference.
+# None of it worked on an installed MARLEY.
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/examples
+  DESTINATION share/marley
+)
+# COPYING and GUIDELINES ship because the licence header of *every installed
+# header* points at them, and MARLEY is GPLv3, so distributing binaries
+# without the licence text is a compliance gap. CITATION.bib joins them
+# because the documentation asks users to cite.
+install(FILES
+  ${CMAKE_SOURCE_DIR}/COPYING
+  ${CMAKE_SOURCE_DIR}/GUIDELINES
+  ${CMAKE_SOURCE_DIR}/CITATION.bib
+  DESTINATION share/marley
 )
 
 # Install the export set and package config files
 install(EXPORT MARLEYTargets
   NAMESPACE MARLEY::
-  DESTINATION lib/cmake/MARLEY
+  DESTINATION ${MARLEY_LIBDIR_REL}/cmake/MARLEY
 )
 configure_package_config_file(
   "${CMAKE_SOURCE_DIR}/cmake/MARLEYConfig.cmake.in"
   "${CMAKE_BINARY_DIR}/MARLEYConfig.cmake"
-  INSTALL_DESTINATION "lib/cmake/MARLEY"
+  INSTALL_DESTINATION "${MARLEY_LIBDIR_REL}/cmake/MARLEY"
 )
 write_basic_package_version_file(
   "${CMAKE_BINARY_DIR}/MARLEYConfigVersion.cmake"
@@ -757,7 +800,7 @@ write_basic_package_version_file(
 install(FILES
   "${CMAKE_BINARY_DIR}/MARLEYConfig.cmake"
   "${CMAKE_BINARY_DIR}/MARLEYConfigVersion.cmake"
-  DESTINATION "lib/cmake/MARLEY"
+  DESTINATION "${MARLEY_LIBDIR_REL}/cmake/MARLEY"
 )
 
 # ------------------------------------------------------------------------------

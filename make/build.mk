@@ -122,7 +122,7 @@ ifeq ($(UNAME_S),Darwin)
   # Without this the recorded install name is the build-tree path, and the
   # library is not relocatable at all
   INSTALL_NAME_FLAG = -Wl,-install_name,@rpath/$(SHARED_LIB_FILE)
-  HEPMC3_INSTALL_NAME_FLAG = -Wl,-install_name,@rpath/libHepMC3.$(SHARED_LIB_SUFFIX)
+  HEPMC3_INSTALL_NAME_FLAG = -Wl,-install_name,@rpath/libMARLEYHepMC3.$(SHARED_LIB_SUFFIX)
 else ifeq ($(UNAME_S),Linux)
   SHARED_LIB_SUFFIX=so
   DL_LIBS := -ldl
@@ -322,8 +322,8 @@ or build against the bundled HepMC3 subset with IGNORE_HEPMC3=1)
     # potentially causing MARLEY to compile against the wrong headers.
     HEPMC3_INCDIR     := $(INCLUDE_DIR)/builtin
     HEPMC3_CXXFLAGS   := -I$(HEPMC3_INCDIR)
-    HEPMC3_LDFLAGS    := -L$(BUILD_LIBDIR) -lHepMC3
-    HEPMC3_SHARED_LIB := $(BUILD_LIBDIR)/libHepMC3.$(SHARED_LIB_SUFFIX)
+    HEPMC3_LDFLAGS    := -L$(BUILD_LIBDIR) -lMARLEYHepMC3
+    HEPMC3_SHARED_LIB := $(BUILD_LIBDIR)/libMARLEYHepMC3.$(SHARED_LIB_SUFFIX)
 
     # Disable warnings about deprecated declarations in the built-in HepMC3
     # library (triggered via use of sprintf)
@@ -382,8 +382,7 @@ or build against the bundled HepMC3 subset with IGNORE_HEPMC3=1)
         ROOT_LDFLAGS += -rdynamic
       endif
       ROOT_DICT_INCLUDES := -I$(INCLUDE_DIR) -I$(HEPMC3_INCDIR) \
-        -I$(HEPMC3_INCDIR)/HepMC3/Data \
-        $(notdir $(wildcard $(HEPMC3_INCDIR)/HepMC3/Data/*.h)) \
+        $(patsubst $(HEPMC3_INCDIR)/%,%,$(wildcard $(HEPMC3_INCDIR)/HepMC3/Data/*.h)) \
         marley/marley_linkdef.hh
       USE_ROOT = yes
       ROOT_OBJ_DICT = marley_root_dict.o
@@ -407,7 +406,7 @@ $(ROOT_OBJ_DICT):
 	  -s $(SHARED_LIB_FILE) -rml $(SHARED_LIB_FILE) -rmf libMARLEY.rootmap \
 	  $(ROOT_DICT_INCLUDES)
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
-	  -I$(INCLUDE_DIR) -I$(HEPMC3_INCDIR)/HepMC3/Data -fPIC \
+	  -I$(INCLUDE_DIR) -fPIC \
           -o $(ROOT_OBJ_DICT) -c marley_root_dict.cc
 	@mkdir -p $(BUILD_LIBDIR)
 	# NOTE: because "-s $(SHARED_LIB_FILE)" is passed above, rootcling names
@@ -581,11 +580,29 @@ install: marley marley-config $(if $(filter yes,$(USE_ROOT)),mroot)
 	cp $(BUILD_LIBDIR)/libMARLEY_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp $(BUILD_LIBDIR)/libMARLEY.rootmap $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp -r $(TOP_DIR)/data $(DESTDIR)$(datadir)/marley
+	# data/tests/ is used only by martest, which runs from the build tree
+	rm -rf $(DESTDIR)$(datadir)/marley/data/tests
 	cp -r $(TOP_DIR)/include/marley $(DESTDIR)$(includedir)
+	# examples/ ships: the documentation references it 15 times across 5
+	# files, including commands users are told to type verbatim, and
+	# examples/config/annotated.js is the primary job-configuration
+	# reference. None of it worked on an installed MARLEY.
+	cp -r $(TOP_DIR)/examples $(DESTDIR)$(datadir)/marley
+	# COPYING and GUIDELINES ship because the licence header of *every
+	# installed header* points at them, and MARLEY is GPLv3. CITATION.bib
+	# joins them because the documentation asks users to cite.
+	cp $(TOP_DIR)/COPYING $(TOP_DIR)/GUIDELINES $(TOP_DIR)/CITATION.bib \
+	  $(DESTDIR)$(datadir)/marley
 ifndef FOUND_HEPMC3
+	# The vendored HepMC3 is installed under MARLEY's own names: a
+	# libHepMC3 of ours in a shared prefix collides with a real one, and
+	# this amalgamated copy does not implement all of HepMC3. Nesting the
+	# headers changes no #include directive -- the -I root travels with
+	# them (design spec 4.1).
 	cp $(HEPMC3_SHARED_LIB) $(DESTDIR)$(libdir)
-	mkdir -p $(DESTDIR)$(includedir)/HepMC3
-	cp -r $(INCLUDE_DIR)/builtin/HepMC3/. $(DESTDIR)$(includedir)/HepMC3
+	mkdir -p $(DESTDIR)$(includedir)/marley/builtin/HepMC3
+	cp -r $(INCLUDE_DIR)/builtin/HepMC3/. \
+	  $(DESTDIR)$(includedir)/marley/builtin/HepMC3
 	touch $(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3
 endif
 	# Write the install manifest: one absolute path per line (no DESTDIR prefix),
@@ -608,7 +625,7 @@ endif
 	  find "$(DESTDIR)$(includedir)/marley" -type f \
 	    | sed 's|^$(DESTDIR)||'; \
 	  if [ -f "$(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3" ]; then \
-	    printf '%s\n' "$(libdir)/libHepMC3.$(SHARED_LIB_SUFFIX)"; \
+	    printf '%s\n' "$(libdir)/libMARLEYHepMC3.$(SHARED_LIB_SUFFIX)"; \
 	    find "$(DESTDIR)$(includedir)/HepMC3" -type f \
 	      | sed 's|^$(DESTDIR)||'; \
 	    printf '%s\n' "$(libdir)/.marley-installed-builtin-hepmc3"; \
