@@ -48,6 +48,79 @@ endif()
 project(MARLEY VERSION 2.0.0 LANGUAGES CXX)
 
 # ------------------------------------------------------------------------------
+# Install directories
+#
+# libdir, bindir and includedir must resolve to exactly ONE directory below
+# the prefix, because the data root is found by a single ".." ascent from the
+# library's own location (design spec 2.2, 4.3). The GNUInstallDirs names are
+# reused because those are the names Spack, conda-forge and RPM recipes
+# already pass; a MARLEY_* namespace would silently ignore them, which is the
+# very defect this check exists to prevent.
+#
+# CMAKE_INSTALL_LIBDIR is genuinely ambiguous in the wild -- relative on some
+# systems, absolute on others (Fedora's %cmake macro historically set it
+# absolute, producing /usr/usr/lib64 in projects that concatenated it). Both
+# spellings are accepted. The prefix comparison is done with LENGTH/SUBSTRING
+# rather than a regex because the prefix would otherwise be interpolated into
+# a pattern, and Spack prefixes routinely contain '.', '+' and '['.
+# ------------------------------------------------------------------------------
+set(CMAKE_INSTALL_LIBDIR     "lib"     CACHE STRING "Library directory name")
+set(CMAKE_INSTALL_BINDIR     "bin"     CACHE STRING "Executable directory name")
+set(CMAKE_INSTALL_INCLUDEDIR "include" CACHE STRING "Header directory name")
+
+function(marley_relative_install_dir var_name out_var)
+  set(_value "${${var_name}}")
+  set(_prefix "${CMAKE_INSTALL_PREFIX}/")
+  string(LENGTH "${_prefix}" _plen)
+  string(LENGTH "${_value}" _vlen)
+  if(_vlen GREATER_EQUAL _plen)
+    string(SUBSTRING "${_value}" 0 ${_plen} _head)
+    if(_head STREQUAL "${_prefix}")
+      string(SUBSTRING "${_value}" ${_plen} -1 _value)
+    endif()
+  endif()
+  if(_value STREQUAL "" OR _value MATCHES "/")
+    message(FATAL_ERROR
+      "${var_name}=\"${${var_name}}\" must be exactly one directory below "
+      "CMAKE_INSTALL_PREFIX=\"${CMAKE_INSTALL_PREFIX}\" (resolved to "
+      "\"${_value}\"); use e.g. -D${var_name}=lib64")
+  endif()
+  set(${out_var} "${_value}" PARENT_SCOPE)
+endfunction()
+
+marley_relative_install_dir(CMAKE_INSTALL_LIBDIR     MARLEY_LIBDIR_REL)
+marley_relative_install_dir(CMAKE_INSTALL_BINDIR     MARLEY_BINDIR_REL)
+marley_relative_install_dir(CMAKE_INSTALL_INCLUDEDIR MARLEY_INCLUDEDIR_REL)
+
+# datadir is fixed: unlike the others it is used for DESCENT, so its name must
+# be known at runtime rather than merely counted. Setting it is therefore an
+# error rather than something to ignore silently.
+foreach(_fixed CMAKE_INSTALL_DATADIR CMAKE_INSTALL_DATAROOTDIR)
+  if(DEFINED ${_fixed} AND NOT "${${_fixed}}" STREQUAL "share")
+    message(FATAL_ERROR
+      "${_fixed}=\"${${_fixed}}\" is not supported: MARLEY's data directory "
+      "name is compiled in and must remain \"share\".")
+  endif()
+endforeach()
+
+# The build tree mirrors the install layout (design spec 2.2), so that the
+# single hop taken by self-location works before installation.
+set(MARLEY_BUILD_LIBDIR "${CMAKE_BINARY_DIR}/${MARLEY_LIBDIR_REL}")
+
+# Token the loader expands to the containing object's own directory. Every
+# linked artifact locates its dependencies relative to itself, so no absolute
+# path is baked into anything and the install tree can be moved (spec 4.2).
+if(APPLE)
+  set(MARLEY_ORIGIN "@loader_path")
+else()
+  set(MARLEY_ORIGIN "$ORIGIN")
+  # Ask for DT_RUNPATH rather than DT_RPATH. Which one -Wl,-rpath produces is
+  # a binutils configure-time default, and the reason for preferring RUNPATH
+  # -- that a user's LD_LIBRARY_PATH still wins -- depends on getting it.
+  add_link_options(-Wl,--enable-new-dtags)
+endif()
+
+# ------------------------------------------------------------------------------
 # Build configuration / warnings
 # ------------------------------------------------------------------------------
 if(NOT CMAKE_BUILD_TYPE)
@@ -264,10 +337,10 @@ if(NOT HEPMC3_FOUND)
   prefer_imported_or_flags(HepMC3_builtin PUBLIC "GSL::gsl;GSL::gslcblas" GSL_CFLAGS GSL_LIBS)
   set_target_properties(HepMC3_builtin PROPERTIES
     OUTPUT_NAME HepMC3
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    LIBRARY_OUTPUT_DIRECTORY ${MARLEY_BUILD_LIBDIR}
   )
   set(HEPMC3_CFLAGS -I${HEPMC3_INCLUDE_DIR})
-  set(HEPMC3_LIBS   -L${CMAKE_BINARY_DIR}/lib -lHepMC3)
+  set(HEPMC3_LIBS   -L${MARLEY_BUILD_LIBDIR} -lHepMC3)
 endif()
 
 # ------------------------------------------------------------------------------
@@ -400,8 +473,19 @@ endif()
 set_target_properties(marley_lib PROPERTIES
   OUTPUT_NAME MARLEY           # produces libMARLEY.so (matches marley-config --libs)
   EXPORT_NAME MARLEY           # for MARLEY::MARLEY namespace
-  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+  LIBRARY_OUTPUT_DIRECTORY ${MARLEY_BUILD_LIBDIR}
   PUBLIC_HEADER ""             # optional
+  # libMARLEY needs its own RUNPATH, and this is a correctness requirement
+  # rather than a convenience. ld.so(8): DT_RUNPATH directories "do not
+  # apply to those objects' children", so the executable's RUNPATH cannot
+  # help libMARLEY find libMARLEYHepMC3. Neither build system set this
+  # before -- CMakeLists only ever set rpath on the *executable*.
+  INSTALL_RPATH "${MARLEY_ORIGIN}"
+  BUILD_RPATH   "${MARLEY_ORIGIN}"
+  # Without this the recorded install name is the build-tree path and the
+  # library is not relocatable at all
+  MACOSX_RPATH ON
+  INSTALL_NAME_DIR "@rpath"
 )
 
 # ------------------------------------------------------------------------------
@@ -437,13 +521,13 @@ if(USE_ROOT)
     # NOTE: because MODULE MARLEY was given above, ROOT names the generated
     # pcm/rootmap files after the module (libMARLEY), not after DICT_NAME.
     add_custom_command(TARGET marley_lib POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lib
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${MARLEY_BUILD_LIBDIR}
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY_rdict.pcm
-        ${CMAKE_BINARY_DIR}/lib/libMARLEY_rdict.pcm
+        ${MARLEY_BUILD_LIBDIR}/libMARLEY_rdict.pcm
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY.rootmap
-        ${CMAKE_BINARY_DIR}/lib/libMARLEY.rootmap
+        ${MARLEY_BUILD_LIBDIR}/libMARLEY.rootmap
       COMMAND ${CMAKE_COMMAND} -E rm -f
         ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY_rdict.pcm
       COMMAND ${CMAKE_COMMAND} -E rm -f
@@ -476,13 +560,13 @@ if(USE_ROOT)
         -I${HEPMC3_INCLUDE_DIR}/HepMC3/Data
         ${HEPMC3_DATA_HEADERS}
         ${DICT_HEADER}
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/lib
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${MARLEY_BUILD_LIBDIR}
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY_rdict.pcm
-        ${CMAKE_BINARY_DIR}/lib/libMARLEY_rdict.pcm
+        ${MARLEY_BUILD_LIBDIR}/libMARLEY_rdict.pcm
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY.rootmap
-        ${CMAKE_BINARY_DIR}/lib/libMARLEY.rootmap
+        ${MARLEY_BUILD_LIBDIR}/libMARLEY.rootmap
       COMMAND ${CMAKE_COMMAND} -E rm -f
         ${CMAKE_CURRENT_BINARY_DIR}/libMARLEY_rdict.pcm
       COMMAND ${CMAKE_COMMAND} -E rm -f
@@ -514,8 +598,12 @@ if(USE_ROOT)
 endif()
 set_target_properties(marley PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-  INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_BINARY_DIR}/lib"
-  BUILD_RPATH   "${CMAKE_BINARY_DIR}/lib"
+  # Relative to the executable's own location, so the install is relocatable.
+  # The previous value baked in both CMAKE_INSTALL_PREFIX and the *build
+  # directory*, which meant an installed binary kept working only while the
+  # build tree survived -- see spec 10.3.
+  INSTALL_RPATH "${MARLEY_ORIGIN}/../${MARLEY_LIBDIR_REL}"
+  BUILD_RPATH   "${MARLEY_ORIGIN}/../${MARLEY_LIBDIR_REL}"
 )
 
 if(USE_ROOT)
@@ -582,7 +670,7 @@ endif()
 include(CMakePackageConfigHelpers)
 
 # Build-tree package config directory
-set(MARLEY_BUILD_CONFIG_DIR "${CMAKE_BINARY_DIR}/lib/cmake/MARLEY")
+set(MARLEY_BUILD_CONFIG_DIR "${MARLEY_BUILD_LIBDIR}/cmake/MARLEY")
 file(MAKE_DIRECTORY "${MARLEY_BUILD_CONFIG_DIR}")
 
 # Collect targets to export from the build tree
@@ -622,8 +710,8 @@ if(USE_ROOT)
     DESTINATION bin
   )
   install(FILES
-    ${CMAKE_BINARY_DIR}/lib/libMARLEY_rdict.pcm
-    ${CMAKE_BINARY_DIR}/lib/libMARLEY.rootmap
+    ${MARLEY_BUILD_LIBDIR}/libMARLEY_rdict.pcm
+    ${MARLEY_BUILD_LIBDIR}/libMARLEY.rootmap
     DESTINATION lib
     OPTIONAL
   )
@@ -741,6 +829,9 @@ target_include_directories(martest PRIVATE
 )
 set_target_properties(martest PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+  # martest is EXCLUDE_FROM_ALL and never installed, but it still has to find
+  # libMARLEY when run from the build tree
+  BUILD_RPATH "${MARLEY_ORIGIN}/../${MARLEY_LIBDIR_REL}"
 )
 # Inherit ROOT compiler and linker settings when building with ROOT support
 if(USE_ROOT)

@@ -96,16 +96,50 @@ UNAME_S := $(shell uname -s)
 # folded into libc and the flag is harmless. MARLEY targets Scientific
 # Linux 7 (glibc 2.17), so it is passed unconditionally on Linux. On macOS
 # dladdr is in libSystem, which is always linked.
+#
+# RPATH_LIB / RPATH_EXE: every linked artifact locates its dependencies
+# relative to its own position, so no absolute path is baked into anything
+# and the installed tree can be moved (design spec 4.2).
+#
+# libMARLEY needs its own RUNPATH, and this is a correctness requirement
+# rather than a convenience: ld.so(8) states that DT_RUNPATH directories
+# "do not apply to those objects' children", so the executable's RUNPATH
+# cannot help libMARLEY find libMARLEYHepMC3.
+#
+# --enable-new-dtags asks for DT_RUNPATH rather than DT_RPATH. Which one
+# -Wl,-rpath produces is a binutils configure-time default, and the whole
+# reason for preferring RUNPATH -- that a user's LD_LIBRARY_PATH still wins
+# -- depends on getting it, so it is requested explicitly.
+#
+# The '$$ORIGIN' quoting is deliberate: $$ escapes the dollar from Make, and
+# the single quotes keep it from the shell, so the linker sees $ORIGIN.
 ifeq ($(UNAME_S),Darwin)
   SHARED_LIB_SUFFIX=dylib
   DL_LIBS :=
+  NEW_DTAGS :=
+  RPATH_LIB := -Wl,-rpath,@loader_path
+  RPATH_EXE = -Wl,-rpath,@loader_path/../$(libdir_rel)
+  # Without this the recorded install name is the build-tree path, and the
+  # library is not relocatable at all
+  INSTALL_NAME_FLAG = -Wl,-install_name,@rpath/$(SHARED_LIB_FILE)
+  HEPMC3_INSTALL_NAME_FLAG = -Wl,-install_name,@rpath/libHepMC3.$(SHARED_LIB_SUFFIX)
 else ifeq ($(UNAME_S),Linux)
   SHARED_LIB_SUFFIX=so
   DL_LIBS := -ldl
+  NEW_DTAGS := -Wl,--enable-new-dtags
+  RPATH_LIB := -Wl,-rpath,'$$ORIGIN'
+  RPATH_EXE = -Wl,-rpath,'$$ORIGIN/../$(libdir_rel)'
+  INSTALL_NAME_FLAG =
+  HEPMC3_INSTALL_NAME_FLAG =
 else
   $(warning Unrecognized operating system encountered.)
   SHARED_LIB_SUFFIX=so
   DL_LIBS := -ldl
+  NEW_DTAGS := -Wl,--enable-new-dtags
+  RPATH_LIB := -Wl,-rpath,'$$ORIGIN'
+  RPATH_EXE = -Wl,-rpath,'$$ORIGIN/../$(libdir_rel)'
+  INSTALL_NAME_FLAG =
+  HEPMC3_INSTALL_NAME_FLAG =
 endif
 
 # If available, use git to determine the hash of the current version
@@ -260,6 +294,18 @@ ifneq ($(MAKECMDGOALS),uninstall)
       HEPMC3_INCDIR   := $(shell $(HEPMC3CONFIG) --includedir)
       HEPMC3_CXXFLAGS := $(shell $(HEPMC3CONFIG) --cflags) -DMARLEY_FOUND_HEPMC3
       HEPMC3_LDFLAGS  := $(shell $(HEPMC3CONFIG) --libs)
+      # Take nothing from HepMC3-config on trust. A broken script (the
+      # Homebrew one fails without GNU coreutils' greadlink, for instance)
+      # succeeds, prints nothing useful, and leaves an empty include
+      # directory -- which surfaces thirty lines later as
+      # "'HepMC3/FourVector.h' file not found", naming neither the script
+      # nor the empty variable. CMake's find_package fails loudly here;
+      # this makes the Make path do the same.
+      ifeq (,$(wildcard $(HEPMC3_INCDIR)/HepMC3))
+        $(error HepMC3-config ($(HEPMC3CONFIG)) did not report a usable \
+include directory (got "$(HEPMC3_INCDIR)"). Check that it runs correctly, \
+or build against the bundled HepMC3 subset with IGNORE_HEPMC3=1)
+      endif
       FOUND_HEPMC3    := TRUE
     endif
   else
@@ -427,7 +473,8 @@ marley_hepmc3.o: $(SRC_DIR)/marley_hepmc3.cc
 
 $(HEPMC3_SHARED_LIB): marley_hepmc3.o
 	@mkdir -p $(BUILD_LIBDIR)
-	$(CXX) $(CXXFLAGS) -fPIC -shared -o $@ $<
+	$(CXX) $(CXXFLAGS) -fPIC -shared -o $@ $< \
+	  $(HEPMC3_INSTALL_NAME_FLAG) $(NEW_DTAGS) -lm
 
 endif
 
@@ -449,8 +496,10 @@ $(BUILD_DIR)/share/marley/data:
 
 $(SHARED_LIB): $(HEPMC3_SHARED_LIB) $(OBJECTS) | $(BUILD_TREE_LINKS)
 	@mkdir -p $(BUILD_LIBDIR)
-	$(CXX) $(CXXFLAGS) $(ROOT_CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) $(GSL_LDFLAGS) $(ROOT_LDFLAGS) $(HEPMC3_LDFLAGS) \
-	-fPIC -shared -o $@ $(OBJECTS) $(DL_LIBS)
+	$(CXX) $(CXXFLAGS) $(ROOT_CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
+	  -fPIC -shared -o $@ $(OBJECTS) \
+	  $(GSL_LDFLAGS) $(ROOT_LDFLAGS) $(HEPMC3_LDFLAGS) $(DL_LIBS) \
+	  $(INSTALL_NAME_FLAG) $(NEW_DTAGS) $(RPATH_LIB)
 
 marley: $(BUILD_DIR)/bin/marley
 
@@ -481,15 +530,16 @@ $(BUILD_DIR)/bin/marley-config: $(MARLEY_LIBS)
 
 $(BUILD_DIR)/bin/marley: $(MARLEY_LIBS) marley.o $(BUILD_DIR)/bin/marley-config $(if $(filter yes,$(USE_ROOT)),$(BUILD_DIR)/bin/mroot)
 	@mkdir -p $(BUILD_DIR)/bin
-	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L$(BUILD_LIBDIR) \
-	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) $(if $(filter yes,$(USE_ROOT)),-lGraf -lGpad) \
-	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(BUILD_LIBDIR) marley.o
+	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ marley.o \
+	  -L$(BUILD_LIBDIR) -l$(SHARED_LIB_NAME) \
+	  $(ROOT_LDFLAGS) $(if $(filter yes,$(USE_ROOT)),-lGraf -lGpad) \
+	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(NEW_DTAGS) $(RPATH_EXE)
 
 $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 	@mkdir -p $(BUILD_DIR)/bin
-	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L$(BUILD_LIBDIR) \
-	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
-	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(TEST_OBJECTS)
+	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ $(TEST_OBJECTS) \
+	  -L$(BUILD_LIBDIR) -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
+	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(NEW_DTAGS) $(RPATH_EXE)
 
 # Build the marg4 Geant4 example (requires a separate Geant4 installation).
 # Delegates to the example's own Makefile with the MARLEY environment
