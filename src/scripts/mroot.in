@@ -60,7 +60,20 @@ export ROOT_INCLUDE_PATH
 # for a ROOT-enabled build, so the define always matches what was compiled.
 #
 # "$@" is quoted, unlike the $@ this script used to pass through.
+# AddDynamicPath comes before the Load, and is not redundant with it.
+# Loading by absolute path makes libMARLEY present; it does not tell ROOT
+# where to look later. libMARLEY.rootmap names the library as a bare
+# "libMARLEY.dylib", so the first time cling meets HepMC3::GenEventData it
+# asks the dynamic path for that name and fails -- three AutoLoad errors and
+# a nonzero exit, even though the library is already loaded. The old mroot
+# avoided this only because setup_marley.sh had to be sourced first and
+# exported DYLD_LIBRARY_PATH.
+#
+# Extending ROOT's own search path rather than DYLD_LIBRARY_PATH also sides
+# steps macOS System Integrity Protection, which strips DYLD_* variables
+# from the environment of protected processes.
 exec root \
+  -e "gSystem->AddDynamicPath(\"${root_dir}/${lib_rel}\");" \
   -e 'gInterpreter->Declare("#define USE_ROOT 1");' \
-  -e "gSystem->Load(\"${root_dir}/${lib_rel}/libMARLEY\")" \
+  -e "gSystem->Load(\"${root_dir}/${lib_rel}/libMARLEY\");" \
   "$@"
