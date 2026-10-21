@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# Starts an interactive ROOT session with the MARLEY shared library loaded
+# and MARLEY's headers on ROOT_INCLUDE_PATH.
+#
+# Generated at build time from src/scripts/mroot.in. Two copies are produced,
+# one for the build tree and one for the install tree, because the two differ
+# by more than a prefix: a vendored HepMC3 sits at include/builtin before
+# installation and at include/marley/builtin after it. A single script
+# applying one set of relative hops cannot express that.
+#
+# This reads no environment variable to find MARLEY. It used to require
+# $MARLEY and then run ${MARLEY}/src/scripts/setup_marley.C -- a file neither
+# build system installs, so an installed mroot was already broken before any
+# of the relocatable-install work. The macro's entire body was one
+# gSystem->Load, which is now inlined below.
+
+here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+root_dir="$( cd "${here}/.." && pwd )"
+
+lib_rel='@lib_rel@'
+include_rel='@include_rel@'
+builtin_rel='@builtin_rel@'
+
+# Setting ROOT_INCLUDE_PATH is what makes this a complete entry point rather
+# than a library loader: without it the library loads but
+# '#include "marley/Event.hh"' still fails.
+#
+# MARLEY's entries are prepended. If a different HepMC3 came first, cling
+# would parse GenEventData from a different HepMC3 than libMARLEY's
+# dictionary was compiled against -- a different member layout, read as
+# silently wrong values.
+ROOT_INCLUDE_PATH="${root_dir}/${include_rel}${ROOT_INCLUDE_PATH:+:${ROOT_INCLUDE_PATH}}"
+if [ -n "${builtin_rel}" ]; then
+  ROOT_INCLUDE_PATH="${root_dir}/${builtin_rel}:${ROOT_INCLUDE_PATH}"
+fi
+export ROOT_INCLUDE_PATH
+
+# -e evaluates the expression before any trailing file arguments, so the
+# library is loaded before a macro the user passes on the command line. It is
+# handled in TApplication::GetOptions() -- not TRint -- and predates MARLEY's
+# ROOT floor of 6.22 by ten minor releases.
+#
+# "$@" is quoted, unlike the $@ this script used to pass through.
+exec root -e "gSystem->Load(\"${root_dir}/${lib_rel}/libMARLEY\")" "$@"

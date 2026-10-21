@@ -216,7 +216,7 @@ SHARED_LIB := $(BUILD_LIBDIR)/$(SHARED_LIB_FILE)
 TEST_EXECUTABLE = $(BUILD_DIR)/bin/martest
 TEST_OBJECTS = $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/tests/*.cc)))
 
-all: marley marley-pc
+all: marley marley-pc setup-script
 debug: marley
 test: $(TEST_EXECUTABLE)
 
@@ -548,11 +548,53 @@ marley: $(BUILD_DIR)/bin/marley
 
 mroot: $(BUILD_DIR)/bin/mroot
 
+setup-script: $(BUILD_DIR)/bin/setup_marley.sh
+
 marley-config: $(BUILD_DIR)/bin/marley-config
 
-$(BUILD_DIR)/bin/mroot: $(MARLEY_LIBS)
-	@mkdir -p $(BUILD_DIR)/bin
-	cp $(SRC_DIR)/scripts/mroot $@
+# ---------------------------------------------------------------------------
+# Generated shell scripts (design spec 6.4)
+#
+# mroot and setup_marley.sh are each generated TWICE from one template: once
+# for the build tree and once for the install tree. The two trees differ by
+# more than a prefix -- a vendored HepMC3 sits at include/builtin before
+# installation and at include/marley/builtin after it -- and a single
+# self-locating script applying one set of relative hops cannot express that.
+#
+# The two copies share a basename, so the install-tree copies are staged in
+# their own directory and installed from there.
+# ---------------------------------------------------------------------------
+INSTALL_SCRIPT_DIR := $(BUILD_DIR)/install-scripts
+
+# The build tree's include symlink is named "include" unconditionally, while
+# the install tree honours includedir. Likewise bin.
+BUILD_BIN_REL     := bin
+BUILD_INCLUDE_REL := include
+BUILD_BUILTIN_REL  = $(if $(FOUND_HEPMC3),,include/builtin)
+INSTALL_BUILTIN_REL = $(if $(FOUND_HEPMC3),,$(includedir_rel)/marley/builtin)
+
+# $(1) bin_rel  $(2) include_rel  $(3) builtin_rel
+define gen_script
+	@mkdir -p $(dir $@)
+	sed -e 's|@bin_rel@|$(1)|g' \
+	  -e 's|@lib_rel@|$(libdir_rel)|g' \
+	  -e 's|@include_rel@|$(2)|g' \
+	  -e 's|@builtin_rel@|$(3)|g' \
+	  $< > $@
+	chmod +x $@
+endef
+
+$(BUILD_DIR)/bin/mroot: $(SRC_DIR)/scripts/mroot.in
+	$(call gen_script,$(BUILD_BIN_REL),$(BUILD_INCLUDE_REL),$(BUILD_BUILTIN_REL))
+
+$(BUILD_DIR)/bin/setup_marley.sh: $(SRC_DIR)/scripts/setup_marley.sh.in
+	$(call gen_script,$(BUILD_BIN_REL),$(BUILD_INCLUDE_REL),$(BUILD_BUILTIN_REL))
+
+$(INSTALL_SCRIPT_DIR)/mroot: $(SRC_DIR)/scripts/mroot.in
+	$(call gen_script,$(bindir_rel),$(includedir_rel),$(INSTALL_BUILTIN_REL))
+
+$(INSTALL_SCRIPT_DIR)/setup_marley.sh: $(SRC_DIR)/scripts/setup_marley.sh.in
+	$(call gen_script,$(bindir_rel),$(includedir_rel),$(INSTALL_BUILTIN_REL))
 
 # marley-config is concatenated, not substituted (design spec 6.2): a
 # generated header of KEY='value' assignments, followed by the static body
@@ -651,7 +693,7 @@ marg4: $(SHARED_LIB) $(BUILD_DIR)/bin/marley-config
 
 DOCS_BUILD_DIR = $(BUILD_DIR)/docs
 
-.PHONY: marley mroot marley-config marley-pc docs clean install uninstall
+.PHONY: marley mroot setup-script marley-config marley-pc docs clean install uninstall
 
 doxygen:
 	export MARLEY_VERSION=$(VERSION_PREFIX)$(MARLEY_VERSION) \
@@ -668,14 +710,20 @@ docs:
 clean:
 	$(RM) -rf $(BUILD_DIR)
 
-install: marley marley-config marley-pc $(if $(filter yes,$(USE_ROOT)),mroot)
+install: marley marley-config marley-pc \
+  $(INSTALL_SCRIPT_DIR)/setup_marley.sh \
+  $(if $(filter yes,$(USE_ROOT)),$(INSTALL_SCRIPT_DIR)/mroot)
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(includedir)/marley
 	mkdir -p $(DESTDIR)$(datadir)/marley
 	cp $(BUILD_DIR)/bin/marley $(DESTDIR)$(bindir)
 	cp $(BUILD_DIR)/bin/marley-config $(DESTDIR)$(bindir)
-	if [ "$(USE_ROOT)" = "yes" ]; then cp $(BUILD_DIR)/bin/mroot $(DESTDIR)$(bindir); fi
+	# From the staging directory, not build/bin: the two copies share a
+	# basename and differ in the hops they take (design spec 6.4).
+	if [ "$(USE_ROOT)" = "yes" ]; then \
+	  cp $(INSTALL_SCRIPT_DIR)/mroot $(DESTDIR)$(bindir); fi
+	cp $(INSTALL_SCRIPT_DIR)/setup_marley.sh $(DESTDIR)$(bindir)
 	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
 	cp $(BUILD_LIBDIR)/libMARLEY_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp $(BUILD_LIBDIR)/libMARLEY.rootmap $(DESTDIR)$(libdir) 2> /dev/null || true
@@ -721,6 +769,7 @@ endif
 	  printf '%s\n' "$(bindir)/marley"; \
 	  printf '%s\n' "$(bindir)/marley-config"; \
 	  if [ "$(USE_ROOT)" = "yes" ]; then printf '%s\n' "$(bindir)/mroot"; fi; \
+	  printf '%s\n' "$(bindir)/setup_marley.sh"; \
 	  printf '%s\n' "$(libdir)/$(SHARED_LIB_FILE)"; \
 	  printf '%s\n' "$(libdir)/pkgconfig/marley.pc"; \
 	  if [ -f "$(DESTDIR)$(libdir)/libMARLEY_rdict.pcm" ]; then \

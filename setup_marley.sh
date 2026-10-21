@@ -1,27 +1,25 @@
-#!/bin/bash
+# Wrapper. The real script is generated into the build directory, because it
+# has to know the library directory name and whether HepMC3 was vendored --
+# neither of which is knowable before the project is configured.
+#
+# Every documented "source setup_marley.sh" invocation keeps working through
+# this file; it just forwards to the generated one.
+#
+# The failure mode this replaces is worth stating: before, sourcing this
+# script in an unbuilt tree quietly exported paths into a build/ directory
+# that did not exist, and the user found out later as "command not found".
 
-# Finds the directory in which this script is located. This method isn't
-# foolproof. See https://stackoverflow.com/a/246128/4081973 if you need
-# something more robust for edge cases (e.g., you're calling the script using
-# symlinks). To make this technique work in zsh as well as bash, use the
-# approach described here: https://stackoverflow.com/a/54755784
-THIS_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )" && pwd )"
+_marley_wrapper_dir="$( cd "$( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )" && pwd )"
 
-# The root MARLEY folder
-export MARLEY=${THIS_DIRECTORY}
-
-# For running MARLEY
-export PATH=${PATH}:${THIS_DIRECTORY}/build/bin
-
-if [ "$(uname)" = "Darwin" ]; then
-  # macOS platform
-  export DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}:${THIS_DIRECTORY}/build/lib
+if [ -r "${_marley_wrapper_dir}/build/bin/setup_marley.sh" ]; then
+  . "${_marley_wrapper_dir}/build/bin/setup_marley.sh"
+else
+  echo "setup_marley.sh: ${_marley_wrapper_dir}/build/bin/setup_marley.sh" \
+    "does not exist." >&2
+  echo "  Build MARLEY first (run 'make'), then source this script again." >&2
+  echo "  For an out-of-source CMake build, source the copy in that build" >&2
+  echo "  directory instead: source <builddir>/bin/setup_marley.sh" >&2
+  echo "  For an installed MARLEY, source <prefix>/bin/setup_marley.sh" >&2
 fi
 
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${THIS_DIRECTORY}/build/lib
-
-# For using MARLEY classes in ROOT 6
-export ROOT_INCLUDE_PATH=${ROOT_INCLUDE_PATH}:${THIS_DIRECTORY}/include
-
-# Allows CMake's find_package() to work with MARLEY
-export CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:${THIS_DIRECTORY}/build
+unset _marley_wrapper_dir

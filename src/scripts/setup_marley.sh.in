@@ -1,0 +1,59 @@
+# Sourced, not executed: this exports environment variables into the calling
+# shell.
+#
+#   source <prefix>/bin/setup_marley.sh
+#
+# Generated at build time from src/scripts/setup_marley.sh.in, in two copies
+# -- one for the build tree, one for the install tree. The two differ by more
+# than a prefix: a vendored HepMC3 sits at include/builtin before
+# installation and at include/marley/builtin after it.
+#
+# MARLEY is deliberately NOT exported. MARLEY locates its own data by asking
+# the loader where libMARLEY is, so the variable has no remaining purpose,
+# and a stale value left in a shell profile would be a standing invitation to
+# point a new MARLEY at an old data directory.
+#
+# Nothing MARLEY ships needs the library-path exports any more: the
+# executables carry a RUNPATH, marley-config --libs emits one for consumers,
+# and mroot passes an absolute path. What still needs them is interactive
+# ROOT and Jupyter -- a bare gSystem->Load("libMARLEY"), and rootmap
+# autoloading.
+
+# Finds the directory holding this script. Not foolproof for exotic cases
+# such as symlinked invocations; see https://stackoverflow.com/a/246128 if
+# you need more. The second form makes this work in zsh as well as bash
+# (https://stackoverflow.com/a/54755784).
+_marley_here="$( cd "$( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )" && pwd )"
+_marley_root="$( cd "${_marley_here}/.." && pwd )"
+
+_marley_bin_rel='@bin_rel@'
+_marley_lib_rel='@lib_rel@'
+_marley_include_rel='@include_rel@'
+_marley_builtin_rel='@builtin_rel@'
+
+# Every entry is PREPENDED. Sourcing this script is a statement about which
+# MARLEY you mean, so it has to win over one that is already on the path.
+export PATH="${_marley_root}/${_marley_bin_rel}${PATH:+:${PATH}}"
+
+export LD_LIBRARY_PATH="${_marley_root}/${_marley_lib_rel}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+
+if [ "$( uname )" = "Darwin" ]; then
+  export DYLD_LIBRARY_PATH="${_marley_root}/${_marley_lib_rel}${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}"
+fi
+
+export ROOT_INCLUDE_PATH="${_marley_root}/${_marley_include_rel}${ROOT_INCLUDE_PATH:+:${ROOT_INCLUDE_PATH}}"
+
+# Present only on a vendored-HepMC3 build, and it is not exposing the
+# vendored copy for its own sake -- it is making MARLEY's public headers
+# parseable. Three installed headers include HepMC3 headers, and the one an
+# interactive user reaches for first is EventFileReader.hh. Without this
+# include root a ROOT session cannot parse it at all.
+if [ -n "${_marley_builtin_rel}" ]; then
+  export ROOT_INCLUDE_PATH="${_marley_root}/${_marley_builtin_rel}:${ROOT_INCLUDE_PATH}"
+fi
+
+# Lets CMake's find_package(MARLEY) work.
+export CMAKE_PREFIX_PATH="${_marley_root}${CMAKE_PREFIX_PATH:+:${CMAKE_PREFIX_PATH}}"
+
+unset _marley_here _marley_root _marley_bin_rel _marley_lib_rel
+unset _marley_include_rel _marley_builtin_rel

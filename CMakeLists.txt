@@ -614,13 +614,63 @@ set_target_properties(marley PROPERTIES
   BUILD_RPATH   "${MARLEY_ORIGIN}/../${MARLEY_LIBDIR_REL}"
 )
 
-if(USE_ROOT)
-  configure_file(${CMAKE_SOURCE_DIR}/src/scripts/mroot ${CMAKE_BINARY_DIR}/bin/mroot COPYONLY)
-  file(CHMOD ${CMAKE_BINARY_DIR}/bin/mroot
+# ------------------------------------------------------------------------------
+# Generated shell scripts (design spec 6.4)
+#
+# mroot and setup_marley.sh are each generated TWICE from one template: once
+# for the build tree and once for the install tree. The two trees differ by
+# more than a prefix -- a vendored HepMC3 sits at include/builtin before
+# installation and at include/marley/builtin after it -- so one self-locating
+# script applying one set of relative hops cannot serve both.
+#
+# The two copies share a basename, so the install-tree copies are staged in
+# their own directory and installed from there.
+# ------------------------------------------------------------------------------
+set(MARLEY_INSTALL_SCRIPT_DIR "${CMAKE_BINARY_DIR}/install-scripts")
+
+set(lib_rel "${MARLEY_LIBDIR_REL}")
+
+# The build tree's include symlink is named "include" unconditionally, while
+# the install tree honours CMAKE_INSTALL_INCLUDEDIR. Likewise bin.
+set(MARLEY_BUILD_BIN_REL     "bin")
+set(MARLEY_BUILD_INCLUDE_REL "include")
+if(USE_BUILTIN_HEPMC3)
+  set(MARLEY_BUILD_BUILTIN_REL   "include/builtin")
+  set(MARLEY_INSTALL_BUILTIN_REL "${MARLEY_INCLUDEDIR_REL}/marley/builtin")
+else()
+  set(MARLEY_BUILD_BUILTIN_REL   "")
+  set(MARLEY_INSTALL_BUILTIN_REL "")
+endif()
+
+function(marley_generate_script template out_path bin_rel include_rel
+                                builtin_rel)
+  set(lib_rel "${MARLEY_LIBDIR_REL}")
+  configure_file("${CMAKE_SOURCE_DIR}/src/scripts/${template}" "${out_path}"
+    @ONLY)
+  file(CHMOD "${out_path}"
     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                 GROUP_READ GROUP_EXECUTE
                 WORLD_READ WORLD_EXECUTE
   )
+endfunction()
+
+foreach(_script setup_marley.sh)
+  marley_generate_script("${_script}.in" "${CMAKE_BINARY_DIR}/bin/${_script}"
+    "${MARLEY_BUILD_BIN_REL}" "${MARLEY_BUILD_INCLUDE_REL}"
+    "${MARLEY_BUILD_BUILTIN_REL}")
+  marley_generate_script("${_script}.in"
+    "${MARLEY_INSTALL_SCRIPT_DIR}/${_script}"
+    "${MARLEY_BINDIR_REL}" "${MARLEY_INCLUDEDIR_REL}"
+    "${MARLEY_INSTALL_BUILTIN_REL}")
+endforeach()
+
+if(USE_ROOT)
+  marley_generate_script("mroot.in" "${CMAKE_BINARY_DIR}/bin/mroot"
+    "${MARLEY_BUILD_BIN_REL}" "${MARLEY_BUILD_INCLUDE_REL}"
+    "${MARLEY_BUILD_BUILTIN_REL}")
+  marley_generate_script("mroot.in" "${MARLEY_INSTALL_SCRIPT_DIR}/mroot"
+    "${MARLEY_BINDIR_REL}" "${MARLEY_INCLUDEDIR_REL}"
+    "${MARLEY_INSTALL_BUILTIN_REL}")
 endif()
 
 # ------------------------------------------------------------------------------
@@ -863,8 +913,13 @@ install(TARGETS marley_lib
 install(TARGETS marley
   RUNTIME DESTINATION ${MARLEY_BINDIR_REL}
 )
+# From the staging directory, not bin/: the two copies share a basename and
+# differ in the hops they take (design spec 6.4).
+install(PROGRAMS ${MARLEY_INSTALL_SCRIPT_DIR}/setup_marley.sh
+  DESTINATION ${MARLEY_BINDIR_REL}
+)
 if(USE_ROOT)
-  install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/mroot
+  install(PROGRAMS ${MARLEY_INSTALL_SCRIPT_DIR}/mroot
     DESTINATION ${MARLEY_BINDIR_REL}
   )
   install(FILES
