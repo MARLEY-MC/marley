@@ -1,9 +1,74 @@
 # Names of various MARLEY directories
 TOP_DIR ?= $(CURDIR)
 BUILD_DIR = $(TOP_DIR)/build
-DATA_DIR = $(TOP_DIR)/data
 INCLUDE_DIR = $(TOP_DIR)/include
 SRC_DIR = $(TOP_DIR)/src
+
+# ---------------------------------------------------------------------------
+# Install directories.
+#
+# These are defined here, rather than next to the install target, because the
+# build tree mirrors the install layout: the library is built into
+# $(BUILD_DIR)/$(libdir_rel), and SHARED_LIB below needs that value.
+#
+# libdir, bindir and includedir must resolve to exactly ONE directory below
+# the prefix, because the data root is found by a single ".." ascent from the
+# library's own location (design spec 2.2, 4.3). Both the GNU-conventional
+# absolute spelling and a bare segment are accepted:
+#
+#   make install libdir=lib64              ->  lib64     OK
+#   make install libdir=/usr/lib64         ->  lib64     OK  (prefix=/usr)
+#   make install libdir=/usr/lib/x86_64-…  ->  ERROR     multi-segment
+#   make install libdir=/opt/other/lib     ->  ERROR     not under the prefix
+#
+# NOTE: libdir is a BUILD-TIME setting, not an install-time one. It is baked
+# into the RUNPATH of the executables at link time, so it must be given to
+# both invocations: make libdir=lib64 && make install libdir=lib64. (This was
+# already true before it was written down -- the old recipe put $(libdir) on
+# the link line -- which is why "make && make install libdir=lib64" has never
+# produced a working install.)
+# ---------------------------------------------------------------------------
+
+# Strip any trailing slash so that the patsubst below matches. "override" is
+# required throughout this block: a variable set on the command line beats an
+# ordinary makefile assignment, so without it every normalisation below would
+# be silently skipped for precisely the invocations it exists to handle.
+override prefix := $(patsubst %/,%,$(or $(prefix),/usr/local))
+override exec_prefix := $(patsubst %/,%,$(or $(exec_prefix),$(prefix)))
+
+bindir ?= $(exec_prefix)/bin
+libdir ?= $(exec_prefix)/lib
+includedir ?= $(prefix)/include
+# datadir is fixed: unlike the others it is used for DESCENT, so its name
+# must be known at runtime rather than merely counted (design spec 4.3).
+datadir = $(prefix)/share
+
+bindir_rel := $(patsubst $(prefix)/%,%,$(bindir))
+libdir_rel := $(patsubst $(prefix)/%,%,$(libdir))
+includedir_rel := $(patsubst $(prefix)/%,%,$(includedir))
+
+define check_install_dir
+ifeq ($$(strip $$($(1)_rel)),)
+$$(error $(1) must name one directory below prefix=$$(prefix))
+endif
+ifneq (,$$(findstring /,$$($(1)_rel)))
+$$(error $(1)=$$($(1)) must be exactly one directory below prefix=$$(prefix) (got $$($(1)_rel)); use e.g. $(1)=lib64)
+endif
+endef
+
+$(eval $(call check_install_dir,bindir))
+$(eval $(call check_install_dir,libdir))
+$(eval $(call check_install_dir,includedir))
+
+# Re-normalise so that a bare segment ("libdir=lib64") still yields an
+# absolute install destination. Without this, $(DESTDIR)$(libdir) would be
+# a path relative to the build directory.
+override bindir := $(prefix)/$(bindir_rel)
+override libdir := $(prefix)/$(libdir_rel)
+override includedir := $(prefix)/$(includedir_rel)
+
+# The build tree mirrors the install layout (design spec 2.2)
+BUILD_LIBDIR = $(BUILD_DIR)/$(libdir_rel)
 
 # Default version of the C++ standard to use for compilation
 CXX_STD=c++17
@@ -98,7 +163,7 @@ override CXXFLAGS += -DMARLEY_GIT_REVISION="\"$(GIT_REVISION)\""
 
 SHARED_LIB_NAME := MARLEY
 SHARED_LIB_FILE := lib$(SHARED_LIB_NAME).$(SHARED_LIB_SUFFIX)
-SHARED_LIB := $(BUILD_DIR)/lib/$(SHARED_LIB_FILE)
+SHARED_LIB := $(BUILD_LIBDIR)/$(SHARED_LIB_FILE)
 
 TEST_EXECUTABLE = $(BUILD_DIR)/bin/martest
 TEST_OBJECTS = $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/tests/*.cc)))
@@ -211,8 +276,8 @@ ifneq ($(MAKECMDGOALS),uninstall)
     # potentially causing MARLEY to compile against the wrong headers.
     HEPMC3_INCDIR     := $(INCLUDE_DIR)/builtin
     HEPMC3_CXXFLAGS   := -I$(HEPMC3_INCDIR)
-    HEPMC3_LDFLAGS    := -L$(BUILD_DIR)/lib -lHepMC3
-    HEPMC3_SHARED_LIB := $(BUILD_DIR)/lib/libHepMC3.$(SHARED_LIB_SUFFIX)
+    HEPMC3_LDFLAGS    := -L$(BUILD_LIBDIR) -lHepMC3
+    HEPMC3_SHARED_LIB := $(BUILD_LIBDIR)/libHepMC3.$(SHARED_LIB_SUFFIX)
 
     # Disable warnings about deprecated declarations in the built-in HepMC3
     # library (triggered via use of sprintf)
@@ -298,12 +363,12 @@ $(ROOT_OBJ_DICT):
 	$(CXX) $(ROOT_CXXFLAGS) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
 	  -I$(INCLUDE_DIR) -I$(HEPMC3_INCDIR)/HepMC3/Data -fPIC \
           -o $(ROOT_OBJ_DICT) -c marley_root_dict.cc
-	@mkdir -p $(BUILD_DIR)/lib
+	@mkdir -p $(BUILD_LIBDIR)
 	# NOTE: because "-s $(SHARED_LIB_FILE)" is passed above, rootcling names
 	# the generated pcm/rootmap files after that library (libMARLEY), not
 	# after the "marley_root_dict" dictionary source file name.
-	mv $(BUILD_DIR)/libMARLEY_rdict.pcm $(BUILD_DIR)/lib/ 2>/dev/null || true
-	mv $(BUILD_DIR)/libMARLEY.rootmap $(BUILD_DIR)/lib/ 2>/dev/null || true
+	mv $(BUILD_DIR)/libMARLEY_rdict.pcm $(BUILD_LIBDIR)/ 2>/dev/null || true
+	mv $(BUILD_DIR)/libMARLEY.rootmap $(BUILD_LIBDIR)/ 2>/dev/null || true
 	$(RM) marley_root_dict.cc
 
     endif
@@ -315,14 +380,9 @@ $(ROOT_OBJ_DICT):
 endif
 endif
 
-# Set up default variables for the install/uninstall targets and for setting
-# the executable rpath
-prefix = /usr
-exec_prefix = $(prefix)
-bindir = $(exec_prefix)/bin
-datadir = $(prefix)/share
-libdir = $(exec_prefix)/lib
-incdir = $(prefix)/include
+# (The install directory variables are defined near the top of this file,
+# because the build tree mirrors the install layout and SHARED_LIB needs
+# libdir_rel.)
 
 # Path (without DESTDIR) to the install manifest that records which files were
 # placed on disk by "make install".  This is the single source of truth used by
@@ -366,7 +426,7 @@ marley_hepmc3.o: $(SRC_DIR)/marley_hepmc3.cc
 	$(COMPILE_CXX) -o $@ -c $<
 
 $(HEPMC3_SHARED_LIB): marley_hepmc3.o
-	@mkdir -p $(BUILD_DIR)/lib
+	@mkdir -p $(BUILD_LIBDIR)
 	$(CXX) $(CXXFLAGS) -fPIC -shared -o $@ $<
 
 endif
@@ -388,7 +448,7 @@ $(BUILD_DIR)/share/marley/data:
 	@ln -sfn $(abspath $(TOP_DIR)/data) $@
 
 $(SHARED_LIB): $(HEPMC3_SHARED_LIB) $(OBJECTS) | $(BUILD_TREE_LINKS)
-	@mkdir -p $(BUILD_DIR)/lib
+	@mkdir -p $(BUILD_LIBDIR)
 	$(CXX) $(CXXFLAGS) $(ROOT_CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) $(GSL_LDFLAGS) $(ROOT_LDFLAGS) $(HEPMC3_LDFLAGS) \
 	-fPIC -shared -o $@ $(OBJECTS) $(DL_LIBS)
 
@@ -421,13 +481,13 @@ $(BUILD_DIR)/bin/marley-config: $(MARLEY_LIBS)
 
 $(BUILD_DIR)/bin/marley: $(MARLEY_LIBS) marley.o $(BUILD_DIR)/bin/marley-config $(if $(filter yes,$(USE_ROOT)),$(BUILD_DIR)/bin/mroot)
 	@mkdir -p $(BUILD_DIR)/bin
-	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L$(BUILD_DIR)/lib \
+	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L$(BUILD_LIBDIR) \
 	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) $(if $(filter yes,$(USE_ROOT)),-lGraf -lGpad) \
-	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(BUILD_DIR)/lib marley.o
+	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) -Wl,-rpath -Wl,$(libdir):$(BUILD_LIBDIR) marley.o
 
 $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 	@mkdir -p $(BUILD_DIR)/bin
-	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L$(BUILD_DIR)/lib \
+	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ -L$(BUILD_LIBDIR) \
 	  -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
 	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(TEST_OBJECTS)
 
@@ -462,20 +522,20 @@ clean:
 install: marley marley-config $(if $(filter yes,$(USE_ROOT)),mroot)
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)
-	mkdir -p $(DESTDIR)$(incdir)/marley
+	mkdir -p $(DESTDIR)$(includedir)/marley
 	mkdir -p $(DESTDIR)$(datadir)/marley
 	cp $(BUILD_DIR)/bin/marley $(DESTDIR)$(bindir)
 	cp $(BUILD_DIR)/bin/marley-config $(DESTDIR)$(bindir)
 	if [ "$(USE_ROOT)" = "yes" ]; then cp $(BUILD_DIR)/bin/mroot $(DESTDIR)$(bindir); fi
 	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
-	cp $(BUILD_DIR)/lib/libMARLEY_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
-	cp $(BUILD_DIR)/lib/libMARLEY.rootmap $(DESTDIR)$(libdir) 2> /dev/null || true
+	cp $(BUILD_LIBDIR)/libMARLEY_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
+	cp $(BUILD_LIBDIR)/libMARLEY.rootmap $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp -r $(TOP_DIR)/data $(DESTDIR)$(datadir)/marley
-	cp -r $(TOP_DIR)/include/marley $(DESTDIR)$(incdir)
+	cp -r $(TOP_DIR)/include/marley $(DESTDIR)$(includedir)
 ifndef FOUND_HEPMC3
 	cp $(HEPMC3_SHARED_LIB) $(DESTDIR)$(libdir)
-	mkdir -p $(DESTDIR)$(incdir)/HepMC3
-	cp -r $(INCLUDE_DIR)/builtin/HepMC3/. $(DESTDIR)$(incdir)/HepMC3
+	mkdir -p $(DESTDIR)$(includedir)/HepMC3
+	cp -r $(INCLUDE_DIR)/builtin/HepMC3/. $(DESTDIR)$(includedir)/HepMC3
 	touch $(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3
 endif
 	# Write the install manifest: one absolute path per line (no DESTDIR prefix),
@@ -495,11 +555,11 @@ endif
 	  fi; \
 	  find "$(DESTDIR)$(datadir)/marley" -type f \
 	    | sed 's|^$(DESTDIR)||'; \
-	  find "$(DESTDIR)$(incdir)/marley" -type f \
+	  find "$(DESTDIR)$(includedir)/marley" -type f \
 	    | sed 's|^$(DESTDIR)||'; \
 	  if [ -f "$(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3" ]; then \
 	    printf '%s\n' "$(libdir)/libHepMC3.$(SHARED_LIB_SUFFIX)"; \
-	    find "$(DESTDIR)$(incdir)/HepMC3" -type f \
+	    find "$(DESTDIR)$(includedir)/HepMC3" -type f \
 	      | sed 's|^$(DESTDIR)||'; \
 	    printf '%s\n' "$(libdir)/.marley-installed-builtin-hepmc3"; \
 	  fi; \
@@ -526,6 +586,6 @@ uninstall:
 	# non-Linux systems (e.g. macOS/BSD).  The '|| true' suppresses the exit
 	# code that rmdir emits when a directory is not empty.
 	rmdir -p "$(DESTDIR)$(datadir)/marley" 2>/dev/null || true
-	rmdir "$(DESTDIR)$(incdir)/marley" 2>/dev/null || true
-	rmdir "$(DESTDIR)$(incdir)/HepMC3" 2>/dev/null || true
+	rmdir "$(DESTDIR)$(includedir)/marley" 2>/dev/null || true
+	rmdir "$(DESTDIR)$(includedir)/HepMC3" 2>/dev/null || true
 	ldconfig
