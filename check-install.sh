@@ -257,7 +257,11 @@ quiet "--- mroot must load the library and parse a MARLEY header ---"
 for p in /tmp/m5 /tmp/m4; do
   quiet ""
   quiet "\$ $p/bin/mroot -b -q  (parse marley/EventFileReader.hh)"
+  # The USE_ROOT probe must come first: Declare() returns false if the
+  # #error fires, so a 0 means cling disagrees with the compiled library
+  # about EventFileReader's layout.
   "$p/bin/mroot" -b -q \
+    -e 'printf("USE_ROOT reached cling: %d\n", (int)gInterpreter->Declare("#ifndef USE_ROOT\n#error USE_ROOT is not defined\n#endif\n"));' \
     -e '#include "marley/EventFileReader.hh"' \
     -e 'printf("HEADER PARSED OK\n");' >> "$LOG" 2>&1 < /dev/null
   quiet "[exit $?]"

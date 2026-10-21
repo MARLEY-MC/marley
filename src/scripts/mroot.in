@@ -51,5 +51,16 @@ export ROOT_INCLUDE_PATH
 # handled in TApplication::GetOptions() -- not TRint -- and predates MARLEY's
 # ROOT floor of 6.22 by ten minor releases.
 #
+# USE_ROOT is defined first, for the same reason marley-config publishes it:
+# it gates a data member of EventFileReader, a public class. No MARLEY class
+# has a ROOT dictionary -- marley_linkdef.hh covers only the HepMC3 data
+# structs -- so cling works entirely by parsing headers. Without the define
+# it would build a class layout that disagrees with the library it is calling
+# into, and read members at the wrong offsets. This script is generated only
+# for a ROOT-enabled build, so the define always matches what was compiled.
+#
 # "$@" is quoted, unlike the $@ this script used to pass through.
-exec root -e "gSystem->Load(\"${root_dir}/${lib_rel}/libMARLEY\")" "$@"
+exec root \
+  -e 'gInterpreter->Declare("#define USE_ROOT 1");' \
+  -e "gSystem->Load(\"${root_dir}/${lib_rel}/libMARLEY\")" \
+  "$@"
