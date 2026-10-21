@@ -128,10 +128,11 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_compile_definitions(MARLEY_COMPILED_LOG_LEVEL=TRACE)
+  set(MARLEY_LOG_LEVEL TRACE)
 else()
-  add_compile_definitions(MARLEY_COMPILED_LOG_LEVEL=INFO)
+  set(MARLEY_LOG_LEVEL INFO)
 endif()
+add_compile_definitions(MARLEY_COMPILED_LOG_LEVEL=${MARLEY_LOG_LEVEL})
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -623,44 +624,154 @@ if(USE_ROOT)
 endif()
 
 # ------------------------------------------------------------------------------
-# marley-config script generation (classic Make-style CLI)
+# marley-config and marley.pc (design spec 6.2, 6.3)
+#
+# marley-config is concatenated, not substituted: a generated header of
+# KEY='value' assignments followed by the static body in src/scripts/.
+#
+# Note what this section does NOT emit: any MARLEY-owned path. Those are
+# computed by the body from the script's own location, so an installed
+# marley-config structurally cannot report a build-tree -L or a source-tree
+# -I. That pair of defects is what forced a patch in larsim.
 # ------------------------------------------------------------------------------
-set(MARLEY_CONFIG_INPUT  ${CMAKE_SOURCE_DIR}/src/scripts/marley-config.in)
+set(MARLEY_CONFIG_BODY   ${CMAKE_SOURCE_DIR}/src/scripts/marley-config-body.sh)
 set(MARLEY_CONFIG_OUTPUT ${CMAKE_BINARY_DIR}/bin/marley-config)
 
-set(CONFIG_VERSION        "${MARLEY_COMPUTED_VERSION}")
-set(CONFIG_GIT_REVISION   "${MARLEY_COMPUTED_GIT_REVISION}")
-set(CONFIG_CXX_STD        "c++${CMAKE_CXX_STANDARD}")
-set(CONFIG_HEPMC3_CFLAGS  "${HEPMC3_CFLAGS}")
-string(REPLACE ";" " " CONFIG_HEPMC3_CFLAGS "${CONFIG_HEPMC3_CFLAGS}")
-set(CONFIG_HEPMC3_LIBS    "${HEPMC3_LIBS}")
-string(REPLACE ";" " " CONFIG_HEPMC3_LIBS   "${CONFIG_HEPMC3_LIBS}")
-set(CONFIG_GSL_CFLAGS     "${GSL_CFLAGS}")
-string(REPLACE ";" " " CONFIG_GSL_CFLAGS    "${CONFIG_GSL_CFLAGS}")
-set(CONFIG_GSL_LIBS       "${GSL_LIBS}")
-string(REPLACE ";" " " CONFIG_GSL_LIBS      "${CONFIG_GSL_LIBS}")
+# ROOT's flags are captured here and emitted verbatim thereafter. The script
+# used to shell out to root-config at run time, which was the last remaining
+# way for it to describe a ROOT other than the one MARLEY was compiled
+# against -- a consumer would then compile successfully and misbehave. Frozen
+# flags can go stale instead, which fails loudly by naming a path that is no
+# longer there.
+set(MARLEY_ROOT_CFLAGS "")
+set(MARLEY_ROOT_LIBS   "")
 if(USE_ROOT)
-  set(CONFIG_USE_ROOT "yes")
-else()
-  set(CONFIG_USE_ROOT "no")
+  if(DEFINED ROOT_CFLAGS AND NOT "${ROOT_CFLAGS}" STREQUAL "")
+    # root-config discovery path: the flat flags are already in hand.
+    set(MARLEY_ROOT_CFLAGS "${ROOT_CFLAGS}")
+    set(MARLEY_ROOT_LIBS   "${ROOT_LIBS}")
+  else()
+    # Config-package discovery path: there are no flat flags here, only
+    # imported targets, so reconstruct the same set the Make path emits.
+    foreach(_d IN LISTS ROOT_INCLUDE_DIRS)
+      list(APPEND MARLEY_ROOT_CFLAGS "-I${_d}")
+    endforeach()
+    if(DEFINED ROOT_LIBRARY_DIR AND NOT "${ROOT_LIBRARY_DIR}" STREQUAL "")
+      list(APPEND MARLEY_ROOT_LIBS "-L${ROOT_LIBRARY_DIR}")
+    endif()
+    list(APPEND MARLEY_ROOT_LIBS -lCore -lRIO -lHist -lTree)
+  endif()
 endif()
 
-file(READ ${MARLEY_CONFIG_INPUT} MARLEY_CONFIG_CONTENT)
-string(REPLACE "@@VERSION@@"       "\"${CONFIG_VERSION}\""       MARLEY_CONFIG_CONTENT "${MARLEY_CONFIG_CONTENT}")
-string(REPLACE "@@GIT_REVISION@@"  "\"${CONFIG_GIT_REVISION}\""  MARLEY_CONFIG_CONTENT "${MARLEY_CONFIG_CONTENT}")
-string(REPLACE "@@CXX_STD@@"       "\"${CONFIG_CXX_STD}\""       MARLEY_CONFIG_CONTENT "${MARLEY_CONFIG_CONTENT}")
-string(REPLACE "@@HEPMC3_CFLAGS@@" "\"${CONFIG_HEPMC3_CFLAGS}\"" MARLEY_CONFIG_CONTENT "${MARLEY_CONFIG_CONTENT}")
-string(REPLACE "@@HEPMC3_LIBS@@"   "\"${CONFIG_HEPMC3_LIBS}\""   MARLEY_CONFIG_CONTENT "${MARLEY_CONFIG_CONTENT}")
-string(REPLACE "@@GSL_CFLAGS@@"    "\"${CONFIG_GSL_CFLAGS}\""    MARLEY_CONFIG_CONTENT "${MARLEY_CONFIG_CONTENT}")
-string(REPLACE "@@GSL_LIBS@@"      "\"${CONFIG_GSL_LIBS}\""      MARLEY_CONFIG_CONTENT "${MARLEY_CONFIG_CONTENT}")
-string(REPLACE "@@USE_ROOT@@"      "\"${CONFIG_USE_ROOT}\""      MARLEY_CONFIG_CONTENT "${MARLEY_CONFIG_CONTENT}")
-string(REGEX REPLACE "\n##[^\n]*" "" MARLEY_CONFIG_CONTENT "${MARLEY_CONFIG_CONTENT}")
+# CMake lists are semicolon-separated; the shell wants spaces.
+function(marley_flatten_flags in_var out_var)
+  string(REPLACE ";" " " _flat "${${in_var}}")
+  set(${out_var} "${_flat}" PARENT_SCOPE)
+endfunction()
 
-file(WRITE ${MARLEY_CONFIG_OUTPUT} "${MARLEY_CONFIG_CONTENT}")
+marley_flatten_flags(MARLEY_ROOT_CFLAGS MARLEY_ROOT_CFLAGS_STR)
+marley_flatten_flags(MARLEY_ROOT_LIBS   MARLEY_ROOT_LIBS_STR)
+
+if(USE_BUILTIN_HEPMC3)
+  set(MARLEY_HEPMC3_MODE "builtin")
+  set(MARLEY_EXT_HEPMC3_CFLAGS_STR "")
+  set(MARLEY_EXT_HEPMC3_LIBS_STR   "")
+else()
+  set(MARLEY_HEPMC3_MODE "external")
+  marley_flatten_flags(HEPMC3_CFLAGS MARLEY_EXT_HEPMC3_CFLAGS_STR)
+  marley_flatten_flags(HEPMC3_LIBS   MARLEY_EXT_HEPMC3_LIBS_STR)
+endif()
+
+if(GSL_FOUND)
+  set(MARLEY_GSL_MODE "external")
+  marley_flatten_flags(GSL_CFLAGS MARLEY_EXT_GSL_CFLAGS_STR)
+  marley_flatten_flags(GSL_LIBS   MARLEY_EXT_GSL_LIBS_STR)
+else()
+  set(MARLEY_GSL_MODE "builtin")
+  set(MARLEY_EXT_GSL_CFLAGS_STR "")
+  set(MARLEY_EXT_GSL_LIBS_STR   "")
+endif()
+
+if(USE_ROOT)
+  set(MARLEY_USE_ROOT_STR "yes")
+else()
+  set(MARLEY_USE_ROOT_STR "no")
+endif()
+
+if(APPLE)
+  set(MARLEY_NEW_DTAGS "")
+else()
+  set(MARLEY_NEW_DTAGS "-Wl,--enable-new-dtags")
+endif()
+
+set(MARLEY_CXX_STD "c++${CMAKE_CXX_STANDARD}")
+
+string(CONCAT MARLEY_CONFIG_HEADER
+  "#!/bin/bash\n"
+  "# Generated at configure time by CMakeLists.txt -- do not edit.\n"
+  "# The static half of this script is src/scripts/marley-config-body.sh.\n"
+  "version='${MARLEY_COMPUTED_VERSION}'\n"
+  "git_revision='${MARLEY_COMPUTED_GIT_REVISION}'\n"
+  "cxx_std='${MARLEY_CXX_STD}'\n"
+  "compiled_log_level='${MARLEY_LOG_LEVEL}'\n"
+  "use_root='${MARLEY_USE_ROOT_STR}'\n"
+  "hepmc3_mode='${MARLEY_HEPMC3_MODE}'\n"
+  "gsl_mode='${MARLEY_GSL_MODE}'\n"
+  "root_cflags='${MARLEY_ROOT_CFLAGS_STR}'\n"
+  "root_libs='${MARLEY_ROOT_LIBS_STR}'\n"
+  "ext_hepmc3_cflags='${MARLEY_EXT_HEPMC3_CFLAGS_STR}'\n"
+  "ext_hepmc3_libs='${MARLEY_EXT_HEPMC3_LIBS_STR}'\n"
+  "ext_gsl_cflags='${MARLEY_EXT_GSL_CFLAGS_STR}'\n"
+  "ext_gsl_libs='${MARLEY_EXT_GSL_LIBS_STR}'\n"
+  "new_dtags='${MARLEY_NEW_DTAGS}'\n"
+  "libdir_rel='${MARLEY_LIBDIR_REL}'\n"
+  "bindir_rel='${MARLEY_BINDIR_REL}'\n"
+  "includedir_rel='${MARLEY_INCLUDEDIR_REL}'\n"
+)
+
+file(READ ${MARLEY_CONFIG_BODY} MARLEY_CONFIG_BODY_CONTENT)
+file(WRITE ${MARLEY_CONFIG_OUTPUT}
+  "${MARLEY_CONFIG_HEADER}${MARLEY_CONFIG_BODY_CONTENT}")
 file(CHMOD ${MARLEY_CONFIG_OUTPUT}
   PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
               GROUP_READ GROUP_EXECUTE
               WORLD_READ WORLD_EXECUTE
+)
+
+# marley.pc. The conditional fields are whole-string substitution keys
+# rather than a bracket notation, because configure_file cannot express a
+# conditional and both build systems must produce the same file.
+#
+# GSL is Requires.private: it is used by src/marley_gsl.cc and named in no
+# installed header. HepMC3 is public, because MARLEY's event type is an
+# HepMC3 type -- but a vendored build gets no Requires: line, since there is
+# no HepMC3.pc on a system that forced the vendored copy.
+set(pc_cflags_extra "")
+set(pc_libs_extra "")
+set(pc_requires "")
+set(pc_requires_private "")
+if(USE_ROOT)
+  string(APPEND pc_cflags_extra "-DUSE_ROOT")
+endif()
+if(USE_BUILTIN_HEPMC3)
+  string(APPEND pc_cflags_extra " -I\${includedir}/marley/builtin")
+  set(pc_libs_extra "-lMARLEYHepMC3")
+else()
+  set(pc_requires "HepMC3")
+endif()
+if(GSL_FOUND)
+  set(pc_requires_private "gsl")
+endif()
+string(STRIP "${pc_cflags_extra}" pc_cflags_extra)
+
+set(libdir_rel     "${MARLEY_LIBDIR_REL}")
+set(includedir_rel "${MARLEY_INCLUDEDIR_REL}")
+set(version        "${MARLEY_COMPUTED_VERSION}")
+set(cxx_std        "${MARLEY_CXX_STD}")
+configure_file(
+  ${CMAKE_SOURCE_DIR}/src/scripts/marley.pc.in
+  ${MARLEY_BUILD_LIBDIR}/pkgconfig/marley.pc
+  @ONLY
 )
 
 # ------------------------------------------------------------------------------
@@ -749,6 +860,12 @@ endif()
 
 install(PROGRAMS ${MARLEY_CONFIG_OUTPUT}
   DESTINATION ${MARLEY_BINDIR_REL}
+)
+# pkgconfig follows libdir, so a lib64 build gets lib64/pkgconfig. The file's
+# own ${pcfiledir}/../.. still reaches the prefix, because libdir_rel is one
+# segment by construction (design spec 4.3).
+install(FILES ${MARLEY_BUILD_LIBDIR}/pkgconfig/marley.pc
+  DESTINATION ${MARLEY_LIBDIR_REL}/pkgconfig
 )
 # Only MARLEY's own headers. The previous rule swept include/ for "*.hh",
 # which also installed include/builtin/marley_gsl.hh to <prefix>/include/

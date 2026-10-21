@@ -1,0 +1,24 @@
+# pkg-config metadata for MARLEY (Model of Argon Reaction Low Energy Yields)
+#
+# This file self-locates. pcfiledir is the directory holding this file --
+# <prefix>/<libdir>/pkgconfig -- so two hops reach the prefix. That holds for
+# lib and lib64 alike because the install-directory interface guarantees the
+# library directory is exactly one segment below the prefix (design spec 4.3).
+#
+# No rpath is emitted here, deliberately. marley-config --libs carries one
+# because a hand-written Makefile has no other way to make its binary
+# runnable; a packaging toolchain manages rpath itself, and an unexpected one
+# is an obstacle (design spec 6.3).
+prefix=${pcfiledir}/../..
+exec_prefix=${prefix}
+libdir=${prefix}/@libdir_rel@
+includedir=${prefix}/@includedir_rel@
+
+Name: MARLEY
+Description: Model of Argon Reaction Low Energy Yields
+URL: https://www.marleygen.org
+Version: @version@
+Cflags: -I${includedir} -std=@cxx_std@ @pc_cflags_extra@
+Libs: -L${libdir} -lMARLEY @pc_libs_extra@
+Requires: @pc_requires@
+Requires.private: @pc_requires_private@

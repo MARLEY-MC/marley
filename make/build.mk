@@ -80,14 +80,16 @@ UNKNOWN_REV=unknown version
 # option so that it will be overridden if the user has manually specified one
 # in CXXFLAGS.
 ifeq ($(MAKECMDGOALS),debug)
+  MARLEY_LOG_LEVEL := TRACE
   override CXXFLAGS := -std=$(CXX_STD) $(CXXFLAGS) -O0 -g \
-    -DMARLEY_COMPILED_LOG_LEVEL=TRACE
+    -DMARLEY_COMPILED_LOG_LEVEL=$(MARLEY_LOG_LEVEL)
 else
   # Otherwise, use full optimization and do not include debugging info. Prepend
   # the default -O3 and -std options here in case the user wants to manually
   # override them in CXXFLAGS.
+  MARLEY_LOG_LEVEL := INFO
   override CXXFLAGS := -O3 -std=$(CXX_STD) $(CXXFLAGS) \
-    -DMARLEY_COMPILED_LOG_LEVEL=INFO
+    -DMARLEY_COMPILED_LOG_LEVEL=$(MARLEY_LOG_LEVEL)
 endif
 
 UNAME_S := $(shell uname -s)
@@ -214,7 +216,7 @@ SHARED_LIB := $(BUILD_LIBDIR)/$(SHARED_LIB_FILE)
 TEST_EXECUTABLE = $(BUILD_DIR)/bin/martest
 TEST_OBJECTS = $(notdir $(patsubst %.cc,%.o,$(wildcard $(SRC_DIR)/tests/*.cc)))
 
-all: marley
+all: marley marley-pc
 debug: marley
 test: $(TEST_EXECUTABLE)
 
@@ -522,22 +524,74 @@ $(BUILD_DIR)/bin/mroot: $(MARLEY_LIBS)
 	@mkdir -p $(BUILD_DIR)/bin
 	cp $(SRC_DIR)/scripts/mroot $@
 
-# We use a temporary backup file here so that the invocation of sed is
-# compatible with both the GNU/Linux and BSD/macOS versions.
-# See https://stackoverflow.com/a/22084103/4081973 for details.
-$(BUILD_DIR)/bin/marley-config: $(MARLEY_LIBS)
+# marley-config is concatenated, not substituted (design spec 6.2): a
+# generated header of KEY='value' assignments, followed by the static body
+# shipped in src/scripts/. The old mechanism transcribed an eight-token
+# substitution list into two languages and failed silently when a token was
+# missed, because an unsubstituted @@ROOT_LIBS@@ is not a shell syntax
+# error. There is now no mapping to get wrong, and the body's :? contract
+# catches an incomplete header in one place.
+#
+# Note what is NOT here: no MARLEY-owned path. Those are computed by the
+# body from the script's own location, so this rule is structurally unable
+# to bake in a build-tree -L or a source-tree -I.
+$(BUILD_DIR)/bin/marley-config: $(SRC_DIR)/scripts/marley-config-body.sh $(MARLEY_LIBS)
 	@mkdir -p $(BUILD_DIR)/bin
-	$(RM) $(BUILD_DIR)/bin/marley-config
-	cp $(SRC_DIR)/scripts/marley-config.in $(BUILD_DIR)/bin/marley-config
-	sed -i.bak -e '/^##/d' -e "s|@@VERSION@@|\"$(MARLEY_VERSION)\"|g" \
-	  -e "s|@@GIT_REVISION@@|\"$(GIT_REVISION)\"|g" \
-	  -e "s|@@CXX_STD@@|\"$(CXX_STD)\"|g" \
-	  -e "s|@@HEPMC3_CFLAGS@@|\"$(HEPMC3_CXXFLAGS)\"|g" \
-	  -e "s|@@HEPMC3_LIBS@@|\"$(HEPMC3_LDFLAGS)\"|g" \
-	  -e "s|@@GSL_CFLAGS@@|\"$(GSL_CXXFLAGS)\"|g" \
-	  -e "s|@@GSL_LIBS@@|\"$(GSL_LDFLAGS)\"|g" \
-	  -e "s|@@USE_ROOT@@|\"$(USE_ROOT)\"|g" $(BUILD_DIR)/bin/marley-config
-	$(RM) $(BUILD_DIR)/bin/marley-config.bak
+	printf '%s\n' \
+	  '#!/bin/bash' \
+	  '# Generated at build time by make/build.mk -- do not edit.' \
+	  '# The static half of this script is src/scripts/marley-config-body.sh.' \
+	  "version='$(MARLEY_VERSION)'" \
+	  "git_revision='$(GIT_REVISION)'" \
+	  "cxx_std='$(CXX_STD)'" \
+	  "compiled_log_level='$(MARLEY_LOG_LEVEL)'" \
+	  "use_root='$(USE_ROOT)'" \
+	  "hepmc3_mode='$(if $(FOUND_HEPMC3),external,builtin)'" \
+	  "gsl_mode='$(if $(FOUND_GSL),external,builtin)'" \
+	  "root_cflags='$(ROOT_CXXFLAGS)'" \
+	  "root_libs='$(ROOT_LDFLAGS)'" \
+	  "ext_hepmc3_cflags='$(if $(FOUND_HEPMC3),$(HEPMC3_CXXFLAGS))'" \
+	  "ext_hepmc3_libs='$(if $(FOUND_HEPMC3),$(HEPMC3_LDFLAGS))'" \
+	  "ext_gsl_cflags='$(if $(FOUND_GSL),$(GSL_CXXFLAGS))'" \
+	  "ext_gsl_libs='$(if $(FOUND_GSL),$(GSL_LDFLAGS))'" \
+	  "new_dtags='$(NEW_DTAGS)'" \
+	  "libdir_rel='$(libdir_rel)'" \
+	  "bindir_rel='$(bindir_rel)'" \
+	  "includedir_rel='$(includedir_rel)'" \
+	  > $@
+	cat $(SRC_DIR)/scripts/marley-config-body.sh >> $@
+	chmod +x $@
+
+# marley.pc self-locates from ${pcfiledir}, so like marley-config it needs
+# only the relative directory names. The conditional fields are whole-string
+# substitution keys rather than any kind of bracket notation, because
+# configure_file (the CMake side) cannot express a conditional and both
+# sides must produce the same file.
+#
+# GSL appears only as Requires.private: it is used by src/marley_gsl.cc and
+# named in no installed header, so a consumer neither needs nor sees it.
+# HepMC3 is public -- MARLEY's event type is an HepMC3 type.
+PC_CFLAGS_EXTRA := $(strip $(if $(filter yes,$(USE_ROOT)),-DUSE_ROOT) \
+  $(if $(FOUND_HEPMC3),,-I$${includedir}/marley/builtin))
+PC_LIBS_EXTRA := $(if $(FOUND_HEPMC3),,-lMARLEYHepMC3)
+# No Requires: on a vendored build -- there is no HepMC3.pc on a system that
+# forced the vendored copy, which is why it was used.
+PC_REQUIRES := $(if $(FOUND_HEPMC3),HepMC3)
+PC_REQUIRES_PRIVATE := $(if $(FOUND_GSL),gsl)
+
+marley-pc: $(BUILD_LIBDIR)/pkgconfig/marley.pc
+
+$(BUILD_LIBDIR)/pkgconfig/marley.pc: $(SRC_DIR)/scripts/marley.pc.in $(MARLEY_LIBS)
+	@mkdir -p $(dir $@)
+	sed -e 's|@libdir_rel@|$(libdir_rel)|g' \
+	  -e 's|@includedir_rel@|$(includedir_rel)|g' \
+	  -e 's|@version@|$(MARLEY_VERSION)|g' \
+	  -e 's|@cxx_std@|$(CXX_STD)|g' \
+	  -e 's|@pc_cflags_extra@|$(PC_CFLAGS_EXTRA)|g' \
+	  -e 's|@pc_libs_extra@|$(PC_LIBS_EXTRA)|g' \
+	  -e 's|@pc_requires@|$(PC_REQUIRES)|g' \
+	  -e 's|@pc_requires_private@|$(PC_REQUIRES_PRIVATE)|g' \
+	  $< > $@
 
 $(BUILD_DIR)/bin/marley: $(MARLEY_LIBS) marley.o $(BUILD_DIR)/bin/marley-config $(if $(filter yes,$(USE_ROOT)),$(BUILD_DIR)/bin/mroot)
 	@mkdir -p $(BUILD_DIR)/bin
@@ -563,7 +617,7 @@ marg4: $(SHARED_LIB) $(BUILD_DIR)/bin/marley-config
 
 DOCS_BUILD_DIR = $(BUILD_DIR)/docs
 
-.PHONY: marley mroot docs clean install uninstall
+.PHONY: marley mroot marley-config marley-pc docs clean install uninstall
 
 doxygen:
 	export MARLEY_VERSION=$(VERSION_PREFIX)$(MARLEY_VERSION) \
@@ -580,7 +634,7 @@ docs:
 clean:
 	$(RM) -rf $(BUILD_DIR)
 
-install: marley marley-config $(if $(filter yes,$(USE_ROOT)),mroot)
+install: marley marley-config marley-pc $(if $(filter yes,$(USE_ROOT)),mroot)
 	mkdir -p $(DESTDIR)$(bindir)
 	mkdir -p $(DESTDIR)$(libdir)
 	mkdir -p $(DESTDIR)$(includedir)/marley
@@ -591,6 +645,11 @@ install: marley marley-config $(if $(filter yes,$(USE_ROOT)),mroot)
 	cp $(SHARED_LIB) $(DESTDIR)$(libdir)
 	cp $(BUILD_LIBDIR)/libMARLEY_rdict.pcm $(DESTDIR)$(libdir) 2> /dev/null || true
 	cp $(BUILD_LIBDIR)/libMARLEY.rootmap $(DESTDIR)$(libdir) 2> /dev/null || true
+	# pkgconfig follows libdir: on a lib64 build this is lib64/pkgconfig, and
+	# the file's own ${pcfiledir}/../.. still lands on the prefix because
+	# libdir_rel is one segment by construction.
+	mkdir -p $(DESTDIR)$(libdir)/pkgconfig
+	cp $(BUILD_LIBDIR)/pkgconfig/marley.pc $(DESTDIR)$(libdir)/pkgconfig
 	cp -r $(TOP_DIR)/data $(DESTDIR)$(datadir)/marley
 	# data/tests/ is used only by martest, which runs from the build tree
 	rm -rf $(DESTDIR)$(datadir)/marley/data/tests
@@ -629,6 +688,7 @@ endif
 	  printf '%s\n' "$(bindir)/marley-config"; \
 	  if [ "$(USE_ROOT)" = "yes" ]; then printf '%s\n' "$(bindir)/mroot"; fi; \
 	  printf '%s\n' "$(libdir)/$(SHARED_LIB_FILE)"; \
+	  printf '%s\n' "$(libdir)/pkgconfig/marley.pc"; \
 	  if [ -f "$(DESTDIR)$(libdir)/libMARLEY_rdict.pcm" ]; then \
 	    printf '%s\n' "$(libdir)/libMARLEY_rdict.pcm"; \
 	  fi; \
@@ -674,4 +734,5 @@ uninstall:
 	  -exec rmdir {} + 2>/dev/null || true
 	find "$(DESTDIR)$(includedir)/marley" -depth -type d \
 	  -exec rmdir {} + 2>/dev/null || true
+	rmdir "$(DESTDIR)$(libdir)/pkgconfig" 2>/dev/null || true
 	$(LDCONFIG_CMD)
