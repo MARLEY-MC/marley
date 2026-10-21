@@ -15,6 +15,7 @@
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
 // Standard library includes
+#include <filesystem>
 #include <iterator>
 
 // HepMC3 includes
@@ -24,7 +25,6 @@
 // MARLEY includes
 #include "marley/marley_utils.hh"
 #include "marley/Error.hh"
-#include "marley/FileManager.hh"
 #include "marley/EventFileReader.hh"
 
 #ifdef USE_ROOT
@@ -50,9 +50,17 @@ bool marley::EventFileReader::deduce_file_format() {
   // readable. Skip the MARLEY search path in this case (the event file should
   // have been passed to the constructor with any needed path specification).
   // Complain if the file cannot be read.
-  const auto& fm = marley::FileManager::Instance();
-  if ( fm.find_file(file_name_, "").empty() ) throw marley::Error( "Could"
-    " not read from the file \"" + file_name_ + '\"' );
+  // This is a path the user handed us, not a MARLEY data file, so it does
+  // not go through the resolver at all -- as the comment above says. (The
+  // old code called find_file(name, "") and relied on an empty second
+  // argument meaning "empty search path, use the name as given". That call
+  // compiles unchanged against the current signature with the opposite
+  // meaning, which is why it is spelled out here.)
+  std::error_code ec;
+  if ( !std::filesystem::is_regular_file(file_name_, ec) ) {
+    throw marley::Error( "Could not read from the file \"" + file_name_
+      + '\"' );
+  }
 
   // Create a temporary event object to use for the following format checks
   HepMC3::GenEvent temp_event;

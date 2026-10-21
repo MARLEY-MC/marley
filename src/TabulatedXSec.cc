@@ -33,8 +33,9 @@ namespace {
 
 marley::TabulatedXSec::TabulatedXSec( int target_pdg,
   marley::Reaction::ProcessType p_type, CoulombCorrector::CoulombMode mode,
-  double delta_ias ) : ta_( target_pdg ), proc_type_( p_type ),
-  coulomb_mode_( mode ), delta_ias_( delta_ias )
+  double delta_ias, const std::filesystem::path& base_dir )
+  : ta_( target_pdg ), proc_type_( p_type ),
+  coulomb_mode_( mode ), delta_ias_( delta_ias ), base_dir_( base_dir )
 {
   // Set the residue PDG code (pdg_d_) based on the input information
   int dummy_charge;
@@ -44,12 +45,12 @@ marley::TabulatedXSec::TabulatedXSec( int target_pdg,
 
 void marley::TabulatedXSec::add_table( const std::string& file_name )
 {
+  // Response file names inside a .react file are relative to that file's
+  // own directory, so resolve against it first. Re-derived from wherever
+  // the .react was found, this needs no context carried from elsewhere.
   const auto& fm = marley::FileManager::Instance();
-  std::string full_file_name = fm.find_file( file_name );
-  if ( full_file_name.empty() ) {
-    throw marley::Error( "Could not open the nuclear response data file \""
-      + file_name + '\"' );
-  }
+  std::string full_file_name
+    = fm.find_file( file_name, "react", base_dir_ ).string();
 
   std::ifstream in_file( full_file_name );
 

@@ -16,6 +16,7 @@
 
 // Standard library includes
 #include <array>
+#include <filesystem>
 
 // MARLEY includes
 #include "marley/marley_utils.hh"
@@ -162,7 +163,14 @@ marley::DecayScheme* marley::StructureDatabase::get_decay_scheme(
     // and return a null pointer.
     std::string ds_file_name = ds_file_iter->second;
     auto& fm = marley::FileManager::Instance();
-    std::string full_ds_file_name = fm.find_file( ds_file_name );
+    // Entries in the index are bare file names, resolved against the
+    // directory the index itself came from. A failure here means the index
+    // references a file the installation does not have, which is a broken
+    // install rather than a physics case -- the legitimate "no tabulated
+    // decay scheme" path returned above, before reaching the resolver.
+    std::string full_ds_file_name
+      = fm.find_file( ds_file_name, "structure", structure_index_dir_ )
+          .string();
     std::ifstream ds_data_file( full_ds_file_name );
     bool found_it = false;
     auto temp_ds = std::make_unique< marley::DecayScheme >();
@@ -381,15 +389,7 @@ void marley::StructureDatabase::initialize_jpi_table() {
   // for many nuclei
   const auto& fm = marley::FileManager::Instance();
   std::string full_jpi_file_name
-    = fm.find_file( jpi_data_file_name_ );
-
-  if ( full_jpi_file_name.empty() ) {
-    throw marley::Error( "Could not find the MARLEY nuclear ground-state"
-      " spin-parity data file " + jpi_data_file_name_ + ". Please ensure that"
-      " the folder containing it is on the MARLEY search path."
-      " If needed, the folder can be appended to the MARLEY_SEARCH_PATH"
-      " environment variable." );
-  }
+    = fm.find_file( jpi_data_file_name_ ).string();
 
   MARLEY_LOG( INFO, "init.structure" ) << "Loading ground-state nuclear spin-parities from "
     << full_jpi_file_name;
@@ -435,15 +435,13 @@ void marley::StructureDatabase::load_structure_index() {
   // Instantiate the file manager and use it to find
   // the index to the decay scheme data files
   const auto& fm = marley::FileManager::Instance();
-  std::string full_index_file_name = fm.find_file( structure_index_filename_ );
+  std::string full_index_file_name
+    = fm.find_file( structure_index_filename_, "structure" ).string();
 
-  if ( full_index_file_name.empty() ) {
-    throw marley::Error( "Could not find the MARLEY structure data index file "
-      + structure_index_filename_ + ". Please ensure that"
-      " the folder containing it is on the MARLEY search path."
-      " If needed, the folder can be appended to the MARLEY_SEARCH_PATH"
-      " environment variable." );
-  }
+  // Retained so that entries in the index -- which are bare file names --
+  // can be resolved against the directory the index itself came from.
+  structure_index_dir_ = std::filesystem::path( full_index_file_name )
+    .parent_path();
 
   MARLEY_LOG( INFO, "init.structure" ) << "Loaded structure data index from "
     << full_index_file_name;
@@ -481,15 +479,8 @@ void marley::StructureDatabase::load_optical_model_params(
   else {
     const auto& fm = marley::FileManager::Instance();
     const std::string om_file_name( "optical_model_kduq_federal_cv.js" );
-    std::string om_full_file_name = fm.find_file( om_file_name );
-
-    if ( om_full_file_name.empty() ) {
-      throw marley::Error( "Could not find the MARLEY nuclear optical model"
-        " configuration file " + om_file_name + ". Please ensure that"
-        " the folder containing it is on the MARLEY search path."
-        " If needed, the folder can be appended to the MARLEY_SEARCH_PATH"
-        " environment variable." );
-    }
+    std::string om_full_file_name
+      = fm.find_file( om_file_name, "optical_model" ).string();
 
     MARLEY_LOG( INFO, "init.structure" ) << "Loading nuclear optical model parameters from "
       << om_full_file_name;
