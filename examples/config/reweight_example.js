@@ -120,10 +120,10 @@
     //
     // The most convenient way to specify the "opt_mod" value is to use
     // the #include syntax to pull in one of the files from the
-    // data/optical_model/ directory. For example:
+    // data/optical/ directory. For example:
     //
     //   { type: "optical_model", name: "KD-global-OMP",
-    //     opt_mod: #include:"optical_model/optical_model_kd_global.js" },
+    //     opt_mod: #include:"optical/kd_global.js" },
     //
     // The example below is equivalent to the #include form above; it uses the
     // results from the original KD global fit
@@ -131,7 +131,7 @@
     // optical model potential in MARLEY v1. The MARLEY v2 default is the
     // central value of the KDUQ Federal evaluation
     // (https://doi.org/10.1103/PhysRevC.107.014602), whose parameter values are
-    // stored in data/optical_model/optical_model_kduq_federal_cv.js.
+    // stored in data/optical/kduq_federal_cv.js.
     { type: "optical_model", name: "KD-global-OMP",
       opt_mod: {
         Default: {
