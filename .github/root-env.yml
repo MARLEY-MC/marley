@@ -1,0 +1,14 @@
+# conda-forge environment used by the ROOT-enabled CI legs.
+#
+# Passed to mamba-org/setup-micromamba as environment-file. Do not move this
+# content inline: GitHub silently ignores unknown "with" keys on JavaScript
+# actions, so a misspelled input creates an empty environment, reports
+# success, and leaves the ROOT legs building without ROOT.
+name: marley-env
+
+channels:
+  - conda-forge
+
+dependencies:
+  # Catch problems introduced by new ROOT releases by using the current version
+  - root

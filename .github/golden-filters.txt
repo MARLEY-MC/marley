@@ -1,0 +1,24 @@
+# Lines stripped from MARLEY output before the "golden file" comparison used
+# to detect unexpected physics changes in CI.
+#
+# The golden file's cache key includes a hash of this file, so editing it
+# invalidates the cached golden file and will cause a new one to be generated.
+#
+# Required usage:
+#
+#   grep -v -f <(grep -v -e '^#' -e '^$' .github/golden-filters.txt) FILE
+#
+# Stripping comments and blank lines first is not cosmetic: grep -f treats an
+# empty pattern as matching every line, so passing this file directly would
+# filter both files down to nothing and the diff would pass vacuously.
+#
+# Each non-comment, non-whitespace line below is a regular expression.
+
+# Run timestamp.
+^T MARLEY
+
+# HepMC3 library version
+^HepMC::Version
+
+# Parsed job configuration
+^A MARLEY.JSONconfig
