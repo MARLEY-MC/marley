@@ -9,8 +9,11 @@
 #   make IGNORE_GSL=1      — use built-in GSL subset (pass through to either build system)
 #   make debug             — debug build
 #   make clean             — remove build/ entirely
-#   make install           — install (GNU Make path only for now)
+#   make install           — install under $(prefix) (default /usr/local)
 #   make help              — show this message
+#
+# Install locations are given with the GNU names on both build paths:
+#   make install prefix=/opt/marley libdir=lib64 DESTDIR=/tmp/stage
 
 CMAKE := $(shell command -v cmake 2>/dev/null)
 
@@ -32,6 +35,45 @@ ifdef IGNORE_GSL
 CMAKE_FLAGS += -DIGNORE_GSL=ON
 endif
 
+# The install-location variables use the GNU names, because that is what
+# packaging recipes already pass. CMake spells them differently, so this
+# Makefile translates; otherwise 'make install prefix=...' would mean two
+# different things depending on whether cmake is installed.
+#
+# They are configure-time settings for CMake, not install-time ones: libdir
+# also determines where the build tree puts libMARLEY, and its relative form
+# is baked into the RUNPATH. A cached value must not win over one given here,
+# so any of them forces a reconfigure below.
+CMAKE_DIR_FLAGS :=
+ifdef prefix
+CMAKE_DIR_FLAGS += -DCMAKE_INSTALL_PREFIX='$(prefix)'
+endif
+ifdef libdir
+CMAKE_DIR_FLAGS += -DCMAKE_INSTALL_LIBDIR='$(libdir)'
+endif
+ifdef bindir
+CMAKE_DIR_FLAGS += -DCMAKE_INSTALL_BINDIR='$(bindir)'
+endif
+ifdef includedir
+CMAKE_DIR_FLAGS += -DCMAKE_INSTALL_INCLUDEDIR='$(includedir)'
+endif
+
+# Reconfigure only when it would change something. An unconditional 'cmake -S'
+# on every build is slow, but a stale cache must not silently override an
+# explicit command-line prefix.
+ifeq ($(strip $(CMAKE_DIR_FLAGS)),)
+CMAKE_CONFIGURE = @test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
+else
+CMAKE_CONFIGURE = cmake -S . -B build $(CMAKE_FLAGS) $(CMAKE_DIR_FLAGS)
+endif
+
+# 'cmake --install' has no --destdir flag; the environment variable is the
+# documented interface, and it is read at install time only.
+CMAKE_INSTALL_ENV :=
+ifdef DESTDIR
+CMAKE_INSTALL_ENV := DESTDIR='$(DESTDIR)'
+endif
+
 PASSTHROUGH_VARS :=
 ifdef IGNORE_ROOT
 PASSTHROUGH_VARS += IGNORE_ROOT=$(IGNORE_ROOT)
@@ -51,6 +93,15 @@ endif
 ifdef prefix
 PASSTHROUGH_VARS += prefix='$(prefix)'
 endif
+ifdef libdir
+PASSTHROUGH_VARS += libdir='$(libdir)'
+endif
+ifdef bindir
+PASSTHROUGH_VARS += bindir='$(bindir)'
+endif
+ifdef includedir
+PASSTHROUGH_VARS += includedir='$(includedir)'
+endif
 ifdef DESTDIR
 PASSTHROUGH_VARS += DESTDIR='$(DESTDIR)'
 endif
@@ -59,7 +110,7 @@ endif
 
 all:
 ifdef USE_CMAKE
-	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
+	$(CMAKE_CONFIGURE)
 	$(MAKE) -C build
 else
 	@mkdir -p build
@@ -68,7 +119,7 @@ endif
 
 debug:
 ifdef USE_CMAKE
-	cmake -S . -B build $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Debug
+	cmake -S . -B build $(CMAKE_FLAGS) $(CMAKE_DIR_FLAGS) -DCMAKE_BUILD_TYPE=Debug
 	$(MAKE) -C build
 else
 	@mkdir -p build
@@ -77,7 +128,7 @@ endif
 
 test:
 ifdef USE_CMAKE
-	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
+	$(CMAKE_CONFIGURE)
 	$(MAKE) -C build test
 else
 	@mkdir -p build
@@ -86,7 +137,7 @@ endif
 
 marg4:
 ifdef USE_CMAKE
-	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
+	$(CMAKE_CONFIGURE)
 	cmake --build build --target marg4
 else
 	@mkdir -p build
@@ -95,7 +146,7 @@ endif
 
 docs:
 ifdef USE_CMAKE
-	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
+	$(CMAKE_CONFIGURE)
 	cmake --build build --target docs $(CMAKE_BUILD_FLAGS)
 	$(MAKE) -C build docs
 else
@@ -105,7 +156,7 @@ endif
 
 doxygen:
 ifdef USE_CMAKE
-	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
+	$(CMAKE_CONFIGURE)
 	cmake --build build --target doxygen $(CMAKE_BUILD_FLAGS)
 	$(MAKE) -C build doxygen
 else
@@ -115,26 +166,26 @@ endif
 
 install:
 ifdef USE_CMAKE
-	@test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
-	cmake --install build
+	$(CMAKE_CONFIGURE)
+# Build before installing: an install-location variable given here may have
+# just forced a reconfigure, and libdir moves the build tree's own library
+# directory, so the artifacts may not exist yet.
+	$(MAKE) -C build
+	$(CMAKE_INSTALL_ENV) cmake --install build
 else
 	@mkdir -p build
 	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) install $(PASSTHROUGH_VARS)
 endif
 
+# Both build paths dispatch to the same script, which reads the receipt left
+# in the prefix. It needs no build tree and no CMake cache, only a prefix.
 uninstall:
-ifdef USE_CMAKE
-	@test -d build/CMakeFiles || (echo "ERROR: No CMake build found in build/. Run 'cmake --install' first." && exit 1)
-	$(MAKE) -C build uninstall
-else
-	@mkdir -p build
-	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) uninstall $(PASSTHROUGH_VARS)
-endif
+	src/scripts/uninstall-marley --prefix "$(DESTDIR)$(or $(prefix),/usr/local)"
 
 reconfigure:
 ifdef USE_CMAKE
 	$(RM) -rf build/CMakeFiles
-	cmake -S . -B build $(CMAKE_FLAGS)
+	cmake -S . -B build $(CMAKE_FLAGS) $(CMAKE_DIR_FLAGS)
 else
 	@echo "reconfigure is only supported for the CMake build path."
 endif
@@ -151,3 +202,14 @@ help:
 	@echo "  make IGNORE_GSL=1      Use built-in GSL subset"
 	@echo "  make marg4             Build the MARLEY+Geant4 example (if Geant4 is available)"
 	@echo "  make [debug|test|docs|doxygen|install|uninstall|clean|reconfigure]"
+	@echo ""
+	@echo "  'make uninstall' asks for confirmation, and refuses rather than"
+	@echo "  guessing if it cannot. For a script or CI, call the uninstaller"
+	@echo "  directly: src/scripts/uninstall-marley --prefix DIR --yes"
+	@echo ""
+	@echo "Install locations (GNU names, honoured on both build paths):"
+	@echo "  prefix=DIR             Installation prefix (default /usr/local)"
+	@echo "  libdir=NAME            Library directory name (default lib)"
+	@echo "  bindir=NAME            Executable directory name (default bin)"
+	@echo "  includedir=NAME        Header directory name (default include)"
+	@echo "  DESTDIR=DIR            Staging directory prepended to every path"
