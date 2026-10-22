@@ -116,9 +116,11 @@ Getting Started
 
 .. getting-started-start1
 
-MARLEY is regularly tested on both Linux and macOS platforms and is expected to
-work in any Unix-like environment in which the prerequisites are installed.
-Building and running MARLEY on Windows is not currently supported.
+MARLEY is regularly `tested
+<https://github.com/MARLEY-MC/marley/actions/workflows/ci.yml>`__ on both Linux
+and macOS platforms and is expected to work in any Unix-like environment in
+which the prerequisites are installed. Building and running MARLEY on Windows
+is not currently supported.
 
 Prerequisites
 ~~~~~~~~~~~~~
