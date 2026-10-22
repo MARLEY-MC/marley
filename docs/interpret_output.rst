@@ -481,15 +481,14 @@ A ROOT HepMC3 file produced by MARLEY contains:
 Opening a MARLEY ROOT HepMC3 file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After sourcing the ``setup_marley.sh`` environment script, one may open a
-MARLEY ROOT file directly in a ROOT session::
+The ``mroot`` wrapper starts an interactive ROOT session with MARLEY already
+loaded, so a MARLEY ROOT file may be opened directly::
 
-  source setup_marley.sh
-  root -l some_events.root
+  mroot -l some_events.root
 
-The ``libMARLEY`` library and its ROOT dictionary are loaded automatically by
-ROOT's autoload mechanism. One can then browse the raw event data, for
-example::
+``mroot`` loads the ``libMARLEY`` library, which carries the ROOT dictionary,
+and puts MARLEY's headers on ``ROOT_INCLUDE_PATH``. One can then browse the
+raw event data, for example::
 
   MARLEY_event_tree->Scan("particles.pid:particles.status", "", "", 20)
 
