@@ -84,6 +84,38 @@ jobs:
     outputs:
       cache_key: ${{ steps.compute-key.outputs.cache-key }}
     steps:
+      # This job's ONLY other checkout is of the REFERENCE branch, which does
+      # not contain .github/golden-filters.txt -- the file is new on the
+      # branch under test. Checking this branch out first, and staging the
+      # filters outside the workspace, is what makes them available after the
+      # reference checkout replaces everything.
+      #
+      # It also has to happen before "Compute cache key": hashFiles() reads
+      # the workspace, so with no checkout it silently returned an empty
+      # string and the filter hash never entered the key at all.
+      - name: Check out this branch (for the golden filters)
+        uses: actions/checkout@v5
+
+      - name: Stage the golden filters
+        run: |
+          src="${GITHUB_WORKSPACE}/.github/golden-filters.txt"
+          dst="${RUNNER_TEMP}/golden-patterns.txt"
+          if [ ! -s "${src}" ]; then
+            echo "ERROR: ${src} is missing or empty" >&2
+            exit 1
+          fi
+          # Strip comments and blanks ONCE, here, and verify the result is
+          # non-empty. grep -f treats an empty pattern as matching every
+          # line, so an empty pattern file would filter both the golden and
+          # the current output down to nothing and make diff pass vacuously.
+          grep -v -e '^#' -e '^$' "${src}" > "${dst}"
+          if [ ! -s "${dst}" ]; then
+            echo "ERROR: ${src} contains no filter patterns" >&2
+            exit 1
+          fi
+          echo "--- active filter patterns ---"
+          cat "${dst}"
+
       - name: Determine reference branch
         id: ref_branch
         env:
@@ -208,8 +240,7 @@ jobs:
           # Comments and blanks stripped first: grep -f treats an empty
           # pattern as matching every line, which would filter both files
           # to nothing and make diff pass vacuously.
-          grep -v -f <(grep -v -e '^#' -e '^$' \
-            "${GITHUB_WORKSPACE}/.github/golden-filters.txt") \
+          grep -v -f "${RUNNER_TEMP}/golden-patterns.txt" \
             events.hepmc3 > golden-linux.hepmc3
 
   ref-macos:
@@ -224,6 +255,38 @@ jobs:
     outputs:
       cache_key: ${{ steps.compute-key.outputs.cache-key }}
     steps:
+      # This job's ONLY other checkout is of the REFERENCE branch, which does
+      # not contain .github/golden-filters.txt -- the file is new on the
+      # branch under test. Checking this branch out first, and staging the
+      # filters outside the workspace, is what makes them available after the
+      # reference checkout replaces everything.
+      #
+      # It also has to happen before "Compute cache key": hashFiles() reads
+      # the workspace, so with no checkout it silently returned an empty
+      # string and the filter hash never entered the key at all.
+      - name: Check out this branch (for the golden filters)
+        uses: actions/checkout@v5
+
+      - name: Stage the golden filters
+        run: |
+          src="${GITHUB_WORKSPACE}/.github/golden-filters.txt"
+          dst="${RUNNER_TEMP}/golden-patterns.txt"
+          if [ ! -s "${src}" ]; then
+            echo "ERROR: ${src} is missing or empty" >&2
+            exit 1
+          fi
+          # Strip comments and blanks ONCE, here, and verify the result is
+          # non-empty. grep -f treats an empty pattern as matching every
+          # line, so an empty pattern file would filter both the golden and
+          # the current output down to nothing and make diff pass vacuously.
+          grep -v -e '^#' -e '^$' "${src}" > "${dst}"
+          if [ ! -s "${dst}" ]; then
+            echo "ERROR: ${src} contains no filter patterns" >&2
+            exit 1
+          fi
+          echo "--- active filter patterns ---"
+          cat "${dst}"
+
       - name: Determine reference branch
         id: ref_branch
         env:
@@ -288,8 +351,7 @@ jobs:
           MARLEY: ${{ github.workspace }}
         run: |
           ./build/bin/marley generate examples/config/COPY_ME.js
-          grep -v -f <(grep -v -e '^#' -e '^$' \
-            "${GITHUB_WORKSPACE}/.github/golden-filters.txt") \
+          grep -v -f "${RUNNER_TEMP}/golden-patterns.txt" \
             events.hepmc3 > golden-macos.hepmc3
 
   # ---------------------------------------------------------------------------
@@ -388,6 +450,25 @@ jobs:
         uses: actions/checkout@v5
 
       # ROOT is only needed for the system build.
+
+      # Same staging as the reference jobs, for the same two reasons: one
+      # place strips comments and blanks, and an empty pattern set is an
+      # error rather than a filter that silently matches everything.
+      - name: Stage the golden filters
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          src="${GITHUB_WORKSPACE}/.github/golden-filters.txt"
+          dst="${RUNNER_TEMP}/golden-patterns.txt"
+          if [ ! -s "${src}" ]; then
+            echo "ERROR: ${src} is missing or empty" >&2
+            exit 1
+          fi
+          grep -v -e '^#' -e '^$' "${src}" > "${dst}"
+          if [ ! -s "${dst}" ]; then
+            echo "ERROR: ${src} contains no filter patterns" >&2
+            exit 1
+          fi
+          cat "${dst}"
       - name: Set up Micromamba (ROOT via conda-forge)
         if: steps.eligibility.outputs.skip != 'true' && matrix.path == 'system'
         uses: mamba-org/setup-micromamba@v1
@@ -532,8 +613,7 @@ jobs:
             exit 1
           fi
           ./build/bin/marley generate examples/config/COPY_ME.js
-          grep -v -f <(grep -v -e '^#' -e '^$' \
-            "${GITHUB_WORKSPACE}/.github/golden-filters.txt") \
+          grep -v -f "${RUNNER_TEMP}/golden-patterns.txt" \
             events.hepmc3 > ${{ matrix.current }}
           diff "${golden}" ${{ matrix.current }}
 
@@ -608,8 +688,7 @@ jobs:
           # CI verifies "build-tree MARLEY is correct" and "installed
           # MARLEY runs", but never "installed MARLEY is correct" -- which
           # is the whole subject of this change.
-          grep -v -f <(grep -v -e '^#' -e '^$' \
-            "${GITHUB_WORKSPACE}/.github/golden-filters.txt") \
+          grep -v -f "${RUNNER_TEMP}/golden-patterns.txt" \
             events.hepmc3 > current-installed.hepmc3
           diff "${golden}" current-installed.hepmc3
 
@@ -629,8 +708,7 @@ jobs:
             echo "WARNING: no golden file for a fork PR; diff skipped"
             exit 0
           fi
-          grep -v -f <(grep -v -e '^#' -e '^$' \
-            "${GITHUB_WORKSPACE}/.github/golden-filters.txt") \
+          grep -v -f "${RUNNER_TEMP}/golden-patterns.txt" \
             events.hepmc3 > current-moved.hepmc3
           diff "${golden}" current-moved.hepmc3
 
