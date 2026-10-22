@@ -258,6 +258,15 @@ set(GSL_FOUND FALSE)
 if(NOT IGNORE_GSL)
   if(GSL_FIND_MODE STREQUAL "cmake" OR GSL_FIND_MODE STREQUAL "auto")
     find_package(GSL QUIET)
+    # Same guard as HepMC3 below. CMake's bundled FindGSL module does define
+    # GSL::gsl, so this has never fired -- but the failure mode is a hard
+    # configure error rather than a fallback, which is too sharp an edge to
+    # leave on an assumption about someone else's packaging.
+    if(GSL_FOUND AND NOT TARGET GSL::gsl)
+      message(STATUS "GSL was found but defines no GSL::gsl target; "
+        "trying gsl-config instead")
+      set(GSL_FOUND FALSE)
+    endif()
     if(GSL_FOUND)
       message(STATUS "Found GSL via CMake")
       set(MARLEY_FOUND_GSL_DEFINE TRUE)
@@ -316,7 +325,20 @@ set(HEPMC3_FOUND FALSE)
 if(NOT IGNORE_HEPMC3)
   if(HEPMC3_FIND_MODE STREQUAL "cmake" OR HEPMC3_FIND_MODE STREQUAL "auto")
     find_package(HepMC3 QUIET)
-    if(HepMC3_FOUND)
+    # HepMC3_FOUND is NOT sufficient to branch on. Some packagings of
+    # HepMC3Config.cmake set the result variables but define no namespaced
+    # imported target: Debian's and Ubuntu's libhepmc3-dev is one of them.
+    # Every get_target_property below then became a hard configure error --
+    # "find_package succeeded" was simply the wrong question.
+    #
+    # Falling through rather than failing is right: HEPMC3_FOUND stays unset,
+    # so the HepMC3-config branch below gets its turn, and the vendored copy
+    # is there if that fails too.
+    if(HepMC3_FOUND AND NOT TARGET HepMC3::HepMC3)
+      message(STATUS "HepMC3's CMake package was found but defines no "
+        "HepMC3::HepMC3 target; trying HepMC3-config instead")
+    endif()
+    if(HepMC3_FOUND AND TARGET HepMC3::HepMC3)
       message(STATUS "Found HepMC3 via CMake config")
       set(HEPMC3_FOUND TRUE)
       get_target_property(HEPMC3_INCLUDE_DIR HepMC3::HepMC3 INTERFACE_INCLUDE_DIRECTORIES)
