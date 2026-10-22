@@ -49,11 +49,15 @@ build() {
   quiet ""
   quiet "\$ $*"
   echo "### $*" >> "$BUILDLOG"
-  if "$@" >> "$BUILDLOG" 2>&1 < /dev/null; then
+  # The status is captured immediately. After a bare "if cmd; then ...; fi"
+  # whose condition fails, $? is the *if statement's* status, which is 0 --
+  # so reading it after the fi reported every failure as "[exit 0]".
+  "$@" >> "$BUILDLOG" 2>&1 < /dev/null
+  local rc=$?
+  if [ $rc -eq 0 ]; then
     quiet "[ok]"
     return 0
   fi
-  local rc=$?
   quiet "[exit $rc] -- last 40 lines of check-install.build.log:"
   tail -40 "$BUILDLOG" >> "$LOG"
   printf '!! FAILED: %s (see check-install.log)\n' "$*" >&3
@@ -366,8 +370,12 @@ quiet ""
 quiet "--- a user file placed in the prefix must survive ---"
 mkdir -p /tmp/m4/bin/mine && : > /tmp/m4/bin/mine/keep.txt
 quiet ""
-quiet "--- Make-path install, removed via make uninstall ---"
+quiet "--- make uninstall prompts, and a non-tty answer aborts safely ---"
 build make IGNORE_CMAKE=1 IGNORE_HEPMC3=1 uninstall prefix=/tmp/m4
+run find /tmp/m4 -maxdepth 2
+quiet ""
+quiet "--- the same prefix, removed non-interactively as CI would ---"
+run src/scripts/uninstall-marley --prefix /tmp/m4 --yes
 run find /tmp/m4
 quiet ""
 quiet "--- CMake-path install, removed by the same script ---"
