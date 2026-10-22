@@ -471,6 +471,17 @@ jobs:
         # the macOS dispatch-only guard and build_path filter are applied here
         # instead.  All subsequent steps are conditioned on this output.
         run: |
+          # The matrix carries libdir as a make ARGUMENT ("libdir=lib64"),
+          # because most uses pass it straight to make. Anything needing it
+          # as a DIRECTORY must strip the prefix and supply the default --
+          # and doing that at each use site has already produced paths like
+          # "${RUNNER_TEMP}/a/libdir=lib64/libMARLEY.so" that match nothing.
+          # Resolve it once here, before any early exit below, since
+          # GITHUB_ENV is read after the step ends either way.
+          libdir="${{ matrix.libdir }}"
+          libdir="${libdir#libdir=}"
+          echo "MARLEY_LIBDIR=${libdir:-lib}" >> "$GITHUB_ENV"
+
           os="${{ matrix.os }}"
           path="${{ matrix.path }}"
           build="${{ matrix.build }}"
@@ -808,13 +819,14 @@ jobs:
               ;;
           esac
           # libdir is recorded nowhere, so check it where it shows: the
-          # library must be under the directory that was asked for.
-          if [ -n "${{ matrix.libdir }}" ]; then
-            want="${{ matrix.libdir }}"; want="${want#libdir=}"
-            ls "${RUNNER_TEMP}/a/${want}/libMARLEY."* > /dev/null \
-              || { echo "ERROR: nothing installed under ${want}/" >&2; exit 1; }
-            echo "libdir override honoured: ${want}/"
-          fi
+          # library must be under the directory that was asked for. Checked
+          # on every leg rather than only the overridden ones, so that the
+          # default is verified too -- and so that MARLEY_LIBDIR, which the
+          # later steps depend on, is known to be right before they use it.
+          ls "${RUNNER_TEMP}/a/${MARLEY_LIBDIR}/libMARLEY."* > /dev/null \
+            || { echo "ERROR: nothing installed under ${MARLEY_LIBDIR}/" >&2;
+                 exit 1; }
+          echo "libdir honoured: ${MARLEY_LIBDIR}/"
 
       # The stash is the point of increment 1. Without it, an install whose
       # RUNPATH still points into the build directory runs perfectly -- the
@@ -851,7 +863,16 @@ jobs:
         run: |
           status=0
           for f in "${RUNNER_TEMP}/a/bin/marley" \
-                   "${RUNNER_TEMP}/a/${{ matrix.libdir }}/libMARLEY.so"; do
+                   "${RUNNER_TEMP}/a/${MARLEY_LIBDIR}/libMARLEY.so"; do
+            # A check that cannot find its subject must fail, not pass. ldd
+            # reports a missing file as "No such file or directory", which
+            # contains no "not found" and so would have sailed through the
+            # test below -- leaving this step green while verifying nothing.
+            if [[ ! -e "${f}" ]]; then
+              echo "ERROR: ${f} does not exist" >&2
+              status=1
+              continue
+            fi
             echo "::group::ldd ${f}"
             # ldd exits non-zero for a binary with unresolved dependencies,
             # so its status is captured rather than allowed to kill the step
@@ -891,7 +912,7 @@ jobs:
           if [[ "${rc}" -ne 0 ]]; then
             echo "::group::Loader diagnostics for the installed binary"
             bin="${RUNNER_TEMP}/a/bin/marley"
-            lib="${RUNNER_TEMP}/a/${{ matrix.libdir }}/libMARLEY.so"
+            lib="${RUNNER_TEMP}/a/${MARLEY_LIBDIR}/libMARLEY.so"
             if [[ "${RUNNER_OS}" == "macOS" ]]; then
               lib="${lib%.so}.dylib"
               otool -l "${bin}" | grep -A 2 LC_RPATH || true
