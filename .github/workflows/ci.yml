@@ -438,6 +438,26 @@ jobs:
             golden: golden-linux.hepmc3
             current: current-linux.hepmc3
 
+          # --- Linux: GNU Make, with ROOT and an EXTERNAL HepMC3 ---
+          # The combination build.mk is least covered for. The existing Make
+          # leg disables every optional dependency, so until now CI never
+          # built the ROOT dictionary through build.mk, never exercised its
+          # C++-standard maximum against ROOT's own -std, and never linked a
+          # system HepMC3 with it. It also makes the
+          # "-DMARLEY_FOUND_HEPMC3 must not reach published flags"
+          # assertion meaningful on the Make path, where it was previously
+          # vacuous because the switch was never defined in the first place.
+          - name: "Linux · Make · ROOT + external HepMC3"
+            os: ubuntu-latest
+            path: system
+            build: make
+            cxx: g++
+            flags: "IGNORE_CMAKE=1"
+            libdir: ""
+            ref_job: ref-linux
+            golden: golden-linux.hepmc3
+            current: current-linux.hepmc3
+
           # --- macOS: builtin path ---
           # Only runs on workflow_dispatch (filtered below); ref-macos is also
           # workflow_dispatch-only, so golden files are available.
@@ -459,6 +479,25 @@ jobs:
             build: cmake
             cxx: clang++
             flags: ""
+            libdir: ""
+            ref_job: ref-macos
+            golden: golden-macos.hepmc3
+            current: current-macos.hepmc3
+
+          # --- macOS: ROOT with the VENDORED HepMC3 ---
+          # macOS resolves shared libraries through the absolute install
+          # names recorded in each dylib, not through RUNPATH, so it fails
+          # and succeeds for different reasons than Linux does. That is
+          # exactly why the external-dependency RUNPATH defect was invisible
+          # in local macOS testing. Pairing ROOT with the vendored HepMC3
+          # puts @loader_path, -install_name and the ROOT dictionary under
+          # test together on the platform where they differ most.
+          - name: "macOS · ROOT + built-in HepMC3"
+            os: macos-latest
+            path: root-builtin
+            build: cmake
+            cxx: clang++
+            flags: "IGNORE_GSL=1 IGNORE_HEPMC3=1"
             libdir: ""
             ref_job: ref-macos
             golden: golden-macos.hepmc3
@@ -827,6 +866,165 @@ jobs:
             || { echo "ERROR: nothing installed under ${MARLEY_LIBDIR}/" >&2;
                  exit 1; }
           echo "libdir honoured: ${MARLEY_LIBDIR}/"
+
+      # ---------------------------------------------------------------
+      # Published interfaces (design spec 6.3, 6.4)
+      #
+      # Five cheap checks on legs that have already paid for a build and an
+      # install. Each covers an interface that MARLEY publishes and that
+      # nothing else in CI exercises: a packager's staged install, the two
+      # published flag interfaces, the resolver's command-line face, the
+      # environment script, and the ROOT session wrapper. All of them were
+      # verified only by hand before this.
+      # ---------------------------------------------------------------
+
+      - name: Staged install into DESTDIR
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          # What a distribution packager does: install into a staging tree,
+          # then package the contents for unpacking at the real prefix. So
+          # DESTDIR must prefix every installed PATH while appearing in no
+          # installed FILE -- a staging directory does not exist on the
+          # user's machine.
+          #
+          # On the CMake path this reconfigures the build tree, since the
+          # prefix differs from the one configured earlier. That is
+          # harmless here: no later step installs again, and the steps that
+          # follow use the already-installed prefix in ${RUNNER_TEMP}/a.
+          dest="${RUNNER_TEMP}/destdir"
+          pfx="/opt/marley-destdir-test"
+          make install CXX=${{ matrix.cxx }} ${{ matrix.flags }} \
+            ${{ matrix.libdir }} prefix="${pfx}" DESTDIR="${dest}"
+
+          test -x "${dest}${pfx}/bin/marley" \
+            || { echo "ERROR: no ${dest}${pfx}/bin/marley after staging" >&2;
+                 exit 1; }
+          test ! -e "${pfx}" \
+            || { echo "ERROR: the staged install wrote to the real ${pfx}" >&2;
+                 exit 1; }
+          if grep -r -l -a "${dest}" "${dest}${pfx}/bin/" 2>/dev/null \
+             | grep -q .; then
+            echo "ERROR: the staging path is baked into an installed file" >&2
+            grep -r -l -a "${dest}" "${dest}${pfx}/bin/" >&2
+            exit 1
+          fi
+          echo "DESTDIR staging is clean"
+
+      - name: Published flags (pkg-config)
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          command -v pkg-config > /dev/null \
+            || { echo "ERROR: pkg-config is absent from this runner" >&2;
+                 exit 1; }
+          export PKG_CONFIG_PATH="${RUNNER_TEMP}/a/${MARLEY_LIBDIR}/pkgconfig"
+          pkg-config --exists marley \
+            || { echo "ERROR: no usable marley.pc in ${PKG_CONFIG_PATH}" >&2;
+                 exit 1; }
+          echo "modversion: $( pkg-config --modversion marley )"
+          pc_cflags="$( pkg-config --cflags marley )"
+          pc_libs="$( pkg-config --libs marley )"
+          echo "--cflags: ${pc_cflags}"
+          echo "--libs:   ${pc_libs}"
+          case "${pc_libs}" in
+            *-lMARLEY*) ;;
+            *) echo "ERROR: --libs does not link MARLEY" >&2; exit 1 ;;
+          esac
+          # A .pc file must carry no rpath. A packager's toolchain manages
+          # that, and an rpath here would bake this machine's layout into a
+          # redistributed binary (spec 6.3). marley-config may carry one,
+          # because a hand-written Makefile has no other way to produce a
+          # runnable binary -- so the two interfaces differ by exactly this.
+          case "${pc_libs}" in
+            *-rpath*) echo "ERROR: marley.pc carries an rpath" >&2; exit 1 ;;
+          esac
+          # No published interface may name the build tree.
+          for flags in "${pc_cflags}" "${pc_libs}"; do
+            case "${flags}" in
+              *"${GITHUB_WORKSPACE}/build"*)
+                echo "ERROR: a published flag names the build tree" >&2
+                exit 1 ;;
+            esac
+          done
+          echo "published flags are clean"
+
+      - name: Resolve a data file through the installed CLI
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          # From an unrelated directory, so nothing resolves by accident.
+          mkdir -p "${RUNNER_TEMP}/resolve-test"
+          cd "${RUNNER_TEMP}/resolve-test"
+          "${RUNNER_TEMP}/a/bin/marley" info
+          out="$( "${RUNNER_TEMP}/a/bin/marley" info --resolve mass_table.js )"
+          echo "${out}"
+          case "${out}" in
+            *mass_table.js*) ;;
+            *) echo "ERROR: --resolve reported no path" >&2; exit 1 ;;
+          esac
+          # A name that cannot be resolved must exit non-zero. Printing
+          # NOT FOUND and exiting 0 would make this useless in a script,
+          # which is the only reason it exists.
+          if "${RUNNER_TEMP}/a/bin/marley" info --resolve no_such_file.js; then
+            echo "ERROR: --resolve exited 0 for a nonexistent file" >&2
+            exit 1
+          fi
+          echo "the resolver CLI behaves"
+
+      - name: The environment script, and the absence of MARLEY
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          cd "${RUNNER_TEMP}"
+          . "${RUNNER_TEMP}/a/bin/setup_marley.sh"
+          resolved="$( command -v marley )"
+          echo "marley resolves to: ${resolved}"
+          [ "${resolved}" = "${RUNNER_TEMP}/a/bin/marley" ] \
+            || { echo "ERROR: the installed marley is not first on PATH" >&2;
+                 exit 1; }
+          # The point of the whole data-discovery change: the script sets no
+          # MARLEY variable, because nothing reads one any more. Exporting
+          # one would quietly reintroduce the dependency this branch removes.
+          if [ -n "${MARLEY:-}" ]; then
+            echo "ERROR: setup_marley.sh exported MARLEY=${MARLEY}" >&2
+            exit 1
+          fi
+          echo "PATH set, MARLEY left unset"
+
+      - name: Interactive ROOT session (mroot)
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          (matrix.path == 'system' || matrix.path == 'root-builtin')
+        run: |
+          cd "${RUNNER_TEMP}"
+          # Two things at once, both specific to the INSTALLED tree:
+          #
+          #   dict -- looking up a dictionary class exercises the rootmap
+          #     and ROOT's dynamic path together. The rootmap names the
+          #     library as a bare "libMARLEY", so a missing dynamic path
+          #     shows up here as a failed autoload even though the library
+          #     was loaded by absolute path moments earlier.
+          #   hdr  -- parsing a MARLEY header exercises ROOT_INCLUDE_PATH,
+          #     without which the library loads but no #include works.
+          #
+          # EventFileReader.hh specifically: it has a member gated on
+          # USE_ROOT, which is why mroot declares that macro before loading
+          # anything. If the define were lost, cling would build a class
+          # layout disagreeing with the library and read wrong offsets.
+          #
+          # -e '(int)0;' last is load-bearing: root exits with the value of
+          # the final expression, and printf returns a character count.
+          out="$( "${RUNNER_TEMP}/a/bin/mroot" -b -q \
+            -e 'printf("dict: %s\n", TClass::GetClass("HepMC3::GenEventData") ? "found" : "MISSING");' \
+            -e 'printf("hdr: %s\n", gInterpreter->Declare("#include \"marley/EventFileReader.hh\"") ? "ok" : "FAILED");' \
+            -e '(int)0;' 2>&1 )"
+          echo "${out}"
+          # grep -a: ROOT's banner carries UTF-8 that can make grep treat
+          # the stream as binary and report nothing.
+          printf '%s\n' "${out}" | grep -a -q 'dict: found' \
+            || { echo "ERROR: the dictionary class could not be looked up" >&2;
+                 exit 1; }
+          printf '%s\n' "${out}" | grep -a -q 'hdr: ok' \
+            || { echo "ERROR: a MARLEY header did not parse under cling" >&2;
+                 exit 1; }
+          echo "mroot loads the library and parses MARLEY headers"
 
       # The stash is the point of increment 1. Without it, an install whose
       # RUNPATH still points into the build directory runs perfectly -- the
