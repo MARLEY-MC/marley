@@ -20,6 +20,7 @@
 
 // MARLEY includes
 #include "marley/CommandHandler.hh"
+#include "marley/FileManager.hh"
 #include "marley/Logger.hh"
 #include "marley/marley_utils.hh"
 
@@ -186,6 +187,35 @@ bool marley::CommandHandler::print_top_level_help() {
 }
 
 bool marley::CommandHandler::execute() {
+
+  // Applying the shipped logging configuration is explicit: the Logger's
+  // constructor installs a working default, so nothing here is required for
+  // MARLEY to run. A missing file leaves those defaults in place and a
+  // malformed one is rejected atomically, so MARLEY_LOG is safe either way.
+  //
+  // The try/catch is local because the handler further down wraps command
+  // dispatch only, and this runs before any command executes.
+  //
+  // resolve() rather than find_file(): this runs before the configuration it
+  // is fetching has been applied, so find_file()'s io.resolve reporting would
+  // print a line that logger.js itself could never suppress.
+  const auto& fm = marley::FileManager::Instance();
+  auto log_cfg = marley::FileManager::resolve( "logger.js", "config", {},
+    fm.roots(), fm.working_directory() );
+
+  if ( !log_cfg ) {
+    MARLEY_LOG( WARN, "app" ) << "Could not find logger.js; continuing with"
+      " default logging settings.";
+  }
+  else {
+    try {
+      marley::Logger::Instance().configure_from_file( log_cfg.path.string() );
+    }
+    catch ( const std::exception& e ) {
+      MARLEY_LOG( WARN, "app" ) << "Ignoring the logging configuration in \""
+        << log_cfg.path.string() << "\": " << e.what();
+    }
+  }
 
   // If we don't have any command-line arguments, then just print the
   // standard top-level help message

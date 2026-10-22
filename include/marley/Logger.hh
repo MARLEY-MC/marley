@@ -242,6 +242,15 @@ namespace marley {
       /// object
       void configure( const marley::JSON& json );
 
+      /// @brief Initialize the Logger from a JSON configuration file
+      /// @details Applying a logging configuration is an explicit act, never
+      /// performed automatically by the constructor. Callers are expected to
+      /// handle failure themselves: a missing file is not fatal, and a
+      /// malformed one leaves the previous configuration intact, so reporting
+      /// the problem and carrying on is always safe.
+      /// @param file_name Path to the configuration file
+      void configure_from_file( const std::string& file_name );
+
       static LogLevel string_to_loglevel( const std::string& str );
 
       /// @brief Get the singleton instance of the Logger class
