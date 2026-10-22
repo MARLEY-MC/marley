@@ -478,9 +478,9 @@ void marley::StructureDatabase::load_optical_model_params(
   // Otherwise, fetch the default one from the standard data file
   else {
     const auto& fm = marley::FileManager::Instance();
-    const std::string om_file_name( "optical_model_kduq_federal_cv.js" );
+    const std::string om_file_name( "kduq_federal_cv.js" );
     std::string om_full_file_name
-      = fm.find_file( om_file_name, "optical_model" ).string();
+      = fm.find_file( om_file_name, "optical" ).string();
 
     MARLEY_LOG( INFO, "init.structure" ) << "Loading nuclear optical model parameters from "
       << om_full_file_name;

@@ -240,7 +240,7 @@
   // "reactions" JSON array. After searching in the working directory, MARLEY's
   // default behavior is to search for reaction input files in the directories
   // ${MARLEY}/data, ${MARLEY}/data/react/, ${MARLEY}/data/structure/, and
-  // ${MARLEY}/data/optical_model/, where ${MARLEY} is the value of the MARLEY
+  // ${MARLEY}/data/optical/, where ${MARLEY} is the value of the MARLEY
   // environment variable (typically set by sourcing the setup_marley.sh bash
   // script). The list of search directories beyond the working directory can
   // be changed from the default by setting the MARLEY_SEARCH_PATH environment
@@ -617,16 +617,16 @@
   //
   //  // The default MARLEY v2 nuclear optical potential is the KDUQ Federal
   //  // evaluation from https://doi.org/10.1103/PhysRevC.107.014602 (settings
-  //  // in data/optical_model/optical_model_kduq_federal_cv.js). This weight
+  //  // in data/optical/kduq_federal_cv.js). This weight
   //  // calculator computes event weights for switching to the MARLEY v1
   //  // default, which was based on the earlier KD global fit from
   //  // https://doi.org/10.1016/S0375-9474(02)01321-0 (settings in
-  //  // data/optical_model/optical_model_kd_global.js). Details on the
+  //  // data/optical/kd_global.js). Details on the
   //  // parameter settings specified under the opt_mod key are available in
   //  // the example configuration file for the "marley reweight" command
   //  // (examples/config/reweight_example.js).
   //  { type: "optical_model", name: "KD-global-OMP",
-  //    opt_mod: #include:"optical_model_kd_global.js" },
+  //    opt_mod: #include:"optical/kd_global.js" },
   //
   //  // multisim mode (default): uncorrelated random Gaussian variations
   //  { type: "strength_variation", name: "MultisimStrengthVar",
@@ -808,7 +808,7 @@
   // The "opt_mod" key provides a custom configuration of nuclear optical model
   // parameters, overriding the defaults. The value should be a JSON object
   // whose format matches the configuration used in the files that appear under
-  // the data/optical_model/ directory. Switching the configuration to match
+  // the data/optical/ directory. Switching the configuration to match
   // the settings in any of these files may most easily be done using the
   // #include syntax shown below. The file given in this example corresponds
   // to the default optical model potential for MARLEY v2.
@@ -817,6 +817,6 @@
   // in the example configuration file for the "marley reweight" command
   // (examples/config/reweight_example.js).
   //
-  // opt_mod: #include:"optical_model_kduq_federal_cv.js"
+  // opt_mod: #include:"optical/kduq_federal_cv.js"
 
 } // A closing curly brace should appear at the end of the file
