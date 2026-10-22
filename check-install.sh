@@ -478,9 +478,9 @@ quiet "comes from the working directory. The notice is CORRECT here."
 ( cd /tmp/marley-reloc/inc \
   && /tmp/m5/bin/marley job.js ) > /tmp/marley-reloc/inc-bare.out 2>&1 < /dev/null
 quiet "[exit $?]"
-grep -E "resolved from the working directory|Generated" \
+grep -a -E "resolved from the working directory|Generated" \
   /tmp/marley-reloc/inc-bare.out >> "$LOG" 2>&1
-if grep -q "resolved from the working directory" /tmp/marley-reloc/inc-bare.out
+if grep -qa "resolved from the working directory" /tmp/marley-reloc/inc-bare.out
 then
   quiet "ok: reported as a working-directory hit, which is what it was"
 else
@@ -500,9 +500,9 @@ INCDIR="$( cd /tmp/marley-reloc/inc && pwd -P )"
   && /tmp/m5/bin/marley "$INCDIR/job.js" ) \
   > /tmp/marley-reloc/inc-abs.out 2>&1 < /dev/null
 quiet "[exit $?]"
-grep -E "resolved from the working directory|Generated" \
+grep -a -E "resolved from the working directory|Generated" \
   /tmp/marley-reloc/inc-abs.out >> "$LOG" 2>&1
-if grep -q "resolved from the working directory" /tmp/marley-reloc/inc-abs.out
+if grep -qa "resolved from the working directory" /tmp/marley-reloc/inc-abs.out
 then
   log "MISATTRIBUTED: leg 2 reported as a working-directory hit"
 else
