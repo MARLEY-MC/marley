@@ -45,7 +45,17 @@ endif()
 # ------------------------------------------------------------------------------
 # Semantic project version (for packaging + find_package version checks)
 # ------------------------------------------------------------------------------
-project(MARLEY VERSION 2.0.0 LANGUAGES CXX)
+# The semantic version, used for packaging and for find_package(MARLEY x.y)
+# version checks. Taken from .VERSION when a release tarball provides one, so
+# that it cannot drift from the version everything else reports; the literal
+# is the fallback for a git checkout, where MARLEY_COMPUTED_VERSION is a
+# commit hash and matches no version pattern.
+set(MARLEY_PROJECT_VERSION 2.0.0)
+if(DEFINED MARLEY_COMPUTED_VERSION
+    AND MARLEY_COMPUTED_VERSION MATCHES "^v?([0-9]+(\\.[0-9]+)*)")
+  set(MARLEY_PROJECT_VERSION "${CMAKE_MATCH_1}")
+endif()
+project(MARLEY VERSION ${MARLEY_PROJECT_VERSION} LANGUAGES CXX)
 
 # ------------------------------------------------------------------------------
 # Install directories
@@ -551,7 +561,13 @@ else()
   # is intended to prevent clashes with the system GSL library later. The extra
   # compile flag is only set for this source file when compiling the marley_lib
   # shared library target
-  set_property(SOURCE ${CMAKE_SOURCE_DIR}/src/marley_gsl.cc TARGET marley_lib
+  # NOTE: source properties are DIRECTORY-scoped. There is no per-target
+  # form, and the TARGET keyword that used to appear here is not one: CMake
+  # silently parsed "TARGET" and "marley_lib" as two more source filenames,
+  # so the option was applied to this directory anyway and the comment above
+  # described scoping that never happened. The only other target compiling
+  # this file is martest, where hiding the symbols is harmless.
+  set_property(SOURCE ${CMAKE_SOURCE_DIR}/src/marley_gsl.cc
     APPEND PROPERTY COMPILE_OPTIONS "-fvisibility=hidden")
 endif()
 
@@ -1008,6 +1024,25 @@ export(TARGETS ${_marley_export_targets}
   NAMESPACE MARLEY::
 )
 
+# Which dependencies the exported targets actually need a consumer to find.
+# Gated on whether MARLEY used the IMPORTED TARGETS, not merely on whether
+# the dependency was present: on the root-config fallback path the exported
+# targets carry raw flags and naming ROOT:: in the config file would make
+# find_package(MARLEY) fail for a consumer whose MARLEY built fine.
+#
+# GSL is deliberately absent. It is a private dependency -- used by
+# src/marley_gsl.cc, named in no installed header -- so a consumer neither
+# needs nor sees it. HepMC3 is public, because MARLEY's event type is an
+# HepMC3 type.
+set(MARLEY_NEEDS_HEPMC3_PACKAGE FALSE)
+if(NOT USE_BUILTIN_HEPMC3 AND TARGET HepMC3::HepMC3)
+  set(MARLEY_NEEDS_HEPMC3_PACKAGE TRUE)
+endif()
+set(MARLEY_NEEDS_ROOT_PACKAGE FALSE)
+if(USE_ROOT AND TARGET ROOT::Core)
+  set(MARLEY_NEEDS_ROOT_PACKAGE TRUE)
+endif()
+
 # Build-tree package config files
 configure_package_config_file(
   "${CMAKE_SOURCE_DIR}/cmake/MARLEYConfig.cmake.in"
@@ -1247,7 +1282,10 @@ endif()
 
 add_executable(martest EXCLUDE_FROM_ALL ${MARLEY_TEST_SOURCES})
 target_link_libraries(martest PRIVATE marley_lib)
-prefer_imported_or_flags(martest PRIVATE "${GSL_IMPORTED_TARGETS}"
+# The same target list marley_lib uses. GSL_IMPORTED_TARGETS was defined
+# nowhere in the tree -- this use site was its only occurrence -- so the call
+# always fell through to the raw-flags branch.
+prefer_imported_or_flags(martest PRIVATE "GSL::gsl;GSL::gslcblas"
   GSL_CFLAGS GSL_LIBS)
 target_include_directories(martest PRIVATE
   "${CMAKE_SOURCE_DIR}/include"

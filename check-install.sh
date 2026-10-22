@@ -336,6 +336,40 @@ build make clean
 build make IGNORE_CMAKE=1 CXX_STD=c++23 -j10
 run sh -c "./build/bin/marley-config --cxx-std"
 
+head2 "J. the CMake package must work for a consumer"
+quiet ""
+quiet "A find_package(MARLEY) that configures and links is the only real"
+quiet "check here: the config file previously had its find_dependency calls"
+quiet "commented out, so it resolved and failed later at link time."
+rm -rf /tmp/marley-consumer && mkdir -p /tmp/marley-consumer
+cat > /tmp/marley-consumer/CMakeLists.txt <<'EOF'
+cmake_minimum_required(VERSION 3.18)
+project(marley_consumer LANGUAGES CXX)
+find_package(MARLEY REQUIRED)
+add_executable(consumer main.cc)
+target_link_libraries(consumer PRIVATE MARLEY::marley_lib)
+EOF
+cat > /tmp/marley-consumer/main.cc <<'EOF'
+#include "marley/FileManager.hh"
+#include "marley/EventFileReader.hh"
+#include <iostream>
+int main() {
+  const auto& fm = marley::FileManager::Instance();
+  std::cout << "consumer sees " << fm.roots().size() << " data root(s)\n";
+  return 0;
+}
+EOF
+quiet ""
+quiet "--- configure against the installed CMake package ---"
+run cmake -S /tmp/marley-consumer -B /tmp/marley-consumer/build   -DCMAKE_PREFIX_PATH=/tmp/m3
+quiet ""
+quiet "--- build and run it ---"
+run cmake --build /tmp/marley-consumer/build
+run /tmp/marley-consumer/build/consumer
+quiet ""
+quiet "--- the consumer must inherit the C++ standard from the target ---"
+run sh -c "grep -o -- '-std=[^ ]*'   /tmp/marley-consumer/build/CMakeFiles/consumer.dir/flags.make | head -2"
+
 head2 "C. no build-tree or source-tree path in any published interface"
 quiet ""
 quiet "Searching the installed marley-config and marley.pc for \"$REPO\"."
