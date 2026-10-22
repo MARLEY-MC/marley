@@ -50,9 +50,13 @@ endif()
 # that it cannot drift from the version everything else reports; the literal
 # is the fallback for a git checkout, where MARLEY_COMPUTED_VERSION is a
 # commit hash and matches no version pattern.
+# The pattern is anchored at BOTH ends and requires at least major.minor.
+# Without that, the git-hash fallback "6b8faa29-dirty" matched its own
+# leading digit and the package declared itself version 6 -- which fails
+# every find_package(MARLEY 2.0) check while configuring perfectly happily.
 set(MARLEY_PROJECT_VERSION 2.0.0)
 if(DEFINED MARLEY_COMPUTED_VERSION
-    AND MARLEY_COMPUTED_VERSION MATCHES "^v?([0-9]+(\\.[0-9]+)*)")
+    AND MARLEY_COMPUTED_VERSION MATCHES "^v?([0-9]+\\.[0-9]+(\\.[0-9]+)?)$")
   set(MARLEY_PROJECT_VERSION "${CMAKE_MATCH_1}")
 endif()
 project(MARLEY VERSION ${MARLEY_PROJECT_VERSION} LANGUAGES CXX)

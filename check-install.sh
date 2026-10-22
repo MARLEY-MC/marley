@@ -371,10 +371,15 @@ find_package(MARLEY REQUIRED)
 # Report every imported target the package defined, so that a wrong guess
 # at the name is distinguishable from a package that exported nothing.
 get_property(_tgts DIRECTORY PROPERTY IMPORTED_TARGETS)
-message(STATUS "imported targets after find_package(MARLEY): ${_tgts}")
+# Only MARLEY's own targets; the ROOT list is ~150 entries of noise.
+list(FILTER _tgts INCLUDE REGEX "^MARLEY::")
+message(STATUS "MARLEY imported targets: ${_tgts}")
 message(STATUS "MARLEY_VERSION=${MARLEY_VERSION} MARLEY_FOUND=${MARLEY_FOUND}")
+# A version check a real consumer would write. The package declared itself
+# version 6 once, by matching the leading digit of a git hash.
+find_package(MARLEY 2.0 REQUIRED)
 add_executable(consumer main.cc)
-target_link_libraries(consumer PRIVATE MARLEY::marley_lib)
+target_link_libraries(consumer PRIVATE MARLEY::MARLEY)
 EOF
 cat > /tmp/marley-consumer/main.cc <<'EOF'
 #include "marley/FileManager.hh"
