@@ -1,0 +1,46 @@
+# Lines stripped from MARLEY output before the golden-file comparison.
+#
+# ONE source of truth. These expressions were previously written out by hand
+# at three places in ci.yml, and -- worse -- were not part of the cache key
+# for the golden file. Editing them therefore produced a current file
+# filtered one way and a cached golden file filtered another: a guaranteed
+# failure, and the reason such a change previously had to land by itself.
+# The cache key now includes a hash of this file, so editing it invalidates
+# the golden file automatically and precisely.
+#
+# MUST be used as:
+#
+#   grep -v -f <(grep -v -e '^#' -e '^$' .github/golden-filters.txt) FILE
+#
+# Comments and blank lines have to be stripped first, and the blank-line
+# part is not cosmetic: grep -f treats an EMPTY pattern as matching every
+# line. Passing this file to grep -f directly would filter the golden file
+# and the current file both down to nothing, and diff would then pass --
+# silently retiring the entire physics comparison while looking green.
+#
+# Each surviving line is a basic regular expression.
+
+# Run timestamp.
+^T MARLEY
+
+# HepMC3 library version, which tracks the build environment.
+^HepMC::Version
+
+# The serialised PARSED job configuration, not a copy of the file. It is
+# produced by whichever MARLEY version ran, so any difference in how two
+# versions parse, normalise, default or NAME a configuration key lands here
+# -- and the golden file comes from the reference branch while the current
+# file comes from the branch under test. None of that is a physics
+# regression.
+#
+# Not hypothetical: an older output in this tree records the generate block
+# as "executable_settings" where a newer one records "generate". Had that
+# rename arrived in a pull request, the golden diff would have gone red for
+# byte-identical physics.
+#
+# The cost, stated rather than glossed: a genuine unintended change to the
+# stored configuration will no longer be caught here. That is acceptable
+# because this diff exists to catch physics regressions, and the
+# configuration schema has its own consumers -- "resume" and "reweight" --
+# that would notice.
+^A MARLEY.JSONconfig

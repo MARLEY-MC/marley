@@ -162,7 +162,15 @@ jobs:
             fi
             suffix="${ref_sha}"
           fi
-          echo "cache-key=ref-linux-${{ steps.ref_branch.outputs.branch }}-${suffix}" \
+          # The golden file is only comparable to a current file filtered
+          # the same way, so the filter's content belongs in the key. Before
+          # this, editing .github/golden-filters.txt produced a current file
+          # filtered one way and a cached golden file filtered another --
+          # which is why such an edit previously had to land on its own.
+          # hashFiles is used rather than sha256sum because the macOS runners
+          # do not have that command.
+          filters="${{ hashFiles('.github/golden-filters.txt') }}"
+          echo "cache-key=ref-linux-${{ steps.ref_branch.outputs.branch }}-${suffix}-${filters:0:12}" \
             >> "$GITHUB_OUTPUT"
           echo "ref-sha=${ref_sha}" >> "$GITHUB_OUTPUT"
 
@@ -197,8 +205,12 @@ jobs:
           MARLEY: ${{ github.workspace }}
         run: |
           ./build/bin/marley generate examples/config/COPY_ME.js
-          grep -v -e '^T MARLEY' -e '^HepMC::Version' events.hepmc3 \
-            > golden-linux.hepmc3
+          # Comments and blanks stripped first: grep -f treats an empty
+          # pattern as matching every line, which would filter both files
+          # to nothing and make diff pass vacuously.
+          grep -v -f <(grep -v -e '^#' -e '^$' \
+            "${GITHUB_WORKSPACE}/.github/golden-filters.txt") \
+            events.hepmc3 > golden-linux.hepmc3
 
   ref-macos:
     name: Reference (macOS)
@@ -243,7 +255,9 @@ jobs:
           else
             suffix="${ref_sha}"
           fi
-          echo "cache-key=ref-macos-${BRANCH}-${suffix}" >> "$GITHUB_OUTPUT"
+          # See the Linux job for why the filter hash is part of the key.
+          filters="${{ hashFiles('.github/golden-filters.txt') }}"
+          echo "cache-key=ref-macos-${BRANCH}-${suffix}-${filters:0:12}" >> "$GITHUB_OUTPUT"
           echo "ref-sha=${ref_sha}" >> "$GITHUB_OUTPUT"
 
       - name: Restore cached reference file
@@ -274,8 +288,9 @@ jobs:
           MARLEY: ${{ github.workspace }}
         run: |
           ./build/bin/marley generate examples/config/COPY_ME.js
-          grep -v -e '^T MARLEY' -e '^HepMC::Version' events.hepmc3 \
-            > golden-macos.hepmc3
+          grep -v -f <(grep -v -e '^#' -e '^$' \
+            "${GITHUB_WORKSPACE}/.github/golden-filters.txt") \
+            events.hepmc3 > golden-macos.hepmc3
 
   # ---------------------------------------------------------------------------
   # Main Build / Test Matrix
@@ -407,24 +422,47 @@ jobs:
         if: steps.eligibility.outputs.skip != 'true'
         run: make test CXX=${{ matrix.cxx }} ${{ matrix.flags }}
 
-      - name: Verify system dependencies were linked
+      # This assertion is the INVERSE of the one it replaces, deliberately.
+      #
+      # It used to require -DMARLEY_FOUND_GSL and -DMARLEY_FOUND_HEPMC3 to
+      # appear in marley-config --cflags, treating their presence as proof
+      # that the system libraries were used. Those are internal build
+      # switches: no installed header tests either of them, and publishing
+      # them pushed MARLEY's private build configuration onto every
+      # consumer's compile line. The published flags must no longer carry
+      # them, so the old check now asserts exactly the leak that was fixed.
+      #
+      # What the leg actually needs to prove -- that the system libraries
+      # really were used rather than the vendored fallbacks -- is recorded
+      # by the install receipt, which exists to state what the build did.
+      # That check lives in the deployment steps below, where the receipt
+      # exists.
+      - name: Verify no internal build switches reach the published flags
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          published=$(./build/bin/marley-config --cflags --libs)
+          echo "published: ${published}"
+          if echo "${published}" | grep -q 'MARLEY_FOUND_'; then
+            echo "ERROR: an internal MARLEY_FOUND_* switch reached the" \
+              "published flags" >&2
+            exit 1
+          fi
+
+      - name: Verify ROOT was linked (system path)
         if: steps.eligibility.outputs.skip != 'true' && matrix.path == 'system'
         run: |
-          cflags=$(./build/bin/marley-config --cflags)
           use_root=$(./build/bin/marley-config --use-root)
-          echo "cflags:   ${cflags}"
           echo "use-root: ${use_root}"
-          echo "${cflags}" | grep -q '\-DMARLEY_FOUND_GSL' \
-            || { echo "ERROR: system GSL was not linked"; exit 1; }
-          echo "${cflags}" | grep -q '\-DMARLEY_FOUND_HEPMC3' \
-            || { echo "ERROR: system HepMC3 was not linked"; exit 1; }
           [ "${use_root}" = "yes" ] \
             || { echo "ERROR: ROOT was not linked"; exit 1; }
 
+      # No MARLEY in the environment. Self-location has to find
+      # build/share/marley/data through the build tree's own symlink; if it
+      # cannot, that is the defect this work exists to prevent and the test
+      # should say so. The ref-* jobs DO set it -- they build the
+      # pre-refactor branch, whose Logger throws without it.
       - name: Unit tests
         if: steps.eligibility.outputs.skip != 'true'
-        env:
-          MARLEY: ${{ github.workspace }}
         run: ./build/bin/martest
 
       # Physics validation: restore the golden file produced by the matching
@@ -482,7 +520,6 @@ jobs:
           (needs.ref-linux.result == 'success' ||
            needs.ref-macos.result == 'success')
         env:
-          MARLEY: ${{ github.workspace }}
           IS_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
           golden="${{ matrix.golden }}"
@@ -495,6 +532,129 @@ jobs:
             exit 1
           fi
           ./build/bin/marley generate examples/config/COPY_ME.js
-          grep -v -e '^T MARLEY' -e '^HepMC::Version' events.hepmc3 \
-            > ${{ matrix.current }}
+          grep -v -f <(grep -v -e '^#' -e '^$' \
+            "${GITHUB_WORKSPACE}/.github/golden-filters.txt") \
+            events.hepmc3 > ${{ matrix.current }}
           diff "${golden}" ${{ matrix.current }}
+
+      # -----------------------------------------------------------------
+      # Deployment (design spec 8.2)
+      #
+      # Coverage here was deep in one dimension and absent in another:
+      # sixteen build configurations, exactly one deployment layout -- the
+      # build tree. Neither "make install" nor "cmake --install" ran
+      # anywhere. These steps install it, prove the install stands alone,
+      # prove it survives being MOVED, and then remove it.
+      # -----------------------------------------------------------------
+      - name: Install
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          make install CXX=${{ matrix.cxx }} ${{ matrix.flags }} \
+            prefix="${RUNNER_TEMP}/a"
+          find "${RUNNER_TEMP}/a" -maxdepth 2 -mindepth 1 \
+            -not -path '*/data/*' | sort
+
+      - name: Verify the receipt records what the build actually did
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          receipt="${RUNNER_TEMP}/a/share/marley/install-receipt"
+          cat "${receipt}"
+          # The question the old --cflags grep was trying to answer, asked
+          # of the thing that exists to record it.
+          if [ "${{ matrix.path }}" = "system" ]; then
+            grep -q '^hepmc3: external' "${receipt}" \
+              || { echo "ERROR: system HepMC3 was not used" >&2; exit 1; }
+            grep -q '^gsl: external' "${receipt}" \
+              || { echo "ERROR: system GSL was not used" >&2; exit 1; }
+            grep -q '^root: yes' "${receipt}" \
+              || { echo "ERROR: ROOT was not used" >&2; exit 1; }
+          else
+            grep -q '^hepmc3: builtin' "${receipt}" \
+              || { echo "ERROR: the vendored HepMC3 was not used" >&2; exit 1; }
+          fi
+
+      # The stash is the point of increment 1. Without it, an install whose
+      # RUNPATH still points into the build directory runs perfectly -- the
+      # exact silent breakage that appears if the install-prefix work lands
+      # before the RUNPATH work. With it, that ordering hazard becomes a
+      # test failure in the commit that causes it.
+      - name: Stash the build tree
+        if: steps.eligibility.outputs.skip != 'true'
+        run: mv build build.stashed
+
+      - name: Run the installed MARLEY, and diff against the golden file
+        if: steps.eligibility.outputs.skip != 'true'
+        env:
+          IS_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          # From a temporary directory, with the INSTALLED example
+          # configuration: that also proves examples/ shipped, since 14
+          # documented commands used to fail on an installed MARLEY.
+          mkdir -p "${RUNNER_TEMP}/run-a"
+          cd "${RUNNER_TEMP}/run-a"
+          "${RUNNER_TEMP}/a/bin/marley" generate \
+            "${RUNNER_TEMP}/a/share/marley/examples/config/COPY_ME.js"
+
+          golden="${GITHUB_WORKSPACE}/${{ matrix.golden }}"
+          if [[ ! -f "${golden}" ]]; then
+            if [[ "${IS_FORK_PR}" == "true" ]]; then
+              echo "WARNING: no golden file for a fork PR; diff skipped"
+              exit 0
+            fi
+            echo "ERROR: golden file '${golden}' not found" >&2
+            exit 1
+          fi
+          # Every checkpoint diffs, not just the build-tree one. Otherwise
+          # CI verifies "build-tree MARLEY is correct" and "installed
+          # MARLEY runs", but never "installed MARLEY is correct" -- which
+          # is the whole subject of this change.
+          grep -v -f <(grep -v -e '^#' -e '^$' \
+            "${GITHUB_WORKSPACE}/.github/golden-filters.txt") \
+            events.hepmc3 > current-installed.hepmc3
+          diff "${golden}" current-installed.hepmc3
+
+      - name: Relocate the installed prefix and run again
+        if: steps.eligibility.outputs.skip != 'true'
+        env:
+          IS_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          mv "${RUNNER_TEMP}/a" "${RUNNER_TEMP}/b"
+          mkdir -p "${RUNNER_TEMP}/run-b"
+          cd "${RUNNER_TEMP}/run-b"
+          "${RUNNER_TEMP}/b/bin/marley" generate \
+            "${RUNNER_TEMP}/b/share/marley/examples/config/COPY_ME.js"
+
+          golden="${GITHUB_WORKSPACE}/${{ matrix.golden }}"
+          if [[ ! -f "${golden}" && "${IS_FORK_PR}" == "true" ]]; then
+            echo "WARNING: no golden file for a fork PR; diff skipped"
+            exit 0
+          fi
+          grep -v -f <(grep -v -e '^#' -e '^$' \
+            "${GITHUB_WORKSPACE}/.github/golden-filters.txt") \
+            events.hepmc3 > current-moved.hepmc3
+          diff "${golden}" current-moved.hepmc3
+
+      # Uninstalling the MOVED tree tests a property nothing else verifies:
+      # that relocating an installation does not render it un-removable.
+      # An explicit --prefix means no guessing, and --yes means CI cannot
+      # hang on the confirmation prompt.
+      - name: Uninstall, and assert the prefix is empty
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          "${GITHUB_WORKSPACE}/src/scripts/uninstall-marley" \
+            --prefix "${RUNNER_TEMP}/b" --yes
+          echo "--- what remains ---"
+          find "${RUNNER_TEMP}/b" || true
+          leftover=$(find "${RUNNER_TEMP}/b" \( -type f -o -type l \) -print)
+          if [ -n "${leftover}" ]; then
+            echo "ERROR: the uninstaller left files behind:" >&2
+            echo "${leftover}" >&2
+            exit 1
+          fi
+
+      - name: Restore the build tree
+        if: always() && steps.eligibility.outputs.skip != 'true'
+        run: |
+          if [ -d build.stashed ] && [ ! -d build ]; then
+            mv build.stashed build
+          fi
