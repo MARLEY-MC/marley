@@ -372,6 +372,20 @@ jobs:
     # is handled by the "Check matrix eligibility" guard step below.
     if: always() && needs.ref-linux.result != 'failure'
     runs-on: ${{ matrix.os }}
+    # A LOGIN shell, so that the micromamba environment is actually active.
+    #
+    # setup-micromamba initialises a shell hook, but GitHub's default run
+    # shell is "bash --noprofile --norc -eo pipefail", which never sources
+    # the profile -- so root-config was not on PATH, every ROOT leg silently
+    # configured WITHOUT ROOT, and the only reason that was ever visible is
+    # that a step asserted --use-root was "yes".
+    #
+    # -eo pipefail is carried over deliberately: the stock default has it,
+    # and dropping it would let a failure in the left-hand side of a pipe
+    # pass unnoticed.
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
     strategy:
       fail-fast: false
       matrix:
