@@ -134,7 +134,17 @@ else()
 endif()
 add_compile_definitions(MARLEY_COMPILED_LOG_LEVEL=${MARLEY_LOG_LEVEL})
 
-set(CMAKE_CXX_STANDARD 17)
+# MARLEY's floor. The effective standard is computed once ROOT has been
+# found -- see "the effective C++ standard" below -- as the maximum of this,
+# whatever was requested, and whatever ROOT was built with.
+#
+# CACHE, not a plain set(): a normal variable here shadows the cache, so
+# -DCMAKE_CXX_STANDARD=20 was silently discarded. The UPS shim passes
+# exactly that (build_marley.sh:288).
+set(MARLEY_CXX_STANDARD_FLOOR 17)
+set(CMAKE_CXX_STANDARD ${MARLEY_CXX_STANDARD_FLOOR} CACHE STRING
+  "C++ standard used to build MARLEY (${MARLEY_CXX_STANDARD_FLOOR} minimum)")
+set(MARLEY_CXX_STD_REQUESTED ${CMAKE_CXX_STANDARD})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -387,17 +397,6 @@ if(NOT IGNORE_ROOT)
   if(NOT USE_ROOT AND (ROOT_FIND_MODE STREQUAL "config" OR ROOT_FIND_MODE STREQUAL "auto"))
     find_library_with_config(ROOT root-config ROOT_FOUND ROOT_CFLAGS ROOT_LIBS)
     if(ROOT_FOUND)
-      string(FIND "${ROOT_CFLAGS}" "c++23" HAS_CXX23)
-      string(FIND "${ROOT_CFLAGS}" "c++2b" HAS_CXX2B)
-      string(FIND "${ROOT_CFLAGS}" "c++20" HAS_CXX20)
-      string(FIND "${ROOT_CFLAGS}" "c++2a" HAS_CXX2A)
-      if(NOT HAS_CXX23 EQUAL -1 OR NOT HAS_CXX2B EQUAL -1)
-        set(CMAKE_CXX_STANDARD 23)
-        message(STATUS "Upgrading to C++23 to match ROOT")
-      elseif(NOT HAS_CXX20 EQUAL -1 OR NOT HAS_CXX2A EQUAL -1)
-        set(CMAKE_CXX_STANDARD 20)
-        message(STATUS "Upgrading to C++20 to match ROOT")
-      endif()
       find_program(ROOTCLING_EXECUTABLE NAMES rootcling rootcint)
       if(ROOTCLING_EXECUTABLE)
         set(USE_ROOT TRUE)
@@ -413,6 +412,101 @@ endif()
 if(NOT USE_ROOT)
   message(STATUS "MARLEY will be built without ROOT support")
 endif()
+
+# ------------------------------------------------------------------------------
+# The effective C++ standard (design spec 6.2)
+#
+# One value: the maximum of MARLEY's floor, whatever was requested, and
+# whatever ROOT was built with. It drives compilation, the exported target's
+# compile features, and what marley-config --cxx-std and marley.pc report --
+# so none of those can disagree with the binary.
+#
+# Three separate defects made this necessary rather than cosmetic:
+#   - a plain set(CMAKE_CXX_STANDARD 17) discarded -DCMAKE_CXX_STANDARD;
+#   - --cxx-std reported the directory variable, not what was built with;
+#   - ROOT's imported targets carry INTERFACE_COMPILE_FEATURES cxx_std_N and
+#     marley_lib links them PUBLIC, so CMake quietly raised the standard
+#     while --cxx-std went on saying c++17. That is the discrepancy observed
+#     between the two build systems on ROOT 6.40.
+#
+# ROOT_CXX_STANDARD is not used: tag-probed absent at v6-22-00 and
+# v6-28-00, appearing only around v6-34-00, and UPS pins v6_28_12.
+# ------------------------------------------------------------------------------
+
+# Reduce a -std= spelling or a cxx_std_N feature name to a bare number.
+# gnu++NN and c++NN alike become NN, and the provisional spellings map to
+# their final numbers. Anything unrecognised becomes empty and drops out of
+# the maximum rather than winning it.
+function(marley_std_number raw out_var)
+  set(_v "${raw}")
+  string(REGEX REPLACE "^-std=" "" _v "${_v}")
+  string(REGEX REPLACE "^cxx_std_" "" _v "${_v}")
+  string(REGEX REPLACE "^gnu\\+\\+" "c++" _v "${_v}")
+  string(REGEX REPLACE "^c\\+\\+" "" _v "${_v}")
+  if(_v STREQUAL "2a")
+    set(_v 20)
+  elseif(_v STREQUAL "2b")
+    set(_v 23)
+  elseif(_v STREQUAL "2c")
+    set(_v 26)
+  endif()
+  if(NOT _v MATCHES "^[0-9]+$")
+    set(_v "")
+  endif()
+  set(${out_var} "${_v}" PARENT_SCOPE)
+endfunction()
+
+set(MARLEY_ROOT_STD "")
+if(USE_ROOT)
+  if(TARGET ROOT::Core)
+    # Config-package path. This is where the standard actually comes from in
+    # the build UPS and most users get, and reading it here is what stops
+    # CMake raising the standard behind the reported value's back.
+    get_target_property(_root_feats ROOT::Core INTERFACE_COMPILE_FEATURES)
+    if(_root_feats)
+      foreach(_f IN LISTS _root_feats)
+        marley_std_number("${_f}" _n)
+        if(_n AND (NOT MARLEY_ROOT_STD OR _n GREATER MARLEY_ROOT_STD))
+          set(MARLEY_ROOT_STD "${_n}")
+        endif()
+      endforeach()
+    endif()
+  elseif(DEFINED ROOT_CFLAGS)
+    # root-config fallback path. Same three steps -- extract, normalise,
+    # take the maximum -- applied to the same root-config --cflags output
+    # the Make path parses, so the two are checkably equivalent rather than
+    # two independent guesses.
+    foreach(_f IN LISTS ROOT_CFLAGS)
+      if(_f MATCHES "^-std=")
+        marley_std_number("${_f}" _n)
+        if(_n AND (NOT MARLEY_ROOT_STD OR _n GREATER MARLEY_ROOT_STD))
+          set(MARLEY_ROOT_STD "${_n}")
+        endif()
+      endif()
+    endforeach()
+  endif()
+endif()
+
+set(MARLEY_CXX_STANDARD ${MARLEY_CXX_STANDARD_FLOOR})
+foreach(_c ${MARLEY_CXX_STD_REQUESTED} ${MARLEY_ROOT_STD})
+  marley_std_number("${_c}" _n)
+  if(_n AND _n GREATER MARLEY_CXX_STANDARD)
+    set(MARLEY_CXX_STANDARD "${_n}")
+  endif()
+endforeach()
+
+if(NOT MARLEY_CXX_STANDARD EQUAL MARLEY_CXX_STD_REQUESTED)
+  if(MARLEY_CXX_STD_REQUESTED GREATER MARLEY_CXX_STANDARD_FLOOR)
+    # Someone named a standard and is not getting it.
+    message(WARNING "Building with C++${MARLEY_CXX_STANDARD}, not the "
+      "requested C++${MARLEY_CXX_STD_REQUESTED}: ROOT was built with it, and "
+      "MARLEY links ROOT's targets PUBLIC.")
+  else()
+    message(STATUS "Using C++${MARLEY_CXX_STANDARD} to match ROOT")
+  endif()
+endif()
+
+set(CMAKE_CXX_STANDARD ${MARLEY_CXX_STANDARD})
 
 # ------------------------------------------------------------------------------
 # Main MARLEY library
@@ -464,10 +558,21 @@ endif()
 # Public includes and transitive deps
 target_include_directories(marley_lib PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
+  $<INSTALL_INTERFACE:${MARLEY_INCLUDEDIR_REL}>
+  # HepMC3's include root is needed to BUILD marley_lib. Consumers get it
+  # from the HepMC3 target itself -- HepMC3_builtin's INSTALL_INTERFACE on a
+  # vendored build, HepMC3::HepMC3's on an external one -- so there is no
+  # second INSTALL_INTERFACE here. The one that used to sit here was a
+  # duplicate of the line above it, and hardcoded "include", so it was also
+  # wrong for any install that renames the header directory.
   $<BUILD_INTERFACE:${HEPMC3_INCLUDE_DIR}>
-  $<INSTALL_INTERFACE:include>
 )
+
+# The one true standard, carried to consumers. MARLEY previously set no
+# compile features at all on its exported target, so a CMake consumer got no
+# constraint while marley-config reported a stale one -- neither published
+# interface carried a true value (design spec 6.2).
+target_compile_features(marley_lib PUBLIC cxx_std_${MARLEY_CXX_STANDARD})
 
 prefer_imported_or_flags(marley_lib PUBLIC "GSL::gsl;GSL::gslcblas" GSL_CFLAGS GSL_LIBS)
 
@@ -789,7 +894,10 @@ else()
   set(MARLEY_NEW_DTAGS "-Wl,--enable-new-dtags")
 endif()
 
-set(MARLEY_CXX_STD "c++${CMAKE_CXX_STANDARD}")
+# The computed value, not the directory variable. Reporting
+# CMAKE_CXX_STANDARD here is what let --cxx-std say c++17 while ROOT's
+# PUBLIC compile features built the library as C++20.
+set(MARLEY_CXX_STD "c++${MARLEY_CXX_STANDARD}")
 
 string(CONCAT MARLEY_CONFIG_HEADER
   "#!/bin/bash\n"

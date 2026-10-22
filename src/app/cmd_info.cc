@@ -62,7 +62,9 @@ namespace {
       << "Options:\n"
       << "  -h, --help       Print this message\n\n"
       << "This output is intended for humans and its format is not stable.\n"
-      << "Do not parse it from a script or a packaging recipe.\n";
+      << "Do not parse it from a script or a packaging recipe. The exit\n"
+      << "status is stable: --resolve exits 0 if the name resolves and 1 if\n"
+      << "it does not.\n";
   }
 
   /// @brief Print the roots, or say plainly that there are none
@@ -222,9 +224,10 @@ bool marley::CommandHandler::cmd_info( std::deque< std::string >& args ) {
   print_roots( fm );
   std::cout << '\n';
 
-  // A name that does not resolve is a legitimate answer to the question
-  // asked, not a failure of the command, so this returns true either way.
-  // The trace says what happened.
-  resolve_one( fm, name, subdir );
-  return true;
+  // The exit status is the one machine-readable thing this command offers,
+  // and the only one that does not involve parsing output whose format is
+  // explicitly not contractual. "marley info --resolve X > /dev/null" is a
+  // reasonable way to ask whether a name resolves, so a name that is not
+  // found exits nonzero even though the command itself did its job.
+  return resolve_one( fm, name, subdir );
 }

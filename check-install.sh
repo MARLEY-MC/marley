@@ -305,6 +305,33 @@ quiet "--- help, and presence in the top-level command list ---"
 run /tmp/m5/bin/marley info --help
 run sh -c "/tmp/m5/bin/marley help | grep -A1 info"
 
+head2 "I. the C++ standard must be one value (design spec 6.2)"
+quiet ""
+quiet "Both build systems saw the same ROOT, so --cxx-std must agree. It did"
+quiet "not before: CMake reported c++17 while Make reported c++20, because"
+quiet "ROOT's PUBLIC compile features raised the standard behind the value"
+quiet "CMake was reporting."
+for p in /tmp/m3 /tmp/m4 /tmp/m5; do
+  quiet ""
+  quiet "\$ $p/bin/marley-config --cxx-std"
+  "$p/bin/marley-config" --cxx-std >> "$LOG" 2>&1 < /dev/null
+done
+quiet ""
+quiet "--- and marley.pc must say the same thing ---"
+run sh -c "grep -h '^Cflags:' /tmp/m3/lib/pkgconfig/marley.pc \
+  /tmp/m4/lib/pkgconfig/marley.pc /tmp/m5/lib/pkgconfig/marley.pc \
+  | sed 's/.*\\(-std=[^ ]*\\).*/\\1/'"
+quiet ""
+quiet "--- exactly one -std= in the published cflags, not two ---"
+run sh -c "/tmp/m5/bin/marley-config --cflags | tr ' ' '\\n' | grep -c -- -std="
+quiet ""
+quiet "--- an explicitly requested standard must not be silently downgraded ---"
+quiet "(c++23 against a C++20 ROOT: the old code fired the c++20 block and"
+quiet "overrode the request back down)"
+build make clean
+build make IGNORE_CMAKE=1 CXX_STD=c++23 -j10
+run sh -c "./build/bin/marley-config --cxx-std"
+
 head2 "C. no build-tree or source-tree path in any published interface"
 quiet ""
 quiet "Searching the installed marley-config and marley.pc for \"$REPO\"."

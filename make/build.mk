@@ -70,8 +70,19 @@ override includedir := $(prefix)/$(includedir_rel)
 # The build tree mirrors the install layout (design spec 2.2)
 BUILD_LIBDIR = $(BUILD_DIR)/$(libdir_rel)
 
-# Default version of the C++ standard to use for compilation
+# Default version of the C++ standard to use for compilation. The effective
+# value is computed once ROOT has been found; see "the effective C++
+# standard" below. Whether the user asked for one explicitly has to be
+# recorded here, while the variable's origin is still intact -- the later
+# "override" changes it.
 CXX_STD=c++17
+ifeq ($(origin CXX_STD),command line)
+  CXX_STD_EXPLICIT := yes
+else ifeq ($(origin CXX_STD),environment)
+  CXX_STD_EXPLICIT := yes
+else
+  CXX_STD_EXPLICIT :=
+endif
 
 UNKNOWN_REV=unknown version
 
@@ -369,7 +380,6 @@ or build against the bundled HepMC3 subset with IGNORE_HEPMC3=1)
       $(info WARNING: Could not find a valid ROOT installation.)
       $(info MARLEY will be built without ROOT support.)
       USE_ROOT = no
-      CXXFLAGS += -std=$(CXX_STD)
     else
       ROOT_VERSION := $(shell $(ROOTCONFIG) --version)
       $(info Found ROOT version $(ROOT_VERSION) in $(ROOT))
@@ -398,26 +408,6 @@ or build against the bundled HepMC3 subset with IGNORE_HEPMC3=1)
       # binary -- working on that machine and nowhere else (spec 6.3).
       comma := ,
       ROOT_PC_LIBS := $(filter-out -Wl$(comma)-rpath$(comma)%,$(ROOT_PUBLIC_LIBS))
-
-      # If ROOT was built with a later C++ standard, switch to building MARLEY
-      # with it as well, just in case. Later -std options take precedence, so
-      # just tack on a new one to keep things simple.
-      ifneq (, $(findstring c++2a, $(ROOT_CXXFLAGS)))
-        override CXX_STD = c++2a
-        override CXXFLAGS += -std=$(CXX_STD)
-      endif
-      ifneq (, $(findstring c++20, $(ROOT_CXXFLAGS)))
-        override CXX_STD = c++20
-        override CXXFLAGS += -std=$(CXX_STD)
-      endif
-      ifneq (, $(findstring c++2b, $(ROOT_CXXFLAGS)))
-        override CXX_STD = c++2b
-        override CXXFLAGS += -std=$(CXX_STD)
-      endif
-      ifneq (, $(findstring c++23, $(ROOT_CXXFLAGS)))
-        override CXX_STD = c++23
-        override CXXFLAGS += -std=$(CXX_STD)
-      endif
 
       ROOT_LDFLAGS := $(shell $(ROOTCONFIG) --ldflags)
       ROOT_LIBDIR := $(shell $(ROOTCONFIG) --libdir)
@@ -467,6 +457,59 @@ $(ROOT_OBJ_DICT):
     USE_ROOT = no
   endif
 endif
+endif
+
+# ---------------------------------------------------------------------------
+# The effective C++ standard (design spec 6.2)
+#
+# One value: the maximum of MARLEY's floor of 17, whatever the user asked
+# for, and whatever ROOT was built with. It is used for compilation and is
+# what marley-config --cxx-std and marley.pc report, so those cannot
+# disagree with the binary.
+#
+# This replaces four findstring blocks that mis-parsed root-config's output
+# in two separate ways. They could DOWNGRADE -- "make CXX_STD=c++23" against
+# a C++20 ROOT fired the c++20 block and overrode the request back down --
+# and they were blind to the gnu++ spellings, since "-std=gnu++20" does not
+# contain the substring "c++20" and root-config emits gnu++ on at least one
+# platform branch.
+# ---------------------------------------------------------------------------
+
+# gnu++NN and c++NN alike reduce to NN, and the provisional spellings map to
+# their final numbers. The gnu++ substitution runs first, so that "gnu++2a"
+# reaches the c++2a rule at all.
+marley_std_num = $(patsubst c++%,%,$(subst c++2c,c++26,$(subst c++2b,c++23,\
+  $(subst c++2a,c++20,$(subst gnu++,c++,$(1))))))
+
+# Sorted ascending, so the largest surviving entry is the last word.
+STD_ORDER := 17 20 23 26
+
+ROOT_STD_RAW := $(patsubst -std=%,%,\
+  $(lastword $(filter -std=%,$(ROOT_CXXFLAGS))))
+
+CXX_STD_REQ_NUM := $(call marley_std_num,$(CXX_STD))
+ROOT_STD_NUM := $(call marley_std_num,$(ROOT_STD_RAW))
+
+# filter keeps the words of STD_ORDER that appear among the candidates, so an
+# unrecognised standard drops out rather than winning; 17 is always a
+# candidate, so the result can never fall below the floor.
+CXX_STD_CANDIDATES := 17 $(CXX_STD_REQ_NUM) $(ROOT_STD_NUM)
+CXX_STD_NUM := $(lastword $(filter $(CXX_STD_CANDIDATES),$(STD_ORDER)))
+
+CXX_STD_BEFORE := $(CXX_STD)
+override CXX_STD := c++$(CXX_STD_NUM)
+
+ifneq ($(CXX_STD),$(CXX_STD_BEFORE))
+  ifdef CXX_STD_EXPLICIT
+    # The user named a standard and is not getting it. That is worth a
+    # warning rather than a status line.
+    $(warning Building with -std=$(CXX_STD), not the requested $(CXX_STD_BEFORE)$(if $(filter $(CXX_STD_NUM),$(ROOT_STD_NUM)), -- ROOT was built with it, -- it is MARLEY's minimum))
+  else
+    $(info Using -std=$(CXX_STD) to match ROOT.)
+  endif
+  # Appended rather than edited in: CXXFLAGS was assembled before ROOT was
+  # found, and a later -std takes precedence over an earlier one.
+  override CXXFLAGS += -std=$(CXX_STD)
 endif
 
 # (The install directory variables are defined near the top of this file,
