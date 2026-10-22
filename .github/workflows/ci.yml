@@ -655,6 +655,36 @@ jobs:
       # cannot, that is the defect this work exists to prevent and the test
       # should say so. The ref-* jobs DO set it -- they build the
       # pre-refactor branch, whose Logger throws without it.
+      # Which copy of each dependency the test binary actually loads, which
+      # is not necessarily the one it compiled against.
+      #
+      # RUNPATH is directory-granular: a directory gets baked in because one
+      # library is needed from it, and every other library in it then takes
+      # precedence over the system copies, since the loader searches
+      # DT_RUNPATH before its default directories. A prefix holding a whole
+      # parallel set of libraries -- conda, Spack, CVMFS -- can therefore
+      # supply a dependency nobody asked it for.
+      #
+      # That is not hypothetical here. The System leg compiles against apt's
+      # GSL while taking ROOT from conda-forge, whose root package depends
+      # on gsl; if the two share a SONAME, this binary runs against a GSL it
+      # was not built against, and martest's chi-squared tests are sensitive
+      # enough to notice. Printing the resolution makes that visible instead
+      # of leaving it to be guessed at from a failed fit.
+      #
+      # Informational: it never fails the job, because mixing dependency
+      # sources this way is a property of the CI environment rather than a
+      # defect in MARLEY.
+      - name: Report which libraries the test binary resolves
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          runner.os == 'Linux'
+        continue-on-error: true
+        run: |
+          ldd ./build/bin/martest || true
+          echo "--- GSL and HepMC3, specifically ---"
+          ldd ./build/bin/martest | grep -Ei 'gsl|hepmc' || echo "(none listed)"
+
       - name: Unit tests
         if: steps.eligibility.outputs.skip != 'true'
         run: ./build/bin/martest
@@ -794,6 +824,49 @@ jobs:
       - name: Stash the build tree
         if: steps.eligibility.outputs.skip != 'true'
         run: mv build build.stashed
+
+      # Asserts the property directly rather than inferring it from the run
+      # below, because the run is about to stop being able to detect it.
+      #
+      # An installed MARLEY must resolve its dependencies on its own. Today
+      # the next step would catch a failure to, but only by accident: these
+      # runners happen to leave LD_LIBRARY_PATH unset, so a missing RUNPATH
+      # entry is fatal. That accident ends with the move to a ROOT container
+      # image, which sets LD_LIBRARY_PATH in the image environment -- and
+      # LD_LIBRARY_PATH beats DT_RUNPATH, so a binary with a completely
+      # broken RUNPATH would run there and this suite would stay green.
+      #
+      # Unsetting it here keeps the check meaningful under any environment,
+      # present or future. It is deliberately NOT unset for the run itself:
+      # the golden diff should exercise the configuration a user would have,
+      # and a false red there costs more than it gains.
+      #
+      # Linux only. macOS records absolute install names in its dylibs and
+      # has no equivalent exposure, which is exactly why it never showed the
+      # RUNPATH defect this step exists to catch.
+      - name: Assert the installed binary needs no environment help
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          runner.os == 'Linux'
+        run: |
+          status=0
+          for f in "${RUNNER_TEMP}/a/bin/marley" \
+                   "${RUNNER_TEMP}/a/${{ matrix.libdir }}/libMARLEY.so"; do
+            echo "::group::ldd ${f}"
+            # ldd exits non-zero for a binary with unresolved dependencies,
+            # so its status is captured rather than allowed to kill the step
+            # before the output is shown.
+            out="$( env -u LD_LIBRARY_PATH ldd "${f}" 2>&1 )" || true
+            echo "${out}"
+            echo "::endgroup::"
+            if printf '%s\n' "${out}" | grep -q 'not found'; then
+              echo "ERROR: ${f} has unresolved dependencies with" \
+                "LD_LIBRARY_PATH unset -- a required directory is missing" \
+                "from its RUNPATH" >&2
+              status=1
+            fi
+          done
+          exit "${status}"
 
       - name: Run the installed MARLEY, and diff against the golden file
         if: steps.eligibility.outputs.skip != 'true'

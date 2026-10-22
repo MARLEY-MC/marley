@@ -133,7 +133,15 @@ set(MARLEY_BUILD_LIBDIR "${CMAKE_BINARY_DIR}/${MARLEY_LIBDIR_REL}")
 # INSTALL_RPATH at install time -- so without this, an installed binary loses
 # every external directory the build tree had. See the external-RUNPATH block
 # after the marley target for how that failed and how it is detected.
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+#
+# Guarded rather than set outright, because a plain set() of a name the user
+# may pass with -D silently overrides them. Packagers are the case that
+# matters: Debian forbids rpath entries into system directories, and Spack,
+# Nix and Homebrew all rewrite rpath themselves after the fact. Any of them
+# can pass -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=OFF and have it respected.
+if(NOT DEFINED CMAKE_INSTALL_RPATH_USE_LINK_PATH)
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+endif()
 
 if(APPLE)
   set(MARLEY_ORIGIN "@loader_path")
@@ -859,8 +867,13 @@ function(marley_external_libdirs out_var)
   set(${out_var} "${_keep}" PARENT_SCOPE)
 endfunction()
 
-marley_external_libdirs(MARLEY_EXT_RPATH
-  "${ROOT_LIBS}" "${HEPMC3_LIBS}" "${GSL_LIBS}")
+# Gated on the same switch, so that turning it off turns off BOTH halves of
+# this -- otherwise a packager who disabled the automatic directories would
+# still get these, which is the opposite of what they asked for.
+if(CMAKE_INSTALL_RPATH_USE_LINK_PATH)
+  marley_external_libdirs(MARLEY_EXT_RPATH
+    "${ROOT_LIBS}" "${HEPMC3_LIBS}" "${GSL_LIBS}")
+endif()
 
 if(MARLEY_EXT_RPATH)
   message(STATUS "External RUNPATH entries: ${MARLEY_EXT_RPATH}")
