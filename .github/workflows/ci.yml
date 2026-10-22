@@ -245,11 +245,14 @@ jobs:
 
   ref-macos:
     name: Reference (macOS)
-    # macOS runners are expensive; only generate on workflow_dispatch, and only
-    # when physics validation has been requested.
+    # macOS runners are expensive, so this used to be workflow_dispatch only.
+    # The macOS built-in leg now runs on public pull requests, and without a
+    # golden file to compare against it would have nothing to validate -- so
+    # this gate has to track the matrix rule rather than stay behind it.
     if: >-
-      github.event_name == 'workflow_dispatch' &&
-      github.event.inputs.ref_source != 'none'
+      github.event.inputs.ref_source != 'none' &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.event.repository.private == false)
     runs-on: macos-latest
     timeout-minutes: 45
     outputs:
@@ -377,18 +380,60 @@ jobs:
           - name: "Linux · Built-in"
             os: ubuntu-latest
             path: builtin
+            build: cmake
             cxx: g++
             flags: "IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            libdir: ""
+            ref_job: ref-linux
+            golden: golden-linux.hepmc3
+            current: current-linux.hepmc3
+
+          # --- Linux: ROOT with the VENDORED HepMC3 ---
+          # A combination the old matrix could not reach on any event type,
+          # because it coupled ROOT to the system path. It is precisely where
+          # the vendored include root, the builtin install interface and the
+          # dictionary's -I flags all operate at once: the built-in-HepMC3
+          # dictionary had never been built in CI at all.
+          - name: "Linux · ROOT + built-in HepMC3"
+            os: ubuntu-latest
+            path: root-builtin
+            build: cmake
+            cxx: g++
+            flags: "IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            libdir: ""
             ref_job: ref-linux
             golden: golden-linux.hepmc3
             current: current-linux.hepmc3
 
           # --- Linux: system path (GSL + HepMC3 + ROOT from package manager) ---
+          # libdir=lib64 makes this the distro-like configuration, so the
+          # install-directory override is exercised on every PR rather than
+          # rotting. The front-door Makefile translates it to
+          # -DCMAKE_INSTALL_LIBDIR, so this also tests the translation.
           - name: "Linux · System"
             os: ubuntu-latest
             path: system
+            build: cmake
             cxx: g++
             flags: ""
+            libdir: "libdir=lib64"
+            ref_job: ref-linux
+            golden: golden-linux.hepmc3
+            current: current-linux.hepmc3
+
+          # --- Linux: the hand-written GNU Make recipe ---
+          # One dedicated leg rather than doubling the matrix: the build
+          # system is a property of the leg, not a second axis. Without it
+          # make/build.mk never runs in automation at all. It carries
+          # libdir=lib64 too, which is what makes the claim of a common
+          # install-directory predicate checked rather than asserted.
+          - name: "Linux · Make"
+            os: ubuntu-latest
+            path: builtin
+            build: make
+            cxx: g++
+            flags: "IGNORE_CMAKE=1 IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            libdir: "libdir=lib64"
             ref_job: ref-linux
             golden: golden-linux.hepmc3
             current: current-linux.hepmc3
@@ -399,8 +444,10 @@ jobs:
           - name: "macOS · Built-in"
             os: macos-latest
             path: builtin
+            build: cmake
             cxx: clang++
             flags: "IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            libdir: ""
             ref_job: ref-macos
             golden: golden-macos.hepmc3
             current: current-macos.hepmc3
@@ -409,8 +456,10 @@ jobs:
           - name: "macOS · System"
             os: macos-latest
             path: system
+            build: cmake
             cxx: clang++
             flags: ""
+            libdir: ""
             ref_job: ref-macos
             golden: golden-macos.hepmc3
             current: current-macos.hepmc3
@@ -424,26 +473,54 @@ jobs:
         run: |
           os="${{ matrix.os }}"
           path="${{ matrix.path }}"
-          event="${{ github.event_name }}"
+          build="${{ matrix.build }}"
           build_path="${{ github.event.inputs.build_path }}"
+          private="${{ github.event.repository.private }}"
 
-          # macOS legs are workflow_dispatch only
-          if [[ "${os}" == "macos-latest" && "${event}" != "workflow_dispatch" ]]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
+          run_it() { echo "skip=false" >> "$GITHUB_OUTPUT"; exit 0; }
+          skip_it() { echo "skip=true"  >> "$GITHUB_OUTPUT"; exit 0; }
+
+          # Evaluated in this order, and the order is the policy:
+          #
+          #   1. an explicit workflow_dispatch input always wins;
+          #   2. otherwise a PRIVATE repository keeps the cheap matrix, so
+          #      nobody starts paying for minutes they were not paying before;
+          #   3. otherwise (public) every leg runs except macOS system, which
+          #      is the slowest to provision and has the least MARLEY-specific
+          #      logic. GitHub Actions is free for public repositories on
+          #      standard runners, so the mirror gets this coverage at no cost.
+          #
+          # Forks need nothing new here: fork detection already exists, and
+          # the one fork-specific degradation -- no access to base-repository
+          # caches -- is handled at the golden-file steps.
+
+          # 1. explicit dispatch input
+          if [[ -n "${build_path}" ]]; then
+            [[ "${build_path}" == "everything" ]] && run_it
+            [[ "${build_path}" == "${path}" ]] && run_it
+            # "builtin" also selects the ROOT-with-vendored-HepMC3 leg, since
+            # that leg is a built-in-HepMC3 build.
+            [[ "${build_path}" == "builtin" && "${path}" == "root-builtin" ]] \
+              && run_it
+            skip_it
           fi
 
-          # Filter by build_path input; a null/empty value (push/PR) defaults
-          # to 'builtin' to avoid the expensive ROOT install by default.
-          if [[ "${build_path}" == "everything" ]]; then
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          elif [[ "${build_path}" == "${path}" ]]; then
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          elif [[ -z "${build_path}" && "${path}" == "builtin" ]]; then
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=true" >> "$GITHUB_OUTPUT"
+          # 2. private repository: exactly today's cheap matrix, so nobody
+          #    starts paying for minutes they were not paying before. That
+          #    means the single Linux built-in CMake leg -- the Make leg is
+          #    NOT included, even though it costs the same, because keeping
+          #    the private matrix unchanged is the point. Reach it with a
+          #    workflow_dispatch when build.mk needs exercising there.
+          if [[ "${private}" == "true" ]]; then
+            [[ "${os}" == "ubuntu-latest" \
+               && "${path}" == "builtin" \
+               && "${build}" == "cmake" ]] && run_it
+            skip_it
           fi
+
+          # 3. public repository
+          [[ "${os}" == "macos-latest" && "${path}" == "system" ]] && skip_it
+          run_it
 
       - name: Check out repository
         if: steps.eligibility.outputs.skip != 'true'
@@ -470,7 +547,9 @@ jobs:
           fi
           cat "${dst}"
       - name: Set up Micromamba (ROOT via conda-forge)
-        if: steps.eligibility.outputs.skip != 'true' && matrix.path == 'system'
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          (matrix.path == 'system' || matrix.path == 'root-builtin')
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-name: marley-env
@@ -497,11 +576,11 @@ jobs:
 
       - name: Build
         if: steps.eligibility.outputs.skip != 'true'
-        run: make CXX=${{ matrix.cxx }} ${{ matrix.flags }}
+        run: make CXX=${{ matrix.cxx }} ${{ matrix.flags }} ${{ matrix.libdir }}
 
       - name: Build test binary
         if: steps.eligibility.outputs.skip != 'true'
-        run: make test CXX=${{ matrix.cxx }} ${{ matrix.flags }}
+        run: make test CXX=${{ matrix.cxx }} ${{ matrix.flags }} ${{ matrix.libdir }}
 
       # This assertion is the INVERSE of the one it replaces, deliberately.
       #
@@ -529,8 +608,10 @@ jobs:
             exit 1
           fi
 
-      - name: Verify ROOT was linked (system path)
-        if: steps.eligibility.outputs.skip != 'true' && matrix.path == 'system'
+      - name: Verify ROOT was linked
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          (matrix.path == 'system' || matrix.path == 'root-builtin')
         run: |
           use_root=$(./build/bin/marley-config --use-root)
           echo "use-root: ${use_root}"
@@ -630,7 +711,7 @@ jobs:
         if: steps.eligibility.outputs.skip != 'true'
         run: |
           make install CXX=${{ matrix.cxx }} ${{ matrix.flags }} \
-            prefix="${RUNNER_TEMP}/a"
+            ${{ matrix.libdir }} prefix="${RUNNER_TEMP}/a"
           find "${RUNNER_TEMP}/a" -maxdepth 2 -mindepth 1 \
             -not -path '*/data/*' | sort
 
@@ -641,16 +722,36 @@ jobs:
           cat "${receipt}"
           # The question the old --cflags grep was trying to answer, asked
           # of the thing that exists to record it.
-          if [ "${{ matrix.path }}" = "system" ]; then
-            grep -q '^hepmc3: external' "${receipt}" \
-              || { echo "ERROR: system HepMC3 was not used" >&2; exit 1; }
-            grep -q '^gsl: external' "${receipt}" \
-              || { echo "ERROR: system GSL was not used" >&2; exit 1; }
-            grep -q '^root: yes' "${receipt}" \
-              || { echo "ERROR: ROOT was not used" >&2; exit 1; }
-          else
-            grep -q '^hepmc3: builtin' "${receipt}" \
-              || { echo "ERROR: the vendored HepMC3 was not used" >&2; exit 1; }
+          case "${{ matrix.path }}" in
+            system)
+              grep -q '^hepmc3: external' "${receipt}" \
+                || { echo "ERROR: system HepMC3 was not used" >&2; exit 1; }
+              grep -q '^gsl: external' "${receipt}" \
+                || { echo "ERROR: system GSL was not used" >&2; exit 1; }
+              grep -q '^root: yes' "${receipt}" \
+                || { echo "ERROR: ROOT was not used" >&2; exit 1; }
+              ;;
+            root-builtin)
+              # The whole point of this leg: ROOT enabled, HepMC3 vendored.
+              grep -q '^hepmc3: builtin' "${receipt}" \
+                || { echo "ERROR: the vendored HepMC3 was not used" >&2; exit 1; }
+              grep -q '^root: yes' "${receipt}" \
+                || { echo "ERROR: ROOT was not used" >&2; exit 1; }
+              ;;
+            *)
+              grep -q '^hepmc3: builtin' "${receipt}" \
+                || { echo "ERROR: the vendored HepMC3 was not used" >&2; exit 1; }
+              grep -q '^root: no' "${receipt}" \
+                || { echo "ERROR: ROOT was enabled on a built-in leg" >&2; exit 1; }
+              ;;
+          esac
+          # libdir is recorded nowhere, so check it where it shows: the
+          # library must be under the directory that was asked for.
+          if [ -n "${{ matrix.libdir }}" ]; then
+            want="${{ matrix.libdir }}"; want="${want#libdir=}"
+            ls "${RUNNER_TEMP}/a/${want}/libMARLEY."* > /dev/null \
+              || { echo "ERROR: nothing installed under ${want}/" >&2; exit 1; }
+            echo "libdir override honoured: ${want}/"
           fi
 
       # The stash is the point of increment 1. Without it, an install whose
@@ -691,6 +792,35 @@ jobs:
           grep -v -f "${RUNNER_TEMP}/golden-patterns.txt" \
             events.hepmc3 > current-installed.hepmc3
           diff "${golden}" current-installed.hepmc3
+
+      # Design spec 8.5. Built-in-HepMC3 legs only: the system path merely
+      # forwards HepMC3-config's output and has almost no MARLEY-specific
+      # logic to get wrong, while the built-in path is where every
+      # MARLEY-owned include path lives. CMake legs only, because the Make
+      # path installs no CMake package to consume.
+      #
+      # It runs AFTER the build tree is stashed, so a consumer that only
+      # works while the build directory survives fails here.
+      - name: Build an external consumer against the installed package
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          matrix.build == 'cmake' &&
+          (matrix.path == 'builtin' || matrix.path == 'root-builtin')
+        run: |
+          cmake -S "${GITHUB_WORKSPACE}/.github/consumer" \
+            -B "${RUNNER_TEMP}/consumer-build" \
+            -DCMAKE_PREFIX_PATH="${RUNNER_TEMP}/a"
+          cmake --build "${RUNNER_TEMP}/consumer-build"
+          # From a directory unrelated to both the build tree and the
+          # prefix, so nothing can be found by accident.
+          mkdir -p "${RUNNER_TEMP}/consumer-run"
+          cd "${RUNNER_TEMP}/consumer-run"
+          "${RUNNER_TEMP}/consumer-build/consumer"
+          # The standard must arrive through the imported target rather than
+          # being set by the consumer.
+          grep -o -- '-std=[^ ]*' \
+            "${RUNNER_TEMP}/consumer-build/CMakeFiles/consumer.dir/flags.make" \
+            | head -1
 
       - name: Relocate the installed prefix and run again
         if: steps.eligibility.outputs.skip != 'true'
