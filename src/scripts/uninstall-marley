@@ -1,0 +1,177 @@
+#!/bin/bash
+#
+# Remove a MARLEY installation using the receipt produced by the installer.
+#
+# Usage: uninstall-marley --prefix /opt/marley [--yes]
+#
+# This script is not installed and is not meant to be run directly by users.
+# Normal invocation is via `make uninstall` from within the MARLEY source tree.
+
+set -u
+
+prefix=""
+assume_yes="no"
+
+die() { printf 'uninstall-marley: %s\n' "$*" >&2; exit 1; }
+
+usage() {
+  cat <<'EOF'
+Usage: uninstall-marley --prefix DIR [--yes]
+
+Remove the MARLEY installation under DIR, as recorded by the install
+receipt at DIR/share/marley/install-receipt.
+
+  --prefix DIR   The installation prefix to remove (required)
+  --yes          Do not prompt for confirmation
+  -h, --help     Print this message
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --prefix)
+      [ $# -ge 2 ] || die "--prefix requires a directory"
+      prefix="$2"; shift 2 ;;
+    --prefix=*)
+      prefix="${1#--prefix=}"; shift ;;
+    --yes|-y)
+      assume_yes="yes"; shift ;;
+    -h|--help)
+      usage; exit 0 ;;
+    *)
+      die "unknown argument \"$1\"" ;;
+  esac
+done
+
+# No default prefix: this deletes directory trees, so it must be told which.
+[ -n "$prefix" ] || { usage >&2; die "--prefix is required"; }
+[ "$prefix" != "/" ] || die "refusing to operate on /"
+[ -d "$prefix" ] || die "\"$prefix\" is not a directory"
+
+prefix="$( cd "$prefix" && pwd )" || die "could not resolve \"$prefix\""
+[ "$prefix" != "/" ] || die "refusing to operate on /"
+
+receipt="$prefix/share/marley/install-receipt"
+
+# Only clean the prefix if a valid "receipt" file from a previous install can
+# be found within it.
+[ -r "$receipt" ] || die "no MARLEY install receipt at $receipt"
+
+read -r marker_key marker_value < "$receipt" || true
+if [ "${marker_key:-}" != "marley-install-receipt:" ]; then
+  die "$receipt does not look like a MARLEY install receipt"
+fi
+case "${marker_value:-}" in
+  1) ;;
+  *) die "unsupported receipt format version \"${marker_value:-}\"" ;;
+esac
+
+trees=""
+files=""
+rec_version=""
+rec_prefix=""
+rec_build_system=""
+key=""
+
+# Folded continuation lines (a leading blank) belong to the previous key, so
+# that a long "files:" list can be wrapped and stay readable.
+while IFS= read -r line || [ -n "$line" ]; do
+  case "$line" in
+    ''|'#'*) continue ;;
+    [[:space:]]*)
+      value="$line" ;;
+    *:*)
+      key="${line%%:*}"
+      value="${line#*:}" ;;
+    *) continue ;;
+  esac
+
+  case "$key" in
+    trees)        trees="$trees $value" ;;
+    files)        files="$files $value" ;;
+    version)      rec_version="$( echo $value )" ;;
+    prefix)       rec_prefix="$( echo $value )" ;;
+    build-system) rec_build_system="$( echo $value )" ;;
+  esac
+done < "$receipt"
+
+# Globbing must be off here. Without set -f the patterns expand against the
+# current directory before being joined to the prefix, and under nullglob any
+# matching nothing there are dropped, so globbed entries go unremoved.
+set -f
+# shellcheck disable=SC2206
+tree_list=( $trees )
+# shellcheck disable=SC2206
+file_list=( $files )
+set +f
+
+echo "About to remove the MARLEY installation under:"
+echo "    $prefix"
+echo
+[ -n "$rec_version" ] && echo "  version:      $rec_version"
+[ -n "$rec_build_system" ] && echo "  installed by: $rec_build_system"
+if [ -n "$rec_prefix" ] && [ "$rec_prefix" != "$prefix" ]; then
+  echo "  receipt records prefix: $rec_prefix"
+  echo "  (the installation has been moved since; removing it where it is now)"
+fi
+echo
+echo "  directory trees to remove:"
+for t in "${tree_list[@]}"; do echo "      $prefix/$t"; done
+echo "  files to remove:"
+for f in "${file_list[@]}"; do echo "      $prefix/$f"; done
+echo
+
+if [ "$assume_yes" != "yes" ]; then
+  printf 'Proceed? [y/N] '
+  read -r reply || reply=""
+  case "$reply" in
+    y|Y|yes|YES) ;;
+    *) echo "Aborted."; exit 1 ;;
+  esac
+fi
+
+# Trees first, wholesale: rm -rf takes symlinks, which a per-file manifest
+# does not.
+#
+# share/marley is one of these trees and the receipt lives inside it, so this
+# deletes its own gate partway through. The receipt has already been read; do
+# not reorder.
+for t in "${tree_list[@]}"; do
+  [ -n "$t" ] || continue
+  rm -rf "$prefix/$t"
+done
+
+# Patterns are expanded here, against the prefix. Quoting them into
+# rm -f "$prefix/$p" instead succeeds without removing anything. nullglob
+# drops a pattern that matches nothing rather than leaving it literal.
+shopt -s nullglob
+for pattern in "${file_list[@]}"; do
+  [ -n "$pattern" ] || continue
+  for f in "$prefix"/$pattern; do
+    rm -f "$f"
+  done
+done
+shopt -u nullglob
+
+# Prune the directories that held them, deepest first, skipping any that are
+# not empty. Only directories MARLEY wrote into are considered, so a user's
+# own files and directories survive.
+prune=""
+for p in "${tree_list[@]}" "${file_list[@]}"; do
+  [ -n "$p" ] || continue
+  d="$( dirname "$p" )"
+  while [ "$d" != "." ] && [ "$d" != "/" ]; do
+    prune="$prune $d"
+    d="$( dirname "$d" )"
+  done
+done
+
+for d in $( printf '%s\n' $prune | sort -u | awk '{ print gsub(/\//,"/"), $0 }' \
+            | sort -rn | cut -d' ' -f2- ); do
+  rmdir "$prefix/$d" 2> /dev/null || true
+done
+
+echo "Removed the MARLEY installation under $prefix."
+
+# No ldconfig: every artifact carries a RUNPATH, so there is no cache to
+# refresh, and the command does not exist on macOS.

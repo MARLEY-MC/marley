@@ -1,0 +1,53 @@
+# This script sets up additional MARLEY environment variables for use cases in
+# which putting the `marley` executable on the system PATH is insufficient.
+#
+# MARLEY is self-locating under normal execution, so the primary situation
+# where these variables are needed is the use of MARLEY classes within an
+# interactive ROOT session (started with bare 'root' rather than the provided
+# 'mroot' script) or a Jupyter notebook running the ROOT C++ kernel.
+#
+# Usage: source <prefix>/bin/setup_marley.sh
+
+# Finds the directory holding this script. This is not foolproof for exotic
+# cases such as symlinked invocations. See https://stackoverflow.com/a/246128
+# for more details. The expression below works in both zsh and bash
+# (https://stackoverflow.com/a/54755784).
+_marley_here="$( cd "$( dirname "${BASH_SOURCE[0]:-${(%):-%x}}" )" && pwd )"
+_marley_root="$( cd "${_marley_here}/.." && pwd )"
+
+_marley_bin_rel='@bin_rel@'
+_marley_lib_rel='@lib_rel@'
+_marley_include_rel='@include_rel@'
+_marley_builtin_rel='@builtin_rel@'
+_marley_hepmc3_include='@hepmc3_include@'
+
+# Entries are prepended: sourcing this script must win over a MARLEY already
+# on the path.
+export PATH="${_marley_root}/${_marley_bin_rel}${PATH:+:${PATH}}"
+
+export LD_LIBRARY_PATH="${_marley_root}/${_marley_lib_rel}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+
+if [ "$( uname )" = "Darwin" ]; then
+  export DYLD_LIBRARY_PATH="${_marley_root}/${_marley_lib_rel}${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}"
+fi
+
+export ROOT_INCLUDE_PATH="${_marley_root}/${_marley_include_rel}${ROOT_INCLUDE_PATH:+:${ROOT_INCLUDE_PATH}}"
+
+# Vendored-HepMC3 builds only. MARLEY's public headers include HepMC3
+# headers, so without this a ROOT session cannot parse EventFileReader.hh.
+if [ -n "${_marley_builtin_rel}" ]; then
+  export ROOT_INCLUDE_PATH="${_marley_root}/${_marley_builtin_rel}:${ROOT_INCLUDE_PATH}"
+fi
+
+# An external HepMC3 needs its include root for the same reason. Unlike
+# every other path here it is baked-in rather than derived, because it belongs
+# to something MARLEY does not own.
+if [ -n "${_marley_hepmc3_include}" ]; then
+  export ROOT_INCLUDE_PATH="${_marley_hepmc3_include}:${ROOT_INCLUDE_PATH}"
+fi
+
+# Lets CMake's find_package(MARLEY) work.
+export CMAKE_PREFIX_PATH="${_marley_root}${CMAKE_PREFIX_PATH:+:${CMAKE_PREFIX_PATH}}"
+
+unset _marley_here _marley_root _marley_bin_rel _marley_lib_rel
+unset _marley_include_rel _marley_builtin_rel _marley_hepmc3_include
