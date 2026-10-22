@@ -552,12 +552,11 @@ jobs:
           (matrix.path == 'system' || matrix.path == 'root-builtin')
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-name: marley-env
-          environment-spec: |
-            channels:
-              - conda-forge
-            dependencies:
-              - root
+          # environment-file, NOT the inline "environment-spec" that used to
+          # be here: that is not an input to this action, GitHub silently
+          # ignores unknown "with" keys, and the result was an empty
+          # environment created in one second with ROOT absent.
+          environment-file: .github/root-env.yml
           cache-environment: true
 
       # setup-micromamba initialises a shell hook rather than exporting

@@ -1,0 +1,27 @@
+# conda-forge environment used by the ROOT-enabled CI legs.
+#
+# This file exists because the workflow previously passed the same content
+# inline via a "with: environment-spec:" key -- which is NOT an input to
+# mamba-org/setup-micromamba. GitHub silently ignores unknown "with" keys
+# for JavaScript actions, so the whole block was discarded: the action
+# created an EMPTY environment named marley-env, finished in about one
+# second, and reported success. ROOT was never installed.
+#
+# That is why every ROOT configuration quietly built without ROOT, and why
+# the old "Verify system dependencies were linked" step -- which asserted
+# marley-config --use-root was "yes" -- could never have passed.
+#
+# environment-file is used rather than the inline create-args/condarc
+# inputs because it is the action's primary documented input and has the
+# same spelling across major versions, and because a tracked file is
+# reviewable in a pull request.
+name: marley-env
+
+channels:
+  - conda-forge
+
+dependencies:
+  # Deliberately unpinned: the point of this leg is to catch breakage
+  # against current ROOT. Pin it here if that ever becomes more noise than
+  # signal -- MARLEY's floor is 6.22, and the UPS product pins 6.28.12.
+  - root
