@@ -15,6 +15,7 @@
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
 // Standard library includes
+#include <filesystem>
 #include <limits>
 #include <map>
 
@@ -533,7 +534,8 @@ std::vector< std::unique_ptr<marley::Reaction> >
     // the tables of nuclear responses. These can be re-used for multiple
     // neutrino flavors by separate Reaction objects.
     auto txsec = std::make_shared< marley::TabulatedXSec >(
-      pdg_b, proc_type, coulomb_mode, delta_ias );
+      pdg_b, proc_type, coulomb_mode, delta_ias,
+      std::filesystem::path( filename ).parent_path() );
 
     // Each line contains a file name corresponding to a distinct table
     // of nuclear responses. Add each one to the map managed by the

@@ -112,15 +112,7 @@ void marley::KleinNystrandNuclearFormFactor::initialize_r0_table() {
   // Instantiate the file manager and use it to find the data file containing
   // the rms charge radii for many nuclei
   const auto& fm = marley::FileManager::Instance();
-  std::string full_r0_file_name = fm.find_file( r0_data_file_name_ );
-
-  if ( full_r0_file_name.empty() ) {
-    throw marley::Error( "Could not find the MARLEY nuclear rms charge radii"
-      " data file " + r0_data_file_name_ + ". Please ensure that"
-      " the folder containing it is on the MARLEY search path."
-      " If needed, the folder can be appended to the MARLEY_SEARCH_PATH"
-      " environment variable." );
-  }
+  std::string full_r0_file_name = fm.find_file( r0_data_file_name_ ).string();
 
   MARLEY_LOG( INFO, "init.structure" ) << "Loading ground-state nuclear rms charge radii from "
     << full_r0_file_name;

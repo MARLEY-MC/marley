@@ -238,9 +238,7 @@ TEST_CASE( "Events match their underlying distributions", "[physics]" )
 {
   // Find the configuration file to use for these tests
   const auto& fm = marley::FileManager::Instance();
-  std::string test_data_dir = fm.marley_dir() + "/data/tests/";
-
-  std::string config_file_name = fm.find_file( "test.js", test_data_dir );
+  std::string config_file_name = fm.find_file( "test.js", "tests" ).string();
 
   // Configure the generator
   marley::JSONConfig config( config_file_name );

@@ -17,6 +17,7 @@
 #pragma once
 
 // Standard library includes
+#include <filesystem>
 #include <map>
 
 // MARLEY includes
@@ -37,9 +38,14 @@ namespace marley {
 
     public:
 
+      /// @param base_dir Directory of the reaction data file that named this
+      /// table set. Response file names inside a .react file are relative to
+      /// it, so resolving them against it is what keeps a relocated or
+      /// user-supplied reaction tree self-consistent.
       explicit TabulatedXSec( int target_pdg,
         marley::Reaction::ProcessType p_type,
-        marley::CoulombCorrector::CoulombMode mode, double delta_ias );
+        marley::CoulombCorrector::CoulombMode mode, double delta_ias,
+        const std::filesystem::path& base_dir = {} );
 
       void add_table( const std::string& file_name );
 
@@ -185,6 +191,10 @@ namespace marley {
       /// difference between the ground state of the initial nucleus and the
       /// isobaric analog state in the daughter nucleus
       double delta_ias_;
+
+      /// @brief Directory of the reaction data file that named this table
+      /// set; response file names are resolved against it
+      std::filesystem::path base_dir_;
   };
 
 }

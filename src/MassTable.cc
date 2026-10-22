@@ -33,15 +33,7 @@ marley::MassTable::MassTable() {
   // the mass table data file
   const auto& fm = marley::FileManager::Instance();
   std::string full_mt_file_name
-    = fm.find_file( data_file_name_ );
-
-  if ( full_mt_file_name.empty() ) {
-    throw marley::Error("Could not find the MARLEY mass table"
-      " data file " + data_file_name_ + ". Please ensure that"
-      " the folder containing it is on the MARLEY search path."
-      " If needed, the folder can be appended to the MARLEY_SEARCH_PATH"
-      " environment variable.");
-  }
+    = fm.find_file( data_file_name_ ).string();
 
   MARLEY_LOG( INFO, "init.structure" ) << "Loading particle and atomic masses from "
     << full_mt_file_name;

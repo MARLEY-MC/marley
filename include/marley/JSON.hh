@@ -23,6 +23,8 @@
 #include <cmath>
 #include <cstdint>
 #include <deque>
+#include <filesystem>
+#include <fstream>
 #include <initializer_list>
 #include <iostream>
 #include <istream>
@@ -33,12 +35,13 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 // MARLEY includes
 #include "marley/marley_utils.hh"
 #include "marley/Error.hh"
 #include "marley/FileManager.hh"
-#include "marley/Logger.hh"
 
 namespace marley {
 
@@ -1097,15 +1100,22 @@ namespace marley {
       JSON file_name_json = parse_string( reader );
       std::string file_name = file_name_json.to_string();
 
-      const auto& fm = marley::FileManager::Instance();
-      std::string full_file_name = fm.find_file( file_name );
-
-      if ( full_file_name.empty() ) {
-        throw marley::Error( "Could not locate the included JSON file \""
-          + file_name + "\". Please check that the file name is spelled"
-          " correctly and that the file is in a folder on the MARLEY"
-          " search path." );
+      // Resolve the included name against the directory of the file doing
+      // the including, so that a configuration and its includes travel
+      // together. Unlike "reactions:", this reference does not survive into
+      // an output file -- the include is expanded before the configuration
+      // is serialised -- so carrying the context here is safe.
+      // filename() is empty when parsing from a string rather than a file,
+      // in which case the resolver simply skips that leg.
+      std::filesystem::path include_base_dir;
+      if ( !reader.filename().empty() ) {
+        include_base_dir
+          = std::filesystem::path( reader.filename() ).parent_path();
       }
+
+      const auto& fm = marley::FileManager::Instance();
+      std::string full_file_name
+        = fm.find_file( file_name, "", include_base_dir ).string();
 
       // Open the file for reading and check that it is ready to use
       auto included_file_stream
