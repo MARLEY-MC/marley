@@ -471,22 +471,44 @@ cat > /tmp/marley-reloc/inc/job.js <<'EOF'
 }
 EOF
 quiet ""
-quiet "--- #include: of a file beside the config (leg 2) ---"
-quiet "Run from that same directory, so the base_dir leg and the"
-quiet "working-directory leg would produce the SAME path. The"
-quiet "working-directory NOTICE must not fire: it is the physics-safety"
-quiet "warning, and this is the ordinary, safe pattern."
+quiet "--- bare config name: leg 2 is SKIPPED, leg 4 supplies the file ---"
+quiet "\"marley job.js\" gives the parser a filename with no directory"
+quiet "component, so include_base_dir is empty and the include legitimately"
+quiet "comes from the working directory. The notice is CORRECT here."
 ( cd /tmp/marley-reloc/inc \
-  && /tmp/m5/bin/marley job.js ) > /tmp/marley-reloc/inc.out 2>&1 < /dev/null
+  && /tmp/m5/bin/marley job.js ) > /tmp/marley-reloc/inc-bare.out 2>&1 < /dev/null
 quiet "[exit $?]"
-cat /tmp/marley-reloc/inc.out >> "$LOG"
-if grep -q "target_block.js\" resolved from the working directory" \
-     /tmp/marley-reloc/inc.out; then
+grep -E "resolved from the working directory|Generated" \
+  /tmp/marley-reloc/inc-bare.out >> "$LOG" 2>&1
+if grep -q "resolved from the working directory" /tmp/marley-reloc/inc-bare.out
+then
+  quiet "ok: reported as a working-directory hit, which is what it was"
+else
+  log "MISSING: leg 4 supplied the include but said nothing"
+fi
+
+quiet ""
+quiet "--- absolute config path, run from that same directory ---"
+quiet "Now include_base_dir is non-empty AND equal to the working directory,"
+quiet "so both legs would name the same path. Leg 2 wins; inferring the leg"
+quiet "from the resulting path reported it as a working-directory hit."
+quiet "pwd -P is needed because cwd is canonicalised (/private/tmp on macOS)"
+quiet "while an argument of /tmp/... is not -- without it the two never"
+quiet "compare equal and the case is not exercised at all."
+INCDIR="$( cd /tmp/marley-reloc/inc && pwd -P )"
+( cd "$INCDIR" \
+  && /tmp/m5/bin/marley "$INCDIR/job.js" ) \
+  > /tmp/marley-reloc/inc-abs.out 2>&1 < /dev/null
+quiet "[exit $?]"
+grep -E "resolved from the working directory|Generated" \
+  /tmp/marley-reloc/inc-abs.out >> "$LOG" 2>&1
+if grep -q "resolved from the working directory" /tmp/marley-reloc/inc-abs.out
+then
   log "MISATTRIBUTED: leg 2 reported as a working-directory hit"
 else
-  quiet "ok: no working-directory notice for a sibling #include:"
+  quiet "ok: leg 2 not reported as a working-directory hit"
 fi
-quiet ""
+
 quiet "--- run it from ELSEWHERE: leg 2 is the including file's directory,"
 quiet "    not the working directory ---"
 mkdir -p /tmp/marley-reloc/inc-elsewhere
