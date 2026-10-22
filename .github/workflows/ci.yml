@@ -84,6 +84,34 @@ jobs:
     outputs:
       cache_key: ${{ steps.compute-key.outputs.cache-key }}
     steps:
+      # The reference checkout below replaces the whole workspace with a
+      # branch that does not contain .github/golden-filters.txt, so the
+      # filters are staged outside the workspace first.
+      #
+      # This must also precede "Compute cache key": hashFiles() reads the
+      # workspace, and returns an empty string if nothing is checked out.
+      - name: Check out this branch (for the golden filters)
+        uses: actions/checkout@v5
+
+      - name: Stage the golden filters
+        run: |
+          src="${GITHUB_WORKSPACE}/.github/golden-filters.txt"
+          dst="${RUNNER_TEMP}/golden-patterns.txt"
+          if [ ! -s "${src}" ]; then
+            echo "ERROR: ${src} is missing or empty" >&2
+            exit 1
+          fi
+          # grep -f treats an empty pattern as matching every line, so an
+          # empty pattern file would filter both files to nothing and make
+          # the diff pass vacuously.
+          grep -v -e '^#' -e '^$' "${src}" > "${dst}"
+          if [ ! -s "${dst}" ]; then
+            echo "ERROR: ${src} contains no filter patterns" >&2
+            exit 1
+          fi
+          echo "--- active filter patterns ---"
+          cat "${dst}"
+
       - name: Determine reference branch
         id: ref_branch
         env:
@@ -162,7 +190,12 @@ jobs:
             fi
             suffix="${ref_sha}"
           fi
-          echo "cache-key=ref-linux-${{ steps.ref_branch.outputs.branch }}-${suffix}" \
+          # The golden file is only comparable to a current file filtered
+          # the same way, so the filter's content belongs in the key.
+          # hashFiles rather than sha256sum: the macOS runners do not have
+          # that command.
+          filters="${{ hashFiles('.github/golden-filters.txt') }}"
+          echo "cache-key=ref-linux-${{ steps.ref_branch.outputs.branch }}-${suffix}-${filters:0:12}" \
             >> "$GITHUB_OUTPUT"
           echo "ref-sha=${ref_sha}" >> "$GITHUB_OUTPUT"
 
@@ -197,21 +230,53 @@ jobs:
           MARLEY: ${{ github.workspace }}
         run: |
           ./build/bin/marley generate examples/config/COPY_ME.js
-          grep -v -e '^T MARLEY' -e '^HepMC::Version' events.hepmc3 \
-            > golden-linux.hepmc3
+          # Comments and blanks stripped first: an empty grep -f pattern
+          # matches every line.
+          grep -v -f "${RUNNER_TEMP}/golden-patterns.txt" \
+            events.hepmc3 > golden-linux.hepmc3
 
   ref-macos:
     name: Reference (macOS)
-    # macOS runners are expensive; only generate on workflow_dispatch, and only
-    # when physics validation has been requested.
+    # This gate has to track the matrix rule below: the macOS legs run on
+    # public pull requests, and without a golden file they have nothing to
+    # validate against.
     if: >-
-      github.event_name == 'workflow_dispatch' &&
-      github.event.inputs.ref_source != 'none'
+      github.event.inputs.ref_source != 'none' &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.event.repository.private == false)
     runs-on: macos-latest
     timeout-minutes: 45
     outputs:
       cache_key: ${{ steps.compute-key.outputs.cache-key }}
     steps:
+      # The reference checkout below replaces the whole workspace with a
+      # branch that does not contain .github/golden-filters.txt, so the
+      # filters are staged outside the workspace first.
+      #
+      # This must also precede "Compute cache key": hashFiles() reads the
+      # workspace, and returns an empty string if nothing is checked out.
+      - name: Check out this branch (for the golden filters)
+        uses: actions/checkout@v5
+
+      - name: Stage the golden filters
+        run: |
+          src="${GITHUB_WORKSPACE}/.github/golden-filters.txt"
+          dst="${RUNNER_TEMP}/golden-patterns.txt"
+          if [ ! -s "${src}" ]; then
+            echo "ERROR: ${src} is missing or empty" >&2
+            exit 1
+          fi
+          # grep -f treats an empty pattern as matching every line, so an
+          # empty pattern file would filter both files to nothing and make
+          # the diff pass vacuously.
+          grep -v -e '^#' -e '^$' "${src}" > "${dst}"
+          if [ ! -s "${dst}" ]; then
+            echo "ERROR: ${src} contains no filter patterns" >&2
+            exit 1
+          fi
+          echo "--- active filter patterns ---"
+          cat "${dst}"
+
       - name: Determine reference branch
         id: ref_branch
         env:
@@ -243,7 +308,9 @@ jobs:
           else
             suffix="${ref_sha}"
           fi
-          echo "cache-key=ref-macos-${BRANCH}-${suffix}" >> "$GITHUB_OUTPUT"
+          # See the Linux job for why the filter hash is part of the key.
+          filters="${{ hashFiles('.github/golden-filters.txt') }}"
+          echo "cache-key=ref-macos-${BRANCH}-${suffix}-${filters:0:12}" >> "$GITHUB_OUTPUT"
           echo "ref-sha=${ref_sha}" >> "$GITHUB_OUTPUT"
 
       - name: Restore cached reference file
@@ -274,8 +341,8 @@ jobs:
           MARLEY: ${{ github.workspace }}
         run: |
           ./build/bin/marley generate examples/config/COPY_ME.js
-          grep -v -e '^T MARLEY' -e '^HepMC::Version' events.hepmc3 \
-            > golden-macos.hepmc3
+          grep -v -f "${RUNNER_TEMP}/golden-patterns.txt" \
+            events.hepmc3 > golden-macos.hepmc3
 
   # ---------------------------------------------------------------------------
   # Main Build / Test Matrix
@@ -300,18 +367,76 @@ jobs:
           - name: "Linux · Built-in"
             os: ubuntu-latest
             path: builtin
+            root_source: ""
+            build: cmake
             cxx: g++
             flags: "IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            libdir: ""
+            ref_job: ref-linux
+            golden: golden-linux.hepmc3
+            current: current-linux.hepmc3
+
+          # --- Linux: ROOT with the vendored HepMC3 ---
+          # Where the vendored include root, the built-in install interface
+          # and the dictionary's -I flags all operate at once.
+          - name: "Linux · ROOT + built-in HepMC3"
+            os: ubuntu-latest
+            path: root-builtin
+            root_source: "conda"
+            build: cmake
+            cxx: g++
+            flags: "IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            libdir: ""
             ref_job: ref-linux
             golden: golden-linux.hepmc3
             current: current-linux.hepmc3
 
           # --- Linux: system path (GSL + HepMC3 + ROOT from package manager) ---
+          # libdir=lib64 makes this the distro-like configuration, and
+          # exercises the front-door Makefile's translation of it to
+          # -DCMAKE_INSTALL_LIBDIR.
           - name: "Linux · System"
             os: ubuntu-latest
             path: system
+            root_source: "conda"
+            build: cmake
             cxx: g++
             flags: ""
+            libdir: "libdir=lib64"
+            ref_job: ref-linux
+            golden: golden-linux.hepmc3
+            current: current-linux.hepmc3
+
+          # --- Linux: the hand-written GNU Make recipe ---
+          # The build system is a property of the leg, not a second axis.
+          # Carries libdir=lib64 so that both build systems are checked
+          # against the same install-directory rule.
+          - name: "Linux · Make"
+            os: ubuntu-latest
+            path: builtin
+            root_source: ""
+            build: make
+            cxx: g++
+            flags: "IGNORE_CMAKE=1 IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            libdir: "libdir=lib64"
+            ref_job: ref-linux
+            golden: golden-linux.hepmc3
+            current: current-linux.hepmc3
+
+          # --- Linux: GNU Make, with ROOT and an external HepMC3 ---
+          # The only leg that builds the ROOT dictionary through build.mk,
+          # exercises its C++-standard maximum against ROOT's own -std, and
+          # links a system HepMC3 with it. It is also the only Make leg on
+          # which the "-DMARLEY_FOUND_HEPMC3 must not reach the published
+          # flags" assertion has anything to assert.
+          - name: "Linux · Make · ROOT + external HepMC3"
+            os: ubuntu-latest
+            path: system
+            root_source: "conda"
+            build: make
+            cxx: g++
+            flags: "IGNORE_CMAKE=1"
+            libdir: ""
             ref_job: ref-linux
             golden: golden-linux.hepmc3
             current: current-linux.hepmc3
@@ -322,18 +447,51 @@ jobs:
           - name: "macOS · Built-in"
             os: macos-latest
             path: builtin
+            root_source: ""
+            build: cmake
             cxx: clang++
             flags: "IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            libdir: ""
             ref_job: ref-macos
             golden: golden-macos.hepmc3
             current: current-macos.hepmc3
 
-          # --- macOS: system path ---
-          - name: "macOS · System"
+          # --- macOS: everything Homebrew can provide ---
+          # The only leg whose dependencies all come from one package
+          # manager, and the only one not taking ROOT from conda-forge.
+          #
+          # A single prefix means no second set of libraries to be picked up
+          # by a directory-granular RUNPATH. Homebrew's ROOT is also a
+          # different build with different root-config output, which
+          # marley.pc's rpath filter and the external-RUNPATH harvest parse.
+          #
+          # HepMC3 is the vendored copy because homebrew-core has no HepMC3
+          # formula; it exists only in a third-party tap.
+          - name: "macOS · Homebrew"
             os: macos-latest
-            path: system
+            path: homebrew
+            root_source: "brew"
+            build: cmake
             cxx: clang++
-            flags: ""
+            flags: "IGNORE_HEPMC3=1"
+            libdir: ""
+            ref_job: ref-macos
+            golden: golden-macos.hepmc3
+            current: current-macos.hepmc3
+
+          # --- macOS: ROOT with the vendored HepMC3 ---
+          # macOS resolves libraries through the absolute install names in
+          # each dylib rather than through RUNPATH, so it fails and succeeds
+          # for different reasons than Linux. This puts @loader_path,
+          # -install_name and the ROOT dictionary under test together.
+          - name: "macOS · ROOT + built-in HepMC3"
+            os: macos-latest
+            path: root-builtin
+            root_source: "conda"
+            build: cmake
+            cxx: clang++
+            flags: "IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            libdir: ""
             ref_job: ref-macos
             golden: golden-macos.hepmc3
             current: current-macos.hepmc3
@@ -345,45 +503,135 @@ jobs:
         # the macOS dispatch-only guard and build_path filter are applied here
         # instead.  All subsequent steps are conditioned on this output.
         run: |
+          # matrix.libdir is a make argument ("libdir=lib64"), since most
+          # uses pass it straight to make. Steps needing it as a directory
+          # use MARLEY_LIBDIR instead of stripping the prefix themselves.
+          # Resolved before any early exit below: GITHUB_ENV is read after
+          # the step ends either way.
+          libdir="${{ matrix.libdir }}"
+          libdir="${libdir#libdir=}"
+          echo "MARLEY_LIBDIR=${libdir:-lib}" >> "$GITHUB_ENV"
+
           os="${{ matrix.os }}"
           path="${{ matrix.path }}"
-          event="${{ github.event_name }}"
+          build="${{ matrix.build }}"
           build_path="${{ github.event.inputs.build_path }}"
+          private="${{ github.event.repository.private }}"
 
-          # macOS legs are workflow_dispatch only
-          if [[ "${os}" == "macos-latest" && "${event}" != "workflow_dispatch" ]]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            exit 0
+          run_it() { echo "skip=false" >> "$GITHUB_OUTPUT"; exit 0; }
+          skip_it() { echo "skip=true"  >> "$GITHUB_OUTPUT"; exit 0; }
+
+          # Evaluated in this order, and the order is the policy:
+          #
+          #   1. an explicit workflow_dispatch input always wins;
+          #   2. otherwise a private repository keeps the cheap matrix;
+          #   3. otherwise every leg runs, since GitHub Actions is free for
+          #      public repositories on standard runners.
+          #
+          # Forks need nothing here: their one degradation, no access to
+          # base-repository caches, is handled at the golden-file steps.
+
+          # 1. explicit dispatch input
+          if [[ -n "${build_path}" ]]; then
+            [[ "${build_path}" == "everything" ]] && run_it
+            [[ "${build_path}" == "${path}" ]] && run_it
+            # "builtin" also selects the ROOT-with-vendored-HepMC3 leg, since
+            # that leg is a built-in-HepMC3 build.
+            [[ "${build_path}" == "builtin" && "${path}" == "root-builtin" ]] \
+              && run_it
+            # "system" means "dependencies from the platform's package
+            # manager", which on macOS is the homebrew leg.
+            [[ "${build_path}" == "system" && "${path}" == "homebrew" ]] \
+              && run_it
+            skip_it
           fi
 
-          # Filter by build_path input; a null/empty value (push/PR) defaults
-          # to 'builtin' to avoid the expensive ROOT install by default.
-          if [[ "${build_path}" == "everything" ]]; then
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          elif [[ "${build_path}" == "${path}" ]]; then
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          elif [[ -z "${build_path}" && "${path}" == "builtin" ]]; then
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "skip=true" >> "$GITHUB_OUTPUT"
+          # 2. private repository: the single Linux built-in CMake leg,
+          #    and nothing else. Use a workflow_dispatch to reach the
+          #    others when they need exercising here.
+          if [[ "${private}" == "true" ]]; then
+            [[ "${os}" == "ubuntu-latest" \
+               && "${path}" == "builtin" \
+               && "${build}" == "cmake" ]] && run_it
+            skip_it
           fi
+
+          # 3. public repository: everything.
+          run_it
 
       - name: Check out repository
         if: steps.eligibility.outputs.skip != 'true'
         uses: actions/checkout@v5
 
       # ROOT is only needed for the system build.
+
+      # Same staging as the reference jobs.
+      - name: Stage the golden filters
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          src="${GITHUB_WORKSPACE}/.github/golden-filters.txt"
+          dst="${RUNNER_TEMP}/golden-patterns.txt"
+          if [ ! -s "${src}" ]; then
+            echo "ERROR: ${src} is missing or empty" >&2
+            exit 1
+          fi
+          grep -v -e '^#' -e '^$' "${src}" > "${dst}"
+          if [ ! -s "${dst}" ]; then
+            echo "ERROR: ${src} contains no filter patterns" >&2
+            exit 1
+          fi
+          cat "${dst}"
       - name: Set up Micromamba (ROOT via conda-forge)
-        if: steps.eligibility.outputs.skip != 'true' && matrix.path == 'system'
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          matrix.root_source == 'conda'
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-name: marley-env
-          environment-spec: |
-            channels:
-              - conda-forge
-            dependencies:
-              - root
+          # environment-file, not an inline spec: GitHub silently ignores
+          # unknown "with" keys, so a misspelled input creates an empty
+          # environment and reports success.
+          environment-file: .github/root-env.yml
           cache-environment: true
+
+      # setup-micromamba initialises a shell hook rather than exporting
+      # anything, and GitHub's default run shell never sources a profile.
+      # A login shell is used in this step only, to read the activated
+      # environment; the result is exported through GITHUB_PATH and
+      # GITHUB_ENV so every later step keeps the stock shell.
+      #
+      # No -e on purpose: this step reports a path, and a non-zero return
+      # from something in /etc/profile.d is not a reason to fail the
+      # build.
+      - name: Put the ROOT environment on PATH
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          matrix.root_source == 'conda'
+        shell: bash -l {0}
+        run: |
+          echo "CONDA_PREFIX=${CONDA_PREFIX:-<unset>}"
+          if [ -z "${CONDA_PREFIX:-}" ]; then
+            echo "ERROR: the micromamba environment is not active; ROOT" \
+              "would be silently absent" >&2
+            exit 1
+          fi
+          # Appended, not prepended, which is why this is done by hand
+          # rather than through GITHUB_PATH: that can only prepend.
+          #
+          # The ROOT environment also contains a complete clang toolchain.
+          # Putting its bin directory first makes a bare "clang++" resolve
+          # to conda-forge's compiler, which on macOS cannot link with
+          # Apple's linker. Appending keeps root-config, rootcling and root
+          # findable with the platform's own toolchain still in front.
+          #
+          # find_package(ROOT) uses CMAKE_PREFIX_PATH, not PATH.
+          clean_path="$( printf '%s' "${PATH}" | tr ':' '\n' \
+            | grep -v "^${CONDA_PREFIX}/" | paste -sd: - )"
+          echo "PATH=${clean_path}:${CONDA_PREFIX}/bin" >> "$GITHUB_ENV"
+          echo "CMAKE_PREFIX_PATH=${CONDA_PREFIX}" >> "$GITHUB_ENV"
+          # Exported so that the compiler check below can tell whether the
+          # toolchain it found came from here.
+          echo "MARLEY_ROOT_PREFIX=${CONDA_PREFIX}" >> "$GITHUB_ENV"
+          "${CONDA_PREFIX}/bin/root-config" --version
 
       - name: Install system dependencies (Linux · system path)
         if: steps.eligibility.outputs.skip != 'true' && matrix.os == 'ubuntu-latest' && matrix.path == 'system'
@@ -391,40 +639,102 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgsl-dev libhepmc3-dev
 
-      - name: Install system dependencies (macOS · system path)
-        if: steps.eligibility.outputs.skip != 'true' && matrix.os == 'macos-latest' && matrix.path == 'system'
-        run: brew install gsl hepmc3
+      # gsl is named explicitly even though ROOT depends on it, so the leg
+      # states what MARLEY needs rather than relying on a transitive
+      # dependency. hepmc3 is absent because homebrew-core has no such
+      # formula; this leg uses the vendored copy.
+      - name: Install dependencies from Homebrew
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          matrix.root_source == 'brew'
+        run: |
+          brew install root gsl
+          root-config --version
+          root-config --prefix
 
+      # Which compiler, not just which version: a version alone cannot
+      # distinguish the intended toolchain from one shadowing it on PATH.
       - name: Verify compiler
         if: steps.eligibility.outputs.skip != 'true'
-        run: ${{ matrix.cxx }} --version
+        run: |
+          resolved="$( command -v "${{ matrix.cxx }}" )" \
+            || { echo "ERROR: ${{ matrix.cxx }} is not on PATH" >&2; exit 1; }
+          echo "compiler: ${resolved}"
+          "${resolved}" --version
+          # The ROOT environment supplies ROOT. If it is also supplying the
+          # compiler, PATH ordering has gone wrong again.
+          if [ -n "${MARLEY_ROOT_PREFIX:-}" ]; then
+            case "${resolved}" in
+              "${MARLEY_ROOT_PREFIX}"/*)
+                echo "ERROR: the compiler came from the ROOT environment" \
+                  "(${MARLEY_ROOT_PREFIX}); it must come from the runner" >&2
+                exit 1 ;;
+            esac
+          fi
 
       - name: Build
         if: steps.eligibility.outputs.skip != 'true'
-        run: make CXX=${{ matrix.cxx }} ${{ matrix.flags }}
+        run: make CXX=${{ matrix.cxx }} ${{ matrix.flags }} ${{ matrix.libdir }}
 
       - name: Build test binary
         if: steps.eligibility.outputs.skip != 'true'
-        run: make test CXX=${{ matrix.cxx }} ${{ matrix.flags }}
+        run: make test CXX=${{ matrix.cxx }} ${{ matrix.flags }} ${{ matrix.libdir }}
 
-      - name: Verify system dependencies were linked
-        if: steps.eligibility.outputs.skip != 'true' && matrix.path == 'system'
+      # -DMARLEY_FOUND_GSL and -DMARLEY_FOUND_HEPMC3 are internal build
+      # switches that no installed header tests, so they must not appear in
+      # the published flags.
+      #
+      # Whether the system libraries were actually used is a separate
+      # question, answered by the install receipt in the deployment steps
+      # below.
+      - name: Verify no internal build switches reach the published flags
+        if: steps.eligibility.outputs.skip != 'true'
         run: |
-          cflags=$(./build/bin/marley-config --cflags)
+          published=$(./build/bin/marley-config --cflags --libs)
+          echo "published: ${published}"
+          if echo "${published}" | grep -q 'MARLEY_FOUND_'; then
+            echo "ERROR: an internal MARLEY_FOUND_* switch reached the" \
+              "published flags" >&2
+            exit 1
+          fi
+
+      - name: Verify ROOT was linked
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          matrix.root_source != ''
+        run: |
           use_root=$(./build/bin/marley-config --use-root)
-          echo "cflags:   ${cflags}"
           echo "use-root: ${use_root}"
-          echo "${cflags}" | grep -q '\-DMARLEY_FOUND_GSL' \
-            || { echo "ERROR: system GSL was not linked"; exit 1; }
-          echo "${cflags}" | grep -q '\-DMARLEY_FOUND_HEPMC3' \
-            || { echo "ERROR: system HepMC3 was not linked"; exit 1; }
           [ "${use_root}" = "yes" ] \
             || { echo "ERROR: ROOT was not linked"; exit 1; }
 
+      # No MARLEY in the environment: self-location has to find
+      # build/share/marley/data through the build tree's own symlink. The
+      # ref-* jobs do set it, because they build a branch whose Logger
+      # throws without it.
+      # Which copy of each dependency the test binary loads, which is not
+      # necessarily the one it compiled against.
+      #
+      # RUNPATH is directory-granular, and the loader searches DT_RUNPATH
+      # before its default directories, so a prefix holding a parallel set
+      # of libraries can supply a dependency nobody asked it for. The System
+      # leg compiles against apt's GSL while taking ROOT from conda-forge,
+      # which also ships one.
+      #
+      # Informational only: mixing dependency sources is a property of the
+      # CI environment, not a defect in MARLEY.
+      - name: Report which libraries the test binary resolves
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          runner.os == 'Linux'
+        continue-on-error: true
+        run: |
+          ldd ./build/bin/martest || true
+          echo "--- GSL and HepMC3, specifically ---"
+          ldd ./build/bin/martest | grep -Ei 'gsl|hepmc' || echo "(none listed)"
+
       - name: Unit tests
         if: steps.eligibility.outputs.skip != 'true'
-        env:
-          MARLEY: ${{ github.workspace }}
         run: ./build/bin/martest
 
       # Physics validation: restore the golden file produced by the matching
@@ -482,7 +792,6 @@ jobs:
           (needs.ref-linux.result == 'success' ||
            needs.ref-macos.result == 'success')
         env:
-          MARLEY: ${{ github.workspace }}
           IS_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
           golden="${{ matrix.golden }}"
@@ -495,6 +804,389 @@ jobs:
             exit 1
           fi
           ./build/bin/marley generate examples/config/COPY_ME.js
-          grep -v -e '^T MARLEY' -e '^HepMC::Version' events.hepmc3 \
-            > ${{ matrix.current }}
+          grep -v -f "${RUNNER_TEMP}/golden-patterns.txt" \
+            events.hepmc3 > ${{ matrix.current }}
           diff "${golden}" ${{ matrix.current }}
+
+      # -----------------------------------------------------------------
+      # Deployment
+      #
+      # Install, prove the install stands alone, prove it survives being
+      # moved, then remove it.
+      # -----------------------------------------------------------------
+      - name: Install
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          make install CXX=${{ matrix.cxx }} ${{ matrix.flags }} \
+            ${{ matrix.libdir }} prefix="${RUNNER_TEMP}/a"
+          find "${RUNNER_TEMP}/a" -maxdepth 2 -mindepth 1 \
+            -not -path '*/data/*' | sort
+
+      - name: Verify the receipt records what the build actually did
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          receipt="${RUNNER_TEMP}/a/share/marley/install-receipt"
+          cat "${receipt}"
+          # Whether the system libraries were used, asked of the receipt
+          # that records what the build did.
+          case "${{ matrix.path }}" in
+            system)
+              grep -q '^hepmc3: external' "${receipt}" \
+                || { echo "ERROR: system HepMC3 was not used" >&2; exit 1; }
+              grep -q '^gsl: external' "${receipt}" \
+                || { echo "ERROR: system GSL was not used" >&2; exit 1; }
+              grep -q '^root: yes' "${receipt}" \
+                || { echo "ERROR: ROOT was not used" >&2; exit 1; }
+              ;;
+            homebrew)
+              # Homebrew supplies ROOT and GSL; HepMC3 is vendored because
+              # homebrew-core has no formula for it.
+              grep -q '^hepmc3: builtin' "${receipt}" \
+                || { echo "ERROR: the vendored HepMC3 was not used" >&2; exit 1; }
+              grep -q '^gsl: external' "${receipt}" \
+                || { echo "ERROR: Homebrew's GSL was not used" >&2; exit 1; }
+              grep -q '^root: yes' "${receipt}" \
+                || { echo "ERROR: ROOT was not used" >&2; exit 1; }
+              ;;
+            root-builtin)
+              # The whole point of this leg: ROOT enabled, HepMC3 vendored.
+              grep -q '^hepmc3: builtin' "${receipt}" \
+                || { echo "ERROR: the vendored HepMC3 was not used" >&2; exit 1; }
+              grep -q '^root: yes' "${receipt}" \
+                || { echo "ERROR: ROOT was not used" >&2; exit 1; }
+              ;;
+            *)
+              grep -q '^hepmc3: builtin' "${receipt}" \
+                || { echo "ERROR: the vendored HepMC3 was not used" >&2; exit 1; }
+              grep -q '^root: no' "${receipt}" \
+                || { echo "ERROR: ROOT was enabled on a built-in leg" >&2; exit 1; }
+              ;;
+          esac
+          # The receipt does not record libdir, so check where it shows:
+          # the library must be under the directory that was asked for.
+          # Checked on every leg, so the default is verified too and
+          # MARLEY_LIBDIR is known good before later steps use it.
+          ls "${RUNNER_TEMP}/a/${MARLEY_LIBDIR}/libMARLEY."* > /dev/null \
+            || { echo "ERROR: nothing installed under ${MARLEY_LIBDIR}/" >&2;
+                 exit 1; }
+          echo "libdir honoured: ${MARLEY_LIBDIR}/"
+
+      # ---------------------------------------------------------------
+      # Published interfaces
+      #
+      # Five checks on legs that have already paid for a build and an
+      # install: a packager's staged install, the two published flag
+      # interfaces, the resolver's command-line face, the environment
+      # script, and the ROOT session wrapper.
+      # ---------------------------------------------------------------
+
+      - name: Staged install into DESTDIR
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          # A packager installs into a staging tree and packages the
+          # contents for unpacking at the real prefix, so DESTDIR must
+          # prefix every installed path while appearing in no installed
+          # file.
+          #
+          # On the CMake path this reconfigures the build tree, since the
+          # prefix differs from the one configured earlier. Nothing later
+          # installs again, and the steps that follow use the prefix in
+          # ${RUNNER_TEMP}/a.
+          dest="${RUNNER_TEMP}/destdir"
+          pfx="/opt/marley-destdir-test"
+          make install CXX=${{ matrix.cxx }} ${{ matrix.flags }} \
+            ${{ matrix.libdir }} prefix="${pfx}" DESTDIR="${dest}"
+
+          test -x "${dest}${pfx}/bin/marley" \
+            || { echo "ERROR: no ${dest}${pfx}/bin/marley after staging" >&2;
+                 exit 1; }
+          test ! -e "${pfx}" \
+            || { echo "ERROR: the staged install wrote to the real ${pfx}" >&2;
+                 exit 1; }
+          if grep -r -l -a "${dest}" "${dest}${pfx}/bin/" 2>/dev/null \
+             | grep -q .; then
+            echo "ERROR: the staging path is baked into an installed file" >&2
+            grep -r -l -a "${dest}" "${dest}${pfx}/bin/" >&2
+            exit 1
+          fi
+          echo "DESTDIR staging is clean"
+
+      - name: Published flags (pkg-config)
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          command -v pkg-config > /dev/null \
+            || { echo "ERROR: pkg-config is absent from this runner" >&2;
+                 exit 1; }
+          export PKG_CONFIG_PATH="${RUNNER_TEMP}/a/${MARLEY_LIBDIR}/pkgconfig"
+          pkg-config --exists marley \
+            || { echo "ERROR: no usable marley.pc in ${PKG_CONFIG_PATH}" >&2;
+                 exit 1; }
+          echo "modversion: $( pkg-config --modversion marley )"
+          pc_cflags="$( pkg-config --cflags marley )"
+          pc_libs="$( pkg-config --libs marley )"
+          echo "--cflags: ${pc_cflags}"
+          echo "--libs:   ${pc_libs}"
+          case "${pc_libs}" in
+            *-lMARLEY*) ;;
+            *) echo "ERROR: --libs does not link MARLEY" >&2; exit 1 ;;
+          esac
+          # A .pc file must carry no rpath: it would bake this machine's
+          # layout into a redistributed binary. marley-config may carry
+          # one, so the two interfaces differ by exactly this.
+          case "${pc_libs}" in
+            *-rpath*) echo "ERROR: marley.pc carries an rpath" >&2; exit 1 ;;
+          esac
+          # No published interface may name the build tree.
+          for flags in "${pc_cflags}" "${pc_libs}"; do
+            case "${flags}" in
+              *"${GITHUB_WORKSPACE}/build"*)
+                echo "ERROR: a published flag names the build tree" >&2
+                exit 1 ;;
+            esac
+          done
+          echo "published flags are clean"
+
+      - name: Resolve a data file through the installed CLI
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          # From an unrelated directory, so nothing resolves by accident.
+          mkdir -p "${RUNNER_TEMP}/resolve-test"
+          cd "${RUNNER_TEMP}/resolve-test"
+          "${RUNNER_TEMP}/a/bin/marley" info
+          out="$( "${RUNNER_TEMP}/a/bin/marley" info --resolve mass_table.js )"
+          echo "${out}"
+          case "${out}" in
+            *mass_table.js*) ;;
+            *) echo "ERROR: --resolve reported no path" >&2; exit 1 ;;
+          esac
+          # A name that cannot be resolved must exit non-zero, so this is
+          # usable from a script.
+          if "${RUNNER_TEMP}/a/bin/marley" info --resolve no_such_file.js; then
+            echo "ERROR: --resolve exited 0 for a nonexistent file" >&2
+            exit 1
+          fi
+          echo "the resolver CLI behaves"
+
+      - name: The environment script, and the absence of MARLEY
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          cd "${RUNNER_TEMP}"
+          . "${RUNNER_TEMP}/a/bin/setup_marley.sh"
+          resolved="$( command -v marley )"
+          echo "marley resolves to: ${resolved}"
+          [ "${resolved}" = "${RUNNER_TEMP}/a/bin/marley" ] \
+            || { echo "ERROR: the installed marley is not first on PATH" >&2;
+                 exit 1; }
+          # The script sets no MARLEY variable, because nothing reads one.
+          if [ -n "${MARLEY:-}" ]; then
+            echo "ERROR: setup_marley.sh exported MARLEY=${MARLEY}" >&2
+            exit 1
+          fi
+          echo "PATH set, MARLEY left unset"
+
+      - name: Interactive ROOT session (mroot)
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          matrix.root_source != ''
+        run: |
+          cd "${RUNNER_TEMP}"
+          # Two checks against the installed tree:
+          #
+          #   dict -- looking up a dictionary class exercises the rootmap
+          #     and ROOT's dynamic path together.
+          #   hdr  -- parsing a MARLEY header exercises ROOT_INCLUDE_PATH.
+          #     EventFileReader.hh has a member gated on USE_ROOT, the
+          #     macro mroot declares before loading anything.
+          #
+          # -e '(int)0;' must come last: root exits with the value of the
+          # final expression, and printf returns a character count.
+          out="$( "${RUNNER_TEMP}/a/bin/mroot" -b -q \
+            -e 'printf("dict: %s\n", TClass::GetClass("HepMC3::GenEventData") ? "found" : "MISSING");' \
+            -e 'printf("hdr: %s\n", gInterpreter->Declare("#include \"marley/EventFileReader.hh\"") ? "ok" : "FAILED");' \
+            -e '(int)0;' 2>&1 )"
+          echo "${out}"
+          # grep -a: ROOT's banner carries UTF-8 that can make grep treat
+          # the stream as binary and report nothing.
+          printf '%s\n' "${out}" | grep -a -q 'dict: found' \
+            || { echo "ERROR: the dictionary class could not be looked up" >&2;
+                 exit 1; }
+          printf '%s\n' "${out}" | grep -a -q 'hdr: ok' \
+            || { echo "ERROR: a MARLEY header did not parse under cling" >&2;
+                 exit 1; }
+          echo "mroot loads the library and parses MARLEY headers"
+
+      # Without this, an install whose RUNPATH still points into the build
+      # directory runs perfectly.
+      - name: Stash the build tree
+        if: steps.eligibility.outputs.skip != 'true'
+        run: mv build build.stashed
+
+      # An installed MARLEY must resolve its dependencies on its own. The
+      # run below only tests that if the environment supplies nothing, since
+      # LD_LIBRARY_PATH beats DT_RUNPATH; unsetting it here keeps the check
+      # meaningful whatever the environment holds.
+      #
+      # It is deliberately not unset for the run itself, which should
+      # exercise the configuration a user would have.
+      #
+      # Linux only: macOS records absolute install names in its dylibs and
+      # has no equivalent exposure.
+      - name: Assert the installed binary needs no environment help
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          runner.os == 'Linux'
+        run: |
+          status=0
+          for f in "${RUNNER_TEMP}/a/bin/marley" \
+                   "${RUNNER_TEMP}/a/${MARLEY_LIBDIR}/libMARLEY.so"; do
+            # A check that cannot find its subject must fail, not pass:
+            # ldd reports a missing file as "No such file or directory",
+            # which the test below would not match.
+            if [[ ! -e "${f}" ]]; then
+              echo "ERROR: ${f} does not exist" >&2
+              status=1
+              continue
+            fi
+            echo "::group::ldd ${f}"
+            # ldd exits non-zero for a binary with unresolved dependencies,
+            # so its status is captured rather than allowed to kill the step
+            # before the output is shown.
+            out="$( env -u LD_LIBRARY_PATH ldd "${f}" 2>&1 )" || true
+            echo "${out}"
+            echo "::endgroup::"
+            if printf '%s\n' "${out}" | grep -q 'not found'; then
+              echo "ERROR: ${f} has unresolved dependencies with" \
+                "LD_LIBRARY_PATH unset -- a required directory is missing" \
+                "from its RUNPATH" >&2
+              status=1
+            fi
+          done
+          exit "${status}"
+
+      - name: Run the installed MARLEY, and diff against the golden file
+        if: steps.eligibility.outputs.skip != 'true'
+        env:
+          IS_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          # From a temporary directory, with the installed example
+          # configuration, which also proves examples/ shipped.
+          mkdir -p "${RUNNER_TEMP}/run-a"
+          cd "${RUNNER_TEMP}/run-a"
+
+          # Diagnostics on failure. This is the first step to run an
+          # installed binary with the build tree moved aside, so it is where
+          # RUNPATH defects land -- and a loader failure exits before
+          # main(), giving a red step with almost no output.
+          rc=0
+          "${RUNNER_TEMP}/a/bin/marley" generate \
+            "${RUNNER_TEMP}/a/share/marley/examples/config/COPY_ME.js" || rc=$?
+          if [[ "${rc}" -ne 0 ]]; then
+            echo "::group::Loader diagnostics for the installed binary"
+            bin="${RUNNER_TEMP}/a/bin/marley"
+            lib="${RUNNER_TEMP}/a/${MARLEY_LIBDIR}/libMARLEY.so"
+            if [[ "${RUNNER_OS}" == "macOS" ]]; then
+              lib="${lib%.so}.dylib"
+              otool -l "${bin}" | grep -A 2 LC_RPATH || true
+              otool -L "${bin}" || true
+              otool -L "${lib}" || true
+            else
+              readelf -d "${bin}" | grep -Ei 'rpath|runpath' || \
+                echo "no RPATH/RUNPATH in ${bin}"
+              readelf -d "${lib}" | grep -Ei 'rpath|runpath' || \
+                echo "no RPATH/RUNPATH in ${lib}"
+              # "not found" lines here name the missing dependency outright.
+              ldd "${bin}" || true
+              ldd "${lib}" || true
+            fi
+            echo "::endgroup::"
+            echo "ERROR: the installed MARLEY failed to run (exit ${rc})" >&2
+            exit "${rc}"
+          fi
+
+          golden="${GITHUB_WORKSPACE}/${{ matrix.golden }}"
+          if [[ ! -f "${golden}" ]]; then
+            if [[ "${IS_FORK_PR}" == "true" ]]; then
+              echo "WARNING: no golden file for a fork PR; diff skipped"
+              exit 0
+            fi
+            echo "ERROR: golden file '${golden}' not found" >&2
+            exit 1
+          fi
+          # Every checkpoint diffs, not just the build-tree one, so that
+          # "installed MARLEY is correct" is tested and not merely
+          # "installed MARLEY runs".
+          grep -v -f "${RUNNER_TEMP}/golden-patterns.txt" \
+            events.hepmc3 > current-installed.hepmc3
+          diff "${golden}" current-installed.hepmc3
+
+      # Built-in-HepMC3 legs only, where every MARLEY-owned include path
+      # lives; the system path just forwards HepMC3-config's output. CMake
+      # legs only, because the Make path installs no CMake package.
+      #
+      # Runs after the build tree is stashed, so a consumer that only works
+      # while the build directory survives fails here.
+      - name: Build an external consumer against the installed package
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          matrix.build == 'cmake' &&
+          (matrix.path == 'builtin' || matrix.path == 'root-builtin' ||
+           matrix.path == 'homebrew')
+        run: |
+          cmake -S "${GITHUB_WORKSPACE}/.github/consumer" \
+            -B "${RUNNER_TEMP}/consumer-build" \
+            -DCMAKE_PREFIX_PATH="${RUNNER_TEMP}/a"
+          cmake --build "${RUNNER_TEMP}/consumer-build"
+          # From a directory unrelated to both the build tree and the
+          # prefix, so nothing can be found by accident.
+          mkdir -p "${RUNNER_TEMP}/consumer-run"
+          cd "${RUNNER_TEMP}/consumer-run"
+          "${RUNNER_TEMP}/consumer-build/consumer"
+          # The standard must arrive through the imported target rather than
+          # being set by the consumer.
+          grep -o -- '-std=[^ ]*' \
+            "${RUNNER_TEMP}/consumer-build/CMakeFiles/consumer.dir/flags.make" \
+            | head -1
+
+      - name: Relocate the installed prefix and run again
+        if: steps.eligibility.outputs.skip != 'true'
+        env:
+          IS_FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          mv "${RUNNER_TEMP}/a" "${RUNNER_TEMP}/b"
+          mkdir -p "${RUNNER_TEMP}/run-b"
+          cd "${RUNNER_TEMP}/run-b"
+          "${RUNNER_TEMP}/b/bin/marley" generate \
+            "${RUNNER_TEMP}/b/share/marley/examples/config/COPY_ME.js"
+
+          golden="${GITHUB_WORKSPACE}/${{ matrix.golden }}"
+          if [[ ! -f "${golden}" && "${IS_FORK_PR}" == "true" ]]; then
+            echo "WARNING: no golden file for a fork PR; diff skipped"
+            exit 0
+          fi
+          grep -v -f "${RUNNER_TEMP}/golden-patterns.txt" \
+            events.hepmc3 > current-moved.hepmc3
+          diff "${golden}" current-moved.hepmc3
+
+      # Uninstalling the moved tree tests that relocating an installation
+      # does not render it un-removable. An explicit --prefix means no
+      # guessing, and --yes means CI cannot hang on the prompt.
+      - name: Uninstall, and assert the prefix is empty
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          "${GITHUB_WORKSPACE}/src/scripts/uninstall-marley" \
+            --prefix "${RUNNER_TEMP}/b" --yes
+          echo "--- what remains ---"
+          find "${RUNNER_TEMP}/b" || true
+          leftover=$(find "${RUNNER_TEMP}/b" \( -type f -o -type l \) -print)
+          if [ -n "${leftover}" ]; then
+            echo "ERROR: the uninstaller left files behind:" >&2
+            echo "${leftover}" >&2
+            exit 1
+          fi
+
+      - name: Restore the build tree
+        if: always() && steps.eligibility.outputs.skip != 'true'
+        run: |
+          if [ -d build.stashed ] && [ ! -d build ]; then
+            mv build.stashed build
+          fi
