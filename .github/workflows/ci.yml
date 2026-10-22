@@ -380,6 +380,7 @@ jobs:
           - name: "Linux · Built-in"
             os: ubuntu-latest
             path: builtin
+            root_source: ""
             build: cmake
             cxx: g++
             flags: "IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1"
@@ -397,6 +398,7 @@ jobs:
           - name: "Linux · ROOT + built-in HepMC3"
             os: ubuntu-latest
             path: root-builtin
+            root_source: "conda"
             build: cmake
             cxx: g++
             flags: "IGNORE_GSL=1 IGNORE_HEPMC3=1"
@@ -413,6 +415,7 @@ jobs:
           - name: "Linux · System"
             os: ubuntu-latest
             path: system
+            root_source: "conda"
             build: cmake
             cxx: g++
             flags: ""
@@ -430,6 +433,7 @@ jobs:
           - name: "Linux · Make"
             os: ubuntu-latest
             path: builtin
+            root_source: ""
             build: make
             cxx: g++
             flags: "IGNORE_CMAKE=1 IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1"
@@ -450,6 +454,7 @@ jobs:
           - name: "Linux · Make · ROOT + external HepMC3"
             os: ubuntu-latest
             path: system
+            root_source: "conda"
             build: make
             cxx: g++
             flags: "IGNORE_CMAKE=1"
@@ -464,6 +469,7 @@ jobs:
           - name: "macOS · Built-in"
             os: macos-latest
             path: builtin
+            root_source: ""
             build: cmake
             cxx: clang++
             flags: "IGNORE_ROOT=1 IGNORE_GSL=1 IGNORE_HEPMC3=1"
@@ -472,13 +478,35 @@ jobs:
             golden: golden-macos.hepmc3
             current: current-macos.hepmc3
 
-          # --- macOS: system path ---
-          - name: "macOS · System"
+          # --- macOS: everything Homebrew can provide ---
+          # The only leg whose dependencies all come from ONE package
+          # manager, and the only one taking ROOT from somewhere other than
+          # conda-forge. Both matter.
+          #
+          # Coherence: RUNPATH is directory-granular, so a prefix holding a
+          # parallel set of libraries can supply a dependency nobody asked
+          # it for. Every other ROOT leg layers conda-forge over the system
+          # packages and is exposed to that; this one has a single prefix
+          # and is not.
+          #
+          # Diversity: every other ROOT leg gets ROOT from conda-forge, so
+          # a quirk in that packaging would be invisible across all of
+          # them. Homebrew's ROOT is a different build with a different
+          # root-config output, which is what marley.pc's rpath filter and
+          # the external-RUNPATH harvest both parse.
+          #
+          # HepMC3 is the vendored copy, not because that is convenient but
+          # because it is what a Mac user gets: homebrew-core has no HepMC3
+          # formula at all. It exists only in a third-party tap, and making
+          # CI depend on one person's repository would trade a tested
+          # configuration for an untested dependency.
+          - name: "macOS · Homebrew"
             os: macos-latest
-            path: system
+            path: homebrew
+            root_source: "brew"
             build: cmake
             cxx: clang++
-            flags: ""
+            flags: "IGNORE_HEPMC3=1"
             libdir: ""
             ref_job: ref-macos
             golden: golden-macos.hepmc3
@@ -495,6 +523,7 @@ jobs:
           - name: "macOS · ROOT + built-in HepMC3"
             os: macos-latest
             path: root-builtin
+            root_source: "conda"
             build: cmake
             cxx: clang++
             flags: "IGNORE_GSL=1 IGNORE_HEPMC3=1"
@@ -535,10 +564,9 @@ jobs:
           #   1. an explicit workflow_dispatch input always wins;
           #   2. otherwise a PRIVATE repository keeps the cheap matrix, so
           #      nobody starts paying for minutes they were not paying before;
-          #   3. otherwise (public) every leg runs except macOS system, which
-          #      is the slowest to provision and has the least MARLEY-specific
-          #      logic. GitHub Actions is free for public repositories on
-          #      standard runners, so the mirror gets this coverage at no cost.
+          #   3. otherwise (public) every leg runs. GitHub Actions is free
+          #      for public repositories on standard runners, so the mirror
+          #      gets the full matrix at no cost.
           #
           # Forks need nothing new here: fork detection already exists, and
           # the one fork-specific degradation -- no access to base-repository
@@ -551,6 +579,10 @@ jobs:
             # "builtin" also selects the ROOT-with-vendored-HepMC3 leg, since
             # that leg is a built-in-HepMC3 build.
             [[ "${build_path}" == "builtin" && "${path}" == "root-builtin" ]] \
+              && run_it
+            # "system" means "dependencies from the platform's package
+            # manager", which on macOS is the homebrew leg.
+            [[ "${build_path}" == "system" && "${path}" == "homebrew" ]] \
               && run_it
             skip_it
           fi
@@ -568,8 +600,11 @@ jobs:
             skip_it
           fi
 
-          # 3. public repository
-          [[ "${os}" == "macos-latest" && "${path}" == "system" ]] && skip_it
+          # 3. public repository: everything. The macOS exclusion that used
+          #    to live here was written when that leg was the slowest to
+          #    provision and had the least MARLEY-specific logic. It is now
+          #    the only single-package-manager configuration and the only
+          #    one not taking ROOT from conda-forge, so it earns its place.
           run_it
 
       - name: Check out repository
@@ -599,7 +634,7 @@ jobs:
       - name: Set up Micromamba (ROOT via conda-forge)
         if: >-
           steps.eligibility.outputs.skip != 'true' &&
-          (matrix.path == 'system' || matrix.path == 'root-builtin')
+          matrix.root_source == 'conda'
         uses: mamba-org/setup-micromamba@v1
         with:
           # environment-file, NOT the inline "environment-spec" that used to
@@ -629,7 +664,7 @@ jobs:
       - name: Put the ROOT environment on PATH
         if: >-
           steps.eligibility.outputs.skip != 'true' &&
-          (matrix.path == 'system' || matrix.path == 'root-builtin')
+          matrix.root_source == 'conda'
         shell: bash -l {0}
         run: |
           echo "CONDA_PREFIX=${CONDA_PREFIX:-<unset>}"
@@ -648,9 +683,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgsl-dev libhepmc3-dev
 
-      - name: Install system dependencies (macOS · system path)
-        if: steps.eligibility.outputs.skip != 'true' && matrix.os == 'macos-latest' && matrix.path == 'system'
-        run: brew install gsl hepmc3
+      # gsl is named explicitly even though ROOT depends on it, so that the
+      # leg states what MARLEY needs rather than relying on a transitive
+      # dependency of something else.
+      #
+      # hepmc3 is NOT installed here, and was never installable: the
+      # previous version of this step asked for a formula homebrew-core
+      # does not have. The leg was excluded from public runs and
+      # dispatch-only before that, so it never ran and never failed.
+      - name: Install dependencies from Homebrew
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          matrix.root_source == 'brew'
+        run: |
+          brew install root gsl
+          root-config --version
+          root-config --prefix
 
       - name: Verify compiler
         if: steps.eligibility.outputs.skip != 'true'
@@ -693,7 +741,7 @@ jobs:
       - name: Verify ROOT was linked
         if: >-
           steps.eligibility.outputs.skip != 'true' &&
-          (matrix.path == 'system' || matrix.path == 'root-builtin')
+          matrix.root_source != ''
         run: |
           use_root=$(./build/bin/marley-config --use-root)
           echo "use-root: ${use_root}"
@@ -840,6 +888,16 @@ jobs:
                 || { echo "ERROR: system HepMC3 was not used" >&2; exit 1; }
               grep -q '^gsl: external' "${receipt}" \
                 || { echo "ERROR: system GSL was not used" >&2; exit 1; }
+              grep -q '^root: yes' "${receipt}" \
+                || { echo "ERROR: ROOT was not used" >&2; exit 1; }
+              ;;
+            homebrew)
+              # Homebrew supplies ROOT and GSL; HepMC3 is vendored because
+              # homebrew-core has no formula for it.
+              grep -q '^hepmc3: builtin' "${receipt}" \
+                || { echo "ERROR: the vendored HepMC3 was not used" >&2; exit 1; }
+              grep -q '^gsl: external' "${receipt}" \
+                || { echo "ERROR: Homebrew's GSL was not used" >&2; exit 1; }
               grep -q '^root: yes' "${receipt}" \
                 || { echo "ERROR: ROOT was not used" >&2; exit 1; }
               ;;
@@ -991,7 +1049,7 @@ jobs:
       - name: Interactive ROOT session (mroot)
         if: >-
           steps.eligibility.outputs.skip != 'true' &&
-          (matrix.path == 'system' || matrix.path == 'root-builtin')
+          matrix.root_source != ''
         run: |
           cd "${RUNNER_TEMP}"
           # Two things at once, both specific to the INSTALLED tree:
@@ -1159,7 +1217,8 @@ jobs:
         if: >-
           steps.eligibility.outputs.skip != 'true' &&
           matrix.build == 'cmake' &&
-          (matrix.path == 'builtin' || matrix.path == 'root-builtin')
+          (matrix.path == 'builtin' || matrix.path == 'root-builtin' ||
+           matrix.path == 'homebrew')
         run: |
           cmake -S "${GITHUB_WORKSPACE}/.github/consumer" \
             -B "${RUNNER_TEMP}/consumer-build" \
