@@ -361,7 +361,12 @@ if(NOT HEPMC3_FOUND)
   )
   # Suppress deprecation warnings from sprintf usage in the amalgamated source
   target_compile_options(HepMC3_builtin PRIVATE -Wno-deprecated-declarations -Wno-strict-aliasing)
-  prefer_imported_or_flags(HepMC3_builtin PUBLIC "GSL::gsl;GSL::gslcblas" GSL_CFLAGS GSL_LIBS)
+  # PRIVATE, and in fact unnecessary: src/marley_hepmc3.cc contains no
+  # reference to GSL at all. Kept rather than deleted only because the
+  # amalgamated source is regenerated from upstream and may acquire one;
+  # PUBLIC would have put GSL::gsl into the exported target's link
+  # interface, which is what broke find_package(MARLEY) for consumers.
+  prefer_imported_or_flags(HepMC3_builtin PRIVATE "GSL::gsl;GSL::gslcblas" GSL_CFLAGS GSL_LIBS)
   set_target_properties(HepMC3_builtin PROPERTIES
     # Renamed from "HepMC3": a libHepMC3 of ours in a shared prefix collides
     # with a real one, and the amalgamated copy does not implement all of it.
@@ -594,7 +599,21 @@ target_include_directories(marley_lib PUBLIC
 # interface carried a true value (design spec 6.2).
 target_compile_features(marley_lib PUBLIC cxx_std_${MARLEY_CXX_STANDARD})
 
-prefer_imported_or_flags(marley_lib PUBLIC "GSL::gsl;GSL::gslcblas" GSL_CFLAGS GSL_LIBS)
+# PRIVATE: GSL is an implementation detail. It is used by src/marley_gsl.cc
+# and named in no INSTALLED header -- include/builtin/marley_gsl.hh is the
+# one that references it, and that is precisely the header the install stops
+# shipping (design spec 4.1, 6.3).
+#
+# PUBLIC put GSL::gsl into the exported target's INTERFACE_LINK_LIBRARIES, so
+# a consumer's find_package(MARLEY) failed with "the link interface contains
+# GSL::gsl but the target was not found" unless it had separately found GSL.
+# That contradicted both of the other published interfaces, where GSL is
+# absent by design, and it is why MARLEYConfig.cmake does not call
+# find_dependency(GSL).
+#
+# PRIVATE also keeps -DMARLEY_FOUND_GSL out of a consumer's compile line,
+# which design spec 6.2 requires.
+prefer_imported_or_flags(marley_lib PRIVATE "GSL::gsl;GSL::gslcblas" GSL_CFLAGS GSL_LIBS)
 
 if(USE_BUILTIN_HEPMC3)
   target_link_libraries(marley_lib PUBLIC HepMC3_builtin)
