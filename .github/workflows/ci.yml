@@ -673,8 +673,27 @@ jobs:
               "would be silently absent" >&2
             exit 1
           fi
-          echo "${CONDA_PREFIX}/bin" >> "$GITHUB_PATH"
+          # APPENDED, not prepended, and this is the whole point of doing it
+          # by hand rather than through GITHUB_PATH (which can only prepend).
+          #
+          # The ROOT environment is here to supply ROOT. It also contains a
+          # complete clang toolchain, and putting its bin directory first
+          # made a bare "clang++" resolve to conda-forge's compiler instead
+          # of the runner's. On macOS that compiler cannot link with Apple's
+          # linker -- "ld: -lto_library library filename must be
+          # 'libLTO.dylib'" -- so the macOS ROOT leg failed to compile a
+          # one-line test program while root-config worked perfectly.
+          #
+          # Appending keeps root-config, rootcling and root findable while
+          # leaving the platform's own toolchain in front of conda's.
+          # CMAKE_PREFIX_PATH, not PATH, is what find_package(ROOT) uses.
+          clean_path="$( printf '%s' "${PATH}" | tr ':' '\n' \
+            | grep -v "^${CONDA_PREFIX}/" | paste -sd: - )"
+          echo "PATH=${clean_path}:${CONDA_PREFIX}/bin" >> "$GITHUB_ENV"
           echo "CMAKE_PREFIX_PATH=${CONDA_PREFIX}" >> "$GITHUB_ENV"
+          # Exported so that the compiler check below can tell whether the
+          # toolchain it found came from here.
+          echo "MARLEY_ROOT_PREFIX=${CONDA_PREFIX}" >> "$GITHUB_ENV"
           "${CONDA_PREFIX}/bin/root-config" --version
 
       - name: Install system dependencies (Linux · system path)
@@ -700,9 +719,28 @@ jobs:
           root-config --version
           root-config --prefix
 
+      # Which compiler, not just which version. Running "clang++ --version"
+      # reported conda-forge's clang 20.1.8 and exited 0, so this step was
+      # green while naming a toolchain that could not link at all -- the
+      # build then failed on a one-line test program. A check that cannot
+      # distinguish the intended tool from a shadowing one is not a check.
       - name: Verify compiler
         if: steps.eligibility.outputs.skip != 'true'
-        run: ${{ matrix.cxx }} --version
+        run: |
+          resolved="$( command -v "${{ matrix.cxx }}" )" \
+            || { echo "ERROR: ${{ matrix.cxx }} is not on PATH" >&2; exit 1; }
+          echo "compiler: ${resolved}"
+          "${resolved}" --version
+          # The ROOT environment supplies ROOT. If it is also supplying the
+          # compiler, PATH ordering has gone wrong again.
+          if [ -n "${MARLEY_ROOT_PREFIX:-}" ]; then
+            case "${resolved}" in
+              "${MARLEY_ROOT_PREFIX}"/*)
+                echo "ERROR: the compiler came from the ROOT environment" \
+                  "(${MARLEY_ROOT_PREFIX}); it must come from the runner" >&2
+                exit 1 ;;
+            esac
+          fi
 
       - name: Build
         if: steps.eligibility.outputs.skip != 'true'
