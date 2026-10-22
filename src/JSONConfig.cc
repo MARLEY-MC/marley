@@ -450,14 +450,13 @@ void marley::JSONConfig::prepare_reactions( marley::Generator& gen,
 
           std::string filename = r.to_string();
 
-          // Find the reaction data file using the MARLEY search path
-          std::string full_file_name = fm.find_file( filename );
-          if ( full_file_name.empty() ) {
-            throw marley::Error( "Could not locate the reaction data file "
-              + filename + ". Please check that the file name is spelled"
-              " correctly and that the file is in a folder"
-              " on the MARLEY search path." );
-          }
+          // Find the reaction data file. No base_dir is passed: this is the
+          // one resolved name that travels, because the configuration is
+          // re-serialised into every output file and replayed by "resume"
+          // and "reweight", where the original configuration's directory is
+          // not merely unknown but unknowable.
+          std::string full_file_name
+            = fm.find_file( filename, "react" ).string();
 
           auto reacts = marley::Reaction::load_from_file(
             full_file_name, gen.get_structure_db(), coulomb_mode,

@@ -15,13 +15,17 @@
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
 #pragma once
-#include <functional>
+#include <filesystem>
+#include <set>
 #include <string>
 #include <vector>
 
 namespace marley {
 
-  /// @brief Singleton class that handles file searches
+  /// @brief Singleton class that locates MARLEY's data files
+  /// @details The data root is found by asking the dynamic loader where
+  /// libMARLEY itself is and taking a single fixed hop from there. No
+  /// environment variable is required.
   class FileManager {
 
     public:
@@ -38,98 +42,145 @@ namespace marley {
       /// @brief Deleted move assignment operator
       FileManager& operator=(FileManager&&) = delete;
 
-      /// @brief Get a const reference to the singleton instance of the
-      /// FileManager
+      /// @brief A directory that may contain MARLEY data files
+      struct DataRoot {
+        /// @brief Absolute path to the root
+        std::filesystem::path path;
+
+        /// @brief True if this root came from MARLEY_SEARCH_PATH
+        /// @details Such roots are also probed for <root>/<name> in addition
+        /// to <root>/<subdir>/<name>, so that a plain directory may stand in
+        /// for a category directory. The self-located root is not probed that
+        /// way: its layout is known, so a bare hit there could only match a
+        /// file added to the installed tree.
+        bool from_search_path = false;
+      };
+
+      /// @brief The outcome of a name resolution, including everything that
+      /// was tried
+      struct Resolution {
+        /// @brief The resolved path, or empty if the name was not found
+        std::filesystem::path path;
+
+        /// @brief Every candidate that was tested, in the order tested
+        std::vector< std::filesystem::path > probed;
+
+        /// @brief True if the working-directory leg supplied the file
+        /// @details Recorded by resolve(), which knows which leg fired. It
+        /// cannot be inferred afterwards by comparing the result against
+        /// cwd/name: an "#include:" of a file beside its configuration, run
+        /// from that same directory, is supplied by the base_dir leg at a
+        /// path the working-directory leg would also have produced. That
+        /// case is ordinary and safe, and must not raise the NOTICE meant
+        /// for files shadowing shipped data.
+        bool from_working_directory = false;
+
+        bool found() const { return !path.empty(); }
+        explicit operator bool() const { return found(); }
+      };
+
+      /// @brief Get a const reference to the singleton instance
       static const FileManager& Instance();
 
-      /// @brief Converts a ':'-delimited search path (given as a single
-      /// string) into a vector of directory names
-      /// @param search_path The search path to convert
-      /// that should be searched for the file
-      /// @return A vector of directory names corresponding to
-      /// those given in the search path
-      static std::vector<std::string> search_path_to_dir_vector(
-        const std::string& search_path = FileManager::default_search_path_);
+      /// @brief Resolve a name against a set of roots
+      /// @details Pure and non-throwing: it touches the filesystem only to
+      /// test candidates, and takes everything else as a parameter so that it
+      /// can be unit-tested without a singleton. The legs, in order, are
+      ///   1. @p name is absolute or begins "./" or "../"  -> used as given
+      ///   2. @p base_dir is non-empty                     -> base_dir/name
+      ///   3. each root in order                           -> root/subdir/name
+      ///                                                   -> root/name
+      ///                                        (second probe: search-path
+      ///                                         roots only, and only when
+      ///                                         subdir is non-empty)
+      ///   4. the working directory                        -> cwd/name
+      /// @param name The name to resolve, as written by the caller or the user
+      /// @param subdir The category directory expected beneath a root, or ""
+      /// @param base_dir A directory to resolve against first, or empty
+      /// @param roots The data roots, in search order
+      /// @param cwd The working directory to use for leg 4
+      /// @return A Resolution; check found() before using path()
+      static Resolution resolve( const std::string& name,
+        const std::string& subdir,
+        const std::filesystem::path& base_dir,
+        const std::vector< DataRoot >& roots,
+        const std::filesystem::path& cwd );
 
-      /// @brief Searches for a file in the given directories
-      /// @details The search is non-recursive, i.e., no subdirectories
-      /// are included in the search. If base_name contains directory
-      /// separators, it is treated as a relative path and resolved
-      /// against each search directory.
-      /// @param base_name The base name (file name without any path)
-      /// of the desired file, or a relative path containing directory
-      /// separators
-      /// @param search_dirs A vector of strings specifying the directories
-      /// that should be searched for the file
-      /// @return The full path to the file, or an empty string if
-      /// no match could be found
-      std::string find_file(const std::string& base_name,
-        const std::vector<std::string>& search_dirs) const;
+      /// @brief Resolve a name, or throw
+      /// @details Calls resolve() against this FileManager's roots and
+      /// working directory. On success the resolved path is reported once at
+      /// INFO under the "io.resolve" logging category (or NOTICE if it came
+      /// from the working directory). On failure a marley::Error is thrown
+      /// carrying the whole trace.
+      /// @param name The name to resolve
+      /// @param subdir The category directory expected beneath a root, or ""
+      /// @param base_dir A directory to resolve against first, or empty
+      /// @return The resolved path
+      std::filesystem::path find_file( const std::string& name,
+        const std::string& subdir = "",
+        const std::filesystem::path& base_dir = {} ) const;
 
-      /// @brief Searches for a file in the given search path
-      /// @details The search is non-recursive, i.e., no subdirectories
-      /// are included in the search
-      /// @param base_name The base name (file name without any path)
-      /// of the desired file
-      /// @param search_path A string containing a ':'-delimited list
-      /// of directories that should be searched for the file
-      /// @return The full path to the file, or an empty string if
-      /// no match could be found
-      std::string find_file(const std::string& base_name,
-        const std::string& search_path
-        = marley::FileManager::default_search_path_) const;
+      /// @brief Get the data roots, in search order
+      /// @details May be empty if no valid root could be located. Callers
+      /// that report roots to the user must handle that case.
+      const std::vector< DataRoot >& roots() const { return roots_; }
 
-      /// @brief Get a vector of full paths for all regular files in
-      /// the requested directories
-      /// @details Files in subdirectories are not included
-      /// (the search is non-recursive)
-      /// @param search_dirs A vector of strings specifying the directories
-      /// that should be scanned
-      /// @return A vector of strings giving the full path to each regular file
-      /// that was found
-      std::vector<std::string> list_all_files(
-        const std::vector<std::string>& search_dirs) const;
+      /// @brief Get the working directory used for the final resolution leg
+      /// @details Snapshotted when the singleton is constructed, so that a
+      /// later chdir cannot change where a lookup looks.
+      const std::filesystem::path& working_directory() const { return cwd_; }
 
-      /// @brief Get a vector of full paths for all regular files in
-      /// the requested search path
-      /// @details Files in subdirectories are not included
-      /// (the search is non-recursive)
-      /// @param search_path A string containing a ':'-delimited list
-      /// of directories that should be scanned for files
-      /// @return A vector of strings giving the full path to each regular file
-      /// that was found
-      std::vector<std::string> list_all_files(
-        const std::string& search_path
-        = FileManager::default_search_path_) const;
+      /// @brief Get the path to libMARLEY, as located at construction
+      /// @details Empty if self-location failed. Reported by "marley info".
+      const std::filesystem::path& library_path() const { return lib_path_; }
 
-      /// @brief Returns the path to the root MARLEY folder
-      inline std::string marley_dir() const { return marley_dir_; }
+      /// @brief Look for a file with this base name anywhere under the roots
+      /// @details Backs the "did you mean" suggestion. Static and public
+      /// because two callers need it: find_file() when it is about to throw,
+      /// and "marley info --resolve" when a user asks. One implementation,
+      /// so the diagnostic cannot disagree with the thing it diagnoses.
+      ///
+      /// Walks the roots recursively, so it is not cheap. It is called only
+      /// when a lookup has already failed -- in a run that is about to stop,
+      /// or in a command whose entire job is to answer this question.
+      /// @param name The name that was not found
+      /// @param roots The data roots to scan
+      /// @return The first match, relative to the root that holds it, or
+      /// empty if there is none
+      static std::filesystem::path suggest_for( const std::string& name,
+        const std::vector< DataRoot >& roots );
 
-    protected:
+    private:
 
       /// @brief Create the singleton FileManager object
       FileManager();
 
-      /// @brief Helper function that executes a std::function on
-      /// the name of each regular file found while scanning through
-      /// a single directory (non-recursively)
-      /// @param dir_name The name of the directory to be scanned
-      /// @param func The function to execute. The first argument
-      /// is the full file name (including the path). The second is
-      /// the base name of the file (no path). The return value should
-      /// be true if no further iterations are needed (e.g., because
-      /// a file matching a desired name was found) and false otherwise.
-      /// @return True if the iterations were stopped early (due to function
-      /// returning true) or false if they were completed
-      static bool dir_iterate(const std::string& dir_name,
-        const std::function<bool(const std::string&, const std::string&)>& func);
+      /// @brief Converts a ':'-delimited search path into a vector of
+      /// directory names
+      static std::vector< std::string > search_path_to_dir_vector(
+        const std::string& search_path );
 
-      /// @brief By default, use this search path when looking for files
-      static std::string default_search_path_;
+      /// @brief Build the message for a failed lookup, including a
+      /// "did you mean" suggestion when one can be found
+      std::string failure_message( const std::string& name,
+        const std::string& subdir, const Resolution& res ) const;
 
-      /// @brief Stores the value of the MARLEY environment variable
-      /// (which points to the root folder of the source code distribution)
-      std::string marley_dir_;
+      /// @brief Report a successful resolution once, at INFO (or NOTICE if
+      /// the working-directory leg supplied it)
+      void report( const std::string& name, const Resolution& res ) const;
+
+      /// @brief The data roots, in search order
+      std::vector< DataRoot > roots_;
+
+      /// @brief The working directory, snapshotted at construction
+      std::filesystem::path cwd_;
+
+      /// @brief Path to libMARLEY, or empty if self-location failed
+      std::filesystem::path lib_path_;
+
+      /// @brief Paths already reported under "io.resolve", so that each
+      /// distinct file is logged once rather than once per lookup
+      mutable std::set< std::filesystem::path > reported_;
   };
 
 }

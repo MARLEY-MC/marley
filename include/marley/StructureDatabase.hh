@@ -15,6 +15,7 @@
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
 #pragma once
+#include <filesystem>
 #include <map>
 #include <memory>
 #include <set>
@@ -241,6 +242,13 @@ namespace marley {
 
       /// @brief Name of the file used as an index for nuclear structure data
       const std::string structure_index_filename_ = "nuclide_index.txt";
+
+      /// @brief Directory from which the structure data index was loaded
+      /// @details Entries in the index are bare file names. Keeping the
+      /// index's own directory lets them be resolved against it, which is
+      /// what makes a relocated or user-supplied structure tree self-
+      /// consistent. Empty until load_structure_index() has run.
+      std::filesystem::path structure_index_dir_;
 
       /// @brief Flag that indicates whether the index to the structure
       /// data files has been loaded or not

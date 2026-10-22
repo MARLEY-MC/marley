@@ -133,13 +133,10 @@ std::vector< std::shared_ptr<
       " strength_variation weight calculator JSON configuration" );
   }
   std::string reaction_file = config.at( "reaction_file" ).to_string();
+  // As for "reactions:", no base_dir -- a user-named reaction file must
+  // resolve the same way wherever the configuration is replayed.
   std::string resolved_reaction_file = marley::FileManager::Instance()
-    .find_file( reaction_file );
-  if ( resolved_reaction_file.empty() ) {
-    throw marley::Error( "Could not find reaction data file \""
-      + reaction_file + "\" requested by a strength_variation"
-      " weight calculator" );
-  }
+    .find_file( reaction_file, "react" ).string();
 
   // Read the optional variation mode (default "multisim")
   std::string mode_str = "multisim";

@@ -14,198 +14,302 @@
 // Please respect the MCnet academic usage guidelines. See GUIDELINES
 // or visit https://www.montecarlonet.org/GUIDELINES for details.
 
+#include <dlfcn.h>
+
 #include <cstdlib>
 #include <filesystem>
+#include <memory>
+#include <sstream>
 
 #include "marley/Error.hh"
 #include "marley/FileManager.hh"
 #include "marley/Logger.hh"
 #include "marley/marley_utils.hh"
 
+namespace fs = std::filesystem;
+
 namespace {
-  // Delimiter that separates directory names in search paths used by
-  // marley::FileManager
+
+  // Delimiter that separates directory names in MARLEY_SEARCH_PATH
   constexpr char SEARCH_PATH_DELIMITER = ':';
 
-  bool file_exists(const std::string& file_name) {
-    return std::filesystem::is_regular_file(file_name);
+  // Probed inside a candidate root to decide whether it really is one
+  constexpr char SENTINEL_FILE[] = "mass_table.js";
+
+  // Hop taken from the directory containing libMARLEY to reach the data root
+  constexpr char DATA_SUBPATH[] = "share/marley/data";
+
+  /// @brief Anchor for self-location.
+  /// @details This must be a function with internal linkage *defined in this
+  /// translation unit*. dladdr() reports the object containing whatever
+  /// address it is given, so taking the address of anything inline or
+  /// header-defined risks naming the consumer's object instead of libMARLEY
+  /// — silently, and with a plausible-looking answer.
+  void self_location_anchor() {}
+
+  /// @brief Ask the dynamic loader where libMARLEY is
+  /// @return The canonical path to the library, or empty on failure
+  fs::path locate_self() {
+
+    Dl_info info;
+    void (*anchor)() = &self_location_anchor;
+
+    if ( !dladdr(reinterpret_cast<void*>(anchor), &info) || !info.dli_fname ) {
+      return {};
+    }
+
+    // dli_fname is loader-dependent: glibc reports the path as it was opened
+    // (possibly relative, possibly through a symlink), while macOS reports a
+    // fully resolved one. Canonicalising makes the two agree, and absolutises
+    // a relative result so that a later chdir cannot move the data root.
+    std::error_code ec;
+    fs::path p = fs::weakly_canonical( fs::path(info.dli_fname), ec );
+    if ( ec ) return {};
+
+    return p;
   }
 
-  //bool file_is_readable(const std::string& file_name) {
-  //  std::ifstream test_stream( file_name );
-  //  return test_stream.good();
-  //}
-}
+  /// @brief Test whether a directory looks like a MARLEY data root
+  bool has_sentinel( const fs::path& dir ) {
+    std::error_code ec;
+    return fs::is_regular_file( dir / SENTINEL_FILE, ec );
+  }
 
-// Define the static default search path member variable. Its value will be set
-// when the singleton instance of marley::FileManager is constructed.
-std::string marley::FileManager::default_search_path_;
+  /// @brief Absolutise and canonicalise a user-supplied directory
+  fs::path normalise( const fs::path& p ) {
+    std::error_code ec;
+    fs::path out = fs::weakly_canonical( p, ec );
+    if ( ec ) return p;
+    return out;
+  }
+}
 
 marley::FileManager::FileManager() {
 
-  // Check whether the MARLEY environment variable is set
-  char* mar = std::getenv("MARLEY");
-  if ( !mar ) throw marley::Error("The MARLEY environment variable is not set."
-    " Please set it (e.g., by sourcing the setup_marley.sh script) and"
-    " try again.");
+  // Snapshot the working directory. Lookups happen lazily -- structure files
+  // are resolved during the de-excitation cascade -- so reading it per call
+  // would make resolution depend on when a given nuclide was first needed.
+  std::error_code ec;
+  cwd_ = fs::current_path( ec );
+  if ( ec ) cwd_.clear();
 
-  marley_dir_ = std::string( mar );
-
-  // If the MARLEY_SEARCH_PATH environment variable is set, use that
-  // instead of the default search path
-  char* msp = std::getenv("MARLEY_SEARCH_PATH");
-  if ( msp ) default_search_path_ = std::string( msp );
-  else {
-    default_search_path_ = marley_dir_ + "/data";
-    default_search_path_ += ':' + marley_dir_ + "/data/react";
-    default_search_path_ += ':' + marley_dir_ + "/data/optical_model";
-    default_search_path_ += ':' + marley_dir_ + "/data/structure";
+  // Roots supplied by the user come first. They are trusted as given: no
+  // sentinel check, because a plain directory legitimately has none.
+  const char* msp = std::getenv( "MARLEY_SEARCH_PATH" );
+  if ( msp ) {
+    for ( const auto& dir : search_path_to_dir_vector( msp ) ) {
+      if ( dir.empty() ) continue;
+      fs::path p = normalise( dir );
+      if ( !fs::is_directory(p, ec) ) {
+        MARLEY_LOG( WARN, "io.resolve" ) << "MARLEY_SEARCH_PATH entry \""
+          << dir << "\" is not an existing directory. It will be kept, but"
+          " nothing will be found there.";
+      }
+      roots_.push_back( DataRoot{ p, true } );
+    }
   }
 
-  MARLEY_LOG( DEBUG, "io" ) << "MARLEY search path set to \""
-    << default_search_path_ << '\"';
+  // Then the root found by asking the loader where this library is.
+  lib_path_ = locate_self();
+  if ( lib_path_.empty() ) {
+    MARLEY_LOG( WARN, "io.resolve" ) << "Could not determine the location of"
+      " the MARLEY shared library. Data files will be found only via"
+      " MARLEY_SEARCH_PATH or the working directory.";
+  }
+  else {
+    fs::path root = ( lib_path_.parent_path() / ".." / DATA_SUBPATH )
+      .lexically_normal();
+
+    if ( has_sentinel(root) ) {
+      roots_.push_back( DataRoot{ root, false } );
+    }
+    else {
+      // Dropped rather than fatal: construction never throws, so the eventual
+      // lookup can report the whole trace instead of this one symptom.
+      MARLEY_LOG( WARN, "io.resolve" ) << "The expected MARLEY data directory"
+        " \"" << root.string() << "\" does not contain " << SENTINEL_FILE
+        << ", so it will not be used.";
+    }
+  }
+
+  if ( roots_.empty() ) {
+    MARLEY_LOG( WARN, "io.resolve" ) << "No valid MARLEY data root was"
+      " located. Set MARLEY_SEARCH_PATH to the directory containing "
+      << SENTINEL_FILE << " if MARLEY's data files are installed elsewhere.";
+  }
 }
 
 const marley::FileManager& marley::FileManager::Instance() {
 
-  // Create the mass table using a static variable. This ensures
-  // that the singleton instance is only created once.
-  static std::unique_ptr<marley::FileManager>
-    the_instance(new marley::FileManager());
+  // Function-local static: created on first use. The constructor cannot
+  // throw, so there is no failure for callers of Instance() to handle.
+  static std::unique_ptr< marley::FileManager >
+    the_instance( new marley::FileManager() );
 
-  // Return a reference to the singleton instance
   return *the_instance;
 }
 
-std::vector<std::string> marley::FileManager::search_path_to_dir_vector(
-  const std::string& search_path)
+std::vector< std::string > marley::FileManager::search_path_to_dir_vector(
+  const std::string& search_path )
 {
-  std::vector<std::string> dir_names
-    = marley_utils::split_string(search_path, SEARCH_PATH_DELIMITER);
-  return dir_names;
+  return marley_utils::split_string( search_path, SEARCH_PATH_DELIMITER );
 }
 
-std::string marley::FileManager::find_file(const std::string& base_name,
-  const std::string& search_path) const
+marley::FileManager::Resolution marley::FileManager::resolve(
+  const std::string& name, const std::string& subdir,
+  const fs::path& base_dir, const std::vector< DataRoot >& roots,
+  const fs::path& cwd )
 {
-  auto search_dirs = search_path_to_dir_vector( search_path );
-  return find_file(base_name, search_dirs);
-}
+  Resolution res;
 
-std::string marley::FileManager::find_file(const std::string& base_name,
-  const std::vector<std::string>& search_dirs) const
-{
-  std::string full_path_to_file;
-
-  // First check if we can find the file just using base_name. We can
-  // avoid the search if it's already accessible (e.g., because the
-  // full path was supplied instead of the base name)
-  if ( file_exists(base_name) ) return base_name;
-
-  // If the file name contains directory separators, try resolving
-  // the relative path against each search directory
-  if ( base_name.find('/') != std::string::npos ) {
-    for (const auto& dir : search_dirs) {
-      std::string candidate = dir + '/' + base_name;
-      if ( file_exists(candidate) ) return candidate;
+  auto try_path = [&res]( const fs::path& p ) -> bool {
+    res.probed.push_back( p );
+    std::error_code ec;
+    if ( fs::is_regular_file(p, ec) ) {
+      res.path = p;
+      return true;
     }
-  }
-
-  // Search the directories in the order listed. In each directory,
-  // compare all regular file names to the given base name. If a match
-  // is found, stop the search and store the result in full_path_to_file.
-  // If no match is found, full_path_to_file will remain empty.
-  for (const auto& dir : search_dirs) {
-    bool file_found = dir_iterate(dir,
-      [&full_path_to_file, &base_name](const std::string& other_full_path,
-        const std::string& other_base_name) -> bool
-      {
-        if ( base_name == other_base_name ) {
-          // We've found the desired file, so store its full path
-          full_path_to_file = other_full_path;
-          // Signal that we don't need to continue the search any longer
-          return true;
-        }
-        return false;
-      }
-    );
-
-    if ( file_found ) break;
-  }
-
-  return full_path_to_file;
-}
-
-std::vector<std::string> marley::FileManager::list_all_files(
-  const std::string& search_path) const
-{
-  auto search_dirs = search_path_to_dir_vector( search_path );
-  return list_all_files( search_dirs );
-}
-
-// Returns a vector of strings loaded with the full paths to all regular files
-// in the desired search path. The directories are scanned non-recursively.
-std::vector<std::string> marley::FileManager::list_all_files(
-  const std::vector<std::string>& search_dirs) const
-{
-  std::vector<std::string> result;
-
-  for (const auto& dir : search_dirs) {
-    dir_iterate(dir,
-      [&result](const std::string& full_path,
-        const std::string& /*base_name*/) -> bool
-      {
-        // Add the current file to the vector of full paths
-        result.push_back( full_path );
-        // Signal that the directory scan should continue
-        return false;
-      }
-    );
-  }
-
-  return result;
-}
-
-
-// Iterates non-recursively through all the regular files in a given
-// directory. Calls a std::function for each one that it finds.
-// If the function returns true, the iteration continues.
-// If it returns false, then the iteration will stop before the
-// next file is used.
-bool marley::FileManager::dir_iterate(const std::string& dir_name,
-  const std::function<bool(const std::string&, const std::string&)>& func)
-{
-  std::error_code ec;
-  std::filesystem::directory_iterator it(dir_name,
-    std::filesystem::directory_options::skip_permission_denied, ec);
-
-  if (ec) {
-    MARLEY_LOG(WARN, "io") << "Could not read from the directory \""
-      << dir_name << '\"';
     return false;
+  };
+
+  const fs::path name_path( name );
+
+  // Leg 1: a path the caller supplied outright is used as given, and no
+  // other candidate is tried. Searching elsewhere for an explicitly named
+  // file would be wrong, not helpful.
+  if ( name_path.is_absolute() || name.rfind("./", 0) == 0
+    || name.rfind("../", 0) == 0 )
+  {
+    try_path( name_path );
+    return res;
   }
 
-  std::filesystem::directory_iterator end;
-  bool stop_iterations = false;
-  while (!stop_iterations && it != end) {
-    const auto& entry = *it;
-    std::string full_file_name = entry.path().string();
-    std::string base_name = entry.path().filename().string();
+  // Leg 2: resolve against a directory the caller supplied. Tested for
+  // non-emptiness, not for "was passed": base_dir defaults to an empty path
+  // and path("") / "name" == "name", so branching on the latter would probe
+  // the working directory ahead of the roots.
+  if ( !base_dir.empty() ) {
+    if ( try_path(base_dir / name_path) ) return res;
+  }
 
-    MARLEY_LOG(TRACE, "io") << "marley::FileManager found file \""
-      << full_file_name << '\"';
-
-    if (entry.is_regular_file()) {
-      stop_iterations = func(full_file_name, base_name);
+  // Leg 3: the data roots, in order.
+  for ( const auto& r : roots ) {
+    if ( subdir.empty() ) {
+      if ( try_path(r.path / name_path) ) return res;
     }
-
-    it.increment(ec);
-    if (ec) {
-      MARLEY_LOG(DEBUG, "io") << "Couldn't access a file in directory \""
-        << dir_name << '\"';
-      ec.clear();
+    else {
+      if ( try_path(r.path / subdir / name_path) ) return res;
+      // A search-path entry may be a plain directory standing in for a
+      // category directory. The self-located root is skipped here: its
+      // layout is known, so a hit could only be a file added to the tree.
+      if ( r.from_search_path && try_path(r.path / name_path) ) return res;
     }
   }
 
-  return stop_iterations;
+  // Leg 4: the working directory, last, and without a subdir. Last is what
+  // makes it safe -- it can supply a name nothing else provides, but can
+  // never replace shipped data.
+  if ( !cwd.empty() ) {
+    if ( try_path(cwd / name_path) ) {
+      res.from_working_directory = true;
+      return res;
+    }
+  }
+
+  return res;
+}
+
+fs::path marley::FileManager::find_file( const std::string& name,
+  const std::string& subdir, const fs::path& base_dir ) const
+{
+  Resolution res = resolve( name, subdir, base_dir, roots_, cwd_ );
+
+  if ( !res ) throw marley::Error( failure_message(name, subdir, res) );
+
+  report( name, res );
+  return res.path;
+}
+
+void marley::FileManager::report( const std::string& name,
+  const Resolution& res ) const
+{
+  // Log each distinct file once. Logging per call would be unusable: a
+  // de-excitation cascade resolves a decay-scheme file per nuclide.
+  if ( !reported_.insert(res.path).second ) return;
+
+  // A hit on the working-directory leg is worth seeing by default; an
+  // ordinary resolution is not. data/config/logger.js ships
+  // io.resolve: "notice", which draws exactly that line.
+  //
+  // Which leg fired comes from resolve(); see Resolution for why it cannot
+  // be inferred here.
+  if ( res.from_working_directory ) {
+    MARLEY_LOG( NOTICE, "io.resolve" ) << '"' << name << "\" resolved from the"
+      " working directory: " << res.path.string();
+  }
+  else {
+    MARLEY_LOG( INFO, "io.resolve" ) << '"' << name << "\" -> "
+      << res.path.string();
+  }
+}
+
+std::string marley::FileManager::failure_message( const std::string& name,
+  const std::string& subdir, const Resolution& res ) const
+{
+  std::ostringstream msg;
+
+  msg << "Could not find the MARLEY data file \"" << name << '\"';
+  if ( !subdir.empty() ) msg << " (expected under a \"" << subdir
+    << "\" directory)";
+  msg << ".\n";
+
+  if ( roots_.empty() ) {
+    msg << "  No valid data root was located.";
+  }
+  else {
+    msg << "  Data roots, in search order:\n";
+    for ( const auto& r : roots_ ) {
+      msg << "    " << r.path.string()
+        << ( r.from_search_path ? "   (MARLEY_SEARCH_PATH)"
+                                : "   (located from libMARLEY)" ) << '\n';
+    }
+  }
+
+  msg << "\n  Paths tried:\n";
+  for ( const auto& p : res.probed ) msg << "    " << p.string() << '\n';
+
+  fs::path suggestion = suggest_for( name, roots_ );
+  if ( !suggestion.empty() ) {
+    msg << "\n  Did you mean \"" << suggestion.generic_string() << "\"?";
+  }
+
+  return msg.str();
+}
+
+std::filesystem::path marley::FileManager::suggest_for(
+  const std::string& name, const std::vector< DataRoot >& roots )
+{
+  // A recursive walk of every root. See the declaration for why the cost is
+  // acceptable here and nowhere else.
+  const std::string base = fs::path( name ).filename().string();
+
+  for ( const auto& r : roots ) {
+    std::error_code ec;
+    fs::recursive_directory_iterator it( r.path,
+      fs::directory_options::skip_permission_denied, ec );
+    if ( ec ) continue;
+
+    fs::recursive_directory_iterator end;
+    for ( ; it != end; it.increment(ec) ) {
+      if ( ec ) { ec.clear(); continue; }
+      if ( !it->is_regular_file(ec) ) continue;
+      if ( it->path().filename().string() != base ) continue;
+
+      fs::path rel = fs::relative( it->path(), r.path, ec );
+      if ( ec ) continue;
+      return rel;
+    }
+  }
+
+  return {};
 }
