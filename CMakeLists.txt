@@ -122,8 +122,19 @@ endforeach()
 set(MARLEY_BUILD_LIBDIR "${CMAKE_BINARY_DIR}/${MARLEY_LIBDIR_REL}")
 
 # Token the loader expands to the containing object's own directory. Every
-# linked artifact locates its dependencies relative to itself, so no absolute
-# path is baked into anything and the install tree can be moved (spec 4.2).
+# linked artifact locates MARLEY's own libraries relative to itself, so no
+# absolute path to anything MARLEY ships is baked in and the install tree can
+# be moved (spec 4.2).
+#
+# External dependencies are the exception, and deliberately so: ROOT, an
+# external HepMC3 and GSL are not relocatable with us and live at absolute
+# paths on the build machine. CMake gives build-tree binaries a RUNPATH
+# containing the directories of everything they link, then REPLACES it with
+# INSTALL_RPATH at install time -- so without this, an installed binary loses
+# every external directory the build tree had. See the external-RUNPATH block
+# after the marley target for how that failed and how it is detected.
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 if(APPLE)
   set(MARLEY_ORIGIN "@loader_path")
 else()
@@ -781,6 +792,92 @@ set_target_properties(marley PROPERTIES
 )
 
 # ------------------------------------------------------------------------------
+# RUNPATH entries for external dependencies (design spec 4.2)
+#
+# $ORIGIN above locates MARLEY's own libraries and says nothing about where
+# ROOT, an external HepMC3 or GSL live. CMAKE_INSTALL_RPATH_USE_LINK_PATH
+# recovers those directories automatically, but ONLY for dependencies linked
+# as imported targets or by full path -- CMake knows the directory because it
+# knows the file. It cannot help when a dependency arrives as raw
+# "-L<dir> -l<name>" flags from root-config or HepMC3-config, because those
+# are opaque strings on the link line. Both routes exist here (see
+# prefer_imported_or_flags), so the flag route is harvested explicitly.
+#
+# How this was found, since it is invisible until the last possible moment:
+# CI's two ROOT legs passed every build-tree check -- build, unit tests,
+# physics validation, install -- and then died in under a second at the first
+# run of the INSTALLED binary, with the build tree moved aside. The non-ROOT
+# legs passed the identical step. ROOT was the only dependency outside the
+# loader's default directories, and the build tree had been carrying its
+# RUNPATH all along. macOS never showed it because ROOT's dylibs record
+# absolute install names, which need no RUNPATH at all.
+#
+# This is a fallback rather than an override. --enable-new-dtags requests
+# DT_RUNPATH, which ld.so searches AFTER LD_LIBRARY_PATH, so a user who
+# sources a different thisroot.sh still gets their own ROOT.
+function(marley_external_libdirs out_var)
+  set(_dirs "")
+  foreach(_item IN LISTS ARGN)
+    # execute_process yields one space-separated string; find_package
+    # variables yield a real list. Normalise both to a list.
+    string(REPLACE " " ";" _parts "${_item}")
+    foreach(_p IN LISTS _parts)
+      # -Wl,-rpath entries are harvested too: root-config emits one, and a
+      # directory ROOT considers necessary at run time is necessary for us.
+      if(_p MATCHES "^-L(.+)$")
+        list(APPEND _dirs "${CMAKE_MATCH_1}")
+      elseif(_p MATCHES "^-Wl,-rpath,(.+)$")
+        list(APPEND _dirs "${CMAKE_MATCH_1}")
+      endif()
+    endforeach()
+  endforeach()
+
+  set(_keep "")
+  foreach(_d IN LISTS _dirs)
+    # A relative -L is resolved against the *current directory* at load time,
+    # which is both useless and a genuine hazard, so only absolute paths are
+    # taken. This also drops the build tree's own -L, which $ORIGIN covers.
+    if(NOT IS_ABSOLUTE "${_d}")
+      continue()
+    endif()
+    file(TO_CMAKE_PATH "${_d}" _d)
+    string(FIND "${_d}" "${CMAKE_BINARY_DIR}" _under_build)
+    if(_under_build EQUAL 0)
+      continue()
+    endif()
+    # /usr/lib and friends are searched by the loader anyway; naming them
+    # would add nothing and make every installed binary look machine-specific.
+    if(_d IN_LIST CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES)
+      continue()
+    endif()
+    list(APPEND _keep "${_d}")
+  endforeach()
+
+  if(_keep)
+    list(REMOVE_DUPLICATES _keep)
+  endif()
+  set(${out_var} "${_keep}" PARENT_SCOPE)
+endfunction()
+
+marley_external_libdirs(MARLEY_EXT_RPATH
+  "${ROOT_LIBS}" "${HEPMC3_LIBS}" "${GSL_LIBS}")
+
+if(MARLEY_EXT_RPATH)
+  message(STATUS "External RUNPATH entries: ${MARLEY_EXT_RPATH}")
+  set(_rpath_targets marley_lib marley)
+  if(TARGET HepMC3_builtin)
+    list(APPEND _rpath_targets HepMC3_builtin)
+  endif()
+  foreach(_t IN LISTS _rpath_targets)
+    # BUILD_RPATH as well as INSTALL_RPATH: on the flag route CMake cannot
+    # infer these directories for the build tree either, and a build-tree
+    # binary that cannot start would strand the unit tests.
+    set_property(TARGET ${_t} APPEND PROPERTY INSTALL_RPATH ${MARLEY_EXT_RPATH})
+    set_property(TARGET ${_t} APPEND PROPERTY BUILD_RPATH   ${MARLEY_EXT_RPATH})
+  endforeach()
+endif()
+
+# ------------------------------------------------------------------------------
 # Generated shell scripts (design spec 6.4)
 #
 # mroot and setup_marley.sh are each generated TWICE from one template: once
@@ -1341,6 +1438,11 @@ set_target_properties(martest PROPERTIES
   # libMARLEY when run from the build tree
   BUILD_RPATH "${MARLEY_ORIGIN}/../${MARLEY_LIBDIR_REL}"
 )
+# ...and ROOT, which it links directly, on the flag route where CMake cannot
+# infer the directory. Same list as the installed targets; see above.
+if(MARLEY_EXT_RPATH)
+  set_property(TARGET martest APPEND PROPERTY BUILD_RPATH ${MARLEY_EXT_RPATH})
+endif()
 # Inherit ROOT compiler and linker settings when building with ROOT support
 if(USE_ROOT)
   if(TARGET ROOT::Graf AND TARGET ROOT::Gpad)

@@ -805,8 +805,38 @@ jobs:
           # documented commands used to fail on an installed MARLEY.
           mkdir -p "${RUNNER_TEMP}/run-a"
           cd "${RUNNER_TEMP}/run-a"
+
+          # Diagnostics on failure. This step is the first thing that runs an
+          # installed binary with the build tree moved aside, so it is where
+          # every RUNPATH defect lands -- and a dynamic-loader failure exits
+          # before main(), producing a red step with almost no output and a
+          # duration of zero. Dumping the RUNPATH and the resolved libraries
+          # turns that into a diagnosis without a second CI round trip.
+          rc=0
           "${RUNNER_TEMP}/a/bin/marley" generate \
-            "${RUNNER_TEMP}/a/share/marley/examples/config/COPY_ME.js"
+            "${RUNNER_TEMP}/a/share/marley/examples/config/COPY_ME.js" || rc=$?
+          if [[ "${rc}" -ne 0 ]]; then
+            echo "::group::Loader diagnostics for the installed binary"
+            bin="${RUNNER_TEMP}/a/bin/marley"
+            lib="${RUNNER_TEMP}/a/${{ matrix.libdir }}/libMARLEY.so"
+            if [[ "${RUNNER_OS}" == "macOS" ]]; then
+              lib="${lib%.so}.dylib"
+              otool -l "${bin}" | grep -A 2 LC_RPATH || true
+              otool -L "${bin}" || true
+              otool -L "${lib}" || true
+            else
+              readelf -d "${bin}" | grep -Ei 'rpath|runpath' || \
+                echo "no RPATH/RUNPATH in ${bin}"
+              readelf -d "${lib}" | grep -Ei 'rpath|runpath' || \
+                echo "no RPATH/RUNPATH in ${lib}"
+              # "not found" lines here name the missing dependency outright.
+              ldd "${bin}" || true
+              ldd "${lib}" || true
+            fi
+            echo "::endgroup::"
+            echo "ERROR: the installed MARLEY failed to run (exit ${rc})" >&2
+            exit "${rc}"
+          fi
 
           golden="${GITHUB_WORKSPACE}/${{ matrix.golden }}"
           if [[ ! -f "${golden}" ]]; then

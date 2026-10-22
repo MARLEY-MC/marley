@@ -155,6 +155,39 @@ else
   HEPMC3_INSTALL_NAME_FLAG =
 endif
 
+# EXT_RPATH: the same thing for dependencies MARLEY does NOT ship. $ORIGIN
+# above locates MARLEY's own libraries; it says nothing about where ROOT, an
+# external HepMC3 or GSL live, and those are not relocatable with us.
+#
+# Without this an installed MARLEY built against a ROOT outside the loader's
+# default directories cannot start at all -- it links fine, installs fine,
+# and then dies before main() with "libCore.so: cannot open shared object
+# file". macOS hides the whole problem, because ROOT's dylibs record absolute
+# install names and need no RUNPATH; this is a Linux-only failure, and it is
+# why it survived local testing. The CMake build has the same gap for the
+# same reason, closed there by CMAKE_INSTALL_RPATH_USE_LINK_PATH plus an
+# equivalent explicit harvest.
+#
+# A fallback, not an override: NEW_DTAGS requests DT_RUNPATH, which ld.so
+# searches after LD_LIBRARY_PATH, so a user's own thisroot.sh still wins.
+#
+# Recursively expanded (=, not :=) because ROOT_LDFLAGS and friends are set
+# later, inside conditionals. Only absolute directories are taken: a relative
+# -L would become a RUNPATH resolved against the current directory at load
+# time, which is both useless and a hazard. Directories the loader already
+# searches are dropped so that installed binaries do not look machine-
+# specific for no gain.
+comma := ,
+SYSTEM_LIBDIRS := /lib /lib64 /usr/lib /usr/lib64 $(wildcard /usr/lib/*-linux-gnu)
+EXT_LDFLAGS_ALL = $(GSL_LDFLAGS) $(ROOT_LDFLAGS) $(HEPMC3_LDFLAGS)
+EXT_LIBDIRS_RAW = \
+  $(patsubst -L%,%,$(filter -L%,$(EXT_LDFLAGS_ALL))) \
+  $(patsubst -Wl$(comma)-rpath$(comma)%,%,\
+    $(filter -Wl$(comma)-rpath$(comma)%,$(EXT_LDFLAGS_ALL)))
+EXT_LIBDIRS = $(filter-out $(SYSTEM_LIBDIRS) $(abspath $(BUILD_LIBDIR)),\
+  $(sort $(filter /%,$(EXT_LIBDIRS_RAW))))
+EXT_RPATH = $(foreach d,$(EXT_LIBDIRS),-Wl,-rpath,$(d))
+
 # ldconfig refreshes the Linux shared-library cache. It does not exist on
 # macOS, where calling it unguarded made 'make install' fail outright, and it
 # is meaningless when staging into DESTDIR, since nothing is at its final
@@ -406,7 +439,6 @@ or build against the bundled HepMC3 subset with IGNORE_HEPMC3=1)
       # must not: a packager's toolchain manages rpath itself, and this one
       # would bake the build machine's ROOT location into a redistributed
       # binary -- working on that machine and nowhere else (spec 6.3).
-      comma := ,
       ROOT_PC_LIBS := $(filter-out -Wl$(comma)-rpath$(comma)%,$(ROOT_PUBLIC_LIBS))
 
       ROOT_LDFLAGS := $(shell $(ROOTCONFIG) --ldflags)
@@ -579,7 +611,7 @@ $(SHARED_LIB): $(HEPMC3_SHARED_LIB) $(OBJECTS) | $(BUILD_TREE_LINKS)
 	$(CXX) $(CXXFLAGS) $(ROOT_CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) \
 	  -fPIC -shared -o $@ $(OBJECTS) \
 	  $(GSL_LDFLAGS) $(ROOT_LDFLAGS) $(HEPMC3_LDFLAGS) $(DL_LIBS) \
-	  $(INSTALL_NAME_FLAG) $(NEW_DTAGS) $(RPATH_LIB)
+	  $(INSTALL_NAME_FLAG) $(NEW_DTAGS) $(RPATH_LIB) $(EXT_RPATH)
 
 marley: $(BUILD_DIR)/bin/marley
 
@@ -712,13 +744,13 @@ $(BUILD_DIR)/bin/marley: $(MARLEY_LIBS) marley.o $(BUILD_DIR)/bin/marley-config 
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ marley.o \
 	  -L$(BUILD_LIBDIR) -l$(SHARED_LIB_NAME) \
 	  $(ROOT_LDFLAGS) $(if $(filter yes,$(USE_ROOT)),-lGraf -lGpad) \
-	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(NEW_DTAGS) $(RPATH_EXE)
+	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(NEW_DTAGS) $(RPATH_EXE) $(EXT_RPATH)
 
 $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 	@mkdir -p $(BUILD_DIR)/bin
 	$(CXX) $(CXXFLAGS) $(GSL_CXXFLAGS) $(HEPMC3_CXXFLAGS) -o $@ $(TEST_OBJECTS) \
 	  -L$(BUILD_LIBDIR) -l$(SHARED_LIB_NAME) $(ROOT_LDFLAGS) \
-	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(NEW_DTAGS) $(RPATH_EXE)
+	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(NEW_DTAGS) $(RPATH_EXE) $(EXT_RPATH)
 
 # Build the marg4 Geant4 example (requires a separate Geant4 installation).
 # Delegates to the example's own Makefile with PATH set so that it finds this
