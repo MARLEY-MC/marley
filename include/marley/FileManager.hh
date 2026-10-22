@@ -65,6 +65,17 @@ namespace marley {
         /// @brief Every candidate that was tested, in the order tested
         std::vector< std::filesystem::path > probed;
 
+        /// @brief True if the working-directory leg supplied the file
+        /// @details Recorded by resolve() rather than inferred afterwards.
+        /// Comparing the result against cwd/name cannot distinguish the
+        /// legs: an "#include:" of a file beside its configuration, run
+        /// from that same directory, is found by the base_dir leg at a path
+        /// the working-directory leg would also have produced. Inferring
+        /// reported that case as a working-directory hit and raised the
+        /// NOTICE meant for files that shadow shipped data -- on the one
+        /// pattern that is both ordinary and safe.
+        bool from_working_directory = false;
+
         bool found() const { return !path.empty(); }
         explicit operator bool() const { return found(); }
       };

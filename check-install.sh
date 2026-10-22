@@ -472,9 +472,20 @@ cat > /tmp/marley-reloc/inc/job.js <<'EOF'
 EOF
 quiet ""
 quiet "--- #include: of a file beside the config (leg 2) ---"
+quiet "Run from that same directory, so the base_dir leg and the"
+quiet "working-directory leg would produce the SAME path. The"
+quiet "working-directory NOTICE must not fire: it is the physics-safety"
+quiet "warning, and this is the ordinary, safe pattern."
 ( cd /tmp/marley-reloc/inc \
-  && /tmp/m5/bin/marley job.js ) >> "$LOG" 2>&1 < /dev/null
+  && /tmp/m5/bin/marley job.js ) > /tmp/marley-reloc/inc.out 2>&1 < /dev/null
 quiet "[exit $?]"
+cat /tmp/marley-reloc/inc.out >> "$LOG"
+if grep -q "target_block.js\" resolved from the working directory" \
+     /tmp/marley-reloc/inc.out; then
+  log "MISATTRIBUTED: leg 2 reported as a working-directory hit"
+else
+  quiet "ok: no working-directory notice for a sibling #include:"
+fi
 quiet ""
 quiet "--- run it from ELSEWHERE: leg 2 is the including file's directory,"
 quiet "    not the working directory ---"

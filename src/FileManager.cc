@@ -210,7 +210,10 @@ marley::FileManager::Resolution marley::FileManager::resolve(
   // makes it safe -- it can supply a name nothing else provides, but can
   // never replace shipped data.
   if ( !cwd.empty() ) {
-    if ( try_path(cwd / name_path) ) return res;
+    if ( try_path(cwd / name_path) ) {
+      res.from_working_directory = true;
+      return res;
+    }
   }
 
   return res;
@@ -237,9 +240,14 @@ void marley::FileManager::report( const std::string& name,
   // A hit on the working-directory leg is worth seeing by default; an
   // ordinary resolution is not. data/config/logger.js ships
   // io.resolve: "notice", which draws exactly that line.
-  const bool from_cwd = !cwd_.empty() && res.path == (cwd_ / fs::path(name));
-
-  if ( from_cwd ) {
+  //
+  // The flag comes from resolve(), which knows which leg fired. It used to
+  // be inferred here by comparing the result against cwd/name, which is not
+  // the same question: an "#include:" of a file beside its configuration,
+  // run from that directory, is supplied by the base_dir leg at a path the
+  // working-directory leg would also have produced -- and was reported as a
+  // working-directory hit.
+  if ( res.from_working_directory ) {
     MARLEY_LOG( NOTICE, "io.resolve" ) << '"' << name << "\" resolved from the"
       " working directory: " << res.path.string();
   }
