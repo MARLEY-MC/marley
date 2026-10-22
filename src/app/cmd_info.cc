@@ -41,7 +41,7 @@ namespace {
       << "                   which one it would use\n"
       << "  --subdir DIR     The category directory to resolve NAME under,\n"
       << "                   as the calling code would pass it (e.g. react,\n"
-      << "                   structure, config, optical_model). Defaults to\n"
+      << "                   structure, config, optical). Defaults to\n"
       << "                   none, which is rarely what a real caller does\n\n"
       << "Options:\n"
       << "  -h, --help       Print this message\n\n"

@@ -186,7 +186,7 @@
   // and in the full "opt_mod" documentation in
   // examples/config/reweight_example.js.
   //
-  // opt_mod: #include:"optical_model_kduq_federal_cv.js"
+  // opt_mod: #include:"optical/kduq_federal_cv.js"
   //
   // EVENT WEIGHT CALCULATORS (optional)
   //
