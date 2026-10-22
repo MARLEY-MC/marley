@@ -98,6 +98,13 @@ namespace {
       << "Note: this command requires a ROOT-enabled build of MARLEY.\n";
   }
 
+  void print_info_command_help() {
+    std::cout << "Usage: marley info [--resolve [--subdir DIR] NAME]\n\n"
+      << "Report where this MARLEY executable looks for its data files.\n\n"
+      << "Options:\n"
+      << "  -h, --help     Print detailed help for this command\n";
+  }
+
   void print_help_command_help() {
     std::cout << "Usage: marley help [COMMAND]\n\n"
       << "Show the top-level help message or detailed help for COMMAND.\n\n"
@@ -158,6 +165,9 @@ const marley::CommandHandler::CommandMap
   // guarded by runtime checks in the implementation.
   { "convert", { "Convert event files between supported formats",
     print_convert_help, cmd_convert, false } },
+
+  { "info", { "Report where MARLEY looks for its data files",
+    print_info_command_help, cmd_info } },
 
   { "help", { "Show this help message or help for a specific command",
     print_help_command_help, cmd_help } },
