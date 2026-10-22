@@ -43,6 +43,21 @@ run() {
   return $rc
 }
 
+# A command that is SUPPOSED to fail. Without this, a deliberate refusal --
+# "make uninstall" declining to proceed with no tty to confirm on -- is
+# indistinguishable in the output from something actually breaking.
+expect_fail() {
+  quiet ""
+  quiet "\$ $*   (expected to fail)"
+  "$@" >> "$LOG" 2>&1 < /dev/null
+  local rc=$?
+  if [ $rc -eq 0 ]; then
+    log "UNEXPECTED SUCCESS: $*"
+  else
+    quiet "[exit $rc, as expected]"
+  fi
+}
+
 # Build quietly; on failure, splice the tail of the build log into the main
 # log so the failure is visible without opening a second file.
 build() {
@@ -122,10 +137,10 @@ quiet "--- generated header, as installed ---"
 sed -n '1,25p' /tmp/m3/bin/marley-config >> "$LOG" 2>&1
 quiet ""
 quiet "--- removed flags should each explain themselves ---"
-run /tmp/m3/bin/marley-config --incdir
-run /tmp/m3/bin/marley-config --datadir
-run /tmp/m3/bin/marley-config --topdir
-run /tmp/m3/bin/marley-config --srcdir
+expect_fail /tmp/m3/bin/marley-config --incdir
+expect_fail /tmp/m3/bin/marley-config --datadir
+expect_fail /tmp/m3/bin/marley-config --topdir
+expect_fail /tmp/m3/bin/marley-config --srcdir
 
 head2 "A3. marley.pc"
 quiet ""
@@ -284,13 +299,13 @@ quiet "--- a name that resolves, with the subdir its real caller passes ---"
 run /tmp/m5/bin/marley info --resolve --subdir react ES.react
 quiet ""
 quiet "--- the same name WITHOUT --subdir: must fail and suggest ---"
-run /tmp/m5/bin/marley info --resolve ES.react
+expect_fail /tmp/m5/bin/marley info --resolve ES.react
 quiet ""
 quiet "--- a name that sits at the top of the data root ---"
 run /tmp/m5/bin/marley info --resolve mass_table.js
 quiet ""
 quiet "--- a name that exists nowhere ---"
-run /tmp/m5/bin/marley info --resolve no_such_file.js
+expect_fail /tmp/m5/bin/marley info --resolve no_such_file.js
 quiet ""
 quiet "--- MARLEY_SEARCH_PATH roots are flagged, and a bad one is marked ---"
 run env MARLEY_SEARCH_PATH=/tmp/marley-reloc:/tmp/definitely-not-here \
@@ -300,10 +315,10 @@ quiet "--- from the relocated prefix: roots must follow the copy ---"
 run /tmp/m3-moved/bin/marley info
 quiet ""
 quiet "--- argument errors ---"
-run /tmp/m5/bin/marley info --resolve
-run /tmp/m5/bin/marley info ES.react
-run /tmp/m5/bin/marley info --subdir react
-run /tmp/m5/bin/marley info --bogus
+expect_fail /tmp/m5/bin/marley info --resolve
+expect_fail /tmp/m5/bin/marley info ES.react
+expect_fail /tmp/m5/bin/marley info --subdir react
+expect_fail /tmp/m5/bin/marley info --bogus
 quiet ""
 quiet "--- help, and presence in the top-level command list ---"
 run /tmp/m5/bin/marley info --help
@@ -338,20 +353,31 @@ run sh -c "./build/bin/marley-config --cxx-std"
 
 head2 "J. the CMake package must work for a consumer"
 quiet ""
-quiet "A find_package(MARLEY) that configures and links is the only real"
-quiet "check here: the config file previously had its find_dependency calls"
+quiet "A find_package(MARLEY) that configures, builds and links is the only"
+quiet "real check: the config file previously had its find_dependency calls"
 quiet "commented out, so it resolved and failed later at link time."
+quiet ""
+quiet "--- what the installed package actually contains ---"
+run sh -c "ls /tmp/m3/lib/cmake/MARLEY"
+run sh -c "cat /tmp/m3/lib/cmake/MARLEY/MARLEYConfig.cmake"
+run sh -c "grep -nE 'add_library|_IMPORT_CHECK_TARGETS|set_target_properties' \
+  /tmp/m3/lib/cmake/MARLEY/MARLEYTargets.cmake | head -20"
+
 rm -rf /tmp/marley-consumer && mkdir -p /tmp/marley-consumer
 cat > /tmp/marley-consumer/CMakeLists.txt <<'EOF'
 cmake_minimum_required(VERSION 3.18)
 project(marley_consumer LANGUAGES CXX)
 find_package(MARLEY REQUIRED)
+# Report every imported target the package defined, so that a wrong guess
+# at the name is distinguishable from a package that exported nothing.
+get_property(_tgts DIRECTORY PROPERTY IMPORTED_TARGETS)
+message(STATUS "imported targets after find_package(MARLEY): ${_tgts}")
+message(STATUS "MARLEY_VERSION=${MARLEY_VERSION} MARLEY_FOUND=${MARLEY_FOUND}")
 add_executable(consumer main.cc)
 target_link_libraries(consumer PRIVATE MARLEY::marley_lib)
 EOF
 cat > /tmp/marley-consumer/main.cc <<'EOF'
 #include "marley/FileManager.hh"
-#include "marley/EventFileReader.hh"
 #include <iostream>
 int main() {
   const auto& fm = marley::FileManager::Instance();
@@ -360,15 +386,15 @@ int main() {
 }
 EOF
 quiet ""
-quiet "--- configure against the installed CMake package ---"
-run cmake -S /tmp/marley-consumer -B /tmp/marley-consumer/build   -DCMAKE_PREFIX_PATH=/tmp/m3
-quiet ""
-quiet "--- build and run it ---"
+quiet "--- configure, build, run ---"
+run cmake -S /tmp/marley-consumer -B /tmp/marley-consumer/build \
+  -DCMAKE_PREFIX_PATH=/tmp/m3
 run cmake --build /tmp/marley-consumer/build
 run /tmp/marley-consumer/build/consumer
 quiet ""
 quiet "--- the consumer must inherit the C++ standard from the target ---"
-run sh -c "grep -o -- '-std=[^ ]*'   /tmp/marley-consumer/build/CMakeFiles/consumer.dir/flags.make | head -2"
+run sh -c "grep -o -- '-std=[^ ]*' \
+  /tmp/marley-consumer/build/CMakeFiles/consumer.dir/flags.make | head -2"
 
 head2 "C. no build-tree or source-tree path in any published interface"
 quiet ""
@@ -395,32 +421,6 @@ for p in /tmp/m3 /tmp/m4 /tmp/m5; do
   esac
 done
 
-head2 "E. uninstall by receipt (design spec 7)"
-quiet ""
-quiet "--- the receipts both installers wrote ---"
-run sh -c "cat /tmp/m3/share/marley/install-receipt"
-run sh -c "cat /tmp/m4/share/marley/install-receipt"
-quiet ""
-quiet "--- a user file placed in the prefix must survive ---"
-mkdir -p /tmp/m4/bin/mine && : > /tmp/m4/bin/mine/keep.txt
-quiet ""
-quiet "--- make uninstall prompts, and a non-tty answer aborts safely ---"
-build make IGNORE_CMAKE=1 IGNORE_HEPMC3=1 uninstall prefix=/tmp/m4
-run find /tmp/m4 -maxdepth 2
-quiet ""
-quiet "--- the same prefix, removed non-interactively as CI would ---"
-run src/scripts/uninstall-marley --prefix /tmp/m4 --yes
-run find /tmp/m4
-quiet ""
-quiet "--- CMake-path install, removed by the same script ---"
-run src/scripts/uninstall-marley --prefix /tmp/m3 --yes
-run find /tmp/m3
-quiet ""
-quiet "--- and the refusals ---"
-run src/scripts/uninstall-marley
-run src/scripts/uninstall-marley --prefix /
-run src/scripts/uninstall-marley --prefix /tmp/m3 --yes
-
 head2 "F. no rpath anywhere in any marley.pc"
 quiet ""
 quiet "marley-config --libs may carry an rpath; marley.pc must not, and that"
@@ -436,6 +436,32 @@ for f in /tmp/m3/lib/pkgconfig/marley.pc /tmp/m4/lib/pkgconfig/marley.pc \
     quiet "clean: $f"
   fi
 done
+
+head2 "E. uninstall by receipt (design spec 7)"
+quiet ""
+quiet "--- the receipts both installers wrote ---"
+run sh -c "cat /tmp/m3/share/marley/install-receipt"
+run sh -c "cat /tmp/m4/share/marley/install-receipt"
+quiet ""
+quiet "--- a user file placed in the prefix must survive ---"
+mkdir -p /tmp/m4/bin/mine && : > /tmp/m4/bin/mine/keep.txt
+quiet ""
+quiet "--- make uninstall prompts, and a non-tty answer aborts safely ---"
+expect_fail make IGNORE_CMAKE=1 IGNORE_HEPMC3=1 uninstall prefix=/tmp/m4
+run find /tmp/m4 -maxdepth 2
+quiet ""
+quiet "--- the same prefix, removed non-interactively as CI would ---"
+run src/scripts/uninstall-marley --prefix /tmp/m4 --yes
+run find /tmp/m4
+quiet ""
+quiet "--- CMake-path install, removed by the same script ---"
+run src/scripts/uninstall-marley --prefix /tmp/m3 --yes
+run find /tmp/m3
+quiet ""
+quiet "--- and the refusals ---"
+expect_fail src/scripts/uninstall-marley
+expect_fail src/scripts/uninstall-marley --prefix /
+expect_fail src/scripts/uninstall-marley --prefix /tmp/m3 --yes
 
 log ""
 log "Done. Wrote check-install.log (and check-install.build.log)."
