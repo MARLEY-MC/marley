@@ -372,20 +372,6 @@ jobs:
     # is handled by the "Check matrix eligibility" guard step below.
     if: always() && needs.ref-linux.result != 'failure'
     runs-on: ${{ matrix.os }}
-    # A LOGIN shell, so that the micromamba environment is actually active.
-    #
-    # setup-micromamba initialises a shell hook, but GitHub's default run
-    # shell is "bash --noprofile --norc -eo pipefail", which never sources
-    # the profile -- so root-config was not on PATH, every ROOT leg silently
-    # configured WITHOUT ROOT, and the only reason that was ever visible is
-    # that a step asserted --use-root was "yes".
-    #
-    # -eo pipefail is carried over deliberately: the stock default has it,
-    # and dropping it would let a failure in the left-hand side of a pipe
-    # pass unnoticed.
-    defaults:
-      run:
-        shell: bash -leo pipefail {0}
     strategy:
       fail-fast: false
       matrix:
@@ -573,6 +559,39 @@ jobs:
             dependencies:
               - root
           cache-environment: true
+
+      # setup-micromamba initialises a shell hook rather than exporting
+      # anything, and GitHub's default run shell is
+      # "bash --noprofile --norc -eo pipefail", which never sources a
+      # profile. So root-config was not on PATH and every ROOT leg silently
+      # configured WITHOUT ROOT -- visible only because a later step
+      # asserted --use-root was "yes".
+      #
+      # A login shell is used HERE ONLY, to read the activated environment,
+      # and the result is exported through GITHUB_PATH/GITHUB_ENV so every
+      # later step keeps the stock shell. Making all 38 steps login shells
+      # was the wrong lever: it changes startup behaviour for steps that
+      # have nothing to do with ROOT, and differs between the Ubuntu and
+      # macOS images.
+      #
+      # No -e here on purpose. This step's job is to report a path; a
+      # non-zero return from something in /etc/profile.d is not a reason to
+      # fail the build.
+      - name: Put the ROOT environment on PATH
+        if: >-
+          steps.eligibility.outputs.skip != 'true' &&
+          (matrix.path == 'system' || matrix.path == 'root-builtin')
+        shell: bash -l {0}
+        run: |
+          echo "CONDA_PREFIX=${CONDA_PREFIX:-<unset>}"
+          if [ -z "${CONDA_PREFIX:-}" ]; then
+            echo "ERROR: the micromamba environment is not active; ROOT" \
+              "would be silently absent" >&2
+            exit 1
+          fi
+          echo "${CONDA_PREFIX}/bin" >> "$GITHUB_PATH"
+          echo "CMAKE_PREFIX_PATH=${CONDA_PREFIX}" >> "$GITHUB_ENV"
+          "${CONDA_PREFIX}/bin/root-config" --version
 
       - name: Install system dependencies (Linux · system path)
         if: steps.eligibility.outputs.skip != 'true' && matrix.os == 'ubuntu-latest' && matrix.path == 'system'
