@@ -626,7 +626,7 @@
   //  // the example configuration file for the "marley reweight" command
   //  // (examples/config/reweight_example.js).
   //  { type: "optical_model", name: "KD-global-OMP",
-  //    opt_mod: #include:"optical_model_kd_global.js" },
+  //    opt_mod: #include:"optical_model/optical_model_kd_global.js" },
   //
   //  // multisim mode (default): uncorrelated random Gaussian variations
   //  { type: "strength_variation", name: "MultisimStrengthVar",
@@ -817,6 +817,6 @@
   // in the example configuration file for the "marley reweight" command
   // (examples/config/reweight_example.js).
   //
-  // opt_mod: #include:"optical_model_kduq_federal_cv.js"
+  // opt_mod: #include:"optical_model/optical_model_kduq_federal_cv.js"
 
 } // A closing curly brace should appear at the end of the file

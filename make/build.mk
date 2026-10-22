@@ -721,13 +721,19 @@ $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(MARLEY_LIBS)
 	  $(GSL_LDFLAGS) $(HEPMC3_LDFLAGS) $(NEW_DTAGS) $(RPATH_EXE)
 
 # Build the marg4 Geant4 example (requires a separate Geant4 installation).
-# Delegates to the example's own Makefile with the MARLEY environment
-# variable and PATH set so that it can find marley-config. The
-# executable is built directly into $(BUILD_DIR)/bin/.
+# Delegates to the example's own Makefile with PATH set so that it finds this
+# build's marley-config, which then reports this build's directories by
+# locating itself. No MARLEY variable is exported: the example no longer has
+# one to read, and that is the point of it being an example.
+#
+# BINDIR/OBJDIR are passed so that an in-tree build still lands in
+# build/bin alongside marley; an installed copy of the example defaults to
+# building beside itself instead.
 .PHONY: marg4
 marg4: $(SHARED_LIB) $(BUILD_DIR)/bin/marley-config
-	@PATH=$(BUILD_DIR)/bin:$$PATH MARLEY=$(TOP_DIR) \
-	  $(MAKE) -C $(TOP_DIR)/examples/marg4
+	@PATH=$(BUILD_DIR)/bin:$$PATH \
+	  $(MAKE) -C $(TOP_DIR)/examples/marg4 \
+	    BINDIR=$(BUILD_DIR)/bin OBJDIR=$(BUILD_DIR)/marg4_obj
 
 DOCS_BUILD_DIR = $(BUILD_DIR)/docs
 

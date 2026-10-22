@@ -123,7 +123,7 @@
     // data/optical_model/ directory. For example:
     //
     //   { type: "optical_model", name: "KD-global-OMP",
-    //     opt_mod: #include:"optical_model_kd_global.js" },
+    //     opt_mod: #include:"optical_model/optical_model_kd_global.js" },
     //
     // The example below is equivalent to the #include form above; it uses the
     // results from the original KD global fit

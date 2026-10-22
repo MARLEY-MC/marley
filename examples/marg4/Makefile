@@ -1,17 +1,21 @@
 INCLUDE_DIR = include
 SRC_DIR = src
-BINDIR ?= $(MARLEY)/build/bin
-OBJDIR ?= $(MARLEY)/build/marg4_obj
 
-ifndef MARLEY
-  $(error The MARLEY environment variable is not set. Please source the \
-     setup_marley.sh script and try again.)
-else
-  MARCONF := $(shell command -v marley-config 2> /dev/null)
-  ifndef MARCONF
-    $(error The marley-config script is not present on the system PATH. \
-        Please ensure that MARLEY has been fully built and try again.)
-  endif
+# Built beside this Makefile rather than inside MARLEY's own build tree.
+# MARLEY no longer exports a $MARLEY variable to point at one, and an
+# installed copy of this example lives under <prefix>/share/marley/examples,
+# which a user may not be able to write to. Override either on the command
+# line if you want the output somewhere else.
+BINDIR ?= bin
+OBJDIR ?= obj
+
+# marley-config on PATH is the only prerequisite. It reports where MARLEY is
+# by locating itself, so nothing here needs to be told where MARLEY lives.
+MARCONF := $(shell command -v marley-config 2> /dev/null)
+ifndef MARCONF
+  $(error The marley-config script is not present on the system PATH. \
+      Source <prefix>/bin/setup_marley.sh, or add MARLEY's bin directory \
+      to PATH, and try again.)
 endif
 
 # Check that Geant4 is available before proceeding
@@ -69,8 +73,11 @@ $(OBJDIR)/%.o: $(SRC_DIR)/%.cc | $(OBJDIR)
 	$(CXX) $(G4_CXXFLAGS) $(CXXFLAGS) -I$(INCLUDE_DIR) -o $@ -c $<
 
 $(BINDIR)/marg4: $(OBJECTS) | $(BINDIR)
+	# No explicit -rpath: marley-config --libs now emits one pointing at
+	# the library directory it located, which is the whole reason that
+	# flag set exists.
 	$(CXX) $(G4_CXXFLAGS) $(CXXFLAGS) -o $@ $(MARLEY_LIBS) \
-	  $(G4_LIBS) -Wl,-rpath -Wl,$(MARLEY)/build/lib $(OBJECTS)
+	  $(G4_LIBS) $(OBJECTS)
 
 $(BINDIR) $(OBJDIR):
 	mkdir -p $@
