@@ -25,6 +25,10 @@
 
     //// I/O — file management and output files
     io: "info",
+    // File-resolution provenance: which file each name actually resolved to.
+    // Set to "info" to record the files this run used. A file taken from the
+    // working directory is reported at "notice", so it is visible even here.
+    io.resolve: "notice",
 
     //// Application — CLI commands
     //app: "info",

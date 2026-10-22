@@ -87,7 +87,34 @@ marley::Logger::OutStream::OutStream( std::ostream& os, LogLevel min,
 
 void marley::Logger::configure( const marley::JSON& config ) {
 
-  if ( config.has_key("out") ) {
+  // Per-section replace, strongly exception safe. Everything is built into
+  // locals; this object's state is untouched until the commit at the end, so
+  // a malformed document leaves the Logger exactly as it was rather than
+  // half-applied in an order determined by the implementation.
+  //
+  // A section the document does not mention is left alone. "out" absent means
+  // "no opinion" -- keep the constructor's streams; "out: []" means silence,
+  // because it was asked for. Additive semantics could not express the second
+  // and whole-object replace could not express the first.
+
+  const bool have_out = config.has_key( "out" );
+  std::vector< OutStream > new_streams;
+
+  // The same de-duplication add_stream() performs, applied to the local list:
+  // naming one stream twice updates its levels rather than doubling it.
+  auto add_local = [ &new_streams ]( OutStream os ) {
+    const std::ostream* key = os.stream_.get();
+    for ( auto& existing : new_streams ) {
+      if ( existing.stream_.get() == key ) {
+        existing.min_level_ = os.min_level_;
+        existing.max_level_ = os.max_level_;
+        return;
+      }
+    }
+    new_streams.push_back( std::move(os) );
+  };
+
+  if ( have_out ) {
     auto out_array = config.at( "out" );
     if ( !out_array.is_array() ) {
       throw marley::Error( "JSON array expected for \"out\" key in"
@@ -150,7 +177,7 @@ void marley::Logger::configure( const marley::JSON& config ) {
           " to open the log file \"" + fname.to_string() + "\"" );
 
         // Create the output stream for the file
-        this->add_stream( outfile, min, max );
+        add_local( OutStream(outfile, min, max) );
       }
       else {
         auto st = s.at( "stream" );
@@ -158,10 +185,10 @@ void marley::Logger::configure( const marley::JSON& config ) {
           " output stream specification " + st.dump_string() );
         auto stream_name = st.to_string();
         if ( stream_name == "stdout" ) {
-          this->add_stream( std::cout, min, max );
+          add_local( OutStream(std::cout, min, max) );
         }
         else if ( stream_name == "stderr" ) {
-          this->add_stream( std::cerr, min, max );
+          add_local( OutStream(std::cerr, min, max) );
         }
         else throw marley::Error( "Unrecognized stream name \"" + stream_name
           + "\" encountered in marley::Logger::configure()" );
@@ -170,58 +197,71 @@ void marley::Logger::configure( const marley::JSON& config ) {
     } // stream definitions
   } // handling of "out" key
 
-  bool set_default_categ = false;
-  if ( !config.has_key("categories") ) {
-    // If the user has not configured any categories then globally set the
-    // logging level to INFO and move on
-    default_level_ = LogLevel::INFO;
-    return;
-  }
+  const bool have_categories = config.has_key( "categories" );
+  std::unordered_map< std::string, LogLevel > new_categories;
+  LogLevel new_default = default_level_;
 
-  auto categ_spec = config.at( "categories" );
-  if ( !categ_spec.is_object() ) {
-    throw marley::Error( "marley::Logger categories must be specified as"
-      " a JSON object." );
-  }
-  auto categs = categ_spec.object_range();
-  for ( const auto& [ cat, lev ] : categs ) {
-    if ( !lev.is_string() ) {
-      throw marley::Error( "Invalid marley::Logger level specification \""
-        + lev.dump_string() + '\"' );
+  if ( have_categories ) {
+
+    bool set_default_categ = false;
+
+    auto categ_spec = config.at( "categories" );
+    if ( !categ_spec.is_object() ) {
+      throw marley::Error( "marley::Logger categories must be specified as"
+        " a JSON object." );
     }
-    LogLevel ll = this->string_to_loglevel( lev.to_string() );
-    // The "default" category doesn't appear in the internal map. Instead,
-    // it has a dedicated class member to use as the ultimate fallback.
-    if ( cat == "default" ) {
-      set_default_categ = true;
-      default_level_ = ll;
+    auto categs = categ_spec.object_range();
+    for ( const auto& [ cat, lev ] : categs ) {
+      if ( !lev.is_string() ) {
+        throw marley::Error( "Invalid marley::Logger level specification \""
+          + lev.dump_string() + '\"' );
+      }
+      LogLevel ll = this->string_to_loglevel( lev.to_string() );
+      // The "default" category doesn't appear in the internal map. Instead,
+      // it has a dedicated class member to use as the ultimate fallback.
+      if ( cat == "default" ) {
+        set_default_categ = true;
+        new_default = ll;
+      }
+      else if ( cat.empty() ) {
+        throw marley::Error( "Empty name encountered in the category"
+          " configuration for marley::Logger" );
+      }
+      else new_categories[ cat ] = ll;
     }
-    else if ( cat.empty() ) {
-      throw marley::Error( "Empty name encountered in the category"
+
+    if ( !set_default_categ ) {
+      throw marley::Error( "Missing \"default\" logging level in the category"
         " configuration for marley::Logger" );
     }
-    else category_map_[ cat ] = ll;
   }
 
-  if ( !set_default_categ ) {
-    throw marley::Error( "Missing \"default\" logging level in the category"
-      " configuration for marley::Logger" );
+  // ---- Commit. Nothing above this point has modified the Logger. ----
+
+  if ( have_out ) streams_ = std::move( new_streams );
+
+  if ( have_categories ) {
+    category_map_ = std::move( new_categories );
+    default_level_ = new_default;
   }
 
+  // category_level() memoises its lookups, so any change to either input
+  // invalidates the cache.
+  if ( have_out || have_categories ) resolved_level_cache_.clear();
 }
 
 marley::Logger::Logger() {
-  // This is usually done with the FileManager, but we need to avoid logging
-  // messages in this constructor (to avoid recursive initialization). So we
-  // do it without the FileManager here.
-  char* mar = std::getenv( "MARLEY" );
-  if ( !mar ) throw marley::Error( "The MARLEY environment variable is not"
-    " set. Please set it (e.g., by sourcing the setup_marley.sh script) and"
-    " try again." );
+  // The constructor does no parsing and no I/O, so it cannot fail and cannot
+  // reach the FileManager. Applying data/config/logger.js is an explicit act,
+  // performed by the application (see configure_from_file). default_level_ is
+  // already INFO from its member declaration, so these two streams are the
+  // whole of the default configuration.
+  add_stream( std::cout, LogLevel::INFO, LogLevel::NOTICE );
+  add_stream( std::cerr, LogLevel::WARN, LogLevel::FATAL );
+}
 
-  // This works OK because the marley::JSON class does not use the Logger
-  std::string config_file_name = std::string( mar ) + "/data/config/logger.js";
-  auto json_config = marley::JSON::load_file( config_file_name );
+void marley::Logger::configure_from_file( const std::string& file_name ) {
+  auto json_config = marley::JSON::load_file( file_name );
   this->configure( json_config );
 }
 
