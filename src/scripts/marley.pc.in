@@ -1,0 +1,22 @@
+# pkg-config metadata for MARLEY (Model of Argon Reaction Low Energy Yields)
+#
+# Self-locating: pcfiledir is <prefix>/<libdir>/pkgconfig
+#
+# Deliberately does not carry a "Requires" line. Neither HepMC3 nor ROOT
+# provides a pkg-config file, and pkg-config fails if requirements cannot be
+# resolved. Naming either would therefore break every query against this file.
+# Bare flags for these dependencies are therefore used instead. GSL does provide
+# gsl.pc, but it is a private MARLEY dependency (none of the installed headers
+# use it) so it should not show up in the --cflags.
+#
+prefix=${pcfiledir}/../..
+exec_prefix=${prefix}
+libdir=${prefix}/@libdir_rel@
+includedir=${prefix}/@includedir_rel@
+
+Name: MARLEY
+Description: Model of Argon Reaction Low Energy Yields
+URL: https://www.marleygen.org
+Version: @version@
+Cflags: -I${includedir} -std=@cxx_std@ @pc_cflags_extra@
+Libs: -L${libdir} -lMARLEY @pc_libs_extra@

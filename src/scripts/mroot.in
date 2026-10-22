@@ -1,0 +1,55 @@
+#!/bin/bash
+#
+# Starts an interactive ROOT session with the MARLEY shared library loaded
+# and MARLEY's headers on ROOT_INCLUDE_PATH.
+#
+# Generated in two copies, for the build tree and the install tree: a
+# vendored HepMC3 sits at include/builtin before installation and at
+# include/marley/builtin after.
+#
+# Every MARLEY path is derived from this script's own location.
+
+here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+root_dir="$( cd "${here}/.." && pwd )"
+
+lib_rel='@lib_rel@'
+include_rel='@include_rel@'
+builtin_rel='@builtin_rel@'
+hepmc3_include='@hepmc3_include@'
+
+# Without this the library loads, but '#include "marley/Generator.hh"' fails.
+#
+# MARLEY's entries are prepended. If a different HepMC3 came first, cling
+# would parse GenEventData from a different HepMC3 than libMARLEY's
+# dictionary was built against, silently reading the wrong member layout.
+ROOT_INCLUDE_PATH="${root_dir}/${include_rel}${ROOT_INCLUDE_PATH:+:${ROOT_INCLUDE_PATH}}"
+if [ -n "${builtin_rel}" ]; then
+  ROOT_INCLUDE_PATH="${root_dir}/${builtin_rel}:${ROOT_INCLUDE_PATH}"
+fi
+
+# An external HepMC3 needs its include root for the same reason. This is the
+# one path here that is baked in rather than derived, since it belongs to
+# something MARLEY does not own.
+if [ -n "${hepmc3_include}" ]; then
+  ROOT_INCLUDE_PATH="${hepmc3_include}:${ROOT_INCLUDE_PATH}"
+fi
+export ROOT_INCLUDE_PATH
+
+# -e expressions run before any file argument, so the library is loaded
+# before a macro the user passes on the command line. The option is handled
+# in TApplication::GetOptions(), not TRint.
+#
+# USE_ROOT is defined here so that MARLEY code gated on it will run as
+# expected.
+#
+# AddDynamicPath is not redundant with the Load. Loading by absolute path
+# makes libMARLEY present. It does not tell ROOT where to look later.
+#
+# Extending ROOT's own search path rather than DYLD_LIBRARY_PATH
+# sidesteps macOS System Integrity Protection, which strips DYLD_* variables
+# from the environment of protected processes.
+exec root \
+  -e "gSystem->AddDynamicPath(\"${root_dir}/${lib_rel}\");" \
+  -e 'gInterpreter->Declare("#define USE_ROOT 1");' \
+  -e "gSystem->Load(\"${root_dir}/${lib_rel}/libMARLEY\");" \
+  "$@"
