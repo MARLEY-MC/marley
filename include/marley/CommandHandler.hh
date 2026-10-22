@@ -82,6 +82,9 @@ namespace marley {
     /// Display top-level or command-specific help messages
     static bool cmd_help( std::deque< std::string >& args );
 
+    /// Report where this executable looks for its data files
+    static bool cmd_info( std::deque< std::string >& args );
+
     /// Print existing MARLEY events in a human-readable format
     static bool cmd_print( std::deque< std::string >& args );
 

@@ -274,11 +274,24 @@ std::string marley::FileManager::failure_message( const std::string& name,
   msg << "\n  Paths tried:\n";
   for ( const auto& p : res.probed ) msg << "    " << p.string() << '\n';
 
-  // "Did you mean": walk the roots looking for a file with this base name.
-  // Only reached when a lookup has already failed, so the cost is paid once,
-  // in a run that is about to stop.
+  fs::path suggestion = suggest_for( name, roots_ );
+  if ( !suggestion.empty() ) {
+    msg << "\n  Did you mean \"" << suggestion.generic_string() << "\"?";
+  }
+
+  return msg.str();
+}
+
+std::filesystem::path marley::FileManager::suggest_for(
+  const std::string& name, const std::vector< DataRoot >& roots )
+{
+  // Walk the roots looking for a file with this base name. Only reached
+  // when a lookup has already failed, so the cost is paid once, in a run
+  // that is about to stop -- or in "marley info --resolve", whose entire
+  // job is to answer this.
   const std::string base = fs::path( name ).filename().string();
-  for ( const auto& r : roots_ ) {
+
+  for ( const auto& r : roots ) {
     std::error_code ec;
     fs::recursive_directory_iterator it( r.path,
       fs::directory_options::skip_permission_denied, ec );
@@ -292,11 +305,9 @@ std::string marley::FileManager::failure_message( const std::string& name,
 
       fs::path rel = fs::relative( it->path(), r.path, ec );
       if ( ec ) continue;
-
-      msg << "\n  Did you mean \"" << rel.generic_string() << "\"?";
-      return msg.str();
+      return rel;
     }
   }
 
-  return msg.str();
+  return {};
 }

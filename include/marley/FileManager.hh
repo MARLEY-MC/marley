@@ -124,6 +124,22 @@ namespace marley {
       /// @details Empty if self-location failed. Reported by "marley info".
       const std::filesystem::path& library_path() const { return lib_path_; }
 
+      /// @brief Look for a file with this base name anywhere under the roots
+      /// @details Backs the "did you mean" suggestion. Static and public
+      /// because two callers need it: find_file() when it is about to throw,
+      /// and "marley info --resolve" when a user asks. One implementation,
+      /// so the diagnostic cannot disagree with the thing it diagnoses.
+      ///
+      /// Walks the roots recursively, so it is not cheap. It is called only
+      /// when a lookup has already failed -- in a run that is about to stop,
+      /// or in a command whose entire job is to answer this question.
+      /// @param name The name that was not found
+      /// @param roots The data roots to scan
+      /// @return The first match, relative to the root that holds it, or
+      /// empty if there is none
+      static std::filesystem::path suggest_for( const std::string& name,
+        const std::vector< DataRoot >& roots );
+
     private:
 
       /// @brief Create the singleton FileManager object

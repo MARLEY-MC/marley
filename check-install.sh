@@ -271,6 +271,40 @@ for p in /tmp/m5 /tmp/m4; do
   # clean run look like it exited 17.
 done
 
+head2 "H. marley info (design spec 2.5, 6.1)"
+quiet ""
+quiet "--- plain: library, roots with provenance, cwd last ---"
+run /tmp/m5/bin/marley info
+quiet ""
+quiet "--- a name that resolves, with the subdir its real caller passes ---"
+run /tmp/m5/bin/marley info --resolve --subdir react ES.react
+quiet ""
+quiet "--- the same name WITHOUT --subdir: must fail and suggest ---"
+run /tmp/m5/bin/marley info --resolve ES.react
+quiet ""
+quiet "--- a name that sits at the top of the data root ---"
+run /tmp/m5/bin/marley info --resolve mass_table.js
+quiet ""
+quiet "--- a name that exists nowhere ---"
+run /tmp/m5/bin/marley info --resolve no_such_file.js
+quiet ""
+quiet "--- MARLEY_SEARCH_PATH roots are flagged, and a bad one is marked ---"
+run env MARLEY_SEARCH_PATH=/tmp/marley-reloc:/tmp/definitely-not-here \
+  /tmp/m5/bin/marley info
+quiet ""
+quiet "--- from the relocated prefix: roots must follow the copy ---"
+run /tmp/m3-moved/bin/marley info
+quiet ""
+quiet "--- argument errors ---"
+run /tmp/m5/bin/marley info --resolve
+run /tmp/m5/bin/marley info ES.react
+run /tmp/m5/bin/marley info --subdir react
+run /tmp/m5/bin/marley info --bogus
+quiet ""
+quiet "--- help, and presence in the top-level command list ---"
+run /tmp/m5/bin/marley info --help
+run sh -c "/tmp/m5/bin/marley help | grep -A1 info"
+
 head2 "C. no build-tree or source-tree path in any published interface"
 quiet ""
 quiet "Searching the installed marley-config and marley.pc for \"$REPO\"."
