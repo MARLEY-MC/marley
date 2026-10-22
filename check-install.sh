@@ -79,7 +79,7 @@ build() {
   return $rc
 }
 
-rm -rf /tmp/m3 /tmp/m3-moved /tmp/m4 /tmp/m5 /tmp/marley-reloc
+rm -rf /tmp/m3 /tmp/m3-moved /tmp/m4 /tmp/m5 /tmp/m6 /tmp/m7 /tmp/marley-reloc
 mkdir -p /tmp/marley-reloc
 
 # A short job that still exercises the whole data-loading path: mass table,
@@ -330,7 +330,7 @@ quiet "Both build systems saw the same ROOT, so --cxx-std must agree. It did"
 quiet "not before: CMake reported c++17 while Make reported c++20, because"
 quiet "ROOT's PUBLIC compile features raised the standard behind the value"
 quiet "CMake was reporting."
-for p in /tmp/m3 /tmp/m4 /tmp/m5; do
+for p in /tmp/m3 /tmp/m4 /tmp/m5 /tmp/m6 /tmp/m7; do
   quiet ""
   quiet "\$ $p/bin/marley-config --cxx-std"
   "$p/bin/marley-config" --cxx-std >> "$LOG" 2>&1 < /dev/null
@@ -401,6 +401,96 @@ quiet "--- the consumer must inherit the C++ standard from the target ---"
 run sh -c "grep -o -- '-std=[^ ]*' \
   /tmp/marley-consumer/build/CMakeFiles/consumer.dir/flags.make | head -2"
 
+head2 "K. CMake, ROOT DISABLED -> /tmp/m6"
+# No configuration tested ROOT-disabled until now, and it is not a small
+# difference: no dictionary, no OutputFileRoot/marley_root sources, no
+# mroot, root: no in the receipt, and -- in the new standard logic -- no
+# ROOT standard to take the maximum against.
+
+build make clean
+build make IGNORE_ROOT=1 -j10
+build make IGNORE_ROOT=1 install prefix=/tmp/m6
+
+run sh -c "find /tmp/m6 -maxdepth 2 -mindepth 1 -not -path '*/data/*' | sort"
+quiet ""
+quiet "--- mroot must NOT be installed, and no dictionary artefacts ---"
+run sh -c "ls /tmp/m6/bin; ls /tmp/m6/lib"
+quiet ""
+quiet "--- use-root no, and the standard falls back to MARLEY's floor ---"
+run /tmp/m6/bin/marley-config --use-root
+run /tmp/m6/bin/marley-config --cxx-std
+run /tmp/m6/bin/marley-config --cflags
+quiet ""
+quiet "--- the receipt must record root: no ---"
+run sh -c "cat /tmp/m6/share/marley/install-receipt"
+quiet ""
+quiet "--- marley.pc must carry no -DUSE_ROOT and no ROOT flags ---"
+run sh -c "grep -E '^(Cflags|Libs):' /tmp/m6/lib/pkgconfig/marley.pc"
+quiet ""
+quiet "--- the config package must NOT demand find_dependency(ROOT) ---"
+run sh -c "grep -A1 -E 'if\\((TRUE|FALSE)\\)' /tmp/m6/lib/cmake/MARLEY/MARLEYConfig.cmake"
+quiet ""
+quiet "--- and it must still generate events ---"
+mkdir -p /tmp/marley-reloc/k
+( cd /tmp/marley-reloc/k \
+  && /tmp/m6/bin/marley ../job.js ) >> "$LOG" 2>&1 < /dev/null
+quiet "[exit $?]"
+
+head2 "L. Make, ROOT DISABLED -> /tmp/m7"
+build make clean
+build make IGNORE_CMAKE=1 IGNORE_ROOT=1 -j10
+build make IGNORE_CMAKE=1 IGNORE_ROOT=1 install prefix=/tmp/m7
+run /tmp/m7/bin/marley-config --use-root
+run /tmp/m7/bin/marley-config --cxx-std
+run sh -c "ls /tmp/m7/bin"
+mkdir -p /tmp/marley-reloc/l
+( cd /tmp/marley-reloc/l \
+  && /tmp/m7/bin/marley ../job.js ) >> "$LOG" 2>&1 < /dev/null
+quiet "[exit $?]"
+
+head2 "M. #include: resolution, and the renamed optical data"
+quiet ""
+quiet "The commented-out #include: examples in examples/config must work if"
+quiet "uncommented. Two legs matter: a file beside the including config"
+quiet "(resolved from the including file's own directory), and a file under"
+quiet "a data root named with its subdirectory."
+mkdir -p /tmp/marley-reloc/inc
+cat > /tmp/marley-reloc/inc/target_block.js <<'EOF'
+{ nuclides: [ 1000180400 ], atom_fractions: [ 1.0 ] }
+EOF
+cat > /tmp/marley-reloc/inc/job.js <<'EOF'
+{
+  seed: 123456,
+  target: #include:"target_block.js",
+  reactions: [ "ES.react" ],
+  source: { type: "mono", neutrino: "ve", energy: 35.0 },
+  generate: {
+    events: 5,
+    output: [ { file: "events.hepmc3", format: "ascii", force: true } ],
+  },
+}
+EOF
+quiet ""
+quiet "--- #include: of a file beside the config (leg 2) ---"
+( cd /tmp/marley-reloc/inc \
+  && /tmp/m5/bin/marley job.js ) >> "$LOG" 2>&1 < /dev/null
+quiet "[exit $?]"
+quiet ""
+quiet "--- run it from ELSEWHERE: leg 2 is the including file's directory,"
+quiet "    not the working directory ---"
+mkdir -p /tmp/marley-reloc/inc-elsewhere
+( cd /tmp/marley-reloc/inc-elsewhere \
+  && /tmp/m5/bin/marley ../inc/job.js ) >> "$LOG" 2>&1 < /dev/null
+quiet "[exit $?]"
+quiet ""
+quiet "--- the renamed optical data resolves under its new subdirectory ---"
+run /tmp/m5/bin/marley info --resolve optical/kduq_federal_cv.js
+run /tmp/m5/bin/marley info --resolve --subdir optical kd_global.js
+quiet ""
+quiet "--- and the OLD spelling is gone, with no suggestion to rescue it ---"
+expect_fail /tmp/m5/bin/marley info --resolve \
+  optical_model/optical_model_kduq_federal_cv.js
+
 head2 "C. no build-tree or source-tree path in any published interface"
 quiet ""
 quiet "Searching the installed marley-config and marley.pc for \"$REPO\"."
@@ -408,7 +498,9 @@ quiet "Any hit is a bug: an installed MARLEY must not reference the tree it"
 quiet "was built from."
 for f in /tmp/m3/bin/marley-config /tmp/m3/lib/pkgconfig/marley.pc \
          /tmp/m4/bin/marley-config /tmp/m4/lib/pkgconfig/marley.pc \
-         /tmp/m5/bin/marley-config /tmp/m5/lib/pkgconfig/marley.pc; do
+         /tmp/m5/bin/marley-config /tmp/m5/lib/pkgconfig/marley.pc \
+         /tmp/m6/bin/marley-config /tmp/m6/lib/pkgconfig/marley.pc \
+         /tmp/m7/bin/marley-config /tmp/m7/lib/pkgconfig/marley.pc; do
   if grep -n -- "$REPO" "$f" >> "$LOG" 2>&1; then
     log "LEAK: $f references the build tree"
   else
@@ -417,7 +509,7 @@ for f in /tmp/m3/bin/marley-config /tmp/m3/lib/pkgconfig/marley.pc \
 done
 quiet ""
 quiet "--- and the emitted flags, which is what consumers actually see ---"
-for p in /tmp/m3 /tmp/m4 /tmp/m5; do
+for p in /tmp/m3 /tmp/m4 /tmp/m5 /tmp/m6 /tmp/m7; do
   out="$( "$p/bin/marley-config" --cflags --libs 2>&1 )"
   quiet "$p: $out"
   case "$out" in
