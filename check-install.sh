@@ -357,9 +357,27 @@ for p in /tmp/m3 /tmp/m4 /tmp/m5; do
   esac
 done
 
-head2 "E. uninstall should leave /tmp/m4 empty of MARLEY"
+head2 "E. uninstall by receipt (design spec 7)"
+quiet ""
+quiet "--- the receipts both installers wrote ---"
+run sh -c "cat /tmp/m3/share/marley/install-receipt"
+run sh -c "cat /tmp/m4/share/marley/install-receipt"
+quiet ""
+quiet "--- a user file placed in the prefix must survive ---"
+mkdir -p /tmp/m4/bin/mine && : > /tmp/m4/bin/mine/keep.txt
+quiet ""
+quiet "--- Make-path install, removed via make uninstall ---"
 build make IGNORE_CMAKE=1 IGNORE_HEPMC3=1 uninstall prefix=/tmp/m4
 run find /tmp/m4
+quiet ""
+quiet "--- CMake-path install, removed by the same script ---"
+run src/scripts/uninstall-marley --prefix /tmp/m3 --yes
+run find /tmp/m3
+quiet ""
+quiet "--- and the refusals ---"
+run src/scripts/uninstall-marley
+run src/scripts/uninstall-marley --prefix /
+run src/scripts/uninstall-marley --prefix /tmp/m3 --yes
 
 head2 "F. no rpath anywhere in any marley.pc"
 quiet ""

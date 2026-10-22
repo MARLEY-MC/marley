@@ -516,12 +516,6 @@ endif
 # because the build tree mirrors the install layout and SHARED_LIB needs
 # libdir_rel.)
 
-# Path (without DESTDIR) to the install manifest that records which files were
-# placed on disk by "make install".  This is the single source of truth used by
-# "make uninstall" to remove exactly the installed files.
-MARLEY_MANIFEST_RELPATH = $(libdir)/marley-install-manifest.txt
-MARLEY_MANIFEST = $(DESTDIR)$(MARLEY_MANIFEST_RELPATH)
-
 MARLEY_LIBS := $(SHARED_LIB)
 ifeq ($(USE_ROOT),yes)
   # If we're building the tests, then link to some extra ROOT libraries
@@ -800,66 +794,39 @@ ifndef FOUND_HEPMC3
 	mkdir -p $(DESTDIR)$(includedir)/marley/builtin/HepMC3
 	cp -r $(INCLUDE_DIR)/builtin/HepMC3/. \
 	  $(DESTDIR)$(includedir)/marley/builtin/HepMC3
-	touch $(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3
 endif
-	# Write the install manifest: one absolute path per line (no DESTDIR prefix),
-	# matching the convention used by CMake's install_manifest.txt.  The manifest
-	# records every file actually placed on disk so that "make uninstall" can
-	# remove them precisely without touching unrelated files or directories.
-	# The single find under $(includedir)/marley covers the vendored HepMC3
-	# headers too, since they are now nested beneath it rather than installed
-	# as a sibling $(includedir)/HepMC3.
+	# The install receipt (design spec 7.1): a coarse manifest recorded in
+	# the thing it describes, so it cannot go stale and a CMake install is
+	# covered by the same reader. Paths are prefix-relative, so a moved
+	# installation still uninstalls. It replaces a 60-line manifest writer
+	# and the .marley-installed-builtin-hepmc3 sentinel, which recorded the
+	# same fact somewhere else.
+	#
+	# The glob is libMARLEY*, not libMARLEY.* -- the latter does not match
+	# libMARLEY_rdict.pcm, which has an underscore, so a ROOT-enabled
+	# install would quietly leave the dictionary behind.
+	@mkdir -p $(DESTDIR)$(datadir)/marley
 	{ \
-	  printf '%s\n' "$(bindir)/marley"; \
-	  printf '%s\n' "$(bindir)/marley-config"; \
-	  if [ "$(USE_ROOT)" = "yes" ]; then printf '%s\n' "$(bindir)/mroot"; fi; \
-	  printf '%s\n' "$(bindir)/setup_marley.sh"; \
-	  printf '%s\n' "$(libdir)/$(SHARED_LIB_FILE)"; \
-	  printf '%s\n' "$(libdir)/pkgconfig/marley.pc"; \
-	  if [ -f "$(DESTDIR)$(libdir)/libMARLEY_rdict.pcm" ]; then \
-	    printf '%s\n' "$(libdir)/libMARLEY_rdict.pcm"; \
+	  printf '%s\n' "marley-install-receipt: 1"; \
+	  printf '%s\n' "version: $(MARLEY_VERSION)"; \
+	  printf '%s\n' "git-revision: $(GIT_REVISION)"; \
+	  printf '%s\n' "prefix: $(prefix)"; \
+	  printf '%s\n' "build-system: make"; \
+	  printf '%s\n' "root: $(USE_ROOT)"; \
+	  printf '%s\n' "hepmc3: $(if $(FOUND_HEPMC3),external,builtin)"; \
+	  printf '%s\n' "gsl: $(if $(FOUND_GSL),external,builtin)"; \
+	  printf '%s\n' "trees: $(includedir_rel)/marley share/marley"; \
+	  printf '%s\n' "files: $(bindir_rel)/marley $(bindir_rel)/marley-config $(bindir_rel)/setup_marley.sh"; \
+	  if [ "$(USE_ROOT)" = "yes" ]; then \
+	    printf '%s\n' "       $(bindir_rel)/mroot"; \
 	  fi; \
-	  if [ -f "$(DESTDIR)$(libdir)/libMARLEY.rootmap" ]; then \
-	    printf '%s\n' "$(libdir)/libMARLEY.rootmap"; \
-	  fi; \
-	  find "$(DESTDIR)$(datadir)/marley" -type f \
-	    | sed 's|^$(DESTDIR)||'; \
-	  find "$(DESTDIR)$(includedir)/marley" -type f \
-	    | sed 's|^$(DESTDIR)||'; \
-	  if [ -f "$(DESTDIR)$(libdir)/.marley-installed-builtin-hepmc3" ]; then \
-	    printf '%s\n' "$(libdir)/libMARLEYHepMC3.$(SHARED_LIB_SUFFIX)"; \
-	    printf '%s\n' "$(libdir)/.marley-installed-builtin-hepmc3"; \
-	  fi; \
-	} > $(MARLEY_MANIFEST)
+	  printf '%s\n' "       $(libdir_rel)/libMARLEY*"; \
+	  printf '%s\n' "       $(libdir_rel)/pkgconfig/marley.pc"; \
+	} > $(DESTDIR)$(datadir)/marley/install-receipt
 	$(LDCONFIG_CMD)
 
+# Delegates to the same script the CMake path and a direct invocation use.
+# One implementation, three entry points (design spec 7.2).
 uninstall:
-	@if [ ! -f "$(MARLEY_MANIFEST)" ]; then \
-	  echo "ERROR: Install manifest not found: $(MARLEY_MANIFEST)"; \
-	  echo "       Have you run 'make install' from this build? Aborting."; \
-	  exit 1; \
-	fi
-	# Remove every file listed in the manifest.
-	while IFS= read -r f; do \
-	  if [ -f "$(DESTDIR)$$f" ] || [ -L "$(DESTDIR)$$f" ]; then \
-	    echo "Removing: $(DESTDIR)$$f"; \
-	    rm -f "$(DESTDIR)$$f"; \
-	  fi; \
-	done < $(MARLEY_MANIFEST)
-	# Remove the manifest itself.
-	rm -f $(MARLEY_MANIFEST)
-	# Prune directories that may now be empty.  Both trees are nested several
-	# levels deep (data/react/crpa, examples/marg4/include,
-	# include/marley/builtin/HepMC3), so each is walked with find -depth:
-	# that removes children before parents, where 'rmdir -p <root>' would
-	# fail on the first non-empty level and prune nothing at all.  Plain
-	# rmdir is used rather than the GNU-specific
-	# --ignore-fail-on-non-empty so this works on macOS/BSD, and the
-	# '|| true' suppresses the exit code it returns for a directory that is
-	# still occupied -- which is the expected case for a shared prefix.
-	find "$(DESTDIR)$(datadir)/marley" -depth -type d \
-	  -exec rmdir {} + 2>/dev/null || true
-	find "$(DESTDIR)$(includedir)/marley" -depth -type d \
-	  -exec rmdir {} + 2>/dev/null || true
-	rmdir "$(DESTDIR)$(libdir)/pkgconfig" 2>/dev/null || true
-	$(LDCONFIG_CMD)
+	$(SRC_DIR)/scripts/uninstall-marley --prefix "$(DESTDIR)$(prefix)"
+

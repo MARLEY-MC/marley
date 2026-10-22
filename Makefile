@@ -179,14 +179,11 @@ else
 	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) install $(PASSTHROUGH_VARS)
 endif
 
+# Both build paths dispatch to the same script, which reads the receipt the
+# installer left in the prefix. It needs no build tree and no CMake cache --
+# only a prefix -- so any checkout can uninstall any installation.
 uninstall:
-ifdef USE_CMAKE
-	@test -d build/CMakeFiles || (echo "ERROR: No CMake build found in build/. Run 'cmake --install' first." && exit 1)
-	$(MAKE) -C build uninstall
-else
-	@mkdir -p build
-	$(MAKE) -C build -f $(CURDIR)/make/build.mk TOP_DIR=$(CURDIR) uninstall $(PASSTHROUGH_VARS)
-endif
+	src/scripts/uninstall-marley --prefix "$(DESTDIR)$(or $(prefix),/usr/local)"
 
 reconfigure:
 ifdef USE_CMAKE

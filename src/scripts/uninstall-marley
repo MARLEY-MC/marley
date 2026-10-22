@@ -1,0 +1,199 @@
+#!/bin/bash
+#
+# Remove a MARLEY installation, using the receipt the installer left behind.
+#
+#   uninstall-marley --prefix /opt/marley [--yes]
+#
+# This script is NOT installed and is not meant to be on PATH. Shipping an
+# "rm -rf" tool into a shared bin/ is something conda-forge, Spack and distro
+# packagers would filter out anyway, and self-installed uninstallers are a
+# Windows convention rather than a Unix one. It is named verb-first for the
+# same reason: it is not one of the installed marley-* tools.
+#
+# It is stateless. Everything it needs is in the receipt, so any checkout can
+# uninstall any installation -- "I deleted the source tree" is a git clone
+# rather than a dead end.
+#
+# The receipt is advisory. When MARLEY arrives through apt, dnf or conda,
+# that package manager owns removal and should ignore all of this.
+
+set -u
+
+prefix=""
+assume_yes="no"
+
+die() { printf 'uninstall-marley: %s\n' "$*" >&2; exit 1; }
+
+usage() {
+  cat <<'EOF'
+Usage: uninstall-marley --prefix DIR [--yes]
+
+Remove the MARLEY installation under DIR, as recorded by the install
+receipt at DIR/share/marley/install-receipt.
+
+  --prefix DIR   The installation prefix to remove (required)
+  --yes          Do not prompt for confirmation
+  -h, --help     Print this message
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --prefix)
+      [ $# -ge 2 ] || die "--prefix requires a directory"
+      prefix="$2"; shift 2 ;;
+    --prefix=*)
+      prefix="${1#--prefix=}"; shift ;;
+    --yes|-y)
+      assume_yes="yes"; shift ;;
+    -h|--help)
+      usage; exit 0 ;;
+    *)
+      die "unknown argument \"$1\"" ;;
+  esac
+done
+
+# Refuse without an explicit prefix, and refuse on the obviously catastrophic
+# ones. There is no default: guessing is not a service worth providing for an
+# operation that deletes directory trees.
+[ -n "$prefix" ] || { usage >&2; die "--prefix is required"; }
+[ "$prefix" != "/" ] || die "refusing to operate on /"
+[ -d "$prefix" ] || die "\"$prefix\" is not a directory"
+
+prefix="$( cd "$prefix" && pwd )" || die "could not resolve \"$prefix\""
+[ "$prefix" != "/" ] || die "refusing to operate on /"
+
+receipt="$prefix/share/marley/install-receipt"
+
+# The gate is the receipt's location and its format marker -- NOT the prefix
+# recorded inside it. Gating on the recorded prefix would contradict
+# relocatability: a moved installation must still uninstall. The recorded
+# value is shown in the confirmation instead, so a user pointed at the wrong
+# tree sees the mismatch.
+[ -r "$receipt" ] || die "no MARLEY install receipt at $receipt"
+
+read -r marker_key marker_value < "$receipt" || true
+if [ "${marker_key:-}" != "marley-install-receipt:" ]; then
+  die "$receipt does not look like a MARLEY install receipt"
+fi
+case "${marker_value:-}" in
+  1) ;;
+  *) die "unsupported receipt format version \"${marker_value:-}\"" ;;
+esac
+
+trees=""
+files=""
+rec_version=""
+rec_prefix=""
+rec_build_system=""
+key=""
+
+# Folded continuation lines (a leading blank) belong to the previous key, so
+# that a long "files:" list can be wrapped and stay readable.
+while IFS= read -r line || [ -n "$line" ]; do
+  case "$line" in
+    ''|'#'*) continue ;;
+    [[:space:]]*)
+      value="$line" ;;
+    *:*)
+      key="${line%%:*}"
+      value="${line#*:}" ;;
+    *) continue ;;
+  esac
+
+  case "$key" in
+    trees)        trees="$trees $value" ;;
+    files)        files="$files $value" ;;
+    version)      rec_version="$( echo $value )" ;;
+    prefix)       rec_prefix="$( echo $value )" ;;
+    build-system) rec_build_system="$( echo $value )" ;;
+  esac
+done < "$receipt"
+
+# Split the receipt's lists into arrays with globbing DISABLED. Without
+# set -f, "for pattern in $files" expands the patterns against the current
+# directory before they are ever joined to the prefix -- and under nullglob a
+# pattern that matches nothing there is dropped from the list entirely, so
+# every globbed entry silently goes unremoved.
+set -f
+# shellcheck disable=SC2206
+tree_list=( $trees )
+# shellcheck disable=SC2206
+file_list=( $files )
+set +f
+
+echo "About to remove the MARLEY installation under:"
+echo "    $prefix"
+echo
+[ -n "$rec_version" ] && echo "  version:      $rec_version"
+[ -n "$rec_build_system" ] && echo "  installed by: $rec_build_system"
+if [ -n "$rec_prefix" ] && [ "$rec_prefix" != "$prefix" ]; then
+  echo "  receipt records prefix: $rec_prefix"
+  echo "  (the installation has been moved since; removing it where it is now)"
+fi
+echo
+echo "  directory trees to remove:"
+for t in "${tree_list[@]}"; do echo "      $prefix/$t"; done
+echo "  files to remove:"
+for f in "${file_list[@]}"; do echo "      $prefix/$f"; done
+echo
+
+if [ "$assume_yes" != "yes" ]; then
+  printf 'Proceed? [y/N] '
+  read -r reply || reply=""
+  case "$reply" in
+    y|Y|yes|YES) ;;
+    *) echo "Aborted."; exit 1 ;;
+  esac
+fi
+
+# Trees first, wholesale. rm -rf takes symlinks and anything else inside,
+# which is the main thing the old per-file manifests kept getting wrong.
+#
+# Note that share/marley is one of these trees and the receipt lives inside
+# it, so this deletes its own gate partway through. That is correct and
+# deliberate: the receipt has already been read. Someone will eventually try
+# to "fix" the ordering.
+for t in "${tree_list[@]}"; do
+  [ -n "$t" ] || continue
+  rm -rf "$prefix/$t"
+done
+
+# Then the file globs. The patterns are expanded HERE, against the prefix,
+# rather than handed to rm: the obvious implementation, rm -f "$prefix/$p"
+# with the pattern quoted, silently succeeds without removing anything and
+# looks exactly like success. nullglob makes a pattern that matches nothing
+# disappear rather than survive as a literal.
+shopt -s nullglob
+for pattern in "${file_list[@]}"; do
+  [ -n "$pattern" ] || continue
+  for f in "$prefix"/$pattern; do
+    rm -f "$f"
+  done
+done
+shopt -u nullglob
+
+# Finally prune the directories that held them, deepest first, ignoring any
+# that are not empty. Only directories MARLEY wrote into are considered, so
+# anything a user placed alongside survives -- including an empty directory
+# of their own.
+prune=""
+for p in "${tree_list[@]}" "${file_list[@]}"; do
+  [ -n "$p" ] || continue
+  d="$( dirname "$p" )"
+  while [ "$d" != "." ] && [ "$d" != "/" ]; do
+    prune="$prune $d"
+    d="$( dirname "$d" )"
+  done
+done
+
+for d in $( printf '%s\n' $prune | sort -u | awk '{ print gsub(/\//,"/"), $0 }' \
+            | sort -rn | cut -d' ' -f2- ); do
+  rmdir "$prefix/$d" 2> /dev/null || true
+done
+
+echo "Removed the MARLEY installation under $prefix."
+
+# No ldconfig. It was always doing the wrong job here, it is what made
+# "make install" fail on macOS, and now that every artifact carries a
+# RUNPATH it is doing no job at all.
