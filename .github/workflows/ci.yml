@@ -379,13 +379,18 @@ jobs:
           # --- Linux: ROOT with the vendored HepMC3 ---
           # Where the vendored include root, the built-in install interface
           # and the dictionary's -I flags all operate at once.
+          #
+          # The only leg that reaches ROOT through root-config rather than
+          # ROOT's CMake package, so it is also the only CMake leg whose
+          # ROOT flags arrive as raw strings to be parsed. Linux · System
+          # keeps the find_package route under test.
           - name: "Linux · ROOT + built-in HepMC3"
             os: ubuntu-latest
             path: root-builtin
             root_source: "conda"
             build: cmake
             cxx: g++
-            flags: "IGNORE_GSL=1 IGNORE_HEPMC3=1"
+            flags: "IGNORE_GSL=1 IGNORE_HEPMC3=1 ROOT_FIND_MODE=config"
             libdir: ""
             ref_job: ref-linux
             golden: golden-linux.hepmc3
