@@ -288,7 +288,9 @@ Core Developers
 
 .. class:: open
 
+- **Steven Doran** - `S81D <https://github.com/S81D>`__
 - **Steven Gardiner** - `sjgardiner <https://github.com/sjgardiner>`__
+- **Komninos-John Plows** - `kjplows <https://github.com/kjplows>`__
 
 See also the list of `contributors
 <https://github.com/MARLEY-MC/marley/contributors>`__ who participated in this
