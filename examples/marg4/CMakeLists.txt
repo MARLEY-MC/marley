@@ -9,7 +9,7 @@ add_executable(marg4
   src/MarleyPrimaryGeneratorAction.cc
 )
 
-target_link_libraries(marg4 PRIVATE marley_lib ${Geant4_LIBRARIES})
+target_link_libraries(marg4 PRIVATE MARLEY::MARLEY ${Geant4_LIBRARIES})
 
 target_include_directories(marg4 PRIVATE
   ${Geant4_INCLUDE_DIRS}

@@ -596,6 +596,7 @@ if(NOT USE_ROOT)
 endif()
 
 add_library(marley_lib SHARED ${MARLEY_SOURCES})
+add_library(MARLEY::MARLEY ALIAS marley_lib)
 
 # dladdr() is used for self-location. CMAKE_DL_LIBS is "dl" on glibc and
 # empty on macOS, where dladdr lives in libSystem -- hence the guard:
@@ -1453,6 +1454,11 @@ prefer_imported_or_flags(martest PRIVATE "GSL::gsl;GSL::gslcblas"
 target_include_directories(martest PRIVATE
   "${CMAKE_SOURCE_DIR}/include"
 )
+# include/builtin/marley_gsl.hh selects between the real GSL headers and a
+# fallback on this macro, so martest must see the same value as marley_lib.
+if(MARLEY_FOUND_GSL_DEFINE)
+  target_compile_definitions(martest PRIVATE MARLEY_FOUND_GSL)
+endif()
 set_target_properties(martest PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
   # martest is EXCLUDE_FROM_ALL and never installed, but it still has to find
