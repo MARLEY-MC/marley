@@ -100,19 +100,18 @@ namespace {
 
   void print_info_command_help() {
     std::cout << "Usage: marley info [--resolve [--subdir DIR] NAME]\n\n"
-      << "Report where this MARLEY executable looks for its data files. With"
-      << " no arguments,\n"
-      << "print the located library, the data roots in search order, and the"
-      << " working\n"
-      << "directory.\n\n"
+      << "Report where MARLEY searches for data files. With no arguments,"
+      << " print the\n"
+      << "located library, the top-level data folders (\"data roots\") in"
+      << " search order,\n"
+      << "and the working directory.\n\n"
       << "  --resolve NAME   Show every path MARLEY would try for NAME, and"
       << " which one it\n"
       << "                   would use. Exits 0 if NAME was found, 1 if not\n"
       << "  --subdir DIR     Category directory to resolve NAME under, as a"
       << " caller would\n"
-      << "                   pass it: react, structure, config or optical."
-      << " Defaults to\n"
-      << "                   none, which few callers use\n\n"
+      << "                   pass it: react, structure, optical, etc."
+      << " Defaults to none.\n\n"
       << "Options:\n"
       << "  -h, --help       Print this help message\n";
   }
@@ -178,7 +177,7 @@ const marley::CommandHandler::CommandMap
   { "convert", { "Convert event files between supported formats",
     print_convert_help, cmd_convert, false } },
 
-  { "info", { "Report where MARLEY looks for its data files",
+  { "info", { "Report where MARLEY searches for data files",
     print_info_command_help, cmd_info } },
 
   { "help", { "Show this help message or help for a specific command",

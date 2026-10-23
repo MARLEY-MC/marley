@@ -156,38 +156,39 @@ Usage::
 
   marley info [--resolve [--subdir DIR] NAME]
 
-Report where this copy of MARLEY will look for its data files. With no
-arguments, the command prints the location of the MARLEY shared library that
-the executable loaded, the data roots derived from it or supplied via the
-``MARLEY_SEARCH_PATH`` environment variable, and the current working
-directory.
+Report where MARLEY will search for data files. With no arguments, the command
+prints the location of the MARLEY shared library, the top-level data folders
+derived from it or supplied as a ``:``-separated list via the
+``MARLEY_SEARCH_PATH`` environment variable, and the current working directory.
 
 Options:
 
 ``--resolve NAME``
-  Show every candidate path that MARLEY would try while searching for
-  ``NAME``, marking the one that would be used. The data roots are printed
-  first, since the list of candidates is difficult to interpret without them.
+  Show every candidate path that MARLEY would inspect while searching for
+  the file ``NAME``, marking the one that would be used. As an aid to
+  understanding the printed output, the list of top-level data folders
+  to be used is printed first.
 
 ``--subdir DIR``
-  Look for ``NAME`` inside the subfolder ``DIR`` of each data root, in the
-  same way that the code loading the file would. Reaction input files use
-  ``react``, nuclear structure data files use ``structure``, and optical
-  model parameter files use ``optical``. The default is to use no subfolder.
+  Look for ``NAME`` inside the subfolder ``DIR`` of each top-level data
+  directory. This option is used to imitate what MARLEY does internally for
+  specific categories of data files. Reaction input files use ``react``,
+  nuclear structure data files use ``structure``, and optical model parameter
+  files use ``optical``. A subfolder is not used unless specified.
 
 ``-h, --help``
   Print a summary of the options above.
 
 When ``--resolve`` is given, the status code returned when the program exits is
 used to report whether the search succeeded: zero if ``NAME`` was found and one
-if it was not. A name that could not be resolved, but which matches a file
-stored somewhere within one of the data roots, is reported together with a
-suggested replacement.
+if it was not. For a ``NAME`` that was unresolved but matched a file stored
+somewhere within one of the searched directories, the printed output will
+include a suggested replacement.
 
 Examples
 ~~~~~~~~
 
-Show where MARLEY will look for its data files::
+Show where MARLEY will look for data files::
 
   $ marley info
   Library:           /opt/marley/lib/libMARLEY.so
@@ -197,7 +198,7 @@ Show where MARLEY will look for its data files::
     /opt/marley/share/marley/data   (located from libMARLEY)
     /home/user/work   (working directory, tried last)
 
-Check which file a reaction name resolves to::
+Find the location of a specific reaction input file::
 
   marley info --resolve --subdir react ve40ArCC_HF-CRPA.react
 

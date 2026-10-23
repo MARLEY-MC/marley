@@ -23,7 +23,7 @@
 #include "marley/CommandHandler.hh"
 #include "marley/FileManager.hh"
 
-// "marley info" reports where MARLEY looks for its data files, as
+// "marley info" reports where MARLEY looks for data files, as
 // opposed to marley-config, which reports how MARLEY was built. This command
 // provides a direct query that is complementary to logging messages that
 // can be suppressed or filtered out.
