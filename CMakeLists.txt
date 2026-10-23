@@ -314,6 +314,14 @@ if(NOT IGNORE_GSL)
       list(APPEND GSL_CFLAGS "-DMARLEY_FOUND_GSL")
     endif()
   endif()
+  # Naming a route means that route and no other. Falling back to the
+  # built-in subset here would hand a packager who declared a GSL dependency
+  # a build that quietly ignores it.
+  if(NOT GSL_FOUND AND NOT GSL_FIND_MODE STREQUAL "auto")
+    message(FATAL_ERROR "GSL_FIND_MODE=${GSL_FIND_MODE} was requested, but GSL "
+      "was not found that way. Use GSL_FIND_MODE=auto (the default) to try "
+      "every route, or IGNORE_GSL=ON to ask for the built-in subset.")
+  endif()
 endif()
 
 if(NOT GSL_FOUND)
@@ -375,6 +383,12 @@ if(NOT IGNORE_HEPMC3)
       )
       set(HEPMC3_CFLAGS ${HEPMC3_CFLAGS} -DMARLEY_FOUND_HEPMC3)
     endif()
+  endif()
+  if(NOT HEPMC3_FOUND AND NOT HEPMC3_FIND_MODE STREQUAL "auto")
+    message(FATAL_ERROR "HEPMC3_FIND_MODE=${HEPMC3_FIND_MODE} was requested, "
+      "but HepMC3 was not found that way. Use HEPMC3_FIND_MODE=auto (the "
+      "default) to try every route, or IGNORE_HEPMC3=ON to ask for the "
+      "built-in copy.")
   endif()
 endif()
 
@@ -454,6 +468,11 @@ if(NOT IGNORE_ROOT)
         set(ROOT_FOUND FALSE)
       endif()
     endif()
+  endif()
+  if(NOT USE_ROOT AND NOT ROOT_FIND_MODE STREQUAL "auto")
+    message(FATAL_ERROR "ROOT_FIND_MODE=${ROOT_FIND_MODE} was requested, but a "
+      "usable ROOT was not found that way. Use ROOT_FIND_MODE=auto (the "
+      "default) to try every route, or IGNORE_ROOT=ON to build without ROOT.")
   endif()
 endif()
 if(NOT USE_ROOT)
