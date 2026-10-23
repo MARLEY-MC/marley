@@ -481,14 +481,15 @@ A ROOT HepMC3 file produced by MARLEY contains:
 Opening a MARLEY ROOT HepMC3 file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``mroot`` wrapper starts an interactive ROOT session with MARLEY already
-loaded, so a MARLEY ROOT file may be opened directly::
+The ``mroot`` wrapper starts a ROOT interpreter with the MARLEY shared library
+already loaded. MARLEY's header files are also made available on the
+``ROOT_INCLUDE_PATH``. This allows output files produced with ``marley
+generate`` to be opened directly in an interactive session::
 
   mroot -l some_events.root
 
-``mroot`` loads the ``libMARLEY`` library, which carries the ROOT dictionary,
-and puts MARLEY's headers on ``ROOT_INCLUDE_PATH``. One can then browse the
-raw event data, for example::
+From within such an interactive session, one can immediately browse the raw
+MARLEY event data::
 
   MARLEY_event_tree->Scan("particles.pid:particles.status", "", "", 20)
 
@@ -507,7 +508,7 @@ directly:
   for convenient histogram-level analysis.
 
 Advanced users who need more complete access can write their own analysis code
-that links against the HepMC3 library (``libHepMC3``) directly, using
+that links against the HepMC3 library directly, using
 ``HepMC3::GenEvent::read_data()`` to reconstruct full event objects from the
 stored ``GenEventData`` structs. This requires the HepMC3 headers and shared
 library to be available at build time and runtime.
@@ -522,7 +523,8 @@ the ASCII or ROOT format) and writes a flat ROOT ntuple suitable for quick
 analysis. This is a convenience projection of the full HepMC3 event record: it
 removes many details of the event history while exposing the most
 commonly-needed information. The summary ROOT TTree cannot be converted back
-into the full HepMC3 event format.
+into the full HepMC3 event format. However, it can be read and analyzed using a
+plain ROOT setup without any special libraries.
 
 Usage::
 

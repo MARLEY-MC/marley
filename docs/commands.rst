@@ -121,10 +121,8 @@ This is the default command: ``marley CONFIG_FILE`` is equivalent to
 Example
 ~~~~~~~
 
-Run a simulation using the annotated example configuration file after
-sourcing the setup script::
+Run a simulation using the annotated example configuration file::
 
-  source setup_marley.sh
   marley generate examples/config/annotated.js
 
 The output file (``events.hepmc3`` by default) will be created in the working
