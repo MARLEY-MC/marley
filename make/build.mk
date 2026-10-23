@@ -133,8 +133,8 @@ else ifeq ($(UNAME_S),Linux)
   NEW_DTAGS := -Wl,--enable-new-dtags
   RPATH_LIB := -Wl,-rpath,'$$ORIGIN'
   RPATH_EXE = -Wl,-rpath,'$$ORIGIN/../$(libdir_rel)'
-  INSTALL_NAME_FLAG =
-  HEPMC3_INSTALL_NAME_FLAG =
+  INSTALL_NAME_FLAG = -Wl,-soname,$(SHARED_LIB_FILE)
+  HEPMC3_INSTALL_NAME_FLAG = -Wl,-soname,libMARLEYHepMC3.$(SHARED_LIB_SUFFIX)
 else
   $(warning Unrecognized operating system encountered.)
   SHARED_LIB_SUFFIX=so
@@ -142,8 +142,8 @@ else
   NEW_DTAGS := -Wl,--enable-new-dtags
   RPATH_LIB := -Wl,-rpath,'$$ORIGIN'
   RPATH_EXE = -Wl,-rpath,'$$ORIGIN/../$(libdir_rel)'
-  INSTALL_NAME_FLAG =
-  HEPMC3_INSTALL_NAME_FLAG =
+  INSTALL_NAME_FLAG = -Wl,-soname,$(SHARED_LIB_FILE)
+  HEPMC3_INSTALL_NAME_FLAG = -Wl,-soname,libMARLEYHepMC3.$(SHARED_LIB_SUFFIX)
 endif
 
 # EXT_RPATH: the same for dependencies MARLEY does not ship. $ORIGIN locates
