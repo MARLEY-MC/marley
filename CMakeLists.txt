@@ -13,26 +13,33 @@ else()
 endif()
 
 # Always try to get the actual git revision (used for --git-revision)
+set(GIT_REVISION "unknown version")
 find_package(Git QUIET)
 if(Git_FOUND)
+  # The exit code decides, not the output. An unpacked release tarball has no
+  # .git, so rev-parse fails and leaves the output empty; the diff-index check
+  # below then also fails, and appending to an empty revision would record
+  # every tarball build as "-dirty".
   execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_REVISION
+    OUTPUT_VARIABLE GIT_REV_OUTPUT
+    RESULT_VARIABLE GIT_REV_RESULT
     OUTPUT_STRIP_TRAILING_WHITESPACE
     ERROR_QUIET
   )
-  execute_process(
-    COMMAND ${GIT_EXECUTABLE} diff-index --quiet HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    RESULT_VARIABLE GIT_DIRTY
-    ERROR_QUIET
-  )
-  if(NOT GIT_DIRTY EQUAL 0)
-    set(GIT_REVISION "${GIT_REVISION}-dirty")
+  if(GIT_REV_RESULT EQUAL 0 AND GIT_REV_OUTPUT)
+    set(GIT_REVISION "${GIT_REV_OUTPUT}")
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} diff-index --quiet HEAD
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      RESULT_VARIABLE GIT_DIRTY
+      ERROR_QUIET
+    )
+    if(NOT GIT_DIRTY EQUAL 0)
+      set(GIT_REVISION "${GIT_REVISION}-dirty")
+    endif()
   endif()
-else()
-  set(GIT_REVISION "unknown version")
 endif()
 
 set(MARLEY_COMPUTED_GIT_REVISION "${GIT_REVISION}")
@@ -54,7 +61,7 @@ endif()
 # git-hash fallback such as "6b8faa29-dirty" matches its own leading digit
 # and the package declares itself version 6, configuring happily while
 # failing every find_package(MARLEY 2.0) check.
-set(MARLEY_PROJECT_VERSION 2.0.0)
+set(MARLEY_PROJECT_VERSION 2.1.0)
 if(DEFINED MARLEY_COMPUTED_VERSION
     AND MARLEY_COMPUTED_VERSION MATCHES "^v?([0-9]+\\.[0-9]+(\\.[0-9]+)?)$")
   set(MARLEY_PROJECT_VERSION "${CMAKE_MATCH_1}")
