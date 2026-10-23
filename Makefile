@@ -74,9 +74,10 @@ CMAKE_DIR_FLAGS += -DCMAKE_INSTALL_INCLUDEDIR='$(includedir)'
 endif
 
 # Reconfigure only when it would change something. An unconditional 'cmake -S'
-# on every build is slow, but a stale cache must not silently override an
-# explicit command-line prefix.
-ifeq ($(strip $(CMAKE_DIR_FLAGS)),)
+# on every build is slow, but a stale cache must not silently override a value
+# given on the command line. Everything above lands in a CMake cache variable,
+# so this applies to all of it, not only the install directories.
+ifeq ($(strip $(CMAKE_DIR_FLAGS)$(CMAKE_FLAGS)),)
 CMAKE_CONFIGURE = @test -d build/CMakeFiles || cmake -S . -B build $(CMAKE_FLAGS)
 else
 CMAKE_CONFIGURE = cmake -S . -B build $(CMAKE_FLAGS) $(CMAKE_DIR_FLAGS)
