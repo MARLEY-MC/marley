@@ -1,0 +1,124 @@
+name: Release files
+
+# Check the .VERSION and .GIT_REVISION files that a release commit carries.
+# Both are written by src/scripts/make-release-files, which records the commit
+# being released -- the parent of the release commit. A tarball build has no
+# .git and reads these files instead, so a wrong value there is wrong in the
+# provenance of every event file produced from that release.
+#
+# Separate from ci.yml because that workflow does not run on tags, and running
+# its matrix on every tag would be wasteful.
+
+on:
+  push:
+    tags: ['*']
+    branches: ['**']
+
+jobs:
+  # Neither file belongs on a branch. Committing one there is prevented by
+  # make-release-files, which refuses to run unless HEAD is detached; this
+  # reports the mistake if it arrives by some other route.
+  branch:
+    name: Check for release files on a branch
+    if: github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify no release files are present
+        run: |
+          for f in .VERSION .GIT_REVISION; do
+            if [ -e "${f}" ]; then
+              echo "ERROR: ${f} belongs only on a release commit, which is" \
+                "never merged into a branch. Branch ${GITHUB_REF_NAME} has" \
+                "it at the tip." >&2
+              exit 1
+            fi
+          done
+          echo "no release files on ${GITHUB_REF_NAME}"
+
+  tag:
+    name: Check release files
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth 2, not the default 1: HEAD^ does not resolve in a
+      # single-commit checkout.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # Tags that are not releases carry neither file and are left alone.
+      # Carrying one but not the other is the malformed case a human is least
+      # likely to notice, so it fails here rather than being skipped.
+      - name: Classify the tag
+        id: classify
+        run: |
+          have_version=0; [ -f .VERSION ]      && have_version=1
+          have_revision=0; [ -f .GIT_REVISION ] && have_revision=1
+
+          if [ "${have_version}" != "${have_revision}" ]; then
+            echo "ERROR: a release commit carries both .VERSION and" \
+              ".GIT_REVISION; this tag has only one" >&2
+            exit 1
+          fi
+
+          if [ "${have_version}" = 0 ]; then
+            echo "${GITHUB_REF_NAME} is not a release tag; nothing to check"
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify the tag name
+        if: steps.classify.outputs.is_release == 'true'
+        run: |
+          case "${GITHUB_REF_NAME}" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "ERROR: release tag \"${GITHUB_REF_NAME}\" is not of the" \
+                 "form vMAJOR.MINOR.PATCH" >&2; exit 1 ;;
+          esac
+
+      - name: Verify .VERSION against the tag
+        if: steps.classify.outputs.is_release == 'true'
+        run: |
+          recorded="$( cat .VERSION )"
+          expected="${GITHUB_REF_NAME#v}"
+          echo ".VERSION: ${recorded}   tag: ${expected}"
+          [ "${recorded}" = "${expected}" ] || {
+            echo "ERROR: .VERSION does not match the tag" >&2; exit 1; }
+
+      # The release commit sits on top of the commit being released. A
+      # parentless commit would leave .GIT_REVISION naming nothing, so say so
+      # rather than letting HEAD^ fail obscurely.
+      - name: Verify .GIT_REVISION against the released commit
+        if: steps.classify.outputs.is_release == 'true'
+        run: |
+          git rev-parse --verify --quiet HEAD^ > /dev/null || {
+            echo "ERROR: the release commit has no parent, so there is no" \
+              "released commit for .GIT_REVISION to name" >&2; exit 1; }
+
+          # Resolved to full hashes before comparing: git chooses the
+          # abbreviation length from the size of the repository, so a stored
+          # short hash gains characters as the history grows.
+          recorded="$( git rev-parse "$( cat .GIT_REVISION )^{commit}" )" || {
+            echo "ERROR: .GIT_REVISION does not name a commit in this" \
+              "repository" >&2; exit 1; }
+          expected="$( git rev-parse HEAD^ )"
+
+          echo ".GIT_REVISION: ${recorded}"
+          echo "HEAD^:         ${expected}"
+          [ "${recorded}" = "${expected}" ] || {
+            echo "ERROR: .GIT_REVISION is not the commit being released" >&2
+            exit 1; }
+
+      # A release commit that swept up other work would ship content that no
+      # branch contains.
+      - name: Verify the release commit changes nothing else
+        if: steps.classify.outputs.is_release == 'true'
+        run: |
+          changed="$( git diff --name-only HEAD^ HEAD | sort | tr '\n' ' ' )"
+          echo "changed: ${changed}"
+          [ "${changed}" = ".GIT_REVISION .VERSION " ] || {
+            echo "ERROR: a release commit must add only .VERSION and" \
+              ".GIT_REVISION" >&2; exit 1; }

@@ -185,7 +185,12 @@ endif
 # Check if git is available on the system path.
 GIT := $(shell command -v git 2> /dev/null)
 
-ifndef GIT
+# A release tarball carries no .git, so the revision is recorded in a file
+# alongside .VERSION when the release is tagged. See
+# src/scripts/make-release-files.
+ifneq (,$(wildcard $(TOP_DIR)/.GIT_REVISION))
+  GIT_REVISION := $(shell cat $(TOP_DIR)/.GIT_REVISION)
+else ifndef GIT
   GIT_REVISION := $(UNKNOWN_REV)
 else
   # Also check that we're inside of a folder managed by a git repository. If

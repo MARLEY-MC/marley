@@ -254,6 +254,62 @@ MARLEY webpages by running, from the root of the source tree, the command
 When the build completes, an offline copy of the MARLEY website may be viewed
 by opening the file ``build/docs/html/index.html`` in a browser.
 
+Making a release
+----------------
+
+A MARLEY release is a Git tag of the form ``vMAJOR.MINOR.PATCH`` which points
+to a commit that adds two files, ``.VERSION`` and ``.GIT_REVISION``, to the
+source tree. That commit is never merged into ``main``: it exists only to be
+tagged, so neither file appears on a development branch.
+
+The two files exist because the source archives that GitHub builds from a tag
+contain no ``.git`` folder. A build made from one therefore has no way to ask
+Git which version it came from, so the answers are recorded in advance.
+``.VERSION`` holds the version number without a leading ``v``, and
+``.GIT_REVISION`` holds the abbreviated hash of the commit being released,
+which is the parent of the release commit. Both values are reported by
+``marley-config``, stored in the install receipt, and written into the
+provenance of every event file that the release produces.
+
+Begin from a clean, up-to-date checkout of ``main`` from the `official
+repository <https://github.com/MARLEY-MC/marley>`__. A release should only be
+tagged for a commit that has already passed all continuous integration tests on
+GitHub. Detach from the ``main`` branch so that committing does not advance it:
+
+::
+
+  git checkout main && git pull
+  git checkout --detach
+
+The ``make-release-files`` script writes both required files and is intended
+only for MARLEY developer use. Its only command-line argument is the version
+number to be tagged without a leading ``v``. The script refuses to run if the
+working tree is dirty, if either file already exists, or if the tag has been
+used before. It does not commit anything so that its output may be checked
+first:
+
+::
+
+  src/scripts/make-release-files 2.1.0
+
+Once the contents look right, commit the two files, tag the result with an
+annotated tag, and push the tag only. Do not push the release commit to any
+branch:
+
+::
+
+  git add .VERSION .GIT_REVISION
+  git commit -m v2.1.0
+  git tag -a v2.1.0 -m "MARLEY version 2.1.0"
+  git push origin v2.1.0
+  git checkout main
+
+Pushing the tag starts the ``Release files`` workflow in the continuous
+integration system. This workflow confirms that ``.VERSION`` matches the tag
+name, that ``.GIT_REVISION`` names the parent of the release commit, and that
+the release commit changes nothing else. A tag carrying neither file is taken
+to be something other than a release and is left alone.
+
 Development wish list
 ---------------------
 
@@ -300,5 +356,4 @@ Documentation and testing
 
 * Full Doxygen documentation coverage
 
-* A full suite of unit tests incorporated into the continuous integration
-  system
+* Expansion of the unit test suite run during continuous integration

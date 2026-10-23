@@ -1,0 +1,99 @@
+#!/bin/bash
+#
+# Write the .VERSION and .GIT_REVISION files that a tagged release carries.
+#
+# Usage: make-release-files VERSION
+#
+# This script is not installed and is not part of any build. It is run once by
+# a developer preparing a release, from the root of the MARLEY source tree.
+#
+# Neither file is tracked on a development branch: both exist only in the
+# commit that a release tag points at. The revision recorded is the commit
+# being released, which is the parent of that release commit, so after
+# committing the invariant is
+#
+#   .GIT_REVISION == git rev-parse --short HEAD^
+#
+# A release tarball carries no .git directory, so without these files a build
+# from one cannot report either value.
+#
+# The files are written but not committed, leaving them to be inspected first.
+
+set -u
+
+die() { printf 'make-release-files: %s\n' "$*" >&2; exit 1; }
+
+usage() {
+  cat <<'EOF'
+Usage: make-release-files VERSION
+
+  VERSION   Release version as major.minor.patch, with no leading "v"
+            (e.g. 2.1.0)
+
+Writes .VERSION and .GIT_REVISION in the current directory, which must be the
+root of a clean MARLEY source tree.
+EOF
+}
+
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+esac
+
+[ $# -eq 1 ] || { usage >&2; exit 1; }
+version="$1"
+
+# A leading "v" belongs on the tag, not in the file: CMakeLists.txt adds the
+# prefix itself when it finds .VERSION, and build.mk does the same.
+case "$version" in
+  v*) die "give the version as ${version#v}, without the leading \"v\"" ;;
+esac
+
+[[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+  || die "\"$version\" is not of the form major.minor.patch"
+
+command -v git > /dev/null 2>&1 || die "git is not on PATH"
+git rev-parse --is-inside-work-tree > /dev/null 2>&1 \
+  || die "not inside a git repository"
+
+[ -f CMakeLists.txt ] && [ -d src/scripts ] \
+  || die "run this from the root of the MARLEY source tree"
+
+# Committing while a branch is checked out would advance that branch, leaving
+# the release commit on it. Neither file belongs on a development branch, so
+# refuse rather than relying on the caller having detached already.
+if branch="$( git symbolic-ref --short -q HEAD )"; then
+  die "HEAD is on branch \"${branch}\": committing would advance it." \
+    "Run \"git checkout --detach\" first"
+fi
+
+# The recorded revision has to describe the tree being released, so refuse to
+# record one that does not.
+[ -z "$( git status --porcelain )" ] \
+  || die "the working tree has uncommitted changes; commit or stash them first"
+
+for f in .VERSION .GIT_REVISION; do
+  [ -e "$f" ] && die "$f already exists; remove it to start over"
+done
+
+if git rev-parse -q --verify "refs/tags/v${version}" > /dev/null; then
+  die "tag v${version} already exists"
+fi
+
+revision="$( git rev-parse --short HEAD )" \
+  || die "could not read the current revision"
+
+printf '%s\n' "$version" > .VERSION
+printf '%s\n' "$revision" > .GIT_REVISION
+
+cat <<EOF
+Wrote .VERSION       ${version}
+      .GIT_REVISION  ${revision}
+
+Review them, then:
+
+  git add .VERSION .GIT_REVISION
+  git commit -m v${version}
+  git tag -a v${version} -m "MARLEY version ${version}"
+  git push origin v${version}
+  git checkout main
+EOF

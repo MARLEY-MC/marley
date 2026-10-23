@@ -12,32 +12,38 @@ else()
   set(VERSION_PREFIX "")
 endif()
 
-# Always try to get the actual git revision (used for --git-revision)
+# A release tarball carries no .git, so the revision is recorded in a file
+# alongside .VERSION when the release is tagged. See
+# src/scripts/make-release-files.
 set(GIT_REVISION "unknown version")
-find_package(Git QUIET)
-if(Git_FOUND)
-  # The exit code decides, not the output. An unpacked release tarball has no
-  # .git, so rev-parse fails and leaves the output empty; the diff-index check
-  # below then also fails, and appending to an empty revision would record
-  # every tarball build as "-dirty".
-  execute_process(
-    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_REV_OUTPUT
-    RESULT_VARIABLE GIT_REV_RESULT
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
-  )
-  if(GIT_REV_RESULT EQUAL 0 AND GIT_REV_OUTPUT)
-    set(GIT_REVISION "${GIT_REV_OUTPUT}")
+if(EXISTS "${CMAKE_SOURCE_DIR}/.GIT_REVISION")
+  file(STRINGS "${CMAKE_SOURCE_DIR}/.GIT_REVISION" GIT_REVISION)
+else()
+  find_package(Git QUIET)
+  if(Git_FOUND)
+    # The exit code decides, not the output. A source tree with no .git fails
+    # rev-parse and leaves the output empty; the diff-index check below then
+    # also fails, and appending to an empty revision would record the build
+    # as "-dirty".
     execute_process(
-      COMMAND ${GIT_EXECUTABLE} diff-index --quiet HEAD
+      COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
       WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-      RESULT_VARIABLE GIT_DIRTY
+      OUTPUT_VARIABLE GIT_REV_OUTPUT
+      RESULT_VARIABLE GIT_REV_RESULT
+      OUTPUT_STRIP_TRAILING_WHITESPACE
       ERROR_QUIET
     )
-    if(NOT GIT_DIRTY EQUAL 0)
-      set(GIT_REVISION "${GIT_REVISION}-dirty")
+    if(GIT_REV_RESULT EQUAL 0 AND GIT_REV_OUTPUT)
+      set(GIT_REVISION "${GIT_REV_OUTPUT}")
+      execute_process(
+        COMMAND ${GIT_EXECUTABLE} diff-index --quiet HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        RESULT_VARIABLE GIT_DIRTY
+        ERROR_QUIET
+      )
+      if(NOT GIT_DIRTY EQUAL 0)
+        set(GIT_REVISION "${GIT_REVISION}-dirty")
+      endif()
     endif()
   endif()
 endif()
