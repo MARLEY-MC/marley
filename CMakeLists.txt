@@ -1075,18 +1075,32 @@ string(CONCAT MARLEY_CONFIG_HEADER
   "ext_gsl_libs='${MARLEY_EXT_GSL_LIBS_STR}'\n"
   "new_dtags='${MARLEY_NEW_DTAGS}'\n"
   "libdir_rel='${MARLEY_LIBDIR_REL}'\n"
-  "bindir_rel='${MARLEY_BINDIR_REL}'\n"
-  "includedir_rel='${MARLEY_INCLUDEDIR_REL}'\n"
 )
 
 file(READ ${MARLEY_CONFIG_BODY} MARLEY_CONFIG_BODY_CONTENT)
-file(WRITE ${MARLEY_CONFIG_OUTPUT}
-  "${MARLEY_CONFIG_HEADER}${MARLEY_CONFIG_BODY_CONTENT}")
-file(CHMOD ${MARLEY_CONFIG_OUTPUT}
-  PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
-              GROUP_READ GROUP_EXECUTE
-              WORLD_READ WORLD_EXECUTE
-)
+
+# Generated twice, like setup_marley.sh and mroot: bin, include and the
+# vendored HepMC3 root sit at different places before and after installation.
+function(marley_generate_config out_path bin_rel include_rel builtin_rel)
+  file(WRITE "${out_path}"
+    "${MARLEY_CONFIG_HEADER}"
+    "bindir_rel='${bin_rel}'\n"
+    "includedir_rel='${include_rel}'\n"
+    "builtin_rel='${builtin_rel}'\n"
+    "${MARLEY_CONFIG_BODY_CONTENT}")
+  file(CHMOD "${out_path}"
+    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                GROUP_READ GROUP_EXECUTE
+                WORLD_READ WORLD_EXECUTE
+  )
+endfunction()
+
+marley_generate_config("${MARLEY_CONFIG_OUTPUT}"
+  "${MARLEY_BUILD_BIN_REL}" "${MARLEY_BUILD_INCLUDE_REL}"
+  "${MARLEY_BUILD_BUILTIN_REL}")
+marley_generate_config("${MARLEY_INSTALL_SCRIPT_DIR}/marley-config"
+  "${MARLEY_BINDIR_REL}" "${MARLEY_INCLUDEDIR_REL}"
+  "${MARLEY_INSTALL_BUILTIN_REL}")
 
 # marley.pc carries the same flags as marley-config, minus the rpath. The
 # conditional fields are whole-string substitution keys rather than bracket
@@ -1112,7 +1126,7 @@ if(USE_ROOT)
   string(APPEND pc_libs_extra " ${_pc_root_libs}")
 endif()
 if(USE_BUILTIN_HEPMC3)
-  string(PREPEND pc_cflags_extra " -I\${includedir}/marley/builtin")
+  # The -I for the vendored headers is added per tree: they move on install.
   string(PREPEND pc_libs_extra " -lMARLEYHepMC3")
 else()
   string(PREPEND pc_cflags_extra " ${MARLEY_EXT_HEPMC3_CFLAGS_STR}")
@@ -1121,15 +1135,27 @@ endif()
 string(STRIP "${pc_cflags_extra}" pc_cflags_extra)
 string(STRIP "${pc_libs_extra}" pc_libs_extra)
 
-set(libdir_rel     "${MARLEY_LIBDIR_REL}")
-set(includedir_rel "${MARLEY_INCLUDEDIR_REL}")
-set(version        "${MARLEY_COMPUTED_VERSION}")
-set(cxx_std        "${MARLEY_CXX_STD}")
-configure_file(
-  ${CMAKE_SOURCE_DIR}/src/scripts/marley.pc.in
-  ${MARLEY_BUILD_LIBDIR}/pkgconfig/marley.pc
-  @ONLY
-)
+set(libdir_rel "${MARLEY_LIBDIR_REL}")
+set(version    "${MARLEY_COMPUTED_VERSION}")
+set(cxx_std    "${MARLEY_CXX_STD}")
+
+function(marley_generate_pc out_path include_rel builtin_rel)
+  set(includedir_rel "${include_rel}")
+  if(builtin_rel)
+    set(pc_cflags_extra "-I\${prefix}/${builtin_rel} ${pc_cflags_extra}")
+    string(STRIP "${pc_cflags_extra}" pc_cflags_extra)
+  endif()
+  configure_file(
+    ${CMAKE_SOURCE_DIR}/src/scripts/marley.pc.in
+    "${out_path}"
+    @ONLY
+  )
+endfunction()
+
+marley_generate_pc("${MARLEY_BUILD_LIBDIR}/pkgconfig/marley.pc"
+  "${MARLEY_BUILD_INCLUDE_REL}" "${MARLEY_BUILD_BUILTIN_REL}")
+marley_generate_pc("${MARLEY_INSTALL_SCRIPT_DIR}/marley.pc"
+  "${MARLEY_INCLUDEDIR_REL}" "${MARLEY_INSTALL_BUILTIN_REL}")
 
 # ------------------------------------------------------------------------------
 # Optional examples (requires Geant4)
@@ -1234,13 +1260,14 @@ if(USE_BUILTIN_HEPMC3)
   )
 endif()
 
-install(PROGRAMS ${MARLEY_CONFIG_OUTPUT}
+# From the staging directory: the build-tree copies describe the build tree.
+install(PROGRAMS ${MARLEY_INSTALL_SCRIPT_DIR}/marley-config
   DESTINATION ${MARLEY_BINDIR_REL}
 )
 # pkgconfig follows libdir, so a lib64 build gets lib64/pkgconfig. The file's
 # own ${pcfiledir}/../.. still reaches the prefix, because the library
 # directory is one segment by construction.
-install(FILES ${MARLEY_BUILD_LIBDIR}/pkgconfig/marley.pc
+install(FILES ${MARLEY_INSTALL_SCRIPT_DIR}/marley.pc
   DESTINATION ${MARLEY_LIBDIR_REL}/pkgconfig
 )
 # Only MARLEY's own headers. Sweeping include/ for "*.hh" would also install

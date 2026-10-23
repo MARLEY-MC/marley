@@ -698,6 +698,22 @@ jobs:
             exit 1
           fi
 
+      # The checks above grep the flags; these compile with them.
+      #
+      # efr.cc includes HepMC3/GenEvent.h and marley/EventFileReader.hh,
+      # covering the HepMC3 include root and the -DUSE_ROOT layout.
+      # mass_40Ar.cc needs neither but runs, exercising the recorded rpath
+      # and the library locating its own data.
+      - name: Compile and run examples against the published flags
+        if: steps.eligibility.outputs.skip != 'true'
+        run: |
+          flags=$(./build/bin/marley-config --cflags --libs)
+          echo "flags: ${flags}"
+          ${{ matrix.cxx }} -o /tmp/efr examples/executables/efr.cc ${flags}
+          ${{ matrix.cxx }} -o /tmp/mass_40Ar \
+            examples/executables/mass_40Ar.cc ${flags}
+          /tmp/mass_40Ar
+
       - name: Verify ROOT was linked
         if: >-
           steps.eligibility.outputs.skip != 'true' &&
