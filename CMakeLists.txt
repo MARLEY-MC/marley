@@ -637,6 +637,12 @@ endif()
 
 if(USE_ROOT)
   prefer_imported_or_flags(marley_lib PUBLIC "ROOT::Core;ROOT::RIO;ROOT::Hist;ROOT::Tree" ROOT_CFLAGS ROOT_LIBS)
+
+  # USE_ROOT guards data members in marley/EventFileReader.hh, so a consumer
+  # that compiles without it disagrees with the library about the size of the
+  # class. INTERFACE rather than PUBLIC because add_compile_definitions()
+  # above already covers MARLEY's own sources.
+  target_compile_definitions(marley_lib INTERFACE USE_ROOT)
 endif()
 
 set_target_properties(marley_lib PROPERTIES
