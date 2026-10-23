@@ -821,6 +821,8 @@ endif
 	@mkdir -p $(DESTDIR)$(datadir)/marley
 	{ \
 	  printf '%s\n' "marley-install-receipt: 1"; \
+	  printf '%s\n' "# To remove this installation, run \"make uninstall prefix=$(prefix)\""; \
+	  printf '%s\n' "# from a MARLEY source tree, or delete the files and directories listed below."; \
 	  printf '%s\n' "version: $(MARLEY_VERSION)"; \
 	  printf '%s\n' "git-revision: $(GIT_REVISION)"; \
 	  printf '%s\n' "prefix: $(prefix)"; \

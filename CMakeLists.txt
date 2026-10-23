@@ -1409,6 +1409,8 @@ string(JOIN "\n       " _receipt_files ${MARLEY_RECEIPT_FILES})
 
 file(WRITE "${CMAKE_BINARY_DIR}/install-receipt"
 "marley-install-receipt: 1
+# To remove this installation, run \"make uninstall prefix=${CMAKE_INSTALL_PREFIX}\"
+# from a MARLEY source tree, or delete the files and directories listed below.
 version: ${MARLEY_COMPUTED_VERSION}
 git-revision: ${MARLEY_COMPUTED_GIT_REVISION}
 prefix: ${CMAKE_INSTALL_PREFIX}
