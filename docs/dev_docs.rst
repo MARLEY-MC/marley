@@ -201,7 +201,7 @@ in which Doxygen is installed. To create the HTML files, simply execute
 
    make doxygen
 
-from within the ``build/`` folder. After Doxygen executes, open the file
+from the root of the source tree. After Doxygen executes, open the file
 ``build/docs/doxygen/html/index.html`` in a browser to view the local copy of
 the API documentation website.
 
@@ -245,7 +245,7 @@ The build-time rendering of LaTeX math by ``sphinxcontrib-katex`` requires
 the `KaTeX <https://katex.org/>`__ npm package (``katex``).
 
 After these components (and Doxygen) have been installed, one may build the
-MARLEY webpages by navigating to the ``build/`` folder and using the command
+MARLEY webpages by running, from the root of the source tree, the command
 
 ::
 

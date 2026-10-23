@@ -466,7 +466,9 @@ extensions = [ 'sphinxcontrib.bibtex', 'sphinxcontrib.newsfeed',
 # runtime)
 katex_prerender = True
 source_suffix = '.rst'
-version = '2.0.0'
+# Both build systems export MARLEY_VERSION for the docs build, as
+# doxygen/Doxyfile already uses. The literal is for a bare sphinx-build.
+version = os.environ.get('MARLEY_VERSION', '2.1.0').lstrip('v')
 exclude_patterns = ['_build']
 
 highlight_language = 'none'
