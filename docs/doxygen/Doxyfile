@@ -1091,7 +1091,8 @@ RECURSIVE              = YES
 
 EXCLUDE                = ../../include/catch2 \
                          ../../include/marley/tests \
-                         ../../src/tests
+                         ../../src/tests \
+                         ../../include/builtin
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -1107,7 +1108,9 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS       = */marley_gsl.cc \
+                         */marley_hepmc3.cc \
+                         */fftpack4.cc
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
