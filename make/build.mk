@@ -632,8 +632,9 @@ $(INSTALL_SCRIPT_DIR)/setup_marley.sh: $(SRC_DIR)/scripts/setup_marley.sh.in
 # Note what is not here: no MARLEY-owned path. Those are computed by the body
 # from the script's own location, so this rule cannot bake in a build-tree -L
 # or a source-tree -I.
-$(BUILD_DIR)/bin/marley-config: $(SRC_DIR)/scripts/marley-config-body.sh $(MARLEY_LIBS)
-	@mkdir -p $(BUILD_DIR)/bin
+# $(1) bin_rel  $(2) include_rel  $(3) builtin_rel
+define gen_marley_config
+	@mkdir -p $(dir $@)
 	printf '%s\n' \
 	  '#!/bin/bash' \
 	  '# Generated at build time by make/build.mk -- do not edit.' \
@@ -653,11 +654,19 @@ $(BUILD_DIR)/bin/marley-config: $(SRC_DIR)/scripts/marley-config-body.sh $(MARLE
 	  "ext_gsl_libs='$(if $(FOUND_GSL),$(GSL_LDFLAGS))'" \
 	  "new_dtags='$(NEW_DTAGS)'" \
 	  "libdir_rel='$(libdir_rel)'" \
-	  "bindir_rel='$(bindir_rel)'" \
-	  "includedir_rel='$(includedir_rel)'" \
+	  "bindir_rel='$(1)'" \
+	  "includedir_rel='$(2)'" \
+	  "builtin_rel='$(3)'" \
 	  > $@
 	cat $(SRC_DIR)/scripts/marley-config-body.sh >> $@
 	chmod +x $@
+endef
+
+$(BUILD_DIR)/bin/marley-config: $(SRC_DIR)/scripts/marley-config-body.sh $(MARLEY_LIBS)
+	$(call gen_marley_config,$(BUILD_BIN_REL),$(BUILD_INCLUDE_REL),$(BUILD_BUILTIN_REL))
+
+$(INSTALL_SCRIPT_DIR)/marley-config: $(SRC_DIR)/scripts/marley-config-body.sh $(MARLEY_LIBS)
+	$(call gen_marley_config,$(bindir_rel),$(includedir_rel),$(INSTALL_BUILTIN_REL))
 
 # marley.pc self-locates from ${pcfiledir}, so like marley-config it needs
 # only the relative directory names. The conditional fields are whole-string
@@ -671,24 +680,39 @@ $(BUILD_DIR)/bin/marley-config: $(SRC_DIR)/scripts/marley-config-body.sh $(MARLE
 # -DUSE_ROOT is not separable from ROOT's include path: EventFileReader.hh
 # includes TFile.h and TTree.h under that macro, so publishing the macro
 # without the -I hands the consumer a public header that cannot be parsed.
+# The -I for a vendored HepMC3 is added per tree: those headers move on
+# install.
 PC_CFLAGS_EXTRA := $(strip \
   $(if $(filter yes,$(USE_ROOT)),-DUSE_ROOT $(ROOT_PUBLIC_CFLAGS)) \
-  $(if $(FOUND_HEPMC3),$(HEPMC3_PUBLIC_CFLAGS),-I$${includedir}/marley/builtin))
+  $(if $(FOUND_HEPMC3),$(HEPMC3_PUBLIC_CFLAGS)))
 PC_LIBS_EXTRA := $(strip \
   $(if $(FOUND_HEPMC3),$(HEPMC3_PUBLIC_LIBS),-lMARLEYHepMC3) \
   $(if $(filter yes,$(USE_ROOT)),$(ROOT_PC_LIBS)))
 
+PC_CFLAGS_BUILD := $(strip $(PC_CFLAGS_EXTRA) \
+  $(if $(FOUND_HEPMC3),,-I$${prefix}/$(BUILD_BUILTIN_REL)))
+PC_CFLAGS_INSTALL := $(strip $(PC_CFLAGS_EXTRA) \
+  $(if $(FOUND_HEPMC3),,-I$${prefix}/$(INSTALL_BUILTIN_REL)))
+
+# $(1) include_rel  $(2) cflags_extra
+define gen_marley_pc
+	@mkdir -p $(dir $@)
+	sed -e 's|@libdir_rel@|$(libdir_rel)|g' \
+	  -e 's|@includedir_rel@|$(1)|g' \
+	  -e 's|@version@|$(MARLEY_VERSION)|g' \
+	  -e 's|@cxx_std@|$(CXX_STD)|g' \
+	  -e 's|@pc_cflags_extra@|$(2)|g' \
+	  -e 's|@pc_libs_extra@|$(PC_LIBS_EXTRA)|g' \
+	  $< > $@
+endef
+
 marley-pc: $(BUILD_LIBDIR)/pkgconfig/marley.pc
 
 $(BUILD_LIBDIR)/pkgconfig/marley.pc: $(SRC_DIR)/scripts/marley.pc.in $(MARLEY_LIBS)
-	@mkdir -p $(dir $@)
-	sed -e 's|@libdir_rel@|$(libdir_rel)|g' \
-	  -e 's|@includedir_rel@|$(includedir_rel)|g' \
-	  -e 's|@version@|$(MARLEY_VERSION)|g' \
-	  -e 's|@cxx_std@|$(CXX_STD)|g' \
-	  -e 's|@pc_cflags_extra@|$(PC_CFLAGS_EXTRA)|g' \
-	  -e 's|@pc_libs_extra@|$(PC_LIBS_EXTRA)|g' \
-	  $< > $@
+	$(call gen_marley_pc,$(BUILD_INCLUDE_REL),$(PC_CFLAGS_BUILD))
+
+$(INSTALL_SCRIPT_DIR)/marley.pc: $(SRC_DIR)/scripts/marley.pc.in $(MARLEY_LIBS)
+	$(call gen_marley_pc,$(includedir_rel),$(PC_CFLAGS_INSTALL))
 
 $(BUILD_DIR)/bin/marley: $(MARLEY_LIBS) marley.o $(BUILD_DIR)/bin/marley-config $(if $(filter yes,$(USE_ROOT)),$(BUILD_DIR)/bin/mroot)
 	@mkdir -p $(BUILD_DIR)/bin
@@ -736,6 +760,8 @@ clean:
 	$(RM) -rf $(BUILD_DIR)
 
 install: marley marley-config marley-pc \
+  $(INSTALL_SCRIPT_DIR)/marley-config \
+  $(INSTALL_SCRIPT_DIR)/marley.pc \
   $(INSTALL_SCRIPT_DIR)/setup_marley.sh \
   $(if $(filter yes,$(USE_ROOT)),$(INSTALL_SCRIPT_DIR)/mroot)
 	mkdir -p $(DESTDIR)$(bindir)
@@ -743,9 +769,9 @@ install: marley marley-config marley-pc \
 	mkdir -p $(DESTDIR)$(includedir)/marley
 	mkdir -p $(DESTDIR)$(datadir)/marley
 	cp $(BUILD_DIR)/bin/marley $(DESTDIR)$(bindir)
-	cp $(BUILD_DIR)/bin/marley-config $(DESTDIR)$(bindir)
 	# From the staging directory, not build/bin: the two copies share a
 	# basename and differ in the hops they take.
+	cp $(INSTALL_SCRIPT_DIR)/marley-config $(DESTDIR)$(bindir)
 	if [ "$(USE_ROOT)" = "yes" ]; then \
 	  cp $(INSTALL_SCRIPT_DIR)/mroot $(DESTDIR)$(bindir); fi
 	cp $(INSTALL_SCRIPT_DIR)/setup_marley.sh $(DESTDIR)$(bindir)
@@ -756,7 +782,7 @@ install: marley marley-config marley-pc \
 	# the file's own ${pcfiledir}/../.. still lands on the prefix because
 	# libdir_rel is one segment by construction.
 	mkdir -p $(DESTDIR)$(libdir)/pkgconfig
-	cp $(BUILD_LIBDIR)/pkgconfig/marley.pc $(DESTDIR)$(libdir)/pkgconfig
+	cp $(INSTALL_SCRIPT_DIR)/marley.pc $(DESTDIR)$(libdir)/pkgconfig
 	cp -r $(TOP_DIR)/data $(DESTDIR)$(datadir)/marley
 	# data/tests/ is used only by martest, which runs from the build tree
 	rm -rf $(DESTDIR)$(datadir)/marley/data/tests

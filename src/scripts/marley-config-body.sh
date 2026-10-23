@@ -29,10 +29,12 @@ includedir="${prefix}/${includedir_rel}"
 
 cflags="-I${includedir} -std=${cxx_std}"
 
-# Vendored HepMC3 headers sit under the MARLEY include root, so this -I is
-# derived here. An external one is known only to the build system.
+# A vendored HepMC3 moves on install: include/builtin before,
+# include/marley/builtin after, so the generated header names the right one.
+# An external HepMC3 is known only to the build system.
 if [ "$hepmc3_mode" = "builtin" ]; then
-  cflags="${cflags} -I${includedir}/marley/builtin"
+  : "${builtin_rel:?marley-config: generated header missing or incomplete}"
+  cflags="${cflags} -I${prefix}/${builtin_rel}"
 else
   cflags="${cflags} ${ext_hepmc3_cflags}"
 fi
