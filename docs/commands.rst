@@ -148,6 +148,59 @@ Show detailed help for the ``generate`` command::
 
   marley help generate
 
+----
+info
+----
+
+Usage::
+
+  marley info [--resolve [--subdir DIR] NAME]
+
+Report where this copy of MARLEY will look for its data files. With no
+arguments, the command prints the location of the MARLEY shared library that
+the executable loaded, the data roots derived from it or supplied via the
+``MARLEY_SEARCH_PATH`` environment variable, and the current working
+directory.
+
+Options:
+
+``--resolve NAME``
+  Show every candidate path that MARLEY would try while searching for
+  ``NAME``, marking the one that would be used. The data roots are printed
+  first, since the list of candidates is difficult to interpret without them.
+
+``--subdir DIR``
+  Look for ``NAME`` inside the subfolder ``DIR`` of each data root, in the
+  same way that the code loading the file would. Reaction input files use
+  ``react``, nuclear structure data files use ``structure``, and optical
+  model parameter files use ``optical``. The default is to use no subfolder.
+
+``-h, --help``
+  Print a summary of the options above.
+
+When ``--resolve`` is given, the status code returned when the program exits is
+used to report whether the search succeeded: zero if ``NAME`` was found and one
+if it was not. A name that could not be resolved, but which matches a file
+stored somewhere within one of the data roots, is reported together with a
+suggested replacement.
+
+Examples
+~~~~~~~~
+
+Show where MARLEY will look for its data files::
+
+  $ marley info
+  Library:           /opt/marley/lib/libMARLEY.so
+  Working directory: /home/user/work
+
+  Data roots, in search order:
+    /opt/marley/share/marley/data   (located from libMARLEY)
+    /home/user/work   (working directory, tried last)
+
+Check which file a reaction name resolves to::
+
+  marley info --resolve --subdir react ve40ArCC_HF-CRPA.react
+
 -----
 print
 -----
