@@ -32,23 +32,6 @@ namespace {
 
   namespace fs = std::filesystem;
 
-  void print_info_help() {
-    std::cout << "Usage: marley info [--resolve [--subdir DIR] NAME]\n\n"
-      << "Report where this MARLEY executable looks for its data files.\n\n"
-      << "With no arguments, print the located library, the data roots in\n"
-      << "search order, and the working directory.\n\n"
-      << "  --resolve NAME   Show every path MARLEY would try for NAME, and\n"
-      << "                   which one it would use\n"
-      << "  --subdir DIR     The category directory to resolve NAME under,\n"
-      << "                   as the calling code would pass it (e.g. react,\n"
-      << "                   structure, config, optical). Defaults to\n"
-      << "                   none, which is rarely what a real caller does\n\n"
-      << "Options:\n"
-      << "  -h, --help       Print this message\n\n"
-      << "The exit code indicates whether resolution succeeds:\n"
-      << "  --resolve returns 0 if the NAME was found and 1 otherwise.\n";
-  }
-
   /// @brief Print the roots, or say plainly that there are none
   void print_roots( const marley::FileManager& fm ) {
     const auto& roots = fm.roots();
@@ -152,8 +135,9 @@ bool marley::CommandHandler::cmd_info( std::deque< std::string >& args ) {
     args.pop_front();
 
     if ( arg == "-h" || arg == "--help" ) {
-      print_info_help();
-      return true;
+      args.clear();
+      args.push_front( "info" );
+      return marley::CommandHandler::cmd_help( args );
     }
     else if ( arg == "--resolve" ) {
       want_resolve = true;
