@@ -8,6 +8,7 @@ Overview
     copyright
     citing
     getting_started
+    install
     interpret_output
     commands
     Bibliography <pubs>
