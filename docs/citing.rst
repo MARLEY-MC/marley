@@ -11,7 +11,7 @@ Citing MARLEY
 
 In publications which use the recommended physics configuration for
 charged-current :math:`\nu_e\text{-}^{40}\mathrm{Ar}` scattering (see the
-REACTION INPUT FILES section of examples/config/annotated.js), please also cite
+REACTION INPUT FILE(S) section of examples/config/annotated.js), please also cite
 the paper describing the MARLEY v2 model of this reaction:
 
 S. Gardiner *et al.*, Continuum contribution to charged-current absorption of

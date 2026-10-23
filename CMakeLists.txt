@@ -1433,7 +1433,7 @@ install(FILES "${CMAKE_BINARY_DIR}/install-receipt"
 # 'make test' (via the custom target below) builds martest without running it,
 # mirroring the GNU Make path in make/build.mk where 'test' depends only on
 # the test executable.  Run the tests manually with:
-#   MARLEY=<source_root> ./build/bin/martest
+#   ./build/bin/martest
 # ------------------------------------------------------------------------------
 file(GLOB MARLEY_TEST_SOURCES
   "${CMAKE_SOURCE_DIR}/src/tests/*.cc"

@@ -1,5 +1,6 @@
 Sphinx>=4.0
 guzzle_sphinx_theme>=0.7.8,<0.8.0
 sphinxcontrib-bibtex>=2.2.0
+sphinxcontrib-newsfeed
 sphinxcontrib-katex>=0.9.0
 sphinx-math-dollar>=1.2

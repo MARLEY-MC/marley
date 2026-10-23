@@ -1,6 +1,6 @@
 // Example MARLEY job configuration file
 // Steven Gardiner <gardiner@fnal.gov>
-// Revised 17 July 2026 for MARLEY 2.0.0
+// Revised 17 July 2026 for MARLEY 2.1.0
 //
 // INTRODUCTION
 //
@@ -345,7 +345,7 @@
   // "AA", or "aa" to use the allowed approximation (trivial form factors for
   // all three categories). Using the "AA" configuration together with one of
   // the charged-current vₑ-⁴⁰Ar reaction input files in data/react/v1/ (see
-  // REACTION INPUT FILES section above) will reproduce the predictions of the
+  // REACTION INPUT FILE(S) section above) will reproduce the predictions of the
   // MARLEY v1.2.0 physics model (https://doi.org/10.1103/PhysRevC.103.044604).
 
   // NEUTRINO SOURCE SPECIFICATION (required)

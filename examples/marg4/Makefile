@@ -33,7 +33,7 @@ else
 endif
 
 CXX = g++
-CXXFLAGS += -Wall -Wextra -Wpedantic -Wcast-align
+override CXXFLAGS += -Wall -Wextra -Wpedantic -Wcast-align
 
 all: $(BINDIR)/marg4
 debug: $(BINDIR)/marg4

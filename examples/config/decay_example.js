@@ -1,6 +1,6 @@
 // Example MARLEY job configuration file for the "marley decay" command
 // Steven Gardiner <gardiner@fnal.gov>
-// Revised 22 July 2026 for MARLEY 2.0.0
+// Revised 22 July 2026 for MARLEY 2.1.0
 //
 // INTRODUCTION
 //

@@ -304,7 +304,7 @@ Usage::
 
   marley summarize -o OUTPUT_FILE INPUT_FILE...
 
-Convert one or more MARLEY event files into a `ROOT <https:://root.cern>`__
+Convert one or more MARLEY event files into a `ROOT <https://root.cern>`__
 summary ntuple file. This summary file provides a convenient representation of
 the events for subsequent analysis with ROOT using either C++ or `Python
 <https://root.cern/manual/python/>`__. The summary ntuple file format is
@@ -339,7 +339,7 @@ Print version information for the current build of MARLEY. Equivalent to
 Example::
 
   $ marley version
-  MARLEY (Model of Argon Reaction Low Energy Yields) 2.0.0
+  MARLEY (Model of Argon Reaction Low Energy Yields) 2.1.0
   Copyright (C) 2016-2026 Steven Gardiner
   License: GNU GPL version 3 <http://opensource.org/licenses/GPL-3.0>
   This is free software: you are free to change and redistribute it.
