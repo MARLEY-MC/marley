@@ -129,10 +129,11 @@ set(MARLEY_BUILD_LIBDIR "${CMAKE_BINARY_DIR}/${MARLEY_LIBDIR_REL}")
 # every external directory. See the external-RUNPATH block after the marley
 # target.
 #
-# Guarded rather than set outright: a plain set() of a name the user may pass
-# with -D would silently override them. Packagers are the case that matters,
-# since Debian forbids rpath into system directories and Spack, Nix and
-# Homebrew rewrite rpath themselves.
+# Guarded rather than set outright so that a packager can switch the automatic
+# directories off with -D.
+#
+# CMAKE_INSTALL_RPATH is not deferred to in the same way: the targets below
+# set INSTALL_RPATH outright, which replaces whatever that variable holds.
 if(NOT DEFINED CMAKE_INSTALL_RPATH_USE_LINK_PATH)
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
