@@ -576,6 +576,14 @@ endif()
 
 set(CMAKE_CXX_STANDARD ${MARLEY_CXX_STANDARD})
 
+# ROOT's -std is already folded into the value above and must not also reach
+# the compiler: CMake emits the standard flag before a target's compile
+# options, so a raw -std= would come last and win. Filtering whole elements
+# takes the value with the flag, and -stdlib=libc++ does not match.
+if(DEFINED ROOT_CFLAGS)
+  list(FILTER ROOT_CFLAGS EXCLUDE REGEX "^-std=")
+endif()
+
 # ------------------------------------------------------------------------------
 # Main MARLEY library
 # ------------------------------------------------------------------------------
