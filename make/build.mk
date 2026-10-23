@@ -263,7 +263,7 @@ ifneq ($(MAKECMDGOALS),uninstall)
     # The ROOT headers trigger clang's no-keyword-macro warning, so
     # disable it. Also disable (for now) warnings for braces around
     # initialization of subobjects (overkill in the meta_numerics header)
-    CXXFLAGS += -Wno-keyword-macro -Wno-missing-braces
+    override CXXFLAGS += -Wno-keyword-macro -Wno-missing-braces
   else
     ifneq (,$(or $(findstring GCC,$(CXXVERSION)), $(findstring g++,$(CXXVERSION))))
       # gcc
@@ -307,7 +307,11 @@ ifneq ($(MAKECMDGOALS),uninstall)
 
     # Keep built-in GSL symbols hidden to avoid clashes with any system GSL
     # loaded by other libraries in the host environment.
-    marley_gsl.o: CXXFLAGS += -fvisibility=hidden
+    #
+    # The override is redundant, since a target-specific append is not
+    # suppressed by the global override flag on CXXFLAGS. It is here because
+    # its absence reads as the defect that a plain global append would be.
+    marley_gsl.o: override CXXFLAGS += -fvisibility=hidden
 
     # The MARLEY shared library doesn't expose the built-in GSL symbols, so
     # we will need to link them into the test executable directly. In order
