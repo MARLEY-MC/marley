@@ -7,6 +7,8 @@
 #   make IGNORE_ROOT=1     — pass through to either build system
 #   make IGNORE_HEPMC3=1   — pass through to either build system
 #   make IGNORE_GSL=1      — use built-in GSL subset (pass through to either build system)
+#   make ROOT_FIND_MODE=M  — require one discovery route: auto, cmake or config.
+#                            Also HEPMC3_FIND_MODE and GSL_FIND_MODE. CMake only.
 #   make debug             — debug build
 #   make clean             — remove build/ entirely
 #   make install           — install under $(prefix) (default /usr/local)
@@ -33,6 +35,19 @@ CMAKE_FLAGS += -DIGNORE_HEPMC3=ON
 endif
 ifdef IGNORE_GSL
 CMAKE_FLAGS += -DIGNORE_GSL=ON
+endif
+
+# Naming a route makes failing to find that dependency fatal instead of
+# falling back to a vendored copy or to no ROOT. There is no equivalent on
+# the make/build.mk path, which has only the one route for each.
+ifdef ROOT_FIND_MODE
+CMAKE_FLAGS += -DROOT_FIND_MODE='$(ROOT_FIND_MODE)'
+endif
+ifdef HEPMC3_FIND_MODE
+CMAKE_FLAGS += -DHEPMC3_FIND_MODE='$(HEPMC3_FIND_MODE)'
+endif
+ifdef GSL_FIND_MODE
+CMAKE_FLAGS += -DGSL_FIND_MODE='$(GSL_FIND_MODE)'
 endif
 
 # The install-location variables use the GNU names, because that is what
@@ -200,6 +215,8 @@ help:
 	@echo "  make IGNORE_ROOT=1     Ignore ROOT"
 	@echo "  make IGNORE_HEPMC3=1   Ignore external HepMC3"
 	@echo "  make IGNORE_GSL=1      Use built-in GSL subset"
+	@echo "  make ROOT_FIND_MODE=M  Require one discovery route: auto|cmake|config."
+	@echo "                         Also HEPMC3_FIND_MODE, GSL_FIND_MODE. CMake only."
 	@echo "  make marg4             Build the MARLEY+Geant4 example (if Geant4 is available)"
 	@echo "  make [debug|test|docs|doxygen|install|uninstall|clean|reconfigure]"
 	@echo ""
