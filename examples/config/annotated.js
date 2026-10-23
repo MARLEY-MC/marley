@@ -22,7 +22,15 @@
 //       key: #include:"my_included_file.js"
 //
 //     Note that included files may themselves make use of the #include syntax,
-//     with as many nested levels as desired by the user.
+//     with as many nested levels as desired by the user. If a full path is not
+//     provided in the #include statement, then the directory of the file doing
+//     the including will be checked first. If the included file is not found
+//     there, then a search similar to the one used for reaction input files
+//     will be carried out (see the REACTION INPUT FILE(S) section below). The
+//     only difference is that the candidate paths are checked directly without
+//     ever inserting a "react/" subfolder. The first matching candidate wins
+//     and is used, even if a more thorough search would have yielded
+//     additional matches.
 //
 //  The JSON parser included with MARLEY will print an error message if it
 //  fails to process the job configuration file. This message will provide some
@@ -237,14 +245,14 @@
   //     the others listed above is not recommended in most cases.
   //
   // The full path to the file does not need to be given in each element of the
-  // "reactions" JSON array. After searching in the working directory, MARLEY's
-  // default behavior is to search for reaction input files in the directories
-  // ${MARLEY}/data, ${MARLEY}/data/react/, ${MARLEY}/data/structure/, and
-  // ${MARLEY}/data/optical/, where ${MARLEY} is the value of the MARLEY
-  // environment variable (typically set by sourcing the setup_marley.sh bash
-  // script). The list of search directories beyond the working directory can
-  // be changed from the default by setting the MARLEY_SEARCH_PATH environment
-  // variable to a ':'-separated list of directories.
+  // "reactions" JSON array. If a full path is not given in the file name
+  // <name>, then MARLEY will search for a matching reaction input file
+  // following several steps. Directories that appear in a ':'-separated list
+  // within the MARLEY_SEARCH_PATH environment variable are checked first. For
+  // each of these directories <dir>, MARLEY first checks <dir>/react/<name>,
+  // then checks <dir>/<name>. If no matches are found at that point, MARLEY
+  // will also check the react/ subfolder of its own installed data area before
+  // falling back to the current working directory for a final attempt.
   //
   // For backward compatibility, the charged-current vₑ-⁴⁰Ar reaction input
   // files from MARLEY v1 have been preserved in the folder data/react/v1/.

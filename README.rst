@@ -180,14 +180,20 @@ included `GNU Make <https://www.gnu.org/software/make/>`__ recipe
 (``make/build.mk``). The ``build/`` directory is created automatically by
 either backend and is removed by running ``make clean``.
 
-If the build is successful, then the ``marley`` executable will be located at
-``build/bin/marley``. Running it without arguments
+If the build is successful, then executing
 
 ::
 
-    build/bin/marley
+   source set_marley_path.sh
 
-should produce the following output:
+will add the ``build/bin/`` subfolder to the system ``PATH``. One may then
+run the main MARLEY executable without arguments
+
+::
+
+   marley
+
+to produce the following output:
 
 ::
 
@@ -198,6 +204,7 @@ should produce the following output:
       decay       Simulate nuclear de-excitations
       generate    Generate Monte Carlo events
       help        Show this help message or help for a specific command
+      info        Report where MARLEY looks for its data files
       print       Print existing events in a human-readable format
       reweight    Reweight previously generated events
       summarize   Create a ROOT TTree summary of event files [requires ROOT]
@@ -225,30 +232,6 @@ versions of GSL and HepMC3 even if system installations are available for both
 of these libraries. Any combination of these ``make`` options may be used
 in any order according to the user's preferences.
 
-Setting up the runtime environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The ``marley`` executable relies on the system environment variable ``MARLEY``
-to store the full path to the root folder of the source code. This variable may
-be set automatically by sourcing the ``setup_marley.sh`` Bash script:
-
-::
-
-    source setup_marley.sh
-
-For user convenience, this script also adds ``build/bin`` to the system
-``PATH`` and adds ``build/lib`` to ``LD_LIBRARY_PATH`` and, on macOS,
-``DYLD_LIBRARY_PATH``. After sourcing the setup script, the ``marley``
-command may be run from any directory.
-
-If generation of events is attempted without setting the ``MARLEY`` environment
-variable first, then MARLEY will halt after printing the error message
-
-::
-
-    [ERROR]: The MARLEY environment variable is not set. Please set it (e.g.,
-    by sourcing the setup_marley.sh script) and try again.
-
 Generating events
 ~~~~~~~~~~~~~~~~~
 
@@ -263,7 +246,8 @@ configuration file to use appears as the first argument after the
   marley generate CONFIG_FILE
 
 To generate events using an example configuration file, execute the following
-command after sourcing the ``setup_marley.sh`` script:
+command after ensuring that the ``marley`` executable is on the system
+``PATH``:
 
 ::
 
